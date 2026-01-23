@@ -7,13 +7,13 @@ import java.io.File
  * Factory for creating the best available Maven executor.
  *
  * Attempts to detect Maven version and create the most optimized executor:
- * - Maven 4.x: Creates ReflectionMavenExecutor (uses reflection to load Maven classes)
- * - Maven 3.x: Falls back to ProcessBasedMavenExecutor (subprocess execution)
+ * - Maven 4.x: Creates ResidentMavenExecutor (uses reflection to load Maven classes)
+ * - Maven 3.x: Creates EmbeddedMaven3Executor (uses reflection to load Maven classes)
+ * - Fallback: ProcessBasedMavenExecutor (subprocess execution)
  *
  * Key design: NO compile-time Maven dependencies!
  * - Maven classes are loaded from MAVEN_HOME at runtime via MavenClassRealm
- * - Adapter classes (CachingResidentMavenInvoker, NxMaven, etc.) are embedded as resources
- *   and injected into the ClassRealm at runtime
+ * - Adapter classes are embedded as JAR resources and loaded into the ClassRealm
  * - All Maven interactions happen via reflection
  */
 object MavenExecutorFactory {
@@ -23,20 +23,8 @@ object MavenExecutorFactory {
      * Create a MavenExecutor suitable for the given Maven version.
      *
      * Strategy:
-     * 1. If Maven home is available, try ReflectionMavenExecutor (loads Maven + adapters at runtime)
+     * 1. If Maven home is available, try ResidentMavenExecutor (loads Maven + adapters at runtime)
      * 2. Fall back to ProcessBasedMavenExecutor (subprocess execution for any Maven version)
-     *
-     * ReflectionMavenExecutor (Maven 4.x optimized):
-     * - Uses MavenClassRealm to load Maven JARs from MAVEN_HOME
-     * - Injects pre-compiled adapter classes (NxMaven, CachingResidentMavenInvoker)
-     * - Enables full graph caching via NxMaven
-     * - Requires Maven 4.x at runtime
-     *
-     * ProcessBasedMavenExecutor:
-     * - Subprocess execution via ProcessBuilder
-     * - Works with both Maven 4.x and 3.9.x
-     * - More reliable but slower (~35-50ms per task)
-     * - No graph caching, no component initialization complexity
      *
      * @param workspaceRoot The Maven workspace root directory
      * @param mavenHome The Maven installation directory (optional)
@@ -48,52 +36,41 @@ object MavenExecutorFactory {
         mavenHome: File?,
         mavenVersion: String?
     ): MavenExecutor {
-        System.err.println("[NX-REFLECTION] MavenExecutorFactory.create() called")
-        System.err.println("[NX-REFLECTION]   workspaceRoot: $workspaceRoot")
-        System.err.println("[NX-REFLECTION]   mavenHome: $mavenHome")
-        System.err.println("[NX-REFLECTION]   mavenVersion: $mavenVersion")
-        log.debug("Creating executor for Maven version: $mavenVersion")
+        log.debug("Creating executor - workspaceRoot: $workspaceRoot, mavenHome: $mavenHome, mavenVersion: $mavenVersion")
 
         // If no Maven home, fall back to subprocess
         if (mavenHome == null) {
-            System.err.println("[NX-REFLECTION] No mavenHome - using ProcessBasedMavenExecutor")
+            log.debug("No mavenHome - using ProcessBasedMavenExecutor")
             return ProcessBasedMavenExecutor(workspaceRoot)
         }
 
         // Detect Maven major version
         val mavenMajorVersion = mavenVersion?.substringBefore(".")
             ?: MavenClassRealm.detectMavenMajorVersion(mavenHome)
-        System.err.println("[NX-REFLECTION]   mavenMajorVersion: $mavenMajorVersion")
 
         val isMaven4 = mavenMajorVersion == "4"
-        System.err.println("[NX-REFLECTION]   isMaven4: $isMaven4")
+        log.debug("Detected Maven major version: $mavenMajorVersion (isMaven4: $isMaven4)")
 
         if (isMaven4) {
-            // Maven 4.x: Use ReflectionMavenExecutor for batch performance
-            System.err.println("[NX-REFLECTION] Maven 4.x detected ($mavenVersion) - using ReflectionMavenExecutor")
-            System.err.println("[NX-REFLECTION] Loading Maven classes from MAVEN_HOME at runtime (no bundled Maven)")
+            // Maven 4.x: Use ResidentMavenExecutor for batch performance
             return try {
-                val executor = ReflectionMavenExecutor(workspaceRoot, mavenHome, "4")
-                System.err.println("[NX-REFLECTION] ReflectionMavenExecutor created successfully!")
+                val executor = ResidentMavenExecutor(workspaceRoot, mavenHome, "4")
+                log.debug("ResidentMavenExecutor created successfully")
                 executor
             } catch (e: Exception) {
-                System.err.println("[NX-REFLECTION] ReflectionMavenExecutor failed: ${e.javaClass.simpleName}: ${e.message}")
-                System.err.println("[NX-REFLECTION] Falling back to ProcessBasedMavenExecutor")
-                e.printStackTrace(System.err)
+                log.warn("ResidentMavenExecutor failed: ${e.javaClass.simpleName}: ${e.message}, falling back to ProcessBasedMavenExecutor")
+                log.debug("ResidentMavenExecutor exception details", e)
                 ProcessBasedMavenExecutor(workspaceRoot)
             }
         } else {
-            // Maven 3.x: Use Maven3ReflectionExecutor for batch performance with caching
-            System.err.println("[NX-REFLECTION] Maven 3.x detected ($mavenVersion) - using Maven3ReflectionExecutor")
-            System.err.println("[NX-REFLECTION] Loading Maven classes from MAVEN_HOME at runtime (no bundled Maven)")
+            // Maven 3.x: Use EmbeddedMaven3Executor for batch performance with caching
             return try {
-                val executor = Maven3ReflectionExecutor(workspaceRoot, mavenHome)
-                System.err.println("[NX-REFLECTION] Maven3ReflectionExecutor created successfully!")
+                val executor = EmbeddedMaven3Executor(workspaceRoot, mavenHome)
+                log.debug("EmbeddedMaven3Executor created successfully")
                 executor
             } catch (e: Exception) {
-                System.err.println("[NX-REFLECTION] Maven3ReflectionExecutor failed: ${e.javaClass.simpleName}: ${e.message}")
-                System.err.println("[NX-REFLECTION] Falling back to ProcessBasedMavenExecutor")
-                e.printStackTrace(System.err)
+                log.warn("EmbeddedMaven3Executor failed: ${e.javaClass.simpleName}: ${e.message}, falling back to ProcessBasedMavenExecutor")
+                log.debug("EmbeddedMaven3Executor exception details", e)
                 ProcessBasedMavenExecutor(workspaceRoot)
             }
         }

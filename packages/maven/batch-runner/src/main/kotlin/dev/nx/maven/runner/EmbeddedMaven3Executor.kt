@@ -7,24 +7,24 @@ import java.io.PrintStream
 import java.lang.reflect.Method
 
 /**
- * Maven 3 Executor using reflection to load and invoke Maven classes.
+ * Embedded Maven 3 Executor - keeps Maven instance alive across invocations.
  *
  * This executor has NO compile-time Maven dependencies. It:
  * 1. Uses MavenClassRealm to load Maven JARs from MAVEN_HOME
- * 2. Injects pre-compiled Maven 3 adapter classes (CachingMaven3Invoker, NxMaven3, etc.)
+ * 2. Loads adapter JAR (CachingMaven3Invoker, NxMaven3) into the realm
  * 3. Uses reflection to instantiate and invoke Maven 3 components
  *
  * Architecture:
  * - Maven JARs are loaded from MAVEN_HOME/lib at runtime
- * - Adapter classes are embedded in the batch-runner JAR and injected into the realm
+ * - Adapter JAR is embedded in batch-runner and loaded into ClassRealm
  * - All Maven interactions happen via reflection
  * - Uses Plexus container (Maven 3) instead of Lookup (Maven 4)
  */
-class Maven3ReflectionExecutor(
+class EmbeddedMaven3Executor(
     private val workspaceRoot: File,
     private val mavenHome: File
 ) : MavenExecutor {
-    private val log = LoggerFactory.getLogger(Maven3ReflectionExecutor::class.java)
+    private val log = LoggerFactory.getLogger(EmbeddedMaven3Executor::class.java)
 
     private val mavenRealm: MavenClassRealm
     private val invoker: Any  // CachingMaven3Invoker
@@ -33,7 +33,7 @@ class Maven3ReflectionExecutor(
     private var invocationCount = 0
 
     init {
-        log.debug("Initializing Maven3ReflectionExecutor")
+        log.debug("Initializing EmbeddedMaven3Executor")
         log.debug("Maven home: ${mavenHome.absolutePath}")
 
         // Configure Maven's logging
@@ -58,7 +58,7 @@ class Maven3ReflectionExecutor(
         )
 
         initialized = true
-        log.debug("Maven3ReflectionExecutor ready")
+        log.debug("EmbeddedMaven3Executor ready")
     }
 
     /**
@@ -175,7 +175,7 @@ class Maven3ReflectionExecutor(
             }
 
             mavenRealm.close()
-            log.info("Maven3ReflectionExecutor shutdown complete")
+            log.info("EmbeddedMaven3Executor shutdown complete")
         }
     }
 }

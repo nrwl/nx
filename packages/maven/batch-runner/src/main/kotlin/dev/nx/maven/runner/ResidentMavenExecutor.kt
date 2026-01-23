@@ -7,27 +7,25 @@ import java.io.PrintStream
 import java.lang.reflect.Method
 
 /**
- * Maven Executor using reflection to load and invoke Maven classes.
+ * Resident Maven 4 Executor - keeps Maven instance alive across invocations.
  *
  * This executor has NO compile-time Maven dependencies. It:
  * 1. Uses MavenClassRealm to load Maven JARs from MAVEN_HOME
- * 2. Injects pre-compiled adapter classes (CachingResidentMavenInvoker, NxMaven, etc.)
+ * 2. Loads adapter JAR (CachingResidentMavenInvoker, NxMaven) into the realm
  * 3. Uses reflection to instantiate and invoke Maven components
  *
  * Architecture:
  * - Maven JARs are loaded from MAVEN_HOME/lib at runtime
- * - Adapter classes are embedded in the batch-runner JAR and injected into the realm
+ * - Adapter JAR is embedded in batch-runner and loaded into ClassRealm
  * - All Maven interactions happen via reflection
- *
- * This allows the batch-runner JAR to be Maven-version-agnostic at compile time,
- * while still supporting full graph caching via NxMaven at runtime.
+ * - Wraps Maven 4's ResidentMavenInvoker for context caching
  */
-class ReflectionMavenExecutor(
+class ResidentMavenExecutor(
     private val workspaceRoot: File,
     private val mavenHome: File,
     private val mavenMajorVersion: String
 ) : MavenExecutor {
-    private val log = LoggerFactory.getLogger(ReflectionMavenExecutor::class.java)
+    private val log = LoggerFactory.getLogger(ResidentMavenExecutor::class.java)
 
     private val mavenRealm: MavenClassRealm
     private val invoker: Any  // CachingResidentMavenInvoker
@@ -38,7 +36,7 @@ class ReflectionMavenExecutor(
     private var invocationCount = 0
 
     init {
-        log.debug("Initializing ReflectionMavenExecutor for Maven $mavenMajorVersion")
+        log.debug("Initializing ResidentMavenExecutor for Maven $mavenMajorVersion")
         log.debug("Maven home: ${mavenHome.absolutePath}")
 
         // Configure Maven's logging
@@ -64,7 +62,7 @@ class ReflectionMavenExecutor(
         parsingFailedMethod = mavenRealm.loadClass("org.apache.maven.api.cli.InvokerRequest").getMethod("parsingFailed")
 
         initialized = true
-        log.debug("ReflectionMavenExecutor ready")
+        log.debug("ResidentMavenExecutor ready")
     }
 
     /**
@@ -267,7 +265,7 @@ class ReflectionMavenExecutor(
             }
 
             mavenRealm.close()
-            log.info("ReflectionMavenExecutor shutdown complete")
+            log.info("ResidentMavenExecutor shutdown complete")
         }
     }
 }
