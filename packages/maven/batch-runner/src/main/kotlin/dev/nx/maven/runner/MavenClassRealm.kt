@@ -130,6 +130,11 @@ class MavenClassRealm private constructor(
             val classWorld = ClassWorld()
             val realm = MavenClassRealm(classWorld, "plexus.core", ClassLoader.getSystemClassLoader())
 
+            // Register realm with ClassWorld (required for Maven to find it)
+            // ClassRealm constructor doesn't auto-register; ClassWorld.newRealm() does the registration
+            // but we can't use newRealm() since we need our subclass
+            registerRealmWithClassWorld(classWorld, realm)
+
             // Load Maven JARs
             realm.loadMavenLibJars(mavenHome)
             realm.loadMavenBootJars(mavenHome)
@@ -139,6 +144,25 @@ class MavenClassRealm private constructor(
             log.debug("ClassRealm initialized with Maven JARs")
 
             return realm
+        }
+
+        /**
+         * Register a ClassRealm with ClassWorld using reflection.
+         * This is needed because ClassRealm constructor doesn't auto-register,
+         * and ClassWorld.newRealm() creates a plain ClassRealm (not our subclass).
+         */
+        private fun registerRealmWithClassWorld(classWorld: ClassWorld, realm: ClassRealm) {
+            try {
+                val realmsField = ClassWorld::class.java.getDeclaredField("realms")
+                realmsField.isAccessible = true
+                @Suppress("UNCHECKED_CAST")
+                val realms = realmsField.get(classWorld) as MutableMap<String, ClassRealm>
+                realms[realm.id] = realm
+                log.debug("Registered realm '${realm.id}' with ClassWorld")
+            } catch (e: Exception) {
+                log.error("Failed to register realm with ClassWorld: ${e.message}", e)
+                throw RuntimeException("Failed to register ClassRealm", e)
+            }
         }
 
         /**

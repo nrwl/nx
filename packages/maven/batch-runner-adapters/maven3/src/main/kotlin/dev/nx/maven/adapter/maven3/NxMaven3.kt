@@ -114,6 +114,10 @@ class NxMaven3(
 
         log.debug("🏗️ Setting up project graph cache for Maven 3...")
         val setupStartTime = System.currentTimeMillis()
+
+        // Set our custom execution listener to suppress verbose output during graph building
+        request.executionListener = BatchExecutionListener()
+
         request.isRecursive = true
 
         // Ensure system properties are available for profile activation (especially java.version)
@@ -192,6 +196,9 @@ class NxMaven3(
         val count = executionCount.incrementAndGet()
         val invokeStartTime = System.currentTimeMillis()
 
+        // Set our custom execution listener for batch builds (before any events fire)
+        request.executionListener = BatchExecutionListener()
+
         // If graph cache failed, fall back to standard DefaultMaven execution
         val result = if (cachedProjectGraph != null) {
             executeWithCachedGraph(request)
@@ -220,7 +227,6 @@ class NxMaven3(
                 request,
                 result
             )
-
             // Apply the cached graph to the session
             applyGraphToSession(session, cachedProjectGraph!!, request)
 

@@ -129,7 +129,10 @@ class ResidentMavenExecutor(
             log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
 
             // Create ParserRequest via reflection
+            val requestStartTime = System.currentTimeMillis()
             val invokerRequest = createInvokerRequest(allArguments, workingDir, streamingOutput)
+            val requestDuration = System.currentTimeMillis() - requestStartTime
+            log.info("createInvokerRequest() took ${requestDuration}ms")
 
             // Check if parsing failed
             val parsingFailed = parsingFailedMethod.invoke(invokerRequest) as Boolean
@@ -149,7 +152,7 @@ class ResidentMavenExecutor(
                 val invokeStartTime = System.currentTimeMillis()
                 val result = invokeMethod.invoke(invoker, invokerRequest) as Int
                 val invokeDuration = System.currentTimeMillis() - invokeStartTime
-                log.debug("invoker.invoke() completed in ${invokeDuration}ms, returned: $result")
+                log.info("invoker.invoke() completed in ${invokeDuration}ms, returned: $result")
                 result
             } catch (e: java.lang.reflect.InvocationTargetException) {
                 val cause = e.cause ?: e
@@ -166,9 +169,9 @@ class ResidentMavenExecutor(
 
             val duration = System.currentTimeMillis() - startTime
             if (exitCode == 0) {
-                log.debug("Maven completed in ${duration}ms")
+                log.info("Maven execution completed in ${duration}ms with exit code: $exitCode")
             } else {
-                log.debug("Maven failed with exit code $exitCode in ${duration}ms")
+                log.info("Maven execution FAILED in ${duration}ms with exit code: $exitCode")
             }
             exitCode
         } catch (e: Exception) {

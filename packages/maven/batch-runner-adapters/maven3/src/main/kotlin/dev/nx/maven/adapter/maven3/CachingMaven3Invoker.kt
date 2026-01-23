@@ -98,7 +98,25 @@ class CachingMaven3Invoker(
      * Create the PlexusContainer for Maven components.
      */
     private fun createContainer(): PlexusContainer {
-        val coreRealm = classWorld.getRealm("plexus.core") as ClassRealm
+        // Get or create the plexus.core realm
+        val coreRealm: ClassRealm = try {
+            classWorld.getRealm("plexus.core") as ClassRealm
+        } catch (e: Exception) {
+            log.debug("plexus.core realm not found, checking existing realms...")
+            // Log available realms for debugging
+            val existingRealms = classWorld.realms.map { it.id }
+            log.debug("Available realms: $existingRealms")
+
+            // Use the first available realm or create a new one
+            if (existingRealms.isNotEmpty()) {
+                val firstRealm = classWorld.realms.first()
+                log.debug("Using existing realm: ${firstRealm.id}")
+                firstRealm as ClassRealm
+            } else {
+                log.debug("Creating new plexus.core realm")
+                classWorld.newRealm("plexus.core", Thread.currentThread().contextClassLoader)
+            }
+        }
 
         val containerConfiguration = DefaultContainerConfiguration()
             .setClassWorld(classWorld)
