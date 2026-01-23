@@ -18,6 +18,7 @@ use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 #[cfg(not(test))]
 use super::action::Action;
 use super::app::App;
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
@@ -242,7 +243,8 @@ fn switch_mode(
         }
         TuiMode::Inline => {
             debug!("Creating inline app with focused item: {:?}", focused_item);
-            let app_instance = InlineApp::with_state(shared_state, focused_item)
+            let selected_item = focused_item.map(SelectionEntry::Task);
+            let app_instance = InlineApp::with_state(shared_state, selected_item)
                 .expect("Failed to create inline app");
             TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
         }

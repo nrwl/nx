@@ -27,6 +27,7 @@ use crate::native::{
 
 use super::action::Action;
 use super::components::countdown_popup::CountdownPopup;
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
 use super::lifecycle::{RunMode, TuiMode};
@@ -64,7 +65,7 @@ pub struct InlineApp {
     // === Inline UI State ===
     /// The item (task or batch) whose output should be displayed (required for inline mode)
     /// This is set during mode switching or defaults to the first running item
-    selected_item: Option<String>,
+    selected_item: Option<SelectionEntry>,
     /// Countdown popup for auto-exit (shared with full-screen mode)
     countdown_popup: CountdownPopup,
     /// Whether we're in interactive mode (forwarding keys to PTY)
@@ -143,7 +144,10 @@ impl InlineApp {
     ///
     /// * `state` - Existing shared TuiState from another app instance
     /// * `selected_item` - Optional item (task or batch) to display (from full-screen selection)
-    pub fn with_state(state: Arc<Mutex<TuiState>>, selected_item: Option<String>) -> Result<Self> {
+    pub fn with_state(
+        state: Arc<Mutex<TuiState>>,
+        selected_item: Option<SelectionEntry>,
+    ) -> Result<Self> {
         Ok(Self {
             core: TuiCore::new(state),
             selected_item, // Use the provided selection from mode switch
@@ -216,36 +220,33 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) {
+    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) -> Option<()> {
         let (rows, cols) = terminal_dimensions;
-
         let mut state = self.core.state().lock();
 
-        let Some(task_id) = self.selected_item.clone() else {
-            return;
-        };
+        let task_id = self.selected_item.as_ref()?.id();
+        let pty_arc = state.get_pty_instance(task_id)?;
+        let (current_rows, current_cols) = pty_arc.get_dimensions();
 
-        if let Some(pty_arc) = state.get_pty_instance(&task_id) {
-            let (current_rows, current_cols) = pty_arc.get_dimensions();
+        // Only resize if dimensions actually changed
+        if current_rows != rows || current_cols != cols {
+            tracing::trace!(
+                "InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                task_id,
+                current_cols,
+                current_rows,
+                cols,
+                rows
+            );
 
-            // Only resize if dimensions actually changed
-            if current_rows != rows || current_cols != cols {
-                tracing::trace!(
-                    "InlineApp resizing PTY for {} from {}x{} to {}x{}",
-                    task_id,
-                    current_cols,
-                    current_rows,
-                    cols,
-                    rows
-                );
-
-                // Clone the PTY instance, resize it, and replace the Arc
-                let mut pty_clone = pty_arc.as_ref().clone();
-                if let Ok(()) = pty_clone.resize(rows, cols) {
-                    state.register_pty_instance(task_id, Arc::new(pty_clone));
-                }
+            // Clone the PTY instance, resize it, and replace the Arc
+            let mut pty_clone = pty_arc.as_ref().clone();
+            if pty_clone.resize(rows, cols).is_ok() {
+                state.register_pty_instance(task_id.to_string(), Arc::new(pty_clone));
             }
         }
+
+        Some(())
     }
 
     fn dispatch_action(&self, action: Action) {
@@ -278,12 +279,13 @@ impl InlineApp {
 
     /// Handle keyboard input in interactive mode - forward to PTY
     fn handle_interactive_key(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
-        let current_task = self
+        let task_id = self
             .selected_item
-            .clone()
+            .as_ref()
+            .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item());
 
-        let Some(task_id) = current_task else {
+        let Some(task_id) = task_id else {
             return Ok(());
         };
 
@@ -467,12 +469,13 @@ impl TuiApp for InlineApp {
                 // Handle 'c' for copying terminal output to clipboard (same as full-screen mode)
                 if matches!(key.code, KeyCode::Char('c')) && key.modifiers.is_empty() {
                     // Get the task to display (selected or first running)
-                    let current_task = self
+                    let task_id = self
                         .selected_item
-                        .clone()
+                        .as_ref()
+                        .map(|s| s.id().to_string())
                         .or_else(|| self.get_current_running_item());
 
-                    if let Some(task_id) = current_task {
+                    if let Some(task_id) = task_id {
                         let state = self.core.state().lock();
                         if let Some(pty) = state.get_pty_instance(&task_id) {
                             if let Some(screen) = pty.get_screen() {
@@ -649,7 +652,8 @@ impl TuiApp for InlineApp {
         // Include fallback to first running item for inline mode
         // This ensures can_be_interactive and other trait methods work correctly
         self.selected_item
-            .clone()
+            .as_ref()
+            .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item())
     }
 
@@ -674,15 +678,11 @@ impl TuiApp for InlineApp {
             self.selected_item
         );
         self.core.end_tasks(&task_results);
-        if task_results
-            .iter()
-            .find(|t| {
-                self.selected_item
-                    .as_ref()
-                    .map_or(false, |id| id == &t.task.id)
-            })
-            .is_some()
-        {
+        if task_results.iter().any(|t| {
+            self.selected_item
+                .as_ref()
+                .is_some_and(|s| s.id() == t.task.id)
+        }) {
             // If the selected task has completed, exit interactive mode
             self.is_interactive = false;
         }
@@ -702,19 +702,20 @@ impl InlineApp {
         // Get the task to display (selected or first running)
         let current_task = self
             .selected_item
-            .clone()
+            .as_ref()
+            .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item());
 
-        if let Some(current_task) = current_task {
+        if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
-            if let Some(pty) = state.get_pty_instance(&current_task) {
+            if let Some(pty) = state.get_pty_instance(current_task) {
                 let pty = pty.clone();
                 drop(state);
 
                 // Get last rendered scrollback line count for this task
                 let last_rendered_lines = self
                     .task_last_rendered_scrollback
-                    .get(&current_task)
+                    .get(current_task)
                     .copied()
                     .unwrap_or(0);
 
@@ -816,7 +817,8 @@ impl InlineApp {
         // Get current task and its status for color coding
         let current_task = self
             .selected_item
-            .clone()
+            .as_ref()
+            .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item());
 
         let (task_name, status, status_style, duration_text) =
@@ -962,12 +964,13 @@ impl InlineApp {
         // Show selected task output if available, otherwise first running task
         let current_task = self
             .selected_item
-            .clone()
+            .as_ref()
+            .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item());
 
-        if let Some(current_task) = current_task {
+        if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
-            if let Some(pty) = state.get_pty_instance(&current_task) {
+            if let Some(pty) = state.get_pty_instance(current_task) {
                 let pty = pty.clone();
                 drop(state);
                 self.render_inline_task_output(f, area, &pty);
