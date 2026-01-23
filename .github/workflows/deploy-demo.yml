@@ -33,7 +33,7 @@ jobs:
                 run: npx nx build fluff
 
             -   name: Build demo app
-                run: npm run cli build fluff-demo-app
+                run: npm run cli -- --no-gzip build fluff-demo-app
 
             -   name: Setup Pages
                 uses: actions/configure-pages@v4

@@ -12,17 +12,20 @@ interface CliOptions
 {
     cwd?: string;
     nxPackage?: string;
+    noGzip?: boolean;
 }
 
 export class Cli
 {
     private readonly cwd: string;
     private readonly nxPackage: string | undefined;
+    private readonly noGzip: boolean;
 
     public constructor(options: CliOptions = {})
     {
         this.cwd = options.cwd ?? process.env.INIT_CWD ?? process.cwd();
         this.nxPackage = options.nxPackage;
+        this.noGzip = options.noGzip ?? false;
     }
 
     public async run(args: string[]): Promise<void>
@@ -69,6 +72,7 @@ Commands:
 Options:
   --nx <package>          Use nx workspace, specify package name
   --cwd <dir>             Set working directory
+  --no-gzip               Disable gzip compression (overrides config)
 
 Examples:
   fluff init              Create fluff.json with default configuration
@@ -363,7 +367,11 @@ Examples:
             fs.mkdirSync(outDir, { recursive: true });
         }
 
-        const bundleOptions = target.bundle ?? {};
+        const bundleOptions = { ...target.bundle };
+        if (this.noGzip)
+        {
+            bundleOptions.gzip = false;
+        }
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
             : await this.generateEntryPoint(srcDir, target.components);
@@ -735,6 +743,11 @@ export function parseArgs(argv: string[]): { options: CliOptions; args: string[]
         {
             options.cwd = argv[i + 1];
             i += 2;
+        }
+        else if (arg === '--no-gzip')
+        {
+            options.noGzip = true;
+            i++;
         }
         else if (arg?.startsWith('--'))
         {
