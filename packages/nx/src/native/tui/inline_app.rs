@@ -221,12 +221,7 @@ impl InlineApp {
 
         let mut state = self.core.state().lock();
 
-        // Collect task IDs to avoid holding immutable borrow during mutation
-        let task_id = self.selected_task.clone();
-
-        let task_id = if let Some(task_id) = task_id {
-            task_id
-        } else {
+        let Some(task_id) = self.selected_item.clone() else {
             return;
         };
 

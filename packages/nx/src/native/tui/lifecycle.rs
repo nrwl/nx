@@ -22,7 +22,7 @@ use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
 #[cfg(not(test))]
-use super::tui::Tui;
+use super::tui::{Event, Tui};
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
 
