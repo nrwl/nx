@@ -16,7 +16,7 @@ describe('TS_ALL_EXT_REGEX', () => {
     expect(filename).toMatch(TS_ALL_EXT_REGEX);
   });
 
-  it.each([['file.js'], ['file.cjs'], ['file.mjs'], ['file']])(
+  it.each([['file.js'], ['file.cjs'], ['file.mjs'], ['file'], ['file.json']])(
     'should not match other files',
     (filename) => {
       expect(filename).not.toMatch(TS_ALL_EXT_REGEX);
@@ -35,12 +35,17 @@ describe('JS_ALL_EXT_REGEX', () => {
     expect(filename).toMatch(JS_ALL_EXT_REGEX);
   });
 
-  it.each([['file.tsx'], ['file.ts'], ['file.cts'], ['file.mts'], ['file']])(
-    'should not match other files',
-    (filename) => {
-      expect(filename).not.toMatch(JS_ALL_EXT_REGEX);
-    }
-  );
+  it.each([
+    ['file.tsx'],
+    ['file.ts'],
+    ['file.cts'],
+    ['file.mts'],
+    ['file'],
+    ['file.json'],
+    ['package.json'],
+  ])('should not match other files', (filename) => {
+    expect(filename).not.toMatch(JS_ALL_EXT_REGEX);
+  });
 });
 
 describe('isStandardJsFile', () => {
