@@ -1,0 +1,40 @@
+{
+    "name": "@fluffjs/cli",
+    "version": "0.0.1",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "bin": {
+        "fluff": "./dist/bin.js"
+    },
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "@fluffjs/source": "./src/index.ts",
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "!**/*.tsbuildinfo"
+    ],
+    "dependencies": {
+        "tslib": "^2.3.0"
+    },
+    "nx": {
+        "targets": {
+            "test": {
+                "executor": "@nx/vitest:test",
+                "outputs": [
+                    "{options.reportsDirectory}"
+                ],
+                "options": {
+                    "reportsDirectory": "../../coverage/packages/cli"
+                }
+            }
+        }
+    }
+}

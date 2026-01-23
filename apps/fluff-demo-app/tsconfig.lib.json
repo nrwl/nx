@@ -1,0 +1,25 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "rootDir": "src",
+        "outDir": "dist",
+        "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+        "emitDeclarationOnly": true,
+        "forceConsistentCasingInFileNames": true,
+        "lib": [
+            "ES2022",
+            "DOM"
+        ],
+        "experimentalDecorators": true,
+        "noUnusedLocals": false
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../packages/fluff/tsconfig.lib.json"
+        }
+    ]
+}

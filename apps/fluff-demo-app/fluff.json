@@ -1,0 +1,29 @@
+{
+    "version": "1.0",
+    "targets": {
+        "app": {
+            "name": "fluff-demo-app",
+            "srcDir": "src",
+            "outDir": "dist",
+            "entryPoint": "main.ts",
+            "indexHtml": "index.html",
+            "components": [
+                "**/*.component.ts"
+            ],
+            "assets": [
+                "**/*.html",
+                "**/*.css"
+            ],
+            "bundle": {
+                "minify": true,
+                "gzip": true,
+                "target": "es2022"
+            },
+            "serve": {
+                "port": 3000,
+                "host": "localhost"
+            }
+        }
+    },
+    "defaultTarget": "app"
+}

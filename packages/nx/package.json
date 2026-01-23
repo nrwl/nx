@@ -1,0 +1,49 @@
+{
+    "name": "@fluffjs/nx",
+    "version": "0.0.1",
+    "private": true,
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "@fluffjs/source": "./src/index.ts",
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
+    },
+    "nx": {
+        "targets": {
+            "build": {
+                "executor": "@nx/js:tsc",
+                "outputs": [
+                    "{options.outputPath}"
+                ],
+                "options": {
+                    "outputPath": "packages/nx/dist",
+                    "main": "packages/nx/src/index.ts",
+                    "tsConfig": "packages/nx/tsconfig.lib.json",
+                    "rootDir": "packages/nx/src",
+                    "generatePackageJson": false,
+                    "assets": [
+                        {
+                            "input": "./packages/nx/src",
+                            "glob": "**/!(*.ts)",
+                            "output": "."
+                        },
+                        {
+                            "input": "./packages/nx/src",
+                            "glob": "**/*.d.ts",
+                            "output": "."
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "dependencies": {
+        "tslib": "^2.3.0"
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "name": "@fluffjs/angular-demo-app-e2e",
+    "version": "0.0.1",
+    "private": true,
+    "nx": {
+        "name": "angular-demo-app-e2e"
+    }
+}

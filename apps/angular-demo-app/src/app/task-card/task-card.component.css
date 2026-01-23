@@ -1,0 +1,365 @@
+:host {
+    display: block;
+    cursor: grab;
+}
+
+:host(.dragging) {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+:host(.dragging) .card {
+    transform: rotate(2deg);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card.overdue {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(231, 76, 60, 0.08);
+}
+
+.card.editing {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #667eea;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.priority-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.priority-indicator.low {
+    background: #718096;
+}
+
+.priority-indicator.medium {
+    background: #48bb78;
+}
+
+.priority-indicator.high {
+    background: #f39c12;
+}
+
+.priority-indicator.urgent {
+    background: #e74c3c;
+    box-shadow: 0 0 8px rgba(231, 76, 60, 0.6);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.card-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.card:hover .card-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background 0.2s;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.action-btn.delete:hover {
+    background: rgba(231, 76, 60, 0.3);
+}
+
+.move-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.move-option {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.move-option:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.card-title {
+    margin: 0 0 8px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.card-description {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    color: #a0aec0;
+    line-height: 1.4;
+}
+
+.card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.tag {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a5b4fc;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.assignee {
+    font-size: 0.8rem;
+    color: #a0aec0;
+}
+
+.due-date {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.due-date.overdue {
+    color: #e74c3c;
+}
+
+.due-date.today {
+    color: #f39c12;
+}
+
+.overdue-badge,
+.today-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.overdue-badge {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.today-badge {
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.edit-title {
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.edit-description {
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.85rem;
+    min-height: 60px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.edit-title:focus,
+.edit-description:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.edit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.edit-row label {
+    color: #a0aec0;
+    font-size: 0.8rem;
+    min-width: 70px;
+}
+
+.edit-row input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.edit-row input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.priority-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.p-btn {
+    padding: 4px 10px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #a0aec0;
+    transition: all 0.2s;
+}
+
+.p-btn.low {
+    border-color: #718096;
+}
+
+.p-btn.low.active {
+    background: #718096;
+    color: #fff;
+}
+
+.p-btn.medium {
+    border-color: #48bb78;
+}
+
+.p-btn.medium.active {
+    background: #48bb78;
+    color: #fff;
+}
+
+.p-btn.high {
+    border-color: #f39c12;
+}
+
+.p-btn.high.active {
+    background: #f39c12;
+    color: #fff;
+}
+
+.p-btn.urgent {
+    border-color: #e74c3c;
+}
+
+.p-btn.urgent.active {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.save-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    border: none;
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.save-btn:hover {
+    transform: translateY(-1px);
+}
+
+.cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #a0aec0;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}

@@ -1,0 +1,59 @@
+<div class="stats-panel">
+    <div class="stat-card completion">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+            <span class="stat-value">{{ completionPercent }}%</span>
+            <span class="stat-label">Completed</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" [style.width]="completionPercent + '%'"></div>
+        </div>
+    </div>
+
+    <div class="stat-card status">
+        <div class="stat-icon">📋</div>
+        <div class="stat-content">
+            <div class="stat-row">
+                <span class="dot todo"></span>
+                <span>To Do: {{ stats.byStatus['todo'] }}</span>
+            </div>
+            <div class="stat-row">
+                <span class="dot in-progress"></span>
+                <span>In Progress: {{ stats.byStatus['in-progress'] }}</span>
+            </div>
+            <div class="stat-row">
+                <span class="dot done"></span>
+                <span>Done: {{ stats.byStatus['done'] }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card priority">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+            <span class="stat-value">{{ urgentAndHighCount }}</span>
+            <span class="stat-label">High Priority</span>
+        </div>
+    </div>
+
+    <div class="stat-card alerts">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-content">
+            @if (stats.overdue > 0) {
+                <div class="alert-item overdue">
+                    <span class="alert-count">{{ stats.overdue }}</span>
+                    <span>Overdue</span>
+                </div>
+            }
+            @if (stats.dueToday > 0) {
+                <div class="alert-item due-today">
+                    <span class="alert-count">{{ stats.dueToday }}</span>
+                    <span>Due Today</span>
+                </div>
+            }
+            @if (stats.overdue === 0 && stats.dueToday === 0) {
+                <span class="all-clear">All clear! 🎉</span>
+            }
+        </div>
+    </div>
+</div>

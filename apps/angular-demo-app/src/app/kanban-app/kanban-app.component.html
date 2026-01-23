@@ -1,0 +1,81 @@
+<div class="kanban-app">
+    <header class="app-header">
+        <div class="header-left">
+            <h1>🗂️ Kanban Board</h1>
+            <span class="task-count">{{ stats.total }} tasks</span>
+            <span class="current-time">🕐 {{ currentTime }}</span>
+        </div>
+        <div class="header-actions">
+            <button class="stats-toggle" (click)="toggleStats()">
+                @if (showStats) {
+                    📊 Hide Stats
+                } @else {
+                    📊 Show Stats
+                }
+            </button>
+        </div>
+    </header>
+
+    @if (showStats) {
+        <app-task-stats
+                [stats]="stats"
+        ></app-task-stats>
+    }
+
+    <div class="toolbar">
+        <div class="search-box">
+            <input
+                    type="text"
+                    placeholder="🔍 Search tasks, tags..."
+                    [ngModel]="searchQuery"
+                    (ngModelChange)="setSearch($event)"
+            />
+        </div>
+
+        <div class="filters">
+            <label>
+                Priority:
+                <select [ngModel]="filterPriority" (ngModelChange)="setFilterPriority($event)">
+                    @for (p of priorities; track p) {
+                        <option [value]="p">{{ p }}</option>
+                    }
+                </select>
+            </label>
+
+            <label>
+                Assignee:
+                <select [ngModel]="filterAssignee" (ngModelChange)="setFilterAssignee($event)">
+                    @for (a of assignees; track a) {
+                        <option [value]="a">{{ a }}</option>
+                    }
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <app-task-form
+            (submitTask)="addTask($event)"
+    ></app-task-form>
+
+    <div class="board">
+        @for (column of columns; track column.id) {
+            <app-kanban-column
+                    [column]="column"
+                    [tasks]="getTasksForColumn(column.id)"
+                    [editingTaskId]="editingTaskId"
+                    (moveTask)="moveTask($event.taskId, $event.newStatus)"
+                    (deleteTask)="deleteTask($event.taskId)"
+                    (startEdit)="startEditing($event.taskId)"
+                    (cancelEdit)="cancelEditing()"
+                    (saveEdit)="updateTask($event.taskId, $event.updates)"
+            ></app-kanban-column>
+        }
+    </div>
+
+    @if (filteredTasks.length === 0) {
+        <div class="empty-state">
+            <p>No tasks match your filters.</p>
+            <button (click)="setSearch('')">Clear search</button>
+        </div>
+    }
+</div>

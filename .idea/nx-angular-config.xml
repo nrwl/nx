@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="NxAngularConfigService" workspaceLocation="file://$PROJECT_DIR$/nx.json">
+    <projects>
+      <project name="angular-demo-app" file="file://$PROJECT_DIR$/apps/angular-demo-app/project.json" />
+      <project name="angular-demo-app-e2e" file="file://$PROJECT_DIR$/apps/angular-demo-app-e2e/project.json" />
+      <project name="fluff-hello-world" file="file://$PROJECT_DIR$/apps/fluff-hello-world/project.json" />
+    </projects>
+  </component>
+</project>

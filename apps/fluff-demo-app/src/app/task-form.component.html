@@ -1,0 +1,91 @@
+<div class="form-wrapper">
+    <button class="add-btn" (click)="toggleForm()">
+        @if (isExpanded) {
+            ✕ Cancel
+        } @else {
+            + New Task
+        }
+    </button>
+
+    @if (isExpanded) {
+        <div class="form-panel">
+            <div class="form-group">
+                <label>Title *</label>
+                <input
+                    #titleInput
+                    type="text"
+                    placeholder="What needs to be done?"
+                    [value]="taskTitle"
+                    (input)="taskTitle = $event.target.value"
+                    (keyup.enter)="handleSubmit()"
+                />
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea
+                        placeholder="Add more details..."
+                        [value]="description"
+                        (input)="description = $event.target.value"
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Priority</label>
+                <div class="priority-selector">
+                    <button
+                            class="priority-btn low"
+                            [class.selected]="priority === 'low'"
+                            (click)="setPriority('low')"
+                    >Low
+                    </button>
+                    <button
+                            class="priority-btn medium"
+                            [class.selected]="priority === 'medium'"
+                            (click)="setPriority('medium')"
+                    >Medium
+                    </button>
+                    <button
+                            class="priority-btn high"
+                            [class.selected]="priority === 'high'"
+                            (click)="setPriority('high')"
+                    >High
+                    </button>
+                    <button
+                            class="priority-btn urgent"
+                            [class.selected]="priority === 'urgent'"
+                            (click)="setPriority('urgent')"
+                    >Urgent
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Tags (comma-separated)</label>
+                <input
+                        type="text"
+                        placeholder="frontend, bug, feature..."
+                        [value]="tagsInput"
+                        (input)="tagsInput = $event.target.value"
+                />
+                @if (parsedTags.length > 0) {
+                    <div class="tag-preview">
+                        @for (tag of parsedTags; track tag) {
+                            <span class="tag">{{ tag }}</span>
+                        }
+                    </div>
+                }
+            </div>
+
+            <button class="submit-btn" (click)="handleSubmit()">
+                Create Task
+            </button>
+            <button class="submit-btn" (click)="focusTitle(titleInput)">
+                Focus Title (Template Ref)
+            </button>
+            <button class="submit-btn" (click)="focusTitleViewChild(titleInput)">
+                Focus Title (ViewChild)
+            </button>
+        </div>
+    }
+</div>

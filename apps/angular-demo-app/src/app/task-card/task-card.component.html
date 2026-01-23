@@ -1,0 +1,127 @@
+@if (isEditing) {
+    <div class="card editing">
+        <div class="edit-form">
+            <input
+                    type="text"
+                    class="edit-title"
+                    placeholder="Task title"
+                    [(ngModel)]="editTitle"
+            />
+
+            <textarea
+                    class="edit-description"
+                    placeholder="Description"
+                    [(ngModel)]="editDescription"
+            ></textarea>
+
+            <div class="edit-row">
+                <span class="edit-label">Priority:</span>
+                <div class="priority-buttons">
+                    <button
+                            class="p-btn low"
+                            [class.active]="editPriority === 'low'"
+                            (click)="setEditPriority('low')"
+                    >Low
+                    </button>
+                    <button
+                            class="p-btn medium"
+                            [class.active]="editPriority === 'medium'"
+                            (click)="setEditPriority('medium')"
+                    >Med
+                    </button>
+                    <button
+                            class="p-btn high"
+                            [class.active]="editPriority === 'high'"
+                            (click)="setEditPriority('high')"
+                    >High
+                    </button>
+                    <button
+                            class="p-btn urgent"
+                            [class.active]="editPriority === 'urgent'"
+                            (click)="setEditPriority('urgent')"
+                    >Urgent
+                    </button>
+                </div>
+            </div>
+
+            <div class="edit-row">
+                <label for="edit-assignee">Assignee:</label>
+                <input
+                        id="edit-assignee"
+                        type="text"
+                        placeholder="Name"
+                        [(ngModel)]="editAssignee"
+                />
+            </div>
+
+            <div class="edit-row">
+                <label for="edit-due-date">Due Date:</label>
+                <input
+                        id="edit-due-date"
+                        type="date"
+                        [(ngModel)]="editDueDate"
+                />
+            </div>
+
+            <div class="edit-actions">
+                <button class="save-btn" (click)="onSave()">💾 Save</button>
+                <button class="cancel-btn" (click)="onCancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+} @else {
+    <div class="card" [class.overdue]="isOverdue">
+        <div class="card-header">
+            <span class="priority-indicator {{ priorityClass }}"></span>
+            <div class="card-actions">
+                <button class="action-btn" (click)="toggleMoveMenu()" title="Move">↔️</button>
+                <button class="action-btn" (click)="onEdit()" title="Edit">✏️</button>
+                <button class="action-btn delete" (click)="onDelete()" title="Delete">🗑️</button>
+            </div>
+        </div>
+
+        @if (showMoveMenu) {
+            <div class="move-menu">
+                @for (status of availableStatuses; track status) {
+                    <button class="move-option" (click)="onMove(status)">
+                        {{ getStatusLabel(status) }}
+                    </button>
+                }
+            </div>
+        }
+
+        <h3 class="card-title">{{ task?.title | uppercase }}</h3>
+
+        @if (task?.description) {
+            <p class="card-description">{{ task?.description | truncate:80 }}</p>
+        }
+
+        <div class="card-meta">
+            @if (task?.tags?.length) {
+                <div class="tags">
+                    @for (tag of task?.tags; track tag) {
+                        <span class="tag">{{ tag | lowercase | capitalize }}</span>
+                    }
+                </div>
+            }
+
+            <div class="meta-row">
+                @if (task?.assignee) {
+                    <span class="assignee">👤 {{ task?.assignee }}</span>
+                }
+
+                @if (task?.dueDate) {
+                    <span class="due-date" [class.overdue]="isOverdue" [class.today]="isDueToday">
+            📅 {{ formattedDueDate }}
+                        @if (isOverdue) {
+                            <span class="overdue-badge">Overdue!</span>
+                        }
+                        @if (isDueToday) {
+                            <span class="today-badge">Today</span>
+                        }
+          </span>
+                }
+            </div>
+        </div>
+    </div>
+}

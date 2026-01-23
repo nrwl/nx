@@ -1,0 +1,26 @@
+{
+    "version": "1.0",
+    "targets": {
+        "app": {
+            "name": "fluff-hello-world",
+            "srcDir": "src",
+            "outDir": "dist",
+            "entryPoint": "main.ts",
+            "indexHtml": "index.html",
+            "components": [
+                "**/*.component.ts"
+            ],
+            "assets": [],
+            "bundle": {
+                "minify": false,
+                "gzip": false,
+                "target": "es2022"
+            },
+            "serve": {
+                "port": 4400,
+                "host": "localhost"
+            }
+        }
+    },
+    "defaultTarget": "app"
+}

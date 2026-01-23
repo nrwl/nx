@@ -1,0 +1,91 @@
+<div class="form-wrapper">
+    <button class="add-btn" (click)="toggleForm()">
+        @if (isExpanded) {
+            ✕ Cancel
+        } @else {
+            + New Task
+        }
+    </button>
+
+    @if (isExpanded) {
+        <div class="form-panel">
+            <div class="form-group">
+                <label for="task-title">Title *</label>
+                <input
+                    #titleInput
+                    id="task-title"
+                    type="text"
+                    placeholder="What needs to be done?"
+                    [(ngModel)]="taskTitle"
+                    (keyup.enter)="handleSubmit()"
+                />
+            </div>
+
+            <div class="form-group">
+                <label for="task-description">Description</label>
+                <textarea
+                        id="task-description"
+                        placeholder="Add more details..."
+                        [(ngModel)]="description"
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <span class="form-label">Priority</span>
+                <div class="priority-selector">
+                    <button
+                            class="priority-btn low"
+                            [class.selected]="priority === 'low'"
+                            (click)="setPriority('low')"
+                    >Low
+                    </button>
+                    <button
+                            class="priority-btn medium"
+                            [class.selected]="priority === 'medium'"
+                            (click)="setPriority('medium')"
+                    >Medium
+                    </button>
+                    <button
+                            class="priority-btn high"
+                            [class.selected]="priority === 'high'"
+                            (click)="setPriority('high')"
+                    >High
+                    </button>
+                    <button
+                            class="priority-btn urgent"
+                            [class.selected]="priority === 'urgent'"
+                            (click)="setPriority('urgent')"
+                    >Urgent
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="task-tags">Tags (comma-separated)</label>
+                <input
+                        id="task-tags"
+                        type="text"
+                        placeholder="frontend, bug, feature..."
+                        [(ngModel)]="tagsInput"
+                />
+                @if (parsedTags.length > 0) {
+                    <div class="tag-preview">
+                        @for (tag of parsedTags; track tag) {
+                            <span class="tag">{{ tag }}</span>
+                        }
+                    </div>
+                }
+            </div>
+
+            <button class="submit-btn" (click)="handleSubmit()">
+                Create Task
+            </button>
+            <button class="submit-btn" (click)="focusTitleTemplateRef(titleInput)">
+                Focus Title (Template Ref)
+            </button>
+            <button class="submit-btn" (click)="focusTitleViewChild()">
+                Focus Title (ViewChild)
+            </button>
+        </div>
+    }
+</div>

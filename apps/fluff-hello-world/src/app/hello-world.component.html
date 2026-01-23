@@ -1,0 +1,27 @@
+<div class="container">
+    <div class="card">
+        <div class="logo">🧸</div>
+        <h1>Hello, <span class="highlight">{{ name }}</span>!</h1>
+        <p class="tagline">Welcome to Fluff.js</p>
+
+        <div class="input-group">
+            <label for="name-input">What's your name?</label>
+            <input
+                    id="name-input"
+                    type="text"
+                    [value]="name"
+                    (input)="name = $event.target.value"
+                    placeholder="Enter your name..."
+            />
+        </div>
+
+        <div class="counter-section">
+            <p>You've clicked <strong>{{ count }}</strong> times</p>
+            <button class="btn" (click)="increment()">Click me! 🎉</button>
+        </div>
+
+        <footer>
+            <p>Built with Fluff.js — <em>"Just the good stuff"</em></p>
+        </footer>
+    </div>
+</div>

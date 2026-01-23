@@ -1,0 +1,32 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noPropertyAccessFromIndexSignature": true,
+        "experimentalDecorators": true,
+        "moduleResolution": "bundler",
+        "module": "preserve",
+        "lib": [
+            "ES2020",
+            "DOM"
+        ],
+        "emitDeclarationOnly": false,
+        "composite": false,
+        "declaration": false
+    },
+    "angularCompilerOptions": {
+        "enableI18nLegacyMessageIdFormat": false,
+        "strictInjectionParameters": true,
+        "strictInputAccessModifiers": true,
+        "strictTemplates": true
+    },
+    "files": [],
+    "include": [],
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        },
+        {
+            "path": "./tsconfig.spec.json"
+        }
+    ]
+}

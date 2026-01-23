@@ -1,0 +1,27 @@
+<div class="column">
+    <div class="column-header" [style.border-color]="column.color">
+        <h2>{{ column.title }}</h2>
+        <span class="count">{{ taskCount }}</span>
+    </div>
+
+    <div class="task-list">
+        @for (task of tasks; track task.id) {
+            <task-card
+                    [task]="task"
+                    [isEditing]="editingTaskId === task.id"
+                    [availableStatuses]="availableStatuses"
+                    (move)="onMoveTask(task.id, $event.newStatus)"
+                    (delete)="onDeleteTask(task.id)"
+                    (edit)="onStartEdit(task.id)"
+                    (cancelEdit)="onCancelEdit()"
+                    (save)="onSaveEdit(task.id, $event.updates)"
+            ></task-card>
+        }
+
+        @if (tasks.length === 0) {
+            <div class="empty-column">
+                <span>No tasks</span>
+            </div>
+        }
+    </div>
+</div>
