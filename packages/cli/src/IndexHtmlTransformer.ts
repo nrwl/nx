@@ -2,7 +2,6 @@ import { minify } from 'html-minifier-terser';
 import * as parse5 from 'parse5';
 import { html as parse5Html } from 'parse5';
 
-type Parse5Document = parse5.DefaultTreeAdapterMap['document'];
 type Parse5Node = parse5.DefaultTreeAdapterMap['node'];
 type Parse5Element = parse5.DefaultTreeAdapterMap['element'];
 
@@ -15,48 +14,9 @@ export interface TransformOptions
     liveReload?: boolean;
 }
 
-export async function transformIndexHtml(html: string, options: TransformOptions): Promise<string>
+function isElement(node: Parse5Node): node is Parse5Element
 {
-    const doc = parse5.parse(html);
-
-    const jsSrc = options.gzip ? `${options.jsBundle}.gz` : options.jsBundle;
-    const cssSrc = options.cssBundle
-        ? (options.gzip ? `${options.cssBundle}.gz` : options.cssBundle)
-        : null;
-
-    const head = findElement(doc, 'head');
-    const body = findElement(doc, 'body');
-
-    if (head && cssSrc)
-    {
-        appendChild(head, createLinkElement(cssSrc));
-    }
-
-    if (body)
-    {
-        appendChild(body, createScriptElement(jsSrc));
-    }
-
-    let result = parse5.serialize(doc);
-
-    if (options.liveReload)
-    {
-        result = result.replace('</body>', getLiveReloadScript() + '</body>');
-    }
-
-    if (options.minify)
-    {
-        result = await minify(result, {
-            collapseWhitespace: true,
-            removeComments: true,
-            removeRedundantAttributes: true,
-            removeEmptyAttributes: true,
-            minifyCSS: true,
-            minifyJS: true
-        });
-    }
-
-    return result;
+    return 'tagName' in node;
 }
 
 function findElement(node: Parse5Node, tagName: string): Parse5Element | null
@@ -76,11 +36,6 @@ function findElement(node: Parse5Node, tagName: string): Parse5Element | null
     }
 
     return null;
-}
-
-function isElement(node: Parse5Node): node is Parse5Element
-{
-    return 'tagName' in node;
 }
 
 function appendChild(parent: Parse5Element, child: Parse5Element): void
@@ -137,4 +92,48 @@ function getLiveReloadScript(): string
     }
     location.reload();
 });</script>`;
+}
+
+export async function transformIndexHtml(html: string, options: TransformOptions): Promise<string>
+{
+    const doc = parse5.parse(html);
+
+    const jsSrc = options.gzip ? `${options.jsBundle}.gz` : options.jsBundle;
+    const cssSrc = options.cssBundle
+        ? (options.gzip ? `${options.cssBundle}.gz` : options.cssBundle)
+        : null;
+
+    const head = findElement(doc, 'head');
+    const body = findElement(doc, 'body');
+
+    if (head && cssSrc)
+    {
+        appendChild(head, createLinkElement(cssSrc));
+    }
+
+    if (body)
+    {
+        appendChild(body, createScriptElement(jsSrc));
+    }
+
+    let result = parse5.serialize(doc);
+
+    if (options.liveReload)
+    {
+        result = result.replace('</body>', getLiveReloadScript() + '</body>');
+    }
+
+    if (options.minify)
+    {
+        result = await minify(result, {
+            collapseWhitespace: true,
+            removeComments: true,
+            removeRedundantAttributes: true,
+            removeEmptyAttributes: true,
+            minifyCSS: true,
+            minifyJS: true
+        });
+    }
+
+    return result;
 }

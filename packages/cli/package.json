@@ -1,6 +1,7 @@
 {
     "name": "@fluffjs/cli",
-    "version": "0.0.1",
+    "version": "0.0.3",
+    "private": true,
     "type": "module",
     "main": "./dist/index.js",
     "module": "./dist/index.js",
@@ -22,10 +23,34 @@
         "!**/*.tsbuildinfo"
     ],
     "dependencies": {
+        "@babel/core": "^7.28.6",
+        "@babel/generator": "^7.28.6",
+        "@babel/parser": "^7.28.6",
+        "@babel/plugin-syntax-decorators": "^7.28.6",
+        "@babel/preset-typescript": "^7.28.5",
+        "@babel/traverse": "^7.28.6",
+        "@babel/types": "^7.28.6",
+        "esbuild": "^0.27.2",
+        "html-minifier-terser": "^7.2.0",
+        "parse5": "^8.0.0",
+        "source-map": "^0.7.6",
         "tslib": "^2.3.0"
     },
     "nx": {
         "targets": {
+            "build": {
+                "executor": "nx:run-commands",
+                "dependsOn": ["lint"],
+                "outputs": ["{projectRoot}/dist"],
+                "options": {
+                    "commands": [
+                        "tsc --build tsconfig.lib.json",
+                        "node scripts/copy-package-json.mjs"
+                    ],
+                    "cwd": "{projectRoot}",
+                    "parallel": false
+                }
+            },
             "test": {
                 "executor": "@nx/vitest:test",
                 "outputs": [

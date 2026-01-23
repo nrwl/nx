@@ -7,6 +7,7 @@ import { fluffPlugin } from './fluff-esbuild-plugin.js';
 import { transformIndexHtml } from './IndexHtmlTransformer.js';
 import type { FluffConfig, FluffTarget } from './types/FluffConfig.js';
 import { DEFAULT_CONFIG } from './types/FluffConfig.js';
+import { Generator } from './Generator.js';
 
 interface CliOptions
 {
@@ -40,6 +41,10 @@ export class Cli
             case 'build':
                 await this.build(commandArgs);
                 break;
+            case 'generate':
+            case 'new':
+                this.generate(commandArgs);
+                break;
             case 'serve':
                 await this.serve(commandArgs);
                 break;
@@ -65,6 +70,7 @@ Usage: fluff <command> [options]
 
 Commands:
   init [target]           Initialize a new fluff.json configuration
+  generate <app-name>     Generate a new Fluff app (alias: new)
   build [target]          Build the project (or specific target)
   serve [target]          Start dev server with watch mode
   help                    Show this help message
@@ -76,6 +82,7 @@ Options:
 
 Examples:
   fluff init              Create fluff.json with default configuration
+  fluff generate my-app   Create a new Fluff app called 'my-app'
   fluff build             Build the default target
   fluff build app         Build the 'app' target
   fluff --nx @myorg/app build   Build an nx package
@@ -278,6 +285,24 @@ Examples:
         console.log(`Configuration saved to ${configPath}`);
     }
 
+    private generate(args: string[]): void
+    {
+        const [appName] = args;
+
+        if (!appName)
+        {
+            console.error('Usage: fluff generate <app-name>');
+            console.error('Example: fluff generate my-app');
+            process.exit(1);
+        }
+
+        const generator = new Generator();
+        generator.generate({
+            appName,
+            outputDir: this.cwd
+        });
+    }
+
     private async build(args: string[]): Promise<void>
     {
         let targetOrProject: string | undefined = args[0];
@@ -374,7 +399,7 @@ Examples:
         }
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
-            : await this.generateEntryPoint(srcDir, target.components);
+            : this.generateEntryPoint(srcDir, target.components);
 
         console.log('   Building with esbuild...');
 
@@ -520,31 +545,29 @@ Examples:
 
         const config = this.loadConfigFrom(configPath);
 
-        let target: FluffTarget;
+        let target: FluffTarget | undefined = undefined;
 
         if (targetOrProject)
         {
-            const t = config.targets[targetOrProject];
-            if (!t)
+            target = config.targets[targetOrProject];
+            if (!target)
             {
                 console.error(`Target '${targetOrProject}' not found in fluff.json`);
                 process.exit(1);
             }
-            target = t;
         }
         else if (config.defaultTarget)
         {
-            const t = config.targets[config.defaultTarget];
-            if (!t)
+            target = config.targets[config.defaultTarget];
+            if (!target)
             {
                 console.error(`Default target '${config.defaultTarget}' not found in fluff.json`);
                 process.exit(1);
             }
-            target = t;
         }
         else
         {
-            target = Object.values(config.targets)[0];
+            [target] = Object.values(config.targets);
             if (!target)
             {
                 console.error('No targets found in fluff.json');
@@ -580,7 +603,7 @@ Examples:
 
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
-            : await this.generateEntryPoint(srcDir, target.components);
+            : this.generateEntryPoint(srcDir, target.components);
 
         if (target.indexHtml)
         {
@@ -653,7 +676,7 @@ Examples:
         console.log('   Press Ctrl+C to stop\n');
     }
 
-    private async generateEntryPoint(srcDir: string, componentPatterns: string[]): Promise<string>
+    private generateEntryPoint(srcDir: string, componentPatterns: string[]): string
     {
         const componentFiles = this.findFiles(srcDir, componentPatterns);
         const imports = componentFiles.map(f =>

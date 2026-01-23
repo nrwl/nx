@@ -20,6 +20,17 @@ I love Angular, but it was too chonky for an embedded project I was working on. 
 - **Control flow syntax** - Angular 17+ style `@if`, `@for`, `@switch`, plus `@fallthrough`
 - **Pipes** - Transform template expressions with built-in or custom pipes, component-scoped
 
+## Getting Started
+
+```bash
+npx @fluffjs/cli@latest generate hello-world
+cd hello-world
+npm install
+npx @fluffjs/cli serve
+```
+
+You can also check out the [Demo app](https://fluffjs.github.io/fluff/) and its [source](https://github.com/fluffjs/fluff/tree/master/apps/fluff-demo-app)
+
 ## What Fluff Doesn't Do
 
 Fluff is intentionally minimal. If you need these features, you can add libraries, implement them yourself, or maybe

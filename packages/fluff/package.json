@@ -1,6 +1,7 @@
 {
     "name": "@fluffjs/fluff",
     "version": "0.0.1",
+    "private": true,
     "type": "module",
     "main": "./dist/index.js",
     "module": "./dist/index.js",
@@ -21,6 +22,19 @@
     "dependencies": {},
     "nx": {
         "targets": {
+            "build": {
+                "executor": "nx:run-commands",
+                "dependsOn": ["lint"],
+                "outputs": ["{projectRoot}/dist"],
+                "options": {
+                    "commands": [
+                        "tsc --build tsconfig.lib.json",
+                        "node scripts/copy-package-json.mjs"
+                    ],
+                    "cwd": "{projectRoot}",
+                    "parallel": false
+                }
+            },
             "test": {
                 "executor": "@nx/vitest:test",
                 "outputs": [

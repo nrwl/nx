@@ -13,5 +13,12 @@
         },
         "./package.json": "./package.json"
     },
-    "dependencies": {}
+    "dependencies": {},
+    "nx": {
+        "targets": {
+            "build": {
+                "dependsOn": ["lint"]
+            }
+        }
+    }
 }

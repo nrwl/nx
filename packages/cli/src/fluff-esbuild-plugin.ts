@@ -34,7 +34,7 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
 
     return {
         name: 'fluff',
-        setup(build)
+        setup(build): void
         {
             build.onStart(async() =>
             {

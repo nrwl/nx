@@ -1,9 +1,10 @@
 {
     "name": "@fluffjs/source",
-    "version": "0.0.1",
+    "version": "0.0.7",
     "license": "MIT",
     "scripts": {
-        "cli": "npx tsx ./packages/cli/src/bin.ts"
+        "cli": "npx tsx ./packages/cli/src/bin.ts",
+        "publish": "node scripts/publish.mjs"
     },
     "private": true,
     "devDependencies": {

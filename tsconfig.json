@@ -3,26 +3,29 @@
     "compileOnSave": false,
     "files": [],
     "references": [
-        {
-            "path": "./packages/fluff"
-        },
-        {
-            "path": "./packages/cli"
-        },
-        {
-            "path": "./apps/fluff-demo-app"
-        },
-        {
-            "path": "./packages/nx"
-        },
-        {
-            "path": "./apps/angular-demo-app-e2e"
-        },
-        {
-            "path": "./apps/react-demo-app"
-        },
-        {
-            "path": "./apps/vue-demo-app"
-        }
+      {
+        "path": "./packages/fluff"
+      },
+      {
+        "path": "./packages/cli"
+      },
+      {
+        "path": "./apps/fluff-demo-app"
+      },
+      {
+        "path": "./packages/nx"
+      },
+      {
+        "path": "./apps/angular-demo-app-e2e"
+      },
+      {
+        "path": "./apps/react-demo-app"
+      },
+      {
+        "path": "./apps/vue-demo-app"
+      },
+      {
+        "path": "./apps/fluff-hello-world"
+      }
     ]
 }
