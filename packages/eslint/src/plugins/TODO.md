@@ -1,0 +1,2 @@
+- We are collecting all files using `collectLintableFilesByProjectRoot` to check if they match the ignore list, but in most cases this is ignored since packages have their own lint configs. Move this to the later point in order to skip completely.
+- The `calculateHashesForCreateNodes` should use caching to skip repetitive work. Also the call uses unoptimized HOF
