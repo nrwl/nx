@@ -96,14 +96,7 @@ export default async function* mavenBatchExecutor(
   }
 
   // Prepare batch runner arguments
-  // Add JVM args to allow reflective access for class injection into ClassRealm
-  const javaArgs = [
-    '--add-opens',
-    'java.base/java.lang=ALL-UNNAMED',
-    '-jar',
-    batchRunnerJar,
-    `--workspaceRoot=${workspaceRoot}`,
-  ];
+  const javaArgs = ['-jar', batchRunnerJar, `--workspaceRoot=${workspaceRoot}`];
 
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     javaArgs.push('--verbose');

@@ -23,14 +23,14 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
     private val log = LoggerFactory.getLogger(MavenClassRealm::class.java)
 
     val classWorld: ClassWorld
-    val realm: ClassRealm
+    val realm: NxClassRealm
 
     init {
-        System.err.println("[NX-REFLECTION] Creating MavenClassRealm for: ${mavenHome.absolutePath}")
+        System.err.println("[NX] Creating MavenClassRealm for: ${mavenHome.absolutePath}")
 
-        // Create ClassWorld with plexus.core realm
+        // Create ClassWorld with our custom NxClassRealm (allows direct class injection)
         classWorld = ClassWorld()
-        realm = classWorld.newRealm("plexus.core", ClassLoader.getSystemClassLoader())
+        realm = NxClassRealm(classWorld, "plexus.core", ClassLoader.getSystemClassLoader())
 
         // Load Maven JARs
         loadMavenLibJars()
@@ -38,7 +38,7 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
 
         // Set TCCL to our realm so Maven classes can load properly
         Thread.currentThread().contextClassLoader = realm
-        System.err.println("[NX-REFLECTION] ClassRealm initialized with Maven JARs")
+        System.err.println("[NX] ClassRealm initialized with Maven JARs")
     }
 
     /**
@@ -47,20 +47,20 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
     private fun loadMavenLibJars() {
         val libDir = File(mavenHome, "lib")
         if (!libDir.isDirectory) {
-            System.err.println("[NX-REFLECTION] ERROR: Maven lib directory not found: ${libDir.absolutePath}")
+            System.err.println("[NX] ERROR: Maven lib directory not found: ${libDir.absolutePath}")
             log.warn("Maven lib directory not found: ${libDir.absolutePath}")
             return
         }
 
         val jarFiles = libDir.listFiles { file -> file.name.endsWith(".jar") } ?: emptyArray()
-        System.err.println("[NX-REFLECTION] Loading ${jarFiles.size} JARs from Maven lib: ${libDir.absolutePath}")
+        System.err.println("[NX] Loading ${jarFiles.size} JARs from Maven lib: ${libDir.absolutePath}")
         log.debug("Loading ${jarFiles.size} JARs from Maven lib directory")
 
         jarFiles.forEach { jarFile ->
             try {
                 realm.addURL(jarFile.toURI().toURL())
             } catch (e: Exception) {
-                System.err.println("[NX-REFLECTION] Failed to add JAR: ${jarFile.name} - ${e.message}")
+                System.err.println("[NX] Failed to add JAR: ${jarFile.name} - ${e.message}")
                 log.warn("Failed to add JAR to realm: ${jarFile.name} - ${e.message}")
             }
         }
@@ -93,12 +93,12 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
      * These must be injected before adapters since adapters depend on them.
      */
     fun injectSharedClasses() {
-        System.err.println("[NX-REFLECTION] Injecting shared classes into ClassRealm...")
+        System.err.println("[NX] Injecting shared classes into ClassRealm...")
 
         val manifestPath = "nx-maven-adapters/shared/classes.txt"
         val manifestStream = javaClass.classLoader.getResourceAsStream(manifestPath)
         if (manifestStream == null) {
-            System.err.println("[NX-REFLECTION] ERROR: Shared classes manifest not found: $manifestPath")
+            System.err.println("[NX] ERROR: Shared classes manifest not found: $manifestPath")
             return
         }
 
@@ -106,7 +106,7 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
             lines.filter { it.isNotBlank() && !it.startsWith("#") }.toList()
         }
 
-        System.err.println("[NX-REFLECTION] Found ${classFiles.size} shared classes to inject")
+        System.err.println("[NX] Found ${classFiles.size} shared classes to inject")
 
         var injectedCount = 0
         for (classFile in classFiles) {
@@ -114,11 +114,11 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
                 injectClass("shared", classFile)
                 injectedCount++
             } catch (e: Exception) {
-                System.err.println("[NX-REFLECTION] Failed to inject shared $classFile: ${e.message}")
+                System.err.println("[NX] Failed to inject shared $classFile: ${e.message}")
             }
         }
 
-        System.err.println("[NX-REFLECTION] Injected $injectedCount shared classes successfully")
+        System.err.println("[NX] Injected $injectedCount shared classes successfully")
     }
 
     /**
@@ -131,13 +131,13 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
         injectSharedClasses()
 
         val adapterPath = "maven$mavenMajorVersion"
-        System.err.println("[NX-REFLECTION] Injecting $adapterPath adapter classes into ClassRealm...")
+        System.err.println("[NX] Injecting $adapterPath adapter classes into ClassRealm...")
 
         // Read the classes manifest
         val manifestPath = "nx-maven-adapters/$adapterPath/classes.txt"
         val manifestStream = javaClass.classLoader.getResourceAsStream(manifestPath)
         if (manifestStream == null) {
-            System.err.println("[NX-REFLECTION] ERROR: Adapter classes manifest not found: $manifestPath")
+            System.err.println("[NX] ERROR: Adapter classes manifest not found: $manifestPath")
             return
         }
 
@@ -145,7 +145,7 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
             lines.filter { it.isNotBlank() && !it.startsWith("#") }.toList()
         }
 
-        System.err.println("[NX-REFLECTION] Found ${classFiles.size} adapter classes to inject")
+        System.err.println("[NX] Found ${classFiles.size} adapter classes to inject")
 
         // Inject each class file
         var injectedCount = 0
@@ -154,11 +154,11 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
                 injectClass(adapterPath, classFile)
                 injectedCount++
             } catch (e: Exception) {
-                System.err.println("[NX-REFLECTION] Failed to inject $classFile: ${e.message}")
+                System.err.println("[NX] Failed to inject $classFile: ${e.message}")
             }
         }
 
-        System.err.println("[NX-REFLECTION] Injected $injectedCount adapter classes successfully")
+        System.err.println("[NX] Injected $injectedCount adapter classes successfully")
     }
 
     /**
@@ -180,42 +180,30 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
     }
 
     /**
-     * Define a class in the realm using reflection.
-     * ClassRealm extends ClassLoader, which has a protected defineClass method.
+     * Define a class in the realm.
+     * Uses NxClassRealm which exposes the protected defineClass method directly.
      */
     private fun defineClassInRealm(className: String, classBytes: ByteArray) {
+        // Check if class already exists
         try {
-            // Check if class already exists
-            try {
-                realm.loadClass(className)
-                log.debug("  Class already exists in realm: $className")
-                return
-            } catch (e: ClassNotFoundException) {
-                // Expected - class doesn't exist yet, we'll define it
-            }
+            realm.loadClass(className)
+            log.debug("  Class already exists in realm: $className")
+            return
+        } catch (e: ClassNotFoundException) {
+            // Expected - class doesn't exist yet, we'll define it
+        }
 
-            // Use reflection to access ClassLoader.defineClass
-            val defineClassMethod = ClassLoader::class.java.getDeclaredMethod(
-                "defineClass",
-                String::class.java,
-                ByteArray::class.java,
-                Int::class.java,
-                Int::class.java
-            )
-            defineClassMethod.isAccessible = true
-
-            defineClassMethod.invoke(realm, className, classBytes, 0, classBytes.size)
-        } catch (e: java.lang.reflect.InvocationTargetException) {
-            val cause = e.cause ?: e
-            val errorMsg = "${cause.javaClass.simpleName}: ${cause.message ?: "no message"}"
-            System.err.println("[NX-REFLECTION]   defineClass error for $className: $errorMsg")
-            if (cause is LinkageError || cause is NoClassDefFoundError) {
-                System.err.println("[NX-REFLECTION]   This usually means a dependency class wasn't found")
-            }
-            throw RuntimeException("Failed to define class $className: $errorMsg", cause)
+        try {
+            // Direct call via NxClassRealm - no reflection needed!
+            realm.defineClass(className, classBytes)
+        } catch (e: LinkageError) {
+            val errorMsg = "${e.javaClass.simpleName}: ${e.message ?: "no message"}"
+            System.err.println("[NX] defineClass error for $className: $errorMsg")
+            System.err.println("[NX] This usually means a dependency class wasn't found")
+            throw RuntimeException("Failed to define class $className: $errorMsg", e)
         } catch (e: Exception) {
             val errorMsg = "${e.javaClass.simpleName}: ${e.message ?: "no message"}"
-            System.err.println("[NX-REFLECTION]   defineClass error for $className: $errorMsg")
+            System.err.println("[NX] defineClass error for $className: $errorMsg")
             throw RuntimeException("Failed to define class $className: $errorMsg", e)
         }
     }
