@@ -580,9 +580,18 @@ describe('app', () => {
   });
 
   describe('format files', () => {
-    it('should format files', async () => {
-      const formatFilesSpy = jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest.spyOn(devkitModule, 'formatFiles');
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
       await generateApp(appTree, 'my-app', { skipFormat: false });
 
       expect(formatFilesSpy).toHaveBeenCalled();
