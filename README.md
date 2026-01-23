@@ -155,14 +155,14 @@ export class MyComponent extends HTMLElement implements OnInit, OnDestroy
 
 ## Bundle Size Comparison
 
+The [fluff demo app](https://fluffjs.github.io/fluff/), vs when ported to other frameworks
+
 | Framework  | Runtime (gzip) | Demo App (gzip) |
 |------------|----------------|-----------------|
 | **Fluff**  | ~3.7 KB        | 19.5 KB         |
 | Vue 3.5    | ~24 KB         | 31.8 KB         |
 | Angular 21 | ~55 KB         | 60.5 KB         |
 | React 19   | ~60 KB         | 65.5 KB         |
-
-*Demo app is a fully-featured Kanban board with drag-and-drop, filtering, and CRUD operations.*
 
 ## Getting Started
 
