@@ -182,31 +182,62 @@ Tasks matching these patterns will also have high-confidence, verified code chan
 
 Tasks matching these patterns will **never** have code changes auto-applied, even if they match the include patterns or presets specified above. For example: `*e2e*`.
 
-## Customization with CLAUDE.md
+## Configuration with SELF_HEALING.md
 
-Create a `CLAUDE.md` file in your repository root to provide additional context to the AI agent:
+Create a `.nx/SELF_HEALING.md` file in your repository to provide project-specific instructions to the Self-Healing CI agent. This file contains freeform markdown that the AI agent reads and interprets naturally.
 
-### Failure Classification Rules
+{% aside title="Why a dedicated file?" type="note" %}
+Using `.nx/SELF_HEALING.md` instead of `AGENTS.md` (or equivalent) separates CI-specific instructions from local development context. The file lives in the `.nx` directory alongside other Nx Cloud configuration.
+{% /aside %}
 
-Override how the AI categorizes failures:
-
-```markdown
-## Failure Classification
-
-- Failures in `**/migrations/**` should be classified as `environment_state`
-- Test timeouts in e2e tests are usually `flaky_task`
-```
-
-### Predefined Fixes
-
-Specify deterministic solutions for common failures:
+### Example SELF_HEALING.md
 
 ```markdown
-## Predefined Fixes
+# Self-Healing Configuration
 
-- For lint failures, always try running `nx lint --fix` first
-- Format failures should use `nx format:write`
+## Confidence Rules
+
+- Fixes involving "test" targets should require high confidence
+- Formatting fixes can be applied with medium confidence
+
+## Off-Limits Areas
+
+- `/src/generated/` - auto-generated, do not modify
+- `/legacy/` - requires manual review
+
+## Fix Preferences
+
+- Prefer updating ESLint rules over adding disable comments
+- For type errors, prefer explicit types over `any`
+
+## Context
+
+See ARCHITECTURE.md for module boundaries.
 ```
+
+### What to Include
+
+| Section              | Purpose                                             | Example                                                                      |
+| -------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Confidence Rules** | Override how the AI categorizes failure severity    | "Failures in `**/migrations/**` should be classified as `environment_state`" |
+| **Off-Limits Areas** | Directories or files the agent should never modify  | "`/src/generated/` - auto-generated code"                                    |
+| **Fix Preferences**  | Guide the agent's approach to common issues         | "Prefer updating ESLint rules over adding disable comments"                  |
+| **Predefined Fixes** | Specify deterministic solutions for known failures  | "For lint failures, always try running `nx lint --fix` first"                |
+| **Context**          | Reference other documentation the agent should read | "See ARCHITECTURE.md for module boundaries"                                  |
+
+### Using CLAUDE.md
+
+If your repository already has a `CLAUDE.md` file at the root, the Self-Healing CI agent will read it for additional context. When both files exist:
+
+- **SELF_HEALING.md takes precedence** for any conflicting instructions
+- Both files are read, so general context in `CLAUDE.md` is still available
+- CI-specific instructions should go in `SELF_HEALING.md`
+
+This allows teams to maintain `CLAUDE.md` for local development workflows while using `SELF_HEALING.md` for CI-specific behavior.
+
+### Viewing Configuration Status
+
+After a CI run, navigate to the pipeline execution in Nx Cloud and check the **Configurations** tab to see whether `SELF_HEALING.md` was detected and applied.
 
 ## Receiving Fix Notifications
 
