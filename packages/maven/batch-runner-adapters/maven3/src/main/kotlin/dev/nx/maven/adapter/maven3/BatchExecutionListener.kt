@@ -2,7 +2,6 @@ package dev.nx.maven.adapter.maven3
 
 import org.apache.maven.cli.event.ExecutionEventLogger
 import org.apache.maven.execution.ExecutionEvent
-import org.slf4j.LoggerFactory
 
 /**
  * Execution listener for batch builds that extends Maven's ExecutionEventLogger.
