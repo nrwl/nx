@@ -25,10 +25,10 @@ function extractJsonFromFramerHtml(html) {
       // Clean up any HTML entities and parse
       const jsonStr = preMatch[1]
         .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&')
         .trim();
       return JSON.parse(jsonStr);
     } catch (e) {
