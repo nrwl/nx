@@ -1,3 +1,4 @@
+#[cfg(not(target_os = "android"))]
 use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
@@ -482,12 +483,17 @@ impl TuiApp for InlineApp {
                                 // Unformatted output (no ANSI escape codes)
                                 let output = screen.all_contents();
                                 drop(state); // Release lock before clipboard operations
+                                #[cfg(not(target_os = "android"))]
                                 if let Ok(mut clipboard) = Clipboard::new() {
                                     if clipboard.set_text(output).is_ok() {
                                         // Show status message in bottom chrome
                                         self.status_message =
                                             Some((String::from("Output copied"), Instant::now()));
                                     }
+                                }
+                                #[cfg(target_os = "android")]
+                                {
+                                    let _ = output; // Clipboard not available on Android
                                 }
                             }
                         }
