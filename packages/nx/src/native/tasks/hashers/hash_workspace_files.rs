@@ -1,13 +1,17 @@
 use rayon::prelude::*;
-use std::sync::Arc;
 
 use crate::native::glob::build_glob_set;
 use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
 use crate::native::types::FileData;
 use anyhow::*;
-use dashmap::DashMap;
 use tracing::{debug, debug_span, trace, warn};
+
+/// Result of hashing workspace files, including the matched file paths
+pub struct WorkspaceFilesHashResult {
+    pub hash: String,
+    pub files: Vec<String>,
+}
 
 /// Expands workspace file set patterns by stripping `{workspaceRoot}/` prefix.
 /// Handles negation patterns (e.g., `!{workspaceRoot}/...`).
@@ -44,26 +48,26 @@ pub fn get_workspace_files<'a, 'b>(
     glob_files(all_workspace_files, globs, None)
 }
 
-pub fn hash_workspace_files(
+/// Hash workspace files and return both the hash and the list of matched file paths.
+pub fn hash_workspace_files_with_inputs(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
-    cache: Arc<DashMap<String, String>>,
-) -> Result<String> {
+) -> Result<WorkspaceFilesHashResult> {
     let globs = expand_workspace_globs(workspace_file_sets);
 
     if globs.is_empty() {
-        return Ok(hash(b""));
-    }
-
-    let cache_key = globs.join(",");
-    if let Some(cache_results) = cache.get(&cache_key) {
-        return Ok(cache_results.clone());
+        return Ok(WorkspaceFilesHashResult {
+            hash: hash(b""),
+            files: vec![],
+        });
     }
 
     let glob = build_glob_set(&globs)?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    debug_span!("Hashing workspace fileset", cache_key).in_scope(|| {
+    let mut files = Vec::new();
+
+    debug_span!("Hashing workspace fileset with inputs").in_scope(|| {
         for file in all_workspace_files
             .iter()
             .filter(|file| glob.is_match(&file.file))
@@ -71,12 +75,15 @@ pub fn hash_workspace_files(
             debug!("Adding {:?} ({:?}) to hash", file.hash, file.file);
             hasher.update(file.file.clone().as_bytes());
             hasher.update(file.hash.clone().as_bytes());
+            files.push(file.file.clone());
         }
         let hashed_value = hasher.digest().to_string();
         debug!("Hash Value: {:?}", hashed_value);
 
-        cache.insert(cache_key.to_string(), hashed_value.clone());
-        Ok(hashed_value)
+        Ok(WorkspaceFilesHashResult {
+            hash: hashed_value,
+            files,
+        })
     })
 }
 
@@ -85,18 +92,12 @@ mod test {
     use crate::native::hasher::hash;
 
     use super::*;
-    use dashmap::DashMap;
-    use std::sync::Arc;
 
     #[test]
     fn invalid_workspace_input_is_just_empty_hash() {
-        let result = hash_workspace_files(
-            &["packages/{package}".to_string()],
-            &[],
-            Arc::new(DashMap::new()),
-        )
-        .unwrap();
-        assert_eq!(result, hash(b""));
+        let result =
+            hash_workspace_files_with_inputs(&["packages/{package}".to_string()], &[]).unwrap();
+        assert_eq!(result.hash, hash(b""));
     }
 
     #[test]
@@ -117,7 +118,7 @@ mod test {
             file: "packages/project/project.json".into(),
             hash: "abc".into(),
         };
-        let result = hash_workspace_files(
+        let result = hash_workspace_files_with_inputs(
             &["{workspaceRoot}/.gitignore".to_string()],
             &[
                 gitignore_file.clone(),
@@ -125,10 +126,9 @@ mod test {
                 package_json_file.clone(),
                 project_file.clone(),
             ],
-            Arc::new(DashMap::new()),
         )
         .unwrap();
-        assert_eq!(result, "15841935230129999746");
+        assert_eq!(result.hash, "15841935230129999746");
     }
 
     #[test]
@@ -149,8 +149,8 @@ mod test {
             file: "packages/project/project.json".into(),
             hash: "abc".into(),
         };
-        for i in 0..1000 {
-            let result = hash_workspace_files(
+        for _ in 0..1000 {
+            let result = hash_workspace_files_with_inputs(
                 &["{workspaceRoot}/**/*".to_string()],
                 &[
                     gitignore_file.clone(),
@@ -158,10 +158,9 @@ mod test {
                     package_json_file.clone(),
                     project_file.clone(),
                 ],
-                Arc::new(DashMap::new()),
             )
             .unwrap();
-            assert_eq!(result, "13759877301064854697");
+            assert_eq!(result.hash, "13759877301064854697");
         }
     }
 }
