@@ -66,7 +66,7 @@ describe('library', () => {
     );
   });
 
-  it('should add vue, vite and vitest to package.json', async () => {
+  it('should add vue and vitest to package.json when non-buildable', async () => {
     await libraryGenerator(tree, defaultSchema);
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
     expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
@@ -538,34 +538,9 @@ module.exports = [
         useProjectJson: false,
       });
 
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import vue from '@vitejs/plugin-vue';
-        import { defineConfig } from 'vite';
-
-        export default defineConfig(() => ({
-          root: __dirname,
-          cacheDir: '../node_modules/.vite/my-lib',
-          plugins: [vue()],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //  plugins: [ nxViteTsPaths() ],
-          // },
-          test: {
-            name: '@proj/my-lib',
-            watch: false,
-            globals: true,
-            environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
-            coverage: {
-              reportsDirectory: './test-output/vitest/coverage',
-              provider: 'v8' as const,
-            },
-          },
-        }));
-        "
-      `);
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(
+        `null`
+      );
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
         [
@@ -606,7 +581,7 @@ module.exports = [
                 "executor": "@nx/eslint:lint"
               },
               "test": {
-                "executor": "@nx/vite:test",
+                "executor": "@nx/vitest:test",
                 "outputs": [
                   "{options.reportsDirectory}"
                 ],

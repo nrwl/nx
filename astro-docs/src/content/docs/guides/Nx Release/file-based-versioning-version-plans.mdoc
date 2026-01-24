@@ -21,11 +21,11 @@ To enable version plans as a feature in your workspace, set `release.versionPlan
 // nx.json
 {
   "release": {
-    "versionPlans": true
+    "versionPlans": true,
     // other release config such as projects to include in releases etc
     // projects: ["packages/**/*"]
     // ...
-  }
+  },
 }
 ```
 
@@ -105,7 +105,7 @@ Because these are just files, they can be created manually or by any custom scri
 
 To make things easier, Nx release comes with a built in command to help you generate valid version plan files:
 
-```shell {% frame="none" %}
+```shell
 nx release plan
 ```
 
@@ -125,11 +125,11 @@ When making changes to your codebase and using version plans as your versioning 
 
 Attempting to keep track of this manually as a part of pull request reviews can be error prone and time consuming, therefore Nx release provides a `nx release plan:check` command which can be used to ensure that a version plan file exists for the changes you are making.
 
-```shell {% frame="none" %}
+```shell
 nx release plan:check
 ```
 
-Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updateDependents` option).
+Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.updateDependents` option).
 
 ### Running release plan:check in CI
 
@@ -164,14 +164,41 @@ By default, all files that have changed are considered, but you may not want all
 {
   "release": {
     "versionPlans": {
-      "ignorePatternsForPlanCheck": ["**/*.spec.ts"]
-    }
-  }
+      "ignorePatternsForPlanCheck": ["**/*.spec.ts"],
+    },
+  },
 }
 ```
 
+{% aside type="caution" title="Important: Pattern Syntax" %}
+
+The `ignorePatternsForPlanCheck` patterns follow [gitignore semantics](https://git-scm.com/docs/gitignore). When using negation patterns (patterns starting with `!`) to "un-ignore" certain files, be aware that:
+
+**Working patterns:**
+
+- `["**/*.spec.ts"]` - ignore all spec files
+- `["**/*.ts", "!**/src/**"]` - ignore all .ts files except those in src/ directories
+
+**Non-working patterns:**
+
+- `["*", "!src/"]` - this does NOT work as expected because `*` in gitignore matches at the root level and negation patterns cannot properly un-ignore nested paths
+
+If you want to ignore all files except those in specific directories, use file extension patterns instead of wildcards:
+
+```jsonc
+{
+  "release": {
+    "versionPlans": {
+      "ignorePatternsForPlanCheck": ["**/*.ts", "**/*.json", "!**/src/**"],
+    },
+  },
+}
+```
+
+{% /aside %}
+
 To see more details about the changed files that were detected and the filtering logic that was used to determine the ultimately changed projects behind the scenes, you can pass `--verbose` to the command:
 
-```shell {% frame="none" %}
+```shell
 nx release plan:check --verbose
 ```

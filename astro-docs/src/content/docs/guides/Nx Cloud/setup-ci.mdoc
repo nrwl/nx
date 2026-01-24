@@ -6,9 +6,15 @@ sidebar:
 filter: 'type:Guides'
 ---
 
-Learn how to set up Nx Cloud for your workspace with your preferred CI platform. Get started connecting to Nx Cloud by running `nx connect`.
+Learn how to set up Nx Cloud for your workspace with your preferred CI platform. Get started connecting to Nx Cloud by running
+
+```shell
+nx connect
+```
 
 Each platform has specific configurations and optimizations that help you build and test only what is affected, retrieve previous successful builds, and optimize CI performance.
+
+{% course_video src="https://www.youtube.com/watch?v=8mqHXYIl_qI" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-06-nx-cloud-setup" /%}
 
 ## CI Configuration
 
@@ -16,7 +22,7 @@ Each platform has specific configurations and optimizations that help you build 
 {% tabitem label="GitHub" %}
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=github
 ```
 
@@ -74,7 +80,7 @@ jobs:
 
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=circleci
 ```
 
@@ -85,7 +91,7 @@ Below is an example of a Circle CI setup, building, and testing only what is aff
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.2
+  nx: nrwl/nx@1.7.0
 
 jobs:
   main:
@@ -126,7 +132,7 @@ workflows:
 {% tabitem label="GitLab" %}
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=gitlab
 ```
 
@@ -170,7 +176,7 @@ CI:
 
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=azure-pipelines
 ```
 
@@ -202,7 +208,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 0
+        fetchDepth: '0'
         fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
@@ -307,7 +313,7 @@ pipeline {
 
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=bitbucket-pipelines
 ```
 

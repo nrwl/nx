@@ -16,7 +16,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:client", "type:app"]
+  "tags": ["scope:client", "type:app"],
 }
 ```
 
@@ -25,7 +25,7 @@ Our project configurations might now look like this:
   // ... more project configuration here
 
   "tags": ["scope:client", "type:app"],
-  "implicitDependencies": ["client"]
+  "implicitDependencies": ["client"],
 }
 ```
 
@@ -33,7 +33,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin", "type:app"]
+  "tags": ["scope:admin", "type:app"],
 }
 ```
 
@@ -42,7 +42,7 @@ Our project configurations might now look like this:
   // ... more project configuration here
 
   "tags": ["scope:admin", "type:app"],
-  "implicitDependencies": ["admin"]
+  "implicitDependencies": ["admin"],
 }
 ```
 
@@ -50,7 +50,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:client", "type:feature"]
+  "tags": ["scope:client", "type:feature"],
 }
 ```
 
@@ -58,7 +58,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin", "type:feature"]
+  "tags": ["scope:admin", "type:feature"],
 }
 ```
 
@@ -66,7 +66,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared", "type:ui"]
+  "tags": ["scope:shared", "type:ui"],
 }
 ```
 
@@ -74,7 +74,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared", "type:util"]
+  "tags": ["scope:shared", "type:util"],
 }
 ```
 
@@ -162,35 +162,35 @@ export default [
       "depConstraints": [
         {
           "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"]
+          "onlyDependOnLibsWithTags": ["scope:shared"],
         },
         {
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
         },
         {
           "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"],
         },
         {
           "sourceTag": "type:app",
-          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"],
         },
         {
           "sourceTag": "type:feature",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
         },
         {
           "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
         },
         {
           "sourceTag": "type:util",
-          "onlyDependOnLibsWithTags": ["type:util"]
-        }
-      ]
-    }
-  ]
+          "onlyDependOnLibsWithTags": ["type:util"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
@@ -267,22 +267,22 @@ export default [
         {
           // this constraint applies to all "admin" projects
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
         },
         {
           "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
         },
         {
           // we don't want our admin ui components to depend on anything except utilities,
           // and we also want to ban router imports
           "allSourceTags": ["scope:admin", "type:ui"],
           "onlyDependOnLibsWithTags": ["type:util"],
-          "bannedExternalImports": ["*router*"]
-        }
-      ]
-    }
-  ]
+          "bannedExternalImports": ["*router*"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }

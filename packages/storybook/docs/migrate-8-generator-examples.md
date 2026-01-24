@@ -15,9 +15,9 @@ Just call:
 npx nx g @nx/storybook:migrate-8
 ```
 
-{% callout type="warning" title="Commit your changes" %}
+:::danger[Commit your changes]
 It is advised that you start with a clean git history before running this generator, since it is going to be making lots of changes to your workspace.
-{% /callout %}
+:::
 
 You can run this generator using the above command, without passing any options. This will start the migration process for all your projects that have Storybook configured. The logs will explain what is happening in every step, and the logs are mixed Nx and Storybook CLI logs. During the process you will be prompted by the Storybook CLI to accept the automigration scripts. You can read more about that in the next section.
 
@@ -43,7 +43,7 @@ Once the generator finishes, and the Storybook CLI automigration scripts have ru
 
 Here is an example of a project-level `.storybook/main.js|ts` file for an Angular project that has been migrated to Storybook version 8:
 
-```ts {% fileName="apps/my-angular-app/.storybook/main.js" %}
+```ts title="apps/my-angular-app/.storybook/main.js"
 const config = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials'],
@@ -60,7 +60,7 @@ export default config;
 
 Here is an example of a project-level `.storybook/main.js|ts` file for a React project using Vite that has been migrated to Storybook version 8:
 
-```ts {% fileName="apps/my-react-app/.storybook/main.js" %}
+```ts title="apps/my-react-app/.storybook/main.js"
 const config = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials'],

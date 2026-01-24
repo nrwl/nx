@@ -33,9 +33,12 @@ When configured for independent releases, Nx Release will prompt for a version b
 
 Since each project can have a different version, Nx Release will create a git tag for each project that is being released. By default, the tag for each project will follow the pattern `{projectName}@{version}`. For example, if the `pkg-1` project is being released with version `1.1.0`, its git tag will be `pkg-1@1.1.0`.
 
-This can still be changed with the `release.releaseTag.pattern` property in `nx.json`, but be sure to include `{projectName}` in the pattern so that each generated tag is unique.
+This can still be changed with the `release.releaseTag.pattern` property (Nx 22+) or `release.releaseTagPattern` (Nx < 22) in `nx.json`, but be sure to include `{projectName}` in the pattern so that each generated tag is unique.
 
 For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1` for the `pkg-1` and `pkg-2` projects respectively, you would use the following configuration in nx.json:
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
 
 ```json
 // nx.json
@@ -48,13 +51,28 @@ For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1
 }
 ```
 
-See the [`releaseTag.pattern` documentation](/docs/reference/nx-json#release-tag-pattern) for more details on how to customize the tag pattern.
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
+
+```json
+// nx.json
+{
+  "release": {
+    "releaseTagPattern": "release/{projectName}/{version}"
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+See the [`releaseTag.pattern` documentation](/docs/reference/nx-json#release-tag) for more details on how to customize the tag pattern.
 
 ### Different Commit Message Structure
 
 Even though Nx Release creates a git tag for each project, it will still create a single commit for the entire release. The commit message will still include all of the projects being released with their corresponding version. For example:
 
-```
+```text
 chore(release): publish
 
   - project: pkg-1 1.1.0
@@ -87,20 +105,20 @@ One of the key benefits of independent releases is the ability to release only a
 
 Release only the `pkg-1` and `pkg-2` projects:
 
-```shell {% frame="none" %}
+```shell
 nx release --projects=pkg-1,pkg-2
 ```
 
 Release all projects in the `server` directory:
 
-```shell {% frame="none" %}
-nx release --projects="server/*"
+```shell
+nx release --projects=server/*
 ```
 
 Release all projects except those in the `ui` directory:
 
-```shell {% frame="none" %}
-nx release --projects="!ui/*"
+```shell
+nx release --projects='!ui/*'
 ```
 
 All other projects in the workspace will be ignored and only those that match the filter will be versioned, have their changelogs updated, and published.

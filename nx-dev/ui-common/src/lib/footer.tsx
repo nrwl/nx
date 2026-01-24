@@ -31,7 +31,7 @@ const navigation = {
       href: `${nxDevUrl}/nx-cloud`,
     },
     {
-      name: 'Nx Enterprise',
+      name: 'Enterprise',
       href: `${nxDevUrl}/enterprise`,
     },
   ],
@@ -241,7 +241,7 @@ export function Footer({
                     title={item.name}
                     target="_blank"
                     rel="noreferer"
-                    className="text-slate-500 no-underline no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                   >
                     {item.name}
                   </a>
@@ -373,7 +373,7 @@ export function Footer({
         </div>
         <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
           <div className="flex items-center gap-1 text-sm text-slate-400 xl:justify-center">
-            <span>&copy; 2025 made with</span>
+            <span>&copy; {new Date().getFullYear()} made with</span>
             <HeartIcon className="inline h-4 w-4" />
             <span>by</span>
             <Link

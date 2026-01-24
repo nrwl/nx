@@ -37,8 +37,8 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "tslib": "^2.3.0",
-    "minimatch": "9.0.3"
+    "tslib": "catalog:typescript",
+    "minimatch": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"
@@ -59,8 +59,10 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./executors.json": "./executors.json",
     "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./executors/*/schema": "./src/executors/*/schema.d.ts",
     "./plugin": "./plugin.js",
     "./preset": "./src/utils/preset.js"
   },

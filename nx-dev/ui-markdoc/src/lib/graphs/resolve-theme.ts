@@ -1,5 +1,5 @@
 import type { RenderTheme } from '@nx/graph';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function resolveTheme(theme: RenderTheme | 'system'): RenderTheme {
   // Astro theme switcher sets this data attr when
@@ -32,13 +32,26 @@ export function useThemeSync(
     return resolveTheme(fallbackTheme);
   });
 
+  // Use a ref to keep the latest callback without re-triggering the effect
+  const onThemeChangeRef = useRef(onThemeChange);
+  useEffect(() => {
+    onThemeChangeRef.current = onThemeChange;
+  }, [onThemeChange]);
+
   useEffect(() => {
     const updateTheme = () => {
       const newTheme = resolveTheme(fallbackTheme);
-      setCurrentTheme(newTheme);
-      onThemeChange?.(newTheme);
+      setCurrentTheme((prevTheme) => {
+        // Only update state if theme actually changed
+        if (prevTheme !== newTheme) {
+          onThemeChangeRef.current?.(newTheme);
+          return newTheme;
+        }
+        return prevTheme;
+      });
     };
 
+    // Check theme on mount
     updateTheme();
 
     // Listen for changes to the document's theme attribute astro theme switcher sets
@@ -68,7 +81,7 @@ export function useThemeSync(
       observer.disconnect();
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
-  }, [fallbackTheme, onThemeChange]);
+  }, [fallbackTheme]);
 
   return currentTheme;
 }

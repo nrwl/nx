@@ -4,11 +4,20 @@ import {
   getDependencyVersionFromPackageJson,
 } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
-import { next14Version, nextVersion } from './versions';
+import {
+  nextVersion,
+  next15Version,
+  next14Version,
+  eslintConfigNextVersion,
+  eslintConfigNext15Version,
+  eslintConfigNext14Version,
+} from './versions';
 
 type NextDependenciesVersions = {
   next: string;
 };
+
+type EslintConfigNextVersion = string;
 
 export async function getNextDependenciesVersionsToInstall(
   tree: Tree,
@@ -18,11 +27,43 @@ export async function getNextDependenciesVersionsToInstall(
     return {
       next: next14Version,
     };
+  } else if (await isNext15(tree)) {
+    return {
+      next: next15Version,
+    };
   } else {
     return {
       next: nextVersion,
     };
   }
+}
+
+export async function getEslintConfigNextDependenciesVersionsToInstall(
+  tree: Tree
+): Promise<EslintConfigNextVersion> {
+  if (await isNext15(tree)) {
+    return eslintConfigNext15Version;
+  } else if (await isNext14(tree)) {
+    return eslintConfigNext14Version;
+  } else {
+    return eslintConfigNextVersion;
+  }
+}
+
+export async function isNext16(tree: Tree) {
+  let installedNextVersion = await getInstalledNextVersionFromGraph();
+  if (!installedNextVersion) {
+    installedNextVersion = getInstalledNextVersion(tree);
+  }
+  return major(installedNextVersion) === 16;
+}
+
+export async function isNext15(tree: Tree) {
+  let installedNextVersion = await getInstalledNextVersionFromGraph();
+  if (!installedNextVersion) {
+    installedNextVersion = getInstalledNextVersion(tree);
+  }
+  return major(installedNextVersion) === 15;
 }
 
 export async function isNext14(tree: Tree) {

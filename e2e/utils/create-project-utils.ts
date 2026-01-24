@@ -21,7 +21,7 @@ import {
 import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'node:child_process';
+import { execSync, execFileSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
@@ -33,6 +33,7 @@ import {
   runCommand,
 } from './command-utils';
 import { logError, logInfo } from './log-utils';
+import * as shellQuote from 'shell-quote';
 
 let projName: string;
 
@@ -62,6 +63,7 @@ const nxPackages = [
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
+  `@nx/vitest`,
   `@nx/web`,
   `@nx/webpack`,
   `@nx/react-native`,
@@ -121,12 +123,10 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
-      // Temporary hack to prevent installing with `--frozen-lockfile`
+      // Workaround: pnpm defaults to frozen-lockfile in CI, but e2e tests
+      // dynamically add packages after workspace creation
       if (isCI && packageManager === 'pnpm') {
-        updateFile(
-          '.npmrc',
-          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
-        );
+        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
       }
 
       let packagesToInstall: Array<NxPackage> = [];
@@ -225,18 +225,11 @@ ${
   }
 }
 
-// pnpm v7 sadly doesn't automatically install peer dependencies
-export function addPnpmRc() {
-  updateFile(
-    '.npmrc',
-    'strict-peer-dependencies=false\nauto-install-peers=true'
-  );
-}
-
 export function runCreateWorkspace(
   name: string,
   {
     preset,
+    template,
     appName,
     style,
     base,
@@ -253,12 +246,14 @@ export function runCreateWorkspace(
     nextSrcDir,
     linter = 'eslint',
     formatter = 'prettier',
+    unitTestRunner,
     e2eTestRunner,
     ssr,
     framework,
     prefix,
   }: {
-    preset: string;
+    preset?: string;
+    template?: string;
     appName?: string;
     style?: string;
     base?: string;
@@ -274,6 +269,12 @@ export function runCreateWorkspace(
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
     linter?: 'none' | 'eslint';
+    unitTestRunner?:
+      | 'jest'
+      | 'vitest'
+      | 'vitest-angular'
+      | 'vitest-analog'
+      | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     formatter?: 'prettier' | 'none';
     ssr?: boolean;
@@ -281,6 +282,15 @@ export function runCreateWorkspace(
     prefix?: string;
   }
 ) {
+  if (preset && template) {
+    throw new Error(
+      'Cannot specify both preset and template. Use one or the other.'
+    );
+  }
+  if (!preset && !template) {
+    throw new Error('Must specify either preset or template.');
+  }
+
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
@@ -288,7 +298,24 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+  const baseCommandString = pm.createWorkspace;
+  const parsedBase = shellQuote.parse(baseCommandString).filter(
+    (token) => typeof token === 'string'
+  ) as string[];
+  if (parsedBase.length === 0) {
+    throw new Error(`Invalid createWorkspace command: "${baseCommandString}"`);
+  }
+  const cmd = parsedBase[0];
+  const args: string[] = parsedBase.slice(1);
+
+  args.push(name, '--nxCloud=skip', '--no-interactive');
+
+  if (preset) {
+    args.push(`--preset=${preset}`);
+  }
+  if (template) {
+    args.push(`--template=${template}`);
+  }
 
   if (appName) {
     command += ` --appName=${appName}`;
@@ -341,6 +368,10 @@ export function runCreateWorkspace(
     command += ` --formatter=${formatter}`;
   }
 
+  if (unitTestRunner) {
+    command += ` --unitTestRunner=${unitTestRunner}`;
+  }
+
   if (e2eTestRunner) {
     command += ` --e2eTestRunner=${e2eTestRunner}`;
   }
@@ -362,11 +393,15 @@ export function runCreateWorkspace(
   }
 
   if (prefix !== undefined) {
-    command += ` --prefix=${prefix}`;
+    args.push(`--prefix=${prefix}`);
+  if (isVerbose()) {
+    args.push('--verbose');
+  }
+
   }
 
   try {
-    const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+    const create = execFileSync(cmd, args, {
       cwd,
       stdio: 'pipe',
       env: {
@@ -379,7 +414,7 @@ export function runCreateWorkspace(
 
     if (isVerbose()) {
       output.log({
-        title: `Command: ${command}`,
+        title: `Command: ${[cmd, ...args].join(' ')}`,
         bodyLines: [create as string],
         color: 'green',
       });
@@ -531,6 +566,7 @@ export function runNgNew(
       }
     });
   }
+
   updateJson('package.json', (json) => {
     updateAngularDependencies(json.dependencies ?? {});
     updateAngularDependencies(json.devDependencies ?? {});
@@ -626,8 +662,8 @@ export function newLernaWorkspace({
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
-          ? ' -W'
-          : ''
+            ? ' -W'
+            : ''
       }`,
       {
         cwd: tmpProjPath(),

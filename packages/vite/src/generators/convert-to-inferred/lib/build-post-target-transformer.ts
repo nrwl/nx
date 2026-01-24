@@ -3,7 +3,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { extname } from 'path/posix';
 import {
   addConfigValuesToViteConfig,
@@ -182,29 +182,26 @@ export function moveBuildLibsFromSourceToViteConfig(
   const viteConfigContents = tree.read(configPath, 'utf-8');
   let newViteConfigContents = viteConfigContents;
 
-  const ast = tsquery.ast(viteConfigContents);
-  const buildLibsFromSourceNodes = tsquery(
-    ast,
-    BUILD_LIBS_FROM_SOURCE_SELECTOR,
-    { visitAllChildren: true }
+  const sourceFile = ast(viteConfigContents);
+  const buildLibsFromSourceNodes = query(
+    sourceFile,
+    BUILD_LIBS_FROM_SOURCE_SELECTOR
   );
   if (buildLibsFromSourceNodes.length > 0) {
     return;
   }
 
-  const nxViteTsPathsNodes = tsquery(ast, PLUGINS_NX_VITE_TS_PATHS_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const nxViteTsPathsNodes = query(
+    sourceFile,
+    PLUGINS_NX_VITE_TS_PATHS_SELECTOR
+  );
   if (nxViteTsPathsNodes.length === 0) {
-    const pluginsNodes = tsquery(ast, PLUGINS_PROPERTY_SELECTOR, {
-      visitAllChildren: true,
-    });
+    const pluginsNodes = query(sourceFile, PLUGINS_PROPERTY_SELECTOR);
     if (pluginsNodes.length === 0) {
       // Add plugin property
-      const configNodes = tsquery(
-        ast,
-        'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression',
-        { visitAllChildren: true }
+      const configNodes = query(
+        sourceFile,
+        'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression'
       );
       if (configNodes.length === 0) {
         return;
@@ -219,7 +216,7 @@ export function moveBuildLibsFromSourceToViteConfig(
     } else {
       // Add nxViteTsPaths plugin
 
-      const pluginsArrayNodes = tsquery(
+      const pluginsArrayNodes = query(
         pluginsNodes[0],
         'ArrayLiteralExpression'
       );
@@ -235,7 +232,7 @@ export function moveBuildLibsFromSourceToViteConfig(
       )}`;
     }
   } else {
-    const pluginOptionsNodes = tsquery(
+    const pluginOptionsNodes = query(
       nxViteTsPathsNodes[0],
       'ObjectLiteralExpression'
     );

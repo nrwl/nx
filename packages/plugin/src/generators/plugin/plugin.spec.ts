@@ -86,6 +86,22 @@ describe('NxPlugin Plugin Generator', () => {
     expect(projectE2e.root).toEqual('plugins/my-plugin-e2e');
   });
 
+  it('should place the e2e project in the specified directory', async () => {
+    await pluginGenerator(
+      tree,
+      getSchema({
+        name: 'my-plugin',
+        directory: 'packages/my-plugin',
+        e2eTestRunner: 'jest',
+        e2eProjectDirectory: 'my-plugin',
+      })
+    );
+    const project = readProjectConfiguration(tree, 'my-plugin');
+    const projectE2e = readProjectConfiguration(tree, 'my-plugin-e2e');
+    expect(project.root).toEqual('packages/my-plugin');
+    expect(projectE2e.root).toEqual('my-plugin-e2e');
+  });
+
   describe('asset paths', () => {
     it('should generate normalized asset paths for plugin in monorepo', async () => {
       await pluginGenerator(
@@ -168,7 +184,7 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        ['my-plugin/jest.config.ts'].forEach((path) =>
+        ['my-plugin/jest.config.cts'].forEach((path) =>
           expect(tree.exists(path)).toBeFalsy()
         );
 
@@ -183,7 +199,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
 
     describe('jest', () => {
-      it('should generate test files with jest.config.ts', async () => {
+      it('should generate test files with jest.config.cts', async () => {
         await pluginGenerator(
           tree,
           getSchema({
@@ -192,10 +208,10 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        expect(tree.exists('my-plugin/jest.config.ts')).toBeTruthy();
-        expect(tree.read('my-plugin/jest.config.ts', 'utf-8'))
+        expect(tree.exists('my-plugin/jest.config.cts')).toBeTruthy();
+        expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "export default {
+          "module.exports = {
             displayName: 'my-plugin',
             preset: '../jest.preset.js',
             testEnvironment: 'node',
@@ -239,7 +255,7 @@ describe('NxPlugin Plugin Generator', () => {
         ).targets;
 
         expect(projectTargets.test).toBeDefined();
-        expect(projectTargets.test?.executor).toEqual('@nx/vite:test');
+        expect(projectTargets.test?.executor).toEqual('@nx/vitest:test');
       });
     });
   });
@@ -348,7 +364,7 @@ describe('NxPlugin Plugin Generator', () => {
       });
     });
 
-    it('should generate test files with jest.config.ts', async () => {
+    it('should generate test files with jest.config.cts', async () => {
       await pluginGenerator(
         tree,
         getSchema({
@@ -358,21 +374,21 @@ describe('NxPlugin Plugin Generator', () => {
         })
       );
 
-      expect(tree.exists('my-plugin/jest.config.ts')).toBeTruthy();
-      expect(tree.read('my-plugin/jest.config.ts', 'utf-8'))
+      expect(tree.exists('my-plugin/jest.config.cts')).toBeTruthy();
+      expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: '@proj/my-plugin',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -492,6 +508,7 @@ describe('NxPlugin Plugin Generator', () => {
           },
           "exclude": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
           ],
@@ -517,6 +534,7 @@ describe('NxPlugin Plugin Generator', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",

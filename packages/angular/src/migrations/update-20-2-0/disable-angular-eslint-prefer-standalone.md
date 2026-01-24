@@ -6,10 +6,9 @@ Disable the Angular ESLint prefer-standalone rule if not set.
 
 Update import paths for `withModuleFederation` and `withModuleFederationForSSR`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/.eslintrc.json" %}
+```json title="apps/app1/.eslintrc.json"
 {
   "overrides": [
     {
@@ -22,10 +21,9 @@ Update import paths for `withModuleFederation` and `withModuleFederationForSSR`.
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="apps/app1/.eslintrc.json" %}
+```json title="apps/app1/.eslintrc.json"
 {
   "overrides": [
     {
@@ -43,9 +41,6 @@ Update import paths for `withModuleFederation` and `withModuleFederationForSSR`.
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 import {
 addProjectConfiguration,

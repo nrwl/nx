@@ -30,6 +30,8 @@
       "default": "./index.js",
       "types": "./index.d.ts"
     },
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
@@ -40,19 +42,21 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
-    "@nuxt/kit": "^3.10.0",
+    "tslib": "catalog:typescript",
+    "@nuxt/kit": "^3.10.0 || ^4.0.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/vue": "workspace:*",
-    "@nx/vite": "workspace:*"
+    "@nx/vite": "workspace:*",
+    "@nx/vitest": "workspace:*",
+    "semver": "^7.5.3"
   },
   "devDependencies": {
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@nuxt/schema": "^3.10.0"
+    "@nuxt/schema": "^3.10.0 || ^4.0.0"
   },
   "publishConfig": {
     "access": "public"

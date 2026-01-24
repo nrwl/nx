@@ -33,14 +33,15 @@
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
     "@nx/workspace": "workspace:*",
-    "tslib": "^2.3.1",
-    "@phenomnomnominal/tsquery": "~5.0.1"
+    "tslib": "catalog:typescript",
+    "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.14.0"
+    "@remix-run/dev": "^2.17.3"
   },
   "publishConfig": {
     "access": "public"
@@ -50,6 +51,10 @@
       "default": "./index.js",
       "types": "./index.d.ts"
     },
+    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",

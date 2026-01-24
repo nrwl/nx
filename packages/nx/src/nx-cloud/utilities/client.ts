@@ -3,7 +3,10 @@ import { verifyOrUpdateNxCloudClient } from '../update-manager';
 import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
 
 export class UnknownCommandError extends Error {
-  constructor(public command: string, public availableCommands: string[]) {
+  constructor(
+    public command: string,
+    public availableCommands: string[]
+  ) {
     super(`Unknown Command "${command}"`);
   }
 }

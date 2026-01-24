@@ -187,19 +187,21 @@ export function hasOverride(
   }
   for (const node of exportsArray) {
     if (isOverride(node)) {
-      let objSource;
+      let data: Partial<Linter.ConfigOverride<Linter.RulesRecord>>;
+
       if (ts.isObjectLiteralExpression(node)) {
-        objSource = node.getFullText();
-        // strip any spread elements
-        objSource = objSource.replace(SPREAD_ELEMENTS_REGEXP, '');
+        data = extractPropertiesFromObjectLiteral(node);
       } else {
-        const fullNodeText =
-          node['expression'].arguments[0].body.expression.getFullText();
-        // strip any spread elements
-        objSource = fullNodeText.replace(SPREAD_ELEMENTS_REGEXP, '');
+        // Handle compat.config(...).map(...) pattern
+        const arrowBody = node['expression'].arguments[0].body.expression;
+        if (ts.isObjectLiteralExpression(arrowBody)) {
+          data = extractPropertiesFromObjectLiteral(arrowBody);
+        } else {
+          continue;
+        }
       }
-      const data = parseTextToJson(objSource);
-      if (lookup(data)) {
+
+      if (lookup(data as Linter.ConfigOverride<Linter.RulesRecord>)) {
         return true;
       }
     }
@@ -220,7 +222,139 @@ function parseTextToJson(text: string): any {
 }
 
 /**
- * Finds an override matching the lookup function and applies the update function to it
+ * Extracts literal values from AST nodes.
+ * Returns undefined for complex expressions that can't be statically evaluated.
+ */
+function extractLiteralValue(node: ts.Node): unknown {
+  if (ts.isStringLiteral(node)) {
+    return node.text;
+  }
+  if (ts.isNumericLiteral(node)) {
+    return Number(node.text);
+  }
+  if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (node.kind === ts.SyntaxKind.NullKeyword) return null;
+
+  if (ts.isArrayLiteralExpression(node)) {
+    const arr: unknown[] = [];
+    for (const element of node.elements) {
+      const value = extractLiteralValue(element);
+      if (value === undefined) return undefined;
+      arr.push(value);
+    }
+    return arr;
+  }
+
+  if (ts.isObjectLiteralExpression(node)) {
+    const obj: Record<string, unknown> = {};
+    for (const prop of node.properties) {
+      if (ts.isPropertyAssignment(prop)) {
+        const name = prop.name.getText().replace(/['"]/g, '');
+        const value = extractLiteralValue(prop.initializer);
+        if (value === undefined) {
+          // Skip properties with non-extractable values (like variable references)
+          continue;
+        }
+        obj[name] = value;
+      } else if (ts.isSpreadAssignment(prop)) {
+        // Cannot extract spread assignments statically, skip them
+        continue;
+      } else {
+        // Skip other property types (shorthand, method, etc.)
+        continue;
+      }
+    }
+    return obj;
+  }
+
+  // For complex expressions (identifiers, function calls, etc.), return undefined
+  return undefined;
+}
+
+/**
+ * Extracts property values from an ObjectLiteralExpression using AST.
+ * Only extracts properties that have simple literal values.
+ * Returns a partial object suitable for the lookup function.
+ */
+function extractPropertiesFromObjectLiteral(
+  node: ts.ObjectLiteralExpression
+): Partial<Linter.ConfigOverride<Linter.RulesRecord>> {
+  const result: Record<string, unknown> = {};
+  for (const prop of node.properties) {
+    if (ts.isPropertyAssignment(prop)) {
+      const name = prop.name.getText().replace(/['"]/g, '');
+      const value = extractLiteralValue(prop.initializer);
+      if (value !== undefined) {
+        result[name] = value;
+      }
+    }
+  }
+
+  return result as Partial<Linter.ConfigOverride<Linter.RulesRecord>>;
+}
+
+/**
+ * Find a property assignment node by name in an object literal.
+ */
+function findPropertyNode(
+  node: ts.ObjectLiteralExpression,
+  propertyName: string
+): ts.PropertyAssignment | undefined {
+  for (const prop of node.properties) {
+    if (ts.isPropertyAssignment(prop)) {
+      const name = prop.name.getText().replace(/['"]/g, '');
+      if (name === propertyName) {
+        return prop;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Find properties that are added, changed, or removed.
+ */
+function findChangedProperties(
+  original: Record<string, unknown>,
+  updated: Record<string, unknown>
+): string[] {
+  const changed: string[] = [];
+  // Check modified/added properties
+  for (const key of Object.keys(updated)) {
+    if (JSON.stringify(original[key]) !== JSON.stringify(updated[key])) {
+      changed.push(key);
+    }
+  }
+  // Check removed properties
+  for (const key of Object.keys(original)) {
+    if (!(key in updated)) {
+      changed.push(key);
+    }
+  }
+  return changed;
+}
+
+/**
+ * Serialize a value to JavaScript source code. Handles converting eslintrc parser format to flat config format.
+ */
+function serializeValue(value: unknown, format: 'mjs' | 'cjs'): string {
+  const parserReplacement =
+    format === 'mjs'
+      ? (parser: string) => `(await import('${parser}'))`
+      : (parser: string) => `require('${parser}')`;
+
+  return JSON.stringify(value, null, 2)
+    .replace(
+      /"parser": "([^"]+)"/g,
+      (_, parser) => `"parser": ${parserReplacement(parser)}`
+    )
+    .replaceAll(/\n/g, '\n    '); // Maintain indentation
+}
+
+/**
+ * Finds an override matching the lookup function and applies the update function to it.
+ * Uses property-level AST updates to preserve properties with variable references.
  */
 export function replaceOverride(
   content: string,
@@ -245,52 +379,86 @@ export function replaceOverride(
   }
   const changes: StringChange[] = [];
   exportsArray.forEach((node) => {
-    if (isOverride(node)) {
-      let objSource;
-      let start, end;
-      if (ts.isObjectLiteralExpression(node)) {
-        objSource = node.getFullText();
-        start = node.properties.pos + 1; // keep leading line break
-        end = node.properties.end;
+    if (!isOverride(node)) {
+      return;
+    }
+
+    let objectLiteralNode: ts.ObjectLiteralExpression;
+    if (ts.isObjectLiteralExpression(node)) {
+      objectLiteralNode = node;
+    } else {
+      // Handle compat.config(...).map(...) pattern
+      const arrowBody = node['expression'].arguments[0].body.expression;
+      if (ts.isObjectLiteralExpression(arrowBody)) {
+        objectLiteralNode = arrowBody;
       } else {
-        const fullNodeText =
-          node['expression'].arguments[0].body.expression.getFullText();
-        // strip any spread elements
-        objSource = fullNodeText.replace(SPREAD_ELEMENTS_REGEXP, '');
-        start =
-          node['expression'].arguments[0].body.expression.properties.pos +
-          (fullNodeText.length - objSource.length);
-        end = node['expression'].arguments[0].body.expression.properties.end;
+        return;
       }
-      const data = parseTextToJson(objSource);
-      if (lookup(data)) {
+    }
+
+    // Use AST-based extraction to handle variable references (e.g., plugins: { 'abc': abc })
+    const data = extractPropertiesFromObjectLiteral(objectLiteralNode);
+    if (lookup(data as Linter.ConfigOverride<Linter.RulesRecord>)) {
+      // Deep clone before update (update functions may mutate nested objects)
+      const originalData = structuredClone(data);
+
+      const updatedData = update?.(data);
+
+      // If update function was provided and returns undefined, delete the entire override block
+      if (update && updatedData === undefined) {
         changes.push({
           type: ChangeType.Delete,
-          start,
-          length: end - start,
+          start: node.pos,
+          length: node.end - node.pos + 1, // +1 for trailing comma
         });
-        let updatedData = update(data);
-        if (updatedData) {
-          updatedData = mapFilePaths(updatedData);
+      } else if (updatedData) {
+        const mappedData = mapFilePaths(updatedData);
 
-          const parserReplacement =
-            format === 'mjs'
-              ? (parser: string) => `(await import('${parser}'))`
-              : (parser: string) => `require('${parser}')`;
+        const changedProps = findChangedProperties(
+          originalData as Record<string, unknown>,
+          mappedData as Record<string, unknown>
+        );
 
-          changes.push({
-            type: ChangeType.Insert,
-            index: start,
-            text:
-              '    ' +
-              JSON.stringify(updatedData, null, 2)
-                .replace(
-                  /"parser": "([^"]+)"/g,
-                  (_, parser) => `"parser": ${parserReplacement(parser)}`
-                )
-                .slice(2, -2) // Remove curly braces and start/end line breaks
-                .replaceAll(/\n/g, '\n    '), // Maintain indentation
-          });
+        for (const propName of changedProps) {
+          const originalNode = findPropertyNode(objectLiteralNode, propName);
+          const updatedValue = mappedData[propName];
+
+          if (originalNode && !(propName in mappedData)) {
+            // Delete property that was removed
+            changes.push({
+              type: ChangeType.Delete,
+              start: originalNode.pos,
+              length: originalNode.end - originalNode.pos,
+            });
+          } else if (originalNode) {
+            // Replace existing property value
+            const valueNode = originalNode.initializer;
+            changes.push({
+              type: ChangeType.Delete,
+              start: valueNode.pos,
+              length: valueNode.end - valueNode.pos,
+            });
+            changes.push({
+              type: ChangeType.Insert,
+              index: valueNode.pos,
+              text: ' ' + serializeValue(updatedValue, format),
+            });
+          } else {
+            // Add new property at the end of the object
+            const lastProp =
+              objectLiteralNode.properties[
+                objectLiteralNode.properties.length - 1
+              ];
+            const insertPos = lastProp
+              ? lastProp.end
+              : objectLiteralNode.pos + 1;
+            const needsComma = lastProp ? ',' : '';
+            changes.push({
+              type: ChangeType.Insert,
+              index: insertPos,
+              text: `${needsComma}\n    "${propName}": ${serializeValue(updatedValue, format)}`,
+            });
+          }
         }
       }
     }
@@ -1685,7 +1853,7 @@ export function generateFlatPredefinedConfig(
 }
 
 export function mapFilePaths<
-  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>,
 >(_override: T) {
   const override: T = {
     ..._override,

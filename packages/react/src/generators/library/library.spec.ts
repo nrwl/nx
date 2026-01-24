@@ -92,7 +92,7 @@ describe('lib', () => {
       'node',
       'vitest',
     ]);
-    expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update tags', async () => {
@@ -184,6 +184,7 @@ describe('lib', () => {
     const tsconfigJson = readJson(tree, 'my-lib/tsconfig.lib.json');
     expect(tsconfigJson.exclude).toEqual([
       'jest.config.ts',
+      'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
       'src/**/*.spec.tsx',
@@ -198,7 +199,7 @@ describe('lib', () => {
   it('should generate files', async () => {
     await libraryGenerator(tree, { ...defaultSchema, skipFormat: false });
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
-    expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+    expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeTruthy();
@@ -206,49 +207,49 @@ describe('lib', () => {
 
     const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
     expect(eslintJson).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "plugin:@nx/react",
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      {
+        "extends": [
+          "plugin:@nx/react",
+          "../.eslintrc.json",
+        ],
+        "ignorePatterns": [
+          "!**/*",
+        ],
+        "overrides": [
+          {
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": {},
+          },
+          {
+            "files": [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": {},
+          },
+          {
+            "files": [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": {},
+          },
+        ],
+      }
+    `);
   });
-  it('should update jest.config.ts for babel', async () => {
+  it('should update jest.config.cts for babel', async () => {
     await libraryGenerator(tree, {
       ...defaultSchema,
       buildable: true,
       compiler: 'babel',
     });
-    expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toContain(
+    expect(tree.read('my-lib/jest.config.cts', 'utf-8')).toContain(
       "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
@@ -302,7 +303,7 @@ describe('lib', () => {
         name: 'my-dir-my-lib',
       });
 
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.tsx')
@@ -315,14 +316,14 @@ describe('lib', () => {
       ).toBeTruthy();
     });
 
-    it('should update jest.config.ts for babel', async () => {
+    it('should update jest.config.cts for babel', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         directory: 'my-dir/my-lib',
         buildable: true,
         compiler: 'babel',
       });
-      expect(tree.read('my-dir/my-lib/jest.config.ts', 'utf-8')).toContain(
+      expect(tree.read('my-dir/my-lib/jest.config.cts', 'utf-8')).toContain(
         "['babel-jest', { presets: ['@nx/react/babel'] }]"
       );
     });
@@ -460,7 +461,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
     });
   });
 
@@ -472,7 +473,7 @@ describe('lib', () => {
         bundler: 'none',
       });
 
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -654,7 +655,7 @@ module.exports = withNx(
         limit: 10000, // 10kB
       }),
     ],
-  }
+  },
 );
 `);
     });
@@ -984,7 +985,7 @@ module.exports = withNx(
         useProjectJson: false,
       });
 
-      expect(tree.read('libs/mylib/vite.config.ts', 'utf-8'))
+      expect(tree.read('libs/mylib/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -993,15 +994,15 @@ module.exports = withNx(
         import * as path from 'path';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/libs/mylib',
-          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             outDir: './dist',
             emptyOutDir: true,

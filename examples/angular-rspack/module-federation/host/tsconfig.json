@@ -8,17 +8,14 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["dom", "es2022"]
   },
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "../../../../packages/angular-rspack"
-    },
-    {
-      "path": "../../../../packages/module-federation"
-    },
     {
       "path": "./tsconfig.editor.json"
     },

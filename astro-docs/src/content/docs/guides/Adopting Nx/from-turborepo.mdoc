@@ -39,7 +39,7 @@ This isn't just about raw speed - Nx's approach to file restoration means it's b
 
 ### 2. Fast CI
 
-**Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, [Nx Cloud](https://nx.dev/nx-cloud) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote caching, small teams can apply for FREE Nx Powerpack License here: [https://nx.dev/powerpack](https://nx.dev/powerpack)
+**Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, [Nx Cloud](https://nx.dev/nx-cloud) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote cache, [you can host your own](/docs/guides/tasks--caching/self-hosted-caching).
 
 However, unlike Turborepo, Nx's CI solution ([Nx Cloud](https://nx.dev/nx-cloud)) goes way beyond just locating a shared cache on a server somewhere.
 
@@ -71,7 +71,7 @@ Turborepo forces you to manually annotated your non-JavaScript packages, Nx unde
 Being able to visually explore your workspace is crucial for large monorepos:
 
 - **Nx**: Rich, interactive visualizer, both locally via the `nx graph` CLI and for every pull request via Nx Cloud. (More [in the docs](/docs/features/explore-graph))
-- **Turborepo**: Basic graphviz image export
+- **Turborepo**: [Browser-based graph visualizations](https://turborepo.com/docs/reference/devtools) and [Graphviz image exports](https://turborepo.com/docs/reference/run#--graph-file-name)
 
 #### IDE/Developer Tools
 
@@ -129,13 +129,13 @@ The simplest way to understand the concepts is to see a basic migration example.
 
 1. Let's create a new Turborepo workspace using the recommended `create-turbo` command:
 
-```shell {% frame="none" %}
+```shell
 npx create-turbo@latest
 ```
 
 2. Once that is finished, literally all we need to do make it a valid Nx workspace is run `nx init`:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest init
 ```
 

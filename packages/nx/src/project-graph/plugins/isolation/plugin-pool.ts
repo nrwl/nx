@@ -1,23 +1,23 @@
 import { ChildProcess, spawn } from 'child_process';
-import path = require('path');
 import { Socket, connect } from 'net';
+import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
+import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { resolveNxPlugin } from '../resolve-plugin';
 import {
   consumeMessage,
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
-import { getNxRequirePaths } from '../../../utils/installation-directory';
-import { resolveNxPlugin } from '../resolve-plugin';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -55,7 +55,8 @@ const nxPluginWorkerCache: NxPluginWorkerCache = (global[
 
 export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
-  root: string
+  root: string,
+  index?: number
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
   const cacheKey = JSON.stringify({ plugin, root });
   if (nxPluginWorkerCache.has(cacheKey)) {
@@ -66,7 +67,36 @@ export async function loadRemoteNxPlugin(
   const { name, pluginPath, shouldRegisterTSTranspiler } =
     await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
-  const { worker, socket } = await startPluginWorker();
+  const { worker, socket } = await startPluginWorker(name);
+
+  // Register plugin worker as a subprocess of the main CLI
+  // This allows metrics collection when the daemon is not used
+  // Fire-and-forget to avoid blocking the loading of the plugin
+  if (worker.pid) {
+    (async () => {
+      try {
+        const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+        /**
+         * We can only register the plugin worker as a subprocess of the main CLI
+         * when the daemon is not used. Additionally, we can't explcitly register
+         * the plugin worker as a subprocess of the daemon, because when on the
+         * daemon, we'd get a different instance of the process metrics service.
+         */
+        if (!isOnDaemon()) {
+          const { getProcessMetricsService } = await import(
+            '../../../tasks-runner/process-metrics-service'
+          );
+
+          getProcessMetricsService().registerMainCliSubprocess(
+            worker.pid,
+            `${name}${index !== undefined ? ` (${index})` : ''}`
+          );
+        }
+      } catch {
+        // Silently ignore - metrics collection is optional
+      }
+    })();
+  }
 
   const pendingPromises = new Map<string, PendingPromise>();
 
@@ -74,6 +104,15 @@ export async function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
+    // Unpipe streams to prevent hanging processes and release references
+    if (worker.stdout) {
+      worker.stdout.unpipe(process.stdout);
+      worker.stdout.destroy();
+    }
+    if (worker.stderr) {
+      worker.stderr.unpipe(process.stderr);
+      worker.stderr.destroy();
+    }
     socket.destroy();
     nxPluginWorkerCache.delete(cacheKey);
   };
@@ -263,7 +302,7 @@ function createWorkerHandler(
         }
       },
       createDependenciesResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.dependencies);
         } else if (result.success === false) {
@@ -271,7 +310,7 @@ function createWorkerHandler(
         }
       },
       createNodesResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.result);
         } else if (result.success === false) {
@@ -279,7 +318,7 @@ function createWorkerHandler(
         }
       },
       createMetadataResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.metadata);
         } else if (result.success === false) {
@@ -287,7 +326,7 @@ function createWorkerHandler(
         }
       },
       preTasksExecutionResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.mutations);
         } else if (result.success === false) {
@@ -295,7 +334,7 @@ function createWorkerHandler(
         }
       },
       postTasksExecutionResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver();
         } else if (result.success === false) {
@@ -311,6 +350,13 @@ function createWorkerExitHandler(
   pendingPromises: Map<string, PendingPromise>
 ) {
   return () => {
+    // Clean up piped streams when worker exits to prevent hanging
+    if (worker.stdout) {
+      worker.stdout.unpipe(process.stdout);
+    }
+    if (worker.stderr) {
+      worker.stderr.unpipe(process.stderr);
+    }
     for (const [_, pendingPromise] of pendingPromises) {
       pendingPromise.rejector(
         new Error(
@@ -320,6 +366,25 @@ function createWorkerExitHandler(
         )
       );
     }
+  };
+}
+
+function getPendingPromise(tx: string, pending: Map<string, PendingPromise>) {
+  const pendingPromise = pending.get(tx);
+
+  if (!pendingPromise) {
+    throw new Error(
+      `No pending promise found for transaction "${tx}". This may indicate a bug in the plugin pool. Currently pending promises:\n` +
+        Array.from(pending.keys())
+          .map((t) => `  -  ${t}`)
+          .join('\n')
+    );
+  }
+
+  const { rejector, resolver } = pendingPromise;
+  return {
+    rejector,
+    resolver,
   };
 }
 
@@ -364,7 +429,8 @@ function registerPendingPromise(
 }
 
 global.nxPluginWorkerCount ??= 0;
-async function startPluginWorker() {
+
+async function startPluginWorker(name: string) {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
@@ -385,7 +451,7 @@ async function startPluginWorker() {
   };
 
   const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++].join('-')
+    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
   );
 
   const worker = spawn(
@@ -394,16 +460,64 @@ async function startPluginWorker() {
       ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
       workerPath,
       ipcPath,
+      name,
     ],
     {
-      stdio: 'inherit',
+      stdio: ['ignore', 'pipe', 'pipe'],
       env,
       detached: true,
       shell: false,
       windowsHide: true,
     }
   );
+
+  // To make debugging easier and allow plugins to communicate things
+  // like performance metrics, we pipe the stdout/stderr of the worker
+  // to the main process.
+  // This adds one listener per plugin to a few events on process.stdout/stderr,
+  // so we need to increase the max listener count to avoid warnings.
+  //
+  // We originally used `inherit` for stdio, but that caused issues with
+  // some environments where the terminal was left in an inconsistent state
+  // that prevented `↑`/`↓` arrow keys from working correctly after Nx finished execution.
+  // Instead, they would print things like `^[[A`/`^[[B` to the terminal.
+  const stdoutMaxListeners = process.stdout.getMaxListeners();
+  const stderrMaxListeners = process.stderr.getMaxListeners();
+  if (stdoutMaxListeners !== 0) {
+    process.stdout.setMaxListeners(stdoutMaxListeners + 1);
+  }
+  if (stderrMaxListeners !== 0) {
+    process.stderr.setMaxListeners(stderrMaxListeners + 1);
+  }
+  worker.stdout.pipe(process.stdout);
+  worker.stderr.pipe(process.stderr);
+
+  // Unref the worker process so it doesn't prevent the parent from exiting.
+  // IMPORTANT: We must also unref the stdout/stderr streams. When streams are
+  // piped, they maintain internal references in Node's event loop. Without
+  // unreferencing them, the parent process will wait for the worker to exit
+  // even after worker.unref() is called. This causes e2e tests to hang on CI
+  // where test frameworks wait for all handles to be released.
+  //
+  // Although TypeScript types these as Readable/Writable, they are actually
+  // net.Socket instances at runtime. Node.js internally creates sockets for
+  // stdio pipes (see lib/internal/child_process.js createSocket function).
+  // Socket.unref() allows the event loop to exit if these are the only handles.
   worker.unref();
+  if (worker.stdout instanceof Socket) {
+    worker.stdout.unref();
+  } else {
+    throw new Error(
+      `Expected worker.stdout to be an instance of Socket, but got ${getTypeName(worker.stdout)}`
+    );
+  }
+  if (worker.stderr instanceof Socket) {
+    worker.stderr.unref();
+  } else {
+    throw new Error(
+      `Expected worker.stderr to be an instance of Socket, but got ${getTypeName(worker.stderr)}`
+    );
+  }
 
   let attempts = 0;
   return new Promise<{
@@ -443,4 +557,15 @@ function isServerAvailable(ipcPath: string): Promise<Socket | false> {
       resolve(false);
     }
   });
+}
+
+function getTypeName(u: unknown): string {
+  if (u === null) return 'null';
+  if (u === undefined) return 'undefined';
+  if (typeof u !== 'object') return typeof u;
+  if (Array.isArray(u)) {
+    const innerTypes = u.map((el) => getTypeName(el));
+    return `Array<${Array.from(new Set(innerTypes)).join('|')}>`;
+  }
+  return u.constructor?.name ?? 'unknown object';
 }

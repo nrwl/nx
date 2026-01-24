@@ -457,10 +457,6 @@ const nxCloudUrls = {
     'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
-  '/ci/recipes/on-premise/auth-single-admin':
-    'https://github.com/nrwl/nx-cloud-helm',
-  '/ci/recipes/enterprise/on-premise/auth-single-admin':
-    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/ami-setup':
     'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/advanced-config':
@@ -1169,7 +1165,7 @@ const blogPosts = {
 };
 
 const featurePagesUpdate = {
-  '/ci/troubleshooting/explain-with-ai': '/ci/features/explain-with-ai',
+  '/ci/troubleshooting/explain-with-ai': '/ci/features/self-healing-ci',
   '/ci/concepts/ai-features': '/docs/features/ci-features/self-healing-ci',
   '/ci/concepts/nx-cloud-ai': '/docs/features/ci-features/self-healing-ci',
   '/concepts/ci-concepts/ai-features':
@@ -1177,13 +1173,17 @@ const featurePagesUpdate = {
 };
 
 const enterpriseNxSection = {
-  '/features/powerpack': '/nx-enterprise/powerpack',
-  '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
-  '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
+  '/features/powerpack': '/nx-enterprise',
+  '/features/powerpack/conformance': '/nx-enterprise/conformance',
+  '/features/powerpack/owners': '/nx-enterprise/owners',
   '/features/powerpack/custom-caching':
     '/recipes/running-tasks/self-hosted-caching',
-  '/recipes/installation/activate-powerpack':
-    '/nx-enterprise/activate-powerpack',
+  '/recipes/installation/activate-powerpack': '/nx-enterprise/activate-license',
+  '/nx-enterprise/activate-powerpack': '/nx-enterprise/activate-license',
+  '/nx-enterprise/powerpack': '/nx-enterprise',
+  '/nx-enterprise/powerpack/conformance': '/nx-enterprise/conformance',
+  '/nx-enterprise/powerpack/owners': '/nx-enterprise/owners',
+  '/nx-enterprise/powerpack/licenses-and-trials': '/nx-enterprise',
 };
 
 const manualDTEUpdate = {
@@ -1198,10 +1198,10 @@ const manualDTEUpdate = {
 };
 
 const powerpackRedirects = {
+  '/powerpack/:path*': '/enterprise',
   '/nx-enterprise/powerpack/custom-caching':
     '/recipes/running-tasks/self-hosted-caching',
-  '/nx-enterprise/powerpack/free-licenses-and-trials':
-    '/nx-enterprise/powerpack/licenses-and-trials',
+  '/nx-enterprise/powerpack/free-licenses-and-trials': '/nx-enterprise',
 
   // Redirects for renamed powerpack packages
   '/nx-api/powerpack-owners': '/nx-api/owners',
@@ -1229,6 +1229,33 @@ const powerpackRedirects = {
   '/nx-api/powerpack-shared-fs-cache': '/nx-api/shared-fs-cache',
   '/nx-api/powerpack-shared-fs-cache/documents/overview':
     '/nx-api/shared-fs-cache/documents/overview',
+
+  // Reference redirects from powerpack to new structure
+  '/docs/reference/powerpack/conformance': '/docs/reference/conformance',
+  '/docs/reference/powerpack/conformance/overview':
+    '/docs/reference/conformance/overview',
+  '/docs/reference/powerpack/conformance/create-conformance-rule':
+    '/docs/reference/conformance/create-conformance-rule',
+  '/docs/reference/powerpack/conformance/executors':
+    '/docs/reference/conformance/executors',
+  '/docs/reference/powerpack/conformance/generators':
+    '/docs/reference/conformance/generators',
+  '/docs/reference/powerpack/owners': '/docs/reference/owners',
+  '/docs/reference/powerpack/owners/overview':
+    '/docs/reference/owners/overview',
+  '/docs/reference/powerpack/owners/generators':
+    '/docs/reference/owners/generators',
+
+  // Enterprise redirects from powerpack to new structure
+  '/docs/enterprise/powerpack': '/docs/enterprise',
+  '/docs/enterprise/powerpack/conformance': '/docs/enterprise/conformance',
+  '/docs/enterprise/powerpack/owners': '/docs/enterprise/owners',
+  '/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud':
+    '/docs/enterprise/configure-conformance-rules-in-nx-cloud',
+  '/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud':
+    '/docs/enterprise/publish-conformance-rules-to-nx-cloud',
+  '/docs/enterprise/powerpack/licenses-and-trials': '/docs/enterprise',
+  '/docs/enterprise/activate-powerpack': '/docs/enterprise/activate-license',
 };
 
 const tmpTerminalUiRedirects = {
@@ -1504,6 +1531,15 @@ const dockerReleaseRedirect = {
     '/recipes/nx-release/release-npm-packages',
 };
 
+const removeEvolvingNx = {
+  '/blog/evolving-nx': '/blog/introducing-nx-powerpack',
+};
+
+const pageCleanUp = {
+  '/advent-of-code ': '/',
+  '/launch-nx ': '/',
+};
+
 /**
  * Public export API
  */
@@ -1549,4 +1585,6 @@ module.exports = {
   dockerReleaseRedirect,
   contentDedupeRedirects,
   docsToAstroRedirects: docsToAstroRedirects,
+  removeEvolvingNx,
+  pageCleanUp,
 };

@@ -1,11 +1,25 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContextV2, workspaceRoot } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2 } from './plugin';
+import { createNodesV2, getProjectNameFromPath } from './plugin';
+import * as gitUtils from 'nx/src/utils/git-utils';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
+
+jest.mock('nx/src/utils/git-utils');
+
+expect.addSnapshotSerializer({
+  serialize(str: string) {
+    const imageRefForRoot = getProjectNameFromPath('.', workspaceRoot);
+    console.log('imageRefForRoot', imageRefForRoot);
+    return str.replaceAll(imageRefForRoot, '{imageRef}');
+  },
+  test(val: string) {
+    return val != null && typeof val === 'string';
+  },
+});
 
 describe('@nx/docker', () => {
   let createNodesFunction = createNodesV2[1];
@@ -13,7 +27,17 @@ describe('@nx/docker', () => {
   let tempFs: TempFs;
   let cwd: string;
 
+  const mockGetLatestCommitSha =
+    gitUtils.getLatestCommitSha as jest.MockedFunction<
+      typeof gitUtils.getLatestCommitSha
+    >;
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+    mockGetLatestCommitSha.mockReturnValue(
+      'abc123456789def0123456789abcdef012345678'
+    );
+
     tempFs = new TempFs('test');
     cwd = process.cwd();
     process.chdir(tempFs.tempDir);
@@ -45,85 +69,85 @@ describe('@nx/docker', () => {
     expect(results).toMatchInlineSnapshot(`
       [
         [
-          "proj/Dockerfile",
+          proj/Dockerfile,
           {
-            "projects": {
-              "proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Docker": [
-                      "docker:build",
-                      "docker:run",
-                      "nx-release-publish",
+            projects: {
+              proj: {
+                metadata: {
+                  targetGroups: {
+                    Docker: [
+                      docker:build,
+                      docker:run,
+                      nx-release-publish,
                     ],
                   },
                 },
-                "root": "proj",
-                "targets": {
-                  "docker:build": {
-                    "command": "docker build .",
-                    "dependsOn": [
-                      "build",
-                      "^build",
+                root: proj,
+                targets: {
+                  docker:build: {
+                    command: docker build .,
+                    dependsOn: [
+                      build,
+                      ^build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker build",
-                      "help": {
-                        "command": "docker build --help",
-                        "example": {
-                          "options": {
-                            "cache-from": "type=s3,region=eu-west-1,bucket=mybucket .",
-                            "cache-to": "type=s3,region=eu-west-1,bucket=mybucket .",
+                    metadata: {
+                      description: Run Docker build,
+                      help: {
+                        command: docker build --help,
+                        example: {
+                          options: {
+                            cache-from: type=s3,region=eu-west-1,bucket=mybucket .,
+                            cache-to: type=s3,region=eu-west-1,bucket=mybucket .,
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "args": [
-                        "--tag proj",
+                    options: {
+                      args: [
+                        --tag proj,
                       ],
-                      "cwd": "proj",
+                      cwd: proj,
                     },
                   },
-                  "docker:run": {
-                    "command": "docker run {args} proj",
-                    "dependsOn": [
-                      "docker:build",
+                  docker:run: {
+                    command: docker run {args} proj,
+                    dependsOn: [
+                      docker:build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker run",
-                      "help": {
-                        "command": "docker run --help",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "-p",
-                              "3000:3000",
+                    metadata: {
+                      description: Run Docker run,
+                      help: {
+                        command: docker run --help,
+                        example: {
+                          options: {
+                            args: [
+                              -p,
+                              3000:3000,
                             ],
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "cwd": "proj",
+                    options: {
+                      cwd: proj,
                     },
                   },
-                  "nx-release-publish": {
-                    "executor": "@nx/docker:release-publish",
+                  nx-release-publish: {
+                    executor: @nx/docker:release-publish,
                   },
                 },
               },
@@ -156,85 +180,85 @@ describe('@nx/docker', () => {
     expect(results).toMatchInlineSnapshot(`
       [
         [
-          "proj/Dockerfile",
+          proj/Dockerfile,
           {
-            "projects": {
-              "proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Docker": [
-                      "docker:build",
-                      "docker:run",
-                      "nx-release-publish",
+            projects: {
+              proj: {
+                metadata: {
+                  targetGroups: {
+                    Docker: [
+                      docker:build,
+                      docker:run,
+                      nx-release-publish,
                     ],
                   },
                 },
-                "root": "proj",
-                "targets": {
-                  "docker:build": {
-                    "command": "docker build .",
-                    "dependsOn": [
-                      "build",
-                      "^build",
+                root: proj,
+                targets: {
+                  docker:build: {
+                    command: docker build .,
+                    dependsOn: [
+                      build,
+                      ^build,
                     ],
-                    "inputs": [
-                      "default",
-                      "^default",
+                    inputs: [
+                      default,
+                      ^default,
                     ],
-                    "metadata": {
-                      "description": "Run Docker build",
-                      "help": {
-                        "command": "docker build --help",
-                        "example": {
-                          "options": {
-                            "cache-from": "type=s3,region=eu-west-1,bucket=mybucket .",
-                            "cache-to": "type=s3,region=eu-west-1,bucket=mybucket .",
+                    metadata: {
+                      description: Run Docker build,
+                      help: {
+                        command: docker build --help,
+                        example: {
+                          options: {
+                            cache-from: type=s3,region=eu-west-1,bucket=mybucket .,
+                            cache-to: type=s3,region=eu-west-1,bucket=mybucket .,
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "args": [
-                        "--tag proj",
+                    options: {
+                      args: [
+                        --tag proj,
                       ],
-                      "cwd": "proj",
+                      cwd: proj,
                     },
                   },
-                  "docker:run": {
-                    "command": "docker run {args} proj",
-                    "dependsOn": [
-                      "docker:build",
+                  docker:run: {
+                    command: docker run {args} proj,
+                    dependsOn: [
+                      docker:build,
                     ],
-                    "inputs": [
-                      "default",
-                      "^default",
+                    inputs: [
+                      default,
+                      ^default,
                     ],
-                    "metadata": {
-                      "description": "Run Docker run",
-                      "help": {
-                        "command": "docker run --help",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "-p",
-                              "3000:3000",
+                    metadata: {
+                      description: Run Docker run,
+                      help: {
+                        command: docker run --help,
+                        example: {
+                          options: {
+                            args: [
+                              -p,
+                              3000:3000,
                             ],
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "cwd": "proj",
+                    options: {
+                      cwd: proj,
                     },
                   },
-                  "nx-release-publish": {
-                    "executor": "@nx/docker:release-publish",
+                  nx-release-publish: {
+                    executor: @nx/docker:release-publish,
                   },
                 },
               },
@@ -263,84 +287,84 @@ describe('@nx/docker', () => {
     expect(results).toMatchInlineSnapshot(`
       [
         [
-          "proj/Dockerfile",
+          proj/Dockerfile,
           {
-            "projects": {
-              "proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Docker": [
-                      "build-docker",
-                      "run-docker",
-                      "nx-release-publish",
+            projects: {
+              proj: {
+                metadata: {
+                  targetGroups: {
+                    Docker: [
+                      build-docker,
+                      run-docker,
+                      nx-release-publish,
                     ],
                   },
                 },
-                "root": "proj",
-                "targets": {
-                  "build-docker": {
-                    "command": "docker build .",
-                    "dependsOn": [
-                      "build",
-                      "^build",
+                root: proj,
+                targets: {
+                  build-docker: {
+                    command: docker build .,
+                    dependsOn: [
+                      build,
+                      ^build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker build",
-                      "help": {
-                        "command": "docker build --help",
-                        "example": {
-                          "options": {
-                            "cache-from": "type=s3,region=eu-west-1,bucket=mybucket .",
-                            "cache-to": "type=s3,region=eu-west-1,bucket=mybucket .",
+                    metadata: {
+                      description: Run Docker build,
+                      help: {
+                        command: docker build --help,
+                        example: {
+                          options: {
+                            cache-from: type=s3,region=eu-west-1,bucket=mybucket .,
+                            cache-to: type=s3,region=eu-west-1,bucket=mybucket .,
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "args": [
-                        "--tag proj",
+                    options: {
+                      args: [
+                        --tag proj,
                       ],
-                      "cwd": "proj",
+                      cwd: proj,
                     },
                   },
-                  "nx-release-publish": {
-                    "executor": "@nx/docker:release-publish",
+                  nx-release-publish: {
+                    executor: @nx/docker:release-publish,
                   },
-                  "run-docker": {
-                    "command": "docker run {args} proj",
-                    "dependsOn": [
-                      "build-docker",
+                  run-docker: {
+                    command: docker run {args} proj,
+                    dependsOn: [
+                      build-docker,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker run",
-                      "help": {
-                        "command": "docker run --help",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "-p",
-                              "3000:3000",
+                    metadata: {
+                      description: Run Docker run,
+                      help: {
+                        command: docker run --help,
+                        example: {
+                          options: {
+                            args: [
+                              -p,
+                              3000:3000,
                             ],
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "cwd": "proj",
+                    options: {
+                      cwd: proj,
                     },
                   },
                 },
@@ -367,85 +391,85 @@ describe('@nx/docker', () => {
     expect(results).toMatchInlineSnapshot(`
       [
         [
-          "apps/api/Dockerfile",
+          apps/api/Dockerfile,
           {
-            "projects": {
-              "apps/api": {
-                "metadata": {
-                  "targetGroups": {
-                    "Docker": [
-                      "docker:build",
-                      "docker:run",
-                      "nx-release-publish",
+            projects: {
+              apps/api: {
+                metadata: {
+                  targetGroups: {
+                    Docker: [
+                      docker:build,
+                      docker:run,
+                      nx-release-publish,
                     ],
                   },
                 },
-                "root": "apps/api",
-                "targets": {
-                  "docker:build": {
-                    "command": "docker build .",
-                    "dependsOn": [
-                      "build",
-                      "^build",
+                root: apps/api,
+                targets: {
+                  docker:build: {
+                    command: docker build .,
+                    dependsOn: [
+                      build,
+                      ^build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker build",
-                      "help": {
-                        "command": "docker build --help",
-                        "example": {
-                          "options": {
-                            "cache-from": "type=s3,region=eu-west-1,bucket=mybucket .",
-                            "cache-to": "type=s3,region=eu-west-1,bucket=mybucket .",
+                    metadata: {
+                      description: Run Docker build,
+                      help: {
+                        command: docker build --help,
+                        example: {
+                          options: {
+                            cache-from: type=s3,region=eu-west-1,bucket=mybucket .,
+                            cache-to: type=s3,region=eu-west-1,bucket=mybucket .,
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "args": [
-                        "--tag apps-api",
+                    options: {
+                      args: [
+                        --tag apps-api,
                       ],
-                      "cwd": "apps/api",
+                      cwd: apps/api,
                     },
                   },
-                  "docker:run": {
-                    "command": "docker run {args} apps-api",
-                    "dependsOn": [
-                      "docker:build",
+                  docker:run: {
+                    command: docker run {args} apps-api,
+                    dependsOn: [
+                      docker:build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker run",
-                      "help": {
-                        "command": "docker run --help",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "-p",
-                              "3000:3000",
+                    metadata: {
+                      description: Run Docker run,
+                      help: {
+                        command: docker run --help,
+                        example: {
+                          options: {
+                            args: [
+                              -p,
+                              3000:3000,
                             ],
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "cwd": "apps/api",
+                    options: {
+                      cwd: apps/api,
                     },
                   },
-                  "nx-release-publish": {
-                    "executor": "@nx/docker:release-publish",
+                  nx-release-publish: {
+                    executor: @nx/docker:release-publish,
                   },
                 },
               },
@@ -528,85 +552,85 @@ describe('@nx/docker', () => {
     expect(results).toMatchInlineSnapshot(`
       [
         [
-          "Dockerfile",
+          Dockerfile,
           {
-            "projects": {
-              ".": {
-                "metadata": {
-                  "targetGroups": {
-                    "Docker": [
-                      "docker:build",
-                      "docker:run",
-                      "nx-release-publish",
+            projects: {
+              .: {
+                metadata: {
+                  targetGroups: {
+                    Docker: [
+                      docker:build,
+                      docker:run,
+                      nx-release-publish,
                     ],
                   },
                 },
-                "root": ".",
-                "targets": {
-                  "docker:build": {
-                    "command": "docker build .",
-                    "dependsOn": [
-                      "build",
-                      "^build",
+                root: .,
+                targets: {
+                  docker:build: {
+                    command: docker build .,
+                    dependsOn: [
+                      build,
+                      ^build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker build",
-                      "help": {
-                        "command": "docker build --help",
-                        "example": {
-                          "options": {
-                            "cache-from": "type=s3,region=eu-west-1,bucket=mybucket .",
-                            "cache-to": "type=s3,region=eu-west-1,bucket=mybucket .",
+                    metadata: {
+                      description: Run Docker build,
+                      help: {
+                        command: docker build --help,
+                        example: {
+                          options: {
+                            cache-from: type=s3,region=eu-west-1,bucket=mybucket .,
+                            cache-to: type=s3,region=eu-west-1,bucket=mybucket .,
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "args": [
-                        "--tag .",
+                    options: {
+                      args: [
+                        --tag {imageRef},
                       ],
-                      "cwd": ".",
+                      cwd: .,
                     },
                   },
-                  "docker:run": {
-                    "command": "docker run {args} .",
-                    "dependsOn": [
-                      "docker:build",
+                  docker:run: {
+                    command: docker run {args} {imageRef},
+                    dependsOn: [
+                      docker:build,
                     ],
-                    "inputs": [
-                      "production",
-                      "^production",
+                    inputs: [
+                      production,
+                      ^production,
                     ],
-                    "metadata": {
-                      "description": "Run Docker run",
-                      "help": {
-                        "command": "docker run --help",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "-p",
-                              "3000:3000",
+                    metadata: {
+                      description: Run Docker run,
+                      help: {
+                        command: docker run --help,
+                        example: {
+                          options: {
+                            args: [
+                              -p,
+                              3000:3000,
                             ],
                           },
                         },
                       },
-                      "technologies": [
-                        "docker",
+                      technologies: [
+                        docker,
                       ],
                     },
-                    "options": {
-                      "cwd": ".",
+                    options: {
+                      cwd: .,
                     },
                   },
-                  "nx-release-publish": {
-                    "executor": "@nx/docker:release-publish",
+                  nx-release-publish: {
+                    executor: @nx/docker:release-publish,
                   },
                 },
               },
@@ -686,6 +710,29 @@ describe('@nx/docker', () => {
       expect(Object.keys(targets)).toContain('custom-build');
       expect(Object.keys(targets)).toContain('docker:run'); // default value
     });
+
+    it('should accept object for buildTarget', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'custom-build',
+            args: ['--platform', 'linux/amd64'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(Object.keys(targets)).toContain('custom-build');
+      expect(targets['custom-build'].options.args).toContain('--platform');
+      expect(targets['custom-build'].options.args).toContain('linux/amd64');
+    });
   });
 
   describe('dependency handling', () => {
@@ -706,6 +753,798 @@ describe('@nx/docker', () => {
 
       const targets = results[0][1].projects['proj'].targets;
       expect(targets['run'].dependsOn).toEqual(['build']);
+    });
+
+    it('should set run target to depend on custom build target name', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: { name: 'custom-build' },
+          runTarget: { name: 'custom-run' },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['custom-run'].dependsOn).toEqual(['custom-build']);
+    });
+  });
+
+  describe('pattern interpolation', () => {
+    it('should not throw when commitSha is null', async () => {
+      mockGetLatestCommitSha.mockReturnValue(null);
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+      expect(
+        await createNodesFunction(['proj/Dockerfile'], {}, context)
+      ).toBeDefined();
+      const targets = (
+        await createNodesFunction(['proj/Dockerfile'], {}, context)
+      )[0][1].projects['proj'].targets;
+      expect(targets['docker:build']).toBeDefined();
+    });
+    it('should interpolate imageRef in args', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--tag', '{imageRef}:latest'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('proj:latest');
+    });
+
+    it('should interpolate projectName from project.json', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'my-project' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'project={projectName}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain('project=my-project');
+    });
+
+    it('should interpolate projectName from package.json', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/package.json': JSON.stringify({ name: '@org/my-package' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'package={projectName}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain(
+        'package=@org/my-package'
+      );
+    });
+
+    it('should prefer project.json name over package.json', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'project-name' }),
+        'proj/package.json': JSON.stringify({ name: 'package-name' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'name={projectName}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain('name=project-name');
+    });
+
+    it('should interpolate projectRoot', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'root={projectRoot}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain('root=apps/api');
+    });
+
+    it('should interpolate multiple tokens in single arg', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'my-app' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--tag', '{projectName}:{imageRef}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('my-app:proj');
+    });
+
+    it('should interpolate env variables', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            env: {
+              IMAGE_NAME: '{imageRef}',
+              PROJECT_NAME: '{projectName}',
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.env).toEqual({
+        IMAGE_NAME: 'proj',
+        PROJECT_NAME: 'proj',
+      });
+    });
+
+    it('should interpolate cwd', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            cwd: '{projectRoot}/dist',
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['build'].options.cwd).toBe('apps/api/dist');
+    });
+  });
+
+  describe('options merging', () => {
+    it('should merge custom args with default args', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--platform', 'linux/amd64', '--no-cache'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--tag proj');
+      expect(targets['build'].options.args).toContain('--platform');
+      expect(targets['build'].options.args).toContain('linux/amd64');
+      expect(targets['build'].options.args).toContain('--no-cache');
+    });
+
+    it('should apply env options to target', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            env: {
+              DOCKER_BUILDKIT: '1',
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.env).toEqual({
+        DOCKER_BUILDKIT: '1',
+      });
+    });
+
+    it('should apply envFile option to target', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            envFile: '.env.docker',
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.envFile).toBe('.env.docker');
+    });
+  });
+
+  describe('skipDefaultTag', () => {
+    it('should skip default tag when skipDefaultTag is true', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+            args: ['--tag', 'custom:latest'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toEqual(['--tag', 'custom:latest']);
+      expect(targets['build'].options.args).not.toContain('--tag proj');
+    });
+
+    it('should add default tag when skipDefaultTag is false', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: false,
+            args: ['--platform', 'linux/amd64'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args[0]).toBe('--tag proj');
+      expect(targets['build'].options.args).toContain('--platform');
+      expect(targets['build'].options.args).toContain('linux/amd64');
+    });
+
+    it('should add default tag when skipDefaultTag is undefined', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--no-cache'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args[0]).toBe('--tag proj');
+      expect(targets['build'].options.args).toContain('--no-cache');
+    });
+
+    it('should use empty args array when skipDefaultTag is true and no args provided', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toEqual([]);
+    });
+
+    it('should respect skipDefaultTag in configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+            configurations: {
+              publish: {
+                args: [
+                  '--platform',
+                  'linux/amd64,linux/arm64',
+                  '--tag',
+                  'ghcr.io/org/proj:latest',
+                  '--push',
+                ],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toEqual([]);
+      expect(targets['build'].configurations.publish.args).toEqual([
+        '--platform',
+        'linux/amd64,linux/arm64',
+        '--tag',
+        'ghcr.io/org/proj:latest',
+        '--push',
+      ]);
+      expect(targets['build'].configurations.publish.args).not.toContain(
+        '--tag proj'
+      );
+    });
+
+    it('should support multi-platform builds with skipDefaultTag', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': JSON.stringify({ name: 'my-api' }),
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'docker:build',
+            args: ['--tag', '{projectName}:latest'],
+            skipDefaultTag: true,
+            configurations: {
+              publish: {
+                args: [
+                  '--platform',
+                  'linux/amd64,linux/arm64',
+                  '--tag',
+                  'ghcr.io/{projectName}:latest',
+                  '--tag',
+                  'ghcr.io/{projectName}:{commitSha}',
+                  '--push',
+                ],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['docker:build'].options.args).toEqual([
+        '--tag',
+        'my-api:latest',
+      ]);
+      expect(targets['docker:build'].configurations.publish.args).toContain(
+        'ghcr.io/my-api:latest'
+      );
+      expect(targets['docker:build'].configurations.publish.args).toContain(
+        'ghcr.io/my-api:abc123456789def0123456789abcdef012345678'
+      );
+      expect(targets['docker:build'].configurations.publish.args).not.toContain(
+        '--tag apps-api'
+      );
+    });
+  });
+
+  describe('target configurations', () => {
+    it('should create configurations with interpolated args', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'my-project' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                args: ['--cache-to={projectName}'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations).toMatchInlineSnapshot(`
+        {
+          ci: {
+            args: [
+              --tag proj,
+              --cache-to=my-project,
+            ],
+            cwd: proj,
+          },
+        }
+      `);
+    });
+
+    it('should create multiple configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                args: ['--cache-to=s3://bucket/{projectName}'],
+              },
+              production: {
+                args: ['--no-cache', '--platform=linux/amd64'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations).toMatchInlineSnapshot(`
+        {
+          ci: {
+            args: [
+              --tag proj,
+              --cache-to=s3://bucket/proj,
+            ],
+            cwd: proj,
+          },
+          production: {
+            args: [
+              --tag proj,
+              --no-cache,
+              --platform=linux/amd64,
+            ],
+            cwd: proj,
+          },
+        }
+      `);
+    });
+
+    it('should include default args in configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--build-arg', 'NODE_ENV=production'],
+            configurations: {
+              ci: {
+                args: ['--cache-from=type=registry'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      // Base options should include custom args
+      expect(targets['build'].options.args).toEqual([
+        '--tag proj',
+        '--build-arg',
+        'NODE_ENV=production',
+      ]);
+      // Configuration should include default tag + config args
+      expect(targets['build'].configurations.ci.args).toEqual([
+        '--tag proj',
+        '--cache-from=type=registry',
+      ]);
+    });
+
+    it('should support configurations with env and envFile', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                env: {
+                  DOCKER_BUILDKIT: '1',
+                  CI: 'true',
+                },
+                envFile: '.env.ci',
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations.ci.env).toEqual({
+        DOCKER_BUILDKIT: '1',
+        CI: 'true',
+      });
+      expect(targets['build'].configurations.ci.envFile).toBe('.env.ci');
+    });
+
+    it('should support configurations for run target', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          runTarget: {
+            name: 'run',
+            configurations: {
+              debug: {
+                args: ['-p', '9229:9229'],
+                env: {
+                  NODE_ENV: 'development',
+                },
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['run'].configurations.debug.args).toEqual([
+        '-p',
+        '9229:9229',
+      ]);
+      expect(targets['run'].configurations.debug.env).toEqual({
+        NODE_ENV: 'development',
+      });
+    });
+
+    it('should not include configurations if not defined', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: 'build',
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations).toBeUndefined();
+      expect(targets['build']).toMatchInlineSnapshot(`
+        {
+          command: docker build .,
+          dependsOn: [
+            build,
+            ^build,
+          ],
+          inputs: [
+            production,
+            ^production,
+          ],
+          metadata: {
+            description: Run Docker build,
+            help: {
+              command: docker build --help,
+              example: {
+                options: {
+                  cache-from: type=s3,region=eu-west-1,bucket=mybucket .,
+                  cache-to: type=s3,region=eu-west-1,bucket=mybucket .,
+                },
+              },
+            },
+            technologies: [
+              docker,
+            ],
+          },
+          options: {
+            args: [
+              --tag proj,
+            ],
+            cwd: proj,
+          },
+        }
+      `);
+    });
+
+    it('should interpolate tokens in configuration args', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': JSON.stringify({ name: 'my-api' }),
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                args: [
+                  '--label',
+                  'project={projectName}',
+                  '--label',
+                  'root={projectRoot}',
+                  '--tag',
+                  '{imageRef}:{shortCommitSha}',
+                ],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['build'].configurations.ci.args).toContain('--label');
+      expect(targets['build'].configurations.ci.args).toContain(
+        'project=my-api'
+      );
+      expect(targets['build'].configurations.ci.args).toContain(
+        'root=apps/api'
+      );
+      expect(targets['build'].configurations.ci.args).toContain('--tag');
+      expect(targets['build'].configurations.ci.args).toContain(
+        'apps-api:abc1234'
+      );
+    });
+
+    it('should support both buildTarget and runTarget configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'docker:build',
+            configurations: {
+              ci: {
+                args: ['--cache-to=type=registry'],
+              },
+            },
+          },
+          runTarget: {
+            name: 'docker:run',
+            configurations: {
+              dev: {
+                args: ['-p', '3000:3000'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['docker:build'].configurations).toMatchInlineSnapshot(`
+        {
+          ci: {
+            args: [
+              --tag proj,
+              --cache-to=type=registry,
+            ],
+            cwd: proj,
+          },
+        }
+      `);
     });
   });
 });

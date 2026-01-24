@@ -1,7 +1,7 @@
 ---
 title: CreateNodes API Compatibility
 description: Understand which createNodes API version is used by different Nx versions and how to write plugins that support multiple Nx versions.
-filter: 'type:Reference'
+filter: 'type:References'
 ---
 
 This is a reference for knowing how Nx versions and the `createNodes`/`createNodesV2` APIs interact. If you plan on supporting multiple Nx versions with a custom plugin, then it's important to know which APIs to use.
@@ -107,7 +107,7 @@ export interface OldCreateNodesContext extends CreateNodesContextV2 {
 
 type OldCreateNodes<T = unknown> = readonly [
   projectFilePattern: string,
-  createNodesFunction: OldCreateNodesFunction<T>
+  createNodesFunction: OldCreateNodesFunction<T>,
 ];
 
 export type OldCreateNodesFunction<T = unknown> = (

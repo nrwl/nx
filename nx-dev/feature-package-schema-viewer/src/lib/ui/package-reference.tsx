@@ -81,7 +81,7 @@ function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
     >
       <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
         {file.type === 'executor' ? (
-          <CpuChipIcon className="h-5 w-5 " role="img" />
+          <CpuChipIcon className="h-5 w-5" role="img" />
         ) : (
           <CogIcon className="h-5 w-5" role="img" />
         )}

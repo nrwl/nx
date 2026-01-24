@@ -135,7 +135,6 @@ export default function Index() {
 exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
@@ -226,7 +225,7 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"export default {
+"module.exports = {
   displayName: 'test',
   preset: '../jest.preset.js',
   transform: {
@@ -253,12 +252,12 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/test',
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
     setupFiles: ['test-setup.ts'],
@@ -299,7 +298,9 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
   },
   "include": [
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "app/**/*.ts",
     "app/**/*.tsx",
     "app/**/*.js",
@@ -386,7 +387,6 @@ export default function Index() {
 exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
@@ -405,7 +405,7 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"export default {
+"module.exports = {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
   preset: './jest.preset.cjs',
@@ -457,12 +457,12 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: './node_modules/.vite/test',
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
     setupFiles: ['test-setup.ts'],
@@ -517,7 +517,9 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
   },
   "include": [
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "app/**/*.ts",
     "app/**/*.tsx",
     "app/**/*.js",
@@ -641,7 +643,7 @@ declare module '@remix-run/node' {
 }
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   plugins: [
     remix({
       future: {

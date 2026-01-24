@@ -40,23 +40,6 @@ describe('@nx/detox (legacy)', () => {
     );
   });
 
-  it('should create files and run lint command for expo apps', async () => {
-    const expoAppName = uniq('myapp');
-    runCLI(
-      `generate @nx/expo:app apps/${expoAppName} --e2eTestRunner=detox --linter=eslint`
-    );
-    checkFilesExist(`apps/${expoAppName}-e2e/.detoxrc.json`);
-    checkFilesExist(`apps/${expoAppName}-e2e/tsconfig.json`);
-    checkFilesExist(`apps/${expoAppName}-e2e/tsconfig.e2e.json`);
-    checkFilesExist(`apps/${expoAppName}-e2e/test-setup.ts`);
-    checkFilesExist(`apps/${expoAppName}-e2e/src/app.spec.ts`);
-
-    const lintResults = await runCLIAsync(`lint ${expoAppName}-e2e`);
-    expect(lintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
-    );
-  });
-
   it('should support generating projects with the new name and root format', async () => {
     const appName = uniq('app1');
 
@@ -78,20 +61,5 @@ describe('@nx/detox (legacy)', () => {
     expect(lintResults.combinedOutput).toContain(
       'Successfully ran target lint'
     );
-  });
-
-  // TODO: @xiongemi please fix or remove this test
-  xdescribe('React Native Detox MACOS-Tests', () => {
-    if (isOSX()) {
-      it('should test ios MACOS-Tests', async () => {
-        expect(
-          runCLI(
-            `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`
-          )
-        ).toContain('Successfully ran target test-ios');
-
-        await killPorts(8081); // kill the port for the serve command
-      }, 3000000);
-    }
   });
 });

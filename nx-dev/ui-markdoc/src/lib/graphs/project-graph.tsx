@@ -4,7 +4,7 @@ import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { ElementData, RenderTheme } from '@nx/graph';
 import {
   NxGraphProjectGraphProvider,
@@ -64,12 +64,17 @@ function NxDevProjectGraphInner({
     ElementData.ProjectNode | ElementData.CompositeProjectNode
   >(eventBus);
 
-  useThemeSync(theme, (resolvedTheme) => {
-    sendRendererConfigEvent({
-      type: 'themeChange',
-      theme: resolvedTheme,
-    });
-  });
+  const handleThemeChange = useCallback(
+    (resolvedTheme: RenderTheme) => {
+      sendRendererConfigEvent({
+        type: 'themeChange',
+        theme: resolvedTheme,
+      });
+    },
+    [sendRendererConfigEvent]
+  );
+
+  useThemeSync(theme, handleThemeChange);
 
   useEffect(() => {
     if (!orchestrator) return;
@@ -84,8 +89,8 @@ function NxDevProjectGraphInner({
         showMode: showAffectedWithNodes
           ? 'all'
           : affectedProjects.length
-          ? 'affected'
-          : 'all',
+            ? 'affected'
+            : 'all',
       }),
     });
 
@@ -93,7 +98,9 @@ function NxDevProjectGraphInner({
     // make sure the graph sized to fix into the box
     const el = orchestrator['renderer'].cy.elements();
     orchestrator['renderer'].cy.fit(el, 1).center().resize();
-  }, [orchestrator]);
+    // other values are static from the docs and we don't need to update for them
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestrator, send]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

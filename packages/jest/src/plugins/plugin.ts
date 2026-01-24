@@ -17,17 +17,23 @@ import {
   loadConfigFile,
 } from '@nx/devkit/src/utils/config-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync } from 'fs';
 import { minimatch } from 'minimatch';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import {
+  dirname,
+  isAbsolute,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
 import { hashObject } from 'nx/src/devkit-internals';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { normalize } from 'node:path';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
-import { major } from 'semver';
+import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const pmc = getPackageManagerCommand();
@@ -233,23 +239,9 @@ async function buildJestTargets(
     customConditions: null,
   });
 
-  // Jest 30 + Node.js 24 can't parse TS configs with imports.
-  // This flag does not exist in Node 20/22.
-  // https://github.com/jestjs/jest/issues/15682
-  const nodeVersion = major(process.version);
-
   const env: Record<string, string> = {
     TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions,
   };
-
-  if (nodeVersion >= 24) {
-    const currentOptions = process.env.NODE_OPTIONS || '';
-    if (!currentOptions.includes('--no-experimental-strip-types')) {
-      env.NODE_OPTIONS = (
-        currentOptions + ' --no-experimental-strip-types'
-      ).trim();
-    }
-  }
 
   const target: TargetConfiguration = (targets[options.targetName] = {
     command: 'jest',
@@ -288,7 +280,7 @@ async function buildJestTargets(
   let metadata: ProjectConfiguration['metadata'];
 
   const groupName =
-    options?.ciGroupName ?? deductGroupNameFromTarget(options?.ciTargetName);
+    options?.ciGroupName ?? deriveGroupNameFromTarget(options?.ciTargetName);
 
   if (disableJestRuntime) {
     const outputs = (target.outputs = getOutputs(
@@ -309,7 +301,7 @@ async function buildJestTargets(
         presetCache
       );
       const targetGroup = [];
-      const dependsOn: string[] = [];
+      const dependsOn: TargetConfiguration['dependsOn'] = [];
       metadata = {
         targetGroups: {
           [groupName]: targetGroup,
@@ -348,7 +340,13 @@ async function buildJestTargets(
         }
 
         const targetName = `${options.ciTargetName}--${relativePath}`;
-        dependsOn.push(targetName);
+        dependsOn.push({
+          target: targetName,
+          projects: 'self',
+          params: 'forward',
+          options: 'forward',
+        });
+
         targets[targetName] = {
           command: `jest ${relativePath}`,
           cache,
@@ -438,10 +436,9 @@ async function buildJestTargets(
         watchman: false,
       });
 
-      const jest = require(resolveJestPath(
-        projectRoot,
-        context.workspaceRoot
-      )) as typeof import('jest');
+      const jest = require(
+        resolveJestPath(projectRoot, context.workspaceRoot)
+      ) as typeof import('jest');
       const source = new jest.SearchSource(jestContext);
 
       const jestVersion = getInstalledJestMajorVersion()!;
@@ -460,29 +457,7 @@ async function buildJestTargets(
             [groupName]: targetGroup,
           },
         };
-        const dependsOn: string[] = [];
-
-        targets[options.ciTargetName] = {
-          executor: 'nx:noop',
-          cache: true,
-          inputs,
-          outputs,
-          dependsOn,
-          metadata: {
-            technologies: ['jest'],
-            description: 'Run Jest Tests in CI',
-            nonAtomizedTarget: options.targetName,
-            help: {
-              command: `${pmc.exec} jest --help`,
-              example: {
-                options: {
-                  coverage: true,
-                },
-              },
-            },
-          },
-        };
-        targetGroup.push(options.ciTargetName);
+        const dependsOn: TargetConfiguration['dependsOn'] = [];
 
         for (const testPath of testPaths) {
           const relativePath = normalizePath(
@@ -506,7 +481,12 @@ async function buildJestTargets(
           }
 
           const targetName = `${options.ciTargetName}--${relativePath}`;
-          dependsOn.push(targetName);
+          dependsOn.push({
+            target: targetName,
+            projects: 'self',
+            params: 'forward',
+            options: 'forward',
+          });
           targets[targetName] = {
             command: `jest ${relativePath}`,
             cache,
@@ -531,6 +511,27 @@ async function buildJestTargets(
           };
           targetGroup.push(targetName);
         }
+        targets[options.ciTargetName] = {
+          executor: 'nx:noop',
+          cache: true,
+          inputs,
+          outputs,
+          dependsOn,
+          metadata: {
+            technologies: ['jest'],
+            description: 'Run Jest Tests in CI',
+            nonAtomizedTarget: options.targetName,
+            help: {
+              command: `${pmc.exec} jest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.unshift(options.ciTargetName);
       }
     }
   }
@@ -709,9 +710,11 @@ function requireJestUtil<T>(
     });
   }
 
-  return require(require.resolve(packageName, {
-    paths: [dirname(resolvedJestCorePaths[jestPath])],
-  }));
+  return require(
+    require.resolve(packageName, {
+      paths: [dirname(resolvedJestCorePaths[jestPath])],
+    })
+  );
 }
 
 async function getTestPaths(
@@ -785,29 +788,4 @@ async function getJestOption<T = any>(
   }
 
   return undefined;
-}
-
-/**
- * Helper that tries to deduct the name of the CI group, based on the related target name.
- *
- * This will work well, when the CI target name follows the documented naming convention or similar (for e.g `test-ci`, `e2e-ci`, `ny-e2e-ci`, etc).
- *
- * For example, `test-ci` => `TEST (CI)`,  `e2e-ci` => `E2E (CI)`,  `my-e2e-ci` => `MY E2E (CI)`
- *
- *
- * @param ciTargetName name of the CI target
- * @returns the deducted group name or `${ciTargetName.toUpperCase()} (CI)` if cannot be deducted automatically
- */
-function deductGroupNameFromTarget(ciTargetName: string | undefined) {
-  if (!ciTargetName) {
-    return null;
-  }
-
-  const parts = ciTargetName.split('-').map((v) => v.toUpperCase());
-
-  if (parts.length > 1) {
-    return `${parts.slice(0, -1).join(' ')} (${parts[parts.length - 1]})`;
-  }
-
-  return `${parts[0]} (CI)`; // default group name when there is a single segment
 }

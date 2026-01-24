@@ -22,8 +22,8 @@ export function extractRollupConfigFromExecutorOptions(
   const oldRollupConfig = Array.isArray(options.rollupConfig)
     ? options.rollupConfig
     : options.rollupConfig
-    ? [options.rollupConfig]
-    : [];
+      ? [options.rollupConfig]
+      : [];
   delete options.rollupConfig;
 
   // Resolve conflict with rollup.config.cjs or rollup.config.js if they exist.
@@ -73,8 +73,8 @@ export function extractRollupConfigFromExecutorOptions(
           oldRollupConfigForConfiguration = Array.isArray(optionValue)
             ? optionValue
             : optionValue
-            ? [optionValue]
-            : [];
+              ? [optionValue]
+              : [];
           newConfigFileName = `rollup.${key}.config.js`;
           for (let i = 0; i < oldRollupConfigForConfiguration.length; i++) {
             const file = oldRollupConfigForConfiguration[i];

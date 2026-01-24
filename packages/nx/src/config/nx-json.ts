@@ -11,6 +11,7 @@ import type {
   TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
+import { getNxRequirePaths } from '../utils/installation-directory';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -78,6 +79,8 @@ export interface NxReleaseDockerConfiguration {
    *     "skipVersionActions": ["api"]
    *   }
    * ```
+   * Note: if you are using {versionActionsVersion} in your docker version scheme you should not skip version actions for that project
+   * as the docker versioning will not be able to resolve the {versionActionsVersion} placeholder.
    */
   skipVersionActions?: string[] | boolean;
   /**
@@ -209,6 +212,23 @@ export interface NxReleaseVersionConfiguration {
         | 'peerDependencies'
         | 'optionalDependencies'
       >;
+  // TODO(v23): change the default value of this to true
+  /**
+   * Whether to strictly follow SemVer V2 spec for 0.x versions where breaking changes
+   * bump the minor version (instead of major), and new features bump the patch version
+   * (instead of minor).
+   *
+   * When enabled:
+   * - 'major' bumps become 'minor' bumps for 0.x versions
+   * - 'minor' bumps become 'patch' bumps for 0.x versions
+   * - 'premajor' becomes 'preminor' for 0.x versions
+   * - 'preminor' becomes 'prepatch' for 0.x versions
+   *
+   * Versions 1.0.0 and above are unaffected.
+   *
+   * This is false by default for backward compatibility.
+   */
+  adjustSemverBumpsForZeroMajorVersion?: boolean;
 }
 
 export interface NxReleaseChangelogConfiguration {
@@ -317,6 +337,13 @@ export interface NxReleaseGitConfiguration {
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
+  /**
+   * Whether or not to rely on commit scope to resolve version specifier.
+   * If set to 'true', then only commits with scope matching projectName and commits without scope affects version determined, rest are assumed as patch change.
+   * If set to 'false', then all commits that affected project used to determine semver change.
+   * If not set, this will default to 'true'
+   */
+  useCommitScope?: boolean;
   types?: Record<
     string,
     /**
@@ -350,6 +377,11 @@ export interface NxReleaseVersionPlansConfiguration {
   /**
    * Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check`
    * command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files.
+   *
+   * These patterns follow gitignore semantics. When using negation patterns (to "un-ignore" certain files), use specific file extension patterns
+   * rather than wildcards like `*` or `**`. For example:
+   * - Works: ["**\/*.ts", "!**\/src\/**"] - ignores all .ts files except those in src/ directories
+   * - Does NOT work as expected: ["*", "!src/"] - negation won't properly un-ignore nested paths
    */
   ignorePatternsForPlanCheck?: string[];
 }
@@ -873,6 +905,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
      * - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.
      */
     autoExit?: boolean | number;
+    /**
+     * Whether to suppress hint popups that provide guidance for unhandled keys.
+     * Defaults to `false` (hints are shown).
+     */
+    suppressHints?: boolean;
   };
 }
 
@@ -891,7 +928,7 @@ export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
     const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
     if (nxJsonConfiguration.extends) {
       const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
-        paths: [dirname(nxJson)],
+        paths: getNxRequirePaths(root),
       });
       const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
       return {

@@ -29,6 +29,9 @@ const docType = doc.data.docType;
 
 // Capitalize the doc type for display
 const docTypeDisplay = docType.charAt(0).toUpperCase() + docType.slice(1);
+
+// Set raw content for the copy button (doc.body contains the raw markdown)
+Astro.locals.rawContent = doc.body;
 ---
 
 <StarlightPage

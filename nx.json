@@ -125,7 +125,10 @@
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+        "env": {
+          "NODE_OPTIONS": "--experimental-vm-modules"
+        }
       }
     },
     "lint": {
@@ -140,8 +143,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
-        "nx-maven-plugin:install"
+        "@nx/nx-source:local-registry"
       ]
     },
     "e2e-ci": {
@@ -162,8 +164,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
-        "nx-maven-plugin:install"
+        "@nx/nx-source:local-registry"
       ],
       "options": {
         "args": ["--forceExit"]
@@ -173,8 +174,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
-        "nx-maven-plugin:install"
+        "@nx/nx-source:local-registry"
       ]
     },
     "e2e-base": {
@@ -213,17 +213,11 @@
       "include": [
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
-      ],
-      "options": {
-        "testTargetName": "test"
-      }
+      ]
     },
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["astro-docs/**"],
-      "options": {
-        "testTargetName": "vite:test"
-      }
+      "include": ["astro-docs/**"]
     },
     {
       "plugin": "@nx/js/typescript",
@@ -330,6 +324,23 @@
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test"
+      },
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ]
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "vite:test"
+      },
+      "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
@@ -444,6 +455,12 @@
       },
       {
         "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/codeblock-language"
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
       }
     ]
   }

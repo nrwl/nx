@@ -10,10 +10,10 @@
       "options": {
         "main": "<app-root>",
         "tsConfig": "<app-root>/tsconfig.app.json",
-        "outputPath": "dist/<app-root>"
-      }
-    }
-  }
+        "outputPath": "dist/<app-root>",
+      },
+    },
+  },
 }
 ```
 
@@ -23,8 +23,7 @@ nx build <app-name>
 
 ## Examples
 
-{% tabs %}
-{% tab label="CommonJS output" %}
+##### CommonJS output
 
 The CommonJS format is required in some environments, such as Electron applications. By default, `esbuild` will use the ESM format, which is recommended for Web and Node applications. You may also output to multiple formats.
 
@@ -46,8 +45,7 @@ nx build <app-name> # defaults to es# defaults to esm
 }
 ```
 
-{% /tab %}
-{% tab label="External packages" %}
+##### External packages
 
 External packages are not bundled by default. To include them in the bundle you can use either the `thirdParty` option to include all third-party dependencies, or use `excludeFromExternal` option to include specific dependencies in the bundle.
 
@@ -83,8 +81,7 @@ And this configuration includes only `lodash` in the bundle, while keeping `*.pn
 }
 ```
 
-{% /tab %}
-{% tab label="Skip type checking" %}
+##### Skip type checking
 
 Type checking is the slowest part of the build. You may want to skip type checking during build and run it as another job in CI.
 
@@ -100,8 +97,7 @@ Type checking is the slowest part of the build. You may want to skip type checki
 }
 ```
 
-{% /tab %}
-{% tab label="Additional esbuild options" %}
+##### Additional esbuild options
 
 Additional [esbuild options](https://esbuild.github.io/api/) can be passed using `esbuildOptions` in your project configuration.
 
@@ -124,6 +120,3 @@ Additional [esbuild options](https://esbuild.github.io/api/) can be passed using
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

@@ -6,10 +6,9 @@ Removes the previously deprecated and unused `tsConfig` and `copyFiles` options 
 
 Remove the options from the project configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1-e2e/project.json" highlightLines=[7,8] %}
+```json title="apps/app1-e2e/project.json" {7-8}
 {
   "targets": {
     "e2e": {
@@ -25,11 +24,9 @@ Remove the options from the project configuration:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/app1-e2e/project.json" %}
+```json title="apps/app1-e2e/project.json"
 {
   "targets": {
     "e2e": {
@@ -43,15 +40,11 @@ Remove the options from the project configuration:
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Remove the options from a target default using the `@nx/cypress:cypress` executor:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[7,8] %}
+```json title="nx.json" {7-8}
 {
   "targetDefaults": {
     "e2e": {
@@ -66,11 +59,9 @@ Remove the options from a target default using the `@nx/cypress:cypress` executo
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "e2e": {
@@ -81,15 +72,11 @@ Remove the options from a target default using the `@nx/cypress:cypress` executo
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Remove the options from a target default using the `@nx/cypress:cypress` executor as the key:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[6,7] %}
+```json title="nx.json" {6-7}
 {
   "targetDefaults": {
     "@nx/cypress:cypress": {
@@ -103,11 +90,9 @@ Remove the options from a target default using the `@nx/cypress:cypress` executo
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "@nx/cypress:cypress": {
@@ -116,6 +101,3 @@ Remove the options from a target default using the `@nx/cypress:cypress` executo
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

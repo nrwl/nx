@@ -58,7 +58,7 @@ export function splitTarget(
     return [project, ...groupJointSegments(segments, validTargetNames)] as [
       string,
       string?,
-      string?
+      string?,
     ];
   }
   // we don't know what to do with the string, return as is

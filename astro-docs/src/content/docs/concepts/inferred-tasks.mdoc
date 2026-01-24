@@ -47,11 +47,32 @@ A typical workspace will have many plugins inferring tasks. Nx processes all the
 
 Plugins are processed in the order that they appear in the `plugins` array in `nx.json`. So, if multiple plugins create a task with the same name, the plugin listed last will win. If, for some reason, you have a project with both a `vite.config.js` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task. The `build` task that is executed will be the task that belongs to the plugin listed lower in the `plugins` array.
 
+### Scope Plugins to Specific Projects
+
+Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["packages/**/*"],
+      "exclude": ["**/*-e2e/**/*"],
+    },
+  ],
+}
+```
+
+The `include` and `exclude` properties are file glob patterns that filter which configuration files the plugin processes. In the example above, the `@nx/jest/plugin` will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
+
+This is useful when you want a plugin to only affect certain projects, or when you need to apply different plugin options to different sets of projects by registering the same plugin multiple times with different `include`/`exclude` patterns.
+
 ## View Inferred Tasks
 
 To view the task settings for projects in your workspace, [show the project details](/docs/features/explore-graph) either from the command line or using Nx Console.
 
-```shell {% frame="none" %}
+```shell
 nx show project my-project --web
 ```
 

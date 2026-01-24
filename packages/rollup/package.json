@@ -38,17 +38,18 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^12.1.0",
     "autoprefixer": "^10.4.9",
-    "picocolors": "^1.1.0",
-    "picomatch": "4.0.2",
+    "concat-with-sourcemaps": "^1.1.0",
+    "picocolors": "catalog:",
+    "picomatch": "catalog:",
     "postcss": "^8.4.38",
+    "postcss-modules": "^6.0.1",
     "rollup": "^4.14.0",
-    "rollup-plugin-copy": "^3.5.0",
-    "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
-    "tslib": "^2.3.0"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "source-map-js": "^1.2.0"
   },
   "publishConfig": {
     "access": "public"

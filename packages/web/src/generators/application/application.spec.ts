@@ -182,7 +182,6 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
-
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
@@ -214,7 +213,6 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
-
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
@@ -282,7 +280,7 @@ describe('app', () => {
         tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
-      expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app/vite.config.mts')).toBeTruthy();
       expect(tree.exists(`my-app/environments/environment.ts`)).toBeFalsy();
       expect(
         tree.exists(`my-app/environments/environment.prod.ts`)
@@ -439,7 +437,7 @@ describe('app', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('my-app/jest.config.ts', 'utf-8')).not.toContain(
+    expect(tree.read('my-app/jest.config.cts', 'utf-8')).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -522,10 +520,10 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('jest.config.ts')).toBeFalsy();
+      expect(tree.exists('jest.config.cts')).toBeFalsy();
       expect(tree.exists('my-app/src/app/app.element.spec.ts')).toBeFalsy();
       expect(tree.exists('my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('my-app/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-app/jest.config.cts')).toBeFalsy();
     });
 
     it('--bundler=none should use jest as the default', async () => {
@@ -534,7 +532,7 @@ describe('app', () => {
         bundler: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('my-cool-app/jest.config.ts')).toBeTruthy();
+      expect(tree.exists('my-cool-app/jest.config.cts')).toBeTruthy();
       expect(
         readJson(tree, 'my-cool-app/tsconfig.spec.json').compilerOptions.types
       ).toMatchInlineSnapshot(`
@@ -556,8 +554,8 @@ describe('app', () => {
         unitTestRunner: 'jest',
         addPlugin: true,
       });
-      expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
-      expect(tree.exists('my-vite-app/jest.config.ts')).toBeTruthy();
+      expect(tree.exists('my-vite-app/vite.config.mts')).toBeTruthy();
+      expect(tree.exists('my-vite-app/jest.config.cts')).toBeTruthy();
     });
 
     it('--bundler=vite --unitTestRunner=none', async () => {
@@ -567,8 +565,8 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
-      expect(tree.read('my-vite-app/vite.config.ts', 'utf-8')).not.toContain(
+      expect(tree.exists('my-vite-app/vite.config.mts')).toBeTruthy();
+      expect(tree.read('my-vite-app/vite.config.mts', 'utf-8')).not.toContain(
         'test: {'
       );
       expect(tree.exists('my-vite-app/tsconfig.spec.json')).toBeFalsy();
@@ -581,8 +579,8 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         addPlugin: true,
       });
-      expect(tree.exists('my-webpack-app/vite.config.ts')).toBeTruthy();
-      expect(tree.exists('my-webpack-app/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-webpack-app/vite.config.mts')).toBeTruthy();
+      expect(tree.exists('my-webpack-app/jest.config.cts')).toBeFalsy();
       expect(
         readJson(tree, 'my-webpack-app/tsconfig.spec.json').compilerOptions
           .types
@@ -617,9 +615,9 @@ describe('app', () => {
         addPlugin: true,
       } as Schema);
 
-      expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -643,9 +641,9 @@ describe('app', () => {
         addPlugin: true,
       } as Schema);
 
-      expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -686,7 +684,7 @@ describe('app', () => {
     });
 
     it('should setup vite configuration', () => {
-      expect(tree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
     it('should add dependencies in package.json', () => {
       const packageJson = readJson(viteAppTree, '/package.json');
@@ -703,7 +701,7 @@ describe('app', () => {
 
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/my-app/index.html')).toBe(true);
-      expect(viteAppTree.exists('/my-app/vite.config.ts')).toBe(true);
+      expect(viteAppTree.exists('/my-app/vite.config.mts')).toBe(true);
     });
 
     it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {

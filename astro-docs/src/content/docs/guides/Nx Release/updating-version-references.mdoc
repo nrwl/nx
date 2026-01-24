@@ -22,13 +22,15 @@ This is the simplest scenario, and default behavior of Nx Release. If you have a
 
 For example, with the following project structure:
 
-```
-packages/
-  my-project/
-    package.json
-  my-other-project-in-the-monorepo/
-    package.json
-```
+{% filetree %}
+
+- packages/
+  - my-project/
+    - package.json
+  - my-other-project-in-the-monorepo/
+    - package.json
+
+{% /filetree %}
 
 And starting point for package.json sources:
 
@@ -94,10 +96,10 @@ If, for example, we want to build our projects to a centralized `dist/` director
         // We use the object form of the manifestRootsToUpdate to specify that we want to update the dist package.json files and not preserve the local dependency references (if not using pnpm or bun)
         {
           "path": "dist/packages/{projectName}",
-          "preserveLocalDependencyProtocols": false // (NOT NEEDED WHEN USING pnpm or bun) because we need to ensure our dist package.json files are valid for publishing and the local dependency references such as "workspace:" and "file:" are removed
-        }
-      ]
-    }
+          "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) because we need to ensure our dist package.json files are valid for publishing and the local dependency references such as "workspace:" and "file:" are removed
+        },
+      ],
+    },
   },
   "targetDefaults": {
     // Ensure that publishing works from the dist directory
@@ -105,10 +107,10 @@ If, for example, we want to build our projects to a centralized `dist/` director
     "nx-release-publish": {
       "options": {
         // the packageRoot property is specific the TS/JS nx-release-publish implementation, other ecosystem plugins may have different options
-        "packageRoot": "dist/packages/{projectName}" // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
-      }
-    }
-  }
+        "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
+      },
+    },
+  },
 }
 ```
 
@@ -129,8 +131,8 @@ For example, using our packages from Scenario 1 above, if we want to reference t
 {
   "name": "my-project", // note there is no version number in the source package.json file because it will never be updated
   "dependencies": {
-    "my-other-project-in-the-monorepo": "workspace:*" // or "file:../my-other-project-in-the-monorepo", depending on your preference and which package manager you are using
-  }
+    "my-other-project-in-the-monorepo": "workspace:*", // or "file:../my-other-project-in-the-monorepo", depending on your preference and which package manager you are using
+  },
 }
 ```
 
@@ -144,18 +146,18 @@ If the package manager we are using is not using pnpm or bun (See Scenario 4 bel
     "version": {
       "manifestRootsToUpdate": ["dist/packages/{projectName}"], // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
       "currentVersionResolver": "git-tag", // or "registry", because we are no longer referencing our source package.json as the source of truth for the current version
-      "preserveLocalDependencyProtocols": false // (NOT NEEDED WHEN USING pnpm or bun) because we need to ensure our dist package.json files are valid for publishing and the local dependency references are removed
-    }
+      "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) because we need to ensure our dist package.json files are valid for publishing and the local dependency references are removed
+    },
   },
   "targetDefaults": {
     // Ensure that publishing works from the dist directory
     // The nx-release-publish target is added implicitly behind the scenes by Nx Release, and we can therefore configure it in targetDefaults
     "nx-release-publish": {
       "options": {
-        "packageRoot": "dist/packages/{projectName}" // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
-      }
-    }
-  }
+        "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
+      },
+    },
+  },
 }
 ```
 
@@ -167,8 +169,8 @@ After applying a patch version, our dist package.json will therefore ultimately 
   "name": "my-project",
   "version": "0.1.2", // the version number is applied
   "dependencies": {
-    "my-other-project-in-the-monorepo": "0.1.2" // the dependency reference is updated from the workspace reference to the actual version number (if not using pnpm or bun)
-  }
+    "my-other-project-in-the-monorepo": "0.1.2", // the dependency reference is updated from the workspace reference to the actual version number (if not using pnpm or bun)
+  },
 }
 ```
 
@@ -194,8 +196,8 @@ For example, using this source package.json file, when applying a patch release:
   "name": "my-project",
   "version": "0.1.2",
   "dependencies": {
-    "my-other-project-in-the-monorepo": "workspace:*"
-  }
+    "my-other-project-in-the-monorepo": "workspace:*",
+  },
 }
 ```
 
@@ -208,8 +210,8 @@ Nx release will see this and update the "version" number to `0.1.3`, and leave t
   "version": "0.1.3", // our version number is updated as expected
   "dependencies": {
     // our workspace dependency reference is preserved
-    "my-other-project-in-the-monorepo": "workspace:*"
-  }
+    "my-other-project-in-the-monorepo": "workspace:*",
+  },
 }
 ```
 

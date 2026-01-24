@@ -58,7 +58,8 @@ describe('e2eProjectGenerator', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('api-e2e/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
+      .toMatchInlineSnapshot(`
       "export default {
         displayName: 'api-e2e',
         preset: '../jest.preset.js',
@@ -125,7 +126,8 @@ describe('e2eProjectGenerator', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('cli-e2e/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
+      .toMatchInlineSnapshot(`
       "export default {
         displayName: 'cli-e2e',
         preset: '../jest.preset.js',
@@ -223,14 +225,14 @@ describe('e2eProjectGenerator', () => {
         addPlugin: true,
       });
 
-      expect(tree.read('api-e2e/jest.config.ts', 'utf-8'))
+      expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
         import { readFileSync } from 'fs';
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
@@ -293,14 +295,14 @@ describe('e2eProjectGenerator', () => {
         useProjectJson: false,
       });
 
-      expect(tree.read('cli-e2e/jest.config.ts', 'utf-8'))
+      expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
         import { readFileSync } from 'fs';
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves

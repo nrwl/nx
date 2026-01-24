@@ -95,6 +95,9 @@
       "path": "./packages/vite"
     },
     {
+      "path": "./packages/vitest"
+    },
+    {
       "path": "./packages/vue"
     },
     {
@@ -192,9 +195,6 @@
     },
     {
       "path": "./nx-dev/ui-animations"
-    },
-    {
-      "path": "./nx-dev/ui-conference"
     },
     {
       "path": "./nx-dev/ui-enterprise"
@@ -414,6 +414,9 @@
     },
     {
       "path": "./e2e/maven"
+    },
+    {
+      "path": "./nx-dev/ui-resources"
     }
   ],
   "extends": "./tsconfig.base.json"

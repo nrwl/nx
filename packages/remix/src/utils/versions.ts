@@ -2,7 +2,7 @@ import { getDependencyVersionFromPackageJson, Tree } from '@nx/devkit';
 
 export const nxVersion = require('../../package.json').version;
 
-export const remixVersion = '^2.15.0';
+export const remixVersion = '^2.17.3';
 export const isbotVersion = '^4.4.0';
 export const reactVersion = '^18.2.0';
 export const reactDomVersion = '^18.2.0';

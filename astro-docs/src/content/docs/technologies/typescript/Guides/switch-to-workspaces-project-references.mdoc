@@ -24,7 +24,7 @@ Follow the specific instructions for your package manager to enable workspaces p
 
 Defining the `workspaces` property in the root `package.json` file lets npm know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `npm install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available.
+If you reference a local library project, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available. This applies to both buildable and non-buildable libraries.
 
 ```json
 // /apps/my-app/package.json
@@ -47,7 +47,7 @@ If you reference a local library project with its own `build` task, you should i
 
 Defining the `workspaces` property in the root `package.json` file lets yarn know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `yarn` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you reference a local library project, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application. This applies to both buildable and non-buildable libraries.
 
 ```json
 // /apps/my-app/package.json
@@ -70,7 +70,7 @@ If you reference a local library project with its own `build` task, you should i
 
 Defining the `workspaces` property in the root `package.json` file lets bun know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `bun install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you reference a local library project, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application. This applies to both buildable and non-buildable libraries.
 
 ```json
 // /apps/my-app/package.json
@@ -93,7 +93,7 @@ packages:
 
 Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
 
-If you reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells pnpm that the project is in the same repository](https://pnpm.io/workspaces#workspace-protocol-workspace) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells pnpm that the project is in the same repository](https://pnpm.io/workspaces#workspace-protocol-workspace) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application. This applies to both buildable and non-buildable libraries.
 
 ```json
 // /apps/my-app/package.json
@@ -125,9 +125,9 @@ Note: Before you delete the `paths` property, copy the project paths for use as 
     // ...
     "paths": {
       "@myorg/utils": ["libs/utils/src/index.ts"],
-      "@myorg/ui": ["libs/ui/src/index.ts"]
-    }
-  }
+      "@myorg/ui": ["libs/ui/src/index.ts"],
+    },
+  },
 }
 ```
 
@@ -144,8 +144,8 @@ Note: Before you delete the `paths` property, copy the project paths for use as 
     // Delete the paths property
     // Other options...
     "allowJs": false,
-    "allowSyntheticDefaultImports": true
-  }
+    "allowSyntheticDefaultImports": true,
+  },
 }
 ```
 
@@ -161,7 +161,7 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
 // tsconfig.json
 {
   "extends": "./tsconfig.base.json",
-  "files": [] // intentionally empty
+  "files": [], // intentionally empty
 }
 ```
 
@@ -177,13 +177,13 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
   "references": [
     // All projects in the repository
     {
-      "path": "./libs/utils"
+      "path": "./libs/utils",
     },
     {
-      "path": "./libs/ui"
-    }
+      "path": "./libs/ui",
+    },
     // Future generated projects will automatically be added here by the generator
-  ]
+  ],
 }
 ```
 
@@ -202,17 +202,17 @@ Make sure that the `@nx/js` plugin is installed in your repository and `@nx/js/t
       "plugin": "@nx/js/typescript",
       "options": {
         "typecheck": {
-          "targetName": "typecheck"
+          "targetName": "typecheck",
         },
         "build": {
           "targetName": "build",
           "configName": "tsconfig.lib.json",
           "buildDepsName": "build-deps",
-          "watchDepsName": "watch-deps"
-        }
-      }
-    }
-  ]
+          "watchDepsName": "watch-deps",
+        },
+      },
+    },
+  ],
 }
 ```
 
@@ -293,12 +293,12 @@ The `tsconfig.json` file's purpose is to provide your IDE with `references` to t
     // UPDATED BY NX SYNC
     // This project's other tsconfig.*.json files
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./tsconfig.lib.json",
     },
     {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+      "path": "./tsconfig.spec.json",
+    },
+  ],
 }
 ```
 
@@ -314,7 +314,7 @@ If there are a lot of shared `compilerOptions` between `tsconfig.lib.json` and `
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     // outDir should be local to the project and not in the same folder as any other tsconfig.*.json
-    "outDir": "./out-tsc/lib"
+    "outDir": "./out-tsc/lib",
     // Any overrides
   },
   "include": ["src/**/*.ts"],
@@ -324,7 +324,7 @@ If there are a lot of shared `compilerOptions` between `tsconfig.lib.json` and `
   "references": [
     // tsconfig.lib.json files for project dependencies
     // UPDATED BY NX SYNC
-  ]
+  ],
 }
 ```
 
@@ -340,7 +340,7 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     // outDir should be local to the project and not in the same folder as any other tsconfig.*.json
-    "outDir": "./out-tsc/spec"
+    "outDir": "./out-tsc/spec",
     // Any overrides
   },
   "include": [
@@ -349,9 +349,9 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
   "references": [
     // tsconfig.lib.json for this project
     {
-      "path": "./tsconfig.lib.json"
-    }
-  ]
+      "path": "./tsconfig.lib.json",
+    },
+  ],
 }
 ```
 

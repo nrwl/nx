@@ -30,7 +30,7 @@ describe('create-nx-workspace --preset=react', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
-    checkFilesExist('vite.config.ts');
+    checkFilesExist('vite.config.mts');
     checkFilesDoNotExist('tsconfig.base.json');
     expectCodeIsFormatted();
   });
@@ -103,7 +103,7 @@ describe('create-nx-workspace --preset=react', () => {
 
     expectNoAngularDevkit();
     checkFilesExist('vitest.workspace.ts');
-    checkFilesDoNotExist('jest.config.ts');
+    checkFilesDoNotExist('jest.config.cts');
     const packageJson = readJson('package.json');
     expect(packageJson.devDependencies['@nx/vite']).toBeDefined(); // vite should be default bundler
     expectCodeIsFormatted();

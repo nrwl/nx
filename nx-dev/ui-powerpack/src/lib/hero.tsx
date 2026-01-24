@@ -35,33 +35,10 @@ export function Hero(): ReactElement {
           Nx Powerpack
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6 text-center">
-          A suite of paid extensions for the Nx CLI{' '}
+          A suite of extensions for the Nx CLI{' '}
           <Strong>specifically designed for enterprises</Strong>, built and
           supported by the Nx core team.
         </SectionHeading>
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <ButtonLink
-            href="https://cloud.nx.app/powerpack?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=cta-button&utm_term=get-nx-powerpack-hero"
-            variant="primary"
-            size="default"
-            title="Get Powerpack License"
-          >
-            Get Powerpack License
-          </ButtonLink>
-          <a
-            href={YOUTUBE_URL}
-            onClick={handleVideoClick}
-            className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
-          >
-            Watch the video{' '}
-            <span
-              aria-hidden="true"
-              className="inline-block transition group-hover:translate-x-1"
-            >
-              →
-            </span>
-          </a>
-        </div>
         <p className="mt-6 text-sm italic">
           Nx Powerpack is included in Nx Enterprise.
           <br />

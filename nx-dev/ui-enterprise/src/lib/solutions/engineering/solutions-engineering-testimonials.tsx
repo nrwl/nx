@@ -42,7 +42,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
             </div>
             <VmwareIcon
               aria-hidden="true"
-              className="mx-auto size-14 flex-none shrink-0  text-white"
+              className="mx-auto size-14 flex-none shrink-0 text-white"
             />
           </figcaption>
         </figure>

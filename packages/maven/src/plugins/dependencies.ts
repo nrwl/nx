@@ -1,6 +1,7 @@
 import { CreateDependencies, logger, hashArray } from '@nx/devkit';
 import { readMavenCache, getCachePath } from './maven-data-cache';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname } from 'path';
@@ -54,6 +55,19 @@ export const createDependencies: CreateDependencies = async (
     'dependencies'
   );
 
-  // Extract dependencies from the mavenData
-  return mavenData.createDependenciesResults;
+  // Create a mapping from project root to project name
+  const rootToProjectMap = createProjectRootMappingsFromProjectConfigurations(
+    context.projects
+  );
+
+  // Extract and transform dependencies from the mavenData
+  const transformedDependencies = mavenData.createDependenciesResults.map(
+    (dep) => ({
+      ...dep,
+      source: rootToProjectMap.get(dep.source),
+      target: rootToProjectMap.get(dep.target),
+    })
+  );
+
+  return transformedDependencies;
 };

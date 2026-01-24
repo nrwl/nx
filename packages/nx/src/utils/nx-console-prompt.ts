@@ -6,6 +6,7 @@ import {
   canInstallNxConsole,
   NxConsolePreferences,
 } from '../native';
+import { isCI } from './is-ci';
 
 export async function ensureNxConsoleInstalled() {
   const preferences = new NxConsolePreferences(homedir());
@@ -27,7 +28,10 @@ export async function ensureNxConsoleInstalled() {
     return;
   }
 
-  if (process.stdout.isTTY && typeof setting !== 'boolean') {
+  // Only prompt if both stdin and stdout are TTY (interactive terminal)
+  // and we're not in a CI environment
+  const isInteractive = process.stdin.isTTY && process.stdout.isTTY && !isCI();
+  if (isInteractive && typeof setting !== 'boolean') {
     setting = await promptForNxConsoleInstallation();
     preferences.setAutoInstallPreference(setting);
   }

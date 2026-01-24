@@ -19,8 +19,8 @@ module.exports = {
       assets: <%- JSON.stringify(webpackPluginOptions.assets) %>,
       optimization: false,
       outputHashing: 'none',
-      generatePackageJson: true,
-      sourceMaps: true,
+      generatePackageJson: <%= webpackPluginOptions.generatePackageJson %>,
+      sourceMap: true,
     })
   ],
 };

@@ -66,7 +66,11 @@ export function runCommand(
   command: string,
   options?: Partial<ExecSyncOptions> & { failOnError?: boolean }
 ): string {
-  const { failOnError, ...childProcessOptions } = options ?? {};
+  const {
+    failOnError,
+    env: optionsEnv,
+    ...childProcessOptions
+  } = options ?? {};
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -75,7 +79,7 @@ export function runCommand(
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
-        ...childProcessOptions?.env,
+        ...optionsEnv,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
@@ -334,7 +338,7 @@ export function runCLIAsync(
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   const pm = getPackageManagerCommand();
   const commandToRun = `${opts.silent ? pm.runNxSilent : pm.runNx} ${command} ${
-    opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+    (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
   }${opts.redirectStderr ? ' 2>&1' : ''}`;
 
   return runCommandAsync(commandToRun, opts);
@@ -394,7 +398,7 @@ export function runCLI(
   try {
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
-      opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+      (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     const logs = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),

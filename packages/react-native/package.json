@@ -33,14 +33,17 @@
     "ajv": "^8.12.0",
     "enhanced-resolve": "^5.8.3",
     "ignore": "^5.0.4",
-    "picocolors": "^1.1.0",
-    "tinyglobby": "^0.2.12",
-    "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0"
+    "picocolors": "catalog:",
+    "tinyglobby": "catalog:",
+    "tsconfig-paths": "catalog:typescript",
+    "tslib": "catalog:typescript"
   },
   "peerDependencies": {
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "optionalDependencies": {
     "@nx/detox": "workspace:*",

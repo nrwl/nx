@@ -52,7 +52,11 @@
     },
     "turbo": {
       "type": "boolean",
-      "description": "Activate the incremental bundler for Next.js, which is implemented in Rust. Please note, this feature is exclusively available in development mode."
+      "description": "Activate Turbopack for Next.js (Next.js 15 and below). In Next.js 16+, Turbopack is enabled by default for development mode."
+    },
+    "webpack": {
+      "type": "boolean",
+      "description": "Use webpack bundler instead of Turbopack (Next.js 16+ only). This flag is only applicable in Next.js 16 and above where Turbopack is the default for development mode."
     },
     "experimentalHttps": {
       "type": "boolean",

@@ -2,8 +2,10 @@
 import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro'
 import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro'
 import SidebarSublist from './SidebarSublist.astro'
+import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
 
 const { sidebar } = Astro.locals.starlightRoute
+const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 ---
 
 <div class="sidebar-wrapper" data-testid="sidebar-wrapper">

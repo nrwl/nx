@@ -1,32 +1,29 @@
 package dev.nx.maven.targets
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 
 data class NxTarget(
   val executor: String,
-  val options: ObjectNode?,
+  val options: JsonObject?,
   val cache: Boolean,
   val continuous: Boolean,
-  val parallelism: Boolean,
-  var dependsOn: ArrayNode? = null,
-  var outputs: ArrayNode? = null,
-  var inputs: ArrayNode? = null
+  var dependsOn: JsonArray? = null,
+  var outputs: JsonArray? = null,
+  var inputs: JsonArray? = null
 ) {
-  fun toJSON(objectMapper: ObjectMapper): ObjectNode {
-    val node = objectMapper.createObjectNode()
-    node.put("executor", executor)
+  fun toJSON(): JsonObject {
+    val node = JsonObject()
+    node.addProperty("executor", executor)
     if (options != null) {
-      node.set<ObjectNode>("options", options)
+      node.add("options", options)
     }
-    node.put("cache", cache)
-    node.put("continuous", continuous)
-    node.put("parallelism", parallelism)
+    node.addProperty("cache", cache)
+    node.addProperty("continuous", continuous)
 
-    dependsOn?.let { node.set<ObjectNode>("dependsOn", it) }
-    outputs?.let { node.set<ObjectNode>("outputs", it) }
-    inputs?.let { node.set<ObjectNode>("inputs", it) }
+    dependsOn?.let { node.add("dependsOn", it) }
+    outputs?.let { node.add("outputs", it) }
+    inputs?.let { node.add("inputs", it) }
 
     return node
   }

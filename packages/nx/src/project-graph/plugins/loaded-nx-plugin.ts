@@ -18,6 +18,11 @@ import type {
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
 
+/**
+ * NOTE: Avoid using `import type` with this class. It causes issues with
+ * jest's module resolution when running tests in projects that import
+ * the devkit-internals
+ */
 export class LoadedNxPlugin {
   index?: number;
   readonly name: string;
@@ -30,7 +35,7 @@ export class LoadedNxPlugin {
       context: CreateNodesContextV2
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
-    >
+    >,
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
@@ -124,6 +129,8 @@ export class LoadedNxPlugin {
           });
         }
         await plugin.preTasksExecution(this.options, context);
+        // This doesn't revert env changes, as the proxy still updates
+        // originalEnv, rather it removes the proxy.
         process.env = originalEnv;
 
         return updates;

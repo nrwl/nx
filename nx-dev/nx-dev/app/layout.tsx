@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-// import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
+import { GlobalSearchHandler, WebinarNotifier } from '@nx/nx-dev-ui-common';
+import bannerCollection from '../lib/banner.json';
 import '../styles/main.css';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 
@@ -119,8 +120,28 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+        <GlobalSearchHandler />
         {children}
-        {/* <LiveStreamNotifier /> */}
+        {bannerCollection.map((bannerConfig) => {
+          // Check if banner is active
+          const isActive =
+            bannerConfig.activeUntil &&
+            new Date() < new Date(bannerConfig.activeUntil);
+          if (!isActive) return null;
+          return (
+            <WebinarNotifier
+              key={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+              id={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+              title={bannerConfig.title}
+              description={bannerConfig.description}
+              primaryCtaUrl={bannerConfig.primaryCtaUrl}
+              primaryCtaText={bannerConfig.primaryCtaText}
+              secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
+              secondaryCtaText={bannerConfig.secondaryCtaText}
+              activeUntil={bannerConfig.activeUntil}
+            />
+          );
+        })}
         <FrontendObservability />
         <GlobalScripts
           gaMeasurementId={gaMeasurementId}

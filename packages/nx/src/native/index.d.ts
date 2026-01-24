@@ -23,10 +23,14 @@ export declare class AppLifeCycle {
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
+  registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
+  appendBatchOutput(batchId: string, output: string): void
+  setBatchStatus(batchId: string, status: BatchStatus): void
 }
 
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
+  getPid(): number
   kill(signal?: NodeJS.Signals): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
@@ -92,6 +96,45 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+/**
+ * High-performance metrics collector for Nx tasks
+ * Thread-safe and designed for minimal overhead
+ */
+export declare class ProcessMetricsCollector {
+  /** Create a new ProcessMetricsCollector with default configuration */
+  constructor()
+  /**
+   * Start metrics collection
+   * Idempotent - safe to call multiple times
+   */
+  startCollection(): void
+  /**
+   * Stop metrics collection
+   * Returns true if collection was stopped, false if not running
+   */
+  stopCollection(): boolean
+  /**
+   * Get system information (CPU cores and total memory)
+   * This is separate from the collection interval and meant to be called imperatively
+   */
+  getSystemInfo(): SystemInfo
+  /** Register the main CLI process for metrics collection */
+  registerMainCliProcess(pid: number): void
+  /** Register a subprocess of the main CLI for metrics collection */
+  registerMainCliSubprocess(pid: number, alias?: string | undefined | null): void
+  /** Register the daemon process for metrics collection */
+  registerDaemonProcess(pid: number): void
+  /**
+   * Register a process for a specific task
+   * Automatically creates the task if it doesn't exist
+   */
+  registerTaskProcess(taskId: string, pid: number): void
+  /** Register a batch with multiple tasks sharing a worker */
+  registerBatch(batchId: string, taskIds: Array<string>, pid: number): void
+  /** Subscribe to push-based metrics notifications from TypeScript */
+  subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
+}
+
 export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
@@ -116,7 +159,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>): NapiDashMap
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
 }
 
 export declare class Watcher {
@@ -151,6 +194,17 @@ export declare class WorkspaceContext {
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   getFilesInDirectory(directory: string): Array<string>
+}
+
+export interface BatchInfo {
+  executorName: string
+  taskIds: Array<string>
+}
+
+export declare const enum BatchStatus {
+  Running = 'Running',
+  Success = 'Success',
+  Failure = 'Failure'
 }
 
 export interface CachedResult {
@@ -225,6 +279,31 @@ export declare export declare function getFilesForOutputs(directory: string, ent
 
 export declare export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
+/**
+ * Group information - union of different process group types
+ * Use group_type to discriminate which optional fields are present
+ */
+export interface GroupInfo {
+  /** Type discriminator: MainCLI, Daemon, Task, or Batch */
+  groupType: GroupType
+  /** Display name for the group */
+  displayName: string
+  /** Unique ID for this group */
+  id: string
+  /** Task IDs in this batch (present for Batch groups) */
+  taskIds?: Array<string>
+}
+
+/** Group type discriminator */
+export declare const enum GroupType {
+  MainCLI = 'MainCLI',
+  MainCliSubprocesses = 'MainCliSubprocesses',
+  Daemon = 'Daemon',
+  DaemonSubprocesses = 'DaemonSubprocesses',
+  Task = 'Task',
+  Batch = 'Batch'
+}
+
 export declare export declare function hashArray(input: Array<string | undefined | null>): string
 
 export interface HashDetails {
@@ -264,6 +343,21 @@ export declare export declare function isEditorInstalled(editor: SupportedEditor
 
 export declare export declare function logDebug(message: string): void
 
+/** Combined metadata for groups and processes */
+export interface Metadata {
+  /** Group-level metadata */
+  groups: Record<string, GroupInfo>
+  /** Process-level metadata (keyed by PID as string for NAPI compatibility) */
+  processes: Record<string, ProcessMetadata>
+}
+
+/** Metrics update sent every collection cycle */
+export interface MetricsUpdate {
+  timestamp: number
+  processes: Array<ProcessMetrics>
+  metadata: Metadata
+}
+
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
   namedInputs?: Record<string, Array<JsInputs>>
@@ -282,6 +376,25 @@ export interface NxWorkspaceFilesExternals {
 }
 
 export declare export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
+/** Process metadata (static, doesn't change during process lifetime) */
+export interface ProcessMetadata {
+  ppid: number
+  name: string
+  command: string
+  exePath: string
+  cwd: string
+  alias?: string
+  groupId: string
+  isRoot: boolean
+}
+
+/** Process metrics (dynamic, changes every collection) */
+export interface ProcessMetrics {
+  pid: number
+  cpu: number
+  memory: number
+}
 
 export interface Project {
   root: string
@@ -316,6 +429,12 @@ export declare const enum SupportedEditor {
   Windsurf = 3,
   JetBrains = 4,
   Unknown = 5
+}
+
+/** System information (static system-level data) */
+export interface SystemInfo {
+  cpuCores: number
+  totalMemory: number
 }
 
 export interface Target {
@@ -393,6 +512,7 @@ export interface TuiCliArgs {
 
 export interface TuiConfig {
   autoExit?: boolean | number | undefined
+  suppressHints?: boolean
 }
 
 export interface UpdatedWorkspaceFiles {
@@ -405,6 +525,10 @@ export declare export declare function validateOutputs(outputs: Array<string>): 
 export interface WatchEvent {
   path: string
   type: EventType
+}
+
+export interface WorkingDirectoryInput {
+  workingDirectory: string
 }
 
 /** Public NAPI error codes that are for Node */

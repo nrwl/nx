@@ -6,10 +6,9 @@ Updates the TypeScript `moduleResolution` option to `'bundler'` for improved com
 
 The migration will update TypeScript configuration files in your workspace to use the `'bundler'` module resolution strategy:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/tsconfig.app.json" highlightLines=["4"] %}
+```json title="apps/app1/tsconfig.app.json" {4}
 {
   "compilerOptions": {
     "module": "es2020",
@@ -18,11 +17,9 @@ The migration will update TypeScript configuration files in your workspace to us
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/app1/tsconfig.app.json" highlightLines=["4"] %}
+```json title="apps/app1/tsconfig.app.json" {4}
 {
   "compilerOptions": {
     "module": "es2020",
@@ -31,15 +28,11 @@ The migration will update TypeScript configuration files in your workspace to us
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If the `moduleResolution` is already set to `'bundler'` or the `module` is set to `'preserve'`, the migration will not modify the configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/tsconfig.app.json" highlightLines=[3,4] %}
+```json title="apps/app1/tsconfig.app.json" {3-4}
 {
   "compilerOptions": {
     "module": "preserve",
@@ -48,11 +41,9 @@ If the `moduleResolution` is already set to `'bundler'` or the `module` is set t
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/app1/tsconfig.app.json" highlightLines=[3,4] %}
+```json title="apps/app1/tsconfig.app.json" {3-4}
 {
   "compilerOptions": {
     "module": "preserve",
@@ -60,6 +51,3 @@ If the `moduleResolution` is already set to `'bundler'` or the `module` is set t
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

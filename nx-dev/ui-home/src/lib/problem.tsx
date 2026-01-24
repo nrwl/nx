@@ -87,8 +87,8 @@ export function ProblemListItem({
     position[0] === 'top'
       ? 'lg:-mt-64'
       : position[0] === 'middle'
-      ? 'lg:-mt-12'
-      : '';
+        ? 'lg:-mt-12'
+        : '';
 
   return (
     <li

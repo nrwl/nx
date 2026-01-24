@@ -7,7 +7,6 @@ import {
   type PluginItem,
   type PluginMigrationItem,
 } from './plugin-schema-parser';
-import { stripMarkdocTags } from './strip-markdoc-tags';
 
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
@@ -34,7 +33,7 @@ export function generateMigrationItem(name: string, item: any): string {
     const maybeExampleMdFile = config.fullPath + '.md';
     if (existsSync(maybeExampleMdFile)) {
       const rawContent = readFileSync(maybeExampleMdFile, 'utf-8');
-      markdown += `${stripMarkdocTags(rawContent)}\n\n`;
+      markdown += `${rawContent}\n\n`;
     }
   }
 
@@ -215,7 +214,7 @@ nx generate ${fullItemName} [options]
     const positionalArgs: string[] = [];
     for (const [propName, prop] of Object.entries(properties) as [
       string,
-      any
+      any,
     ][]) {
       if (
         prop.$default &&
@@ -266,7 +265,7 @@ nx generate ${fullItemName} ${positionalArgs
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
 
-        const optionName = `\`${propName}\``;
+        const optionName = `\`--${propName}\``;
 
         if (isRequired) {
           type += ' [**required**]';
@@ -280,14 +279,14 @@ nx generate ${fullItemName} ${positionalArgs
   }
 
   markdown += `
-     ## Getting Help
+## Getting Help
 
-     You can get help for any generator by adding the \`--help\` flag:
+You can get help for any generator by adding the \`--help\` flag:
 
-     \`\`\`bash
-     nx generate ${packageName}:<generator> --help
-     \`\`\`
-     `;
+\`\`\`bash
+nx generate ${packageName}:<generator> --help
+\`\`\`
+`;
 
   return markdown;
 }

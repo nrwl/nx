@@ -278,11 +278,11 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
-          options.workspaces &&
-          process.env.NX_ADD_PLUGINS !== 'false') ||
-        options.preset === Preset.NPM
-      ? './files-package-based-repo'
-      : './files-integrated-repo';
+            options.workspaces &&
+            process.env.NX_ADD_PLUGINS !== 'false') ||
+          options.preset === Preset.NPM
+        ? './files-package-based-repo'
+        : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',

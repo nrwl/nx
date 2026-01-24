@@ -484,23 +484,23 @@ async function handleMissingWorkspacesEntry(
               `See: https://docs.npmjs.com/cli/using-npm/workspaces`,
             ]
           : pm === 'yarn'
-          ? [
-              `We recommend enabling Yarn workspaces to install dependencies for the imported project.`,
-              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
-              `See: https://yarnpkg.com/features/workspaces`,
-            ]
-          : pm === 'bun'
-          ? [
-              `We recommend enabling Bun workspaces to install dependencies for the imported project.`,
-              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
-              `See: https://bun.sh/docs/install/workspaces`,
-            ]
-          : [
-              `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
-              `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
-              chalk.bold(`packages:\n  - '${pkgPath}'`),
-              `See: https://pnpm.io/workspaces`,
-            ],
+            ? [
+                `We recommend enabling Yarn workspaces to install dependencies for the imported project.`,
+                `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+                `See: https://yarnpkg.com/features/workspaces`,
+              ]
+            : pm === 'bun'
+              ? [
+                  `We recommend enabling Bun workspaces to install dependencies for the imported project.`,
+                  `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+                  `See: https://bun.sh/docs/install/workspaces`,
+                ]
+              : [
+                  `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
+                  `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
+                  chalk.bold(`packages:\n  - '${pkgPath}'`),
+                  `See: https://pnpm.io/workspaces`,
+                ],
     });
   } else {
     let workspaces: string[] = getPackageWorkspaces(pm, workspaceRoot);

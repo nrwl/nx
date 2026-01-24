@@ -57,7 +57,7 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
     }
     const eventDir = path.dirname(event.src);
     const relativeDest = path.relative(eventDir, event.dest);
-    logger.log(`\n${dim(relativeDest)}`);
+    logger.verbose(`\n${dim(relativeDest)}`);
   });
 };
 
@@ -139,8 +139,10 @@ export class CopyAssetsHandler {
           cwd: this.rootDir,
           dot: true, // enable hidden files
           expandDirectories: false,
-          // Ignore common directories that should not be copied or processed
-          ignore: ['**/node_modules/**', '**/.git/**'],
+          // Only ignore node_modules when the pattern doesn't explicitly reference it.
+          // This allows copying generated files from node_modules (e.g., Prisma client)
+          // while avoiding performance issues from scanning all node_modules for other patterns.
+          ignore: this.getIgnorePatternsForAsset(ag),
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -157,11 +159,24 @@ export class CopyAssetsHandler {
         cwd: this.rootDir,
         dot: true, // enable hidden files
         expandDirectories: false,
-        ignore: ['**/node_modules/**', '**/.git/**'],
+        ignore: this.getIgnorePatternsForAsset(ag),
       });
 
       this.callback(this.filesToEvent(files, ag));
     });
+  }
+
+  private getIgnorePatternsForAsset(ag: AssetEntry): string[] {
+    // If the asset input path starts with 'node_modules', allow traversing node_modules
+    // for that specific pattern. This enables copying generated files like Prisma client.
+    const inputStartsWithNodeModules =
+      ag.input.startsWith('node_modules/') || ag.input === 'node_modules';
+
+    if (inputStartsWithNodeModules) {
+      return ['**/.git/**'];
+    }
+
+    return ['**/node_modules/**', '**/.git/**'];
   }
 
   async watchAndProcessOnAssetChange(): Promise<() => void> {
@@ -171,8 +186,14 @@ export class CopyAssetsHandler {
         includeGlobalWorkspaceFiles: true,
       },
       (err, data) => {
-        if (err === 'closed') {
-          logger.error(`Watch error: Daemon closed the connection`);
+        if (err === 'reconnecting') {
+          // Silent - daemon restarts automatically on lockfile changes
+          return;
+        } else if (err === 'reconnected') {
+          // Silent - reconnection succeeded
+          return;
+        } else if (err === 'closed') {
+          logger.error(`Failed to reconnect to daemon after multiple attempts`);
           process.exit(1);
         } else if (err) {
           logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);

@@ -114,6 +114,7 @@ export async function generateAllPluginDocs(
   logger.info('Generating plugin documentation...');
   let successCount = 0;
   let skipCount = 0;
+  const criticalErrors: Array<{ plugin: string; error: Error }> = [];
 
   const ghStarMap = await getGithubStars([{ owner: 'nrwl', repo: 'nx' }]);
 
@@ -282,10 +283,35 @@ export async function generateAllPluginDocs(
         skipCount++;
       }
     } catch (error: any) {
-      logger.error(`❌ Error processing ${pluginName}: ${error.message}`);
+      // Determine if this is a critical error that should fail the build
+      const isCriticalError =
+        error.code === 'ENOENT' || // Missing file referenced in manifest files
+        error instanceof SyntaxError || // Malformed JSON
+        error.message?.includes('schema') || // Schema-related error
+        error.message?.includes('JSON'); // JSON parsing error
+
+      if (isCriticalError) {
+        logger.error(
+          `❌ Critical error processing ${pluginName}: ${error.message}`
+        );
+        criticalErrors.push({ plugin: pluginName, error });
+      } else {
+        logger.warn(`⚠️  Skipping ${pluginName}: ${error.message}`);
+      }
       skipCount++;
     }
     store.set(pluginOverview);
+  }
+
+  // After processing all plugins, fail the build if there were critical errors
+  if (criticalErrors.length > 0) {
+    const errorSummary = criticalErrors
+      .map(({ plugin, error }) => `  - ${plugin}: ${error.message}`)
+      .join('\n');
+
+    throw new Error(
+      `Failed to generate documentation for ${criticalErrors.length} plugin(s):\n${errorSummary}`
+    );
   }
 }
 

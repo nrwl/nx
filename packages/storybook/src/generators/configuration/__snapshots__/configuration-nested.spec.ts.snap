@@ -1,7 +1,10 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 1`] = `
-"import type { StorybookConfig } from '@storybook/react-vite';
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-vite';
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
@@ -11,7 +14,7 @@ const config: StorybookConfig = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [],
   framework: {
-    name: '@storybook/react-vite',
+    name: getAbsolutePath('@storybook/react-vite'),
     options: {},
   },
 
@@ -20,6 +23,10 @@ const config: StorybookConfig = {
       plugins: [react(), nxViteTsPaths()],
     }),
 };
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
 
 export default config;
 
@@ -67,16 +74,23 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 3`] = `""`;
 
 exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 4`] = `
-"import type { StorybookConfig } from '@storybook/react-webpack5';
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [, '@nx/react/plugins/storybook'],
   framework: {
-    name: '@storybook/react-webpack5',
+    name: getAbsolutePath('@storybook/react-webpack5'),
     options: {},
   },
 };
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
 
 export default config;
 

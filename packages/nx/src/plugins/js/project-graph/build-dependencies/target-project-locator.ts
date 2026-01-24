@@ -1,5 +1,5 @@
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative, resolve } from 'node:path';
+import { dirname, join, posix, relative, isAbsolute } from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -29,6 +29,7 @@ import {
  * resolved external node name from the project graph.
  */
 type NpmResolutionCache = Map<string, string | null>;
+type PackageJsonResolutionCache = Map<string, PackageJson | null>;
 
 type PathPattern = {
   pattern: string;
@@ -44,6 +45,7 @@ type ParsedPatterns = {
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
+const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
@@ -71,7 +73,8 @@ export class TargetProjectLocator {
       string,
       ProjectGraphExternalNode
     > = {},
-    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
+    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache,
+    private readonly packageJsonResolutionCache: PackageJsonResolutionCache = defaultPackageJsonResolutionCache
   ) {
     /**
      * Only the npm external nodes should be included.
@@ -79,19 +82,22 @@ export class TargetProjectLocator {
      * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
      * is set in the key for optimal lookup.
      */
-    this.npmProjects = Object.values(this.externalNodes).reduce((acc, node) => {
-      if (node.type === 'npm') {
-        const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
-        if (!acc[node.name]) {
-          acc[node.name] = node;
+    this.npmProjects = Object.values(this.externalNodes).reduce(
+      (acc, node) => {
+        if (node.type === 'npm') {
+          const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
+          if (!acc[node.name]) {
+            acc[node.name] = node;
+          }
+          // The node.name may have already contained the version
+          if (!acc[keyWithVersion]) {
+            acc[keyWithVersion] = node;
+          }
         }
-        // The node.name may have already contained the version
-        if (!acc[keyWithVersion]) {
-          acc[keyWithVersion] = node;
-        }
-      }
-      return acc;
-    }, {} as Record<string, ProjectGraphExternalNode>);
+        return acc;
+      },
+      {} as Record<string, ProjectGraphExternalNode>
+    );
 
     if (this.tsConfig.config?.compilerOptions?.paths) {
       this.parsePaths(this.tsConfig.config.compilerOptions.paths);
@@ -357,7 +363,7 @@ export class TargetProjectLocator {
       const targetPath = maybeDep?.data.root;
 
       const normalizedPath = normalizedRange.replace('file:', '');
-      const resolvedPath = join(dirname(packageJsonPath), normalizedPath);
+      const resolvedPath = posix.join(dirname(packageJsonPath), normalizedPath);
 
       if (targetPath === resolvedPath) {
         return maybeDep?.name;
@@ -414,6 +420,11 @@ export class TargetProjectLocator {
     filePath: string
   ): string | undefined {
     let resolvedModule: string;
+    if (!isAbsolute(filePath)) {
+      // Convert to an absolute file path because TypeScript's module resolution won't
+      // properly walk up the directory tree (toward the workspace root) when given a relative path.
+      filePath = this.getAbsolutePath(filePath);
+    }
     const projectName = findProjectForPath(filePath, this.projectRootMappings);
     const cacheScope = projectName
       ? // fall back to the project name if the project root can't be determined
@@ -538,10 +549,17 @@ export class TargetProjectLocator {
       relativeToDir
     );
     if (packageJsonPath) {
+      if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+        return this.packageJsonResolutionCache.get(packageJsonPath);
+      }
       const parsedPackageJson = readJsonFile(packageJsonPath);
 
       if (parsedPackageJson.name && parsedPackageJson.version) {
+        this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
+      } else {
+        this.packageJsonResolutionCache.set(packageJsonPath, null);
+        return null;
       }
     }
 
@@ -553,14 +571,24 @@ export class TargetProjectLocator {
 
       while (dir !== dirname(dir)) {
         const packageJsonPath = join(dir, 'package.json');
+        if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+          return this.packageJsonResolutionCache.get(packageJsonPath);
+        }
         try {
           const parsedPackageJson = readJsonFile(packageJsonPath);
           // Ensure the package.json contains the "name" and "version" fields
           if (parsedPackageJson.name && parsedPackageJson.version) {
+            this.packageJsonResolutionCache.set(
+              packageJsonPath,
+              parsedPackageJson
+            );
             return parsedPackageJson;
+          } else {
+            this.packageJsonResolutionCache.set(packageJsonPath, null);
+            return null;
           }
         } catch {
-          // Package.json doesn't exist, keep traversing
+          // Package.json is invalid, keep traversing
         }
         dir = dirname(dir);
       }

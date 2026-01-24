@@ -24,17 +24,17 @@
   "main": "index.js",
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "^0.18.0",
-    "@module-federation/node": "^2.7.11",
-    "@module-federation/sdk": "^0.18.0",
+    "@module-federation/enhanced": "^0.21.2",
+    "@module-federation/node": "^2.7.21",
+    "@module-federation/sdk": "^0.21.2",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
-    "@rspack/core": "^1.3.8",
+    "@rspack/core": "catalog:rspack",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.5",
-    "picocolors": "^1.1.0",
-    "tslib": "^2.3.0",
+    "picocolors": "catalog:",
+    "tslib": "catalog:typescript",
     "webpack": "^5.101.3"
   },
   "devDependencies": {

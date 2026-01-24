@@ -1,4 +1,33 @@
+# Disable gradle and maven plugins on Netlify
+# (Netlify only supports Java 8 but these plugins require Java 17)
+[build.environment]
+NX_GRADLE_DISABLE = "true"
+NX_MAVEN_DISABLE = "true"
+
+# Edge Functions for tracking LLM/AI tool requests to GA4
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/*.txt"
+
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/**/*.txt"
+
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/*.md"
+
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/**/*.md"
+
 # Permanent redirects (301 by default)
+
+# Storybook docs consolidation
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/storybook-9-setup"
+to = "/docs/technologies/test-tools/storybook/guides/upgrading-storybook"
+
 [[redirects]]
 from = "/"
 to = "/docs/getting-started/intro"

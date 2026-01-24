@@ -30,28 +30,28 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tabs syncKey="package-manager" %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npm add --global nx@latest
 ```
 
 {% /tabitem %}
 {% tabitem label="Homebrew (macOS, Linux)" %}
 
-```shell {% frame="none" %}
+```shell
 brew install nx
 ```
 
 {% /tabitem %}
 {% tabitem label="Chocolatey (Windows)" %}
 
-```shell {% frame="none" %}
+```shell
 choco install nx
 ```
 
 {% /tabitem %}
 {% tabitem label="apt (Ubuntu)" %}
 
-```shell {% frame="none" %}
+```shell
 sudo add-apt-repository ppa:nrwl/nx
 sudo apt update
 sudo apt install nx
@@ -64,13 +64,13 @@ sudo apt install nx
 
 In any Gradle workspace, run the following command to add Nx and the `@nx/gradle` plugin:
 
-```shell {% frame="none" %}
+```shell
 nx init
 ```
 
 Then, you can run Gradle tasks using Nx. For example:
 
-```shell {% frame="none" %}
+```shell
 nx build <your gradle library>
 ```
 
@@ -116,14 +116,14 @@ The `dev.nx.gradle.project-graph` plugin introduces a task named `nxProjectGraph
 {% tabs syncKey="os" %}
 {% tabitem label="Mac OS/Linux" %}
 
-```shell {% frame="none" %}
+```shell
 ./gradlew nxProjectGraph
 ```
 
 {% /tabitem %}
 {% tabitem label="Windows" %}
 
-```shell {% frame="none" %}
+```shell
 .\gradlew.bat nxProjectGraph
 ```
 
@@ -138,7 +138,7 @@ To view inferred tasks for a project, open the [project details view](/docs/feat
 
 In any Nx workspace, you can install `@nx/gradle` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/gradle
 ```
 
@@ -157,7 +157,8 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
         "classesTargetName": "classes",
         "buildTargetName": "build",
         "ciTestTargetName": "test-ci",
-        "ciIntTestTargetName": "intTest-ci"
+        "ciIntTestTargetName": "intTest-ci",
+        "gradleExecutableDirectory": "./gradle-projects"
       }
     }
   ]
@@ -165,6 +166,11 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 ```
 
 Once a Gradle configuration file has been identified, the targets are created with the name you specify under `testTargetName`, `classesTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test`, `classes` and `build`.
+
+### Custom Gradle Executable Directory
+
+By default, the @nx/gradle plugin executes the Gradle wrapper found in your project root. If no wrapper exists there, it searches up through parent directories to the workspace root.
+To use a Gradle wrapper from a custom location, specify the directory path in your nx.json under the plugins array using the gradleExecutableDirectory option.
 
 ### Test Distribution
 
@@ -176,7 +182,7 @@ To enable test distribution for your Gradle projects in CI, follow these steps:
 
 1.  **Generate CI Workflow**: Run the `ci-workflow` generator to set up the necessary CI configurations. This generator creates a GitHub Actions workflow file that integrates with Nx's distributed task execution capabilities.
 
-    ```shell {% frame="none" %}
+    ```shell
     nx g @nx/gradle:ci-workflow
     ```
 
@@ -203,7 +209,7 @@ To enable test distribution for your Gradle projects in CI, follow these steps:
 
 3.  **Update CI Workflow Command**: In your generated CI workflow file, modify the command used to run affected tasks. Instead of using a generic `build` target, leverage the `build-ci` target provided by the `@nx/gradle` plugin:
 
-    ```shell {% frame="none" %}
+    ```shell
     # Before:
     # ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
 
@@ -299,3 +305,127 @@ In a `project.json`, you can specify the target configuration like so:
 
 {% /tabitem %}
 {% /tabs %}
+
+### Configuring Projects and Tasks with the Gradle DSL
+
+The `dev.nx.gradle.project-graph` plugin provides a type-safe `nx {}` DSL for configuring Nx-specific metadata on your Gradle projects and tasks. This allows you to customize project metadata, configure task dependencies, and control caching behavior directly in your Gradle build files.
+
+#### Project-Level Configuration
+
+Use the `nx {}` block at the project level to configure Nx in any way you would in `project.json`:
+
+{% tabs syncKey="java-lang" %}
+{% tabitem label="build.gradle.kts" %}
+
+```kotlin
+// build.gradle.kts
+import dev.nx.gradle.nx
+
+nx {
+  // Set project name
+  set("name", "my-custom-project-name")
+
+  // Add tags for organization
+  array("tags", "api", "backend", "tier:1")
+
+  // Add nested metadata
+  set("metadata") {
+    set("owner", "team-payments")
+    set("criticality", "high")
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="build.gradle" %}
+
+```groovy
+// build.gradle
+import static dev.nx.gradle.Groovy.nx
+
+nx(project) {
+  // Set project name
+  it.set 'name', 'my-custom-project-name'
+
+  // Add tags for organization
+  it.array 'tags', 'api', 'backend', 'tier:1'
+
+  // Add nested metadata
+  it.set 'metadata', {
+    it.set 'owner', 'team-payments'
+    it.set 'criticality', 'high'
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+**Available DSL methods for project-level configuration:**
+
+- `set(key, value)` - Set string, number, or boolean values
+- `array(key, ...values)` - Set array values
+- `set(key) { ... }` - Create nested objects
+- `merge(map)` - Merge a map of properties
+
+#### Task-Level Configuration
+
+Use the `nx {}` block on individual Gradle tasks to configure target-specific behavior:
+
+{% tabs syncKey="java-lang" %}
+{% tabitem label="build.gradle.kts" %}
+
+```kotlin
+// build.gradle.kts
+import dev.nx.gradle.nx
+
+tasks {
+  build {
+    nx {
+      // Configure caching
+      set("cache", true)
+
+      // Add target tags
+      array("tags", "integration", "slow")
+
+      // Add any custom configuration
+      set("options") {
+        set("timeout", 300)
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="build.gradle" %}
+
+```groovy
+// build.gradle
+import static dev.nx.gradle.Groovy.nx
+
+tasks.named('integrationTest') {
+  nx(it) {
+    // Configure caching
+    it.set 'cache', true
+
+    // Add target tags
+    it.array 'tags', 'integration', 'slow'
+
+    // Add any custom configuration
+    it.set 'options', {
+      it.set 'timeout', 300
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+**Available DSL methods for task-level configuration:**
+
+- `set(key, value)` - Set string, number, or boolean values
+- `array(key, ...values)` - Set array values
+- `set(key) { ... }` - Create nested objects
+- `merge(map)` - Merge a map of properties

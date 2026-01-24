@@ -1,5 +1,6 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.NxProjectExtension
 import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
@@ -11,21 +12,13 @@ fun createNodeForProject(
     project: Project,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    atomized: Boolean
+    atomized: Boolean,
+    targetNamePrefix: String = ""
 ): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
 
-  // Initialize dependencies with an empty Set to prevent null issues
-  val dependencies: MutableSet<Dependency> =
-      try {
-        getDependenciesForProject(project)
-      } catch (e: Exception) {
-        logger.info(
-            "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}")
-        mutableSetOf()
-      }
-  logger.info("${Date()} ${project.name} createNodeForProject: got dependencies")
+  val dependencies: MutableSet<Dependency> = mutableSetOf()
 
   // Initialize nodes and externalNodes with empty maps to prevent null issues
   var nodes: Map<String, ProjectNode>
@@ -34,16 +27,35 @@ fun createNodeForProject(
   try {
     val gradleTargets: GradleTargets =
         processTargetsForProject(
-            project, dependencies, targetNameOverrides, workspaceRoot, atomized)
+            project, dependencies, targetNameOverrides, workspaceRoot, atomized, targetNamePrefix)
+
+    try {
+      val configDependencies = getDependenciesForProject(project)
+      dependencies.addAll(configDependencies)
+      logger.info("${Date()} ${project.name} createNodeForProject: got configuration dependencies")
+    } catch (e: Exception) {
+      logger.info(
+          "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}")
+    }
     val projectRoot = project.projectDir.path
+
+    // Read project-level nx config if it exists
+    val nxProjectExtension = project.extensions.findByType(NxProjectExtension::class.java)
+    val nxConfig = nxProjectExtension?.json?.getOrNull()?.takeIf { it.isNotEmpty() }
+
+    // Use Gradle defaults for project metadata (TypeScript side will merge nxConfig)
+    val projectName =
+        if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
+        else project.buildTreePath
+    val projectDescription = project.description
+
     val projectNode =
         ProjectNode(
             targets = gradleTargets.targets,
             metadata =
-                NodeMetadata(gradleTargets.targetGroups, listOf("gradle"), project.description),
-            name =
-                if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
-                else project.buildTreePath)
+                NodeMetadata(gradleTargets.targetGroups, listOf("gradle"), projectDescription),
+            name = projectName,
+            nxConfig = nxConfig)
     nodes = mapOf(projectRoot to projectNode)
     externalNodes = gradleTargets.externalNodes
     logger.info(
@@ -73,7 +85,8 @@ fun processTargetsForProject(
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    atomized: Boolean
+    atomized: Boolean,
+    targetNamePrefix: String = ""
 ): GradleTargets {
   val targets: NxTargets = mutableMapOf()
   val targetGroups: TargetGroups = mutableMapOf()
@@ -83,32 +96,45 @@ fun processTargetsForProject(
   val logger = project.logger
 
   logger.info("Using workspace root: $workspaceRoot")
+  logger.info("Using target name prefix: '$targetNamePrefix'")
+
+  // Helper function to apply prefix to target names
+  fun applyPrefix(name: String): String =
+      if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$name" else name
+
+  // Create GitIgnoreClassifier once for the entire project
+  val gitIgnoreClassifier = GitIgnoreClassifier(File(workspaceRoot))
 
   val projectBuildPath = project.buildTreePath.trimEnd(':')
 
   logger.info("${Date()} ${project}: Process targets")
 
-  val ciTestTargetBaseName = targetNameOverrides["ciTestTargetName"]
-  val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
+  val ciTestTargetBaseName = targetNameOverrides["ciTestTargetName"]?.let { applyPrefix(it) }
+  val testTargetName = applyPrefix(targetNameOverrides.getOrDefault("testTargetName", "test"))
 
-  val testTasks = project.tasks.withType(Test::class.java)
+  // Create a snapshot of test tasks to avoid ConcurrentModificationException
+  // with Kotlin Multiplatform which adds tasks dynamically
+  val testTasks = project.tasks.withType(Test::class.java).toList()
   val hasCiTestTarget = ciTestTargetBaseName != null && testTasks.isNotEmpty() && atomized
 
   logger.info(
       "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
 
-  project.tasks.forEach { task ->
+  // Create a snapshot of all tasks to avoid ConcurrentModificationException
+  // with Kotlin Multiplatform which adds tasks dynamically
+  project.tasks.toList().forEach { task ->
     try {
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
-      // Apply target name override if applicable
+      // Apply target name override if applicable, then apply prefix
       val targetName =
-          if (task.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-            targetNameOverrides["testTargetName"]!!
-          } else {
-            task.name
-          }
+          applyPrefix(
+              if (task.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+                targetNameOverrides["testTargetName"]!!
+              } else {
+                task.name
+              })
 
       // Group task under its group if available, using the overridden name
       task.group
@@ -123,7 +149,10 @@ fun processTargetsForProject(
               workspaceRoot,
               externalNodes,
               dependencies,
-              targetNameOverrides)
+              targetNameOverrides,
+              gitIgnoreClassifier,
+              targetNamePrefix,
+              project)
 
       targets[targetName] = target
 
@@ -160,12 +189,14 @@ fun processTargetsForProject(
               targetGroups,
               projectRoot,
               workspaceRoot,
-              ciTestTargetName)
+              ciTestTargetName,
+              gitIgnoreClassifier)
         }
       }
 
       if (ciTestTargetBaseName != null) {
-        val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
+        val ciCheckTargetName =
+            applyPrefix(targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci"))
         if (task.name == "check") {
           val replacedDependencies =
               (target["dependsOn"] as? List<*>)?.map { dependency ->
@@ -178,7 +209,8 @@ fun processTargetsForProject(
                   hasCiTestTarget && dependsOn.startsWith("${project.name}:") -> {
                     val taskName = dependsOn.removePrefix("${project.name}:")
                     // Check if it's a test task that's not the default test target
-                    if (testTasks.any { it.name == taskName } && taskName != testTargetName) {
+                    if (testTasks.any { it.name == taskName } &&
+                        applyPrefix(taskName) != testTargetName) {
                       "${project.name}:$ciTestTargetBaseName-$taskName"
                     } else {
                       dependency
@@ -201,11 +233,12 @@ fun processTargetsForProject(
         }
 
         if (task.name == "build") {
-          val ciBuildTargetName = targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci")
+          val ciBuildTargetName =
+              applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
           val replacedDependencies =
               (target["dependsOn"] as? List<*>)?.map { dep ->
                 val dependsOn = dep.toString()
-                if (dependsOn == "${project.name}:check") {
+                if (dependsOn == "${project.name}:${applyPrefix("check")}") {
                   "${project.name}:$ciCheckTargetName"
                 } else {
                   dep

@@ -2,7 +2,8 @@ import { VcsPushStatus } from '../git/git';
 
 function getSetupMessage(
   url: string | null,
-  pushedToVcs: VcsPushStatus
+  pushedToVcs: VcsPushStatus,
+  workspaceName?: string
 ): string {
   if (pushedToVcs === VcsPushStatus.PushedToVcs) {
     return url
@@ -10,59 +11,59 @@ function getSetupMessage(
       : 'Return to Nx Cloud and finish the setup.';
   }
 
-  // Default case: FailedToPushToVcs
+  // User needs to push first
+  const githubUrl = workspaceName
+    ? `https://github.com/new?name=${encodeURIComponent(workspaceName)}`
+    : 'https://github.com/new';
+
   const action = url ? 'go' : 'return';
   const urlSuffix = url ? `: ${url}` : '.';
-  return `Push your repo, then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
+  return `Push your repo (${githubUrl}), then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
 }
 
-const outputMessages = {
-  'create-nx-workspace-success-ci-setup': [
-    {
-      code: 'ci-setup-visit',
-      createMessage: (url: string | null, pushedToVcs: VcsPushStatus) => {
-        return {
-          title: `Your CI setup is almost complete.`,
-          type: 'success',
-          bodyLines: [getSetupMessage(url, pushedToVcs)],
-        };
-      },
-    },
-  ],
-  'create-nx-workspace-success-cache-setup': [
-    {
-      code: 'remote-cache-visit',
-      createMessage: (url: string | null, pushedToVcs: VcsPushStatus) => {
-        return {
-          title: `Your remote cache is almost complete.`,
-          type: 'success',
-          bodyLines: [getSetupMessage(url, pushedToVcs)],
-        };
-      },
-    },
-  ],
+/**
+ * Completion messages shown after workspace creation.
+ * Keys are referenced by ab-testing.ts prompts via completionMessage field.
+ */
+const completionMessages = {
+  'ci-setup': {
+    title: 'Your CI setup is almost complete.',
+  },
+  'cache-setup': {
+    title: 'Your remote cache setup is almost complete.',
+  },
+  'platform-setup': {
+    title: 'Your platform setup is almost complete.',
+  },
 } as const;
-type OutputMessageKey = keyof typeof outputMessages;
 
-class ABTestingMessages {
-  private selectedMessages: Record<string, number> = {};
+export type CompletionMessageKey = keyof typeof completionMessages;
 
-  getMessageFactory(key: OutputMessageKey) {
-    if (this.selectedMessages[key] === undefined) {
-      if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
-        this.selectedMessages[key] = 0;
-      } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * outputMessages[key].length
-        );
-      }
-    }
-    return outputMessages[key][this.selectedMessages[key]!];
-  }
+export function getCompletionMessage(
+  completionMessageKey: CompletionMessageKey | undefined,
+  url: string | null,
+  pushedToVcs: VcsPushStatus,
+  workspaceName?: string
+): { title: string; bodyLines: string[] } {
+  const key = completionMessageKey ?? 'ci-setup';
+
+  return {
+    title: completionMessages[key].title,
+    bodyLines: [getSetupMessage(url, pushedToVcs, workspaceName)],
+  };
 }
 
-const messages = new ABTestingMessages();
-
-export function getMessageFactory(key: OutputMessageKey) {
-  return messages.getMessageFactory(key);
+export function getSkippedCloudMessage(): {
+  title: string;
+  bodyLines: string[];
+} {
+  return {
+    title: 'Next steps',
+    bodyLines: [
+      'Run "nx connect" to enable remote caching and speed up your CI.',
+      '',
+      '70% faster CI, 60% less compute, automatically fix broken PRs.',
+      'Learn more at https://nx.dev/nx-cloud',
+    ],
+  };
 }

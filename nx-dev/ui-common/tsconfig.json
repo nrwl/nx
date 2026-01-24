@@ -14,33 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-animations"
-    },
-    {
-      "path": "../ui-references"
-    },
-    {
-      "path": "../models-menu"
-    },
-    {
-      "path": "../feature-search"
-    },
-    {
-      "path": "../ui-icons"
-    },
-    {
-      "path": "../feature-analytics"
-    },
-    {
-      "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../models-document"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

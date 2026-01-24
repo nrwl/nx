@@ -42,6 +42,7 @@ export interface PackageManagerCommands {
   exec: string;
   dlx: string;
   list: string;
+  why: string;
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
@@ -65,10 +66,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
+        ? 'yarn'
+        : existsSync(join(dir, 'pnpm-lock.yaml'))
+          ? 'pnpm'
+          : 'npm')
   );
 }
 
@@ -148,6 +149,7 @@ export function getPackageManagerCommand(
         run: (script: string, args?: string) =>
           `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
+        why: 'yarn why',
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
@@ -195,6 +197,7 @@ export function getPackageManagerCommand(
               : ''
           }`,
         list: 'pnpm ls --depth 100',
+        why: 'pnpm why',
         getRegistryUrl: 'pnpm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `pnpm publish "${packageRoot}" --json --"${
@@ -216,6 +219,7 @@ export function getPackageManagerCommand(
         run: (script: string, args?: string) =>
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
+        why: 'npm explain',
         getRegistryUrl: 'npm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
@@ -235,6 +239,7 @@ export function getPackageManagerCommand(
         dlx: 'bunx',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
+        why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
@@ -462,9 +467,9 @@ export async function resolvePackageVersionUsingRegistry(
     const manager = getCatalogManager(workspaceRoot);
     if (manager?.isCatalogReference(version)) {
       resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
         packageName,
-        version,
-        workspaceRoot
+        version
       );
       if (!resolvedVersion) {
         throw new Error(
@@ -525,9 +530,9 @@ export async function resolvePackageVersionUsingInstallation(
     const manager = getCatalogManager(workspaceRoot);
     if (manager.isCatalogReference(version)) {
       resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
         packageName,
-        version,
-        workspaceRoot
+        version
       );
       if (!resolvedVersion) {
         throw new Error(

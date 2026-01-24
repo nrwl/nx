@@ -10,7 +10,7 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.8"
+version = "0.1.11"
 
 repositories { mavenCentral() }
 
@@ -18,6 +18,7 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.jgit)
   // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
   compileOnly(libs.kotlin.compiler.embeddable) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")

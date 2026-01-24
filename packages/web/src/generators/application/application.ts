@@ -354,7 +354,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
       ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
-    // See: https://vitejs.dev/guide/env-and-mode.html
+    // See: https://vite.dev/guide/env-and-mode.html
     if (
       host.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
     ) {
@@ -380,16 +380,20 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: false,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
+        useEsmExtension: true,
       },
       false
     );
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    const vitestTask = await vitestGenerator(host, {
+    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
+    ensurePackage('@nx/vitest', nxVersion);
+    const { configurationGenerator } = await import('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
       coverageProvider: 'v8',
@@ -406,6 +410,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: false,
         includeVitest: true,
         inSourceTests: options.inSourceTests,
+        useEsmExtension: true,
       },
       true
     );

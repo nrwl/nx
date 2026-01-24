@@ -132,9 +132,9 @@ describe('lib', () => {
             "**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
           ],
           "extends": "./tsconfig.json",
           "include": [
@@ -255,7 +255,7 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-lib/jest.config.cts')).toBeFalsy();
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration).toMatchInlineSnapshot(`
         {
@@ -317,6 +317,7 @@ describe('lib', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -325,17 +326,17 @@ describe('lib', () => {
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
-            "src/**/*.d.ts",
-            "jest.resolver.js"
+            "src/**/*.d.ts"
           ]
         }
         "
       `);
-      expect(appTree.read('my-lib/jest.config.ts', 'utf-8'))
+      expect(appTree.read('my-lib/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/// <reference types="jest" />
+        /// <reference types="node" />
+        module.exports = {
           displayName: 'my-lib',
-          resolver: require.resolve('./jest.resolver.js'),
           preset: 'jest-expo',
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -559,8 +560,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.0.0",
-            "react-native": "0.79.3",
+            "react": "^19.1.0",
+            "react-native": "0.81.5",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -622,9 +623,9 @@ describe('lib', () => {
             "eslint.config.cjs",
             "eslint.config.mjs",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -652,6 +653,7 @@ describe('lib', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -661,7 +663,6 @@ describe('lib', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-            "jest.resolver.js",
           ],
         }
       `);
@@ -690,8 +691,8 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.0.0",
-            "react-native": "0.79.3",
+            "react": "^19.1.0",
+            "react-native": "0.81.5",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",

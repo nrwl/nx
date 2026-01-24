@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   newProject,
-  renameFile,
   runCLI,
   uniq,
   updateJson,
@@ -20,9 +19,7 @@ describe('Vite ESM tests', () => {
     const appName = uniq('viteapp');
     runCLI(`generate @nx/react:app ${appName} --bundler=vite`);
 
-    // .mts file is needed because Nx will transpile .ts files as CJS
-    renameFile(`${appName}/vite.config.ts`, `${appName}/vite.config.mts`);
-
+    // Nx now generates .mts files by default to force ESM
     // Remove CJS entry point for Vite
     updateJson('node_modules/vite/package.json', (json) => {
       for (const [key, value] of Object.entries(json.exports['.'])) {

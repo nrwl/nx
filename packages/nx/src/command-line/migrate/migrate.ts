@@ -193,6 +193,10 @@ export class Migrator {
   private async createMigrateJson() {
     const migrations = await Promise.all(
       Object.keys(this.packageUpdates).map(async (packageName) => {
+        if (this.packageUpdates[packageName].ignoreMigrations) {
+          return [];
+        }
+
         const currentVersion = this.getPkgVersion(packageName);
         if (currentVersion === null) return [];
 
@@ -279,6 +283,7 @@ export class Migrator {
       this.addPackageUpdate(targetPackage, {
         version: target.version,
         addToPackageJson: target.addToPackageJson || false,
+        ...(target.ignoreMigrations && { ignoreMigrations: true }),
       });
       return [];
     }
@@ -308,13 +313,15 @@ export class Migrator {
     this.addPackageUpdate(targetPackage, {
       version: migrationConfig.version,
       addToPackageJson: target.addToPackageJson || false,
+      ...(target.ignoreMigrations && { ignoreMigrations: true }),
     });
 
     const { packageJsonUpdates, packageGroupOrder } =
       this.getPackageJsonUpdatesFromMigrationConfig(
         targetPackage,
         targetVersion,
-        migrationConfig
+        migrationConfig,
+        target.ignorePackageGroup
       );
 
     if (!Object.keys(packageJsonUpdates).length) {
@@ -359,7 +366,8 @@ export class Migrator {
   private getPackageJsonUpdatesFromMigrationConfig(
     packageName: string,
     targetVersion: string,
-    migrationConfig: ResolvedMigrationConfiguration
+    migrationConfig: ResolvedMigrationConfiguration,
+    ignorePackageGroup?: boolean
   ): {
     packageJsonUpdates: PackageJsonUpdates;
     packageGroupOrder: string[];
@@ -368,7 +376,8 @@ export class Migrator {
       this.getPackageJsonUpdatesFromPackageGroup(
         packageName,
         targetVersion,
-        migrationConfig
+        migrationConfig,
+        ignorePackageGroup
       );
 
     if (
@@ -398,12 +407,17 @@ export class Migrator {
   private getPackageJsonUpdatesFromPackageGroup(
     packageName: string,
     targetVersion: string,
-    migrationConfig: ResolvedMigrationConfiguration
+    migrationConfig: ResolvedMigrationConfiguration,
+    ignorePackageGroup?: boolean
   ) {
+    if (ignorePackageGroup) {
+      return [];
+    }
+
     const packageGroup: ArrayPackageGroup =
       packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')
         ? LEGACY_NRWL_PACKAGE_GROUP
-        : migrationConfig.packageGroup ?? [];
+        : (migrationConfig.packageGroup ?? []);
 
     let packageGroupOrder: string[] = [];
     if (packageGroup.length) {
@@ -480,6 +494,12 @@ export class Migrator {
                 ? packageUpdate.alwaysAddToPackageJson
                 : 'dependencies'
               : packageUpdate.addToPackageJson || false,
+            ...(packageUpdate.ignorePackageGroup && {
+              ignorePackageGroup: true,
+            }),
+            ...(packageUpdate.ignoreMigrations && {
+              ignoreMigrations: true,
+            }),
           };
         }
       }
@@ -1867,7 +1887,10 @@ export async function runMigration() {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
-  if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+  if (
+    process.env.NX_USE_LOCAL !== 'true' &&
+    process.env.NX_MIGRATE_USE_LOCAL === undefined
+  ) {
     const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();

@@ -11,7 +11,10 @@ import {
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 import { GradleExecutorSchema } from './schema';
-import { findGradlewFile } from '../../utils/exec-gradle';
+import {
+  findGradlewFile,
+  getCustomGradleExecutableDirectoryFromPlugin,
+} from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
 import {
@@ -23,6 +26,7 @@ import {
   getExcludeTasks,
   getGradleTaskNameWithNxTaskId,
 } from './get-exclude-task';
+import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export const batchRunnerPath = join(
   __dirname,
@@ -38,7 +42,14 @@ export default async function gradleBatch(
   try {
     const projectName = taskGraph.tasks[taskGraph.roots[0]]?.target?.project;
     let projectRoot = context.projectGraph.nodes[projectName]?.data?.root ?? '';
-    let gradlewPath = findGradlewFile(join(projectRoot, 'project.json')); // find gradlew near project root
+    const customGradleExecutableDirectory =
+      getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
+
+    let gradlewPath = findGradlewFile(
+      join(projectRoot, 'project.json'),
+      workspaceRoot,
+      customGradleExecutableDirectory
+    ); // find gradlew near project root
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);
 
@@ -49,8 +60,8 @@ export default async function gradleBatch(
       typeof input.args === 'string'
         ? input.args.trim().split(' ')
         : Array.isArray(input.args)
-        ? input.args
-        : [];
+          ? input.args
+          : [];
     if (overrides.__overrides_unparsed__.length) {
       args.push(...overrides.__overrides_unparsed__);
     }
@@ -108,12 +119,20 @@ export function getGradlewTasksToRun(
   const testTaskIdsWithExclude: Set<string> = new Set([]);
   const taskIdsWithoutExclude: Set<string> = new Set([]);
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
+  const includeDependsOnTasks: Set<string> = new Set();
 
   for (const taskId of taskIds) {
     const task = taskGraph.tasks[taskId];
     const input = inputs[task.id];
 
     gradlewTasksToRun[taskId] = input;
+
+    // Collect tasks that should be included (not excluded) - typically provider-based dependencies
+    if (input.includeDependsOnTasks) {
+      for (const task of input.includeDependsOnTasks) {
+        includeDependsOnTasks.add(task);
+      }
+    }
 
     if (input.excludeDependsOn) {
       if (input.testClassName) {
@@ -133,7 +152,12 @@ export function getGradlewTasksToRun(
     dependencies.forEach((dep) => allDependsOn.add(dep));
   }
 
-  const excludeTasks = getExcludeTasks(taskIdsWithExclude, nodes, allDependsOn);
+  const excludeTasks = getExcludeTasks(
+    taskIdsWithExclude,
+    nodes,
+    allDependsOn,
+    includeDependsOnTasks
+  );
 
   const allTestsDependsOn = new Set<string>();
   for (const taskId of testTaskIdsWithExclude) {

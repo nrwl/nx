@@ -24,6 +24,7 @@ export { stripIndent } from './utils/logger';
 export {
   readModulePackageJson,
   installPackageToTmp,
+  installPackageToTmpAsync,
 } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
@@ -33,6 +34,7 @@ export {
 } from './utils/workspace-context';
 export {
   createProjectRootMappingsFromProjectConfigurations,
+  createProjectRootMappings,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
@@ -44,3 +46,4 @@ export { isCI } from './utils/is-ci';
 export { isUsingPrettierInTree } from './utils/is-using-prettier';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
+export { signalToCode } from './utils/exit-codes';

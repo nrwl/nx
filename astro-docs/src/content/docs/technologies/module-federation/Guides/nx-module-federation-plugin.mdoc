@@ -62,13 +62,11 @@ export default {
 The NxModuleFederationPlugin wraps and configures the Module Federation plugin from `@module-federation/enhanced` to provide a streamlined experience in Nx workspaces. Here's what the plugin does:
 
 1. **Base Configuration**: It sets up essential Rspack configurations:
-
    - Disables runtime chunking (`runtimeChunk: false`)
    - Sets a unique name for the output
    - Configures specific settings for server-side rendering when needed
 
 2. **Module Federation Setup**: The plugin automatically:
-
    - Configures the remote entry filename (`remoteEntry.js`)
    - Sets up exposed modules based on your configuration
    - Manages remote module connections
@@ -113,14 +111,14 @@ export default {
 These names match the names of the projects in the workspace. Therefore, Nx can find them in the project graph and determine the information it needs.
 This usually amounts to Nx creating the following URLs:
 
-```shell {% frame="none" %}
+```shell
 shop@localhost:4201
 cart@localhost:4202
 ```
 
 When it comes deployment to a real server, you'll need to configure the URLs to point to their real location. For example, if you deploy the host and the remotes to three servers, each with their own domain, you'd need to configure that:
 
-```shell {% frame="none" %}
+```shell
 shop@https://shop.example.com
 cart@https://cart.example.com
 ```

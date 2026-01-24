@@ -1,10 +1,17 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.NxTaskExtension
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import org.gradle.api.Action
+import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.TaskInternal
+import org.gradle.api.internal.provider.ProviderInternal
+import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -21,7 +28,10 @@ fun processTask(
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
-    targetNameOverrides: Map<String, String>
+    targetNameOverrides: Map<String, String>,
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNamePrefix: String = "",
+    project: Project,
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -44,14 +54,24 @@ fun processTask(
   }
 
   // process dependsOn
-  val dependsOn = getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides)
+  val dependsOn =
+      getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides, targetNamePrefix)
+
   if (!dependsOn.isNullOrEmpty()) {
-    logger.info("${task}: processed ${dependsOn.size} dependsOn")
+    logger.info("${task}: processed ${dependsOn.size} total dependsOn")
     target["dependsOn"] = dependsOn
   }
 
+  // Check for nx extension to get additional config
+  val nxExtension = task.extensions.findByType(NxTaskExtension::class.java)
+
+  // Merge nx.json config into target (this allows users to set any Nx target properties)
+  nxExtension?.json?.getOrNull()?.let { nxJson -> target["nxConfig"] = nxJson }
+
   // process inputs
-  val inputs = getInputsForTask(dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes)
+  val inputs =
+      getInputsForTask(
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
@@ -64,15 +84,16 @@ fun processTask(
           task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] =
-      if (continuous) {
-        mapOf(
-            "taskName" to "${projectBuildPath}:${task.name}",
-            "continuous" to true,
-            "excludeDependsOn" to shouldExcludeDependsOn(task))
-      } else {
-        mapOf("taskName" to "${projectBuildPath}:${task.name}")
-      }
+  target["options"] = buildMap {
+    put("taskName", "${projectBuildPath}:${task.name}")
+    val providerDependencies = findProviderBasedDependencies(task)
+    if (providerDependencies.isNotEmpty()) {
+      put("includeDependsOnTasks", providerDependencies.toList())
+    }
+    if (continuous) {
+      put("continuous", true)
+    }
+  }
 
   return target
 }
@@ -89,10 +110,12 @@ fun getGradlewCommand(): String {
 /**
  * Parse task and get inputs for this task
  *
+ * @param dependsOnTasks set of tasks this task depends on
  * @param task task to process
  * @param projectRoot the project root path
  * @param workspaceRoot the workspace root path
  * @param externalNodes map of external nodes
+ * @param gitIgnoreClassifier classifier to determine if files match gitignore patterns
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
@@ -100,82 +123,80 @@ fun getInputsForTask(
     task: Task,
     projectRoot: String,
     workspaceRoot: String,
-    externalNodes: MutableMap<String, ExternalNode>? = null
+    externalNodes: MutableMap<String, ExternalNode>? = null,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): List<Any>? {
-  fun getDependentTasksOutputFile(file: File): String {
-    val relativePathToWorkspaceRoot =
-        file.path.substring(workspaceRoot.length + 1) // also remove the file separator
-    val dependentTasksOutputFiles =
-        if (file.name.contains('.') ||
-            (file.exists() &&
-                file.isFile)) { // if file does not exists, file.isFile would always be false
-          relativePathToWorkspaceRoot
-        } else {
-          "$relativePathToWorkspaceRoot${File.separator}**${File.separator}*"
-        }
-    return dependentTasksOutputFiles
-  }
-
   return try {
-    val mappedInputsIncludeExternal: MutableList<Any> = mutableListOf()
+    val inputs = mutableListOf<Any>()
+    val externalDependencies = mutableListOf<String>()
 
-    val dependsOnOutputs: MutableSet<File> = mutableSetOf()
-    val combinedDependsOn: Set<Task> = dependsOnTasks ?: getDependsOnTask(task)
-    combinedDependsOn.forEach { dependsOnTask ->
-      dependsOnTask.outputs.files.files.forEach { file ->
-        if (file.path.startsWith(workspaceRoot + File.separator)) {
-          dependsOnOutputs.add(file)
-          val dependentTasksOutputFiles = getDependentTasksOutputFile(file)
-          mappedInputsIncludeExternal.add(
-              mapOf("dependentTasksOutputFiles" to dependentTasksOutputFiles))
+    // Collect outputs from dependent tasks
+    val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
+    tasksToProcess.forEach { dependentTask ->
+      dependentTask.outputs.files.files.forEach { outputFile ->
+        if (isFileInWorkspace(outputFile, workspaceRoot)) {
+          val relativePath = toRelativePathOrGlob(outputFile, workspaceRoot)
+          inputs.add(mapOf("dependentTasksOutputFiles" to relativePath))
         }
       }
     }
 
-    val externalDependencies = mutableListOf<String>()
-    val buildDir = task.project.layout.buildDirectory.get().asFile
+    // Process each tasks's input files from the tooling API
+    task.inputs.files.forEach { inputFile ->
+      val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
-    task.inputs.files.forEach { file ->
-      val path: String = file.path
-      val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
-
-      if (pathWithReplacedRoot != null) {
-        val isInTaskOutputBuildDir = file.path.startsWith(buildDir.path + File.separator)
-        if (!isInTaskOutputBuildDir) {
-          mappedInputsIncludeExternal.add(pathWithReplacedRoot)
-        } else {
-          val isInDependsOnOutputs =
-              dependsOnOutputs.any { outputFile ->
-                file == outputFile || file.path.startsWith(outputFile.path + File.separator)
-              }
-          if (!isInDependsOnOutputs) {
-            val dependentTasksOutputFile = getDependentTasksOutputFile(file)
-            mappedInputsIncludeExternal.add(
-                mapOf("dependentTasksOutputFiles" to dependentTasksOutputFile))
+      when {
+        // File is outside workspace - treat as external dependency
+        relativePath == null -> {
+          try {
+            val externalDep =
+                getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
+            externalDep?.let { externalDependencies.add(it) }
+          } catch (e: Exception) {
+            task.logger.info("Error resolving external dependency for ${inputFile.path}: $e")
           }
         }
-      } else {
-        try {
-          val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
-          externalDep?.let { externalDependencies.add(it) }
-        } catch (e: Exception) {
-          task.logger.info("${task}: get external dependency error $e")
+
+        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
+        gitIgnoreClassifier.isIgnored(inputFile) -> {
+          val relativePathOrGlob = toRelativePathOrGlob(inputFile, workspaceRoot)
+          inputs.add(mapOf("dependentTasksOutputFiles" to relativePathOrGlob))
+        }
+
+        // Regular source file - add as direct input
+        else -> {
+          inputs.add(relativePath)
         }
       }
     }
 
+    // Step 3: Add external dependencies if any
     if (externalDependencies.isNotEmpty()) {
-      mappedInputsIncludeExternal.add(mapOf("externalDependencies" to externalDependencies))
+      inputs.add(mapOf("externalDependencies" to externalDependencies))
     }
 
-    if (mappedInputsIncludeExternal.isNotEmpty()) {
-      return mappedInputsIncludeExternal
-    }
-    return null
+    inputs.ifEmpty { null }
   } catch (e: Exception) {
     task.logger.info("Error getting inputs for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
     null
+  }
+}
+
+/** Checks if a file is within the workspace. */
+private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
+  return file.path.startsWith(workspaceRoot + File.separator)
+}
+
+/** Converts a file to a relative path. If it's a directory, returns a glob pattern. */
+private fun toRelativePathOrGlob(file: File, workspaceRoot: String): String {
+  val relativePath = file.path.substring(workspaceRoot.length + 1)
+  val isFile = file.name.contains('.') || (file.exists() && file.isFile)
+
+  return if (isFile) {
+    relativePath
+  } else {
+    "$relativePath${File.separator}**${File.separator}*"
   }
 }
 
@@ -245,11 +266,12 @@ fun getDependsOnTask(task: Task): Set<Task> {
 
 /**
  * Get dependsOn for task, handling configuration timing safely. Rewrites dependency task names
- * based on targetNameOverrides (e.g., test -> ci).
+ * based on targetNameOverrides (e.g., test -> ci) and applies targetNamePrefix.
  *
  * @param task task to process
  * @param dependencies optional set to collect inter-project Dependency objects
  * @param targetNameOverrides optional map of overrides (e.g., test -> ci)
+ * @param targetNamePrefix optional prefix to apply to all target names
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
@@ -259,8 +281,13 @@ fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
     task: Task,
     dependencies: MutableSet<Dependency>? = null,
-    targetNameOverrides: Map<String, String> = emptyMap()
+    targetNameOverrides: Map<String, String> = emptyMap(),
+    targetNamePrefix: String = ""
 ): List<String>? {
+
+  // Helper function to apply prefix to target names
+  fun applyPrefix(name: String): String =
+      if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$name" else name
 
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
@@ -289,11 +316,12 @@ fun getDependsOnForTask(
 
       if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
         val taskName =
-            if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-              targetNameOverrides["testTargetName"]!!
-            } else {
-              depTask.name
-            }
+            applyPrefix(
+                if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+                  targetNameOverrides["testTargetName"]!!
+                } else {
+                  depTask.name
+                })
         "${depProject.name}:${taskName}"
       } else {
         null
@@ -374,12 +402,6 @@ fun getMetadata(
  * Into an external dependency with key: "gradle:commons-lang3-3.13.0" with value: { "type":
  * "gradle", "name": "commons-lang3", "data": { "version": "3.13.0", "packageName":
  * "org.apache.commons.commons-lang3", "hash": "b7263237aa89c1f99b327197c41d0669707a462e",} }
- *
- * @param inputFile Path to the dependency jar.
- * @param externalNodes Map to populate with the resulting ExternalNode.
- * @param logger Gradle logger for warnings and debug info
- * @return The external dependency key (e.g., gradle:commons-lang3-3.13.0), or null if parsing
- *   fails.
  */
 fun getExternalDepFromInputFile(
     inputFile: String,
@@ -432,6 +454,7 @@ fun replaceRootInPath(path: String, projectRoot: String, workspaceRoot: String):
     path == projectRoot -> "{projectRoot}"
     path.startsWith(workspaceRoot + File.separator) ->
         path.replaceFirst(workspaceRoot, "{workspaceRoot}")
+
     path == workspaceRoot -> "{workspaceRoot}"
     else -> null
   }
@@ -449,8 +472,52 @@ fun isCacheable(task: Task): Boolean {
   return !nonCacheableTasks.contains(task.name)
 }
 
-private val tasksWithDependsOn = setOf("bootRun", "bootJar")
+/**
+ * Finds provider-based task dependencies by inspecting lifecycle dependencies without triggering
+ * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
+ * with known producer tasks.
+ */
+fun findProviderBasedDependencies(task: Task): Set<String> {
+  val logger = task.logger
+  val producerTasks = mutableSetOf<String>()
 
-fun shouldExcludeDependsOn(task: Task): Boolean {
-  return !tasksWithDependsOn.contains(task.name)
+  try {
+    val taskInternal = task as? TaskInternal ?: return emptySet()
+    val lifecycleDeps = taskInternal.lifecycleDependencies
+
+    if (lifecycleDeps is DefaultTaskDependency) {
+      val rawDeps: Set<Any> = lifecycleDeps.mutableValues
+
+      rawDeps.forEach { dep ->
+        when (dep) {
+          is ProviderInternal<*> -> {
+            try {
+              val producer = dep.producer
+              if (producer.isKnown) {
+                producer.visitProducerTasks(
+                    Action { producerTask -> producerTasks.add(producerTask.path) })
+              }
+            } catch (e: Exception) {
+              logger.debug("Could not get producer from provider: ${e.message}")
+            }
+          }
+          is TaskProvider<*> -> {
+            try {
+              producerTasks.add(dep.name)
+            } catch (e: Exception) {
+              logger.debug("Could not get name from TaskProvider: ${e.message}")
+            }
+          }
+        }
+      }
+    }
+
+    if (producerTasks.isNotEmpty()) {
+      logger.info("Task ${task.path} has provider-based dependencies: $producerTasks")
+    }
+  } catch (e: Exception) {
+    logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
+  }
+
+  return producerTasks
 }

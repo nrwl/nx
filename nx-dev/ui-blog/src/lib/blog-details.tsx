@@ -85,7 +85,8 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
             <YouTube src={post.youtubeUrl} title={post.title} />
           </div>
         ) : (
-          post.cover_image && (
+          post.cover_image &&
+          !post.hideCoverImage && (
             <div className="mx-auto mb-16 w-full max-w-screen-md">
               <Image
                 className="w-full object-cover md:rounded-md"

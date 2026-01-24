@@ -708,20 +708,20 @@ describe('ChangelogRenderer', () => {
         }).render();
 
         expect(markdown).toMatchInlineSnapshot(`
-                  "## v1.1.0
+          "## v1.1.0
 
-                  ### 🚀 Features
+          ### 🚀 Features
 
-                  - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+          - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
-                  ### ⚠️  Breaking Changes
+          ### ⚠️  Breaking Changes
 
-                  - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+          - **WebSocketSubject:** no longer extends \`Subject\`.
 
-                  ### ❤️ Thank You
+          ### ❤️ Thank You
 
-                  - James Henry"
-              `);
+          - James Henry"
+        `);
       });
 
       it('should extract the explanation of a breaking change and render it preferentially with references', async () => {
@@ -771,7 +771,8 @@ describe('ChangelogRenderer', () => {
 
           ### ⚠️  Breaking Changes
 
-          - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead. ([54f2f6ed1](https://example.com/example/example/commit/54f2f6ed1))
+          - **WebSocketSubject:** no longer extends \`Subject\`.  ([54f2f6ed1](https://example.com/example/example/commit/54f2f6ed1))
+            \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead.
 
           ### ❤️ Thank You
 
@@ -819,8 +820,8 @@ describe('ChangelogRenderer', () => {
 
           ### ⚠️  Breaking Changes
 
-          - **misc:** The \`--legacy-peer-deps\` behavior is no longer forced. ([#33014](https://example.com/example/example/pull/33014))
-
+          - **misc:** don't set legacy-peer-deps by default  ([#33014](https://example.com/example/example/pull/33014))
+            The \`--legacy-peer-deps\` behavior is no longer forced.
             If you need it, configure your package manager to enforce it.
 
           ### ❤️ Thank You
@@ -870,8 +871,8 @@ describe('ChangelogRenderer', () => {
 
           ### ⚠️  Breaking Changes
 
-          - **core:** First paragraph of explanation. ([#12345](https://example.com/example/example/pull/12345))
-
+          - **core:** major refactor  ([#12345](https://example.com/example/example/pull/12345))
+            First paragraph of explanation.
             Second paragraph with more details.
             Continued explanation.
 
@@ -1002,7 +1003,8 @@ A	packages/nx/src/migrations/update-22-0-0/consolidate-release-tag-config.ts
 
           ### ⚠️  Breaking Changes
 
-          - **release:** This is a breaking change in the preferred configuration structure. Existing configurations will continue to work through the migration period, but users should update to the new nested format. ([#12345](https://example.com/example/example/pull/12345))
+          - **release:** improve release configuration  ([#12345](https://example.com/example/example/pull/12345))
+            This is a breaking change in the preferred configuration structure. Existing configurations will continue to work through the migration period, but users should update to the new nested format.
 
           ### ❤️ Thank You
 

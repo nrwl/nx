@@ -26,19 +26,21 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
 import { deleteOutput } from '../delete-output';
+import { nxCopyAssetsPlugin } from '../nx-copy-assets.plugin';
 import { generatePackageJson } from '../package-json/generate-package-json';
 import { swc } from '../swc';
 import { getProjectNode } from './get-project-node';
 import { normalizeOptions } from './normalize-options';
-import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
+import { RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
 
 const json = require('@rollup/plugin-json');
-const copy = require('rollup-plugin-copy');
-const postcss = require('rollup-plugin-postcss');
+
+// Use our inlined postcss plugin instead of external rollup-plugin-postcss
+import { postcss } from '../postcss';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -104,7 +106,7 @@ export function withNx(
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
-          projectRoot,
+          projectNode.data.root,
           dependencies
         );
 
@@ -241,11 +243,10 @@ export function withNx(
       : finalConfig.output.dir;
 
     finalConfig.plugins = [
-      copy({
-        targets: convertCopyAssetsToRollupOptions(
-          options.outputPath,
-          options.assets
-        ),
+      nxCopyAssetsPlugin({
+        assets: options.assets,
+        outputPath: options.outputPath,
+        projectRoot,
       }),
       image(),
       json(),
@@ -386,23 +387,6 @@ function createTsCompilerOptions(
     compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
-}
-
-interface RollupCopyAssetOption {
-  src: string;
-  dest: string;
-}
-
-function convertCopyAssetsToRollupOptions(
-  outputPath: string,
-  assets: AssetGlobPattern[]
-): RollupCopyAssetOption[] {
-  return assets
-    ? assets.map((a) => ({
-        src: join(a.input, a.glob).replace(/\\/g, '/'),
-        dest: join(workspaceRoot, outputPath, a.output).replace(/\\/g, '/'),
-      }))
-    : undefined;
 }
 
 function readCompatibleFormats(

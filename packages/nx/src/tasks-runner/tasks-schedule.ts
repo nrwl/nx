@@ -12,6 +12,7 @@ import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
 
 export interface Batch {
+  id: string;
   executorName: string;
   taskGraph: TaskGraph;
 }
@@ -29,6 +30,7 @@ export class TasksSchedule {
   private scheduleRequestsExecutionChain = Promise.resolve();
   private estimatedTaskTimings: Record<string, number> = {};
   private projectDependencies: Record<string, number> = {};
+  private batchCounters: Record<string, number> = {};
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -177,29 +179,48 @@ export class TasksSchedule {
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
-      await this.processTaskForBatches(batchMap, rootTask, executorName, true);
+      await this.processTaskForBatches(
+        batchMap,
+        rootTask,
+        executorName,
+        true,
+        new Set<string>()
+      );
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
-      this.scheduleBatch({ executorName, taskGraph });
+      this.scheduleBatch(executorName, taskGraph);
     }
   }
 
-  private scheduleBatch({ executorName, taskGraph }: Batch) {
+  private scheduleBatch(executorName: string, taskGraph: TaskGraph) {
+    // Generate batch ID with incrementing counter
+    if (!this.batchCounters[executorName]) {
+      this.batchCounters[executorName] = 0;
+    }
+    this.batchCounters[executorName]++;
+    const batchId = `${executorName} ${this.batchCounters[executorName]}`;
+
     // Create a new task graph without the tasks that are being scheduled as part of this batch
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
       Object.keys(taskGraph.tasks)
     );
 
-    this.scheduledBatches.push({ executorName, taskGraph });
+    this.scheduledBatches.push({ id: batchId, executorName, taskGraph });
   }
 
   private async processTaskForBatches(
     batches: Record<string, TaskGraph>,
     task: Task,
     rootExecutorName: string,
-    isRoot: boolean
+    isRoot: boolean,
+    visitedInBatch: Set<string>
   ): Promise<void> {
+    // Skip if already processed in this batch - prevents redundant traversals
+    if (visitedInBatch.has(task.id)) {
+      return;
+    }
+
     if (!this.canBatchTaskBeScheduled(task, batches[rootExecutorName])) {
       return;
     }
@@ -216,6 +237,10 @@ export class TasksSchedule {
     if (!batchImplementationFactory) {
       return;
     }
+
+    // Mark as visited only after all checks pass and we're actually adding to batch
+    // This ensures tasks can be added if they pass checks from any path
+    visitedInBatch.add(task.id);
 
     const batch = (batches[rootExecutorName] =
       batches[rootExecutorName] ??
@@ -241,7 +266,8 @@ export class TasksSchedule {
         batches,
         depTask,
         rootExecutorName,
-        false
+        false,
+        visitedInBatch
       );
     }
   }

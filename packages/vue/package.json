@@ -33,10 +33,11 @@
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/vite": "workspace:*",
+    "@nx/vitest": "workspace:*",
     "@nx/web": "workspace:*",
-    "picomatch": "^4.0.2",
-    "semver": "^7.6.3",
-    "tslib": "^2.3.0"
+    "picomatch": "catalog:",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"

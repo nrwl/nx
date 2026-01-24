@@ -21,7 +21,7 @@ Nx offers two complementary approaches to enforce module boundaries:
 
 **ESLint Integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports using the `@nx/enforce-module-boundaries` ESLint rule. This checks TypeScript imports and `package.json` dependencies during linting.
 
-**Language-Agnostic Conformance** - For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/powerpack/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`. Requires [Nx Powerpack or Enterprise](https://nx.dev/enterprise).
+**Language-Agnostic Conformance** - For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`. Requires [Nx Enterprise plan](https://nx.dev/enterprise).
 
 Both approaches use the same tag-based constraint system described below.
 
@@ -39,8 +39,8 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {
   // ... more project configuration here
   "nx": {
-    "tags": ["scope:client"]
-  }
+    "tags": ["scope:client"],
+  },
 }
 ```
 
@@ -49,8 +49,8 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {
   // ... more project configuration here
   "nx": {
-    "tags": ["scope:admin"]
-  }
+    "tags": ["scope:admin"],
+  },
 }
 ```
 
@@ -59,8 +59,8 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {
   // ... more project configuration here
   "nx": {
-    "tags": ["scope:shared"]
-  }
+    "tags": ["scope:shared"],
+  },
 }
 ```
 
@@ -71,7 +71,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 // client/project.json
 {
   // ... more project configuration here
-  "tags": ["scope:client"]
+  "tags": ["scope:client"],
 }
 ```
 
@@ -79,7 +79,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 // admin/project.json
 {
   // ... more project configuration here
-  "tags": ["scope:admin"]
+  "tags": ["scope:admin"],
 }
 ```
 
@@ -87,7 +87,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 // utils/project.json
 {
   // ... more project configuration here
-  "tags": ["scope:shared"]
+  "tags": ["scope:shared"],
 }
 ```
 
@@ -103,7 +103,7 @@ Once you have tagged your projects, configure the dependency constraints based o
 
 For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` ESLint rule:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/eslint-plugin @nx/devkit
 ```
 
@@ -166,19 +166,19 @@ export default [
       "depConstraints": [
         {
           "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"]
+          "onlyDependOnLibsWithTags": ["scope:shared"],
         },
         {
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
         },
         {
           "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
-        }
-      ]
-    }
-  ]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
@@ -201,7 +201,7 @@ Read more about [ESLint rule options](/docs/technologies/eslint/eslint-plugin/gu
 
 For any project type or to enforce boundaries on the complete dependency graph, use the Conformance plugin:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/conformance
 ```
 
@@ -218,21 +218,21 @@ Configure rules in your `nx.json`:
           "depConstraints": [
             {
               "sourceTag": "scope:shared",
-              "onlyDependOnProjectsWithTags": ["scope:shared"]
+              "onlyDependOnProjectsWithTags": ["scope:shared"],
             },
             {
               "sourceTag": "scope:admin",
-              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:admin"]
+              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:admin"],
             },
             {
               "sourceTag": "scope:client",
-              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:client"]
-            }
-          ]
-        }
-      }
-    ]
-  }
+              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:client"],
+            },
+          ],
+        },
+      },
+    ],
+  },
 }
 ```
 
@@ -243,7 +243,7 @@ Run conformance checks in CI:
   run: npx nx conformance:check
 ```
 
-Learn more about [Conformance rules](/docs/enterprise/powerpack/conformance).
+Learn more about [Conformance rules](/docs/enterprise/conformance).
 
 {% /tabitem %}
 {% /tabs %}
@@ -261,7 +261,7 @@ Example: projects with any tags (including untagged) can depend on any other pro
 ```jsonc
 {
   "sourceTag": "*",
-  "onlyDependOnLibsWithTags": ["*"]
+  "onlyDependOnLibsWithTags": ["*"],
 }
 ```
 
@@ -272,7 +272,7 @@ Example: projects tagged with `scope:client` can only depend on projects tagged 
 ```jsonc
 {
   "sourceTag": "scope:client",
-  "onlyDependOnLibsWithTags": ["scope:util"]
+  "onlyDependOnLibsWithTags": ["scope:util"],
 }
 ```
 

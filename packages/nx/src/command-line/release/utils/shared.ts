@@ -1,13 +1,24 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
-import { extname } from 'path';
 import { ProjectGraph } from '../../../config/project-graph';
-import { interpolate } from '../../../tasks-runner/utils';
-import { output } from '../../../utils/output';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
-import { WholeFileChange } from '../../../project-graph/file-utils';
+import {
+  calculateFileChanges,
+  Change,
+  DeletedFileChange,
+  WholeFileChange,
+} from '../../../project-graph/file-utils';
+import { interpolate } from '../../../tasks-runner/utils';
+import type { NxArgs } from '../../../utils/command-line-utils';
+import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { GitCommit, gitAdd, gitCommit } from './git';
+import {
+  GitCommit,
+  gitAdd,
+  gitCommit,
+  sanitizeProjectNameForGitTag,
+} from './git';
+import { NxReleaseConfig } from '../config/config';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -59,15 +70,20 @@ export class ReleaseVersion {
     version, // short form version string with no prefixes or patterns, e.g. 1.0.0
     releaseTagPattern, // full pattern to interpolate, e.g. "v{version}" or "{projectName}@{version}"
     projectName, // optional project name to interpolate into the releaseTagPattern
+    releaseGroupName, // optional release group name to interpolate into the releaseTagPattern
   }: {
     version: string;
     releaseTagPattern: string;
     projectName?: string;
+    releaseGroupName?: string;
   }) {
     this.rawVersion = version;
     this.gitTag = interpolate(releaseTagPattern, {
       version,
-      projectName,
+      projectName: projectName
+        ? sanitizeProjectNameForGitTag(projectName)
+        : projectName,
+      releaseGroupName,
     });
     this.isPrerelease = isPrerelease(version);
   }
@@ -136,6 +152,7 @@ export function createCommitMessageValues(
     const releaseVersion = new ReleaseVersion({
       version: projectVersionData.newVersion,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
+      releaseGroupName: releaseGroup.name,
     });
     commitMessageValues[0] = interpolate(commitMessageValues[0], {
       version: releaseVersion.rawVersion,
@@ -163,6 +180,7 @@ export function createCommitMessageValues(
         version: projectVersionData.newVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
         projectName: releaseGroupProjectNames[0],
+        releaseGroupName: releaseGroup.name,
       });
       commitMessageValues[0] = interpolate(commitMessageValues[0], {
         version: releaseVersion.rawVersion,
@@ -199,6 +217,7 @@ export function createCommitMessageValues(
             version: projectVersionData.newVersion,
             releaseTagPattern: releaseGroup.releaseTag.pattern,
             projectName: project,
+            releaseGroupName: releaseGroup.name,
           });
           commitMessageValues.push(
             `- project: ${project} ${releaseVersion.rawVersion}`
@@ -214,6 +233,7 @@ export function createCommitMessageValues(
       const releaseVersion = new ReleaseVersion({
         version: projectVersionData.newVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
+        releaseGroupName: releaseGroup.name,
       });
       commitMessageValues.push(
         `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
@@ -282,7 +302,8 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
                 })
               );
             }
@@ -290,7 +311,8 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
                 })
               );
             }
@@ -301,7 +323,8 @@ export function createGitTagValues(
                 version: preferDockerVersion
                   ? projectVersionData.dockerVersion
                   : projectVersionData.newVersion,
-                projectName: project,
+                projectName: sanitizeProjectNameForGitTag(project),
+                releaseGroupName: releaseGroup.name,
               })
             );
           }
@@ -382,10 +405,38 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
   }
 }
 
+function isAutomatedReleaseCommit(
+  message: string,
+  nxReleaseConfig: NxReleaseConfig
+) {
+  // All possible commit message patterns based on config
+  const commitMessagePatterns = [
+    nxReleaseConfig.git.commitMessage,
+    nxReleaseConfig.version.git.commitMessage,
+    nxReleaseConfig.changelog.git.commitMessage,
+  ];
+  // Check if message matches any pattern
+  for (const pattern of commitMessagePatterns) {
+    if (!pattern) continue;
+    // Split on {version}, escape each part for regex, then join with version pattern
+    const parts = pattern.split('{version}');
+    const escapedParts = parts.map((part) =>
+      part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    );
+    const regexPattern = escapedParts.join('\\S+');
+    const regex = new RegExp(`^${regexPattern}$`);
+    if (regex.test(message)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
-  projects: string[]
+  projects: string[],
+  nxReleaseConfig: NxReleaseConfig
 ): // Map of projectName to GitCommit[]
 Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
@@ -395,11 +446,16 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   > = new Map();
 
   for (const commit of commits) {
-    // Convert affectedFiles to FileChange[] format
-    const touchedFiles = commit.affectedFiles.map((f) => ({
-      file: f,
-      getChanges: () => [new WholeFileChange()],
-    }));
+    // Filter out automated release commits
+    if (isAutomatedReleaseCommit(commit.message, nxReleaseConfig)) {
+      continue;
+    }
+
+    // Convert affectedFiles to FileChange[] format with proper diff computation
+    const touchedFiles = calculateFileChanges(commit.affectedFiles, {
+      base: `${commit.shortHash}^`,
+      head: commit.shortHash,
+    } as NxArgs);
 
     // Use the same affected detection logic as `nx affected`
     const affectedGraph = await filterAffected(projectGraph, touchedFiles);

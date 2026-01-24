@@ -7,15 +7,6 @@
   "include": [],
   "references": [
     {
-      "path": "../data-access-documents"
-    },
-    {
-      "path": "../models-document"
-    },
-    {
-      "path": "../models-package"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

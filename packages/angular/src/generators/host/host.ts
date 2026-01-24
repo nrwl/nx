@@ -20,19 +20,19 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { assertRspackIsCSR } from '../utils/assert-mf-utils';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
-import { updateSsrSetup } from './lib';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import { updateSsrSetup, validateOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function host(tree: Tree, schema: Schema) {
   assertNotUsingTsSolutionSetup(tree, 'host');
+  validateOptions(tree, schema);
   // TODO: Replace with Rspack when confidence is high enough
   schema.bundler ??= 'webpack';
   const isRspack = schema.bundler === 'rspack';
-  assertRspackIsCSR(
-    schema.bundler,
-    schema.ssr ?? false,
-    schema.serverRouting ?? false
-  );
+  assertRspackIsCSR(schema.bundler, schema.ssr ?? false);
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  schema.zoneless ??= angularMajorVersion >= 21 ? true : false;
 
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
@@ -117,8 +117,8 @@ export async function host(tree: Tree, schema: Schema) {
     const remoteDirectory = options.directory
       ? joinPathFragments(options.directory, '..', remote)
       : appRoot === '.'
-      ? remote
-      : joinPathFragments(appRoot, '..', remote);
+        ? remote
+        : joinPathFragments(appRoot, '..', remote);
     await remoteGenerator(tree, {
       ...options,
       name: remote,

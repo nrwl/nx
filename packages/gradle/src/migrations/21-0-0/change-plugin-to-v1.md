@@ -4,23 +4,18 @@ Change @nx/gradle plugin to version 1 in nx.json
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "plugins": ["@nx/gradle"]
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[5] fileName="nx.json" %}
+```json title="nx.json" {5}
 {
   "plugins": ["@nx/gradle/plugin-v1"]
 }
 ```
-
-{% /tab %}
-{% /tabs %}

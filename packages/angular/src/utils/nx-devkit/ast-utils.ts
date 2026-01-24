@@ -16,8 +16,6 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
-import { getInstalledAngularVersionInfo as getInstalledAngularVersionInfoFromTree } from '../../generators/utils/version-utils';
 
 let tsModule: typeof import('typescript');
 
@@ -102,18 +100,8 @@ export function isStandalone(
     return true;
   }
 
-  const { major: angularMajorVersion } = tree
-    ? getInstalledAngularVersionInfoFromTree(tree)
-    : getInstalledAngularVersionInfo();
-  if (angularMajorVersion !== null && angularMajorVersion < 19) {
-    // in angular 18 and below, standalone: false is the default, so, if
-    // standalone: true is not set, then it is false
-    return false;
-  }
-
-  // in case angularMajorVersion is null, we assume that the version is 19 or
-  // above, in which case, standalone: true is the default, so we need to
-  // check that standalone: false is not set
+  // standalone: true is the default, so we need to check that standalone: false
+  // is not set
   return !decoratorMetadata.some((node) =>
     node.getText().includes('standalone: false')
   );
@@ -725,16 +713,14 @@ export function isNgStandaloneApp(tree: Tree, projectName: string) {
   }
 
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
 
   const mainFileContents = tree.read(mainFile, 'utf-8');
 
   const BOOTSTRAP_APPLICATION_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication])';
-  const ast = tsquery.ast(mainFileContents);
-  const nodes = tsquery(ast, BOOTSTRAP_APPLICATION_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const sourceFile = ast(mainFileContents);
+  const nodes = query(sourceFile, BOOTSTRAP_APPLICATION_SELECTOR);
   return nodes.length > 0;
 }
 
@@ -750,15 +736,13 @@ export function addProviderToBootstrapApplication(
   providerToAdd: string
 ) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const PROVIDERS_ARRAY_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
   const fileContents = tree.read(filePath, 'utf-8');
-  const ast = tsquery.ast(fileContents);
-  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const sourceFile = ast(fileContents);
+  const providersArrayNodes = query(sourceFile, PROVIDERS_ARRAY_SELECTOR);
   if (providersArrayNodes.length === 0) {
     throw new Error(
       `Providers does not exist in the bootstrapApplication call within ${filePath}.`
@@ -791,15 +775,13 @@ export function addProviderToAppConfig(
   providerToAdd: string
 ) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const PROVIDERS_ARRAY_SELECTOR =
     'VariableDeclaration:has(TypeReference > Identifier[name=ApplicationConfig]) > ObjectLiteralExpression  PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
   const fileContents = tree.read(filePath, 'utf-8');
-  const ast = tsquery.ast(fileContents);
-  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const sourceFile = ast(fileContents);
+  const providersArrayNodes = query(sourceFile, PROVIDERS_ARRAY_SELECTOR);
   if (providersArrayNodes.length === 0) {
     throw new Error(
       `'providers' does not exist in the application configuration at '${filePath}'.`

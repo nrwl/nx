@@ -1,0 +1,639 @@
+---
+title: 'Nx Console Settings Reference'
+description: Complete reference of all configuration settings for Nx Console in VSCode and JetBrains IDEs.
+sidebar:
+  label: Nx Console Settings
+weight: 2.1
+filter: 'type:References'
+---
+
+This page provides a complete reference of all configuration settings available for Nx Console. Each setting shows how to configure it in both VSCode and JetBrains IDEs (IntelliJ IDEA, WebStorm, etc.).
+
+## Editor Settings
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+VSCode uses JSON files for configuration. Settings can be configured at different scopes:
+
+**User Settings** (global across all workspaces):
+
+- Apply to all VSCode projects
+- Location: `~/.config/Code/User/settings.json` (Linux/macOS) or `%APPDATA%\Code\User\settings.json` (Windows)
+- Access via: `Cmd+,` (macOS) or `Ctrl+,` (Windows/Linux), then click the "Open Settings (JSON)" icon
+
+**Workspace Settings** (specific to one workspace):
+
+- Apply only to the current workspace
+- Location: `.vscode/settings.json` in your workspace root
+- Recommended for team-shared configurations (commit to version control)
+- Override user settings
+
+Learn more about VSCode settings in the [official VSCode documentation](https://code.visualstudio.com/docs/getstarted/settings).
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="note" title="JetBrains IDE Configuration" %}
+JetBrains IDEs configure Nx Console through the Settings/Preferences UI panel (**Settings > Tools > Nx Console**) rather than JSON configuration files. Only a subset of VSCode settings are available.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs  %}
+
+## Common Nx Commands
+
+Configure which Nx commands appear in the sidebar view.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.commonNxCommands`
+
+**Default:** `["run", "run-many", "affected", "affected --graph", "list"]`
+
+```json
+{
+  "nxConsole.commonNxCommands": ["run", "run-many", "affected", "test", "build"]
+}
+```
+
+This setting supports both arbitrary commands and UI-based commands that open dedicated interfaces.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. Command customization is not currently supported.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Project Viewing Style
+
+Defines how the Projects view displays entries in the sidebar.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.projectViewingStyle`
+
+**Options:** `"list"` | `"tree"` | `"automatic"`
+
+**Default:** `"automatic"`
+
+```json
+{
+  "nxConsole.projectViewingStyle": "tree"
+}
+```
+
+**Options explained:**
+
+- `"list"`: Shows projects as a flat ordered list
+- `"tree"`: Displays projects in a folder/tree structure
+- `"automatic"`: Adaptively switches between list and tree based on workspace structure
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Location:** Settings > Tools > Nx Console > Tool Window Style
+
+**Options:** List | Tree | Automatic
+
+**Default:** Automatic
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and select the desired style from the "Tool Window Style" dropdown.
+
+**Options explained:**
+
+- **List**: Shows projects as a flat ordered list
+- **Tree**: Displays projects in a folder/tree structure
+- **Automatic**: Adaptively switches between list and tree based on workspace structure
+
+{% /tabitem %}
+{% /tabs %}
+
+## Nx Workspace Path
+
+Specifies the relative path to the Nx workspace root directory.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.nxWorkspacePath`
+
+**Default:** `undefined`
+
+```json
+{
+  "nxConsole.nxWorkspacePath": "packages/workspace"
+}
+```
+
+Useful when working in a monorepo where the Nx workspace is nested within a larger repository structure.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Location:** Settings > Tools > Nx Console > Nx Workspace Path
+
+**Default:** Empty (uses project root)
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and enter the relative path in the "Nx Workspace Path" field.
+
+For example: `packages/workspace`
+
+{% /tabitem %}
+{% /tabs %}
+
+## Enable CodeLens
+
+Controls the visibility of CodeLens features for Nx-specific files.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.enableCodeLens`
+
+**Default:** `true`
+
+```json
+{
+  "nxConsole.enableCodeLens": false
+}
+```
+
+CodeLens provides inline actionable commands directly in your editor for files like `project.json` and workspace configuration files.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. CodeLens is a VSCode-specific feature. JetBrains IDEs use their native intention actions and code inspections instead.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Enable Library Imports
+
+Configures the TypeScript language server plugin to include configured libraries.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.enableLibraryImports`
+
+**Default:** `true`
+
+```json
+{
+  "nxConsole.enableLibraryImports": true
+}
+```
+
+This enables better IntelliSense and autocompletion for library imports in your workspace.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. TypeScript library imports are handled through JetBrains' native TypeScript language services.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Generator Allowlist
+
+Specifies generator names or wildcard patterns to show in the generator picker.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.generatorAllowlist`
+
+**Default:** `[]` (all generators shown)
+
+```json
+{
+  "nxConsole.generatorAllowlist": [
+    "@nx/react:*",
+    "@nx/next:application",
+    "@nrwl/workspace:library"
+  ]
+}
+```
+
+Use the format `@package:generator` or `@package:*` for wildcards. When this list is populated, only matching generators will be shown.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Location:** Settings > Tools > Nx Console > Generator Allowlist
+
+**Default:** Empty (all generators shown)
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and add patterns in the "Generator Allowlist" field, one per line:
+
+```text
+@nx/react:*
+@nx/next:application
+@nrwl/workspace:library
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Generator Blocklist
+
+Specifies generator names or wildcard patterns to hide from the generator picker.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.generatorBlocklist`
+
+**Default:** `[]`
+
+```json
+{
+  "nxConsole.generatorBlocklist": ["@nx/angular:*", "*:stories"]
+}
+```
+
+Useful for removing generators that aren't relevant to your workflow.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Location:** Settings > Tools > Nx Console > Generator Blocklist
+
+**Default:** Empty
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and add patterns in the "Generator Blocklist" field, one per line:
+
+```text
+@nx/angular:*
+*:stories
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Enable Dry Run on Change
+
+Enables automatic dry runs when using the Generate command.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.enableTaskExecutionDryRunOnChange`
+
+**Default:** `true`
+
+```json
+{
+  "nxConsole.enableTaskExecutionDryRunOnChange": false
+}
+```
+
+When enabled, changing generator options triggers a dry run to preview the changes before applying them.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Location:** Settings > Tools > Nx Console > Enable Dry Run on Change
+
+**Default:** Checked (enabled)
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and toggle the "Enable Dry Run on Change" checkbox.
+
+{% /tabitem %}
+{% /tabs %}
+
+## Move Generator Patterns
+
+Controls which collections' move generators should be used based on project path patterns.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.moveGeneratorPatterns`
+
+**Default:** `{}`
+
+```json
+{
+  "nxConsole.moveGeneratorPatterns": {
+    "apps/**": "@nx/workspace:move",
+    "libs/**": "@custom/generators:move"
+  }
+}
+```
+
+This is useful when you have multiple generator collections and want to specify which move generator to use for different project types.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. Move generator pattern customization is not currently supported.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Nx Cloud Notifications
+
+Controls which Nx Cloud notifications are displayed.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.nxCloudNotifications`
+
+**Options:** `"all"` | `"errors"` | `"none"`
+
+**Default:** `"all"`
+
+```json
+{
+  "nxConsole.nxCloudNotifications": "errors"
+}
+```
+
+**Options explained:**
+
+- `"all"`: Show all Nx Cloud notifications
+- `"errors"`: Only show error notifications
+- `"none"`: Disable all Nx Cloud notifications
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Location:** Settings > Tools > Nx Console > Nx Cloud Notifications
+
+**Options:** All | Errors Only | None
+
+**Default:** All
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and select the desired notification level from the "Nx Cloud Notifications" dropdown.
+
+{% /tabitem %}
+{% /tabs %}
+
+## Show Node Version on Startup
+
+Shows a notification with the Node.js version information when the IDE starts.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.showNodeVersionOnStartup`
+
+**Default:** `false`
+
+```json
+{
+  "nxConsole.showNodeVersionOnStartup": true
+}
+```
+
+Useful for debugging version-related issues, especially when using nvm or similar Node version managers.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. Node version management is handled through the IDE's Node.js interpreter settings (**Settings > Languages & Frameworks > Node.js**).
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## MCP Port
+
+Specifies a fixed port for the Nx MCP (Model Context Protocol) server.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.mcpPort`
+
+**Default:** `undefined` (random port)
+
+```json
+{
+  "nxConsole.mcpPort": 3333
+}
+```
+
+Set to `0` to explicitly use a random available port. If not specified, a random port is used by default.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. MCP port configuration is not currently supported.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## MCP Tools Filter
+
+Filters which MCP tools are enabled using glob patterns with negation support.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.mcpToolsFilter`
+
+**Default:** `[]` (all tools enabled)
+
+```json
+{
+  "nxConsole.mcpToolsFilter": ["nx_*", "!nx_cloud_*"]
+}
+```
+
+Use glob patterns to include or exclude specific MCP tools. Prefix with `!` to negate a pattern (exclude matching tools).
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. MCP tools filtering is not currently supported.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Enable Debug Logging
+
+Activates debug logging in output channels and the Language Server.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.enableDebugLogging`
+
+**Default:** `false`
+
+```json
+{
+  "nxConsole.enableDebugLogging": true
+}
+```
+
+Useful for troubleshooting Nx Console issues. When enabled, detailed debug information is written to the output channels.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. Debug logging configuration is handled through the IDE's native logging system.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Disable File Watching
+
+Disables automatic workspace refresh after file changes in the Language Server.
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+**Setting:** `nxConsole.disableFileWatching`
+
+**Default:** `false`
+
+```json
+{
+  "nxConsole.disableFileWatching": true
+}
+```
+
+When enabled, the workspace will not automatically refresh when files change. This can be useful for performance optimization in very large workspaces, but you will need to manually refresh the workspace to see changes.
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+{% aside type="caution" title="Not Available" %}
+This setting is not available in JetBrains IDEs. File watching behavior is managed by the IDE's native file system watcher.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
+
+## Common Configuration Scenarios
+
+### Team Configuration for Specific Framework
+
+If your team works primarily with React and Next.js:
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "nxConsole.generatorAllowlist": [
+    "@nx/react:*",
+    "@nx/next:*",
+    "@nx/workspace:library"
+  ],
+  "nxConsole.generatorBlocklist": [
+    "*:stories",
+    "*:cypress-component-configuration"
+  ],
+  "nxConsole.projectViewingStyle": "tree",
+  "nxConsole.enableTaskExecutionDryRunOnChange": true,
+  "nxConsole.nxCloudNotifications": "errors"
+}
+```
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+Navigate to **Settings > Tools > Nx Console** and configure:
+
+**Generator Allowlist:**
+
+```text
+@nx/react:*
+@nx/next:*
+@nx/workspace:library
+```
+
+**Generator Blocklist:**
+
+```text
+*:stories
+*:cypress-component-configuration
+```
+
+**Nx Cloud Notifications:** Errors Only
+
+**Enable Dry Run on Change:** Checked
+
+{% /tabitem %}
+{% /tabs %}
+
+### Nested Workspace Setup
+
+For monorepos where Nx is nested within a larger repository:
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+```json
+{
+  "nxConsole.nxWorkspacePath": "packages/my-workspace"
+}
+```
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Nx Workspace Path:** `packages/my-workspace`
+
+{% /tabitem %}
+{% /tabs %}
+
+### Minimal Noise Configuration
+
+To reduce notifications and automatic behaviors:
+
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
+
+```json
+{
+  "nxConsole.nxCloudNotifications": "errors",
+  "nxConsole.enableTaskExecutionDryRunOnChange": false,
+  "nxConsole.enableCodeLens": false
+}
+```
+
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
+
+**Nx Cloud Notifications:** Errors Only
+
+**Enable Dry Run on Change:** Unchecked
+
+{% /tabitem %}
+{% /tabs %}
+
+## See Also
+
+- [Nx Console Overview](/docs/guides/nx-console)
+- [Nx Console Generate Command](/docs/guides/nx-console/console-generate-command)
+- [Nx Console Run Command](/docs/guides/nx-console/console-run-command)
+- [Nx Console Troubleshooting](/docs/guides/nx-console/console-troubleshooting)

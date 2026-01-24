@@ -12,7 +12,15 @@ jest.mock('../../../config/nx-json', () => ({
   ...jest.requireActual('../../../config/nx-json'),
   readNxJson: jest.fn(),
 }));
+
+// Mock getPlugins to return an empty array, avoiding plugin worker spawning
+// while still allowing filterAffected to run its real logic
+jest.mock('../../../project-graph/plugins/get-plugins', () => ({
+  getPlugins: jest.fn().mockResolvedValue([]),
+}));
+
 import { createVersionConfig } from './test/test-utils';
+import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -455,6 +463,175 @@ describe('shared', () => {
       ]);
     });
 
+    it('should sanitize Gradle-style project names with colons in independent groups', () => {
+      const projects = [':common:iam-client'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'gradle-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: 'release/{projectName}/{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+
+      const releaseGroupToFilteredProjects = new Map<
+        ReleaseGroupWithName,
+        Set<string>
+      >().set(releaseGroup, new Set(projects));
+
+      const versionData = {
+        ':common:iam-client': {
+          currentVersion: '1.0.0',
+          dependentProjects: [],
+          newVersion: '1.0.1',
+        },
+      };
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        versionData
+      );
+
+      // Colons should be replaced with slashes
+      expect(tags).toEqual(['release/common/iam-client/1.0.1']);
+    });
+
+    it('should sanitize nested Gradle-style project names', () => {
+      const projects = [':apps:backend:api-service'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'gradle-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+
+      const releaseGroupToFilteredProjects = new Map<
+        ReleaseGroupWithName,
+        Set<string>
+      >().set(releaseGroup, new Set(projects));
+
+      const versionData = {
+        ':apps:backend:api-service': {
+          currentVersion: '2.0.0',
+          dependentProjects: [],
+          newVersion: '2.1.0',
+        },
+      };
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        versionData
+      );
+
+      expect(tags).toEqual(['apps/backend/api-service@2.1.0']);
+    });
+
+    it('should interpolate {releaseGroupName} in tag pattern for fixed groups', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'forge',
+        projects,
+        projectsRelationship: 'fixed',
+        releaseTag: {
+          pattern: '{releaseGroupName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['forge@1.1.0']);
+    });
+
+    it('should interpolate {releaseGroupName} in tag pattern for independent groups', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{releaseGroupName}/{projectName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group/a@1.1.0', 'my-group/b@1.2.0']);
+    });
+
     function setUpReleaseGroup() {
       const projects = ['a', 'b'];
       const releaseGroup: ReleaseGroupWithName = {
@@ -483,8 +660,9 @@ describe('shared', () => {
 
   describe(`getCommitsRelevantToProjects()`, () => {
     let mockProjectGraph: ProjectGraph;
+    let mockReleaseConfig: NxReleaseConfig | null;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       (readNxJson as jest.Mock).mockReturnValue({});
 
       mockProjectGraph = {
@@ -532,6 +710,25 @@ describe('shared', () => {
         },
         externalNodes: {},
       };
+
+      // Create mock project file map based on the mock project graph
+      const mockProjectFileMap: Record<string, any[]> = {};
+      for (const projectName of Object.keys(mockProjectGraph.nodes)) {
+        mockProjectFileMap[projectName] = [];
+      }
+
+      ({ nxReleaseConfig: mockReleaseConfig } = await createNxReleaseConfig(
+        mockProjectGraph,
+        mockProjectFileMap,
+        {
+          projects: Object.keys(mockProjectGraph.nodes),
+          changelog: {
+            git: {
+              commitMessage: 'chore(release): publish packages',
+            },
+          },
+        }
+      ));
     });
 
     it('should include commits that directly touch target projects', async () => {
@@ -544,7 +741,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(2);
@@ -564,7 +762,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // Both commits should be included - nx.json affects all, and lib-a is directly touched
@@ -584,7 +783,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(1);
@@ -610,7 +810,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // lib-a depends on lib-c, so commit touching lib-c should affect lib-a
@@ -631,7 +832,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(1);
@@ -650,7 +852,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       // Same commit should appear for both projects
@@ -667,7 +870,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       // Global file should appear for all requested projects
@@ -686,7 +890,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       expect(result.has('lib-a')).toBe(false);
@@ -698,7 +903,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         [],
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(0);
@@ -712,7 +918,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        []
+        [],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(0);
@@ -727,7 +934,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // Lock file changes typically affect all or many projects
@@ -743,19 +951,45 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // package.json changes typically affect projects
       expect(result.size).toBeGreaterThanOrEqual(0);
     });
 
+    it('should exclude automated version or changelog commits', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'abc123',
+          ['libs/deleted-lib-1/package.json'],
+          'chore(release): publish 1.0.0' // with version interpolated
+        ),
+        createMockCommit(
+          'def456',
+          ['libs/deleted-lib-2/package.json'],
+          'chore(release): publish packages'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a'],
+        mockReleaseConfig!
+      );
+
+      expect(result.size).toBe(0);
+    });
+
     function createMockCommit(
       shortHash: string,
-      affectedFiles: string[]
+      affectedFiles: string[],
+      message?: string
     ): GitCommit {
       return {
-        message: `feat: commit ${shortHash}`,
+        message: message || `feat: commit ${shortHash}`,
         body: '',
         shortHash,
         author: { name: 'Test Author', email: 'test@example.com' },

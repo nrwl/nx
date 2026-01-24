@@ -1835,11 +1835,6 @@
               "file": "shared/features/powerpack/index",
               "itemList": [
                 {
-                  "name": "Free Licenses & Trials",
-                  "id": "licenses-and-trials",
-                  "file": "shared/features/powerpack/licenses-and-trials"
-                },
-                {
                   "name": "Run Language-Agnostic Conformance Rules",
                   "description": "Write and apply rules for your Nx workspace",
                   "id": "conformance",
@@ -2595,12 +2590,6 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
-            },
-            {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
-              "file": "nx-cloud/features/explain-with-ai"
             },
             {
               "name": "GitHub Integration",

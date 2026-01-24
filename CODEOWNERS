@@ -76,6 +76,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/rollup/** @nrwl/nx-js-reviewers
 /packages/vite/** @nrwl/nx-js-reviewers
 /e2e/vite/** @nrwl/nx-js-reviewers
+/packages/vitest/** @nrwl/nx-js-reviewers
 
 ## Module Federation
 /packages/module-federation/** @nrwl/nx-js-reviewers
@@ -99,7 +100,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/storybook/** @nrwl/nx-storybook-reviewers
 
 # Docker
-/packages/docker/** @nrwl/nx-core-reviewers @Coly010
+/packages/docker/** @nrwl/nx-core-reviewers @Coly010 @jaysoo
 
 ## Devkit
 /packages/devkit/** @nrwl/nx-devkit-reviewers
@@ -109,14 +110,18 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 # Gradle
 /packages/gradle/** @FrozenPandaz @MaxKless @lourw
 /e2e/gradle/** @FrozenPandaz @MaxKless @lourw
+/build.gradle.kts @FrozenPandaz @MaxKless @lourw
+/settings.gradle.kts @FrozenPandaz @MaxKless @lourw
 
 # Maven
 /packages/maven/** @FrozenPandaz @MaxKless @lourw
 /e2e/maven/** @FrozenPandaz @MaxKless @lourw
+/pom.xml @FrozenPandaz @MaxKless @lourw
 
 # Nx-Plugin
 /packages/plugin/** @nrwl/nx-devkit-reviewers
 /e2e/plugin/** @nrwl/nx-devkit-reviewers
+/packages/create-nx-plugin/** @nrwl/nx-devkit-reviewers
 
 ## Core
 /packages/nx/** @nrwl/nx-core-reviewers
@@ -131,12 +136,18 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/nx*/** @nrwl/nx-core-reviewers
 /packages/workspace/** @nrwl/nx-core-reviewers
 /e2e/workspace-create/** @nrwl/nx-core-reviewers
-/e2e/release/** @nrwl/nx-core-reviewers
+/packages/create-nx-workspace/** @nrwl/nx-core-reviewers
+/packages/nx/src/command-line/release/** @nrwl/nx-core-reviewers @Coly010
+/packages/nx/src/plugins/js/** @nrwl/nx-core-reviewers @nrwl/nx-js-reviewers
+/e2e/release/** @nrwl/nx-core-reviewers @Coly010
+
+# .NET
+/packages/dotnet/** @FrozenPandaz @AgentEnder
+/e2e/dotnet/** @FrozenPandaz @AgentEnder
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin
-/community @nrwl/nx-docs-reviewers
 /CONTRIBUTING.md @FrozenPandaz
 /CODE_OF_CONDUCT.md @FrozenPandaz
 /CODEOWNERS @FrozenPandaz @AgentEnder
@@ -148,14 +159,17 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # CI
 /.nx/workflows/** @nrwl/nx-pipelines-reviewers
+mise.toml @nrwl/nx-pipelines-reviewers @FrozenPandaz
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
 
-# Claude AI Integration
-CLAUDE.md @FrozenPandaz
-.claude/** @FrozenPandaz
-.mcp.json @FrozenPandaz
+# AI Agent Integration
+CLAUDE.md @FrozenPandaz @Coly010
+.claude/** @FrozenPandaz @Coly010
+.mcp.json @FrozenPandaz @Coly010
+AGENTS.md @FrozenPandaz @Coly010
+.gemini @FrozenPandaz @Coly010
 
 # Global Files
 project.json @FrozenPandaz @vsavkin

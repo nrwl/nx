@@ -2,14 +2,12 @@ import { names } from '@nx/devkit';
 import {
   checkFilesExist,
   killProcessAndPorts,
-  readJson,
   runCLI,
   runCommandUntil,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { join } from 'path';
 import {
   setupModuleFederationTest,
   cleanupModuleFederationTest,
@@ -37,11 +35,11 @@ describe('Angular Module Federation - Host and Remote', () => {
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --no-interactive`
+      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --unitTestRunner=jest --no-interactive`
     );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-standalone --no-interactive`
+      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-standalone --unitTestRunner=jest --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/")
@@ -177,10 +175,10 @@ describe('Angular Module Federation - Host and Remote', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --bundler=webpack --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --bundler=webpack --unitTestRunner=jest --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:application ${app2} --bundler=webpack --no-interactive`
+      `generate @nx/angular:application ${app2} --bundler=webpack --unitTestRunner=jest --no-interactive`
     );
 
     // convert apps

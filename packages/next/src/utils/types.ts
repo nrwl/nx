@@ -41,7 +41,9 @@ export interface NextBuildBuilderOptions {
   profile?: boolean;
   skipOverrides?: boolean;
   skipPackageManager?: boolean;
+  turbo?: boolean;
   watch?: boolean;
+  webpack?: boolean;
 }
 
 export interface NextServeBuilderOptions {
@@ -55,6 +57,7 @@ export interface NextServeBuilderOptions {
   buildLibsFromSource?: boolean;
   keepAliveTimeout?: number;
   turbo?: boolean;
+  webpack?: boolean;
   experimentalHttps?: boolean;
   experimentalHttpsKey?: string;
   experimentalHttpsCert?: string;

@@ -483,7 +483,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
+    expect(tree.read(`${name}/jest.config.cts`, 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
     expect(
@@ -499,7 +499,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
+    expect(tree.read(`${name}/jest.config.cts`, 'utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'`
     );
   });
@@ -546,7 +546,7 @@ describe('app', () => {
         style: 'css',
         unitTestRunner: 'none',
       });
-      expect(tree.exists('jest.config.ts')).toBeFalsy();
+      expect(tree.exists('jest.config.cts')).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeFalsy();
     });
   });
@@ -590,19 +590,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.mjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "import { FlatCompat } from '@eslint/eslintrc';
-          import { dirname } from 'path';
-          import { fileURLToPath } from 'url';
-          import js from '@eslint/js';
+          "import nextEslintPluginNext from '@next/eslint-plugin-next';
           import nx from '@nx/eslint-plugin';
           import baseConfig from '../eslint.config.mjs';
-          const compat = new FlatCompat({
-            baseDirectory: dirname(fileURLToPath(import.meta.url)),
-            recommendedConfig: js.configs.recommended,
-          });
 
           export default [
-            ...compat.extends('next', 'next/core-web-vitals'),
+            { plugins: { '@next/next': nextEslintPluginNext } },
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
             {
@@ -624,18 +617,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.cjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const { FlatCompat } = require('@eslint/eslintrc');
-          const js = require('@eslint/js');
+          "const nextEslintPluginNext = require('@next/eslint-plugin-next');
           const nx = require('@nx/eslint-plugin');
           const baseConfig = require('../eslint.config.cjs');
 
-          const compat = new FlatCompat({
-            baseDirectory: __dirname,
-            recommendedConfig: js.configs.recommended,
-          });
-
           module.exports = [
-            ...compat.extends('next', 'next/core-web-vitals'),
+            { plugins: { '@next/next': nextEslintPluginNext } },
 
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
@@ -645,6 +632,76 @@ describe('app', () => {
           ];
           "
         `);
+      });
+
+      it('should install eslint-config-next@15 when generating a new Next.js application in an empty Nx workspace', async () => {
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-config-next': '^16.0.1',
+            '@next/eslint-plugin-next': '^16.0.1',
+          },
+        });
+      });
+
+      it('should install eslint-config-next@15 when an existing Next.js 15 project is detected', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: {
+              next: '~15.2.4',
+            },
+            devDependencies: {},
+          })
+        );
+
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-config-next': '^15.2.4',
+            '@next/eslint-plugin-next': '^15.2.4',
+          },
+        });
+      });
+
+      it('should install eslint-config-next@14 when an existing Next.js 14 project is detected', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: {
+              next: '~14.2.16',
+            },
+            devDependencies: {},
+          })
+        );
+
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-config-next': '~14.2.26',
+            '@next/eslint-plugin-next': '~14.2.26',
+          },
+        });
       });
 
       it('should add .eslintrc.json and dependencies', async () => {
@@ -732,6 +789,58 @@ describe('app', () => {
           ]
         `
         );
+      });
+
+      it('should setup eslint config for standalone projects', async () => {
+        const name = uniq();
+        const prevEslintUseFlatConfigEnvVarValue =
+          process.env['ESLINT_USE_FLAT_CONFIG'];
+        process.env['ESLINT_USE_FLAT_CONFIG'] = 'true';
+        await applicationGenerator(tree, {
+          name,
+          directory: '.',
+          style: 'css',
+          linter: 'eslint',
+          appDir: true,
+          rootProject: true,
+        });
+
+        const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
+
+        expect(eslintContents).toMatchInlineSnapshot(`
+          "import nextEslintPluginNext from '@next/eslint-plugin-next';
+          import nx from '@nx/eslint-plugin';
+
+          export default [
+            { plugins: { '@next/next': nextEslintPluginNext } },
+            ...nx.configs['flat/base'],
+            ...nx.configs['flat/typescript'],
+            ...nx.configs['flat/javascript'],
+            {
+              ignores: ['**/dist', '**/out-tsc', '.next/**/*'],
+            },
+            {
+              files: [
+                '**/*.ts',
+                '**/*.tsx',
+                '**/*.cts',
+                '**/*.mts',
+                '**/*.js',
+                '**/*.jsx',
+                '**/*.cjs',
+                '**/*.mjs',
+              ],
+              // Override or add rules here
+              rules: {
+                '@next/next/no-html-link-for-pages': ['error', './pages'],
+              },
+            },
+            ...nx.configs['flat/react-typescript'],
+          ];
+          "
+        `);
+        process.env['ESLINT_USE_FLAT_CONFIG'] =
+          prevEslintUseFlatConfigEnvVarValue;
       });
 
       it('should scope tsconfig to the src/ project directory', async () => {
@@ -909,128 +1018,133 @@ describe('app', () => {
           ]
         `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
-          {
-            "compilerOptions": {
-              "allowJs": true,
-              "allowSyntheticDefaultImports": true,
-              "emitDeclarationOnly": false,
-              "esModuleInterop": true,
-              "forceConsistentCasingInFileNames": true,
-              "incremental": true,
-              "isolatedModules": true,
-              "jsx": "preserve",
-              "lib": [
-                "dom",
-                "dom.iterable",
-                "esnext",
-              ],
-              "module": "esnext",
-              "moduleResolution": "bundler",
-              "noEmit": true,
-              "outDir": "dist",
-              "paths": {
-                "@/*": [
-                  "./src/*",
-                ],
-              },
-              "plugins": [
-                {
-                  "name": "next",
-                },
-              ],
-              "resolveJsonModule": true,
-              "rootDir": "src",
-              "strict": true,
-              "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
-              "types": [
-                "jest",
-                "node",
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "allowSyntheticDefaultImports": true,
+            "emitDeclarationOnly": false,
+            "esModuleInterop": true,
+            "forceConsistentCasingInFileNames": true,
+            "incremental": true,
+            "isolatedModules": true,
+            "jsx": "preserve",
+            "lib": [
+              "dom",
+              "dom.iterable",
+              "esnext",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "noEmit": true,
+            "outDir": "dist",
+            "paths": {
+              "@/*": [
+                "./src/*",
               ],
             },
-            "exclude": [
-              "out-tsc",
-              "dist",
-              "node_modules",
-              "jest.config.ts",
-              "src/**/*.spec.ts",
-              "src/**/*.test.ts",
-              ".next",
-              "eslint.config.js",
-              "eslint.config.cjs",
-              "eslint.config.mjs",
-            ],
-            "extends": "../tsconfig.base.json",
-            "include": [
-              "src/**/*.ts",
-              "src/**/*.tsx",
-              "src/**/*.js",
-              "src/**/*.jsx",
-              "../myapp/.next/types/**/*.ts",
-              "../dist/myapp/.next/types/**/*.ts",
-              "next-env.d.ts",
-            ],
-          }
-        `);
-      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
-          {
-            "compilerOptions": {
-              "jsx": "preserve",
-              "module": "esnext",
-              "moduleResolution": "bundler",
-              "outDir": "./out-tsc/jest",
-              "types": [
-                "jest",
-                "node",
-              ],
-            },
-            "extends": "../tsconfig.base.json",
-            "include": [
-              "jest.config.ts",
-              "src/**/*.test.ts",
-              "src/**/*.spec.ts",
-              "src/**/*.test.tsx",
-              "src/**/*.spec.tsx",
-              "src/**/*.test.js",
-              "src/**/*.spec.js",
-              "src/**/*.test.jsx",
-              "src/**/*.spec.jsx",
-              "src/**/*.d.ts",
-            ],
-            "references": [
+            "plugins": [
               {
-                "path": "./tsconfig.json",
+                "name": "next",
               },
             ],
-          }
-        `);
-      expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
-          {
-            "compilerOptions": {
-              "allowJs": true,
-              "outDir": "out-tsc/cypress",
-              "sourceMap": false,
-              "types": [
-                "cypress",
-                "node",
-              ],
+            "resolveJsonModule": true,
+            "rootDir": "src",
+            "strict": true,
+            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "node_modules",
+            "jest.config.ts",
+            "jest.config.cts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            ".next",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "../myapp/.next/types/**/*.ts",
+            "../dist/myapp/.next/types/**/*.ts",
+            "next-env.d.ts",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "jest.config.cts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.json",
             },
-            "exclude": [
-              "out-tsc",
-              "test-output",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "out-tsc/cypress",
+            "sourceMap": false,
+            "types": [
+              "cypress",
+              "node",
             ],
-            "extends": "../tsconfig.base.json",
-            "include": [
-              "**/*.ts",
-              "**/*.js",
-              "cypress.config.ts",
-              "**/*.cy.ts",
-              "**/*.cy.tsx",
-              "**/*.cy.js",
-              "**/*.cy.jsx",
-              "**/*.d.ts",
-            ],
-          }
-        `);
+          },
+          "exclude": [
+            "out-tsc",
+            "test-output",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "**/*.ts",
+            "**/*.js",
+            "cypress.config.ts",
+            "**/*.cy.ts",
+            "**/*.cy.tsx",
+            "**/*.cy.js",
+            "**/*.cy.jsx",
+            "**/*.d.ts",
+          ],
+        }
+      `);
     });
 
     it('should respect the provided name', async () => {
@@ -1139,16 +1253,15 @@ describe('app', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = tree.read(`${name}/jest.config.ts`, 'utf-8');
+      const jestConfig = tree.read(`${name}/jest.config.cts`, 'utf-8');
       expect(jestConfig).toMatchInlineSnapshot(`
-        "import type { Config } from 'jest';
-        import nextJest from 'next/jest.js';
+        "const nextJest = require('next/jest.js');
 
         const createJestConfig = nextJest({
           dir: './',
         });
 
-        const config: Config = {
+        const config = {
           displayName: 'myapp',
           preset: '../jest.preset.js',
           transform: {
@@ -1159,7 +1272,7 @@ describe('app', () => {
           testEnvironment: 'jsdom',
         };
 
-        export default createJestConfig(config);
+        module.exports = createJestConfig(config);
         "
       `);
     });
@@ -1247,16 +1360,15 @@ describe('app (legacy)', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = tree.read(`${name}/jest.config.ts`, 'utf-8');
+      const jestConfig = tree.read(`${name}/jest.config.cts`, 'utf-8');
       expect(jestConfig).toMatchInlineSnapshot(`
-        "import type { Config } from 'jest';
-        import nextJest from 'next/jest.js';
+        "const nextJest = require('next/jest.js');
 
         const createJestConfig = nextJest({
           dir: './',
         });
 
-        const config: Config = {
+        const config = {
           displayName: 'myapp',
           preset: '../jest.preset.js',
           transform: {
@@ -1267,7 +1379,7 @@ describe('app (legacy)', () => {
           testEnvironment: 'jsdom',
         };
 
-        export default createJestConfig(config);
+        module.exports = createJestConfig(config);
         "
       `);
     });

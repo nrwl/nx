@@ -18,7 +18,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@nx/js` package](/docs/technologies/typescript/introduction) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/js
 ```
 
@@ -53,7 +53,7 @@ The `--dry-run` option is useful for testing your configuration without actually
 
 To preview your first release, run:
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 
@@ -156,7 +156,7 @@ Skipped publishing packages.
 
 If the preview looks good, run the command again without the `--dry-run` option to actually create the release.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release
 ```
 
@@ -255,9 +255,12 @@ By default, Nx Release will stage all changes it makes with git. This includes u
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
-The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTag.pattern` property in nx.json.
+The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTag.pattern` property (Nx 22+) or `release.releaseTagPattern` property (Nx < 22) in nx.json.
 
 For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
 
 ```json
 // nx.json
@@ -272,6 +275,24 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
   }
 }
 ```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
+
+```json
+// nx.json
+{
+  "release": {
+    "releaseTagPattern": "release/{version}",
+    "git": {
+      "commitMessage": "chore(release): {version}"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
 
 When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 

@@ -74,7 +74,8 @@ const VALID_AUTHORS_FOR_LATEST = [
   };
 
   // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NODE_AUTH_TOKEN) {
+  // This runs locally (not in CI) to create the GitHub release that triggers the actual publish workflow
+  if (!options.local && !process.env.GITHUB_ACTIONS) {
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
@@ -478,8 +479,8 @@ function determineDistTag(
     parsedGivenVersion.prerelease.length > 0
       ? 'next'
       : parsedGivenVersion.major < parsedCurrentLatestVersion.major
-      ? 'previous'
-      : 'latest';
+        ? 'previous'
+        : 'latest';
 
   return distTag;
 }

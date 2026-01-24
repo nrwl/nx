@@ -261,11 +261,14 @@ export class ReleaseGroupProcessor {
   ) {
     const dockerProjects = new Map<string, FinalConfigForProject>();
     for (const project of this.versionData.keys()) {
-      const finalConfigForProject =
-        this.releaseGraph.finalConfigsByProject.get(project);
-      if (Object.keys(finalConfigForProject.dockerOptions).length === 0) {
+      const hasDockerTechnology = Object.values(
+        this.projectGraph.nodes[project]?.data?.targets ?? []
+      ).some(({ metadata }) => metadata?.technologies?.includes('docker'));
+      if (!hasDockerTechnology) {
         continue;
       }
+      const finalConfigForProject =
+        this.releaseGraph.finalConfigsByProject.get(project);
       dockerProjects.set(project, finalConfigForProject);
     }
     // If no docker projects to process, exit early to avoid unnecessary loading of docker handling
@@ -277,7 +280,8 @@ export class ReleaseGroupProcessor {
       projectGraphNode: ProjectGraphProjectNode,
       finalConfigForProject: FinalConfigForProject,
       dockerVersionScheme?: string,
-      dockerVersion?: string
+      dockerVersion?: string,
+      versionActionsVersion?: string
     ) => Promise<{ newVersion: string; logs: string[] }>;
     try {
       const {
@@ -294,19 +298,21 @@ export class ReleaseGroupProcessor {
     }
     for (const [project, finalConfigForProject] of dockerProjects.entries()) {
       const projectNode = this.projectGraph.nodes[project];
+      const projectVersionData = this.versionData.get(project);
       const { newVersion, logs } = await handleDockerVersion(
         workspaceRoot,
         projectNode,
         finalConfigForProject,
         dockerVersionScheme,
-        dockerVersion
+        dockerVersion,
+        projectVersionData.newVersion
       );
 
       logs.forEach((log) =>
         this.getProjectLoggerForProject(project).buffer(log)
       );
       const newVersionData = {
-        ...this.versionData.get(project),
+        ...projectVersionData,
         dockerVersion: newVersion,
       };
       this.versionData.set(project, newVersionData);
@@ -369,9 +375,8 @@ export class ReleaseGroupProcessor {
             depGroup !== releaseGroup.name &&
             this.processedGroups.has(depGroup)
           ) {
-            const depGroupBumpType = await this.getFixedReleaseGroupBumpType(
-              depGroup
-            );
+            const depGroupBumpType =
+              await this.getFixedReleaseGroupBumpType(depGroup);
 
             // If a dependency group has been bumped, determine if it should trigger a bump in this group
             if (depGroupBumpType !== 'none') {

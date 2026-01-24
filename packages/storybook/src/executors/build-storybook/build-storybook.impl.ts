@@ -14,12 +14,8 @@ export default async function buildStorybookExecutor(
 ) {
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const storybookMajor = storybookMajorVersion();
-  if (storybookMajor > 0 && storybookMajor <= 6) {
+  if (storybookMajor > 0 && storybookMajor <= 7) {
     throw pleaseUpgrade();
-  } else if (storybookMajor === 7) {
-    logger.warn(
-      `Support for Storybook 7 is deprecated. Please upgrade to Storybook 8. See https://nx.dev/nx-api/storybook/generators/migrate-8 for more details.`
-    );
   }
 
   const buildOptions: CLIOptions = options;

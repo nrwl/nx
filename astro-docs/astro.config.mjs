@@ -22,7 +22,7 @@ const PUBLIC_CONFIG = {
 export default defineConfig({
   base: BASE,
   vite: { plugins: [tailwindcss()] },
-  // Allow this to be configured per environment
+  // Allow this to be configured per environment for robots.txt detection
   // Note: this happens during build time so we don't use `import.meta.env`
   site: process.env.NX_DEV_URL ?? 'https://nx.dev',
   image: {
@@ -82,7 +82,6 @@ export default defineConfig({
       ],
       plugins: [],
       routeMiddleware: [
-        './src/plugins/banner.middleware.ts',
         // NOTE: this is responsibile for populating the Reference section
         // with generated routes from the nx-reference-packages content collection
         // since the sidebar doesn't auto generate w/ dynamic routes from src/pages/reference
@@ -90,6 +89,9 @@ export default defineConfig({
         './src/plugins/sidebar-reference-updater.middleware.ts',
         './src/plugins/sidebar-icons.middleware.ts',
         './src/plugins/og.middleware.ts',
+        './src/plugins/github-stars.middleware.ts',
+        './src/plugins/raw-content.middleware.ts',
+        './src/plugins/canonical.middleware.ts',
       ],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization

@@ -310,8 +310,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-    buildOptions.outputPath
-  }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxAppRspackPlugin({
@@ -486,10 +486,10 @@ export function deleteWebpackConfig(
     webpackConfigFilePath && tree.exists(webpackConfigFilePath)
       ? webpackConfigFilePath
       : tree.exists(`${projectRoot}/webpack.config.js`)
-      ? `${projectRoot}/webpack.config.js`
-      : tree.exists(`${projectRoot}/webpack.config.ts`)
-      ? `${projectRoot}/webpack.config.ts`
-      : null;
+        ? `${projectRoot}/webpack.config.js`
+        : tree.exists(`${projectRoot}/webpack.config.ts`)
+          ? `${projectRoot}/webpack.config.ts`
+          : null;
   if (webpackConfigPath) {
     tree.delete(webpackConfigPath);
   }
@@ -572,10 +572,10 @@ export function normalizeViteConfigFilePathWithTree(
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.ts`))
-    ? joinPathFragments(`${projectRoot}/rspack.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.js`))
-    ? joinPathFragments(`${projectRoot}/rspack.config.js`)
-    : undefined;
+      ? joinPathFragments(`${projectRoot}/rspack.config.ts`)
+      : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.js`))
+        ? joinPathFragments(`${projectRoot}/rspack.config.js`)
+        : undefined;
 }
 
 export function getViteConfigPathForProject(
@@ -636,8 +636,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
     `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/rspack:${executor} executor.
      However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
-     Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-     your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+     Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
+     your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -654,8 +654,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
       Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
-      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-      your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+      Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
+      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
       `
     );
   }
@@ -702,7 +702,7 @@ export function determineFrameworkAndTarget(
 ): { target: 'node' | 'web'; framework?: Framework } {
   ensureTypescript();
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
 
   // First try to infer if the target is node
   if (options.target !== 'node') {
@@ -721,9 +721,9 @@ export function determineFrameworkAndTarget(
       return { target: options.target, framework: options.framework };
     }
     const appFileContent = tree.read(jestConfigPath, 'utf-8');
-    const file = tsquery.ast(appFileContent);
+    const file = ast(appFileContent);
     // find testEnvironment: 'node' in jest config
-    const testEnvironment = tsquery(
+    const testEnvironment = query(
       file,
       `PropertyAssignment:has(Identifier[name="testEnvironment"]) > StringLiteral[value="node"]`
     );
@@ -736,8 +736,8 @@ export function determineFrameworkAndTarget(
         joinPathFragments(projectRoot, 'src/main.ts'),
         'utf-8'
       );
-      const file = tsquery.ast(appFileContent);
-      const hasNestJsDependency = tsquery(
+      const file = ast(appFileContent);
+      const hasNestJsDependency = query(
         file,
         `ImportDeclaration:has(StringLiteral[value="@nestjs/common"])`
       );

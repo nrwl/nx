@@ -9,7 +9,8 @@ import '../styles/main.css';
 import Link from 'next/link';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
-import { WebinarNotifier } from 'nx-dev/ui-common/src';
+import { WebinarNotifier, GlobalSearchHandler } from '@nx/nx-dev-ui-common';
+import bannerCollection from '../lib/banner.json';
 
 export default function CustomApp({
   Component,
@@ -97,8 +98,27 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
-      {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      <GlobalSearchHandler />
+      {bannerCollection.map((bannerConfig) => {
+        // Check if banner is active
+        const isActive =
+          bannerConfig.activeUntil &&
+          new Date() < new Date(bannerConfig.activeUntil);
+        if (!isActive) return null;
+        return (
+          <WebinarNotifier
+            key={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+            id={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+            title={bannerConfig.title}
+            description={bannerConfig.description}
+            primaryCtaUrl={bannerConfig.primaryCtaUrl}
+            primaryCtaText={bannerConfig.primaryCtaText}
+            secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
+            secondaryCtaText={bannerConfig.secondaryCtaText}
+            activeUntil={bannerConfig.activeUntil}
+          />
+        );
+      })}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

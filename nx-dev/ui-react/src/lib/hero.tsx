@@ -78,7 +78,7 @@ export function GettingStarted(): ReactElement {
           </h2>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3 ">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
           <GetStartedCard
             title="Add Nx To Your Project"
             command="npx init nx"

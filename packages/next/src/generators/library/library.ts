@@ -132,10 +132,10 @@ export async function HelloServer() {
 
   // Configure Vite and package.json for server entry point when using Vite bundler
   if (options.bundler === 'vite') {
-    // Update vite.config.ts to support multiple entry points
+    // Update vite.config.mts to support multiple entry points
     const viteConfigPath = joinPathFragments(
       options.projectRoot,
-      'vite.config.ts'
+      'vite.config.mts'
     );
     updateViteConfigForServerEntry(host, viteConfigPath);
 

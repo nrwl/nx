@@ -1,3 +1,4 @@
+import { signalToCode } from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
 import * as pc from 'picocolors';
 import {
@@ -129,8 +130,16 @@ function createFileWatcher(
       includeDependentProjects: true,
     },
     async (error, val) => {
-      if (error === 'closed') {
-        throw new Error('Watch error: Daemon closed the connection');
+      if (error === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (error === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (error === 'closed') {
+        throw new Error(
+          'Failed to reconnect to daemon after multiple attempts'
+        );
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
       } else if (val?.changedFiles.length > 0) {
@@ -267,7 +276,8 @@ export default async function* fileServerExecutor(
   };
 
   return new Promise<{ success: boolean }>((res) => {
-    serve.on('exit', (code) => {
+    serve.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code == 0) {
         res({ success: true });
       } else {

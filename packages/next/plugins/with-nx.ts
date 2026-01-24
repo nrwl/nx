@@ -12,6 +12,7 @@ import {
   type Target,
 } from '@nx/devkit';
 import type { AssetGlobPattern } from '@nx/webpack';
+import { satisfies } from 'semver';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -210,12 +211,11 @@ function withNx(
 
       const userWebpackConfig = nextConfig.webpack;
 
-      const { createWebpackConfig } = require(require.resolve(
-        '@nx/next/src/utils/config',
-        {
+      const { createWebpackConfig } = require(
+        require.resolve('@nx/next/src/utils/config', {
           paths: [workspaceRoot],
-        }
-      )) as typeof import('@nx/next/src/utils/config');
+        })
+      ) as typeof import('@nx/next/src/utils/config');
       // If we have file replacements or assets, inside of the next config we pass the workspaceRoot as a join of the workspaceRoot and the projectDirectory
       // Because the file replacements and assets are relative to the projectRoot, not the workspaceRoot
       nextConfig.webpack = (a, b) =>
@@ -243,12 +243,21 @@ export function getNextConfig(
   }
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
-  return {
-    eslint: {
+
+  const baseConfig: NextConfig = {
+    ...validNextConfig,
+  };
+
+  const nextJsVersion = require('next/package.json')?.version ?? '16.0.1';
+  if (satisfies(nextJsVersion, '<16.0.0', { includePrerelease: true })) {
+    baseConfig.eslint = {
       ignoreDuringBuilds: true,
       ...(validNextConfig.eslint ?? {}),
-    },
-    ...validNextConfig,
+    };
+  }
+
+  return {
+    ...baseConfig,
     webpack: (config, options) => {
       /**
        * To support ESM library export, we need to ensure the extensionAlias contains both `.js` and `.ts` extensions.

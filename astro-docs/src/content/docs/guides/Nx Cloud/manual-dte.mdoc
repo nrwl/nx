@@ -40,18 +40,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        name: Checkout [Pull Request]
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          # By default, PRs will be checked-out based on the Merge Commit, but we want the actual branch HEAD.
-          ref: ${{ github.event.pull_request.head.sha }}
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
-          fetch-depth: 0
-          filter: tree:0
-
-      - uses: actions/checkout@v4
-        name: Checkout [Default Branch]
-        if: ${{ github.event_name != 'pull_request' }}
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
@@ -71,8 +59,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check out the default branch
-        run: git branch --track main origin/main
+      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+        uses: nrwl/nx-set-shas@v4
 
       - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
         run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
@@ -204,7 +192,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 0
+        fetchDepth: '0'
         fetchFilter: tree:0
         persistCredentials: true
 

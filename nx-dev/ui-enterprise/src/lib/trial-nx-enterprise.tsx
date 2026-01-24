@@ -102,17 +102,17 @@ export function TrialNxEnterprise(): ReactElement {
             <div className="mt-12 grid w-full grid-cols-4 place-items-center gap-2">
               <CapitalOneIcon
                 aria-hidden="true"
-                className="col-span-1 size-28  text-black dark:text-white"
+                className="col-span-1 size-28 text-black dark:text-white"
               />
 
               <CaterpillarIcon
                 aria-hidden="true"
-                className="col-span-1 size-14  text-[#FFCD11]"
+                className="col-span-1 size-14 text-[#FFCD11]"
               />
 
               <RoyalBankOfCanadaIcon
                 aria-hidden="true"
-                className="col-span-1 size-14  text-black dark:text-white"
+                className="col-span-1 size-14 text-black dark:text-white"
               />
 
               <ShopifyIcon

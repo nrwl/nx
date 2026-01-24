@@ -75,10 +75,10 @@ function normalizeDependencies(
       let resolvedVersionRange = versionRange;
       const manager = getCatalogManager(workspaceRootPath);
       if (manager?.isCatalogReference(versionRange)) {
-        const resolvedVersionRange = manager.resolveCatalogReference(
+        resolvedVersionRange = manager.resolveCatalogReference(
+          workspaceRootPath,
           packageName,
-          versionRange,
-          workspaceRootPath
+          versionRange
         );
         if (!resolvedVersionRange) {
           throw new Error(
@@ -161,9 +161,9 @@ export function addNodesAndDependencies(
       traverseNode(graph, builder, node);
     } else if (workspacePackages.has(name)) {
       // Workspace Node
-      const node = graph.nodes[name];
-      if (node) {
-        traverseWorkspaceNode(graph, builder, node);
+      const workspaceNode = workspacePackages.get(name);
+      if (workspaceNode) {
+        traverseWorkspaceNode(graph, builder, workspaceNode);
       }
     }
   });

@@ -47,7 +47,7 @@ To start with, we need to create a new Nx Workspace and add the Nx Angular plugi
 {% tabs %}
 {% tabitem label="npm" %}
 
-```{% title="npx create-nx-workspace@latest ng-mf --preset=apps" frame="terminal" %}
+```text {% title="npx create-nx-workspace@latest ng-mf --preset=apps" frame="terminal" %}
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Which CI provider would you like to use? · skip
@@ -57,7 +57,7 @@ To start with, we need to create a new Nx Workspace and add the Nx Angular plugi
 
 Next run:
 
-```shell {% frame="none" %}
+```shell
 cd ng-mf
 npx nx add @nx/angular
 ```
@@ -65,7 +65,7 @@ npx nx add @nx/angular
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
-```{% title="yarn create nx-workspace ng-mf --preset=apps" frame="terminal" %}
+```text {% title="yarn create nx-workspace ng-mf --preset=apps" frame="terminal" %}
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Which CI provider would you like to use? · skip
@@ -75,7 +75,7 @@ npx nx add @nx/angular
 
 Next run:
 
-```shell {% frame="none" %}
+```shell
 cd ng-mf
 yarn nx add @nx/angular
 ```
@@ -83,7 +83,7 @@ yarn nx add @nx/angular
 {% /tabitem %}
 {% tabitem label="pnpm" %}
 
-```{% title="pnpx create-nx-workspace@latest ng-mf --preset=apps" frame="terminal" %}
+```text {% title="pnpx create-nx-workspace@latest ng-mf --preset=apps" frame="terminal" %}
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Which CI provider would you like to use? · skip
@@ -93,7 +93,7 @@ yarn nx add @nx/angular
 
 Next run:
 
-```shell {% frame="none" %}
+```shell
 cd ng-mf
 pnpx nx add @nx/angular
 ```
@@ -107,7 +107,7 @@ We need to generate two applications that support Module Federation.
 
 We'll start with the **Admin Dashboard** application which will act as a host application for the Micro-Frontends (_MFEs_):
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:host apps/dashboard --prefix=ng-mf
 ```
 
@@ -124,7 +124,7 @@ The `host` generator will create and modify the files needed to set up the Angul
 
 Now, let's generate the **Login** application as a remote application that will be consumed by the **Dashboard** host application.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:remote apps/login --prefix=ng-mf --host=dashboard
 ```
 
@@ -211,7 +211,7 @@ We'll start by building the **Login** application, which will consist of a login
 Let's create a user data-access library that will be shared between the host application and the remote application.
 This will be used to determine if there is an authenticated user as well as providing logic for authenticating the user.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:lib libs/shared/data-access-user
 ```
 
@@ -219,7 +219,7 @@ This will scaffold a new library for us to use.
 
 We need an Angular Service that we will use to hold state:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:service user --project=data-access-user
 ```
 
@@ -326,7 +326,7 @@ This could be improved with things like error handling, but for the purposes of 
 
 Now let's serve the application and view it in a browser to check that the form renders correctly.
 
-```shell {% frame="none" %}
+```shell
 nx run login:serve
 ```
 
@@ -413,7 +413,7 @@ export const appRoutes: Route[] = [
 
 We can now run both the **Dashboard** and **Login** applications:
 
-```shell {% frame="none" %}
+```shell
 nx serve dashboard --devRemotes=login
 ```
 
@@ -454,7 +454,7 @@ We'll start by creating this file. Add a `module-federation.manifest.json` file 
 ```json
 // apps/dashboard/public/module-federation.manifest.json
 {
-  "login": "http://localhost:4201"
+  "login": "http://localhost:4201/mf-manifest.json"
 }
 ```
 
@@ -462,15 +462,18 @@ Next, open the `main.ts` file and replace it with the following:
 
 ```ts
 // apps/dashboard/src/main.ts
-import { setRemoteDefinitions } from '@nx/angular/mf';
+import { registerRemotes } from '@module-federation/enhanced/runtime';
 
 fetch('/module-federation.manifest.json')
   .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
+  .then((remotes: Record<string, string>) =>
+    Object.entries(remotes).map(([name, entry]) => ({ name, entry }))
+  )
+  .then((remotes) => registerRemotes(remotes))
   .then(() => import('./bootstrap').catch((err) => console.error(err)));
 ```
 
-You'll notice that we fetch the JSON file and provide its contents to the `setRemoteDefinitions` function we invoke next. This tells webpack where each of our remote applications has been deployed to!
+You'll notice that we fetch the JSON file, transform it into the format expected by `registerRemotes`, and register the remotes with the Module Federation runtime. This tells webpack where each of our remote applications has been deployed to!
 
 ### Change how Remotes are loaded
 
@@ -495,14 +498,16 @@ Next, we need to change how our application attempts to load the Remote when it 
 ```ts {% meta="{3,9-10}" %}
 // apps/dashboard/src/app/app.routes.ts
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nx/angular/mf';
+import { loadRemote } from '@module-federation/enhanced/runtime';
 import { App } from './app';
 
 export const appRoutes: Route[] = [
   {
     path: 'login',
     loadChildren: () =>
-      loadRemoteModule('login', './Routes').then((m) => m.remoteRoutes),
+      loadRemote<typeof import('login/Routes')>('login/Routes').then(
+        (m) => m!.remoteRoutes
+      ),
   },
   {
     path: '',
@@ -511,7 +516,7 @@ export const appRoutes: Route[] = [
 ];
 ```
 
-The `loadRemoteModule` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed routes from it.
+The `loadRemote` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed routes from it.
 
 ### Summary
 
@@ -519,7 +524,7 @@ That's all the changes required to replace Static Module Federation with Dynamic
 
 Running:
 
-```shell {% frame="none" %}
+```shell
 nx serve dashboard --devRemotes=login
 ```
 
@@ -539,7 +544,7 @@ To showcase this, let's create a new Host application that will use our previous
 
 Run the following command to generate a new Host application that is preconfigured for Dynamic Federation and add specify the **Login** Remote application we want to add:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:host apps/employee --remotes=login --dynamic
 ```
 
@@ -557,7 +562,7 @@ You should take a look at the files generated and see how the **Login** Remote a
 
 We're going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host's Micro Frontend Manifest file correctly.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:remote apps/todo --host=employee
 ```
 

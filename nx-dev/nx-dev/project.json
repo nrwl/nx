@@ -6,38 +6,73 @@
   "targets": {
     "build": {
       "dependsOn": [
-        "astro-docs:build",
         {
           "target": "build-base"
         }
       ],
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
-        ],
+        "commands": ["nx run nx-dev:sitemap"],
         "parallel": false
       },
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/scripts/tsconfig.scripts.json",
-        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
+        { "env": "NEXT_PUBLIC_ASTRO_URL" },
+        { "env": "NEXT_PUBLIC_FRAMER_URL" },
+        { "env": "NEXT_PUBLIC_FRAMER_REWRITES" }
       ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
+    "check-links": {
+      "cache": true,
+      "dependsOn": ["nx-dev:build", "astro-docs:build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+      },
+      "inputs": [
+        "{workspaceRoot}/docs/**/*",
+        "{workspaceRoot}/dist/nx-dev/nx-dev/public/sitemap.xml",
+        "{workspaceRoot}/astro-docs/dist/sitemap-index.xml",
+        "{workspaceRoot}/scripts/tsconfig.scripts.json",
+        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
+      ]
+    },
+    "test": {
+      "dependsOn": ["check-links"]
+    },
     "sitemap": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/docs/**/*",
+        "production",
+        "{projectRoot}/next-sitemap.config.js",
+        { "env": "NX_DEV_URL" },
+        { "env": "NEXT_PUBLIC_NO_INDEX" }
+      ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
       "options": {
         "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
       }
     },
+    "prebuild-banner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{projectRoot}/lib/banner.json"],
+      "options": {
+        "command": "node ../../scripts/documentation/prebuild-banner.mjs",
+        "cwd": "nx-dev/nx-dev",
+        "env": {
+          "BANNER_OUTPUT_PATH": "lib/banner.json"
+        }
+      }
+    },
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "inputs": ["production", "^production", "{projectRoot}/lib/banner.json"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -74,6 +109,7 @@
     },
     "serve": {
       "executor": "@nx/next:server",
+      "dependsOn": ["copy-docs", "prebuild-banner"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`@nx/storybook:configuration for Storybook v9 basic functionalities should generate TS config for project by default 1`] = `
+exports[`@nx/storybook:configuration v9 basic functionalities should generate TS config for project by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -20,7 +20,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 basic functionalities should generate TypeScript Configuration files by default 1`] = `
+exports[`@nx/storybook:configuration v9 basic functionalities should generate TypeScript Configuration files by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -40,7 +40,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 basic functionalities should have the proper typings 1`] = `
+exports[`@nx/storybook:configuration v9 basic functionalities should have the proper typings 1`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -75,7 +75,7 @@ exports[`@nx/storybook:configuration for Storybook v9 basic functionalities shou
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
 "const config = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [],
@@ -97,9 +97,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -123,9 +123,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -145,9 +145,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/nextjs';
 
 const config: StorybookConfig = {
@@ -167,9 +167,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -189,9 +189,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
 "const config = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [],
@@ -213,9 +213,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -235,9 +235,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/web-components-vite';
 
 const config: StorybookConfig = {
@@ -261,9 +261,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -283,9 +283,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -309,4 +309,385 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 basic functionalities should generate TS config for project by default 1`] = `
+"import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
+  stories: ['../**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
+};
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 basic functionalities should generate TypeScript Configuration files by default 1`] = `
+"import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
+  stories: ['../**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
+};
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 basic functionalities should have the proper typings 1`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
+  },
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.js",
+    "src/**/*.test.js",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.test.js"
+  ],
+  "include": [
+    "src/**/*.stories.ts",
+    "src/**/*.stories.js",
+    "src/**/*.stories.jsx",
+    "src/**/*.stories.tsx",
+    "src/**/*.stories.mdx",
+    ".storybook/*.js",
+    ".storybook/*.ts"
+  ],
+  "files": [
+    "../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../node_modules/@nx/react/typings/image.d.ts"
+  ]
+}
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+const config = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: getAbsolutePath('@storybook/react-vite'),
+    options: {
+      builder: {
+        viteConfigPath: 'vite.config.ts',
+      },
+    },
+  },
+};
+
+function getAbsolutePath(value) {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your Vite configuration you can use the viteFinal field.
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: getAbsolutePath('@storybook/react-vite'),
+    options: {
+      builder: {
+        viteConfigPath: 'vite.config.ts',
+      },
+    },
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your Vite configuration you can use the viteFinal field.
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [, '@nx/react/plugins/storybook'],
+  framework: {
+    name: getAbsolutePath('@storybook/react-webpack5'),
+    options: {},
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/nextjs';
+
+const config: StorybookConfig = {
+  stories: ['../**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: getAbsolutePath('@storybook/nextjs'),
+    options: {},
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [, '@nx/react/plugins/storybook'],
+  framework: {
+    name: getAbsolutePath('@storybook/react-webpack5'),
+    options: {},
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+const config = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: getAbsolutePath('@storybook/react-vite'),
+    options: {
+      builder: {
+        viteConfigPath: 'vite.config.ts',
+      },
+    },
+  },
+};
+
+function getAbsolutePath(value) {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your Vite configuration you can use the viteFinal field.
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [, '@nx/react/plugins/storybook'],
+  framework: {
+    name: getAbsolutePath('@storybook/react-webpack5'),
+    options: {},
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/web-components-vite';
+
+const config: StorybookConfig = {
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: getAbsolutePath('@storybook/web-components-vite'),
+    options: {
+      builder: {
+        viteConfigPath: 'vite.config.ts',
+      },
+    },
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your Vite configuration you can use the viteFinal field.
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
+  stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [, '@nx/react/plugins/storybook'],
+  framework: {
+    name: getAbsolutePath('@storybook/react-webpack5'),
+    options: {},
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
+"import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
+  stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  addons: [],
+  framework: {
+    name: getAbsolutePath('@storybook/react-vite'),
+    options: {
+      builder: {
+        viteConfigPath: 'vite.config.ts',
+      },
+    },
+  },
+};
+
+function getAbsolutePath(value: string): any {
+  return dirname(fileURLToPath(import.meta.resolve(\`\${value}/package.json\`)));
+}
+
+export default config;
+
+// To customize your Vite configuration you can use the viteFinal field.
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+"
+`;
+
+exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;

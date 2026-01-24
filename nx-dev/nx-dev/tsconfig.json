@@ -49,6 +49,9 @@
       "path": "../ui-blog"
     },
     {
+      "path": "../ui-resources"
+    },
+    {
       "path": "../ui-fence"
     },
     {
@@ -77,9 +80,6 @@
     },
     {
       "path": "../ui-animations"
-    },
-    {
-      "path": "../ui-conference"
     },
     {
       "path": "../ui-enterprise"

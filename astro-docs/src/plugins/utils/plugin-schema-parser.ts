@@ -95,10 +95,8 @@ export function parseExecutors(
 
     const schemaPath = join(pluginPath, config.schema);
 
-    if (existsSync(schemaPath)) {
-      const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
-      executors.set(name, { config, schema, schemaPath });
-    }
+    const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
+    executors.set(name, { config, schema, schemaPath });
   }
 
   return executors;

@@ -76,21 +76,25 @@ function applyNxIndependentConfig(
     config.target === 'node'
       ? 'none'
       : // Otherwise, make sure it matches `process.env.NODE_ENV`.
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
-      process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'production'
-      ? (process.env.NODE_ENV as 'development' | 'production')
-      : 'none';
+        // When mode is development or production, webpack will automatically
+        // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+        // build-time value. Thus, we need to make sure it's the same value to
+        // avoid conflicts.
+        //
+        // When the NODE_ENV is something else (e.g. test), then set it to none
+        // to prevent extra behavior from webpack.
+        process.env.NODE_ENV === 'development' ||
+          process.env.NODE_ENV === 'production'
+        ? (process.env.NODE_ENV as 'development' | 'production')
+        : 'none';
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
-    options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
+    'cache' in options
+      ? options.cache
+      : options.target === 'node' && options.watch
+        ? { type: 'memory' }
+        : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
@@ -215,7 +219,7 @@ function applyNxIndependentConfig(
     warnings: true,
     errors: true,
     colors: !options.verbose && !options.statsJson,
-    chunks: !options.verbose,
+    chunks: !!options.verbose,
     assets: !!options.verbose,
     chunkOrigins: !!options.verbose,
     chunkModules: !!options.verbose,
@@ -266,16 +270,34 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
   }
 
+  // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
+  const defaultTypeCheckOptions = { async: true };
+
+  let typeCheckOptions: boolean | { async: boolean };
+  if (options.typeCheckOptions !== undefined) {
+    if (options.typeCheckOptions === true) {
+      typeCheckOptions = defaultTypeCheckOptions;
+    } else if (options.typeCheckOptions === false) {
+      typeCheckOptions = false;
+    } else {
+      typeCheckOptions = options.typeCheckOptions;
+    }
+  } else if (options.skipTypeChecking) {
+    typeCheckOptions = false;
+  } else {
+    typeCheckOptions = defaultTypeCheckOptions;
+  }
+
   // New TS Solution already has a typecheck target but allow it to run during serve
-  if (
-    (!options?.skipTypeChecking && !isUsingTsSolution) ||
-    (isUsingTsSolution &&
-      options?.skipTypeChecking === false &&
-      process.env['WEBPACK_SERVE'])
-  ) {
+  const shouldTypeCheck =
+    typeCheckOptions !== false &&
+    (!isUsingTsSolution || process.env['WEBPACK_SERVE']);
+
+  if (shouldTypeCheck) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
+        ...typeCheckOptions,
         typescript: {
           configFile: path.isAbsolute(tsConfig)
             ? tsConfig
@@ -370,7 +392,10 @@ function applyNxDependentConfig(
     plugins.push(new StatsJsonPlugin());
   }
 
-  const externals = [];
+  const externals =
+    options.mergeExternals && Array.isArray(config.externals)
+      ? [...config.externals]
+      : [];
   if (options.target === 'node' && options.externalDependencies === 'all') {
     const modulesDir = `${options.root}/node_modules`;
 

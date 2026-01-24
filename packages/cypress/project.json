@@ -42,6 +42,11 @@
             "output": "/"
           },
           {
+            "input": "packages/cypress",
+            "glob": "PLUGIN.md",
+            "output": "/"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"

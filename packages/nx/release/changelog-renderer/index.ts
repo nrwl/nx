@@ -408,50 +408,58 @@ export default class DefaultChangelogRenderer {
     return changeLine;
   }
 
-  protected formatBreakingChange(change: ChangelogChange): string {
-    const explanation = this.extractBreakingChangeExplanation(change.body);
-
-    if (!explanation) {
-      // No explanation found, use the regular formatChange which includes references
-      return this.formatChange(change);
-    }
-
-    // Build the breaking change line with scope, explanation, and references
+  protected formatBreakingChangeBase(change: ChangelogChange): string {
     let breakingLine = '- ';
 
     if (change.scope) {
       breakingLine += `**${change.scope.trim()}:** `;
     }
 
+    if (change.description) {
+      breakingLine += `${change.description.trim()}`;
+    }
+
+    if (
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.commitReferences &&
+      change.githubReferences
+    ) {
+      breakingLine += ` ${this.remoteReleaseClient.formatReferences(
+        change.githubReferences
+      )}`;
+    }
+
+    return breakingLine;
+  }
+
+  protected formatBreakingChange(change: ChangelogChange): string {
+    const explanation = this.extractBreakingChangeExplanation(change.body);
+    const baseLine = this.formatBreakingChangeBase(change);
+
+    if (!explanation) {
+      return baseLine;
+    }
+
+    const indentation = '  ';
+    let breakingLine = baseLine + `\n${indentation}`;
+
     // Handle multi-line explanations
     let explanationText = explanation;
-    let extraLines = [];
+    let extraLines: string[] = [];
     if (explanation.includes('\n')) {
       [explanationText, ...extraLines] = explanation.split('\n');
     }
 
     breakingLine += explanationText;
 
-    // Add PR/commit references
-    if (
-      this.remoteReleaseClient.getRemoteRepoData() &&
-      this.changelogRenderOptions.commitReferences &&
-      change.githubReferences
-    ) {
-      breakingLine += this.remoteReleaseClient.formatReferences(
-        change.githubReferences
-      );
-    }
-
     // Add extra lines with indentation (matching formatChange behavior)
     if (extraLines.length > 0) {
-      const indentation = '  ';
       const extraLinesStr = extraLines
         .filter((l) => l.trim().length > 0)
         .map((l) => `${indentation}${l}`)
         .join('\n');
       if (extraLinesStr) {
-        breakingLine += '\n\n' + extraLinesStr;
+        breakingLine += '\n' + extraLinesStr;
       }
     }
 

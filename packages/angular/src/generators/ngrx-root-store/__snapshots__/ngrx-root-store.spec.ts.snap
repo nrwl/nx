@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`NgRxRootStoreGenerator NgModule should add a facade when --facade=true 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
@@ -28,7 +28,7 @@ import { UsersFacade } from './+state/users.facade';
           strictActionImmutability: true,
           strictStateImmutability: true,
         },
-      }
+      },
     ),
     StoreRouterConnectingModule.forRoot(),
     StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
@@ -99,7 +99,7 @@ import { UsersEffects } from './+state/users.effects';
           strictActionImmutability: true,
           strictStateImmutability: true,
         },
-      }
+      },
     ),
     StoreRouterConnectingModule.forRoot(),
     StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
@@ -120,12 +120,12 @@ export const initUsers = createAction('[Users Page] Init');
 
 export const loadUsersSuccess = createAction(
   '[Users/API] Load Users Success',
-  props<{ users: UsersEntity[] }>()
+  props<{ users: UsersEntity[] }>(),
 );
 
 export const loadUsersFailure = createAction(
   '[Users/API] Load Users Failure',
-  props<{ error: any }>()
+  props<{ error: any }>(),
 );
 "
 `;
@@ -148,8 +148,8 @@ export class UsersEffects {
       catchError((error) => {
         console.error('Error', error);
         return of(UsersActions.loadUsersFailure({ error }));
-      })
-    )
+      }),
+    ),
   );
 }
 "
@@ -233,9 +233,12 @@ const reducer = createReducer(
     error: null,
   })),
   on(UsersActions.loadUsersSuccess, (state, { users }) =>
-    usersAdapter.setAll(users, { ...state, loaded: true })
+    usersAdapter.setAll(users, { ...state, loaded: true }),
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -256,33 +259,33 @@ const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
 export const selectUsersLoaded = createSelector(
   selectUsersState,
-  (state: UsersState) => state.loaded
+  (state: UsersState) => state.loaded,
 );
 
 export const selectUsersError = createSelector(
   selectUsersState,
-  (state: UsersState) => state.error
+  (state: UsersState) => state.error,
 );
 
 export const selectAllUsers = createSelector(
   selectUsersState,
-  (state: UsersState) => selectAll(state)
+  (state: UsersState) => selectAll(state),
 );
 
 export const selectUsersEntities = createSelector(
   selectUsersState,
-  (state: UsersState) => selectEntities(state)
+  (state: UsersState) => selectEntities(state),
 );
 
 export const selectSelectedId = createSelector(
   selectUsersState,
-  (state: UsersState) => state.selectedId
+  (state: UsersState) => state.selectedId,
 );
 
 export const selectEntity = createSelector(
   selectUsersEntities,
   selectSelectedId,
-  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined),
 );
 "
 `;
@@ -303,7 +306,7 @@ describe('Users Selectors', () => {
     ({
       id,
       name: name || \`name-\${id}\`,
-    } as UsersEntity);
+    }) as UsersEntity;
 
   let state: UsersPartialState;
 
@@ -320,7 +323,7 @@ describe('Users Selectors', () => {
           selectedId: 'PRODUCT-BBB',
           error: ERROR_MSG,
           loaded: true,
-        }
+        },
       ),
     };
   });
@@ -426,7 +429,7 @@ export class AppModule {}
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 1`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -438,7 +441,6 @@ import { UsersFacade } from './+state/users.facade';
 export const appConfig: ApplicationConfig = {
   providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideStore(),provideEffects(),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -477,7 +479,7 @@ export class UsersFacade {
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 1`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -488,7 +490,6 @@ import { UsersEffects } from './+state/users.effects';
 export const appConfig: ApplicationConfig = {
   providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideStore(),provideEffects(),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -730,7 +731,7 @@ describe('Users Selectors', () => {
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add an empty root module when --minimal=true 1`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore } from '@ngrx/store';
@@ -739,7 +740,6 @@ import { provideEffects } from '@ngrx/effects';
 export const appConfig: ApplicationConfig = {
   providers: [provideStore(),provideEffects(),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -747,7 +747,7 @@ export const appConfig: ApplicationConfig = {
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should instrument the store devtools when "addDevTools: true" 1`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, isDevMode } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore } from '@ngrx/store';
@@ -757,7 +757,6 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 export const appConfig: ApplicationConfig = {
   providers: [provideStore(),provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };

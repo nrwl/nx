@@ -1,5 +1,4 @@
 import { DependencyType } from '../../../../config/project-graph';
-import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
@@ -8,7 +7,6 @@ import {
 } from '../../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../../utils/json';
 import type { PackageJson } from '../../../../utils/package-json';
-import { joinPathFragments } from '../../../../utils/path';
 import { TargetProjectLocator } from './target-project-locator';
 
 export function buildExplicitPackageJsonDependencies(
@@ -16,10 +14,14 @@ export function buildExplicitPackageJsonDependencies(
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
-  const nodes = Object.values(ctx.projects);
+  const roots = {};
+  Object.values(ctx.projects).forEach((project) => {
+    roots[project.root] = true;
+  });
+
   Object.keys(ctx.filesToProcess.projectFileMap).forEach((source) => {
     Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(nodes, f.file)) {
+      if (isPackageJsonAtProjectRoot(roots, f.file)) {
         processPackageJson(source, f.file, ctx, targetProjectLocator, res);
       }
     });
@@ -28,16 +30,14 @@ export function buildExplicitPackageJsonDependencies(
 }
 
 function isPackageJsonAtProjectRoot(
-  nodes: ProjectConfiguration[],
+  roots: Record<string, boolean>,
   fileName: string
 ) {
-  return (
-    fileName.endsWith('package.json') &&
-    nodes.find(
-      (projectNode) =>
-        joinPathFragments(projectNode.root, 'package.json') === fileName
-    )
-  );
+  if (!fileName.endsWith('package.json')) {
+    return false;
+  }
+  const filePath = fileName.slice(0, -13);
+  return !!roots[filePath];
 }
 
 function processPackageJson(
@@ -50,7 +50,8 @@ function processPackageJson(
   try {
     const deps = readDeps(parseJson(defaultFileRead(packageJsonPath)));
 
-    for (const [packageName, packageVersion] of Object.entries(deps)) {
+    Object.keys(deps).forEach((packageName) => {
+      const packageVersion = deps[packageName];
       const localProject =
         targetProjectLocator.findDependencyInWorkspaceProjects(
           packageJsonPath,
@@ -67,7 +68,7 @@ function processPackageJson(
         };
         validateDependency(dependency, ctx);
         collectedDeps.push(dependency);
-        continue;
+        return;
       }
 
       const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
@@ -75,7 +76,7 @@ function processPackageJson(
         packageJsonPath
       );
       if (!externalNodeName) {
-        continue;
+        return;
       }
 
       const dependency: RawProjectGraphDependency = {
@@ -86,7 +87,7 @@ function processPackageJson(
       };
       validateDependency(dependency, ctx);
       collectedDeps.push(dependency);
-    }
+    });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);
@@ -109,11 +110,9 @@ function readDeps(packageJson: PackageJson) {
   ] as const;
 
   for (const type of depType) {
-    for (const [depName, depVersion] of Object.entries(
-      packageJson[type] || {}
-    )) {
-      deps[depName] = depVersion;
-    }
+    Object.keys(packageJson[type] || {}).forEach((depName) => {
+      deps[depName] = packageJson[type][depName];
+    });
   }
 
   return deps;

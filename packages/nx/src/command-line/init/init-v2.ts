@@ -30,6 +30,8 @@ import {
   updateGitIgnore,
 } from './implementation/utils';
 import { addNxToCraRepo } from './implementation/react';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { installPackageToTmp } from '../../devkit-internals';
 
 export interface InitArgs {
   interactive: boolean;
@@ -41,7 +43,39 @@ export interface InitArgs {
   aiAgents?: Agent[];
 }
 
-export async function initHandler(options: InitArgs): Promise<void> {
+export async function initHandler(
+  options: InitArgs,
+  inner = false
+): Promise<void> {
+  // Use environment variable to force local execution
+  if (process.env.NX_USE_LOCAL === 'true' || inner) {
+    return await initHandlerImpl(options);
+  }
+
+  let cleanup: () => void | undefined;
+  try {
+    await ensurePackageHasProvenance('nx', 'latest');
+    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    cleanup = packageInstallResults.cleanup;
+
+    let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
+      paths: [packageInstallResults.tempDir],
+    });
+
+    const module = await import(modulePath);
+    const result = await module.initHandler(options, true);
+    cleanup();
+    return result;
+  } catch (error) {
+    if (cleanup) {
+      cleanup();
+    }
+    // Fall back to local implementation
+    return initHandlerImpl(options);
+  }
+}
+
+async function initHandlerImpl(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
@@ -218,7 +252,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',
-  vitest: '@nx/vite',
+  vitest: '@nx/vitest',
   webpack: '@nx/webpack',
   '@rspack/core': '@nx/rspack',
   rollup: '@nx/rollup',
@@ -314,6 +348,13 @@ export async function detectPlugins(
   ]);
   if (mvnwFiles.length > 0) {
     detectedPlugins.add('@nx/maven');
+  }
+
+  let dockerFiles = ['Dockerfile'].concat(
+    globWithWorkspaceContextSync(process.cwd(), ['**/Dockerfile'])
+  );
+  if (dockerFiles.some((f) => existsSync(f))) {
+    detectedPlugins.add('@nx/docker');
   }
 
   // Remove existing plugins

@@ -11,7 +11,8 @@
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "jest.config.cts"
   ],
   "include": ["**/*.ts", "**/*.json"],
   "references": [
@@ -37,7 +38,13 @@
       "path": "../nx/tsconfig.lib.json"
     },
     {
+      "path": "../storybook/tsconfig.lib.json"
+    },
+    {
       "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../vitest/tsconfig.lib.json"
     },
     {
       "path": "../rsbuild/tsconfig.lib.json"

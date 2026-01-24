@@ -39,52 +39,7 @@ exports[`application generator should set up project correctly for cypress 1`] =
 "
 `;
 
-exports[`application generator should set up project correctly for cypress 2`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/test',
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-  preview: {
-    port: 4300,
-    host: 'localhost',
-  },
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  build: {
-    outDir: '../dist/test',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-  test: {
-    name: 'test',
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/test',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
+exports[`application generator should set up project correctly for cypress 2`] = `null`;
 
 exports[`application generator should set up project correctly for cypress 3`] = `
 "{
@@ -129,7 +84,6 @@ describe('App', () => {
 exports[`application generator should set up project correctly for cypress 5`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
@@ -149,25 +103,26 @@ export default defineConfig({
 `;
 
 exports[`application generator should set up project correctly for rsbuild 1`] = `
-"import vue from '@vitejs/plugin-vue';
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/test',
-  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), vue()],
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
     name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
@@ -206,7 +161,7 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
   "test/tsconfig.app.json",
   "test/tsconfig.json",
   "test/tsconfig.spec.json",
-  "test/vitest.config.ts",
+  "test/vitest.config.mts",
   "tsconfig.base.json",
   "vitest.workspace.ts",
 ]
@@ -251,52 +206,7 @@ exports[`application generator should set up project correctly with given option
 "
 `;
 
-exports[`application generator should set up project correctly with given options 2`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/test',
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-  preview: {
-    port: 4300,
-    host: 'localhost',
-  },
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  build: {
-    outDir: '../dist/test',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-  test: {
-    name: 'test',
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/test',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
+exports[`application generator should set up project correctly with given options 2`] = `null`;
 
 exports[`application generator should set up project correctly with given options 3`] = `
 "{
@@ -437,7 +347,7 @@ exports[`application generator should set up project correctly with given option
   "test/tsconfig.app.json",
   "test/tsconfig.json",
   "test/tsconfig.spec.json",
-  "test/vite.config.ts",
+  "test/vite.config.mts",
   "tsconfig.base.json",
   "vitest.workspace.ts",
 ]

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ensureViteConfigIsCorrect should add build options if it is using conditional config - do nothing for test 1`] = `
 "
@@ -13,11 +13,11 @@ exports[`ensureViteConfigIsCorrect should add build options if it is using condi
       } else {
         // command === 'build'
         return {
-        ...{
-          my: 'option',
-        },
-        ..."\\n    // Configuration for building your library.\\n    // See: https://vitejs.dev/guide/build.html#library-mode\\n    build: {\\n      lib: {\\n        // Could also be a dictionary or array of multiple entry points.\\n        entry: 'src/index.ts',\\n        name: 'my-app',\\n        fileName: 'index',\\n        // Change this to the formats you want to support.\\n        // Don't forget to update your package.json as well.\\n        formats: ['es']\\n      },\\n      rollupOptions: {\\n        // External packages that should not be bundled into your library.\\n        external: ['react', 'react-dom', 'react/jsx-runtime']\\n      }\\n    },"
-      }
+    ...{
+        my: 'option',
+    },
+    ..."\\n    // Configuration for building your library.\\n    // See: https://vite.dev/guide/build.html#library-mode\\n    build: {\\n      lib: {\\n        // Could also be a dictionary or array of multiple entry points.\\n        entry: 'src/index.ts',\\n        name: 'my-app',\\n        fileName: 'index',\\n        // Change this to the formats you want to support.\\n        // Don't forget to update your package.json as well.\\n        formats: ['es']\\n      },\\n      rollupOptions: {\\n        // External packages that should not be bundled into your library.\\n        external: ['react', 'react-dom', 'react/jsx-runtime']\\n      }\\n    },"
+};
       }
     })
     "

@@ -157,8 +157,10 @@ describe('application generator', () => {
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
+      'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
@@ -390,6 +392,7 @@ describe('application generator', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -418,6 +421,7 @@ describe('application generator', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -576,7 +580,7 @@ describe('application generator', () => {
               ],
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.ts",
+                "jestConfig": "myapp-e2e/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

@@ -58,6 +58,7 @@
               "@nx/playwright",
               "@nx/storybook",
               "@nx/vite",
+              "@nx/vitest",
               "@schematics/angular",
               "browserslist",
               "cypress",
@@ -65,7 +66,8 @@
               "injection-js",
               "nx",
               "piscina",
-              "typescript"
+              "typescript",
+              "vite"
             ]
           }
         ]

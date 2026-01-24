@@ -153,6 +153,7 @@ export interface CreateNxReleaseConfigError {
     | 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER'
     | 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME'
     | 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL'
+    | 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS'
     | 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE';
   data: Record<string, string | string[]>;
 }
@@ -377,6 +378,9 @@ export async function createNxReleaseConfig(
         userConfig.version?.preserveMatchingDependencyRanges ?? true,
       logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
       updateDependents: userConfig.version?.updateDependents ?? 'always',
+      // TODO(v23): change the default value of this to true
+      adjustSemverBumpsForZeroMajorVersion:
+        userConfig.version?.adjustSemverBumpsForZeroMajorVersion ?? false,
     } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
       git: changelogGitDefaults,
@@ -723,9 +727,9 @@ export async function createNxReleaseConfig(
           ? WORKSPACE_DEFAULTS.releaseTag.pattern?.includes('{projectName}')
             ? WORKSPACE_DEFAULTS.releaseTag.pattern
             : defaultIndependentReleaseTagPattern
-          : userConfig?.releaseTag?.pattern ??
+          : (userConfig?.releaseTag?.pattern ??
             userConfig?.releaseTagPattern ??
-            defaultFixedGroupReleaseTagPattern;
+            defaultFixedGroupReleaseTagPattern);
 
       // Initialize releaseTag object if it doesn't exist
       if (!releaseGroup.releaseTag) {
@@ -910,6 +914,9 @@ export async function createNxReleaseConfig(
     });
 
     if (hasDockerProjects) {
+      const error = validateDockerVersionSchemes({ releaseGroups });
+      if (error) return { error, nxReleaseConfig: null };
+
       // If any project in the group has docker configuration, disable semver requirement
       releaseGroup.releaseTag.requireSemver = false;
 
@@ -1071,6 +1078,22 @@ export async function handleNxReleaseConfigError(
 ): Promise<never> {
   const linkMessage = `\nRead more about Nx Release at https://nx.dev/features/manage-releases.`;
   switch (error.code) {
+    case 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+          'groups',
+          error.data.releaseGroupName as string,
+          'docker',
+          'versionSchemes',
+        ]);
+        output.error({
+          title: `Release group "${error.data.releaseGroupName}" configures "skipVersionActions" but its docker version scheme "${error.data.schemeName}" contains the "{versionActionsVersion}" placeholder which cannot be resolved without version actions. Remove "skipVersionActions" or remove the placeholder from the scheme.`,
+          bodyLines: [nxJsonMessage, linkMessage],
+        });
+      }
+      break;
+
     case 'PROJECTS_AND_GROUPS_DEFINED':
       {
         const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
@@ -1552,6 +1575,35 @@ function validateCreateReleaseConfig(
       '__hostname__',
       createRelease.hostname
     );
+  }
+  return null;
+}
+
+type ValidateDockerVersionSchemesParams = {
+  releaseGroups: EnsureDockerOptional<NxReleaseConfig['groups']>;
+};
+
+function validateDockerVersionSchemes({
+  releaseGroups,
+}: ValidateDockerVersionSchemesParams): CreateNxReleaseConfigError | null {
+  for (const [releaseGroupName, releaseGroup] of Object.entries(
+    releaseGroups
+  )) {
+    if (!releaseGroup.docker) continue;
+    const versionSchemes = releaseGroup.docker.versionSchemes ?? {};
+    const skipVersionActions = releaseGroup.docker.skipVersionActions;
+    if (!versionSchemes || !skipVersionActions) continue;
+    const schemeWithPlaceholder = Object.entries(versionSchemes).find(
+      ([, scheme]) => scheme.includes('{versionActionsVersion}')
+    );
+    if (!schemeWithPlaceholder) continue;
+    return {
+      code: 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS',
+      data: {
+        releaseGroupName,
+        schemeName: schemeWithPlaceholder[0],
+      },
+    };
   }
   return null;
 }

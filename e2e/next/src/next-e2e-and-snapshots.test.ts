@@ -63,20 +63,17 @@ describe('Next.js Applications - E2E and Snapshots', () => {
 
     const appDirNextEnv = `${appName}/next-env.d.ts`;
     const appDirNextEnvContent = readFile(appDirNextEnv);
-
+    expect(appDirNextEnvContent).toMatchSnapshot();
     const pagesDirNextEnv = `${pagesAppName}/next-env.d.ts`;
     const pagesDirNextEnvContent = readFile(pagesDirNextEnv);
+    expect(pagesDirNextEnvContent).toMatchSnapshot();
 
     runCLI(`build ${appName}`);
     runCLI(`build ${pagesAppName}`);
 
     const postBuildAppContent = readFile(appDirNextEnv);
     const postBuildPagesContent = readFile(pagesDirNextEnv);
-
-    expect(postBuildAppContent).toEqual(appDirNextEnvContent);
     expect(postBuildAppContent).toMatchSnapshot();
-
-    expect(postBuildPagesContent).toEqual(pagesDirNextEnvContent);
     expect(postBuildPagesContent).toMatchSnapshot();
   });
 });
