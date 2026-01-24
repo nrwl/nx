@@ -1,10 +1,105 @@
-import { exec, execSync } from 'child_process';
+import { exec, execSync, spawn, spawnSync } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
+
+type PackageManagerCommand = {
+  command: string;
+  args: string[];
+};
+
+function tokenizeCommand(command: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let inSingle = false;
+  let inDouble = false;
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i];
+    if (ch === "'" && !inDouble) {
+      inSingle = !inSingle;
+      continue;
+    }
+    if (ch === '"' && !inSingle) {
+      inDouble = !inDouble;
+      continue;
+    }
+    if (!inSingle && !inDouble && /\s/.test(ch)) {
+      if (current) {
+        tokens.push(current);
+        current = '';
+      }
+      continue;
+    }
+    current += ch;
+  }
+  if (current) {
+    tokens.push(current);
+  }
+  return tokens;
+}
+
+function parsePackageManagerCommand(
+  command: string | null | undefined
+): PackageManagerCommand | null {
+  if (!command) {
+    return null;
+  }
+  const tokens = tokenizeCommand(command);
+  if (tokens.length === 0) {
+    return null;
+  }
+  return {
+    command: tokens[0],
+    args: tokens.slice(1),
+  };
+}
+
+function runPackageManagerCommandSync(
+  cmd: PackageManagerCommand,
+  options: { cwd: string; stdio: any; windowsHide: boolean }
+): void {
+  const result = spawnSync(cmd.command, cmd.args, {
+    cwd: options.cwd,
+    stdio: options.stdio,
+    windowsHide: options.windowsHide,
+    shell: false,
+  });
+  if (result.error) {
+    throw result.error;
+  }
+  if (typeof result.status === 'number' && result.status !== 0) {
+    throw new Error(
+      `Command "${cmd.command}" exited with code ${result.status}`
+    );
+  }
+}
+
+function runPackageManagerCommandAsync(
+  cmd: PackageManagerCommand,
+  options: { cwd: string; stdio: any; windowsHide: boolean }
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd.command, cmd.args, {
+      cwd: options.cwd,
+      stdio: options.stdio,
+      windowsHide: options.windowsHide,
+      shell: false,
+    });
+    child.on('error', (err) => reject(err));
+    child.on('close', (code) => {
+      if (code && code !== 0) {
+        reject(
+          new Error(`Command "${cmd.command}" exited with code ${code}`)
+        );
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
@@ -366,16 +461,28 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
 
-  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
+  const preInstall =
+    parsePackageManagerCommand(pmCommands.preInstall ?? null);
   const pmCommands = getPackageManagerCommand(packageManager);
   let addCommand = pmCommands.addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
   }
 
-  const installCommand = `${addCommand} ${pkg}@${requiredVersion} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
+  const addTokens = tokenizeCommand(addCommand);
+  if (addTokens.length === 0) {
+    throw new Error('Invalid package manager add command');
+  }
+  const installCommand: PackageManagerCommand = {
+    command: addTokens[0],
+    args: [
+      ...addTokens.slice(1),
+      `${pkg}@${requiredVersion}`,
+      ...(pmCommands.ignoreScriptsFlag
+        ? [pmCommands.ignoreScriptsFlag]
+        : []),
+    ],
+  };
 
   const execOptions = {
     cwd: tempDir,
@@ -386,7 +493,7 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   return {
     tempDir,
     cleanup,
-    preInstallCommand,
+    preInstallCommand: preInstall,
     installCommand,
     execOptions,
   };
@@ -404,10 +511,10 @@ export function installPackageToTmp(
 
   if (preInstallCommand) {
     // ensure package.json and repo in tmp folder is set to a proper package manager state
-    execSync(preInstallCommand, execOptions);
+    runPackageManagerCommandSync(preInstallCommand, execOptions);
   }
 
-  execSync(installCommand, execOptions);
+  runPackageManagerCommandSync(installCommand, execOptions);
 
   return {
     tempDir,
@@ -428,10 +535,10 @@ export async function installPackageToTmpAsync(
   try {
     if (preInstallCommand) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
-      await execAsync(preInstallCommand, execOptions);
+      await runPackageManagerCommandAsync(preInstallCommand, execOptions);
     }
 
-    await execAsync(installCommand, execOptions);
+    await runPackageManagerCommandAsync(installCommand, execOptions);
 
     return {
       tempDir,
