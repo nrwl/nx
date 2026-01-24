@@ -14,21 +14,25 @@ export type TaskPidUpdate = {
   pids: number[];
 };
 
-export type FileSetInput = {
-  /** Project name, or undefined for workspace-level file sets */
-  project?: string;
-  /** Glob patterns for the file set */
-  patterns: string[];
-};
-
 export type TaskIOInfo = {
-  /** File set inputs (project-scoped or workspace-level globs) */
-  fileSets: FileSetInput[];
+  /** Expanded file paths that were used as inputs */
+  files: string[];
   /** Task outputs (glob patterns) */
   outputs: string[];
 };
 
 export type TaskPidCallback = (update: TaskPidUpdate) => void;
+
+export type HashInputsCallback = (
+  taskId: string,
+  inputs: {
+    files: string[];
+    runtime: string[];
+    environment: string[];
+    depOutputs: string[];
+    external: string[];
+  }
+) => void;
 
 /**
  * Service for tracking task process IDs and providing access to task IO information.
@@ -43,6 +47,7 @@ class TaskIOService {
 
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
+  private hashInputsCallbacks: HashInputsCallback[] = [];
   private metricsSubscribed = false;
 
   // Project graph for output resolution
@@ -82,6 +87,37 @@ class TaskIOService {
   }
 
   /**
+   * Subscribe to hash inputs as they are computed.
+   * Called when a task's hash inputs become available.
+   */
+  subscribeToHashInputs(callback: HashInputsCallback): void {
+    this.hashInputsCallbacks.push(callback);
+  }
+
+  /**
+   * Notify subscribers that hash inputs are available for a task.
+   * Called from the hasher when inputs are computed.
+   */
+  notifyHashInputs(
+    taskId: string,
+    inputs: {
+      files: string[];
+      runtime: string[];
+      environment: string[];
+      depOutputs: string[];
+      external: string[];
+    }
+  ): void {
+    for (const cb of this.hashInputsCallbacks) {
+      try {
+        cb(taskId, inputs);
+      } catch {
+        // Silent failure - don't let one callback break others
+      }
+    }
+  }
+
+  /**
    * Get current PIDs for a task (synchronous).
    */
   getPidsForTask(taskId: string): number[] {
@@ -102,7 +138,7 @@ class TaskIOService {
   /**
    * Get IO information for a task.
    * The task must have been hashed (task.hashInputs must be populated).
-   * Returns file set inputs and outputs.
+   * Returns file inputs and outputs.
    */
   getTaskIOInfo(task: Task): TaskIOInfo | null {
     if (!task.hashInputs) {
@@ -110,10 +146,7 @@ class TaskIOService {
     }
 
     return {
-      fileSets: task.hashInputs.fileSets.map((fs) => ({
-        project: fs.project,
-        patterns: fs.patterns,
-      })),
+      files: task.hashInputs.files,
       outputs: task.outputs ?? [],
     };
   }
@@ -148,7 +181,7 @@ class TaskIOService {
   /**
    * Get expected outputs for all tasks in the task graph.
    * Unlike getAllTaskGraphIOInfo, this includes all tasks regardless of hash status.
-   * FileSets will be empty for unhashed tasks.
+   * Files will be empty for unhashed tasks.
    */
   getAllExpectedTaskIO(): Map<string, TaskIOInfo> {
     if (!this.taskGraph) {
@@ -158,11 +191,7 @@ class TaskIOService {
     const result = new Map<string, TaskIOInfo>();
     for (const task of Object.values(this.taskGraph.tasks)) {
       result.set(task.id, {
-        fileSets:
-          task.hashInputs?.fileSets.map((fs) => ({
-            project: fs.project,
-            patterns: fs.patterns,
-          })) ?? [],
+        files: task.hashInputs?.files ?? [],
         outputs: task.outputs ?? [],
       });
     }
@@ -348,14 +377,7 @@ class DebugTaskIOService extends TaskIOService {
                 'Expected task IO:',
                 ...[...this.getAllTaskGraphIOInfo().entries()].map(
                   ([taskId, io]) =>
-                    `Task ${taskId}:\n  FileSets: ${io.fileSets
-                      .map(
-                        (fs) =>
-                          `{ project: ${fs.project ?? 'workspace'}, patterns: [${fs.patterns.join(
-                            ', '
-                          )}] }`
-                      )
-                      .join('; ')}\n  Outputs: [${io.outputs.join(', ')}]`
+                    `Task ${taskId}:\n  Files: [${io.files.slice(0, 5).join(', ')}${io.files.length > 5 ? `, ... (${io.files.length} total)` : ''}]\n  Outputs: [${io.outputs.join(', ')}]`
                 ),
               ]
             : []),

@@ -170,39 +170,22 @@ describe('native task hasher', () => {
           "inputs": {
             "depOutputs": [],
             "environment": [
+              "NONEXISTENTENV",
               "TESTENV",
               "NX_CLOUD_ENCRYPTION_KEY",
-              "NONEXISTENTENV",
             ],
             "external": [
               "AllExternalDependencies",
             ],
-            "fileSets": [
-              {
-                "patterns": [
-                  "libs/tagged/**/*",
-                ],
-                "project": "tagged",
-              },
-              {
-                "patterns": [
-                  "nx.json",
-                  ".gitignore",
-                  ".nxignore",
-                ],
-              },
-              {
-                "patterns": [
-                  "libs/parent/**/*",
-                ],
-                "project": "parent",
-              },
-              {
-                "patterns": [
-                  "libs/unrelated/**/*",
-                ],
-                "project": "unrelated",
-              },
+            "files": [
+              "nx.json",
+              "libs/tagged/project.json",
+              "libs/unrelated/filec.ts",
+              "libs/unrelated/project.json",
+              "libs/parent/filea.spec.ts",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
             ],
             "runtime": [
               "echo runtime123",
@@ -282,26 +265,16 @@ describe('native task hasher', () => {
           "external": [
             "AllExternalDependencies",
           ],
-          "fileSets": [
-            {
-              "patterns": [
-                "nx.json",
-                ".gitignore",
-                ".nxignore",
-              ],
-            },
-            {
-              "patterns": [
-                "libs/parent/**/*",
-              ],
-              "project": "parent",
-            },
-            {
-              "patterns": [
-                "libs/child/**/*",
-              ],
-              "project": "child",
-            },
+          "files": [
+            "nx.json",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
           ],
           "runtime": [],
         },
@@ -393,26 +366,15 @@ describe('native task hasher', () => {
           "external": [
             "AllExternalDependencies",
           ],
-          "fileSets": [
-            {
-              "patterns": [
-                "nx.json",
-                ".gitignore",
-                ".nxignore",
-              ],
-            },
-            {
-              "patterns": [
-                "libs/child/**/*",
-              ],
-              "project": "child",
-            },
-            {
-              "patterns": [
-                "!libs/parent/**/*.spec.ts",
-              ],
-              "project": "parent",
-            },
+          "files": [
+            "nx.json",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
           ],
           "runtime": [],
         },
@@ -491,20 +453,11 @@ describe('native task hasher', () => {
             "external": [
               "AllExternalDependencies",
             ],
-            "fileSets": [
-              {
-                "patterns": [
-                  "nx.json",
-                  ".gitignore",
-                  ".nxignore",
-                ],
-              },
-              {
-                "patterns": [
-                  "!libs/parent/**/*.spec.ts",
-                ],
-                "project": "parent",
-              },
+            "files": [
+              "nx.json",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
             ],
             "runtime": [],
           },
@@ -527,20 +480,12 @@ describe('native task hasher', () => {
             "external": [
               "AllExternalDependencies",
             ],
-            "fileSets": [
-              {
-                "patterns": [
-                  "nx.json",
-                  ".gitignore",
-                  ".nxignore",
-                ],
-              },
-              {
-                "patterns": [
-                  "libs/parent/**/*",
-                ],
-                "project": "parent",
-              },
+            "files": [
+              "nx.json",
+              "libs/parent/filea.spec.ts",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
             ],
             "runtime": [],
           },
@@ -645,36 +590,17 @@ describe('native task hasher', () => {
             "external": [
               "AllExternalDependencies",
             ],
-            "fileSets": [
-              {
-                "patterns": [
-                  "global2",
-                ],
-              },
-              {
-                "patterns": [
-                  "nx.json",
-                  ".gitignore",
-                  ".nxignore",
-                ],
-              },
-              {
-                "patterns": [
-                  "global1",
-                ],
-              },
-              {
-                "patterns": [
-                  "libs/parent/**/*",
-                ],
-                "project": "parent",
-              },
-              {
-                "patterns": [
-                  "!libs/child/**/*.spec.ts",
-                ],
-                "project": "child",
-              },
+            "files": [
+              "global1",
+              "global2",
+              "nx.json",
+              "libs/parent/filea.spec.ts",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
+              "libs/child/fileb.ts",
+              "libs/child/project.json",
+              "libs/child/src/index.ts",
             ],
             "runtime": [],
           },
@@ -741,20 +667,12 @@ describe('native task hasher', () => {
           "external": [
             "AllExternalDependencies",
           ],
-          "fileSets": [
-            {
-              "patterns": [
-                "nx.json",
-                ".gitignore",
-                ".nxignore",
-              ],
-            },
-            {
-              "patterns": [
-                "libs/parent/**/*",
-              ],
-              "project": "parent",
-            },
+          "files": [
+            "nx.json",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
           ],
           "runtime": [],
         },
@@ -845,26 +763,16 @@ describe('native task hasher', () => {
           "external": [
             "AllExternalDependencies",
           ],
-          "fileSets": [
-            {
-              "patterns": [
-                "nx.json",
-                ".gitignore",
-                ".nxignore",
-              ],
-            },
-            {
-              "patterns": [
-                "libs/parent/**/*",
-              ],
-              "project": "parent",
-            },
-            {
-              "patterns": [
-                "libs/child/**/*",
-              ],
-              "project": "child",
-            },
+          "files": [
+            "nx.json",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
           ],
           "runtime": [],
         },
@@ -899,26 +807,16 @@ describe('native task hasher', () => {
           "external": [
             "AllExternalDependencies",
           ],
-          "fileSets": [
-            {
-              "patterns": [
-                "nx.json",
-                ".gitignore",
-                ".nxignore",
-              ],
-            },
-            {
-              "patterns": [
-                "libs/parent/**/*",
-              ],
-              "project": "parent",
-            },
-            {
-              "patterns": [
-                "libs/child/**/*",
-              ],
-              "project": "child",
-            },
+          "files": [
+            "nx.json",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
           ],
           "runtime": [],
         },

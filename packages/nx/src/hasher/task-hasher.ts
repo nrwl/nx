@@ -18,18 +18,9 @@ import { NxWorkspaceFilesExternals } from '../native';
  */
 export interface HashInputs {
   /**
-   * File sets (project-scoped or workspace-level globs)
+   * Expanded file paths that were used as inputs
    */
-  fileSets: Array<{
-    /**
-     * Project name, or undefined for workspace-level file sets
-     */
-    project?: string;
-    /**
-     * Glob patterns for the file set
-     */
-    patterns: string[];
-  }>;
+  files: string[];
   /**
    * Runtime commands
    */
