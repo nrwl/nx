@@ -285,10 +285,7 @@ async function addNxProjectGraphPluginToBuildGradle(
   if (!hasPluginViaAlias) {
     const applyPluginPattern = versionCatalogPluginAccessor
       ? new RegExp(
-          `\\s*plugin\\(${versionCatalogPluginAccessor.replace(
-            /\./g,
-            '\\.'
-          )}\\)`
+          `\\s*plugin\\(${escapeRegExp(versionCatalogPluginAccessor)}\\)`
         )
       : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
 
