@@ -616,7 +616,34 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
             }
           }
         } catch (e) {
-          // this can happen when the update file was deleted right after
+          // If stat fails, check if the file still exists
+          const fullPath = join(workspaceRoot, event.path);
+          try {
+            const { existsSync } = require('fs');
+            if (!existsSync(fullPath)) {
+              // File was deleted between event detection and processing
+              serverLogger.watcherLog(
+                `File ${event.path} was deleted after ${event.type} event was detected`
+              );
+              deletedFiles.push(event.path);
+            } else {
+              // File exists but we couldn't stat it (possibly due to timing/locking)
+              // Process it anyway to avoid missing updates
+              serverLogger.watcherLog(
+                `Warning: Could not stat ${event.path} (error: ${e.message}), processing as ${event.type} anyway`
+              );
+              if (event.type === 'update') {
+                updatedFilesToHash.push(event.path);
+              } else {
+                createdFilesToHash.push(event.path);
+              }
+            }
+          } catch (existsError) {
+            // If we can't even check existence, log and skip
+            serverLogger.watcherLog(
+              `Error processing file event for ${event.path}: ${existsError.message}`
+            );
+          }
         }
       }
     }
