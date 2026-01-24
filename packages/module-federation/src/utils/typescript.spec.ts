@@ -1,5 +1,10 @@
-import * as fs from 'fs';
-import { readTsPathMappings } from './typescript';
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn((...args: any[]) =>
+    (jest.requireActual('fs') as any).existsSync(...args)
+  ),
+}));
+const fs = require('fs');
 
 let readConfigFileResult: any;
 let parseJsonConfigFileContentResult: any;
@@ -11,9 +16,13 @@ jest.mock('typescript', () => ({
     .mockImplementation(() => parseJsonConfigFileContentResult),
 }));
 
+import { readTsPathMappings } from './typescript';
+
 describe('readTsPathMappings', () => {
+  afterEach(() => jest.clearAllMocks());
+
   it('should normalize paths', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
     readConfigFileResult = {
       config: {
         options: {

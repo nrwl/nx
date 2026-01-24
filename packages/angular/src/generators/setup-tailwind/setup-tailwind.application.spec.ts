@@ -1,4 +1,3 @@
-import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -424,28 +423,41 @@ describe('setupTailwind generator', () => {
       `);
     });
 
-    it('should format files', async () => {
-      const stylesEntryPoint = `apps/${project}/src/styles.scss`;
-      tree.write(stylesEntryPoint, 'p { margin: 0; }');
-      jest.spyOn(devkit, 'formatFiles');
+    describe('--skipFormat', () => {
+      let formatFilesSpy: jest.SpyInstance;
 
-      await setupTailwindGenerator(tree, { project, stylesEntryPoint });
-
-      expect(devkit.formatFiles).toHaveBeenCalled();
-    });
-
-    it('should not format files when "skipFormat: true"', async () => {
-      const stylesEntryPoint = `apps/${project}/src/styles.scss`;
-      tree.write(stylesEntryPoint, 'p { margin: 0; }');
-      jest.spyOn(devkit, 'formatFiles');
-
-      await setupTailwindGenerator(tree, {
-        project,
-        stylesEntryPoint,
-        skipFormat: true,
+      beforeEach(() => {
+        const devkitModule = require('@nx/devkit');
+        formatFilesSpy = jest
+          .spyOn(devkitModule, 'formatFiles')
+          .mockImplementation(() => Promise.resolve());
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      afterAll(() => {
+        jest.restoreAllMocks();
+      });
+
+      it('should format files', async () => {
+        const stylesEntryPoint = `apps/${project}/src/styles.scss`;
+        tree.write(stylesEntryPoint, 'p { margin: 0; }');
+
+        await setupTailwindGenerator(tree, { project, stylesEntryPoint });
+
+        expect(formatFilesSpy).toHaveBeenCalled();
+      });
+
+      it('should not format files when "skipFormat: true"', async () => {
+        const stylesEntryPoint = `apps/${project}/src/styles.scss`;
+        tree.write(stylesEntryPoint, 'p { margin: 0; }');
+
+        await setupTailwindGenerator(tree, {
+          project,
+          stylesEntryPoint,
+          skipFormat: true,
+        });
+
+        expect(formatFilesSpy).not.toHaveBeenCalled();
+      });
     });
   });
 });

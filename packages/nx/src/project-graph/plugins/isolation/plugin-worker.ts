@@ -57,8 +57,8 @@ const server = createServer((socket) => {
           if (loadTimeout) clearTimeout(loadTimeout);
           process.chdir(root);
           try {
-            const { loadResolvedNxPluginAsync } = await import(
-              '../load-resolved-plugin'
+            const { loadResolvedNxPluginAsync } = await Promise.resolve(
+              require(require.resolve('../load-resolved-plugin'))
             );
 
             // Register the ts-transpiler if we are pointing to a

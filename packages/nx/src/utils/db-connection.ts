@@ -1,6 +1,5 @@
 import { closeDbConnection, connectToNxDb, ExternalObject } from '../native';
 import { workspaceDataDirectory } from './cache-directory';
-import { version as NX_VERSION } from '../../package.json';
 
 const dbConnectionMap = new Map<string, ExternalObject<any>>();
 
@@ -10,6 +9,7 @@ export function getDbConnection(
     dbName?: string;
   } = {}
 ) {
+  const { version: NX_VERSION } = require(require.resolve('nx/package.json'));
   opts.directory ??= workspaceDataDirectory;
   const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
   const connection = getEntryOrSet(dbConnectionMap, key, () =>

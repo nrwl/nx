@@ -1,18 +1,34 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/nx",
-    "tsBuildInfoFile": "../../dist/packages/nx/tsconfig.tsbuildinfo",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*_spec.ts",
     "jest.config.ts",
     "**/__fixtures__/**/*.*",
-    "./src/internal-testing-utils/**/*.ts"
+    "./src/internal-testing-utils/**/*.ts",
+    ".eslintrc.json"
   ],
-  "include": ["**/*.ts", "**/*.json", "migrations.json"]
+  "include": [
+    "bin/**/*.ts",
+    "plugins/**/*.ts",
+    "release/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "tasks-runners/**/*.ts"
+  ]
 }

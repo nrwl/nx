@@ -21,6 +21,7 @@ import {
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 import { globalSpinner } from '../../utils/spinner';
+import { NxPackageJson } from '../../utils/package-json';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -165,7 +166,7 @@ function parsePackageSpecifier(
 }
 
 export const coreNxPluginVersions = (
-  require('../../../package.json') as typeof import('../../../package.json')
+  require(require.resolve('nx/package.json')) as NxPackageJson
 )['nx-migrations'].packageGroup.reduce(
   (map, entry) => {
     const packageName = typeof entry === 'string' ? entry : entry.package;

@@ -24,7 +24,7 @@ export const yargsRegisterCommand: CommandModule<{}, RegisterOptions> = {
       .example('$0 register <key>', 'Register a Nx key'),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose ?? false, async () => {
-      return (await import('./register')).handleRegister(args);
+      return (await import('./register.js')).handleRegister(args);
     });
     process.exit(exitCode);
   },

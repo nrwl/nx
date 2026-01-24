@@ -1,5 +1,10 @@
-import * as fs from 'fs';
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn(),
+}));
+jest.mock('../../../utils/fileutils');
 
+import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import {
   DependencyType,
@@ -13,6 +18,11 @@ import { createPackageJson } from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
 
 describe('createPackageJson', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetAllMocks();
+  });
+
   it('should add additional dependencies', () => {
     jest.spyOn(fs, 'existsSync').mockReturnValue(false);
     jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({

@@ -6,12 +6,14 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as allProjects from './test-configs/all-projects.json';
+import * as _allProjects from './test-configs/all-projects.json';
 import {
   getAllStorybookInfo,
   logResult,
   onlyShowGuide,
 } from './helper-functions';
+const allProjects =
+  'default' in _allProjects ? _allProjects.default : _allProjects;
 
 describe('Helper functions for the Storybook 8 migration generator', () => {
   let tree: Tree;

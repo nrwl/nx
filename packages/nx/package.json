@@ -2,6 +2,7 @@
   "name": "nx",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
   "repository": {
     "type": "git",
@@ -27,8 +28,8 @@
     "Mobile"
   ],
   "bin": {
-    "nx": "./bin/nx.js",
-    "nx-cloud": "./bin/nx-cloud.js"
+    "nx": "./dist/bin/nx.js",
+    "nx-cloud": "./dist/bin/nx-cloud.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -172,5 +173,28 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    "./src/**/*.js": {
+      "@nx/nx-source": "./src/**/*.ts",
+      "types": "./src/**/*.d.ts",
+      "default": "./dist/src/**/*.js"
+    },
+    "./src/**/*": {
+      "@nx/nx-source": "./src/**/*.ts",
+      "types": "./src/**/*.d.ts",
+      "default": "./dist/src/**/*.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./release": {
+      "@nx/nx-source": "./release/index.ts",
+      "types": "./release/index.d.ts",
+      "default": "./dist/release/index.js"
+    }
   }
 }

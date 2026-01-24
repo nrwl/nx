@@ -1,32 +1,50 @@
-let mockDeriveSpecifierFromConventionalCommits = jest.fn();
-let mockDeriveSpecifierFromVersionPlan = jest.fn();
-let mockResolveVersionActionsForProject = jest.fn();
+// Module-level mock container - initialized early so jest.mock factories can reference it
+const mocks = {
+  deriveSpecifierFromConventionalCommits: jest.fn(),
+  deriveSpecifierFromVersionPlan: jest.fn(),
+  resolveVersionActionsForProject: jest.fn(),
+  resolveCurrentVersion: jest.fn(),
+};
 
-jest.doMock('./derive-specifier-from-conventional-commits', () => ({
-  deriveSpecifierFromConventionalCommits:
-    mockDeriveSpecifierFromConventionalCommits,
+// Aliases for test usage
+const mockDeriveSpecifierFromConventionalCommits =
+  mocks.deriveSpecifierFromConventionalCommits;
+const mockDeriveSpecifierFromVersionPlan = mocks.deriveSpecifierFromVersionPlan;
+const mockResolveVersionActionsForProject =
+  mocks.resolveVersionActionsForProject;
+const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
+
+jest.mock('./derive-specifier-from-conventional-commits', () => ({
+  deriveSpecifierFromConventionalCommits: (...args: any[]) =>
+    mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-// Use jest.mock (hoisted) to ensure it's set up before any imports
-jest.mock('./version-actions', () => ({
-  ...jest.requireActual('./version-actions'),
-  deriveSpecifierFromVersionPlan: mockDeriveSpecifierFromVersionPlan,
-  resolveVersionActionsForProject: mockResolveVersionActionsForProject,
-}));
+jest.mock('./version-actions', () => {
+  const actual = jest.requireActual('./version-actions');
+  return {
+    ...actual,
+    deriveSpecifierFromVersionPlan: (...args: any[]) =>
+      mocks.deriveSpecifierFromVersionPlan(...args),
+    resolveVersionActionsForProject: (...args: any[]) =>
+      mocks.resolveVersionActionsForProject(...args),
+  };
+});
 
-jest.doMock('./project-logger', () => ({
-  ...jest.requireActual('./project-logger'),
-  // Don't slow down or add noise to unit tests output unnecessarily
-  ProjectLogger: class ProjectLogger {
-    buffer() {}
+jest.mock('./project-logger', () => {
+  const actual = jest.requireActual('./project-logger');
+  return {
+    ...actual,
+    // Don't slow down or add noise to unit tests output unnecessarily
+    ProjectLogger: class ProjectLogger {
+      buffer() {}
+      flush() {}
+    },
+  };
+});
 
-    flush() {}
-  },
-}));
-
-let mockResolveCurrentVersion = jest.fn();
-jest.doMock('./resolve-current-version', () => ({
-  resolveCurrentVersion: mockResolveCurrentVersion,
+jest.mock('./resolve-current-version', () => ({
+  resolveCurrentVersion: (...args: any[]) =>
+    mocks.resolveCurrentVersion(...args),
 }));
 
 import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';

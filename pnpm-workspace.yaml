@@ -74,6 +74,8 @@ catalogs:
     jest-runtime: '^30.0.2'
     jest-util: '^30.0.2'
     ts-jest: '^29.4.0'
+    '@swc/jest': '0.2.39'
+    '@swc-contrib/mut-cjs-exports': '^14.3.0'
   react:
     '@types/react': '18.3.1'
     '@types/react-dom': '18.3.1'
@@ -93,3 +95,8 @@ catalogs:
     tsconfig-paths: '^4.1.2'
     tslib: '^2.3.0'
     typescript: '~5.9.2'
+  swc:
+    '@swc/core': '^1.15.5'
+    '@swc/helpers': '^0.5.18'
+    '@swc/cli': '^0.7.10'
+    '@swc-node/register': '^1.11.1'
