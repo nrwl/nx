@@ -21,7 +21,7 @@ import {
 import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'node:child_process';
+import { execSync, execFileSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
@@ -33,6 +33,7 @@ import {
   runCommand,
 } from './command-utils';
 import { logError, logInfo } from './log-utils';
+import * as shellQuote from 'shell-quote';
 
 let projName: string;
 
@@ -297,13 +298,23 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --nxCloud=skip --no-interactive`;
+  const baseCommandString = pm.createWorkspace;
+  const parsedBase = shellQuote.parse(baseCommandString).filter(
+    (token) => typeof token === 'string'
+  ) as string[];
+  if (parsedBase.length === 0) {
+    throw new Error(`Invalid createWorkspace command: "${baseCommandString}"`);
+  }
+  const cmd = parsedBase[0];
+  const args: string[] = parsedBase.slice(1);
+
+  args.push(name, '--nxCloud=skip', '--no-interactive');
 
   if (preset) {
-    command += ` --preset=${preset}`;
+    args.push(`--preset=${preset}`);
   }
   if (template) {
-    command += ` --template=${template}`;
+    args.push(`--template=${template}`);
   }
 
   if (appName) {
@@ -382,11 +393,15 @@ export function runCreateWorkspace(
   }
 
   if (prefix !== undefined) {
-    command += ` --prefix=${prefix}`;
+    args.push(`--prefix=${prefix}`);
+  if (isVerbose()) {
+    args.push('--verbose');
+  }
+
   }
 
   try {
-    const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+    const create = execFileSync(cmd, args, {
       cwd,
       stdio: 'pipe',
       env: {
@@ -399,7 +414,7 @@ export function runCreateWorkspace(
 
     if (isVerbose()) {
       output.log({
-        title: `Command: ${command}`,
+        title: `Command: ${[cmd, ...args].join(' ')}`,
         bodyLines: [create as string],
         color: 'green',
       });

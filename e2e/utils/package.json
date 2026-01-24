@@ -7,6 +7,7 @@
   "dependencies": {
     "nx": "workspace:*",
     "@nx/devkit": "workspace:*",
-    "@nx/workspace": "workspace:*"
+    "@nx/workspace": "workspace:*",
+    "shell-quote": "^1.8.3"
   }
 }
