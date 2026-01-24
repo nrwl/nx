@@ -68,7 +68,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
-    const templateUrl = `https://github.com/${options.template}`;
+    const templateName = options.template.slice('nrwl/'.length);
+    const templateNamePattern = /^[A-Za-z0-9._-]+$/;
+    if (!templateNamePattern.test(templateName)) {
+      throw new Error(
+        `Invalid template. Template name may only contain letters, numbers, '.', '_' or '-'.`
+      );
+    }
+    const templateUrl = `https://github.com/nrwl/${templateName}`;
     const workingDir = process.cwd().replace(/\\/g, '/');
     directory = join(workingDir, name);
 
