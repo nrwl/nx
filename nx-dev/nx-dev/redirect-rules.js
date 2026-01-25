@@ -1535,6 +1535,11 @@ const removeEvolvingNx = {
   '/blog/evolving-nx': '/blog/introducing-nx-powerpack',
 };
 
+const pageCleanUp = {
+  '/advent-of-code ': '/',
+  '/launch-nx ': '/',
+};
+
 /**
  * Public export API
  */
@@ -1581,4 +1586,5 @@ module.exports = {
   contentDedupeRedirects,
   docsToAstroRedirects: docsToAstroRedirects,
   removeEvolvingNx,
+  pageCleanUp,
 };

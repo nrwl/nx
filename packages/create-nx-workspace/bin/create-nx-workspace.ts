@@ -46,7 +46,6 @@ import {
 } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
-import { isGhCliAvailable } from '../src/utils/git/git';
 
 function extractErrorFile(error: Error): string | undefined {
   if (!error.stack) return undefined;
@@ -353,6 +352,12 @@ process.on('SIGINT', async () => {
   const { directory, connectUrl } = getInterruptedWorkspaceState();
 
   if (directory) {
+    const path = require('path');
+    const workspaceName = path.basename(directory);
+    const githubUrl = `https://github.com/new?name=${encodeURIComponent(
+      workspaceName
+    )}`;
+
     console.log(''); // New line after ^C
     output.log({
       title: 'Workspace creation interrupted',
@@ -360,7 +365,7 @@ process.on('SIGINT', async () => {
         `Your workspace was created at: ${directory}`,
         '',
         'To complete the setup:',
-        '  1. Ensure your repo is pushed (e.g. https://github.com/new)',
+        `  1. Ensure your repo is pushed (e.g. ${githubUrl})`,
         connectUrl
           ? `  2. Connect to Nx Cloud: ${connectUrl}`
           : '  2. Connect to Nx Cloud: Run "nx connect"',
@@ -457,31 +462,12 @@ async function normalizeArgsMiddleware(
       // Template flow - respects CLI arg, otherwise uses detected package manager (from invoking command)
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
-
-      // Track GH CLI availability for telemetry
-      const ghAvailable = isGhCliAvailable();
-
-      let nxCloud: string;
-      let completionMessageKey: string | undefined;
-
-      if (argv.skipGit === true) {
-        nxCloud = 'skip';
-        completionMessageKey = undefined;
-      } else if (getFlowVariant() === '1') {
-        // Variant 1 (NXC-3628): Skip cloud prompt, always show platform link
-        // Respect --nxCloud=skip if explicitly provided
-        nxCloud = argv.nxCloud === 'skip' ? 'skip' : 'yes';
-        completionMessageKey =
-          nxCloud === 'skip' ? undefined : 'platform-setup';
-      } else {
-        // Variant 0: Current behavior - show cloud prompt
-        nxCloud = await determineNxCloudV2(argv);
-        completionMessageKey =
-          nxCloud === 'skip'
-            ? undefined
-            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
-      }
-
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
+      const completionMessageKey =
+        nxCloud === 'skip'
+          ? undefined
+          : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
@@ -490,8 +476,6 @@ async function normalizeArgsMiddleware(
         packageManager,
         defaultBase: 'main',
         aiAgents,
-        ghAvailable,
-        skipCloudConnect: getFlowVariant() === '1',
       });
 
       await recordStat({
@@ -505,7 +489,6 @@ async function normalizeArgsMiddleware(
           preset: '',
           nodeVersion: process.versions.node ?? '',
           packageManager,
-          ghAvailable: ghAvailable ? 'true' : 'false',
         },
       });
     } else {

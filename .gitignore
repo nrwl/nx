@@ -25,6 +25,10 @@ jest.debug.config.js
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
+
+# Banner JSON files are generated during static builds
+/nx-dev/nx-dev/lib/banner.json
+/astro-docs/src/content/banner.json
 **/tests/temp-db
 
 # Issues scraper creates these files, stored by github's cache

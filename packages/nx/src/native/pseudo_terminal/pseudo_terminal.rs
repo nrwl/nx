@@ -6,10 +6,9 @@ use crossterm::{
     tty::IsTty,
 };
 use napi::bindgen_prelude::*;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;
-use std::sync::RwLock;
 use std::{
     collections::HashMap,
     io::{Read, Write},
@@ -111,14 +110,8 @@ impl PseudoTerminal {
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
                     if is_within_nx_tui {
-                        if let Ok(mut parser) = parser_clone.write() {
-                            if is_within_nx_tui {
-                                trace!("Processing data via vt100 for use in tui");
-                                parser.process(&buf[..len]);
-                            }
-                        } else {
-                            debug!("Failed to lock parser");
-                        }
+                        trace!("Processing data via vt100 for use in tui");
+                        parser_clone.write().process(&buf[..len]);
                     }
 
                     if !quiet {
@@ -213,10 +206,7 @@ impl PseudoTerminal {
 
         if self.is_within_nx_tui {
             // within the tui, update the parser directly so it is displayed in the tui
-            self.parser
-                .write()
-                .expect("Failed to acquire parser write lock")
-                .process(command_info.as_bytes());
+            self.parser.write().process(command_info.as_bytes());
         } else if !quiet {
             // outside the tui, just print to stdout so the user can see it
             if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
