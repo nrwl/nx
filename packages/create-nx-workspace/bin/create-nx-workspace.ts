@@ -46,6 +46,7 @@ import {
 } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
+import { isGhCliAvailable } from '../src/utils/git/git';
 
 function extractErrorFile(error: Error): string | undefined {
   if (!error.stack) return undefined;
@@ -462,12 +463,31 @@ async function normalizeArgsMiddleware(
       // Template flow - respects CLI arg, otherwise uses detected package manager (from invoking command)
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
-      const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
-      const completionMessageKey =
-        nxCloud === 'skip'
-          ? undefined
-          : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+
+      // Track GH CLI availability for telemetry
+      const ghAvailable = isGhCliAvailable();
+
+      let nxCloud: string;
+      let completionMessageKey: string | undefined;
+
+      if (argv.skipGit === true) {
+        nxCloud = 'skip';
+        completionMessageKey = undefined;
+      } else if (getFlowVariant() === '1') {
+        // Variant 1 (NXC-3628): Skip cloud prompt, always show platform link
+        // Respect --nxCloud=skip if explicitly provided
+        nxCloud = argv.nxCloud === 'skip' ? 'skip' : 'yes';
+        completionMessageKey =
+          nxCloud === 'skip' ? undefined : 'platform-setup';
+      } else {
+        // Variant 0: Current behavior - show cloud prompt
+        nxCloud = await determineNxCloudV2(argv);
+        completionMessageKey =
+          nxCloud === 'skip'
+            ? undefined
+            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      }
+
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
@@ -476,6 +496,8 @@ async function normalizeArgsMiddleware(
         packageManager,
         defaultBase: 'main',
         aiAgents,
+        ghAvailable,
+        skipCloudConnect: getFlowVariant() === '1',
       });
 
       await recordStat({
@@ -489,6 +511,7 @@ async function normalizeArgsMiddleware(
           preset: '',
           nodeVersion: process.versions.node ?? '',
           packageManager,
+          ghAvailable: ghAvailable ? 'true' : 'false',
         },
       });
     } else {
