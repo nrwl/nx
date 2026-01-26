@@ -29,7 +29,7 @@ describe('configure-ai-agents', () => {
 
   it('should throw with --check if agent rules are out of date', () => {
     updateFile('CLAUDE.md', (content: string) =>
-      content.replace('nx_workspace', 'nx_workspace_outdated')
+      content.replace('nx_docs', 'nx_docs_outdated')
     );
 
     let didThrow = false;
@@ -44,7 +44,7 @@ describe('configure-ai-agents', () => {
   it('should update agent rules if out of date', () => {
     runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
-    expect(readFile('CLAUDE.md')).not.toContain('nx_workspace_outdated');
+    expect(readFile('CLAUDE.md')).not.toContain('nx_docs_outdated');
   });
 
   describe('--check (backward compatible, defaults to outdated mode)', () => {
@@ -96,7 +96,7 @@ describe('configure-ai-agents', () => {
 
       // Make it outdated
       updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_workspace', 'nx_workspace_outdated')
+        content.replace('nx_docs', 'nx_docs_outdated')
       );
 
       let didThrow = false;
@@ -144,7 +144,7 @@ describe('configure-ai-agents', () => {
 
     it('should exit 1 with outdated agents', () => {
       updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_workspace', 'nx_workspace_outdated')
+        content.replace('nx_docs', 'nx_docs_outdated')
       );
 
       let didThrow = false;
