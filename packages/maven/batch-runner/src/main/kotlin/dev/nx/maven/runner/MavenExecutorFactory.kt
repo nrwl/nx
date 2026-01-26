@@ -13,7 +13,7 @@ import java.io.File
  *
  * Key design: NO compile-time Maven dependencies!
  * - Maven classes are loaded from MAVEN_HOME at runtime via MavenClassRealm
- * - Adapter classes are embedded as JAR resources and loaded into the ClassRealm
+ * - Adapter JARs are loaded from nx-maven-adapters directory
  * - All Maven interactions happen via reflection
  */
 object MavenExecutorFactory {
@@ -40,7 +40,7 @@ object MavenExecutorFactory {
 
         // If no Maven home, fall back to subprocess
         if (mavenHome == null) {
-            log.debug("No mavenHome - using ProcessBasedMavenExecutor")
+            log.warn("MAVEN_HOME not found - using slower subprocess execution")
             return ProcessBasedMavenExecutor(workspaceRoot)
         }
 
