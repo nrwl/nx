@@ -18,10 +18,6 @@ export function addViteTempFilesToGitIgnore(tree: Tree): void {
     gitIgnoreContents = stripIndents`${gitIgnoreContents}
       vite.config.*.timestamp*`;
   }
-  if (!/^vitest\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {
-    gitIgnoreContents = stripIndents`${gitIgnoreContents}
-      vitest.config.*.timestamp*`;
-  }
 
   tree.write('.gitignore', gitIgnoreContents);
 }
@@ -52,12 +48,9 @@ async function ignoreViteTempFilesInEslintConfig(
   }
 
   // for flat config, we update the root config file
-  const directory = isUsingFlatConfig ? '' : projectRoot ?? '';
+  const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
-  addIgnoresToLintConfig(tree, directory, [
-    '**/vite.config.*.timestamp*',
-    '**/vitest.config.*.timestamp*',
-  ]);
+  addIgnoresToLintConfig(tree, directory, ['**/vite.config.*.timestamp*']);
 }
 
 export function isEslintInstalled(tree: Tree): boolean {

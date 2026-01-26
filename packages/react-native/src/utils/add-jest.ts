@@ -1,5 +1,5 @@
-import { Tree, offsetFromRoot } from '@nx/devkit';
-import { configurationGenerator } from '@nx/jest';
+import { Tree, ensurePackage, offsetFromRoot } from '@nx/devkit';
+import { nxVersion } from './versions';
 
 export async function addJest(
   host: Tree,
@@ -15,6 +15,11 @@ export async function addJest(
     return () => {};
   }
 
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+    '@nx/jest',
+    nxVersion
+  );
+
   const jestTask = await configurationGenerator(host, {
     js,
     project: projectName,
@@ -29,8 +34,11 @@ export async function addJest(
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property
-  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'ts'}`;
-  const content = `module.exports = {
+  // Workaround issue where Jest is not picking tyope node nor jest types from tsconfig by using <reference>.
+  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
+  const content = `/// <reference types="jest" />
+/// <reference types="node" />
+module.exports = {
   displayName: '${projectName}',
   preset: 'react-native',
   resolver: '@nx/jest/plugins/resolver',

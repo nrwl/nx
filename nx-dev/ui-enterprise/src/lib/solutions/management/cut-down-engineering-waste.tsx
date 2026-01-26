@@ -4,7 +4,7 @@ import {
   LightBulbIcon,
 } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 const features = [
@@ -18,7 +18,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/intro/ci-with-nx"
+            href="/ci/features"
             title="Learn how to speed up CI"
             className="text-sm/6 font-semibold"
           >

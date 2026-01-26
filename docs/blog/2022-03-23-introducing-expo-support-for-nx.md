@@ -292,7 +292,7 @@ With Nx, we can create as many libraries as we want to handle different concerns
 
 I hope you found this useful, and we look forward to hearing your [feedback](https://github.com/nrwl/nx-labs/issues).
 
-If you're new to Nx and want to learn more, visit [our docs](/getting-started/intro)**.**
+If you're new to Nx and want to learn more, visit [our docs](/docs/getting-started/intro)**.**
 
 _(Note, the repository with the code for this article is linked at the very top.)_
 

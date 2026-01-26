@@ -1,0 +1,25 @@
+{
+  "//There are some settings in the TS Project References that angular can't run on.": "",
+  "//Therefore we do not extend the root": "",
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nx/devkit": ["../../../build/packages/devkit/index.js"],
+      "@nx/devkit/*": ["../../../build/packages/devkit/*"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

@@ -17,6 +17,11 @@ export async function removeMigrationsGenerator(
   { v }: RemoveMigrationsGeneratorSchema
 ) {
   visitNotIgnoredFiles(tree, '', (path) => {
+    // Ignore nx migrations because they are needed for nx repair
+    if (['packages/nx/package.json'].includes(path)) {
+      return;
+    }
+
     // Ignore angular migrations because angular needs to support migrations until LTS support is dropped
     if (['packages/angular/package.json'].includes(path)) {
       return;

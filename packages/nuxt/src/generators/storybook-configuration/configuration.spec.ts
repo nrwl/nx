@@ -89,6 +89,7 @@ export async function createTestApp(
     unitTestRunner: 'none',
     directory: appName,
     js: plainJS,
+    useAppDir: false, // Use src/ directory structure for backward compatibility
   });
 
   await componentGenerator(appTree, {

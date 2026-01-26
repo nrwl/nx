@@ -11,15 +11,15 @@ It has been a while since our last release blog post [which was on Nx 13.5](/blo
 
 ## Housekeeping and "core" cleanup
 
-We keep optimizing the Nx core. This round we started doing some housekeeping and cleanup that will allow us to move more quickly in the future and add new features more easily. In particular we now have a single package `nx` that contains all the core and CLI related functionality that have previously been in `@nrwl/cli` and `@nrwl/tao`. This also results in a reduce number of packages you need to install in any Nx workspace. In fact, if you run `add-nx-to-monorepo` - our easy migration command for [adding Nx to Yarn/NPM workspaces](/recipes/adopting-nx/adding-to-monorepo) - you should now see a single `nx` package and not have any `@nrwl/*` packages at all.
+We keep optimizing the Nx core. This round we started doing some housekeeping and cleanup that will allow us to move more quickly in the future and add new features more easily. In particular we now have a single package `nx` that contains all the core and CLI related functionality that have previously been in `@nrwl/cli` and `@nrwl/tao`. This also results in a reduce number of packages you need to install in any Nx workspace. In fact, if you run `add-nx-to-monorepo` - our easy migration command for [adding Nx to Yarn/NPM workspaces](/docs/guides/adopting-nx/adding-to-monorepo) - you should now see a single `nx` package and not have any `@nrwl/*` packages at all.
 
 ## Nx Daemon on by default
 
-One of the core features of Nx is the calculation of the project graph. It is the basis for most other features in Nx like the [affected commands](/ci/features/affected), computation caching and calculation and topological sorting of parallelizing tasks [during DTE](/ci/features/distribute-task-execution). This is a I/O heavy operation. Whenever you change a file, the project graph needs to be re-calculated which involves reading the source files, analyze imports from other packages' source files and external libraries.
+One of the core features of Nx is the calculation of the project graph. It is the basis for most other features in Nx like the [affected commands](/docs/features/ci-features/affected), computation caching and calculation and topological sorting of parallelizing tasks [during DTE](/docs/features/ci-features/distribute-task-execution). This is a I/O heavy operation. Whenever you change a file, the project graph needs to be re-calculated which involves reading the source files, analyze imports from other packages' source files and external libraries.
 
 Such a crucial and central feature like the project graph need to be as fast as possible. That's the reason why we introduced the Nx Daemon, which is started automatically and runs in the background, watching for file changes and asynchronously recomputes and caches the project graph. As a result, whenever Nx runs an operation that requires the project graph, it is already there and ready to be used, without adding any additional delay to the operation that needs to be executed.
 
-Read more on the docs: [/guides/nx-daemon](/concepts/nx-daemon)
+Read more on the docs: [/guides/nx-daemon](/docs/concepts/nx-daemon)
 
 ## Nx Cloud opt-in now points to "Yes" by default
 
@@ -36,13 +36,13 @@ Nx can be used in a wide range of scenarios, from small open source projects, st
 - `@nrwl/*` plugins which are those actively maintained by the Nx core team
 - [Community plugins](/community)
 
-This illustration should give you a rough idea. obviously some of the plugins may be built on top of others, leveraging common functionality. An example is the [@nrwl/js](/technologies/typescript/introduction) plugin which not only can be used as a standalone plugin but also builds the basis for of many others by providing core JavaScript/TypeScript features.
+This illustration should give you a rough idea. obviously some of the plugins may be built on top of others, leveraging common functionality. An example is the [@nrwl/js](/docs/technologies/typescript/introduction) plugin which not only can be used as a standalone plugin but also builds the basis for of many others by providing core JavaScript/TypeScript features.
 
 ![](/blog/images/2022-04-08/iMPg692nMj5ty709M7tTQQ.avif)
 
-You can just use the [Nx core without any plugins](/getting-started/intro) to get started and later decide to add more plugins such as `@nrwl/react` or `@nrwl/js` etc depending on your specific use case.
+You can just use the [Nx core without any plugins](/docs/getting-started/intro) to get started and later decide to add more plugins such as `@nrwl/react` or `@nrwl/js` etc depending on your specific use case.
 
-As you can see, plugins are at the very core and for quite some time now we've had a [fully featured Devkit and Nx Plugin package](/extending-nx/intro/getting-started) to create your own. And the community followed: have a look at [all the community Nx plugins that are available out there](/community).
+As you can see, plugins are at the very core and for quite some time now we've had a [fully featured Devkit and Nx Plugin package](/docs/extending-nx/intro) to create your own. And the community followed: have a look at [all the community Nx plugins that are available out there](/community).
 
 And we keep improving. Starting with Nx 13.10 you can now use Nx plugins to automate your local workspace. Install `@nrwl/nx-plugin` into your Nx workspace and generate a new plugin:
 
@@ -206,7 +206,7 @@ If however you're curious, you can now append `--allPrompts` to get all possible
 npx create-nx-workspace@next myorg --allPrompts
 ```
 
-Alternatively you can browse the [API docs on the Nx website](/reference/core-api/nx/documents/create-nx-workspace) to find out more.
+Alternatively you can browse the [API docs on the Nx website](/docs/reference/create-nx-workspace) to find out more.
 
 ## Deliver the best possible TypeScript experience with `@nrwl/js`
 
@@ -242,7 +242,7 @@ Learn more in this short video walkthrough:
 
 ## Our docs keep getting more and more awesome
 
-Besides delivering awesome features, we keep improving our docs. They are essential to help discover new features and better understand existing ones. In the last weeks we've improved the navigation support, allowing you to navigate to a specific package with `/packages/<package-name>` such as [/technologies/react/api](/technologies/react/api) listing executors and generators that come with that Nx package, also improving the API docs of the individual executor options including a live embedded editor playground to experiment with different configuration setup.
+Besides delivering awesome features, we keep improving our docs. They are essential to help discover new features and better understand existing ones. In the last weeks we've improved the navigation support, allowing you to navigate to a specific package with `/packages/<package-name>` such as [/technologies/react/api](/docs/technologies/react/guides/adding-assets-react) listing executors and generators that come with that Nx package, also improving the API docs of the individual executor options including a live embedded editor playground to experiment with different configuration setup.
 
 Check out Benjamin Cabanes' tweet with some short videos:
 

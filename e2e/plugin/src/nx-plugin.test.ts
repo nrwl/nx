@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { join } from 'path';
@@ -26,7 +26,7 @@ describe('Nx Plugin', () => {
   let workspaceName: string;
 
   beforeAll(() => {
-    workspaceName = newProject();
+    workspaceName = newProject({ packages: ['@nx/plugin'] });
   });
 
   afterAll(() => cleanupProject());
@@ -208,9 +208,8 @@ describe('Nx Plugin', () => {
     updateFile(`${plugin}/generators.json`, (f) => {
       const json = JSON.parse(f);
       // @proj/plugin:plugin has an invalid implementation path
-      json.generators[
-        badFactoryPath
-      ].factory = `./generators/${plugin}/bad-path`;
+      json.generators[badFactoryPath].factory =
+        `./generators/${plugin}/bad-path`;
       // @proj/plugin:non-existant has a missing implementation path amd schema
       json.generators['non-existant-generator'] = {};
       return JSON.stringify(json);

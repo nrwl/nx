@@ -1,0 +1,117 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`app debug support should generate a debug config for vscode by default 1`] = `
+[
+  {
+    "console": "integratedTerminal",
+    "env": {
+      "NODE_OPTIONS": "--inspect=9229",
+    },
+    "internalConsoleOptions": "neverOpen",
+    "name": "Debug api-fastify with Nx",
+    "outFiles": [
+      "\${workspaceFolder}/api-fastify/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
+    ],
+    "request": "launch",
+    "runtimeArgs": [
+      "nx",
+      "serve",
+      "api-fastify",
+    ],
+    "runtimeExecutable": "npx",
+    "skipFiles": [
+      "<node_internals>/**",
+    ],
+    "sourceMaps": true,
+    "type": "node",
+  },
+]
+`;
+
+exports[`app debug support should generate a debug config for vscode by default 2`] = `
+[
+  {
+    "console": "integratedTerminal",
+    "env": {
+      "NODE_OPTIONS": "--inspect=9229",
+    },
+    "internalConsoleOptions": "neverOpen",
+    "name": "Debug api-express with Nx",
+    "outFiles": [
+      "\${workspaceFolder}/api-express/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
+    ],
+    "request": "launch",
+    "runtimeArgs": [
+      "nx",
+      "serve",
+      "api-express",
+    ],
+    "runtimeExecutable": "npx",
+    "skipFiles": [
+      "<node_internals>/**",
+    ],
+    "sourceMaps": true,
+    "type": "node",
+  },
+]
+`;
+
+exports[`app debug support should generate a debug config for vscode by default 3`] = `
+[
+  {
+    "console": "integratedTerminal",
+    "env": {
+      "NODE_OPTIONS": "--inspect=9229",
+    },
+    "internalConsoleOptions": "neverOpen",
+    "name": "Debug api-koa with Nx",
+    "outFiles": [
+      "\${workspaceFolder}/api-koa/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
+    ],
+    "request": "launch",
+    "runtimeArgs": [
+      "nx",
+      "serve",
+      "api-koa",
+    ],
+    "runtimeExecutable": "npx",
+    "skipFiles": [
+      "<node_internals>/**",
+    ],
+    "sourceMaps": true,
+    "type": "node",
+  },
+]
+`;
+
+exports[`app debug support should generate a debug config for vscode by default 4`] = `
+[
+  {
+    "console": "integratedTerminal",
+    "env": {
+      "NODE_OPTIONS": "--inspect=9229",
+    },
+    "internalConsoleOptions": "neverOpen",
+    "name": "Debug api-nest with Nx",
+    "outFiles": [
+      "\${workspaceFolder}/api-nest/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
+    ],
+    "request": "launch",
+    "runtimeArgs": [
+      "nx",
+      "serve",
+      "api-nest",
+    ],
+    "runtimeExecutable": "npx",
+    "skipFiles": [
+      "<node_internals>/**",
+    ],
+    "sourceMaps": true,
+    "type": "node",
+  },
+]
+`;

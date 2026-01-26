@@ -8,6 +8,7 @@ export function createTsConfig(
     rootProject?: boolean;
     unitTestRunner?: string;
     isUsingTsSolutionConfig: boolean;
+    useAppDir?: boolean;
   },
   relativePathToRootTsConfig: string
 ) {
@@ -43,14 +44,52 @@ export function createTsConfig(
   writeJson(host, `${options.projectRoot}/tsconfig.json`, json);
 }
 
-function createAppTsConfig(host: Tree, options: { projectRoot: string }) {
+function createAppTsConfig(
+  host: Tree,
+  options: { projectRoot: string; useAppDir?: boolean }
+) {
+  const sourceDir = options.useAppDir ? 'app' : 'src';
+
+  // Build include array
+  const include = ['.nuxt/nuxt.d.ts', `${sourceDir}/**/*`];
+  if (options.useAppDir) {
+    include.push('server/**/*');
+  }
+
+  // Build exclude array with test patterns
+  // Order: extension-grouped (ts, tsx, js, jsx) with test/spec interleaved
+  const testExcludes = ['ts', 'tsx', 'js', 'jsx'].flatMap((ext) =>
+    ['test', 'spec'].map((type) => `${sourceDir}/**/*.${type}.${ext}`)
+  );
+  if (options.useAppDir) {
+    testExcludes.push(
+      ...['ts', 'tsx', 'js', 'jsx'].flatMap((ext) =>
+        ['test', 'spec'].map((type) => `server/**/*.${type}.${ext}`)
+      )
+    );
+  }
+
+  const exclude = [
+    'out-tsc',
+    'dist',
+    'vite.config.ts',
+    'vite.config.mts',
+    'vitest.config.ts',
+    'vitest.config.mts',
+    ...testExcludes,
+    'eslint.config.js',
+    'eslint.config.cjs',
+    'eslint.config.mjs',
+  ];
+
   const json = {
     extends: './tsconfig.json',
     compilerOptions: {
       composite: true,
+      rootDir: sourceDir,
     },
-    include: ['.nuxt/nuxt.d.ts', 'src/**/*'],
-    exclude: [],
+    include,
+    exclude,
   };
 
   writeJson(host, `${options.projectRoot}/tsconfig.app.json`, json);

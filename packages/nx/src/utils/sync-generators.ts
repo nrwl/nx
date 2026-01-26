@@ -25,6 +25,7 @@ import chalk = require('chalk');
 export type SyncGeneratorResult = void | {
   callback?: GeneratorCallback;
   outOfSyncMessage?: string;
+  outOfSyncDetails?: string[];
 };
 
 export type SyncGenerator = (
@@ -36,6 +37,7 @@ export type SyncGeneratorRunSuccessResult = {
   changes: FileChange[];
   callback?: GeneratorCallback;
   outOfSyncMessage?: string;
+  outOfSyncDetails?: string[];
 };
 
 // Error is not serializable, so we use a simple object instead
@@ -69,7 +71,10 @@ export type FlushSyncGeneratorChangesResult =
   | FlushSyncGeneratorChangesFailure;
 
 export class SyncError extends Error {
-  constructor(public title: string, public bodyLines?: string[]) {
+  constructor(
+    public title: string,
+    public bodyLines?: string[]
+  ) {
     super(title);
     this.name = this.constructor.name;
   }
@@ -150,9 +155,11 @@ export async function runSyncGenerator(
 
     let callback: GeneratorCallback | undefined;
     let outOfSyncMessage: string | undefined;
+    let outOfSyncDetails: string[] | undefined;
     if (result && typeof result === 'object') {
       callback = result.callback;
       outOfSyncMessage = result.outOfSyncMessage;
+      outOfSyncDetails = result.outOfSyncDetails;
     }
 
     performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
@@ -167,6 +174,7 @@ export async function runSyncGenerator(
       generatorName: generatorSpecifier,
       callback,
       outOfSyncMessage,
+      outOfSyncDetails,
     };
   } catch (e) {
     return {
@@ -258,7 +266,8 @@ export function collectRegisteredGlobalSyncGenerators(
 }
 
 export function getSyncGeneratorSuccessResultsMessageLines(
-  results: SyncGeneratorRunResult[]
+  results: SyncGeneratorRunResult[],
+  logOutOfSyncDetails = false
 ): string[] {
   const messageLines: string[] = [];
 
@@ -272,6 +281,10 @@ export function getSyncGeneratorSuccessResultsMessageLines(
         result.outOfSyncMessage ?? `Some files are out of sync.`
       }`
     );
+
+    if (logOutOfSyncDetails && result.outOfSyncDetails?.length) {
+      messageLines.push(...result.outOfSyncDetails);
+    }
   }
 
   return messageLines;

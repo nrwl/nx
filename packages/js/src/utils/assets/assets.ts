@@ -9,6 +9,7 @@ export type AssetGlob = FileInputOutput & {
   glob: string;
   ignore?: string[];
   dot?: boolean;
+  includeIgnoredFiles?: boolean;
 };
 
 export function assetGlobsToFiles(

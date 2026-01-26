@@ -37,6 +37,7 @@ export interface NxArgs {
   skipNxCache?: boolean;
   skipRemoteCache?: boolean;
   outputStyle?: string;
+  tui?: boolean;
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
   type?: string;
@@ -319,6 +320,7 @@ function parseGitOutput(command: string): string[] {
   return execSync(command, {
     maxBuffer: TEN_MEGABYTES,
     cwd: workspaceRoot,
+    stdio: 'pipe',
     windowsHide: false,
   })
     .toString('utf-8')

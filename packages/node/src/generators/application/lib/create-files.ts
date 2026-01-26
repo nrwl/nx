@@ -8,6 +8,7 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { addVSCodeDebugConfiguration } from '../../../utils/vscode-debug-config';
 import { NormalizedSchema } from './normalized-schema';
 
 export function addAppFiles(tree: Tree, options: NormalizedSchema) {
@@ -38,6 +39,7 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
               main: './src/main' + (options.js ? '.js' : '.ts'),
               tsConfig: './tsconfig.app.json',
               assets: ['./src/assets'],
+              generatePackageJson: !options.isUsingTsSolutionConfig,
             }
           : null,
     }
@@ -68,4 +70,10 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
   if (options.js) {
     toJS(tree);
   }
+
+  // Generate a debug config for VS Code so that users can easily debug their application
+  addVSCodeDebugConfiguration(tree, {
+    projectName: options.name,
+    projectRoot: options.appProjectRoot,
+  });
 }

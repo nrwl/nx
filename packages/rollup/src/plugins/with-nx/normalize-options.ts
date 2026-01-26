@@ -42,6 +42,12 @@ export function normalizeOptions(
     javascriptEnabled: options.javascriptEnabled ?? false,
     skipTypeCheck: options.skipTypeCheck ?? false,
     skipTypeField: options.skipTypeField ?? false,
+    /**
+     * TODO(v23): Update default to true
+     * This defaults to false for pure plugin usage to match what is the current behaviour for users
+     * However, this differs from the Rollup executor usage as it defaulted to `true` in the `schema.json`
+     */
+    buildLibsFromSource: options.buildLibsFromSource ?? false,
   };
 }
 
@@ -98,11 +104,11 @@ function normalizeRelativePaths(
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {
-      options[fieldName] = join(projectRoot, fieldValue);
+      options[fieldName] = normalizePath(join(projectRoot, fieldValue));
     } else if (Array.isArray(fieldValue)) {
       for (let i = 0; i < fieldValue.length; i++) {
         if (isRelativePath(fieldValue[i])) {
-          fieldValue[i] = join(projectRoot, fieldValue[i]);
+          fieldValue[i] = normalizePath(join(projectRoot, fieldValue[i]));
         }
       }
     }

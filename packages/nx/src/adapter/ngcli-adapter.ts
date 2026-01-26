@@ -100,7 +100,16 @@ export async function createBuilderContext(
   );
 
   const registry = new schema.CoreSchemaRegistry();
-  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  const isAngularBuild =
+    builderInfo.builderName.startsWith('@angular/build:') ||
+    ['@nx/angular:application', '@nx/angular:unit-test'].includes(
+      builderInfo.builderName
+    );
+  if (isAngularBuild) {
+    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
+  } else {
+    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  }
   registry.addSmartDefaultProvider('unparsed', () => {
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
@@ -214,19 +223,43 @@ export async function scheduleTarget(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
   );
-
-  const registry = new schema.CoreSchemaRegistry();
-  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  registry.addSmartDefaultProvider('unparsed', () => {
-    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
-    return [];
-  });
-
   const architectHost = await getWrappedWorkspaceNodeModulesArchitectHost(
     workspace,
     root,
     opts.projects
   );
+
+  const project = workspace.projects.get(opts.project);
+  if (!project) {
+    throw new Error(`Cannot find project '${opts.project}' in the workspace`);
+  }
+  if (!project.targets?.get(opts.target)) {
+    throw new Error(
+      `Cannot find target '${opts.target}' for project '${opts.project}'`
+    );
+  }
+  const builderName = project.targets.get(opts.target).builder;
+  if (!builderName) {
+    throw new Error(
+      `Cannot find the builder for the target '${opts.target}' of project '${opts.project}'`
+    );
+  }
+
+  const isAngularBuild =
+    builderName.startsWith('@angular/build:') ||
+    ['@nx/angular:application', '@nx/angular:unit-test'].includes(builderName);
+
+  const registry = new schema.CoreSchemaRegistry();
+  if (isAngularBuild) {
+    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
+  } else {
+    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  }
+  registry.addSmartDefaultProvider('unparsed', () => {
+    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
+    return [];
+  });
+
   const architect: Architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
     {
@@ -433,7 +466,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       isAngularPluginInstalled()
     ) {
       return this.readMergedWorkspaceConfiguration().pipe(
-        map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
+        map((r) => stringToArrayBuffer(JSON.stringify(toOldFormat(r))))
       );
     } else {
       return super.read(path);
@@ -566,13 +599,15 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                         allObservables.push(
                           super.write(
                             path as any,
-                            Buffer.from(JSON.stringify(updatedContent, null, 2))
+                            stringToArrayBuffer(
+                              JSON.stringify(updatedContent, null, 2)
+                            )
                           )
                         );
                       }
                     } else {
                       allObservables.push(
-                        super.write(path as any, Buffer.from(content))
+                        super.write(path as any, stringToArrayBuffer(content))
                       );
                     }
                   },
@@ -615,7 +650,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     let modified = false;
 
     function updatePropertyIfDifferent<
-      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>
+      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>,
     >(property: T): void {
       if (typeof res[property] === 'string') {
         if (res[property] !== updated[property]) {
@@ -717,7 +752,10 @@ export function arrayBufferToString(buffer: any) {
  * the project configuration files.
  */
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
-  constructor(root: string, private readonly host: Tree) {
+  constructor(
+    root: string,
+    private readonly host: Tree
+  ) {
     super(root);
   }
 
@@ -756,7 +794,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       return super.readExistingAngularJson().pipe(
         map((angularJson) => {
           if (angularJson) {
-            return Buffer.from(
+            return stringToArrayBuffer(
               JSON.stringify({
                 version: 1,
                 projects: {
@@ -766,14 +804,14 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
               })
             );
           } else {
-            return Buffer.from(JSON.stringify(projectJsonConfig));
+            return stringToArrayBuffer(JSON.stringify(projectJsonConfig));
           }
         })
       );
     } else {
       const match = findMatchingFileChange(this.host, path);
       if (match) {
-        return of(Buffer.from(match.content));
+        return of(bufferToArrayBuffer(Buffer.from(match.content)));
       } else {
         return super.read(path);
       }
@@ -1075,10 +1113,10 @@ export function wrapAngularDevkitSchematic(
             event.content.toString()
           );
         } else {
-          host.write(eventPath, event.content);
+          host.write(eventPath, toBufferOrString(event.content));
         }
       } else if (event.kind === 'create') {
-        host.write(eventPath, event.content);
+        host.write(eventPath, toBufferOrString(event.content));
       } else if (event.kind === 'delete') {
         host.delete(eventPath);
       } else if (event.kind === 'rename') {
@@ -1437,4 +1475,26 @@ export function restoreNxTokensInOptions<T extends Object | Array<unknown>>(
     }
   }
   return result;
+}
+
+function toBufferOrString(
+  content: ArrayBufferLike | Buffer | string
+): Buffer | string {
+  if (Buffer.isBuffer(content) || typeof content === 'string') {
+    return content;
+  }
+
+  // it's an ArrayBuffer
+  return Buffer.from(content);
+}
+
+function stringToArrayBuffer(str: string): ArrayBuffer {
+  return new TextEncoder().encode(str).buffer as ArrayBuffer;
+}
+
+function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  return buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength
+  ) as ArrayBuffer;
 }

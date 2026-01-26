@@ -47,6 +47,7 @@ export interface RunOptions {
 
 export interface TuiOptions {
   tuiAutoExit: boolean | number;
+  tui: boolean;
 }
 
 export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
@@ -56,6 +57,11 @@ export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
         'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
       type: 'string',
       coerce: (v) => coerceTuiAutoExit(v),
+    })
+    .option('tui', {
+      describe: 'Enable or disable the Nx Terminal UI.',
+      type: 'boolean',
+      conflicts: 'outputStyle',
     })
     .middleware((args) => {
       if (args.tuiAutoExit !== undefined) {
@@ -101,8 +107,8 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
         value === '' || value === 'true' || value === true
           ? true
           : value === 'false' || value === false
-          ? false
-          : value,
+            ? false
+            : value,
     })
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task.',
@@ -318,6 +324,15 @@ export function withOutputStyleOption<T>(
       choices,
     })
     .middleware([
+      (args) => {
+        if (
+          !args.outputStyle &&
+          process.env.NX_DEFAULT_OUTPUT_STYLE &&
+          choices.includes(process.env.NX_DEFAULT_OUTPUT_STYLE as OutputStyle)
+        ) {
+          args.outputStyle = process.env.NX_DEFAULT_OUTPUT_STYLE;
+        }
+      },
       (args) => {
         const useTui = shouldUseTui(readNxJson(), args as NxArgs);
         if (useTui) {

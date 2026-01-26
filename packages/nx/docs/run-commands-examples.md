@@ -21,8 +21,7 @@ nx run frontend:ls-project-root
 
 ## Examples
 
-{% tabs %}
-{% tab label="Chaining commands" %}
+##### Chaining commands
 
 The `commands` option accepts as many commands as you want. By default, they all run in parallel.
 You can run them sequentially by setting `parallel: false`:
@@ -41,8 +40,7 @@ You can run them sequentially by setting `parallel: false`:
 }
 ```
 
-{% /tab %}
-{% tab label="Setting the cwd" %}
+##### Setting the cwd
 
 By setting the `cwd` option, each command will run in the `apps/frontend` folder.
 
@@ -61,8 +59,7 @@ By setting the `cwd` option, each command will run in the `apps/frontend` folder
 }
 ```
 
-{% /tab %}
-{% tab label="Interpolating Args" %}
+##### Interpolating Args
 
 You can use custom arguments in your scripts with `{args.[someFlag]}`:
 
@@ -93,8 +90,8 @@ or simply with:
 nx run frontend:create-script --name=example
 ```
 
-{% /tab %}
-{% tab label="Arguments forwarding" %}
+##### Arguments forwarding
+
 When interpolation is not present in the command, all arguments are forwarded to the command by default.
 
 This is useful when you need to pass raw argument strings to your command.
@@ -133,8 +130,8 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 }
 ```
 
-{% /tab %}
-{% tab label="Shorthand" %}
+##### Shorthand
+
 When you only need to run a single command, you can use a shorthand for nx:run-commands:
 
 ```json
@@ -143,8 +140,7 @@ When you only need to run a single command, you can use a shorthand for nx:run-c
 }
 ```
 
-{% /tab %}
-{% tab label="Custom done conditions" %}
+##### Custom done conditions
 
 Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:
 
@@ -191,8 +187,7 @@ nx run frontend:finish-when-multiple-ready
 
 The above commands will finish as soon as both the 1st and the 2nd command echoed "READY" (between 1 and 10 seconds), instead of waiting for the extra hour.
 
-{% /tab %}
-{% tab label="Nx Affected" %}
+##### Nx Affected
 
 The true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your project graph. So you can run **custom commands** only for the projects that have been affected by a change.
 
@@ -227,8 +222,5 @@ nx affected --target=generate-docs
     }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

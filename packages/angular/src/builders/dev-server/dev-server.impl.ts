@@ -33,6 +33,7 @@ import {
 } from '../utilities/webpack';
 import { normalizeOptions, validateOptions } from './lib';
 import type { NormalizedSchema, Schema } from './schema';
+
 type BuildTargetOptions = {
   tsConfig: string;
   buildLibsFromSource?: boolean;
@@ -77,8 +78,8 @@ export function executeDevServerBuilder(
     ...(parsedBuildTarget.configuration
       ? buildTarget.configurations[parsedBuildTarget.configuration]
       : buildTarget.defaultConfiguration
-      ? buildTarget.configurations[buildTarget.defaultConfiguration]
-      : {}),
+        ? buildTarget.configurations[buildTarget.defaultConfiguration]
+        : {}),
   };
 
   const buildLibsFromSource =
@@ -212,7 +213,7 @@ export function executeDevServerBuilder(
                             parsedBuildTarget.target
                           } --projects=${workspaceDependencies.join(',')}`,
                           { skipWatchingDeps: !options.watchDependencies }
-                        )
+                        ) as any // TODO(Colum): this can be removed when angular 20.2 is merged
                       );
                     }
                   }

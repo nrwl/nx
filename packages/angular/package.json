@@ -31,8 +31,12 @@
     "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
+    "./src/builders/*/schema": "./src/builders/*/schema.d.ts",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js"
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
+    "./src/generators/*/schema": "./src/generators/*/schema.d.ts"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -47,32 +51,37 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/eslint": "file:../eslint",
-    "@nx/js": "file:../js",
-    "@nx/module-federation": "file:../module-federation",
-    "@nx/rspack": "file:../rspack",
-    "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack",
-    "@nx/workspace": "file:../workspace",
-    "@phenomnomnominal/tsquery": "~5.0.1",
+    "@nx/devkit": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/rspack": "workspace:*",
+    "@nx/web": "workspace:*",
+    "@nx/webpack": "workspace:*",
+    "@nx/workspace": "workspace:*",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "^8.0.0",
-    "enquirer": "~2.3.6",
+    "enquirer": "catalog:",
     "magic-string": "~0.30.2",
-    "picocolors": "^1.1.0",
-    "picomatch": "4.0.2",
-    "semver": "^7.5.3",
-    "tslib": "^2.3.0",
+    "picocolors": "catalog:",
+    "picomatch": "catalog:",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
     "webpack-merge": "^5.8.0"
   },
+  "devDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/vitest": "workspace:*",
+    "nx": "workspace:*"
+  },
   "peerDependencies": {
-    "@angular/build": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/build-angular": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/core": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/schematics": ">= 18.0.0 < 21.0.0",
-    "@schematics/angular": ">= 18.0.0 < 21.0.0",
-    "ng-packagr": ">= 18.0.0 < 21.0.0",
-    "rxjs": "^6.5.3 || ^7.5.0"
+    "@angular/build": "catalog:angular-supported-versions",
+    "@angular-devkit/build-angular": "catalog:angular-supported-versions",
+    "@angular-devkit/core": "catalog:angular-supported-versions",
+    "@angular-devkit/schematics": "catalog:angular-supported-versions",
+    "@schematics/angular": "catalog:angular-supported-versions",
+    "ng-packagr": "catalog:angular-supported-versions",
+    "rxjs": "catalog:angular-supported-versions"
   },
   "peerDependenciesMeta": {
     "@angular/build": {

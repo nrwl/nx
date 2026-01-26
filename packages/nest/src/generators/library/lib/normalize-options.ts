@@ -6,7 +6,10 @@ import {
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  shouldConfigureTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -31,14 +34,17 @@ export async function normalizeOptions(
 
   options.addPlugin ??= addPlugin;
 
-  const fileName = options.simpleName
-    ? projectNames.projectSimpleName
-    : projectNames.projectFileName;
+  const fileName = projectNames.projectFileName;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const isUsingTsSolutionsConfig = isUsingTsSolutionSetup(tree);
+  // this helper is called before the jsLibraryGenerator is called, so, if the
+  // TS solution setup is not configured, we additionally check if the TS
+  // solution setup will be configured by the jsLibraryGenerator
+  const isUsingTsSolutionsConfig =
+    isUsingTsSolutionSetup(tree) ||
+    shouldConfigureTsSolutionSetup(tree, addPlugin);
   const normalized: NormalizedOptions = {
     ...options,
     strict: options.strict ?? true,

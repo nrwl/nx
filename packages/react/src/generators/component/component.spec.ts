@@ -332,6 +332,8 @@ describe('component', () => {
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
 
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
+      expect(content).not.toContain("styles['container']");
+      expect(content).not.toContain('import styles');
       expect(content).toMatchSnapshot();
     });
   });

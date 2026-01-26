@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
@@ -45,6 +45,9 @@ describe('@nx/expo (legacy)', () => {
     runCLI(
       `generate @nx/expo:library libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --unitTestRunner=jest --linter=eslint`
     );
+
+    // Build first to speed up static-serve
+    runCLI(`export ${appName}`);
   });
   afterAll(() => {
     process.env.NX_ADD_PLUGINS = originalEnv;
@@ -106,7 +109,9 @@ describe('@nx/expo (legacy)', () => {
     }
   });
 
-  it('should export', async () => {
+  // Currently skipping this due to a change in `@expo/cli`, see
+  // https://github.com/expo/expo/issues/37357
+  it.skip('should export', async () => {
     const exportResults = await runCLIAsync(
       `export ${appName} --no-interactive`
     );
@@ -281,6 +286,10 @@ describe('@nx/expo (legacy)', () => {
     runCLI(
       `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive --unitTestRunner=jest --linter=eslint`
     );
+
+    // Build first to speed up static-serve
+    runCLI(`export ${appName2}`);
+
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });
       expect(results).toContain('Successfully ran target e2e');

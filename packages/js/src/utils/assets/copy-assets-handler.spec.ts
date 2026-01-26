@@ -283,8 +283,558 @@ describe('AssetInputOutputHandler', () => {
       },
     ]);
   });
+
+  describe('includeIgnoredFiles functionality', () => {
+    test('should include ignored files when global includeIgnoredFiles is true', async () => {
+      // Create a new handler with includeIgnoredFiles enabled globally
+      const sutWithIncludeIgnored = new CopyAssetsHandler({
+        rootDir,
+        projectDir,
+        outputDir,
+        callback: callback as any,
+        includeIgnoredFiles: true,
+        assets: [
+          'mylib/*.md',
+          {
+            input: 'mylib/docs',
+            glob: '**/*.md',
+            output: 'docs',
+            ignore: ['ignore.md', '**/nested-ignore.md'],
+          },
+        ],
+      });
+
+      // Create test files including ones that would normally be ignored
+      fs.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
+      fs.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/git-ignore.md'),
+        'GIT IGNORED'
+      );
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/nx-ignore.md'),
+        'NX IGNORED'
+      );
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/ignore.md'),
+        'ASSET IGNORED'
+      );
+
+      await sutWithIncludeIgnored.processAllAssetsOnce();
+
+      // Should include git and nx ignored files but still respect asset-specific ignore
+      expect(callback).toHaveBeenCalledWith([
+        {
+          type: 'create',
+          src: path.join(rootDir, 'mylib/README.md'),
+          dest: path.join(rootDir, 'dist/mylib/README.md'),
+        },
+      ]);
+      expect(callback).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'create',
+            src: path.join(rootDir, 'mylib/docs/test1.md'),
+            dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+          }),
+          expect.objectContaining({
+            type: 'create',
+            src: path.join(rootDir, 'mylib/docs/git-ignore.md'),
+            dest: path.join(rootDir, 'dist/mylib/docs/git-ignore.md'),
+          }),
+          expect.objectContaining({
+            type: 'create',
+            src: path.join(rootDir, 'mylib/docs/nx-ignore.md'),
+            dest: path.join(rootDir, 'dist/mylib/docs/nx-ignore.md'),
+          }),
+        ])
+      );
+
+      // Should still respect asset-specific ignore patterns
+      expect(callback).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/ignore.md'),
+          }),
+        ])
+      );
+    });
+
+    test('should include ignored files for specific assets when per-asset includeIgnoredFiles is true', async () => {
+      // Create handler with per-asset includeIgnoredFiles
+      const sutWithPerAssetInclude = new CopyAssetsHandler({
+        rootDir,
+        projectDir,
+        outputDir,
+        callback: callback as any,
+        includeIgnoredFiles: false, // Global is false
+        assets: [
+          'mylib/*.md', // This asset will exclude ignored files
+          {
+            input: 'mylib/docs',
+            glob: '**/*.md',
+            output: 'docs',
+            includeIgnoredFiles: true, // This asset will include ignored files
+            ignore: ['ignore.md'],
+          },
+        ],
+      });
+
+      // Create test files
+      fs.writeFileSync(path.join(projectDir, 'git-ignore.md'), 'GIT IGNORED');
+      fs.writeFileSync(path.join(projectDir, 'nx-ignore.md'), 'NX IGNORED');
+      fs.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
+      fs.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/git-ignore.md'),
+        'GIT IGNORED'
+      );
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/nx-ignore.md'),
+        'NX IGNORED'
+      );
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/ignore.md'),
+        'ASSET IGNORED'
+      );
+
+      await sutWithPerAssetInclude.processAllAssetsOnce();
+
+      // First asset (mylib/*.md) should exclude ignored files
+      expect(callback).toHaveBeenCalledWith([
+        {
+          type: 'create',
+          src: path.join(rootDir, 'mylib/README.md'),
+          dest: path.join(rootDir, 'dist/mylib/README.md'),
+        },
+      ]);
+
+      // Should NOT include ignored files for first asset
+      expect(callback).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/git-ignore.md'),
+          }),
+        ])
+      );
+      expect(callback).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/nx-ignore.md'),
+          }),
+        ])
+      );
+
+      // Second asset (docs) should include git/nx ignored files but respect asset ignore
+      expect(callback).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'create',
+            src: path.join(rootDir, 'mylib/docs/test1.md'),
+            dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+          }),
+          expect.objectContaining({
+            type: 'create',
+            src: path.join(rootDir, 'mylib/docs/git-ignore.md'),
+            dest: path.join(rootDir, 'dist/mylib/docs/git-ignore.md'),
+          }),
+          expect.objectContaining({
+            type: 'create',
+            src: path.join(rootDir, 'mylib/docs/nx-ignore.md'),
+            dest: path.join(rootDir, 'dist/mylib/docs/nx-ignore.md'),
+          }),
+        ])
+      );
+
+      // Should still respect asset-specific ignore even with includeIgnoredFiles: true
+      expect(callback).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/ignore.md'),
+          }),
+        ])
+      );
+    });
+
+    test('should respect per-asset includeIgnoredFiles precedence over global setting', async () => {
+      // Create handler where global is true but per-asset is false
+      const sutWithMixedSettings = new CopyAssetsHandler({
+        rootDir,
+        projectDir,
+        outputDir,
+        callback: callback as any,
+        includeIgnoredFiles: true, // Global is true
+        assets: [
+          {
+            input: 'mylib/docs',
+            glob: '**/*.md',
+            output: 'docs',
+            includeIgnoredFiles: false, // This asset explicitly excludes ignored files
+          },
+        ],
+      });
+
+      // Create test files
+      fs.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/git-ignore.md'),
+        'GIT IGNORED'
+      );
+      fs.writeFileSync(
+        path.join(projectDir, 'docs/nx-ignore.md'),
+        'NX IGNORED'
+      );
+
+      await sutWithMixedSettings.processAllAssetsOnce();
+
+      // Should include regular files
+      expect(callback).toHaveBeenCalledWith([
+        {
+          type: 'create',
+          src: path.join(rootDir, 'mylib/docs/test1.md'),
+          dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+        },
+      ]);
+
+      // Should NOT include ignored files because per-asset setting overrides global
+      expect(callback).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/git-ignore.md'),
+          }),
+        ])
+      );
+      expect(callback).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/nx-ignore.md'),
+          }),
+        ])
+      );
+    });
+
+    test('should include ignored files during watch mode when includeIgnoredFiles is enabled', async () => {
+      // Create handler with includeIgnoredFiles enabled
+      const sutWithIncludeIgnored = new CopyAssetsHandler({
+        rootDir,
+        projectDir,
+        outputDir,
+        callback: callback as any,
+        includeIgnoredFiles: true,
+        assets: [
+          {
+            input: 'mylib/docs',
+            glob: '**/*.md',
+            output: 'docs',
+          },
+        ],
+      });
+
+      const dispose =
+        await sutWithIncludeIgnored.watchAndProcessOnAssetChange();
+
+      // Simulate creating ignored files
+      createMockedWatchedFile(path.join(projectDir, 'docs/git-ignore.md'));
+      createMockedWatchedFile(path.join(projectDir, 'docs/nx-ignore.md'));
+      createMockedWatchedFile(path.join(projectDir, 'docs/regular.md'));
+
+      // Should include all files including ignored ones
+      expect(callback).toHaveBeenCalledWith([
+        {
+          type: 'create',
+          src: path.join(rootDir, 'mylib/docs/git-ignore.md'),
+          dest: path.join(rootDir, 'dist/mylib/docs/git-ignore.md'),
+        },
+      ]);
+      expect(callback).toHaveBeenCalledWith([
+        {
+          type: 'create',
+          src: path.join(rootDir, 'mylib/docs/nx-ignore.md'),
+          dest: path.join(rootDir, 'dist/mylib/docs/nx-ignore.md'),
+        },
+      ]);
+      expect(callback).toHaveBeenCalledWith([
+        {
+          type: 'create',
+          src: path.join(rootDir, 'mylib/docs/regular.md'),
+          dest: path.join(rootDir, 'dist/mylib/docs/regular.md'),
+        },
+      ]);
+
+      dispose();
+    });
+
+    test('should handle includeIgnoredFiles with nested gitignore patterns', async () => {
+      // Create nested gitignore with more complex patterns
+      fs.writeFileSync(
+        path.join(rootDir, '.gitignore'),
+        `
+*.log
+temp-*
+build/
+*.tmp.md
+`
+      );
+
+      const sutWithIncludeIgnored = new CopyAssetsHandler({
+        rootDir,
+        projectDir,
+        outputDir,
+        callback: callback as any,
+        includeIgnoredFiles: true,
+        assets: [
+          {
+            input: 'mylib/docs',
+            glob: '**/*',
+            output: 'docs',
+          },
+        ],
+      });
+
+      // Create files that match gitignore patterns
+      fs.writeFileSync(path.join(projectDir, 'docs/debug.log'), 'LOG');
+      fs.writeFileSync(path.join(projectDir, 'docs/temp-file.md'), 'TEMP');
+      fs.writeFileSync(path.join(projectDir, 'docs/report.tmp.md'), 'TEMP MD');
+      fs.writeFileSync(path.join(projectDir, 'docs/regular.md'), 'REGULAR');
+      fs.mkdirSync(path.join(projectDir, 'docs/build'), { recursive: true });
+      fs.writeFileSync(path.join(projectDir, 'docs/build/output.js'), 'BUILD');
+
+      await sutWithIncludeIgnored.processAllAssetsOnce();
+
+      // Should include all files, even those matching gitignore patterns
+      expect(callback).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/debug.log'),
+          }),
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/temp-file.md'),
+          }),
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/report.tmp.md'),
+          }),
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/regular.md'),
+          }),
+          expect.objectContaining({
+            src: path.join(rootDir, 'mylib/docs/build/output.js'),
+          }),
+        ])
+      );
+    });
+  });
 });
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+describe('CopyAssetsHandler - node_modules support', () => {
+  let rootDir: string;
+  let projectDir: string;
+  let outputDir: string;
+  let callback: jest.SpyInstance;
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+    const tmp = fs.realpathSync(path.join(os.tmpdir()));
+
+    callback = jest.fn();
+    rootDir = path.join(tmp, 'nx-assets-node-modules-test');
+    projectDir = path.join(rootDir, 'apps/api');
+    outputDir = path.join(rootDir, 'dist/apps/api');
+
+    fs.rmSync(rootDir, { recursive: true, force: true });
+    fs.mkdirSync(projectDir, { recursive: true });
+    fs.mkdirSync(path.join(rootDir, 'node_modules/.prisma/client'), {
+      recursive: true,
+    });
+    fs.mkdirSync(path.join(rootDir, 'node_modules/@prisma/client'), {
+      recursive: true,
+    });
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+  });
+
+  test('should copy files from node_modules/.prisma using async method', async () => {
+    // Create mock Prisma client files
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+      'prisma client'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+      'prisma types'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/schema.prisma'),
+      'schema'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'node_modules/.prisma/client',
+          glob: '**/*',
+          output: 'prisma-client',
+        },
+      ],
+    });
+
+    await sut.processAllAssetsOnce();
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.js'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.d.ts'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/schema.prisma'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/schema.prisma'),
+        }),
+      ])
+    );
+  });
+
+  test('should copy files from node_modules/.prisma using sync method', () => {
+    // Create mock Prisma client files
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+      'prisma client'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+      'prisma types'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'node_modules/.prisma/client',
+          glob: '**/*',
+          output: 'prisma-client',
+        },
+      ],
+    });
+
+    sut.processAllAssetsOnceSync();
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.js'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.d.ts'),
+        }),
+      ])
+    );
+  });
+
+  test('should copy files from node_modules/@prisma/client', async () => {
+    // Create mock @prisma/client files
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/@prisma/client/index.js'),
+      'prisma client'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/@prisma/client/package.json'),
+      '{"name": "@prisma/client"}'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'node_modules/@prisma/client',
+          glob: '**/*',
+          output: '@prisma/client',
+        },
+      ],
+    });
+
+    await sut.processAllAssetsOnce();
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/@prisma/client/index.js'),
+          dest: path.join(rootDir, 'dist/apps/api/@prisma/client/index.js'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/@prisma/client/package.json'),
+          dest: path.join(rootDir, 'dist/apps/api/@prisma/client/package.json'),
+        }),
+      ])
+    );
+  });
+
+  test('should still ignore node_modules for non-node_modules patterns', async () => {
+    // Create files in project directory and in node_modules that would match the pattern
+    fs.writeFileSync(path.join(projectDir, 'config.json'), 'config');
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/@prisma/client/package.json'),
+      '{"name": "@prisma/client"}'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'apps/api',
+          glob: '**/*.json',
+          output: 'assets',
+        },
+      ],
+    });
+
+    await sut.processAllAssetsOnce();
+
+    // Should include project files
+    expect(callback).toHaveBeenCalledWith([
+      expect.objectContaining({
+        type: 'create',
+        src: path.join(rootDir, 'apps/api/config.json'),
+        dest: path.join(rootDir, 'dist/apps/api/assets/config.json'),
+      }),
+    ]);
+
+    // Should NOT include node_modules files even though they match the glob pattern
+    const allCalls = callback.mock.calls.flat().flat();
+    const nodeModulesFiles = allCalls.filter((event: any) =>
+      event.src.includes('node_modules')
+    );
+    expect(nodeModulesFiles).toHaveLength(0);
+  });
+});

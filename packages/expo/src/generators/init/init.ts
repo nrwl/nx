@@ -10,14 +10,8 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../../plugins/plugin';
-import {
-  expoCliVersion,
-  expoVersion,
-  nxVersion,
-  reactDomVersion,
-  reactNativeVersion,
-  reactVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
@@ -74,7 +68,7 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host, schema));
+    tasks.push(await updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -84,18 +78,22 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree, schema: Schema) {
+export async function updateDependencies(host: Tree, schema: Schema) {
+  const versions = await getExpoDependenciesVersionsToInstall(host);
+
   return addDependenciesToPackageJson(
     host,
     {
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-      'react-native': reactNativeVersion,
-      expo: expoVersion,
+      react: versions.react,
+      'react-dom': versions.reactDom,
+      'react-native': versions.reactNative,
+      expo: versions.expo,
     },
     {
       '@nx/expo': nxVersion,
-      '@expo/cli': expoCliVersion,
+      '@expo/cli': versions.expoCli,
+      'metro-config': versions.metro,
+      'metro-resolver': versions.metro,
     },
     undefined,
     schema.keepExistingVersions

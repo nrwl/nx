@@ -20,10 +20,17 @@ import { isIsolationEnabled } from './isolation/enabled';
  */
 let currentPluginsConfigurationHash: string;
 let loadedPlugins: LoadedNxPlugin[];
-let pendingPluginsPromise:
-  | Promise<readonly [LoadedNxPlugin[], () => void]>
-  | undefined;
+let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
+
+const loadingMethod = (
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+) =>
+  isIsolationEnabled()
+    ? loadNxPluginInIsolation(plugin, root, index)
+    : loadNxPlugin(plugin, root);
 
 export async function getPlugins(
   root = workspaceRoot
@@ -39,24 +46,16 @@ export async function getPlugins(
     return loadedPlugins;
   }
 
-  // Cleanup current plugins before loading new ones
-  cleanupSpecifiedPlugins?.();
-
-  pendingPluginsPromise ??= loadSpecifiedNxPlugins(pluginsConfiguration, root);
-
   currentPluginsConfigurationHash = pluginsConfigurationHash;
-  const [[result, cleanupFn], defaultPlugins] = await Promise.all([
-    pendingPluginsPromise,
+  const [defaultPlugins, specifiedPlugins] = await Promise.all([
     getOnlyDefaultPlugins(root),
+    (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
+      pluginsConfiguration,
+      root
+    )),
   ]);
 
-  cleanupSpecifiedPlugins = () => {
-    loadedPlugins = undefined;
-    pendingPluginsPromise = undefined;
-    cleanupFn();
-  };
-
-  loadedPlugins = result.concat(defaultPlugins);
+  loadedPlugins = specifiedPlugins.concat(defaultPlugins);
 
   return loadedPlugins;
 }
@@ -102,15 +101,13 @@ export async function getOnlyDefaultPlugins(root = workspaceRoot) {
 export function cleanupPlugins() {
   cleanupSpecifiedPlugins?.();
   cleanupDefaultPlugins?.();
+  pendingPluginsPromise = undefined;
+  pendingDefaultPluginPromise = undefined;
 }
 
 /**
  * Stuff for generic loading
  */
-
-const loadingMethod = isIsolationEnabled()
-  ? loadNxPluginInIsolation
-  : loadNxPlugin;
 
 async function loadDefaultNxPlugins(root = workspaceRoot) {
   performance.mark('loadDefaultNxPlugins:start');
@@ -159,54 +156,62 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
 }
 
 async function loadSpecifiedNxPlugins(
-  plugins: PluginConfiguration[],
+  pluginsConfigurations: PluginConfiguration[],
   root = workspaceRoot
-): Promise<readonly [LoadedNxPlugin[], () => void]> {
+): Promise<LoadedNxPlugin[]> {
+  // Returning existing plugins is handled by getPlugins,
+  // so, if we are here and there are existing plugins, they are stale
+  if (cleanupSpecifiedPlugins) {
+    cleanupSpecifiedPlugins();
+  }
+
   performance.mark('loadSpecifiedNxPlugins:start');
 
-  plugins ??= [];
+  pluginsConfigurations ??= [];
 
   const cleanupFunctions: Array<() => void> = [];
-  const ret = [
-    await Promise.all(
-      plugins.map(async (plugin, index) => {
-        const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
-        performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
+  const plugins = await Promise.all(
+    pluginsConfigurations.map(async (plugin, index) => {
+      const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
+      performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
 
-        const [loadedPluginPromise, cleanup] = await loadingMethod(
-          plugin,
-          root
-        );
+      const [loadedPluginPromise, cleanup] = await loadingMethod(
+        plugin,
+        root,
+        index
+      );
 
-        cleanupFunctions.push(cleanup);
-        const res = await loadedPluginPromise;
-        res.index = index;
-        performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
-        performance.measure(
-          `Load Nx Plugin: ${pluginPath}`,
-          `Load Nx Plugin: ${pluginPath} - start`,
-          `Load Nx Plugin: ${pluginPath} - end`
-        );
+      cleanupFunctions.push(cleanup);
+      const res = await loadedPluginPromise;
+      res.index = index;
+      performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
+      performance.measure(
+        `Load Nx Plugin: ${pluginPath}`,
+        `Load Nx Plugin: ${pluginPath} - start`,
+        `Load Nx Plugin: ${pluginPath} - end`
+      );
 
-        return res;
-      })
-    ),
-    () => {
-      for (const fn of cleanupFunctions) {
-        fn();
-      }
-      if (pluginTranspilerIsRegistered()) {
-        cleanupPluginTSTranspiler();
-      }
-    },
-  ] as const;
+      return res;
+    })
+  );
   performance.mark('loadSpecifiedNxPlugins:end');
   performance.measure(
     'loadSpecifiedNxPlugins',
     'loadSpecifiedNxPlugins:start',
     'loadSpecifiedNxPlugins:end'
   );
-  return ret;
+
+  cleanupSpecifiedPlugins = () => {
+    for (const fn of cleanupFunctions) {
+      fn();
+    }
+    if (pluginTranspilerIsRegistered()) {
+      cleanupPluginTSTranspiler();
+    }
+    pendingPluginsPromise = undefined;
+  };
+
+  return plugins;
 }
 
 function getDefaultPlugins(root: string) {

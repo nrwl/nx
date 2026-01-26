@@ -79,6 +79,38 @@ You can specify a custom social media image for a page by specifying `mediaImage
 
 Note that you won't see the social media image in the preview generated for your PR, because it loads from the live `nx.dev` site. You can make sure the image is correct by looking at `[preview-url]/images/open-graph/[page-url].[image-extension]`.
 
+### Blog Post Front Matter
+
+Blog posts support additional front matter properties beyond the standard `title` and `description`:
+
+```markdown
+---
+title: 'My Blog Post Title'
+slug: my-custom-slug
+authors: ['Author Name']
+tags: ['nx', 'monorepo']
+description: 'A description of the blog post.'
+cover_image: /blog/images/articles/my-image.avif
+hideCoverImage: true
+pinned: true
+youtubeUrl: https://www.youtube.com/watch?v=...
+podcastYoutubeId: abc123
+podcastSpotifyId: xyz789
+---
+```
+
+| Property           | Description                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| `slug`             | Custom URL slug for the post (defaults to filename)                                             |
+| `authors`          | Array of author names (must match entries in `authors.json`)                                    |
+| `tags`             | Array of tags for categorization                                                                |
+| `cover_image`      | Path to the cover image (used for social sharing and displayed in post)                         |
+| `hideCoverImage`   | When `true`, hides the cover image in the blog post detail view (still used for social sharing) |
+| `pinned`           | When `true`, pins the post to the top of the blog list                                          |
+| `youtubeUrl`       | YouTube video URL to embed at the top of the post                                               |
+| `podcastYoutubeId` | YouTube video ID for podcast episodes                                                           |
+| `podcastSpotifyId` | Spotify episode ID for podcast episodes                                                         |
+
 ### Custom markdown syntax
 
 The documentation website [nx.dev](https://nx.dev) is using custom Markdown syntax to enable the authors to add functionality to its content.
@@ -304,8 +336,14 @@ Have a more decent button-like widget that you can place below sections of a tut
 This is for embedding a video just like with the Youtube component, but in addition to have a link to a Nx Course (nx.dev/courses) video to improve the discoverability of these courses.
 
 ```markdown
-{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 ```
+
+Attributes:
+
+- `src` (required): YouTube video URL
+- `courseTitle` (required): Title of the course
+- `courseUrl` (required): Link to the course page (e.g., `/courses/pnpm-nx-next/lessons-01-nx-init`)
 
 #### Project Details View
 

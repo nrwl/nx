@@ -51,7 +51,42 @@ describe('application generator', () => {
                 "--node-env=production",
               ],
               "command": "webpack-cli build",
+              "cwd": "my-node-app",
             },
+          },
+          "copy-workspace-modules": {
+            "cache": true,
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/js:copy-workspace-modules",
+            "options": {
+              "buildTarget": "build",
+            },
+            "outputs": [
+              "{workspaceRoot}/dist/my-node-app/workspace_modules",
+            ],
+          },
+          "prune": {
+            "dependsOn": [
+              "prune-lockfile",
+              "copy-workspace-modules",
+            ],
+            "executor": "nx:noop",
+          },
+          "prune-lockfile": {
+            "cache": true,
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/js:prune-lockfile",
+            "options": {
+              "buildTarget": "build",
+            },
+            "outputs": [
+              "{workspaceRoot}/dist/my-node-app/package.json",
+              "{workspaceRoot}/dist/my-node-app/package-lock.json",
+            ],
           },
           "serve": {
             "configurations": {
@@ -122,8 +157,10 @@ describe('application generator', () => {
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
+      'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
@@ -225,6 +262,17 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
+          "dependencies": {
+            "@nestjs/common": "^11.0.0",
+            "@nestjs/core": "^11.0.0",
+            "@nestjs/platform-express": "^11.0.0",
+            "reflect-metadata": "^0.1.13",
+            "rxjs": "^7.8.0",
+            "tslib": "^2.3.0",
+          },
+          "devDependencies": {
+            "@nestjs/testing": "^11.0.0",
+          },
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -242,7 +290,42 @@ describe('application generator', () => {
                     "--node-env=production",
                   ],
                   "command": "webpack-cli build",
+                  "cwd": "myapp",
                 },
+              },
+              "copy-workspace-modules": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
+                ],
+              },
+              "prune": {
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
+                ],
               },
               "serve": {
                 "configurations": {
@@ -309,6 +392,7 @@ describe('application generator', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -337,6 +421,7 @@ describe('application generator', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -370,6 +455,8 @@ describe('application generator', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
+          "devDependencies",
         ]
       `);
     });
@@ -408,7 +495,42 @@ describe('application generator', () => {
                   "--node-env=production",
                 ],
                 "command": "webpack-cli build",
+                "cwd": "myapp",
               },
+            },
+            "copy-workspace-modules": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+              "outputs": [
+                "{workspaceRoot}/myapp/dist/workspace_modules",
+              ],
+            },
+            "prune": {
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
+              "outputs": [
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
+              ],
             },
             "serve": {
               "configurations": {
@@ -458,7 +580,7 @@ describe('application generator', () => {
               ],
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.ts",
+                "jestConfig": "myapp-e2e/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

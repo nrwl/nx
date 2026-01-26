@@ -19,5 +19,5 @@ pnpm nx login
 
 ## Relevant Links
 
-- [Nx Cloud and Personal Access Tokens](/ci/recipes/security/personal-access-tokens)
+- [Nx Cloud and Personal Access Tokens](/docs/guides/nx-cloud/personal-access-tokens)
 - [Blog: Better security with Personal Access Tokens](/blog/personal-access-tokens)

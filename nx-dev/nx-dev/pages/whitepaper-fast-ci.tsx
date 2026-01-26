@@ -6,17 +6,17 @@ import {
   Header,
   HubspotForm,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import {
   CapitalOneIcon,
   CaterpillarIcon,
   RoyalBankOfCanadaIcon,
   ShopifyIcon,
   SiriusxmAlternateIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { type ReactElement } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
@@ -137,17 +137,17 @@ export function WhitePaperFastCI(): ReactElement {
                   <div className="mt-12 grid w-full grid-cols-4 place-items-center gap-2">
                     <CapitalOneIcon
                       aria-hidden="true"
-                      className="col-span-1 size-28  text-black dark:text-white"
+                      className="col-span-1 size-28 text-black dark:text-white"
                     />
 
                     <CaterpillarIcon
                       aria-hidden="true"
-                      className="col-span-1 size-14  text-[#FFCD11]"
+                      className="col-span-1 size-14 text-[#FFCD11]"
                     />
 
                     <RoyalBankOfCanadaIcon
                       aria-hidden="true"
-                      className="col-span-1 size-14  text-black dark:text-white"
+                      className="col-span-1 size-14 text-black dark:text-white"
                     />
 
                     <ShopifyIcon

@@ -11,25 +11,21 @@ export function updateVitestTestSetup(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const fileContents = tree.read(pathToVitestConfig, 'utf-8');
 
-  const ast = tsquery.ast(fileContents);
+  const sourceFile = ast(fileContents);
 
   const TEST_SETUPFILES_SELECTOR =
     'PropertyAssignment:has(Identifier[name=test]) PropertyAssignment:has(Identifier[name=setupFiles])';
 
-  const nodes = tsquery(ast, TEST_SETUPFILES_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const nodes = query(sourceFile, TEST_SETUPFILES_SELECTOR);
 
   let updatedFileContents = fileContents;
   if (nodes.length === 0) {
     const TEST_CONFIG_SELECTOR =
       'PropertyAssignment:has(Identifier[name=test]) > ObjectLiteralExpression';
-    const testConfigNodes = tsquery(ast, TEST_CONFIG_SELECTOR, {
-      visitAllChildren: true,
-    });
+    const testConfigNodes = query(sourceFile, TEST_CONFIG_SELECTOR);
     updatedFileContents = stripIndents`${fileContents.slice(
       0,
       testConfigNodes[0].getStart() + 1
@@ -37,9 +33,7 @@ export function updateVitestTestSetup(
       testConfigNodes[0].getStart() + 1
     )}`;
   } else {
-    const arrayNodes = tsquery(nodes[0], 'ArrayLiteralExpression', {
-      visitAllChildren: true,
-    });
+    const arrayNodes = query(nodes[0], 'ArrayLiteralExpression');
     if (arrayNodes.length !== 0) {
       updatedFileContents = stripIndents`${fileContents.slice(
         0,
@@ -61,20 +55,18 @@ export function updateJestTestSetup(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const fileContents = tree.read(pathToJestConfig, 'utf-8');
 
-  const ast = tsquery.ast(fileContents);
+  const sourceFile = ast(fileContents);
 
   const TEST_SETUPFILES_SELECTOR =
     'PropertyAssignment:has(Identifier[name=setupFilesAfterEnv])';
-  const nodes = tsquery(ast, TEST_SETUPFILES_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const nodes = query(sourceFile, TEST_SETUPFILES_SELECTOR);
 
   if (nodes.length === 0) {
     const CONFIG_SELECTOR = 'ObjectLiteralExpression';
-    const nodes = tsquery(ast, CONFIG_SELECTOR, { visitAllChildren: true });
+    const nodes = query(sourceFile, CONFIG_SELECTOR);
 
     const updatedFileContents = stripIndents`${fileContents.slice(
       0,
@@ -84,9 +76,7 @@ export function updateJestTestSetup(
     )}`;
     tree.write(pathToJestConfig, updatedFileContents);
   } else {
-    const arrayNodes = tsquery(nodes[0], 'ArrayLiteralExpression', {
-      visitAllChildren: true,
-    });
+    const arrayNodes = query(nodes[0], 'ArrayLiteralExpression');
     if (arrayNodes.length !== 0) {
       const updatedFileContents = stripIndents`${fileContents.slice(
         0,
@@ -108,14 +98,14 @@ export function updateJestTestMatch(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const fileContents = tree.read(pathToJestConfig, 'utf-8');
 
-  const ast = tsquery.ast(fileContents);
+  const sourceFile = ast(fileContents);
 
   const TEST_MATCH_SELECTOR =
     'PropertyAssignment:has(Identifier[name=testMatch])';
-  const nodes = tsquery(ast, TEST_MATCH_SELECTOR, { visitAllChildren: true });
+  const nodes = query(sourceFile, TEST_MATCH_SELECTOR);
 
   if (nodes.length !== 0) {
     const updatedFileContents = stripIndents`${fileContents.slice(
@@ -135,14 +125,14 @@ export function updateVitestTestIncludes(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const fileContents = tree.read(pathToVitestConfig, 'utf-8');
 
-  const ast = tsquery.ast(fileContents);
+  const sourceFile = ast(fileContents);
 
   const TEST_INCLUDE_SELECTOR =
     'PropertyAssignment:has(Identifier[name=test]) PropertyAssignment:has(Identifier[name=include])';
-  const nodes = tsquery(ast, TEST_INCLUDE_SELECTOR, { visitAllChildren: true });
+  const nodes = query(sourceFile, TEST_INCLUDE_SELECTOR);
 
   if (nodes.length !== 0) {
     const updatedFileContents = stripIndents`${fileContents.slice(

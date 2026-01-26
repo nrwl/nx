@@ -12,7 +12,7 @@ import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
-import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 import { initCloud } from '../utils';
 import type { Options } from './types';
 
@@ -23,6 +23,7 @@ const nxAngularLegacyVersionMap: Record<number, string> = {
   15: '~19.0.0',
   16: '~20.1.0',
   17: '~21.1.0',
+  18: '~22.2.0',
 };
 // min major angular version supported in latest Nx
 const minMajorAngularVersionSupported =

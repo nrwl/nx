@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('React Cypress Component Tests', () => {
@@ -280,9 +280,8 @@ ${content}`;
       `
     );
     updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets[
-        'build'
-      ].options.webpackConfig = `apps/${appName}/webpack.config.js`;
+      config.targets['build'].options.webpackConfig =
+        `apps/${appName}/webpack.config.js`;
 
       return config;
     });

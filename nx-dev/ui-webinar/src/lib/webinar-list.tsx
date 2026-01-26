@@ -1,5 +1,5 @@
-import { WebinarDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
-import { CallToAction } from '@nx/nx-dev/ui-markdoc';
+import { WebinarDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
+import { CallToAction } from '@nx/nx-dev-ui-markdoc';
 import Image from 'next/image';
 import Link from 'next/link';
 import { WebinarListItem } from './webinar-list-item';
@@ -11,7 +11,7 @@ export interface WebinarListProps {
 export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
   return webinars.length < 1 ? (
     <div>
-      <h2 className="mt-32 text-center text-xl font-semibold text-slate-500 sm:text-2xl xl:mb-24 dark:text-white ">
+      <h2 className="mt-32 text-center text-xl font-semibold text-slate-500 sm:text-2xl xl:mb-24 dark:text-white">
         No webinars as yet but stay tuned!
       </h2>
     </div>

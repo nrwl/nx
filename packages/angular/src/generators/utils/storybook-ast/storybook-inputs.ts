@@ -110,6 +110,6 @@ export function getArgsDefaultValue(property: PropertyDeclaration): string {
   return property.initializer
     ? property.initializer.getText()
     : property.type
-    ? typeNameToDefault[property.type.getText()]
-    : "''";
+      ? typeNameToDefault[property.type.getText()]
+      : "''";
 }

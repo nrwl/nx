@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function FeatureSections(): ReactElement {
   return (
@@ -12,7 +12,7 @@ export function FeatureSections(): ReactElement {
           </span>
         </SectionHeading>
 
-        <div className="mt-10 grid grid-cols-1 gap-8 sm:mt-16 md:grid-cols-2 lg:grid-cols-3 ">
+        <div className="mt-10 grid grid-cols-1 gap-8 sm:mt-16 md:grid-cols-2 lg:grid-cols-3">
           {/* Affected Section */}
           <FeatureSection
             title="Affected"
@@ -20,7 +20,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-affected.avif"
             alt="Nx Affected: Run tasks only on affected projects"
             tag="Affected"
-            href="/ci/features/affected"
+            href={'/docs/ci/features/affected'}
           />
 
           {/* Remote Caching Section */}
@@ -30,7 +30,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-replay.avif"
             alt="Nx Replay: Remote caching"
             tag="Nx Replay"
-            href="/features/cache-task-results"
+            href={'/docs/features/cache-task-results'}
           />
 
           {/* Distribution Section */}
@@ -40,7 +40,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-agents.avif"
             alt="Nx Agents: Task distribution"
             tag="Nx Agents"
-            href="/ci/features/distribute-task-execution"
+            href={'/docs/ci/features/distribute-task-execution'}
           />
 
           {/* Atomizer Section */}
@@ -50,7 +50,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-atomizer.avif"
             alt="Nx Atomizer: Split large test tasks"
             tag="Atomizer"
-            href="/ci/features/split-e2e-tasks"
+            href={'/docs/ci/features/split-e2e-tasks'}
           />
 
           {/* Flaky Test Retries Section */}
@@ -88,7 +88,7 @@ function FeatureSection({
 }: FeatureSectionProps): ReactElement {
   return (
     <div
-      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5  dark:bg-slate-950 dark:ring-white/10 `}
+      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10`}
     >
       <div className="h-0 w-full md:h-72">
         <img

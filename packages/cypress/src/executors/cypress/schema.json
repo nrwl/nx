@@ -44,7 +44,7 @@
       "type": "boolean",
       "description": "Hide the browser instead of running headed.",
       "default": false,
-      "x-deprecated": "Cypress runs headless by default. Use the --watch flag to control head/headless behavior instead. It will be removed in Nx v22."
+      "x-deprecated": "Cypress runs headless by default. Use the --watch flag to control head/headless behavior instead. It will be removed in Nx v23."
     },
     "exit": {
       "type": "boolean",

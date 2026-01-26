@@ -490,7 +490,7 @@ For NPM workspaces you don't necessarily have to reference dependent packages in
 
 There's an exception to this:
 
-- **publishable packages**: Clearly, if you want to [publish a package](/features/manage-releases), it needs to have all its dependencies listed properly in the `package.json`.
+- **publishable packages**: Clearly, if you want to [publish a package](/docs/features/manage-releases), it needs to have all its dependencies listed properly in the `package.json`.
 - **PNPM workspaces**: Due to how PNPM links packages, you need to reference the dependent packages in the consuming package's `package.json`. To avoid having to manually maintain such dependency in every consumer `package.json` you could resort to declaring such dependencies in the root `package.json` instead.
 
 Also note that [PNPM](https://pnpm.io/workspaces), [Yarn v2+](https://yarnpkg.com/features/workspaces) and [Bun](https://bun.sh/docs/install/workspaces) support a dedicated "Workspaces Protocol" allowing you to prefix local dependencies with `workspace:`. This makes it more evident that the dependency is resolved locally. For example:
@@ -548,7 +548,7 @@ This configuration works well for local monorepo use cases but delegates the res
 
 In our simple setup, the TypeScript project references already establish a dependency graph. Running `tsc --build` from the root of the workspace ensures that projects are compiled in the correct order based on their dependencies.
 
-> In a more complex setup you might need to rely on additional tooling such as Nx that has [a task pipelines functionality](/concepts/task-pipeline-configuration) built-in.
+> In a more complex setup you might need to rely on additional tooling such as Nx that has [a task pipelines functionality](/docs/concepts/task-pipeline-configuration) built-in.
 
 The resulting structure of the `dist` folder looks like this: (notice the `*.js` and `*.d.ts` files)
 
@@ -601,7 +601,7 @@ To make the compiled `lib-a` usable for other packages, we need to update its `p
 ### Observations: Pre-building Packages
 
 **Dependency resolution:**  
-Precompiling dependent packages allows the application bundler to rely on prebuilt outputs, avoiding the need to compile package dependencies during application bundling. A [task pipeline](/concepts/task-pipeline-configuration) ensures that packages are compiled beforehand, streamlining the workflow.
+Precompiling dependent packages allows the application bundler to rely on prebuilt outputs, avoiding the need to compile package dependencies during application bundling. A [task pipeline](/docs/concepts/task-pipeline-configuration) ensures that packages are compiled beforehand, streamlining the workflow.
 
 **Modularity:**  
 Compared to the previous approach of directly referencing TypeScript source files, this setup slightly increases modularity. Each package is now self-contained, with its compiled outputs and defined entry points in the `package.json`. By precompiling and packaging the library, it can be distributed outside the monorepo if needed, which enhances its modularity and reusability. However, the primary focus remains internal use within the monorepo.
@@ -620,7 +620,7 @@ TypeScript path aliases have been a reliable way to manage package resolution, p
 {% callout type="deepdive" title="Isn't Nx using TS Path Aliases?" %}
 Yes and no. Nx has been around since before package managers introduced workspaces. As a result, the default setup in Nx traditionally leveraged a root-level `tsconfig.base.json` containing path aliases to link packages within the monorepo.
 
-That said, Nx can also be used in combination with NPM/Yarn/PNPM/Bun workspaces, as [shown here](/recipes/adopting-nx/adding-to-monorepo). This led to two distinct setups for monorepos with Nx: one using TypeScript path aliases and the other leveraging workspaces. To address the confusion this created, the Nx team has spent the last year enhancing Nx to unify these approaches. The goal is to align with "the platform" by adopting and promoting package manager workspaces, while updating Nx plugins to fully support it, preserving the developer experience (DX) benefits Nx users have come to love.
+That said, Nx can also be used in combination with NPM/Yarn/PNPM/Bun workspaces, as [shown here](/docs/guides/adopting-nx/adding-to-monorepo). This led to two distinct setups for monorepos with Nx: one using TypeScript path aliases and the other leveraging workspaces. To address the confusion this created, the Nx team has spent the last year enhancing Nx to unify these approaches. The goal is to align with "the platform" by adopting and promoting package manager workspaces, while updating Nx plugins to fully support it, preserving the developer experience (DX) benefits Nx users have come to love.
 
 If you're currently using the TypeScript path aliases approach, there's no need to worry. The Nx team is working on comprehensive documentation and semi-automated tools to help with migration. Additionally, it's possible to migrate manually and even incrementally, allowing you to adopt the workspaces at your own pace.
 {% /callout %}
@@ -635,9 +635,9 @@ When combined with **TypeScript project references**, this method becomes even m
 
 Prebuilding packages isn't always necessary. Modern bundlers like Vite and Rspack are optimized for speed, often making in-place compilation sufficient. Some things to consider:
 
-- **Cost of Prebuilding:** Precompiling packages introduces a small overhead, as each package must be built individually. Tools like Nx mitigate this cost with [computation caching](/features/cache-task-results), allowing you to skip redundant builds. If cache results are available, builds can be significantly faster.
+- **Cost of Prebuilding:** Precompiling packages introduces a small overhead, as each package must be built individually. Tools like Nx mitigate this cost with [computation caching](/docs/features/cache-task-results), allowing you to skip redundant builds. If cache results are available, builds can be significantly faster.
 - **Selective Prebuilding:** Prebuilding doesn't have to be applied universally. You can start without prebuilding and add it for specific subsets of your projects, such as the leaf nodes in your monorepo's project graph.
-- **External Publishing:** Prebuilding is essential if your packages need to be published outside the monorepo with tools like [Nx release](/features/manage-releases).
+- **External Publishing:** Prebuilding is essential if your packages need to be published outside the monorepo with tools like [Nx release](/docs/features/manage-releases).
 
 ## Are There Any Downsides to TypeScript Project References?
 
@@ -646,7 +646,7 @@ While TypeScript project references offer significant benefits, they can be main
 This is where Nx comes in, eliminating much of the manual effort involved in maintaining TypeScript project references:
 
 - **Automated Setup with Generators:** Nx provides generators for scaffolding applications and library packages. These generators handle the `tsconfig.json` setup automatically, ensuring that TypeScript project references are correctly configured from the start.
-- **Automatic Synchronization:** Nx includes a [sync command](/concepts/sync-generators) that is automatically triggered before critical operations like building or serving a project. This command verifies whether the TypeScript project references are in sync across the workspace. If discrepancies are found, Nx automatically updates the references arrays, keeping your configuration consistent and accurate without manual intervention.
+- **Automatic Synchronization:** Nx includes a [sync command](/docs/concepts/sync-generators) that is automatically triggered before critical operations like building or serving a project. This command verifies whether the TypeScript project references are in sync across the workspace. If discrepancies are found, Nx automatically updates the references arrays, keeping your configuration consistent and accurate without manual intervention.
 
 ## Wrapping Up
 
@@ -662,14 +662,14 @@ npx create-nx-workspace mymonorepo --workspaces
 
 Also check out our docs:
 
-- [TypeScript Project Linking](/concepts/typescript-project-linking)
-- [Switching to Workspaces and Project References](/technologies/typescript/recipes/switch-to-workspaces-project-references)
+- [TypeScript Project Linking](/docs/concepts/typescript-project-linking)
+- [Switching to Workspaces and Project References](/docs/technologies/typescript/guides/switch-to-workspaces-project-references)
 
 ---
 
 ## Learn More
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

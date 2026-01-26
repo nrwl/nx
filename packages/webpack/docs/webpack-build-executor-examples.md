@@ -26,9 +26,7 @@ nx build my-app
 
 ## Examples
 
-{% tabs %}
-
-{% tab label="Using `babelUpwardRootMode`" %}
+##### Using `babelUpwardRootMode`
 
 Copying from the [Babel documentation](https://babeljs.io/docs/config-files#root-babelconfigjson-file):
 
@@ -68,7 +66,7 @@ Then for each package, you must have a `.babelrc` file that will be applied to t
 
 All packages will use its own `.babelrc` file, thus you must ensure the right presets and plugins are set in each config file. This behavior can lead to build discrepancies between packages, so we recommend that you don't set `babelUpwardRootMode` at all.
 
-```treeview
+```text
 ├── apps
 │   └── demo
 │       └── .babelrc
@@ -82,9 +80,7 @@ All packages will use its own `.babelrc` file, thus you must ensure the right pr
 
 In workspace above, if `demo` imports `a` and `b`, it will apply the config `libs/a/.babelrc` and `libs/b/.babelrc` to the respective packages and not apply its own `apps/demo/.babelrc` to `a` and `b`. Anything in `babel.config.json` will apply to all packages.
 
-{% /tab %}
-
-{% tab label="Specify a custom Babel config file" %}
+##### Specify a custom Babel config file
 
 If you have a custom Babel config file (i.e. not `.babelrc`), you can use the `configFile` option as follows:
 
@@ -108,9 +104,7 @@ If you do not set the path to the `.babelrc` file, Nx will look for a `.babelrc`
 
 Note that this option does not work if `babelUpwardRootMode` is set to `true`.
 
-{% /tab %}
-
-{% tab label="Run webpack with `isolatedConfig`" %}
+##### Run webpack with `isolatedConfig`
 
 Setting `isolatedConfig` to `true` in your `project.json` file means that Nx will not apply the Nx webpack plugins automatically. In that case, the Nx plugins need to be applied in the project's `webpack.config.js` file (e.g. `withNx`, `withReact`, etc.). So don't forget to also specify the path to your webpack config file (using the `webpackConfig` option).
 
@@ -135,6 +129,62 @@ Set `isolatedConfig` to `true` in your `project.json` file in the `build` target
 }
 ```
 
-{% /tab %}
+##### Configuring type checking
 
-{% /tabs %}
+You can configure type checking behavior using the `typeCheckOptions` option. By default, type checking runs asynchronously (non-blocking).
+
+```json5
+//...
+"my-app": {
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "webpackConfig": "apps/my-app/webpack.config.js",
+        // Run type checking asynchronously (non-blocking)
+        "typeCheckOptions": { "async": true }
+      }
+    },
+    //...
+  }
+}
+```
+
+To disable type checking entirely:
+
+```json5
+//...
+"my-app": {
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "webpackConfig": "apps/my-app/webpack.config.js",
+        "typeCheckOptions": false
+      }
+    },
+    //...
+  }
+}
+```
+
+##### Adding runtime dependencies to generated package.json
+
+When using `generatePackageJson`, you can add additional runtime dependencies that should be included in the generated `package.json` file. This is useful for Docker installs where you need dependencies that aren't detected automatically:
+
+```json5
+//...
+"my-app": {
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "webpackConfig": "apps/my-app/webpack.config.js",
+        "generatePackageJson": true,
+        "runtimeDependencies": ["pg", "redis"]
+      }
+    },
+    //...
+  }
+}
+```

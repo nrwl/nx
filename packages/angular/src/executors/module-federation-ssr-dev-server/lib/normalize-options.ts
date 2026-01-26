@@ -6,8 +6,8 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
   const devServeRemotes = !options.devRemotes
     ? []
     : Array.isArray(options.devRemotes)
-    ? options.devRemotes
-    : [options.devRemotes];
+      ? options.devRemotes
+      : [options.devRemotes];
 
   return {
     ...options,

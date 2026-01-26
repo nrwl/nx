@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Tailwind support', () => {
@@ -408,7 +408,7 @@ describe('Tailwind support', () => {
     it('should build correctly and only output the tailwind utilities used when using webpack and incremental builds', async () => {
       const appWithTailwind = uniq('app-with-tailwind');
       runCLI(
-        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --bundler=webpack --no-interactive`
+        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --bundler=webpack --unitTestRunner=jest --no-interactive`
       );
       setupTailwindAndProjectDependencies(appWithTailwind);
       updateJson(join(appWithTailwind, 'project.json'), (config) => {

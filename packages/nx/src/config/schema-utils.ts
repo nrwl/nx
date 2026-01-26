@@ -33,7 +33,7 @@ export function getImplementationFactory<T>(
     const module = require(modulePath);
     return implementationExportName
       ? module[implementationExportName]
-      : module.default ?? module;
+      : (module.default ?? module);
   };
 }
 

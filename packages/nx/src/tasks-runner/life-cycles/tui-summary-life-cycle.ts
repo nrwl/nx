@@ -68,8 +68,17 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
-  lifeCycle.printTaskTerminalOutput = (task, taskStatus) => {
+  lifeCycle.printTaskTerminalOutput = (task, taskStatus, output) => {
     tasksToTaskStatus[task.id] = taskStatus;
+    // Store the complete output for display in the summary
+    // This is called with the full output for cached tasks. For non-cached tasks,
+    // the output doesn't include the portion of the output that prints the command that was being ran.
+    if (
+      output &&
+      !(['failure', 'success'] as Array<TaskStatus>).includes(taskStatus)
+    ) {
+      tasksToTerminalOutputs[task.id] = output;
+    }
   };
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
@@ -139,7 +148,7 @@ export function getTuiTerminalSummaryLifeCycle({
         cancelled,
       });
     }
-    getTasksHistoryLifeCycle()?.printFlakyTasksMessage();
+    getTasksHistoryLifeCycle().printFlakyTasksMessage();
   };
 
   const printRunOneSummary = ({
@@ -149,8 +158,6 @@ export function getTuiTerminalSummaryLifeCycle({
     failure: boolean;
     cancelled: boolean;
   }) => {
-    let lines: string[] = [];
-
     // Prints task outputs in the order they were completed
     // above the summary, since run-one should print all task results.
     for (const taskId of taskIdsInTheOrderTheyStart) {
@@ -159,7 +166,13 @@ export function getTuiTerminalSummaryLifeCycle({
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
-    lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
+    // Print vertical separator
+    const separatorLines = output.getVerticalSeparatorLines(
+      failure ? 'red' : 'green'
+    );
+    for (const line of separatorLines) {
+      console.log(line);
+    }
 
     if (!failure && !cancelled) {
       const text = `Successfully ran ${formatTargetsAndProjects(
@@ -168,35 +181,40 @@ export function getTuiTerminalSummaryLifeCycle({
         tasks
       )}`;
 
-      const taskOverridesLines = [];
-      if (Object.keys(overrides).length > 0) {
-        taskOverridesLines.push('');
-        taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
-        );
-        Object.entries(overrides)
-          .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
-          )
-          .forEach((arg) => taskOverridesLines.push(arg));
-      }
-
-      lines.push(
+      // Build success message with color applied to the entire block
+      const messageLines = [
         output.applyNxPrefix(
           'green',
           output.colors.green(text) + output.dim(` (${timeTakenText})`)
         ),
-        ...taskOverridesLines
+      ];
+
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
       );
+      if (filteredOverrides.length > 0) {
+        messageLines.push('');
+        messageLines.push(
+          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+        );
+        filteredOverrides
+          .map(([flag, value]) =>
+            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+          )
+          .forEach((arg) => messageLines.push(arg));
+      }
 
       if (totalCachedTasks > 0) {
-        lines.push(
+        messageLines.push(
           output.dim(
             `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
       }
-      lines = [output.colors.green(lines.join(EOL))];
+
+      // Print the entire success message block with green color
+      console.log(output.colors.green(messageLines.join(EOL)));
     } else if (!cancelled) {
       let text = `Ran target ${output.bold(
         targets[0]
@@ -205,44 +223,51 @@ export function getTuiTerminalSummaryLifeCycle({
         text += ` and ${output.bold(tasks.length - 1)} task(s) they depend on`;
       }
 
-      const taskOverridesLines: string[] = [];
-      if (Object.keys(overrides).length > 0) {
-        taskOverridesLines.push('');
-        taskOverridesLines.push(
+      // Build failure message lines
+      const messageLines = [
+        output.applyNxPrefix(
+          'red',
+          output.colors.red(text) + output.dim(` (${timeTakenText})`)
+        ),
+      ];
+
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
+        messageLines.push('');
+        messageLines.push(
           `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
-        Object.entries(overrides)
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
-          .forEach((arg) => taskOverridesLines.push(arg));
+          .forEach((arg) => messageLines.push(arg));
       }
 
-      const viewLogs = viewLogsFooterRows(totalFailedTasks);
-
-      lines.push(
-        output.colors.red(
-          [
-            output.applyNxPrefix(
-              'red',
-              output.colors.red(text) + output.dim(` (${timeTakenText})`)
-            ),
-            ...taskOverridesLines,
-            '',
-            `${LEFT_PAD}${output.colors.red(
-              figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-            `${LEFT_PAD}${output.dim(
-              figures.tick
-            )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-              `[${totalCachedTasks} read from cache]`
-            )}`,
-            ...viewLogs,
-          ].join(EOL)
-        )
+      messageLines.push('');
+      messageLines.push(
+        `${LEFT_PAD}${output.colors.red(
+          figures.cross
+        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
       );
+      messageLines.push(
+        `${LEFT_PAD}${output.dim(
+          figures.tick
+        )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+          `[${totalCachedTasks} read from cache]`
+        )}`
+      );
+
+      const viewLogs = viewLogsFooterRows(totalFailedTasks);
+      messageLines.push(...viewLogs);
+
+      // Print the entire failure message block with red color
+      console.log(output.colors.red(messageLines.join(EOL)));
     } else {
-      lines.push(
+      console.log(
         output.applyNxPrefix(
           'red',
           output.colors.red(
@@ -255,9 +280,7 @@ export function getTuiTerminalSummaryLifeCycle({
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
-    lines.push('');
-
-    console.log(lines.join(EOL));
+    console.log('');
   };
 
   const printRunManySummary = ({
@@ -269,16 +292,27 @@ export function getTuiTerminalSummaryLifeCycle({
   }) => {
     console.log('');
 
-    const lines: string[] = [''];
+    // Collect checklist lines to print after task outputs
+    const checklistLines: string[] = [];
 
-    for (const taskId of taskIdsInTheOrderTheyStart) {
+    // Sort tasks by status: successful tasks first, failed tasks at the end
+    const sortedTaskIds = [...taskIdsInTheOrderTheyStart].sort((a, b) => {
+      const statusA = tasksToTaskStatus[a];
+      const statusB = tasksToTaskStatus[b];
+      const isFailureA = statusA === 'failure' || !statusA ? 1 : 0;
+      const isFailureB = statusB === 'failure' || !statusB ? 1 : 0;
+      return isFailureA - isFailureB;
+    });
+
+    // First pass: Print task outputs and collect checklist lines
+    for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = tasksToTerminalOutputs[taskId];
       // Task Status is null?
       if (!taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
-        lines.push(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.cyan(
             figures.squareSmallFilled
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
@@ -286,13 +320,43 @@ export function getTuiTerminalSummaryLifeCycle({
       } else if (taskStatus === 'failure') {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
-        lines.push(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.red(
             figures.cross
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
+      } else if (taskStatus === 'local-cache') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
+            '[local cache]'
+          )}`
+        );
+      } else if (taskStatus === 'local-cache-kept-existing') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
+            '[existing outputs match the cache, left as is]'
+          )}`
+        );
+      } else if (taskStatus === 'remote-cache') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
+            '[remote cache]'
+          )}`
+        );
+      } else if (taskStatus === 'success') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
+        );
       } else {
-        lines.push(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
@@ -300,37 +364,50 @@ export function getTuiTerminalSummaryLifeCycle({
       }
     }
 
-    lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
+    // Print all checklist lines together
+    console.log();
+    for (const line of checklistLines) {
+      console.log(line);
+    }
+
+    // Print vertical separator
+    const separatorLines = output.getVerticalSeparatorLines(
+      failure ? 'red' : 'green'
+    );
+    for (const line of separatorLines) {
+      console.log(line);
+    }
 
     if (totalSuccessfulTasks + stoppedTasks.size === totalTasks) {
-      const successSummaryRows = [];
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
         targets,
         tasks
       )}`;
-      const taskOverridesRows = [];
-      if (Object.keys(overrides).length > 0) {
-        taskOverridesRows.push('');
-        taskOverridesRows.push(
+
+      const successSummaryRows = [
+        output.applyNxPrefix(
+          'green',
+          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+        ),
+      ];
+
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
+        successSummaryRows.push('');
+        successSummaryRows.push(
           `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
-        Object.entries(overrides)
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
-          .forEach((arg) => taskOverridesRows.push(arg));
+          .forEach((arg) => successSummaryRows.push(arg));
       }
 
-      successSummaryRows.push(
-        ...[
-          output.applyNxPrefix(
-            'green',
-            output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
-          ),
-          ...taskOverridesRows,
-        ]
-      );
       if (totalCachedTasks > 0) {
         successSummaryRows.push(
           output.dim(
@@ -338,37 +415,38 @@ export function getTuiTerminalSummaryLifeCycle({
           )
         );
       }
-      lines.push(successSummaryRows.join(EOL));
+
+      console.log(successSummaryRows.join(EOL));
     } else {
       const text = `${
         cancelled ? 'Cancelled while running' : 'Ran'
       } ${formatTargetsAndProjects(projectNames, targets, tasks)}`;
-      const taskOverridesRows: string[] = [];
-      if (Object.keys(overrides).length > 0) {
-        taskOverridesRows.push('');
-        taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
-        );
-        Object.entries(overrides)
-          .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
-          )
-          .forEach((arg) => taskOverridesRows.push(arg));
-      }
 
-      const numFailedToPrint = 5;
-      const failedTasksForPrinting = Array.from(failedTasks).slice(
-        0,
-        numFailedToPrint
-      );
       const failureSummaryRows: string[] = [
         output.applyNxPrefix(
           'red',
           output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
         ),
-        ...taskOverridesRows,
-        '',
       ];
+
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
+        failureSummaryRows.push('');
+        failureSummaryRows.push(
+          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+        );
+        filteredOverrides
+          .map(([flag, value]) =>
+            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+          )
+          .forEach((arg) => failureSummaryRows.push(arg));
+      }
+
+      failureSummaryRows.push('');
+
       if (totalCompletedTasks > 0) {
         if (totalSuccessfulTasks > 0) {
           failureSummaryRows.push(
@@ -383,6 +461,11 @@ export function getTuiTerminalSummaryLifeCycle({
           );
         }
         if (totalFailedTasks > 0) {
+          const numFailedToPrint = 5;
+          const failedTasksForPrinting = Array.from(failedTasks).slice(
+            0,
+            numFailedToPrint
+          );
           failureSummaryRows.push(
             `${LEFT_PAD}${output.colors.red(
               figures.cross
@@ -440,15 +523,13 @@ export function getTuiTerminalSummaryLifeCycle({
         }
 
         failureSummaryRows.push(...viewLogsFooterRows(failedTasks.size));
-
-        lines.push(output.colors.red(failureSummaryRows.join(EOL)));
       }
+
+      console.log(output.colors.red(failureSummaryRows.join(EOL)));
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
-    lines.push('');
-
-    console.log(lines.join(EOL));
+    console.log('');
   };
-  return { lifeCycle, printSummary };
+  return { lifeCycle: lifeCycle as LifeCycle, printSummary };
 }

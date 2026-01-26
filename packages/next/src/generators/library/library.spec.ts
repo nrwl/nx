@@ -87,8 +87,39 @@ describe('next library', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
   });
+
+  it('should configure server entry point for buildable library with Vite', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      bundler: 'vite',
+    });
+
+    // Check vite.config.mts has multiple entry points
+    const viteConfig = appTree.read(
+      'my-buildable-lib/vite.config.mts',
+      'utf-8'
+    );
+    expect(viteConfig).toContain("index: 'src/index.ts'");
+    expect(viteConfig).toContain("server: 'src/server.ts'");
+    expect(viteConfig).toContain('fileName: (format, entryName) =>');
+
+    // Check package.json has server export
+    const packageJson = readJson(appTree, 'my-buildable-lib/package.json');
+    expect(packageJson.exports['./server']).toBeDefined();
+    expect(packageJson.exports['./server'].types).toBe('./dist/server.d.ts');
+    expect(packageJson.exports['./server'].import).toBe('./dist/server.js');
+    expect(packageJson.exports['./server'].default).toBe('./dist/server.js');
+  });
+
   it('should generate a server-only entry point', async () => {
     const appTree = createTreeWithEmptyWorkspace();
 
@@ -150,7 +181,7 @@ describe('next library', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -227,6 +258,7 @@ describe('next library', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.tsx",
@@ -263,6 +295,7 @@ describe('next library', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -295,7 +328,7 @@ describe('next library', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
     });
 
     it('should create a correct package.json for buildable libraries', async () => {
@@ -322,7 +355,7 @@ describe('next library', () => {
           "exports": {
             "./package.json": "./package.json",
             ".": {
-              "development": "./src/index.ts",
+              "@proj/source": "./src/index.ts",
               "types": "./dist/index.esm.d.ts",
               "import": "./dist/index.esm.js",
               "default": "./dist/index.esm.js"
@@ -365,7 +398,7 @@ describe('next library', () => {
                   "{projectRoot}/test-output/jest/coverage"
                 ],
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts"
+                  "jestConfig": "mylib/jest.config.cts"
                 }
               }
             },
@@ -378,7 +411,7 @@ describe('next library', () => {
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

@@ -25,6 +25,12 @@ export const callToAction: Schema = {
       type: 'String',
       required: false,
     },
+    variant: {
+      type: 'String',
+      required: false,
+      default: 'default',
+      matches: ['default', 'gradient', 'inverted', 'gradient-alt', 'simple'],
+    },
     size: {
       // 'Size of the call to action.  Defaults to "sm".',
       type: 'String',

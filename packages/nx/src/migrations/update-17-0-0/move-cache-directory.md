@@ -2,40 +2,30 @@
 
 Add `.nx/cache` to the `.gitignore` file.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```{% fileName=".gitignore" %}
+```text title=".gitignore"
 node_modules
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```{% highlightLines=[2] fileName=".gitignore" %}
+```text title=".gitignore" {2}
 node_modules
 .nx/cache
 ```
-
-{% /tab %}
-{% /tabs %}
 
 Add `.nx/cache` to the `.prettierignore` file.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName=".prettierignore" %}
+```ts title=".prettierignore"
 /dist
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```ts {% highlightLines=[2] fileName=".prettierignore" %}
+```ts title=".prettierignore" {2}
 /dist
 .nx/cache
 ```
-
-{% /tab %}
-{% /tabs %}

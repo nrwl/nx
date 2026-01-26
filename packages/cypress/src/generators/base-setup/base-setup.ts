@@ -54,8 +54,8 @@ export function addBaseCypressSetup(
                 projectConfig.root
           )
         : opts.hasTsConfig
-        ? `${opts.offsetFromProjectRoot}tsconfig.json`
-        : getRelativePathToRootTsConfig(tree, projectConfig.root),
+          ? `${opts.offsetFromProjectRoot}tsconfig.json`
+          : getRelativePathToRootTsConfig(tree, projectConfig.root),
     linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
   };

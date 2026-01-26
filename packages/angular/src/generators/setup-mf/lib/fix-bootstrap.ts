@@ -33,12 +33,12 @@ export function fixBootstrap(
       manifestPath = '/module-federation.manifest.json';
     }
 
-    const fetchMFManifestCode = `import { init } from '@module-federation/enhanced/runtime';
+    const fetchMFManifestCode = `import { registerRemotes } from '@module-federation/enhanced/runtime';
 
 fetch('${manifestPath}')
   .then((res) => res.json())
   .then((remotes: Record<string, string>) => Object.entries(remotes).map(([name, entry]) => ({ name,entry})))
-  .then(remotes => init({name: '${options.appName}', remotes}))
+  .then(remotes => registerRemotes(remotes))
   .then(() => ${bootstrapImportCode});`;
 
     tree.write(mainFilePath, fetchMFManifestCode);

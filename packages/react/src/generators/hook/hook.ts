@@ -123,8 +123,8 @@ async function normalizeOptions(
   const hookName = options.name
     ? artifactName
     : className.toLocaleLowerCase().startsWith('use')
-    ? className
-    : `use${className}`;
+      ? className
+      : `use${className}`;
   const hookTypeName = names(hookName).className;
   const project = getProjects(host).get(projectName);
 

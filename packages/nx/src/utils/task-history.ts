@@ -42,7 +42,7 @@ let taskHistory: TaskHistory;
  * @returns singleton instance of TaskHistory, null if database is disabled or WASM is enabled
  */
 export function getTaskHistory(): TaskHistory | null {
-  if (process.env.NX_DISABLE_DB === 'true' || IS_WASM) {
+  if (IS_WASM) {
     return null;
   }
 

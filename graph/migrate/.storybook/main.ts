@@ -15,10 +15,12 @@ const config: StorybookConfig = {
     const {
       nxViteTsPaths,
       // nx-ignore-next-line
-    } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
+    } = await import('@nx/vite/plugins/nx-tsconfig-paths.plugin');
     return mergeConfig(config, { plugins: [nxViteTsPaths()] });
   },
-
+  typescript: {
+    reactDocgen: 'react-docgen-typescript',
+  },
   docs: {},
 };
 

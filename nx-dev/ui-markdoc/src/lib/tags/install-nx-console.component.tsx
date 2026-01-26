@@ -1,7 +1,7 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export const InstallNxConsole = () => (
-  <div className="my-12 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-16">
+  <div className="not-content my-12 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-16">
     {/* VSCode */}
     <div className="not-prose group relative mx-auto flex w-full max-w-md items-center gap-4 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
       <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500" />
@@ -26,7 +26,7 @@ export const InstallNxConsole = () => (
               href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console"
               target="_blank"
               rel="noreferrer"
-              className="block text-xs font-medium opacity-80"
+              className="block text-xs font-medium text-black no-underline opacity-80 dark:text-white"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
               The official VSCode extension for Nx.
@@ -60,7 +60,7 @@ export const InstallNxConsole = () => (
               href="https://plugins.jetbrains.com/plugin/21060-nx-console"
               target="_blank"
               rel="noreferrer"
-              className="block text-xs font-medium opacity-80"
+              className="block text-xs font-medium text-black no-underline opacity-80 dark:text-white"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
               Available for WebStorm, IntelliJ IDEA Ultimate and more!

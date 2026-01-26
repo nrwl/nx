@@ -9,7 +9,7 @@ use crate::native::{
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
-    tasks::hashers::{hash_env, hash_runtime, hash_workspace_files},
+    tasks::hashers::{hash_cwd, hash_env, hash_runtime, hash_workspace_files},
 };
 use crate::native::{
     tasks::hashers::{
@@ -81,9 +81,17 @@ impl TaskHasher {
         &self,
         hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
+        cwd: String,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+        // Create a fresh task output cache for this invocation
+        // This ensures no stale caches across multiple CLI commands when the daemon holds
+        // the TaskHasher instance
+        let task_output_cache = DashMap::new();
+
+        let function_start = std::time::Instant::now();
+
         trace!("hashing plans {:?}", hash_plans.as_ref());
-        debug!("plan length: {}", hash_plans.len());
+        trace!("Starting hash_plans with {} plans", hash_plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());
 
@@ -99,9 +107,13 @@ impl TaskHasher {
             .map(|o| o.selectively_hash_ts_config)
             .unwrap_or(false);
 
+        let setup_duration = function_start.elapsed();
+        trace!("Setup phase completed in {:?}", setup_duration);
+
         let hash_time = std::time::Instant::now();
 
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
+        let cwd_path = std::path::Path::new(&cwd);
 
         hash_plans
             .iter()
@@ -121,6 +133,8 @@ impl TaskHasher {
                         project_root_mappings: &project_root_mappings,
                         sorted_externals: &sorted_externals,
                         selectively_hash_tsconfig,
+                        task_output_cache: &task_output_cache,
+                        cwd: cwd_path,
                     },
                 )?;
 
@@ -134,6 +148,8 @@ impl TaskHasher {
                 entry.details.insert(hash_detail.0, hash_detail.1);
                 Ok::<(), anyhow::Error>(())
             })?;
+
+        let assemble_start = std::time::Instant::now();
 
         hashes.iter_mut().for_each(|mut h| {
             let (hash_id, hash_details) = h.pair_mut();
@@ -151,7 +167,19 @@ impl TaskHasher {
             });
         });
 
-        trace!("hashing took {:?}", hash_time.elapsed());
+        let assemble_duration = assemble_start.elapsed();
+        let hash_duration = hash_time.elapsed();
+        let total_duration = function_start.elapsed();
+
+        debug!(
+            "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?}, assembly: {:?})",
+            total_duration,
+            hash_plans.len(),
+            setup_duration,
+            hash_duration,
+            assemble_duration
+        );
+
         Ok(hashes)
     }
 
@@ -165,6 +193,8 @@ impl TaskHasher {
             project_root_mappings,
             sorted_externals,
             selectively_hash_tsconfig,
+            task_output_cache,
+            cwd,
         }: HashInstructionArgs,
     ) -> anyhow::Result<(String, String)> {
         let now = std::time::Instant::now();
@@ -193,6 +223,12 @@ impl TaskHasher {
                 let hashed_env = hash_env(env, js_env);
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
                 hashed_env
+            }
+            HashInstruction::Cwd(mode) => {
+                let workspace_root = std::path::Path::new(&self.workspace_root);
+                let hashed_cwd = hash_cwd(workspace_root, cwd, mode.clone());
+                trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
+                hashed_cwd
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let project = self
@@ -242,7 +278,8 @@ impl TaskHasher {
                 ts_hash
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let hashed_task_output = hash_task_output(&self.workspace_root, glob, outputs)?;
+                let hashed_task_output =
+                    hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 hashed_task_output
             }
@@ -275,4 +312,6 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
+    task_output_cache: &'a DashMap<String, String>,
+    cwd: &'a std::path::Path,
 }

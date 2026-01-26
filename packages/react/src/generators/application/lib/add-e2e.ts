@@ -37,7 +37,7 @@ export async function addE2e(
     e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve-static`,
-    e2eCiBaseUrl: `http://localhost:${options.port ?? 4300}`,
+    e2eCiBaseUrl: `http://localhost:${options.port ?? 4200}`,
     e2eDevServerTarget: `${options.projectName}:serve`,
   };
 
@@ -166,8 +166,8 @@ export async function addE2e(
           options.bundler === 'rspack'
             ? 'webpack'
             : options.bundler === 'rsbuild'
-            ? 'none'
-            : options.bundler,
+              ? 'none'
+              : options.bundler,
         skipFormat: true,
         devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,

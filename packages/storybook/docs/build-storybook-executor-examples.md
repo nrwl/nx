@@ -34,8 +34,7 @@ nx run ui:build-storybook
 
 ### For non-Angular projects
 
-{% tabs %}
-{% tab label="Working in docsMode" %}
+##### Working in docsMode
 
 You can work in docs mode, building a documentation-only site, by setting the `docsMode` option to `true` and using the `@storybook/addon-docs` addon.
 
@@ -57,14 +56,9 @@ Read more on the [Storybook documentation page for `addon-docs`](https://storybo
 }
 ```
 
-{% /tab %}
-
-{% /tabs %}
-
 ### For Angular projects
 
-{% tabs %}
-{% tab label="Default configuration" %}
+##### Default configuration
 
 This is the default configuration for Angular projects using Storybook. You can see that it uses the native `@storybook/angular:build-storybook` executor. You can read more about the configuration options at the relevant [Storybook documentation page](https://storybook.js.org/docs/angular/get-started/install).
 
@@ -86,8 +80,7 @@ This is the default configuration for Angular projects using Storybook. You can 
 }
 ```
 
-{% /tab %}
-{% tab label="Changing the browserTarget" %}
+##### Changing the browserTarget
 
 You can set the `browserTarget` to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target. Read more about the `browserTarget` in the [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular) recipe.
 
@@ -109,9 +102,7 @@ You can set the `browserTarget` to use `build-storybook` as the builder. This is
 }
 ```
 
-{% /tab %}
-
-{% tab label="Adding styles" %}
+##### Adding styles
 
 You can add paths to stylesheets to be included in the Storybook build by using the `styles` array. You can also add `stylePreprocessorOptions`, much like you would do in the Angular builder. You can read more in our guide about [styles and preprocessor options for Storybook](/recipes/storybook/angular-configuring-styles).
 
@@ -136,7 +127,3 @@ You can add paths to stylesheets to be included in the Storybook build by using 
   }
 }
 ```
-
-{% /tab %}
-
-{% /tabs %}

@@ -10,4 +10,4 @@ In this lesson, you'll learn how to fine-tune local caching to ensure proper han
 
 ## Relevant Links
 
-- [Cache Task Results](/features/cache-task-results)
+- [Cache Task Results](/docs/features/cache-task-results)

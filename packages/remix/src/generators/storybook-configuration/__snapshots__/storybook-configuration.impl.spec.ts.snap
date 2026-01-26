@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework jest 1`] = `
 "/// <reference types="vitest" />
@@ -86,35 +86,7 @@ export default config;
 "
 `;
 
-exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework vitest 1`] = `
-"import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/libs/storybook-test',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  test: {
-    setupFiles: ['./src/test-setup.ts'],
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/libs/storybook-test',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
+exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework vitest 1`] = `null`;
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework vitest 2`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
@@ -126,7 +98,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {
       builder: {
-        viteConfigPath: 'vite.config.ts',
+        viteConfigPath: 'vite.config.mts',
       },
     },
   },

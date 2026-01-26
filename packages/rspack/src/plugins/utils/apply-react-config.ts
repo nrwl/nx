@@ -1,6 +1,8 @@
 import { Configuration, RspackOptionsNormalized } from '@rspack/core';
+import { logger } from '@nx/devkit';
 import { SvgrOptions } from './models';
 
+// TODO(v23): Remove SVGR support
 export function applyReactConfig(
   options: { svgr?: boolean | SvgrOptions },
   config: Partial<RspackOptionsNormalized | Configuration> = {}
@@ -10,6 +12,13 @@ export function applyReactConfig(
   addHotReload(config);
 
   if (options.svgr !== false || typeof options.svgr === 'object') {
+    // Log deprecation warning when SVGR is used
+    if (options.svgr === true || typeof options.svgr === 'object') {
+      logger.warn(
+        'SVGR support is deprecated and will be removed in Nx 23. Please consider using alternative SVG handling methods.'
+      );
+    }
+
     removeSvgLoaderIfPresent(config);
 
     const defaultSvgrOptions = {

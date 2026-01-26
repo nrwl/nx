@@ -39,6 +39,11 @@
       "implementation": "./src/executors/extract-i18n/extract-i18n.impl",
       "schema": "./src/executors/extract-i18n/schema.json",
       "description": "Extracts i18n messages from source code."
+    },
+    "unit-test": {
+      "implementation": "./src/executors/unit-test/unit-test.impl",
+      "schema": "./src/executors/unit-test/schema.json",
+      "description": "Run application unit tests. _Note: this is only supported in Angular versions >= 21.0.0_."
     }
   },
   "builders": {
@@ -50,7 +55,7 @@
     "dev-server": {
       "implementation": "./src/builders/dev-server/dev-server.impl",
       "schema": "./src/builders/dev-server/schema.json",
-      "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor."
+      "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vite.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor."
     },
     "webpack-server": {
       "implementation": "./src/builders/webpack-server/webpack-server.impl",

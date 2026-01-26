@@ -1,0 +1,8 @@
+---
+import { type TestimonialProps, Testimonial as Default } from '@nx/nx-dev-ui-markdoc/src/lib/tags/testimonial.component';
+type Props = TestimonialProps;
+---
+
+<Default {...Astro.props}>
+  <slot />
+</Default>

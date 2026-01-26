@@ -2,8 +2,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: '<%= nxWelcomeSelector %>',<% if (setStandaloneTrue) { %>
-  standalone: true,<% } %>
+  selector: '<%= nxWelcomeSelector %>',
   imports: [CommonModule],
   template: `
     <!--

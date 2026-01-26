@@ -1,18 +1,12 @@
 import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { GradlePluginOptions } from './gradle-plugin-options';
-import { dirname } from 'node:path';
 
 export async function getNxProjectGraphLines(
   gradlewFile: string,
   gradleConfigHash: string,
   gradlePluginOptions: GradlePluginOptions
 ): Promise<string[]> {
-  if (process.env.VERCEL) {
-    // skip on Vercel
-    return [];
-  }
-
   let nxProjectGraphBuffer: Buffer;
 
   const gradlePluginOptionsArgs =
@@ -31,7 +25,7 @@ export async function getNxProjectGraphLines(
       'none',
       ...gradlePluginOptionsArgs,
       `-PworkspaceRoot=${workspaceRoot}`,
-      process.env.NX_VERBOSE_LOGGING ? '--info' : '',
+      process.env.NX_GRADLE_VERBOSE_LOGGING ? '--info' : '',
     ]);
   } catch (e: Buffer | Error | any) {
     if (e.toString()?.includes('ERROR: JAVA_HOME')) {

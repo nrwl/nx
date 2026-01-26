@@ -11,6 +11,7 @@ type Story = StoryObj<typeof TargetTechnologies>;
 
 export const Simple: Story = {
   args: {
-    technologies: ['react', 'angular'],
+    technologies: ['react', 'angular', 'docker'],
+    showTooltip: false,
   },
 };

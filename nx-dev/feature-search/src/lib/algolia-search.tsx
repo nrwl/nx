@@ -1,8 +1,9 @@
 import * as docsearchReact from '@docsearch/react';
-import {
-  InternalDocSearchHit,
-  StoredDocSearchHit,
-} from '@docsearch/react/dist/esm/types';
+// Note: InternalDocSearchHit and StoredDocSearchHit are not exported by @docsearch/react
+// import type {
+//   InternalDocSearchHit,
+//   StoredDocSearchHit,
+// } from '@docsearch/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ function Hit({
   hit,
   children,
 }: {
-  hit: InternalDocSearchHit | StoredDocSearchHit;
+  hit: any; // TODO: Import proper types when @docsearch/react exports them
   children: ReactNode;
 }): JSX.Element {
   return (
@@ -31,8 +32,10 @@ function Hit({
 
 export function AlgoliaSearch({
   tiny = false,
+  blogOnly = false,
 }: {
   tiny?: boolean;
+  blogOnly?: boolean;
 }): JSX.Element {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -138,12 +141,14 @@ export function AlgoliaSearch({
         createPortal(
           <DocSearchModal
             searchParameters={{
-              facetFilters: ['language:en'],
+              facetFilters: blogOnly
+                ? ['language:en', 'hierarchy.lvl0:Nx | Blog']
+                : ['language:en'],
               hitsPerPage: 100,
               distinct: true,
             }}
             initialQuery={initialQuery}
-            placeholder="Search the docs"
+            placeholder={blogOnly ? 'Search blog posts' : 'Search the docs'}
             initialScrollY={window.scrollY}
             onClose={handleClose}
             indexName={`${process.env.NEXT_PUBLIC_SEARCH_INDEX}`}

@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": [
@@ -30,7 +30,9 @@
               "typescript",
               "react",
               "react-native",
+
               // These are in ensurePackage
+              "@nx/jest",
               "@nx/rollup",
               "@nx/storybook",
               "@nx/vite",
@@ -49,6 +51,7 @@
       "rules": {
         "no-restricted-imports": [
           "error",
+          "@nx/workspace",
           {
             "name": "fs-extra",
             "message": "Please use equivalent utilities from `node:fs` instead."

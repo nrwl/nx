@@ -4,19 +4,17 @@ Add includeSubprojectsTasks to @nx/gradle plugin options in nx.json file
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "plugins": ["@nx/gradle"]
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[5] fileName="nx.json" %}
+```json title="nx.json" {5}
 {
   "plugins": [
     {
@@ -28,6 +26,3 @@ Add includeSubprojectsTasks to @nx/gradle plugin options in nx.json file
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}

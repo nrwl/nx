@@ -6,10 +6,9 @@ use crossterm::{
     tty::IsTty,
 };
 use napi::bindgen_prelude::*;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;
-use std::sync::RwLock;
 use std::{
     collections::HashMap,
     io::{Read, Write},
@@ -111,12 +110,8 @@ impl PseudoTerminal {
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
                     if is_within_nx_tui {
-                        if let Ok(mut parser) = parser_clone.write() {
-                            if is_within_nx_tui {
-                                trace!("Processing data via vt100 for use in tui");
-                                parser.process(&buf[..len]);
-                            }
-                        }
+                        trace!("Processing data via vt100 for use in tui");
+                        parser_clone.write().process(&buf[..len]);
                     }
 
                     if !quiet {
@@ -149,8 +144,6 @@ impl PseudoTerminal {
                             }
                         }
                         let _ = stdout.flush();
-                    } else {
-                        debug!("Failed to lock parser");
                     }
                 }
                 if !running_clone.load(Ordering::SeqCst) {
@@ -212,10 +205,13 @@ impl PseudoTerminal {
         self.stdout_tx.send(command_info.clone()).ok();
 
         if self.is_within_nx_tui {
-            self.parser
-                .write()
-                .expect("Failed to acquire parser write lock")
-                .process(command_info.as_bytes());
+            // within the tui, update the parser directly so it is displayed in the tui
+            self.parser.write().process(command_info.as_bytes());
+        } else if !quiet {
+            // outside the tui, just print to stdout so the user can see it
+            if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
+                debug!("Failed to write command info to stdout: {}", e);
+            }
         }
 
         trace!("Running {}", command_clone);
@@ -229,11 +225,10 @@ impl PseudoTerminal {
             trace!("Enabling raw mode");
             enable_raw_mode().expect("Failed to enter raw terminal mode");
         }
-        let process_killer = ProcessKiller::new(
-            child
-                .process_id()
-                .expect("unable to determine child process id") as i32,
-        );
+        let pid = child
+            .process_id()
+            .expect("unable to determine child process id") as i32;
+        let process_killer = ProcessKiller::new(pid);
 
         trace!("Getting running clone");
         let running_clone = self.running.clone();
@@ -277,6 +272,7 @@ impl PseudoTerminal {
         Ok(ChildProcess::new(
             self.parser.clone(),
             self.writer.clone(),
+            pid,
             process_killer,
             self.stdout_rx.clone(),
             exit_to_process_rx,

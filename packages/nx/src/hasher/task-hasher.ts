@@ -51,7 +51,8 @@ export interface TaskHasher {
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<Hash>;
 
   /**
@@ -68,7 +69,8 @@ export interface TaskHasher {
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<Hash[]>;
 }
 
@@ -76,14 +78,15 @@ export interface TaskHasherImpl {
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<PartialHash[]>;
 
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    visited?: string[]
+    cwd?: string
   ): Promise<PartialHash>;
 }
 
@@ -104,7 +107,8 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       this.runnerOptions,
       tasks,
       taskGraph,
-      env ?? process.env
+      env ?? process.env,
+      process.cwd()
     );
   }
 
@@ -118,7 +122,8 @@ export class DaemonBasedTaskHasher implements TaskHasher {
         this.runnerOptions,
         [task],
         taskGraph,
-        env ?? process.env
+        env ?? process.env,
+        process.cwd()
       )
     )[0];
   }
@@ -147,12 +152,14 @@ export class InProcessTaskHasher implements TaskHasher {
   async hashTasks(
     tasks: Task[],
     taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv
+    env?: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
       taskGraph,
-      env ?? process.env
+      env ?? process.env,
+      cwd ?? process.cwd()
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
@@ -162,12 +169,14 @@ export class InProcessTaskHasher implements TaskHasher {
   async hashTask(
     task: Task,
     taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv
+    env?: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
       taskGraph,
-      env ?? process.env
+      env ?? process.env,
+      cwd ?? process.cwd()
     );
     return this.createHashDetails(task, res);
   }
@@ -214,7 +223,7 @@ export type ExpandedDepsOutput = {
 export type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
 const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
   {
-    fileset: '{projectRoot}/**/*',
+    input: 'default',
   },
   {
     dependencies: true,
@@ -373,7 +382,8 @@ export function expandSingleProjectInputs(
         (d as any).env ||
         (d as any).runtime ||
         (d as any).externalDependencies ||
-        (d as any).dependentTasksOutputFiles
+        (d as any).dependentTasksOutputFiles ||
+        (d as any).workingDirectory
       ) {
         expanded.push(d);
       } else {

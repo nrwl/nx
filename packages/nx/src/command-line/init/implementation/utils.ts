@@ -18,8 +18,7 @@ import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
-import { connectWorkspaceToCloud } from '../../connect/connect-to-nx-cloud';
+import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
 import { deduceDefaultBase } from './deduce-default-base';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 
@@ -222,20 +221,6 @@ export function updateGitIgnore(root: string) {
       }
       lines.push('.nx/workspace-data');
     }
-    if (!contents.includes('.cursor/rules/nx-rules.mdc')) {
-      if (!sepIncluded) {
-        lines.push('\n');
-        sepIncluded = true;
-      }
-      lines.push('.cursor/rules/nx-rules.mdc');
-    }
-    if (!contents.includes('.github/instructions/nx.instructions.md')) {
-      if (!sepIncluded) {
-        lines.push('\n');
-        sepIncluded = true;
-      }
-      lines.push('.github/instructions/nx.instructions.md');
-    }
 
     writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}
@@ -265,7 +250,7 @@ export async function initCloud(
   const token = await connectWorkspaceToCloud({
     installationSource,
   });
-  await printSuccessMessage(token, installationSource, await repoUsesGithub());
+  await printSuccessMessage(token, installationSource);
 }
 
 export function addVsCodeRecommendedExtensions(
@@ -333,18 +318,12 @@ export function printFinalMessage({
   learnMoreLink?: string;
   appendLines?: string[];
 }): void {
-  const pmc = getPackageManagerCommand();
-
   output.success({
     title: '🎉 Done!',
     bodyLines: [
-      `- Run "${getRunNxBaseCommand(
-        pmc
-      )} run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results`,
-      `- Run "${getRunNxBaseCommand(
-        pmc
-      )} graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
-      learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
+      `- Learn more about what to do next at ${
+        learnMoreLink ?? 'https://nx.dev/getting-started/adding-to-existing'
+      }`,
       ...(appendLines ?? []),
     ].filter(Boolean),
   });
@@ -353,8 +332,15 @@ export function printFinalMessage({
 export function isMonorepo(packageJson: PackageJson) {
   if (!!packageJson.workspaces) return true;
 
-  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
-    return true;
+  try {
+    const content = readFileSync('pnpm-workspace.yaml', 'utf-8');
+    const { load } = require('@zkochan/js-yaml');
+    const { packages } = load(content) ?? {};
+
+    if (packages) {
+      return true;
+    }
+  } catch {}
 
   if (existsSync('lerna.json')) return true;
 

@@ -45,7 +45,7 @@ This process introduces significant delays in your workflow. The **biggest waste
 
 **What if your editor could notify you as soon as a CI failure happens and help you fix it immediately?**
 
-That's exactly what our new integration does. By connecting [Nx Console](/getting-started/editor-setup), [Nx Cloud](/nx-cloud), and our [MCP server](/features/enhance-AI), we've created a workflow that:
+That's exactly what our new integration does. By connecting [Nx Console](/docs/getting-started/editor-setup), [Nx Cloud](/nx-cloud), and our [MCP server](/docs/features/enhance-ai), we've created a workflow that:
 
 1. Notifies you in your editor when your CI build fails
 2. Provides a one-click option to have an AI assistant help you fix the issue
@@ -58,7 +58,7 @@ That's exactly what our new integration does. By connecting [Nx Console](/gettin
 
 This integration leverages multiple components of the Nx ecosystem:
 
-- **Nx Console Extension**: Our editor extension (available for [VS Code, Cursor, and IntelliJ](/getting-started/editor-setup)) monitors your CI runs through Nx Cloud. We [wrote about this previously](/blog/nx-cloud-pipelines-come-to-nx-console).
+- **Nx Console Extension**: Our editor extension (available for [VS Code, Cursor, and IntelliJ](/docs/getting-started/editor-setup)) monitors your CI runs through Nx Cloud. We [wrote about this previously](/blog/nx-cloud-pipelines-come-to-nx-console).
 
 - **Nx Cloud**: Our CI acceleration service not only makes your builds faster but also maintains detailed information about each task, including failures, logs, and affected projects.
 
@@ -109,9 +109,9 @@ As [Victor Savkin mentioned in his recent post](/blog/nx-and-ai-why-they-work-to
 
 To use this feature, you'll need:
 
-1. [Nx Console](/getting-started/editor-setup) installed in your editor (VS Code, Cursor, or IntelliJ)
+1. [Nx Console](/docs/getting-started/editor-setup) installed in your editor (VS Code, Cursor, or IntelliJ)
 2. An [Nx Cloud](/nx-cloud) account for your CI runs (there's a Hobby plan as well)
-3. The MCP server configured for your editor (see our guides [in the docs](/features/enhance-AI))
+3. The MCP server configured for your editor (see our guides [in the docs](/docs/features/enhance-ai))
 
 Once these components are in place, your editor will automatically notify you of CI failures with the option to get AI help.
 
@@ -119,7 +119,7 @@ Once these components are in place, your editor will automatically notify you of
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

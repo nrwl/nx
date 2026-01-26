@@ -34,7 +34,7 @@ const craEnvVars = Object.keys(process.env)
     return env;
   }, {});
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   build: {
     outDir: ${

@@ -24,8 +24,8 @@ nx run mobile:build-android
 
 ## Examples
 
-{% tabs %}
-{% tab label="Build with custom tasks" %}
+##### Build with custom tasks
+
 The `tasks` option accepts any custom gradle task, such as `assembleDebug`, `assembleRelease`, `bundleDebug`, `bundleRelease`, `installDebug`, `installRelease`.
 For example, pass in `bundleRelease` or `bundleRelease` to tasks, it will create with `.aab` extension under bundle folder.
 Pass in `assembleDebug` or `assembleRelease` to tasks, it will create a build with `.apk` extension under apk folder.
@@ -44,8 +44,7 @@ Pass in `installDebug` or `installRelease` to tasks, it will create a build with
     }
 ```
 
-{% /tab %}
-{% tab label="Build for debug/release" %}
+##### Build for debug/release
 
 The `mode` option allows you determine whether to build for debug/release apk.
 
@@ -62,8 +61,7 @@ The `mode` option allows you determine whether to build for debug/release apk.
     }
 ```
 
-{% /tab %}
-{% tab label="Build for current device architecture" %}
+##### Build for current device architecture
 
 The `activeArchOnly` option allows you to build native libraries only for the current device architecture for debug builds.
 
@@ -79,8 +77,5 @@ The `activeArchOnly` option allows you to build native libraries only for the cu
       }
     }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

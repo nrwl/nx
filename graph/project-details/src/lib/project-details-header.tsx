@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { useRouteConstructor } from '@nx/graph/legacy/shared';
-import { ThemePanel } from '@nx/graph-internal/ui-theme';
+import { useRouteConstructor } from '@nx/graph-shared';
+import { ThemePanel } from '@nx/graph-internal-ui-render-config';
 
 export function ProjectDetailsHeader() {
   const routeConstructor = useRouteConstructor();
   return (
     <header className="mx-auto mb-8 flex w-full items-center justify-center border-b-2 border-slate-900/10 py-2 dark:border-slate-300/10">
-      <div className="flex max-w-6xl flex-grow items-center justify-between px-8 ">
+      <div className="flex max-w-6xl flex-grow items-center justify-between px-8">
         <Link to={routeConstructor('/projects', false)}>
           <svg
             className="h-10 w-auto text-slate-900 dark:text-white"

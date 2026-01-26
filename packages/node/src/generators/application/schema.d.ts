@@ -22,6 +22,7 @@ export interface Schema {
   port?: number;
   rootProject?: boolean;
   docker?: boolean;
+  skipDockerPlugin?: boolean;
   isNest?: boolean;
   addPlugin?: boolean;
   useTsSolution?: boolean;

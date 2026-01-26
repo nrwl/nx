@@ -159,7 +159,7 @@
     "useLegacyTypescriptPlugin": {
       "type": "boolean",
       "description": "Use rollup-plugin-typescript2 instead of @rollup/plugin-typescript.",
-      "default": true
+      "default": false
     }
   },
   "required": ["tsConfig", "main", "outputPath"],

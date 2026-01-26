@@ -1,0 +1,103 @@
+{
+  "generators": {
+    "update-20-3-0": {
+      "version": "20.3.0-beta.2",
+      "description": "Add gitignore entry for temporary vitest config files.",
+      "implementation": "./src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore"
+    },
+    "update-22-1-0": {
+      "version": "22.1.0-beta.8",
+      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
+      "implementation": "./src/migrations/update-22-1-0/create-ai-instructions-for-vitest-4"
+    },
+    "update-22-3-2": {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "@angular/build": ">=21.0.0"
+      },
+      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
+      "implementation": "./src/migrations/update-22-1-0/create-ai-instructions-for-vitest-4"
+    }
+  },
+  "packageJsonUpdates": {
+    "22.1.0": {
+      "version": "22.1.0-beta.8",
+      "incompatibleWith": {
+        "@angular/build": "< 21.0.0"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.2.0-analog": {
+      "version": "22.2.0-beta.3",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~2.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~2.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.3.2": {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "@angular/build": ">=21.0.0",
+        "vitest": "<=4.0.8"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^4.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^4.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^4.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^4.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "jsdom": {
+          "version": "^27.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.3.2-analog": {
+      "version": "22.3.2-beta.0",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~2.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~2.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

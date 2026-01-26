@@ -6,7 +6,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev/ui-common';
+import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev-ui-common';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef, ElementRef } from 'react';
 
@@ -93,7 +93,7 @@ export function PluginDirectory({
   }
   return (
     <div id="plugin-directory">
-      <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
+      <div className="flex w-full flex-col justify-between gap-8 md:flex-row">
         <SectionHeading as="h2" variant="title" id="plugins-registry">
           <span className="whitespace-nowrap">Nx Plugin</span> Registry
         </SectionHeading>

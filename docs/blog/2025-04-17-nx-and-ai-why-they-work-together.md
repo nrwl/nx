@@ -63,7 +63,7 @@ LLMs rely entirely on provided context. Because monorepos consolidate all code i
 4. Information about used tools, frameworks, their versions and dependencies
 5. CI information (frequency, failures)
 
-This information is used to make CI execution fast, to ensure boundaries, and now **Nx provides this information to [coding assistants through MCP servers](/features/enhance-AI), enabling LLMs to answer questions like**:
+This information is used to make CI execution fast, to ensure boundaries, and now **Nx provides this information to [coding assistants through MCP servers](/docs/features/enhance-ai), enabling LLMs to answer questions like**:
 
 - "Who should I consult about creating a new bank library for overdraft payments?"
 - "Create a library using the bank team's best practices."
@@ -117,13 +117,13 @@ One way to minimize technical debt is by codifying and reusing best practices:
 
 You don't have to create libraries reflecting organization's best practices. Nx plugins come with many generators.
 
-The reason why this approach works with Nx is that everything in Nx (including [its generators](/features/generate-code)) comes with a lot of static metadata. Traditionally this metadata was used to power the terminal UI, graphic UI, docs and more. Turns out it's also extremely useful for LLMs. **With this metadata they know all the inputs into each generator and what each of them does. But it gets better! Nx's virtual file system lets LLMs run the generators in dry run mode to get the generator outputs.** With this, LLMs can derive which generators work well with which parameters. **Additional metadata specifically designed for LLMs is being added.**
+The reason why this approach works with Nx is that everything in Nx (including [its generators](/docs/features/generate-code)) comes with a lot of static metadata. Traditionally this metadata was used to power the terminal UI, graphic UI, docs and more. Turns out it's also extremely useful for LLMs. **With this metadata they know all the inputs into each generator and what each of them does. But it gets better! Nx's virtual file system lets LLMs run the generators in dry run mode to get the generator outputs.** With this, LLMs can derive which generators work well with which parameters. **Additional metadata specifically designed for LLMs is being added.**
 
 LLMs excel at impressive demonstrations but struggle with consistency and correctness. This is why they work better for new applications where correctness is loosely defined and consistency is not important. Being able to access a large library of annotated generators helps LLMs reduce variability of what they generate, which improves consistency and quality. They use a generator and make some small modifications on top instead of trying to author everything from scratch.
 
 ### Migrations
 
-[Nx Migrations](/features/automate-updating-dependencies) are special generators that update codebases to use newer tool versions and new APIs. AI agents can enhance this process with specialized metadata for validation and fixes.
+[Nx Migrations](/docs/features/automate-updating-dependencies) are special generators that update codebases to use newer tool versions and new APIs. AI agents can enhance this process with specialized metadata for validation and fixes.
 
 ### Human in the Loop
 
@@ -141,7 +141,7 @@ This is the sketch I drew a while back, and we have been moving toward this visi
 
 **These are some of the things Nx either already does or is about to do in the next couple of weeks:**
 
-1. Coding assistants can open and manipulate the [Nx project graph visualization](/features/explore-graph).
+1. Coding assistants can open and manipulate the [Nx project graph visualization](/docs/features/explore-graph).
 2. Coding assistants are able to open the generation UI, prefill the right values.
 3. Coding assistants are able to fetch up-to-date docs to ensure they don't hallucinate.
 4. Coding assistants get notified about CI execution results while the CI is still running. The assistant gets relevant logs and files and is able to explain or fix the CI error and push changes before the CI execution even completes.
@@ -153,7 +153,7 @@ This is the sketch I drew a while back, and we have been moving toward this visi
 
 Monorepos offer many benefits but come with caveats. The main concern is managing large-scale changes across the repository, such as updating all applications to the latest React version.
 
-Nx has always addressed this with ["migrations" - specialized generators](/features/automate-updating-dependencies) optimized for such tasks. Typically, migrations handle 80% of the work, with the remaining 20% potentially taking weeks for a small team in large repos.
+Nx has always addressed this with ["migrations" - specialized generators](/docs/features/automate-updating-dependencies) optimized for such tasks. Typically, migrations handle 80% of the work, with the remaining 20% potentially taking weeks for a small team in large repos.
 
 This is precisely where agentic coding assistants excel. **By building on Nx's migration capabilities, AI increases completion from 80% to a much higher percentage, reducing effort from weeks to days or even hours.** What was difficult becomes easy.
 
@@ -188,7 +188,7 @@ Although it's not entirely impossible, it is significantly harder to provide the
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 📖 [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

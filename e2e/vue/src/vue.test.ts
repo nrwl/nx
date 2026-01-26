@@ -6,7 +6,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Vue Plugin', () => {
   let proj: string;
@@ -45,7 +45,7 @@ describe('Vue Plugin', () => {
           .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
       });
 
-      updateFile(`${app}/vite.config.ts`, (content) => {
+      updateFile(`${app}/vite.config.mts`, (content) => {
         return content.replace(
           /preview:\s*{[^}]*}/,
           `preview: {

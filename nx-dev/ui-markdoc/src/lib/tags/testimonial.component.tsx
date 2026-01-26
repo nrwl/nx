@@ -18,19 +18,21 @@ export const testimonial: Schema = {
   },
 };
 
+export type TestimonialProps = {
+  title: string;
+  name: string;
+  children: ReactNode;
+  image: string;
+};
+
 export function Testimonial({
   children,
   name,
   title,
   image,
-}: {
-  title: string;
-  name: string;
-  children: ReactNode;
-  image: string;
-}) {
+}: TestimonialProps) {
   return (
-    <figure className="not-prose">
+    <figure className="not-content not-prose">
       <blockquote className="relative pt-6">
         <svg
           className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"
@@ -47,7 +49,7 @@ export function Testimonial({
           />
         </svg>
 
-        <div className="relative z-10 ">
+        <div className="relative z-10">
           <div className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
             {children}
           </div>

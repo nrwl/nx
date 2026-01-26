@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
 
@@ -41,7 +41,7 @@ describe('Storybook generators and executors for monorepos', () => {
       const p = await runCommandUntil(
         `run ${reactStorybookApp}:storybook`,
         (output) => {
-          return /Storybook.*started/gi.test(output);
+          return /Storybook.*(started|ready)/gi.test(output);
         }
       );
       p.kill();

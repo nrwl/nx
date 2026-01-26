@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`MF Remote App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
@@ -16,11 +16,11 @@ import { App } from './app';
           path: '',
           loadChildren: () =>
             import('./remote-entry/entry-module').then(
-              (m) => m.RemoteEntryModule
+              (m) => m.RemoteEntryModule,
             ),
         },
       ],
-      { initialNavigation: 'enabledBlocking' }
+      { initialNavigation: 'enabledBlocking' },
     ),
   ],
   providers: [],
@@ -35,9 +35,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 2`] = `
 import { AppModule } from './app/app-module';
 
 platformBrowser()
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true,
-  })
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
 "
 `;
@@ -48,12 +46,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 3`] = `
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
@@ -264,9 +260,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 import { AppModule } from './app/app-module';
 
 platformBrowser()
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true,
-  })
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
 "
 `;
@@ -277,12 +271,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 4`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
@@ -563,11 +555,10 @@ module.exports = {
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [CommonModule, NxWelcome],
+  imports: [NxWelcome],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
@@ -626,11 +617,10 @@ export default config;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 3`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [CommonModule, NxWelcome],
+  imports: [NxWelcome],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })

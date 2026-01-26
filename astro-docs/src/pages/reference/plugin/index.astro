@@ -1,0 +1,31 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { getEntry } from 'astro:content';
+
+const doc = await getEntry('nx-reference-packages', 'plugin-overview')!;
+---
+
+<StarlightPage
+  frontmatter={{
+    title: doc.data.title,
+    description:doc.data.description,
+    tableOfContents: false,
+    pagefind: false,
+  }}
+  headings={[]}
+>
+  <p>{doc.data.description}</p>
+  {doc.data.features!.length === 0 ? (
+    <p class="mt-4">No features available.</p>
+  ) : (
+  <CardGrid>
+    {doc.data.features!.map((feature) => (
+      <LinkCard
+        href={`/docs/reference/${doc.data.packageType}/${feature}`}
+        title={feature}
+      />
+    ))}
+  </CardGrid>
+  )}
+</StarlightPage>

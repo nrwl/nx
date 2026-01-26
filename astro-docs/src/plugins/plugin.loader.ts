@@ -1,0 +1,346 @@
+import { existsSync, readFileSync, readdirSync } from 'fs';
+import { join } from 'path';
+import { workspaceRoot } from '@nx/devkit';
+import {
+  parseExecutors,
+  parseGenerators,
+  parseMigrations,
+} from './utils/plugin-schema-parser';
+import {
+  getExecutorsMarkdown,
+  getGeneratorsMarkdown,
+  getMigrationsMarkdown,
+} from './utils/generate-plugin-markdown';
+import type { Loader, LoaderContext } from 'astro/loaders';
+import type { CollectionEntry, RenderedContent } from 'astro:content';
+import { watchAndCall } from './utils/watch';
+import {
+  getGithubStars,
+  PLUGIN_IGNORE_LIST,
+  shouldFetchStats,
+  getCachedOrDefaultStats,
+  fetchFreshStats,
+  type PluginStats,
+} from './utils/plugin-stats';
+import {
+  getTechnologyCategory,
+  pluginSpecialCasePluginRemapping,
+  pluginToTechnology,
+} from './utils/plugin-mappings';
+
+const PLUGIN_PATHS = readdirSync(join(workspaceRoot, 'packages'));
+
+type DocEntry = CollectionEntry<'plugin-docs'>;
+
+/**
+ * Generate the URL slug for a plugin document
+ * @param pluginName The plugin name (e.g., 'react', 'next', 'webpack')
+ * @param docType The document type (e.g., 'generators', 'executors', 'migrations')
+ * @returns The URL slug or null if this is a special package handled elsewhere
+ */
+function getPluginSlug(pluginName: string, docType: string) {
+  // Special packages are handled by nx-reference-packages.loader
+  if (['nx', 'devkit', 'plugin', 'web', 'workspace'].includes(pluginName)) {
+    return '';
+  }
+
+  const category = getTechnologyCategory(pluginName);
+
+  const remappedPluginName = pluginSpecialCasePluginRemapping(pluginName);
+  // plugin is the top level tech, then we make the docs on the top level too
+  if (category === remappedPluginName) {
+    return `technologies/${remappedPluginName}/${docType}`;
+  }
+
+  return `technologies/${category}/${remappedPluginName}/${docType}`;
+}
+
+function getPluginDescription(pluginPath: string, pluginName: string): string {
+  const packageJsonPath = join(pluginPath, 'package.json');
+
+  try {
+    if (existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+      if (packageJson.description && packageJson.description.trim()) {
+        return packageJson.description.trim();
+      }
+    }
+  } catch (error) {
+    // If we can't read the package.json, fall back to default
+  }
+
+  return `The Nx Plugin for ${pluginName}`;
+}
+
+/**
+ * Create a plugin overview entry with the given stats
+ * Features and totalDocs start empty and are populated during processing
+ */
+function createPluginOverview(
+  pluginName: string,
+  packageName: string,
+  pluginDescription: string,
+  technologyCategory: string,
+  stats: PluginStats
+): DocEntry {
+  const slug = getPluginSlug(pluginName, 'introduction');
+
+  return {
+    id: `${pluginName}-overview`,
+    collection: 'plugin-docs',
+    data: {
+      description: pluginDescription,
+      packageName,
+      pluginName,
+      technologyCategory,
+      features: [],
+      totalDocs: 0,
+      docType: 'overview',
+      ...stats,
+      title: pluginName,
+      slug,
+      filter: 'type:References',
+      weight: 2.1,
+    },
+  };
+}
+
+export async function generateAllPluginDocs(
+  logger: LoaderContext['logger'],
+  watcher: LoaderContext['watcher'],
+  renderMarkdown: (content: string) => Promise<RenderedContent>,
+  store: LoaderContext['store']
+) {
+  logger.info('Generating plugin documentation...');
+  let successCount = 0;
+  let skipCount = 0;
+  const criticalErrors: Array<{ plugin: string; error: Error }> = [];
+
+  const ghStarMap = await getGithubStars([{ owner: 'nrwl', repo: 'nx' }]);
+
+  for (const relativePath of PLUGIN_PATHS) {
+    const pluginPath = join(workspaceRoot, 'packages', relativePath);
+
+    if (!existsSync(pluginPath)) {
+      logger.warn(`Skipping ${relativePath} - path does not exist`);
+      skipCount++;
+      continue;
+    }
+
+    const pluginName = relativePath.split('/').pop() || '';
+    if (PLUGIN_IGNORE_LIST.includes(pluginName)) {
+      logger.warn(`Skipping ${pluginName} - listed as ignored plugin`);
+      skipCount++;
+      continue;
+    }
+
+    // Skip special packages that are handled by nx-reference-packages.loader
+    if (['nx', 'devkit', 'plugin', 'web', 'workspace'].includes(pluginName)) {
+      logger.info(
+        `Skipping ${pluginName} - handled by nx-reference-packages.loader`
+      );
+      skipCount++;
+      continue;
+    }
+
+    watcher?.add(pluginPath);
+    // Get plugin description from package.json
+    const pluginDescription = getPluginDescription(pluginPath, pluginName);
+
+    const existingOverviewEntry = store.get<DocEntry['data']>(
+      `${pluginName}-overview`
+    );
+    // special case for the main Nx package
+    const packageName = pluginName === 'nx' ? 'nx' : `@nx/${pluginName}`;
+
+    // Get technology category for this plugin
+    const technologyCategory = getTechnologyCategory(pluginName);
+
+    // Determine which stats to use: fresh, cached, or defaults
+    let stats: PluginStats;
+    if (shouldFetchStats(existingOverviewEntry)) {
+      // Fetch fresh stats from external sources
+      const npmPackage = {
+        name: packageName,
+        url: `https://github.com/nrwl/nx/tree/master/packages/${pluginName}`,
+        description: pluginDescription,
+      };
+      stats = await fetchFreshStats(npmPackage, 'nrwl/nx', ghStarMap, false);
+    } else {
+      // Reuse cached stats if available, otherwise use defaults
+      stats = getCachedOrDefaultStats(existingOverviewEntry, false);
+    }
+
+    // Create plugin overview with the determined stats
+    // Features and totalDocs will be populated as we process generators/executors/migrations
+    const pluginOverview = createPluginOverview(
+      pluginName,
+      packageName,
+      pluginDescription,
+      technologyCategory,
+      stats
+    );
+
+    try {
+      // Process generators
+      const generators = parseGenerators(pluginPath);
+      if (generators && generators.size > 0) {
+        const markdown = getGeneratorsMarkdown(pluginName, generators);
+        const slug = getPluginSlug(pluginName, 'generators');
+        if (slug) {
+          store.set({
+            id: `${pluginName}-generators`,
+            body: markdown,
+            rendered: await renderMarkdown(markdown),
+            data: {
+              title: `@nx/${pluginName} Generators`,
+              pluginName,
+              packageName: `@nx/${pluginName}`,
+              technologyCategory,
+              docType: 'generators',
+              description: pluginDescription,
+              slug,
+              weight: 1.0,
+              filter: 'type:References',
+            },
+          });
+        }
+
+        if (slug) {
+          pluginOverview.data.features!.push('generators');
+          pluginOverview.data.totalDocs!++;
+        }
+      }
+
+      // Process executors
+      const executors = parseExecutors(pluginPath);
+      if (executors && executors.size > 0) {
+        const markdown = getExecutorsMarkdown(pluginName, executors);
+        const slug = getPluginSlug(pluginName, 'executors');
+        if (slug) {
+          store.set({
+            id: `${pluginName}-executors`,
+            body: markdown,
+            rendered: await renderMarkdown(markdown),
+            data: {
+              title: `@nx/${pluginName} Executors`,
+              pluginName,
+              packageName: `@nx/${pluginName}`,
+              technologyCategory,
+              docType: 'executors',
+              description: pluginDescription,
+              slug,
+              weight: 1.1,
+              filter: 'type:References',
+            },
+          });
+        }
+        if (slug) {
+          pluginOverview.data.features!.push('executors');
+          pluginOverview.data.totalDocs!++;
+        }
+      }
+
+      // Process migrations
+      const migrations = parseMigrations(pluginPath);
+      // parseMigrations will return null if the plugin doesn't define migration.json
+      // if there are not migrations then getMigrationsMarkdown will render a custom message
+      // to check previous Nx version docs
+      if (migrations) {
+        const markdown = getMigrationsMarkdown(pluginName, migrations);
+        const slug = getPluginSlug(pluginName, 'migrations');
+        if (slug) {
+          store.set({
+            id: `${pluginName}-migrations`,
+            body: markdown,
+            rendered: await renderMarkdown(markdown),
+            data: {
+              title: `@nx/${pluginName} Migrations`,
+              pluginName,
+              packageName: `@nx/${pluginName}`,
+              technologyCategory,
+              docType: 'migrations',
+              description: pluginDescription,
+              slug,
+              weight: 0.5,
+              filter: 'type:References',
+            },
+          });
+        }
+        if (slug) {
+          pluginOverview.data.features!.push('migrations');
+          pluginOverview.data.totalDocs!++;
+        }
+      }
+
+      if (generators?.size || executors?.size || migrations?.size) {
+        logger.info(`✅ Generated documentation for ${pluginName}`);
+        successCount++;
+      } else {
+        logger.warn(
+          `⚠️  Skipping ${pluginName} - no visible documentation found`
+        );
+        skipCount++;
+      }
+    } catch (error: any) {
+      // Determine if this is a critical error that should fail the build
+      const isCriticalError =
+        error.code === 'ENOENT' || // Missing file referenced in manifest files
+        error instanceof SyntaxError || // Malformed JSON
+        error.message?.includes('schema') || // Schema-related error
+        error.message?.includes('JSON'); // JSON parsing error
+
+      if (isCriticalError) {
+        logger.error(
+          `❌ Critical error processing ${pluginName}: ${error.message}`
+        );
+        criticalErrors.push({ plugin: pluginName, error });
+      } else {
+        logger.warn(`⚠️  Skipping ${pluginName}: ${error.message}`);
+      }
+      skipCount++;
+    }
+    store.set(pluginOverview);
+  }
+
+  // After processing all plugins, fail the build if there were critical errors
+  if (criticalErrors.length > 0) {
+    const errorSummary = criticalErrors
+      .map(({ plugin, error }) => `  - ${plugin}: ${error.message}`)
+      .join('\n');
+
+    throw new Error(
+      `Failed to generate documentation for ${criticalErrors.length} plugin(s):\n${errorSummary}`
+    );
+  }
+}
+
+export function PluginLoader(options: any = {}): Loader {
+  return {
+    name: 'nx-plugin-loader',
+    async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
+      const generate = async () => {
+        await generateAllPluginDocs(
+          logger,
+          watcher,
+          // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
+          renderMarkdown,
+          store
+        );
+      };
+
+      if (watcher) {
+        const pathsToWatch = [
+          join(import.meta.dirname, 'plugin.loader.ts'),
+          join(import.meta.dirname, 'utils', 'plugin-schema-parser.ts'),
+          join(import.meta.dirname, 'utils', 'get-schema-example-content.ts'),
+          join(import.meta.dirname, 'utils', 'plugin-mappings.ts'),
+          join(import.meta.dirname, '..', '..', 'sidebar.mts'),
+        ];
+        watchAndCall(watcher, pathsToWatch, generate);
+      }
+
+      await generate();
+    },
+  };
+}

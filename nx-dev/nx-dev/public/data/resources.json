@@ -1,0 +1,101 @@
+[
+  {
+    "id": "angular-enterprise-patterns",
+    "title": "Enterprise Monorepo Angular Patterns",
+    "description": "The official Angular enterprise book from the Nx team. Learn proven patterns and best practices for building enterprise-grade Angular applications in a monorepo.",
+    "category": "book",
+    "coverImage": "/images/resources/book-angular-enterprise.avif",
+    "downloadUrl": "https://go.nx.dev/angular-patterns-ebook",
+    "publishDate": "2024-01-01"
+  },
+  {
+    "id": "react-enterprise-architecture",
+    "title": "React for Enterprise: Timeless Architecture for Enterprise Apps",
+    "description": "Community resource: Learn timeless architecture patterns for building scalable React applications. By Przemyslaw Nowak (Brainly) in collaboration with the Nx Core Team.",
+    "category": "book",
+    "coverImage": "/images/resources/book-react-enterprise-nowak.avif",
+    "downloadUrl": "https://bit.ly/3J3cern",
+    "publishDate": "2025-10-23"
+  },
+  {
+    "id": "financial-institution-case-study",
+    "title": "Financial Institution Case Study",
+    "description": "$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud.",
+    "category": "case-study",
+    "coverImage": "/images/resources/case-study-financial-institution.avif",
+    "downloadUrl": "https://go.nx.dev/financial-case-study",
+    "publishDate": "2024-11-26"
+  },
+  {
+    "id": "banking-case-study",
+    "title": "Banking Case Study",
+    "description": "$7B European bank cuts CI times by 62% and boosts team productivity.",
+    "category": "case-study",
+    "coverImage": "/images/resources/case-study-bank-eu.avif",
+    "downloadUrl": "https://go.nx.dev/banking-case-study",
+    "publishDate": "2024-11-26"
+  },
+  {
+    "id": "fast-ci-whitepaper",
+    "title": "Fast CI Whitepaper",
+    "description": "Learn how to optimize your CI pipeline for speed and efficiency with Nx Cloud.",
+    "category": "whitepaper",
+    "coverImage": "/images/resources/whitepaper-fast-ci.avif",
+    "downloadUrl": "https://bit.ly/4oeIjvK",
+    "publishDate": "2024-01-01"
+  },
+  {
+    "id": "nx-enterprise-pov",
+    "title": "Nx Enterprise Proof Of Value",
+    "description": "Discover how Nx Enterprise transforms development workflows and accelerates delivery at scale with a hands-on proof of value.",
+    "category": "whitepaper",
+    "coverImage": "/images/resources/whitepaper-nx-enterprise-pov.avif",
+    "downloadUrl": "https://bit.ly/43y7xfW",
+    "publishDate": "2024-01-01"
+  },
+  {
+    "id": "mini-angular-cheatsheet-2025",
+    "title": "Mini Angular Cheatsheet",
+    "description": "Quick reference guide for Angular development with essential commands and patterns.",
+    "category": "cheatsheet",
+    "coverImage": "/images/resources/cheatsheet-angular.avif",
+    "downloadUrl": "https://bit.ly/4oEaZ0Y",
+    "publishDate": "2025-01-01"
+  },
+  {
+    "id": "mini-react-cheatsheet-2025",
+    "title": "Mini React Cheatsheet",
+    "description": "Quick reference guide for React development with essential commands and patterns.",
+    "category": "cheatsheet",
+    "coverImage": "/images/resources/cheatsheet-react.avif",
+    "downloadUrl": "https://bit.ly/4qrv6B6",
+    "publishDate": "2025-01-01"
+  },
+  {
+    "id": "nx-cloud-one-pager-2025",
+    "title": "Nx Cloud One-Pager",
+    "description": "A concise overview of Nx Cloud features and benefits for CI/CD optimization.",
+    "category": "cheatsheet",
+    "coverImage": "/images/resources/cheatsheet-nx-cloud.avif",
+    "downloadUrl": "https://bit.ly/47Cq6SG",
+    "publishDate": "2025-01-01"
+  },
+  {
+    "id": "module-federation-quick-start",
+    "title": "Module Federation Quick Start Guide",
+    "description": "Get started with Module Federation for building micro-frontends with Nx.",
+    "category": "cheatsheet",
+    "coverImage": "/images/resources/cheatsheet-module-federation.avif",
+    "downloadUrl": "https://bit.ly/49jkrlM",
+    "publishDate": "2024-01-01"
+  },
+  {
+    "id": "nx-enterprise-overview-2025",
+    "title": "Nx Enterprise Overview",
+    "description": "A concise overview of Nx Enterprise features and benefits.",
+    "category": "whitepaper",
+    "coverImage": "/images/resources/whitepaper-nx-enterprise-overview.avif",
+    "downloadUrl": "https://bit.ly/43y5mJi",
+    "publishDate": "2025-01-01"
+  }
+]

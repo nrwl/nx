@@ -7,7 +7,7 @@ import {
   runCommandAsync,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -399,7 +399,7 @@ describe('nx release conventional commits config', () => {
 
       ### ⚠️  Breaking Changes
 
-      - ⚠️  **{project-name}:** this is a breaking change
+      - **{project-name}:** this is a breaking change
     `);
 
     const pkg2Changelog = readFile(`${pkg2}/CHANGELOG.md`);

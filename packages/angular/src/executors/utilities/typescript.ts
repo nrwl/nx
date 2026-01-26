@@ -10,16 +10,20 @@
 import { resolve } from 'path';
 import * as ts from 'typescript';
 import { loadEsmModule } from './module-loader';
+import { getNgPackagrVersionInfo } from './ng-packagr/ng-packagr-version';
 
 async function readDefaultTsConfig(fileName: string) {
+  const ngPackagrVersion = getNgPackagrVersionInfo();
+
   // these options are mandatory
   const extraOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2022,
 
+    composite: false,
     // sourcemaps
-    sourceMap: false,
+    sourceMap: ngPackagrVersion.major < 20 ? false : true,
     inlineSources: true,
-    inlineSourceMap: true,
+    inlineSourceMap: ngPackagrVersion.major < 20 ? true : false,
 
     outDir: '',
     declaration: true,

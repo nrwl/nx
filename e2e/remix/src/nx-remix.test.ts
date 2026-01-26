@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   runCommandAsync,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {
@@ -35,7 +35,10 @@ describe('Remix E2E Tests', () => {
   });
   describe('--integrated (yarn)', () => {
     beforeAll(async () => {
-      newProject({ packages: ['@nx/remix', '@nx/react'] });
+      newProject({
+        packages: ['@nx/remix', '@nx/react', '@nx/js'],
+        packageManager: 'yarn',
+      });
     });
 
     afterAll(() => {
@@ -103,7 +106,7 @@ describe('Remix E2E Tests', () => {
         expect(result).toContain(`Successfully ran target test`);
       }, 120_000);
 
-      // TODO(nicholas): This test is failing. It doesn't look like the yarn usage is correct.
+      // TODO(Colum): This is failing in CI, but it is working locally.
       xit('should generate a library with jest and test correctly', async () => {
         const reactapp = uniq('react');
         runCLI(
@@ -122,8 +125,7 @@ describe('Remix E2E Tests', () => {
       }, 120_000);
     });
 
-    // TODO(nicholas): These test are failing. It doesn't look like the yarn usage is correct.
-    xdescribe('error checking', () => {
+    describe('error checking', () => {
       const plugin = uniq('remix');
 
       beforeAll(async () => {
@@ -148,8 +150,6 @@ describe('Remix E2E Tests', () => {
         ).not.toThrow();
       }, 120000);
 
-      // This is expecting yarn v1, or else there will be complaints of lockfile errors.
-      // TODO(nicholas): The workspace is created with npm, but we're running `yarn nx` which causes lockfile errors in yarn 2/3/4. I think we need to create with yarn instead?
       it('should pass un-escaped dollar signs in routes with skipChecks flag', async () => {
         await runCommandAsync(
           `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --path="apps/${plugin}/app/routes/my.route.$someWeirdUseCase.tsx" --force`

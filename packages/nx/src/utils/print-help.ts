@@ -9,7 +9,7 @@ import { readModulePackageJson } from './package-json';
 // cliui is the CLI layout engine developed by, and used within, yargs
 // the typings for cliui do not play nice with our tsconfig, it either
 // works in build or in test but not both.
-const cliui = require('cliui') as typeof import('cliui')['default'];
+const cliui = require('cliui') as (typeof import('cliui'))['default'];
 
 export function printHelp(
   header: string,
@@ -362,7 +362,7 @@ function compareByPriority(
 ): number {
   function getPriority([name, property]: [
     string,
-    Schema['properties'][0]
+    Schema['properties'][0],
   ]): number {
     if (schema.required?.includes(name)) {
       return 0;

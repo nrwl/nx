@@ -1,13 +1,9 @@
-import { Tree } from 'nx/src/generators/tree';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
 } from '@nx/devkit';
-import { extraEslintDependencies } from './lint';
+import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -17,8 +13,21 @@ import {
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import type { Linter as EsLintLinter } from 'eslint';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import {
+  getInstalledEslintVersion,
+  getTypeScriptEslintVersionToInstall,
+} from '@nx/eslint/src/utils/version-utils';
+import type { Linter as EsLintLinter } from 'eslint';
+import { Tree } from 'nx/src/generators/tree';
+import { joinPathFragments } from 'nx/src/utils/path';
+import {
+  eslint9__VueEslintConfigTypescriptVersion,
+  eslintPluginVueVersion,
+  vueEslintConfigPrettierVersion,
+  vueEslintConfigTypescriptVersion,
+} from './versions';
+import { lt } from 'semver';
 
 export async function addLinting(
   host: Tree,
@@ -68,20 +77,27 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
+    const eslintVersion = getInstalledEslintVersion(host);
     const devDependencies = {
-      ...extraEslintDependencies.devDependencies,
+      '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
+      '@vue/eslint-config-typescript':
+        eslintVersion && lt(eslintVersion, '9.0.0')
+          ? vueEslintConfigTypescriptVersion
+          : eslint9__VueEslintConfigTypescriptVersion,
+      'eslint-plugin-vue': eslintPluginVueVersion,
     };
     if (
       isEslintConfigSupported(host, options.projectRoot) &&
       useFlatConfig(host)
     ) {
-      devDependencies['@typescript-eslint/parser'] = typescriptESLintVersion;
+      devDependencies['@typescript-eslint/parser'] =
+        getTypeScriptEslintVersionToInstall(host);
     }
 
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(
         host,
-        extraEslintDependencies.dependencies,
+        {},
         devDependencies
       );
       tasks.push(installTask);

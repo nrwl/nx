@@ -25,7 +25,10 @@ export class TempFs {
 
   private previousWorkspaceRoot: string;
 
-  constructor(private dirname: string, overrideWorkspaceRoot = true) {
+  constructor(
+    private dirname: string,
+    overrideWorkspaceRoot = true
+  ) {
     this.tempDir = realpathSync(mkdtempSync(join(tmpdir(), this.dirname)));
     this.previousWorkspaceRoot = workspaceRoot;
 

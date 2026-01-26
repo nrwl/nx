@@ -159,26 +159,43 @@ export function validateNoAtomizedTasks(
 export function assertTaskGraphDoesNotContainInvalidTargets(
   taskGraph: TaskGraph
 ) {
-  const invalidTasks = [];
+  const nonParallelTasksThatDependOnContinuousTasks = [];
+  const nonParallelContinuousTasksThatAreDependedOn = [];
   for (const task of Object.values(taskGraph.tasks)) {
     if (
       task.parallelism === false &&
       taskGraph.continuousDependencies[task.id].length > 0
     ) {
-      invalidTasks.push(task);
+      nonParallelTasksThatDependOnContinuousTasks.push(task);
+    }
+    for (const dependency of taskGraph.continuousDependencies[task.id]) {
+      if (taskGraph.tasks[dependency].parallelism === false) {
+        nonParallelContinuousTasksThatAreDependedOn.push(
+          taskGraph.tasks[dependency]
+        );
+      }
     }
   }
 
-  if (invalidTasks.length > 0) {
+  if (nonParallelTasksThatDependOnContinuousTasks.length > 0) {
     throw new NonParallelTaskDependsOnContinuousTasksError(
-      invalidTasks,
+      nonParallelTasksThatDependOnContinuousTasks,
+      taskGraph
+    );
+  }
+  if (nonParallelContinuousTasksThatAreDependedOn.length > 0) {
+    throw new DependingOnNonParallelContinuousTaskError(
+      nonParallelContinuousTasksThatAreDependedOn,
       taskGraph
     );
   }
 }
 
 class NonParallelTaskDependsOnContinuousTasksError extends Error {
-  constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
+  constructor(
+    public invalidTasks: Task[],
+    taskGraph: TaskGraph
+  ) {
     let message =
       'The following tasks do not support parallelism but depend on continuous tasks:';
 
@@ -190,6 +207,31 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
 
     super(message);
     this.name = 'NonParallelTaskDependsOnContinuousTasksError';
+  }
+}
+
+class DependingOnNonParallelContinuousTaskError extends Error {
+  constructor(
+    public invalidTasks: Task[],
+    taskGraph: TaskGraph
+  ) {
+    let message =
+      'The following continuous tasks do not support parallelism but are depended on:';
+
+    for (const task of invalidTasks) {
+      const dependents = Object.keys(taskGraph.continuousDependencies).filter(
+        (parentTaskId) =>
+          taskGraph.continuousDependencies[parentTaskId].includes(task.id)
+      );
+
+      message += `\n - ${task.id} <- ${dependents.join(', ')}`;
+    }
+
+    message +=
+      '\nParallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it.';
+
+    super(message);
+    this.name = 'DependingOnNonParallelContinuousTaskError';
   }
 }
 

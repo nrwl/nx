@@ -1,8 +1,27 @@
 import { workspaceRoot } from '@nx/devkit';
-import { mergeConfig } from 'metro-config';
-import type { MetroConfig } from 'metro-config';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'path';
+
+// Cache for metro-config module
+let metroConfig: any = null;
+
+/**
+ * Lazily require metro-config to handle cases where it might not be installed
+ */
+function getMetroConfig() {
+  if (!metroConfig) {
+    try {
+      metroConfig = require('metro-config');
+    } catch (error) {
+      throw new Error(
+        'metro-config is required but not installed. Please install metro-config >= 0.82.0'
+      );
+    }
+  }
+  return metroConfig;
+}
+
+type MetroConfig = any; // We'll use any to avoid importing the type
 
 import { getResolveRequest } from './metro-resolver';
 
@@ -33,10 +52,7 @@ interface WithNxOptions {
   mainFields?: string[];
 }
 
-export async function withNxMetro(
-  userConfig: MetroConfig,
-  opts: WithNxOptions = {}
-) {
+export function withNxMetro(userConfig: MetroConfig, opts: WithNxOptions = {}) {
   const extensions = ['', 'ts', 'tsx', 'js', 'jsx', 'json'];
   if (opts.debug) process.env.NX_REACT_NATIVE_DEBUG = 'true';
   if (opts.extensions) extensions.push(...opts.extensions);
@@ -58,6 +74,9 @@ export async function withNxMetro(
   );
 
   const nxConfig: MetroConfig = {
+    // Set projectRoot to workspaceRoot to ensure originModulePath is
+    // workspace-relative. This is required for Expo SDK 54+ compatibility.
+    projectRoot: workspaceRoot,
     resolver: {
       resolveRequest: getResolveRequest(
         extensions,
@@ -69,5 +88,6 @@ export async function withNxMetro(
     watchFolders,
   };
 
+  const { mergeConfig } = getMetroConfig();
   return mergeConfig(userConfig, nxConfig);
 }

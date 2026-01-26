@@ -1,0 +1,57 @@
+{
+  "name": "vitest",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/vitest",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js vitest",
+      "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "packages/vitest",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/vitest",
+            "glob": "**files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/vitest",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/vitest",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/vitest",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "packages/vitest",
+            "glob": "PLUGIN.md",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}

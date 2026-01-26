@@ -12,6 +12,7 @@ import {
 import * as path from 'path';
 import { e2eCwd } from './get-env-info';
 import { tmpProjPath } from './create-project-utils';
+import { join } from 'path';
 
 export function createFile(f: string, content: string = ''): void {
   const path = tmpProjPath(f);
@@ -48,6 +49,28 @@ export function checkFilesExist(...expectedFiles: string[]) {
       throw new Error(`File '${ff}' does not exist`);
     }
   });
+}
+
+export function checkFilesMatchingPatternExist(
+  pattern: string,
+  cwd = tmpProjPath()
+) {
+  const files = readdirSync(cwd, {
+    withFileTypes: true,
+    recursive: true,
+  });
+  const regex = new RegExp(pattern);
+  const matchedFiles = files
+    .filter((f) => f.isFile() && regex.test(join(f.parentPath, f.name)))
+    .map((f) => f.name);
+  if (matchedFiles.length === 0) {
+    throw new Error(
+      `No files matching pattern '${pattern}' were found.` +
+        `
+      Existing files: \n
+      ${files.map((f) => join(f.parentPath, f.name)).join('\n')}`
+    );
+  }
 }
 
 export function updateJson<T extends object = any, U extends object = T>(

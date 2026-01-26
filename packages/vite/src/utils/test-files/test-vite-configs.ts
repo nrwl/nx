@@ -150,7 +150,7 @@ export const hasEverything = `
       ],
     
       // Configuration for building your library.
-      // See: https://vitejs.dev/guide/build.html#library-mode
+      // See: https://vite.dev/guide/build.html#library-mode
       build: {
         lib: {
           // Could also be a dictionary or array of multiple entry points.
@@ -177,7 +177,7 @@ export const hasEverything = `
 
 export const buildOption = `
     // Configuration for building your library.
-    // See: https://vitejs.dev/guide/build.html#library-mode
+    // See: https://vite.dev/guide/build.html#library-mode
     build: {
       lib: {
         // Could also be a dictionary or array of multiple entry points.

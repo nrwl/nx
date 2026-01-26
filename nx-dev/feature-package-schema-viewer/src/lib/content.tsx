@@ -1,17 +1,17 @@
 import { HandRaisedIcon } from '@heroicons/react/24/outline';
 import { XCircleIcon } from '@heroicons/react/24/solid';
-import { getSchemaFromReference } from '@nx/nx-dev/data-access-packages';
-import { JsonSchema1, NxSchema } from '@nx/nx-dev/models-package';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { getSchemaFromReference } from '@nx/nx-dev-data-access-packages';
+import { JsonSchema1, NxSchema } from '@nx/nx-dev-models-package';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import { generateJsonExampleFor, isErrors } from './examples';
 import { SchemaViewModel } from './get-schema-view-model';
 import { SchemaEditor } from './schema-editor';
 import { SchemaViewer } from './schema-viewer';
 import { Heading2, Heading3 } from './ui/headings';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 function pathCleaner(path: string): string {
   return path.split('?')[0];
@@ -28,7 +28,14 @@ export function Content({
     );
 
   const router = useRouter();
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
   const [presets, setPresets] = useState<string[]>([]);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
   const filterWithPresets = (
     data: Record<string, any>,
     wantedProperties: string[]
@@ -64,13 +71,13 @@ export function Content({
         },
         {
           name: schemaViewModel.schemaMetadata.name,
-          href: pathCleaner(router.asPath),
+          href: isClient ? pathCleaner(currentPath) : '',
           current: !schemaViewModel.subReference,
         },
         !!schemaViewModel.subReference
           ? {
               name: schemaViewModel.subReference.split('/')[2],
-              href: pathCleaner(router.asPath),
+              href: isClient ? pathCleaner(currentPath) : '',
               current: true,
             }
           : void 0,
@@ -87,7 +94,7 @@ export function Content({
       return {
         header: renderMarkdown(
           getHeaderMarkdown({
-            type: schemaViewModel.type,
+            type: schemaViewModel.type as 'executor' | 'generator',
             packageName: schemaViewModel.packageName,
             schemaName: schemaViewModel.schemaMetadata.name,
             schema,
@@ -101,7 +108,7 @@ export function Content({
           : null,
         usageAndExamples: renderMarkdown(
           getUsageAndExamplesMarkdown({
-            type: schemaViewModel.type,
+            type: schemaViewModel.type as 'executor' | 'generator',
             packageName: schemaViewModel.packageName,
             schemaName: schemaViewModel.schemaMetadata.name,
             schemaAlias: schemaViewModel.schemaMetadata.aliases[0] ?? '',
@@ -262,7 +269,7 @@ export function Content({
                       setPresets(p.keys);
                     }}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 px-4 py-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     {p.name}
                   </button>
@@ -271,7 +278,7 @@ export function Content({
                   <button
                     onClick={() => setPresets([])}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     Reset <XCircleIcon className="ml-1.5 h-4 w-4" />
                   </button>

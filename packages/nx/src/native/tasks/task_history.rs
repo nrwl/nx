@@ -1,11 +1,22 @@
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::*;
-use rusqlite::vtab::array;
 use rusqlite::{params, types::Value};
 use std::collections::HashMap;
 use std::rc::Rc;
 use tracing::trace;
+
+pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    hash TEXT NOT NULL,
+    status TEXT NOT NULL,
+    code INTEGER NOT NULL,
+    start TIMESTAMP NOT NULL,
+    end TIMESTAMP NOT NULL,
+    FOREIGN KEY (hash) REFERENCES task_details (hash)
+);
+CREATE INDEX IF NOT EXISTS hash_idx ON task_history (hash);
+CREATE INDEX IF NOT EXISTS status_idx ON task_history (status);";
 
 #[napi(object)]
 pub struct TaskRun {
@@ -25,38 +36,7 @@ pub struct NxTaskHistory {
 impl NxTaskHistory {
     #[napi(constructor)]
     pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        let s = Self { db };
-
-        s.setup()?;
-
-        Ok(s)
-    }
-
-    fn setup(&self) -> anyhow::Result<()> {
-        array::load_module(
-            self.db
-                .conn
-                .as_ref()
-                .expect("Database connection should be available"),
-        )?;
-        self.db
-            .execute_batch(
-                "
-            BEGIN IMMEDIATE;
-            CREATE TABLE IF NOT EXISTS task_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                hash TEXT NOT NULL,
-                status TEXT NOT NULL,
-                code INTEGER NOT NULL,
-                start TIMESTAMP NOT NULL,
-                end TIMESTAMP NOT NULL,
-                FOREIGN KEY (hash) REFERENCES task_details (hash)
-            );
-            CREATE INDEX IF NOT EXISTS hash_idx ON task_history (hash);
-            COMMIT;
-            ",
-            )
-            .map_err(anyhow::Error::from)
+        Ok(Self { db })
     }
 
     #[napi]
@@ -133,7 +113,7 @@ impl NxTaskHistory {
                     AVG(end - start) AS duration
                     FROM task_history
                         JOIN task_details ON task_history.hash = task_details.hash
-                    WHERE target_string in rarray(?1)
+                    WHERE target_string in rarray(?1) AND status = 'success'
                     GROUP BY target_string
                 ",
             )?

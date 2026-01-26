@@ -12,12 +12,12 @@ import {
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -34,14 +34,17 @@ import {
   normalizeOptions,
   setGeneratorDefaults,
   updateTsconfigFiles,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function applicationGenerator(
   tree: Tree,
-  schema: Partial<Schema>
+  schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
+  assertNotUsingTsSolutionSetup(tree, 'application');
+  validateOptions(tree, schema);
+
   const isRspack = schema.bundler === 'rspack';
   if (isRspack) {
     schema.bundler = 'webpack';
@@ -63,7 +66,7 @@ export async function applicationGenerator(
   });
 
   if (!options.skipPackageJson) {
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, options.zoneless);
   }
 
   createProject(tree, options);
@@ -116,6 +119,8 @@ export async function applicationGenerator(
     });
 
     if (options.ssr) {
+      const { major: angularMajorVersion } =
+        getInstalledAngularVersionInfo(tree);
       generateFiles(
         tree,
         joinPathFragments(__dirname, './files/rspack-ssr'),
@@ -126,6 +131,9 @@ export async function applicationGenerator(
             options.outputPath,
             'browser'
           ),
+          zoneless: options.zoneless,
+          useDefaultImport: angularMajorVersion >= 21,
+          angularMajorVersion,
           tmpl: '',
         }
       );
@@ -134,12 +142,14 @@ export async function applicationGenerator(
 
   if (!options.skipPackageJson) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
+    const devDependencies: Record<string, string> = {};
+    const packageVersions = versions(tree);
     if (angularMajorVersion >= 20) {
       const angularDevkitVersion =
         getInstalledAngularDevkitVersion(tree) ??
-        versions(tree).angularDevkitVersion;
+        packageVersions.angularDevkitVersion;
 
-      const devDependencies: Record<string, string> = {};
       if (options.bundler === 'esbuild') {
         devDependencies['@angular/build'] = angularDevkitVersion;
       } else if (isRspack) {
@@ -148,7 +158,11 @@ export async function applicationGenerator(
       } else {
         devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
       }
-
+    }
+    if (options.style === 'less') {
+      devDependencies['less'] = packageVersions.lessVersion;
+    }
+    if (Object.keys(devDependencies).length) {
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
     }
   }

@@ -1,5 +1,5 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
-import { output } from './utils/output';
+import { CnwError } from './utils/error-utils';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
@@ -15,6 +15,11 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   directory: string
 ): Promise<void> {
   const { skipGit, commit, nxCloud, ...restArgs } = parsedArgs;
+
+  // Delete verbose because it will conflict with the --quiet flag
+  if (!restArgs.verbose) {
+    delete restArgs.verbose;
+  }
 
   let args = unparse({
     interactive: true,
@@ -58,10 +63,6 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     );
     await spawnAndWait(exec, args, directory);
   } catch (e) {
-    output.error({
-      title: `Failed to apply preset: ${preset}`,
-      bodyLines: ['See above'],
-    });
-    process.exit(1);
+    throw new CnwError('PRESET_FAILED', `Failed to apply preset: ${preset}`);
   }
 }

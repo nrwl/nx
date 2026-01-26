@@ -2,6 +2,10 @@ import type { DevTool, Mode } from '@rspack/core';
 import type { ProjectGraph } from '@nx/devkit';
 import type { AssetGlob } from '@nx/js/src/utils/assets/assets';
 
+/**
+ * @deprecated SVGR support is deprecated and will be removed in Nx 23.
+ * TODO(v23): Remove SVGR support
+ */
 export interface SvgrOptions {
   svgo?: boolean;
   titleProp?: boolean;
@@ -44,6 +48,10 @@ export interface OptimizationOptions {
   styles: boolean;
 }
 
+export interface TypeCheckOptions {
+  async: boolean;
+}
+
 export interface NxAppRspackPluginOptions {
   /**
    * The tsconfig file for the project. e.g. `tsconfig.json`
@@ -72,12 +80,6 @@ export interface NxAppRspackPluginOptions {
 
   commonChunk?: boolean;
 
-  /**
-   * Delete the output path before building.
-   * @deprecated Use the `output.clean` option in Rspack. https://rspack.dev/config/output#outputclean
-   */
-  // TODO(v22): Add migration to remove this option and remove it.
-  deleteOutputPath?: boolean;
   /**
    * The deploy path for the application. e.g. `/my-app/`
    */
@@ -109,6 +111,10 @@ export interface NxAppRspackPluginOptions {
    * Generate a `package.json` file for the bundle. Useful for Node applications.
    */
   generatePackageJson?: boolean;
+  /**
+   * Add runtime dependencies to the generated `package.json` file. Useful for Docker installs. Only works in conjunction with `generatePackageJson` option.
+   */
+  runtimeDependencies?: string[];
   /**
    * Path to the `index.html`.
    */
@@ -161,12 +167,6 @@ export interface NxAppRspackPluginOptions {
    * Add an additional chunk for the rspack runtime. Defaults to `true` when `target === 'web'`.
    */
   runtimeChunk?: boolean;
-  // TODO(v22): Remove in version 22.
-  /**
-   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
-   * @deprecated Sass option will be removed in Nx 22. This option will also be removed in Nx 22 as it is no longer needed.
-   */
-  sassImplementation?: 'sass' | 'sass-embedded';
   /**
    * External scripts that will be included before the main application entry.
    */
@@ -181,12 +181,23 @@ export interface NxAppRspackPluginOptions {
   skipPackageManager?: boolean;
   /**
    * Skip type checking. Default is `false`.
+   * @deprecated Use `typeCheckOptions` option instead. This option will be removed in Nx 24.
    */
   skipTypeChecking?: boolean;
   /**
    * Skip type checking. Default is `false`.
+   * @deprecated Use `typeCheckOptions` option instead. This option will be removed in Nx 24.
    */
   typeCheck?: boolean;
+  /**
+   * Configure type checking during the build.
+   * - Set to `true` to enable type checking with default options (async: true).
+   * - Set to `false` to disable type checking entirely.
+   * - Use `{ async: true }` to run type checking in a separate process without blocking the build.
+   * - Use `{ async: false }` to run type checking synchronously.
+   * Default is `{ async: true }`.
+   */
+  typeCheckOptions?: boolean | TypeCheckOptions;
   /**
    * Generate source maps.
    */
@@ -228,6 +239,15 @@ export interface NxAppRspackPluginOptions {
    */
   useTsconfigPaths?: boolean;
   /**
+   * Allows to overwrite the parameters used in the template. When using a function, pass in the original template parameters and use the returned object as the final template parameters.
+   */
+  templateParameters?:
+    | Record<string, string>
+    | boolean
+    | ((
+        params: Record<string, any>
+      ) => Record<string, any> | Promise<Record<string, any>>);
+  /**
    * Generate a separate vendor chunk for 3rd party packages.
    */
   vendorChunk?: boolean;
@@ -239,6 +259,10 @@ export interface NxAppRspackPluginOptions {
    * Watch for file changes.
    */
   watch?: boolean;
+  /**
+   * Configure rspack caching behavior. When not specified, defaults to `true` for Node targets in watch mode, and `undefined` otherwise.
+   */
+  cache?: boolean;
   /**
    * Set a public path for assets resources with absolute paths.
    */

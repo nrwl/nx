@@ -31,18 +31,19 @@ function extractRemoteProjectsFromConfig(
     );
 
     if (moduleFederationManifestJson) {
-      // This should have shape of
-      // {
-      //   "remoteName": "remoteLocation",
-      // }
+      /**
+       *
+       * This should have shape of
+       * {
+       *   "remoteName": "remoteLocation",
+       * }
+       * But users might have their own, enforce only that the key is the remote name
+       */
       const parsedManifest = JSON.parse(moduleFederationManifestJson);
-      if (
-        Object.keys(parsedManifest).every(
-          (key) =>
-            typeof key === 'string' && typeof parsedManifest[key] === 'string'
-        )
-      ) {
-        dynamicRemotes.push(...Object.keys(parsedManifest));
+      // Get keys once instead of calling Object.keys twice
+      const manifestKeys = Object.keys(parsedManifest);
+      if (manifestKeys.every((key) => typeof key === 'string')) {
+        dynamicRemotes.push(...manifestKeys);
       }
     }
   }
@@ -149,11 +150,10 @@ export function getRemotes(
   // With dynamic remotes, the manifest file may contain the names with `_` due to MF limitations on naming
   // The project graph might contain these names with `-` rather than `_`. Check for both.
   // This can occur after migration of existing remotes past Nx 19.8
-  let normalizedDynamicRemotes = dynamicRemotes.map((r) => {
-    if (context.projectGraph.nodes[r.replace(/_/g, '-')]) {
-      return r.replace(/_/g, '-');
-    }
-    return r;
+  const normalizedDynamicRemotes = dynamicRemotes.map((r) => {
+    // Compute replacement once instead of twice
+    const normalizedName = r.replace(/_/g, '-');
+    return context.projectGraph.nodes[normalizedName] ? normalizedName : r;
   });
   const knownDynamicRemotes = normalizedDynamicRemotes.filter(
     (r) => !remotesToSkip.has(r) && context.projectGraph.nodes[r]
@@ -165,12 +165,14 @@ export function getRemotes(
     )} with ${[...knownRemotes, ...knownDynamicRemotes].length} remotes`
   );
 
+  // Normalize devRemotes to array and call findMatchingProjects once
   const devServeApps = new Set(
     !devRemotes
       ? []
-      : Array.isArray(devRemotes)
-      ? findMatchingProjects(devRemotes, context.projectGraph.nodes)
-      : findMatchingProjects([devRemotes], context.projectGraph.nodes)
+      : findMatchingProjects(
+          Array.isArray(devRemotes) ? devRemotes : [devRemotes],
+          context.projectGraph.nodes
+        )
   );
 
   const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
@@ -180,20 +182,29 @@ export function getRemotes(
   const staticDynamicRemotes = knownDynamicRemotes.filter(
     (r) => !devServeApps.has(r)
   );
+  // Helper to get port from remote project
+  const getRemotePort = (r: string): number =>
+    context.projectGraph.nodes[r].data.targets['serve'].options.port;
+
+  // Collect ports for dev-served remotes (used in return value)
   const remotePorts = [...devServeRemotes, ...staticDynamicRemotes].map(
-    (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
+    getRemotePort
   );
+
+  // Calculate max port in a single pass instead of creating intermediate arrays
+  let maxPort = -Infinity;
+  for (const port of remotePorts) {
+    if (port > maxPort) maxPort = port;
+  }
+  for (const r of staticRemotes) {
+    const port = getRemotePort(r);
+    if (port > maxPort) maxPort = port;
+  }
+
   const staticRemotePort =
-    Math.max(
-      ...([
-        ...remotePorts,
-        ...staticRemotes.map(
-          (r) =>
-            context.projectGraph.nodes[r].data.targets['serve'].options.port
-        ),
-      ] as number[])
-    ) +
-    (remotesToSkip.size + 1);
+    staticRemotes.length === 0 && remotePorts.length === 0
+      ? undefined
+      : maxPort + (remotesToSkip.size + 1);
 
   return {
     staticRemotes,

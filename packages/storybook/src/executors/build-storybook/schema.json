@@ -42,14 +42,6 @@
       "description": "Build a documentation-only site using addon-docs.",
       "default": false
     },
-    "staticDir": {
-      "type": "array",
-      "description": "Directory where to load static files from, array of strings.",
-      "items": {
-        "type": "string"
-      },
-      "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
-    },
     "configDir": {
       "type": "string",
       "description": "Directory where to load Storybook configurations from.",

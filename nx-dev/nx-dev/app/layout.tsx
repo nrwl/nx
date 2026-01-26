@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-// import { LiveStreamNotifier } from '@nx/nx-dev/ui-common';
+import { GlobalSearchHandler, WebinarNotifier } from '@nx/nx-dev-ui-common';
+import bannerCollection from '../lib/banner.json';
 import '../styles/main.css';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 
@@ -44,6 +46,17 @@ export const metadata: Metadata = {
       'application/atom+xml': '/blog/atom.xml',
     },
   },
+  // Add robots directive when NEXT_PUBLIC_NO_INDEX is set
+  ...(process.env.NEXT_PUBLIC_NO_INDEX === 'true' && {
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
+  }),
 };
 
 // Viewport settings for the entire site
@@ -61,6 +74,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
+      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
+          data-blockingmode="auto"
+          type="text/javascript"
+          strategy="beforeInteractive"
+        />
+      ) : null}
       <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
@@ -96,8 +120,28 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+        <GlobalSearchHandler />
         {children}
-        {/* <LiveStreamNotifier /> */}
+        {bannerCollection.map((bannerConfig) => {
+          // Check if banner is active
+          const isActive =
+            bannerConfig.activeUntil &&
+            new Date() < new Date(bannerConfig.activeUntil);
+          if (!isActive) return null;
+          return (
+            <WebinarNotifier
+              key={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+              id={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+              title={bannerConfig.title}
+              description={bannerConfig.description}
+              primaryCtaUrl={bannerConfig.primaryCtaUrl}
+              primaryCtaText={bannerConfig.primaryCtaText}
+              secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
+              secondaryCtaText={bannerConfig.secondaryCtaText}
+              activeUntil={bannerConfig.activeUntil}
+            />
+          );
+        })}
         <FrontendObservability />
         <GlobalScripts
           gaMeasurementId={gaMeasurementId}

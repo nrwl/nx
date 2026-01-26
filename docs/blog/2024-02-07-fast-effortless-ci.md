@@ -18,7 +18,7 @@ In 2014, the state of the art for running tests and builds in your repository we
 
 Nx was created in 2017 to address this problem. Nx is a build system that operates on a **higher level** where developers define the relationships between tasks and then Nx to decides the optimal way to run those tasks. In the same way, developers can define the inputs and outputs of tasks, then Nx automatically caches those task results. Developers tell Nx what a task does and then Nx can decide how best to run that task.
 
-With [Nx Agents](/ci/features/distribute-task-execution), Nx is applying this same mindset to the problem of slow and costly CI pipelines. Nx gives you both **Smart Repos** and **Fast Builds**.
+With [Nx Agents](/docs/features/ci-features/distribute-task-execution), Nx is applying this same mindset to the problem of slow and costly CI pipelines. Nx gives you both **Smart Repos** and **Fast Builds**.
 
 ## Why is CI So Hard?
 
@@ -93,35 +93,35 @@ jobs:
 
 The only reason to modify this file is if you need to change the number of agent machines or there is another type of task that needs to run in CI.
 
-The `linux-medium-js` name in the CI configuration refers to a built-in launch template that Nx provides. If you can not find a template in [the default list](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) that meets your needs, you can provide your own. [With a single yaml file](/ci/reference/launch-templates), you can set up your agent environment in exactly the way you want with your own launch template.
+The `linux-medium-js` name in the CI configuration refers to a built-in launch template that Nx provides. If you can not find a template in [the default list](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) that meets your needs, you can provide your own. [With a single yaml file](/docs/reference/nx-cloud/launch-templates), you can set up your agent environment in exactly the way you want with your own launch template.
 
 ## Dynamically Allocate Agents
 
-Nx understands that some CI pipelines need more resources than others. To account for this, Nx Agents gives you the ability to [define three different classes of agent allocation configurations](/ci/features/dynamic-agents). You can use fewer agents for smaller PRs and more agents for larger PRs. This allows you to save money where possible and use the full power of Nx Agents when needed.
+Nx understands that some CI pipelines need more resources than others. To account for this, Nx Agents gives you the ability to [define three different classes of agent allocation configurations](/docs/features/ci-features/dynamic-agents). You can use fewer agents for smaller PRs and more agents for larger PRs. This allows you to save money where possible and use the full power of Nx Agents when needed.
 
 ![](/blog/images/2024-02-07/bodyimg2.webp)
 
 ## Automatically Split E2E Tasks by File
 
-Typically, e2e tests are the tasks that take the longest in CI. In order to take advantage of parallelization and task distribution, these large tasks would need to be split into smaller tasks, but doing this manually would involve duplicating a lot of configuration code and making sure to keep that configuration synchronized. Nx 18's [Project Crystal](/blog/what-if-nx-plugins-were-more-like-vscode-extensions) allows you to [automatically create separate Cypress and Playwright tasks](/ci/features/split-e2e-tasks) for each spec file in the e2e project. These individual tasks can all be triggered by running the `e2e-ci` task. What was once a tedious manual process can now be done for you automatically.
+Typically, e2e tests are the tasks that take the longest in CI. In order to take advantage of parallelization and task distribution, these large tasks would need to be split into smaller tasks, but doing this manually would involve duplicating a lot of configuration code and making sure to keep that configuration synchronized. Nx 18's [Project Crystal](/blog/what-if-nx-plugins-were-more-like-vscode-extensions) allows you to [automatically create separate Cypress and Playwright tasks](/docs/features/ci-features/split-e2e-tasks) for each spec file in the e2e project. These individual tasks can all be triggered by running the `e2e-ci` task. What was once a tedious manual process can now be done for you automatically.
 
 ![](/blog/images/2024-02-07/bodyimg3.webp)
 
 ## Identify and Re-run Flaky Tasks
 
-There are some tasks that will fail or succeed in CI without any changes to the task's code. These are flaky tasks and in order to merge a change in unrelated code, developers need to manually re-run the entire pipeline until that flaky task succeeds. Because Nx is already tracking inputs and outputs of tasks, it knows when a task is flaky. Now, Nx Cloud will [automatically re-run a flaky task if it fails](/ci/features/flaky-tasks), without a developer needing to manually trigger it.
+There are some tasks that will fail or succeed in CI without any changes to the task's code. These are flaky tasks and in order to merge a change in unrelated code, developers need to manually re-run the entire pipeline until that flaky task succeeds. Because Nx is already tracking inputs and outputs of tasks, it knows when a task is flaky. Now, Nx Cloud will [automatically re-run a flaky task if it fails](/docs/features/ci-features/flaky-tasks), without a developer needing to manually trigger it.
 
 ![](/blog/images/2024-02-07/bodyimg4.webp)
 
 ## Run Some Tasks on Another CI Provider
 
-If you have a task that can't be run on Nx Agents for some reason, you can easily [flag it to run directly on the main CI job](/ci/reference/nx-cloud-cli#enablingdisabling-distribution). Add a `--no-agents` flag to the command and Nx will not run it on an agent.
+If you have a task that can't be run on Nx Agents for some reason, you can easily [flag it to run directly on the main CI job](/docs/reference/nx-cloud-cli#enablingdisabling-distribution). Add a `--no-agents` flag to the command and Nx will not run it on an agent.
 
 ---
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

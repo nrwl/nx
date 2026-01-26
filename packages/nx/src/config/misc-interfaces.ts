@@ -54,6 +54,8 @@ export interface PackageJsonUpdateForPackage {
   ifPackageInstalled?: string;
   alwaysAddToPackageJson?: boolean | Dependencies;
   addToPackageJson?: boolean | Dependencies;
+  ignorePackageGroup?: boolean;
+  ignoreMigrations?: boolean;
 }
 
 export type PackageJsonUpdates = {
@@ -64,6 +66,7 @@ export type PackageJsonUpdates = {
     };
     'x-prompt'?: string;
     requires?: Record<string, string>;
+    incompatibleWith?: Record<string, string>;
   };
 };
 

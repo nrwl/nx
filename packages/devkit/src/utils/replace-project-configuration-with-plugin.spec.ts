@@ -1,6 +1,6 @@
 import {
   addProjectConfiguration,
-  CreateNodes,
+  CreateNodesV2,
   readProjectConfiguration,
   Tree,
 } from 'nx/src/devkit-exports';
@@ -10,36 +10,40 @@ import { replaceProjectConfigurationsWithPlugin } from './replace-project-config
 
 describe('replaceProjectConfigurationsWithPlugin', () => {
   let tree: Tree;
-  let createNodes: CreateNodes;
+  let createNodes: CreateNodesV2;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
     tree.write('proj/file.txt', '');
     createNodes = [
       'proj/file.txt',
-      () => ({
-        projects: {
-          proj: {
-            root: 'proj',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                dependsOn: ['^build-base'],
-                inputs: ['default', '^default'],
-                outputs: ['{options.output}', '{projectRoot}/outputs'],
-                options: {
-                  configFile: 'file.txt',
-                },
-                configurations: {
-                  production: {
-                    configFile: 'file.prod.txt',
+      (configFiles) =>
+        configFiles.map((configFile) => [
+          configFile,
+          {
+            projects: {
+              proj: {
+                root: 'proj',
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    dependsOn: ['^build-base'],
+                    inputs: ['default', '^default'],
+                    outputs: ['{options.output}', '{projectRoot}/outputs'],
+                    options: {
+                      configFile: 'file.txt',
+                    },
+                    configurations: {
+                      production: {
+                        configFile: 'file.prod.txt',
+                      },
+                    },
                   },
                 },
               },
             },
           },
-        },
-      }),
+        ]),
     ];
   });
 

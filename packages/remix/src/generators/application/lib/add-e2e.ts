@@ -3,15 +3,19 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ensurePackage,
+  GeneratorCallback,
   readNxJson,
   writeJson,
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
-import { getPackageVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-export async function addE2E(tree: Tree, options: NormalizedSchema) {
+export async function addE2E(
+  tree: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   const hasRemixPlugin = readNxJson(tree).plugins?.find((p) =>
     typeof p === 'string'
       ? p === '@nx/remix/plugin'
@@ -28,7 +32,7 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
-    >('@nx/cypress', getPackageVersion(tree, 'nx'));
+    >('@nx/cypress', nxVersion);
 
     const packageJson: PackageJson = {
       name: options.e2eProjectName,
@@ -78,7 +82,7 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/playwright')
-    >('@nx/playwright', getPackageVersion(tree, 'nx'));
+    >('@nx/playwright', nxVersion);
 
     const packageJson: PackageJson = {
       name: options.e2eProjectName,

@@ -3,6 +3,7 @@ import {
   getBuildTargetNameFromMFDevServer,
   getModuleFederationConfig,
   getRemotes,
+  normalizeProjectName,
   parseStaticRemotesConfig,
   parseStaticSsrRemotesConfig,
   startRemoteProxies,
@@ -65,8 +66,8 @@ export async function startRemoteIterators(
       remotes.devRemotes.map((r) =>
         typeof r === 'string' ? r : r.remoteName
       ) ?? []
-    ).map((r) => r.replace(/-/g, '_')),
-    project.name.replace(/-/g, '_'),
+    ).map((r) => normalizeProjectName(r)),
+    normalizeProjectName(project.name),
   ]);
 
   const staticRemotesConfig = isServer
@@ -99,7 +100,7 @@ export async function startRemoteIterators(
     : startStaticRemotesFileServer(staticRemotesConfig, context, options);
 
   isServer
-    ? startSsrRemoteProxies(
+    ? await startSsrRemoteProxies(
         staticRemotesConfig,
         mappedLocationsOfStaticRemotes,
         options.ssl
@@ -107,9 +108,10 @@ export async function startRemoteIterators(
               pathToCert: options.sslCert,
               pathToKey: options.sslKey,
             }
-          : undefined
+          : undefined,
+        options.host
       )
-    : startRemoteProxies(
+    : await startRemoteProxies(
         staticRemotesConfig,
         mappedLocationsOfStaticRemotes,
         options.ssl
@@ -117,7 +119,8 @@ export async function startRemoteIterators(
               pathToCert: options.sslCert,
               pathToKey: options.sslKey,
             }
-          : undefined
+          : undefined,
+        options.host
       );
 
   return {

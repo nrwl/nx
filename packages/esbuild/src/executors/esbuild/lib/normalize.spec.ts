@@ -15,6 +15,12 @@ jest.mock<typeof import('@nx/js')>('@nx/js', () => {
   };
 });
 
+// TODO Investigate how to ensure that the test is not being influenced by the current workspace setup
+// Currently, we are using ts solution and it is generating the wrong results if not mocked this way.
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 describe('normalizeOptions', () => {
   const context: ExecutorContext = {
     root: '/',
@@ -65,8 +71,13 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 
@@ -93,8 +104,13 @@ describe('normalizeOptions', () => {
       additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
       singleEntry: false,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 
@@ -120,8 +136,13 @@ describe('normalizeOptions', () => {
       outputFileName: 'test.js',
       singleEntry: true,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 
@@ -164,8 +185,13 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 

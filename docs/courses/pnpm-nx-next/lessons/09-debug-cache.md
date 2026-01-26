@@ -12,4 +12,4 @@ In this lesson, we'll explore how Nx Cloud enables you to compare runs and ident
 
 ## Relevant Links
 
-- [Troubleshoot cache misses](/troubleshooting/troubleshoot-cache-misses)
+- [Troubleshoot cache misses](/docs/troubleshooting/troubleshoot-cache-misses)

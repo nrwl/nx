@@ -8,6 +8,7 @@ import { getFirstGitCommit, getLatestGitTagForPattern } from '../utils/git';
 import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
 import { ProjectLogger } from './project-logger';
 import { SemverBumpType } from './version-actions';
+import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';
 
 export async function deriveSpecifierFromConventionalCommits(
   nxReleaseConfig: NxReleaseConfig,
@@ -37,8 +38,8 @@ export async function deriveSpecifierFromConventionalCommits(
   const previousVersionRef = latestMatchingGitTag
     ? latestMatchingGitTag.tag
     : fallbackCurrentVersionResolver === 'disk'
-    ? await getFirstGitCommit()
-    : undefined;
+      ? await getFirstGitCommit()
+      : undefined;
 
   if (!previousVersionRef) {
     // This should never happen since the checks above should catch if the current version couldn't be resolved
@@ -49,12 +50,28 @@ export async function deriveSpecifierFromConventionalCommits(
     );
   }
 
-  let specifier = await resolveSemverSpecifierFromConventionalCommits(
-    previousVersionRef,
-    projectGraph,
-    affectedProjects,
-    nxReleaseConfig.conventionalCommits
-  );
+  const projectToSpecifiers =
+    await resolveSemverSpecifierFromConventionalCommits(
+      previousVersionRef,
+      projectGraph,
+      affectedProjects,
+      nxReleaseConfig
+    );
+
+  const getHighestSemverChange = (
+    semverSpecifiersItr: MapIterator<SemverSpecifier>
+  ) => {
+    const semverSpecifiers = Array.from(semverSpecifiersItr);
+    return semverSpecifiers.sort((a, b) => b - a)[0];
+  };
+
+  const semverSpecifier =
+    releaseGroup.projectsRelationship === 'independent'
+      ? projectToSpecifiers.get(projectGraphNode.name)
+      : getHighestSemverChange(projectToSpecifiers.values());
+
+  let specifier =
+    semverSpecifier === null ? null : SemverSpecifierType[semverSpecifier];
 
   if (!specifier) {
     projectLogger.buffer(

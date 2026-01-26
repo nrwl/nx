@@ -72,11 +72,10 @@ describe('component Generator', () => {
     expect(tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { Component } from '@angular/core';
-      import { CommonModule } from '@angular/common';
 
       @Component({
         selector: 'example',
-        imports: [CommonModule],
+        imports: [],
         templateUrl: './example.component.html',
         styleUrl: './example.component.css',
       })
@@ -109,7 +108,7 @@ describe('component Generator', () => {
 
           fixture = TestBed.createComponent(ExampleComponent);
           component = fixture.componentInstance;
-          fixture.detectChanges();
+          await fixture.whenStable();
         });
 
         it('should create', () => {
@@ -143,11 +142,10 @@ describe('component Generator', () => {
     expect(tree.read('libs/lib1/src/lib/example/example.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { Component } from '@angular/core';
-      import { CommonModule } from '@angular/common';
 
       @Component({
         selector: 'example',
-        imports: [CommonModule],
+        imports: [],
         templateUrl: './example.ng.html',
         styleUrl: './example.css',
       })
@@ -352,6 +350,7 @@ describe('component Generator', () => {
       @Component({
         selector: 'example',
         standalone: false,
+        imports: [],
         templateUrl: './example.html'
       })
       export class Example {}
@@ -1128,11 +1127,10 @@ export class LibModule {}
         tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
       ).toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
 
         @Component({
           selector: 'example',
-          imports: [CommonModule],
+          imports: [],
           templateUrl: './example.component.html',
           styleUrl: './example.component.css',
         })
@@ -1168,7 +1166,7 @@ export class LibModule {}
 
             fixture = TestBed.createComponent(ExampleComponent);
             component = fixture.componentInstance;
-            fixture.detectChanges();
+            await fixture.whenStable();
           });
 
           it('should create', () => {

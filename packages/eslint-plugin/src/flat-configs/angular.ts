@@ -1,6 +1,6 @@
 import angularEslint from 'angular-eslint';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 
 /**
  * This configuration is intended to be applied to ALL .ts files in Angular
@@ -13,7 +13,7 @@ import tseslint from 'typescript-eslint';
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-export default tseslint.config(
+const config: ConfigArray = tseslint.config(
   ...angularEslint.configs.tsRecommended.map((c) => ({
     // Files need to be specified or else typescript-eslint rules will be
     // applied to non-TS files. For example, buildable/publishable libs
@@ -31,6 +31,8 @@ export default tseslint.config(
       },
     },
     processor: angularEslint.processInlineTemplates,
-    plugins: { '@angular-eslint': angularEslint.tsPlugin },
+    plugins: { '@angular-eslint': angularEslint.tsPlugin as any },
   }
 );
+
+export default config;

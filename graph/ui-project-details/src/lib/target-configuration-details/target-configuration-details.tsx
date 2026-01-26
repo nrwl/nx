@@ -1,10 +1,6 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { JsonCodeBlock } from '@nx/graph-internal/ui-code-block';
-import { ExpandedTargetsContext } from '@nx/graph/legacy/shared';
-import { CopyToClipboardButton } from '@nx/graph/legacy/components';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { JsonCodeBlock } from '@nx/graph-ui-code-block';
+import { CopyToClipboardButton, Tooltip } from '@nx/graph-ui-common';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Pill } from '../pill';
 import { ShowOptionsHelp } from '../show-all-options/show-options-help';
@@ -19,6 +15,7 @@ import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
+import { ExpandedTargetsContext } from '../expanded-targets-provider';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -133,7 +130,7 @@ export default function TargetConfigurationDetails({
             <h4 className="mb-4">
               <TargetExecutorTitle {...displayHeader} />
             </h4>
-            <p className="pl-5 font-mono">
+            <div className="pl-5 font-mono">
               <TargetExecutor {...displayHeader} link={link}>
                 <TargetSourceInfo
                   className="pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
@@ -143,7 +140,7 @@ export default function TargetConfigurationDetails({
                   sourceMap={sourceMap}
                 />
               </TargetExecutor>
-            </p>
+            </div>
           </div>
 
           {script && (
@@ -151,7 +148,7 @@ export default function TargetConfigurationDetails({
               <h4 className="mb-4">
                 <TargetExecutorTitle script={script} />
               </h4>
-              <p className="pl-5 font-mono">
+              <div className="pl-5 font-mono">
                 <TargetExecutor script={script} link={link}>
                   <TargetSourceInfo
                     className="pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
@@ -159,7 +156,7 @@ export default function TargetConfigurationDetails({
                     sourceMap={sourceMap}
                   />
                 </TargetExecutor>
-              </p>
+              </div>
             </div>
           )}
 

@@ -1,4 +1,5 @@
 import { NX_VERSION, normalizePath, workspaceRoot } from '@nx/devkit';
+import { getCatalogManager } from '@nx/devkit/src/utils/catalog';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import { AST } from 'jsonc-eslint-parser';
@@ -17,6 +18,8 @@ import {
   getSourceFilePath,
 } from '../utils/runtime-lint-utils';
 
+const WORKSPACE_VERSION_WILDCARD = 'workspace:*';
+
 export type Options = [
   {
     buildTargets?: string[];
@@ -28,14 +31,16 @@ export type Options = [
     includeTransitiveDependencies?: boolean;
     useLocalPathsForWorkspaceDependencies?: boolean;
     runtimeHelpers?: string[];
-  }
+    peerDepsVersionStrategy?: 'installed' | 'workspace';
+  },
 ];
 
 export type MessageIds =
   | 'missingDependency'
   | 'obsoleteDependency'
   | 'versionMismatch'
-  | 'missingDependencySection';
+  | 'missingDependencySection'
+  | 'invalidCatalogReference';
 
 export const RULE_NAME = 'dependency-checks';
 
@@ -63,6 +68,12 @@ export default ESLintUtils.RuleCreator(
           includeTransitiveDependencies: { type: 'boolean' },
           useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
           runtimeHelpers: { type: 'array', items: { type: 'string' } },
+          peerDepsVersionStrategy: {
+            type: 'string',
+            enum: ['installed', 'workspace'],
+            description:
+              'Strategy for peer dependency versions. "installed" uses versions from root package.json (default). "workspace" uses workspace:* for all peer dependencies to ensure version synchronization in integrated monorepos.',
+          },
         },
         additionalProperties: false,
       },
@@ -72,6 +83,7 @@ export default ESLintUtils.RuleCreator(
       obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}" project.`,
       versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
       missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
+      invalidCatalogReference: `Invalid catalog reference for "{{packageName}}": {{error}}`,
     },
   },
   defaultOptions: [
@@ -85,6 +97,7 @@ export default ESLintUtils.RuleCreator(
       includeTransitiveDependencies: false,
       useLocalPathsForWorkspaceDependencies: false,
       runtimeHelpers: [],
+      peerDepsVersionStrategy: 'installed',
     },
   ],
   create(
@@ -100,6 +113,7 @@ export default ESLintUtils.RuleCreator(
         includeTransitiveDependencies,
         useLocalPathsForWorkspaceDependencies,
         runtimeHelpers,
+        peerDepsVersionStrategy = 'installed',
       },
     ]
   ) {
@@ -161,6 +175,24 @@ export default ESLintUtils.RuleCreator(
 
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
+    function getDependencySection(node: AST.JSONProperty): string | undefined {
+      // Check if this node is a dependency section itself
+      const directSection = (node.key as JSONLiteral)?.value as string;
+      if (
+        ['dependencies', 'peerDependencies', 'optionalDependencies'].includes(
+          directSection
+        )
+      ) {
+        return directSection;
+      }
+
+      // Otherwise, traverse up to find the parent section
+      const sectionProp = node.parent?.parent as AST.JSONProperty | undefined;
+      return (sectionProp?.key as JSONLiteral | undefined)?.value as
+        | string
+        | undefined;
+    }
+
     function validateMissingDependencies(node: AST.JSONProperty) {
       if (!checkMissingDependencies) {
         return;
@@ -170,6 +202,8 @@ export default ESLintUtils.RuleCreator(
       );
 
       if (missingDeps.length) {
+        const dependencySection = getDependencySection(node);
+
         context.report({
           node: node as any,
           messageId: 'missingDependency',
@@ -180,8 +214,15 @@ export default ESLintUtils.RuleCreator(
           },
           fix(fixer) {
             missingDeps.forEach((d) => {
-              projPackageJsonDeps[d] =
-                rootPackageJsonDeps[d] || npmDependencies[d];
+              if (
+                dependencySection === 'peerDependencies' &&
+                peerDepsVersionStrategy === 'workspace'
+              ) {
+                projPackageJsonDeps[d] = WORKSPACE_VERSION_WILDCARD;
+              } else {
+                projPackageJsonDeps[d] =
+                  rootPackageJsonDeps[d] || npmDependencies[d];
+              }
             });
 
             const deps = (node.value as AST.JSONObjectExpression).properties;
@@ -205,27 +246,93 @@ export default ESLintUtils.RuleCreator(
       }
     }
 
+    function validateCatalogReferenceForPackage(
+      node: AST.JSONProperty,
+      packageName: string,
+      packageRange: string
+    ) {
+      const manager = getCatalogManager(workspaceRoot);
+      if (!manager) {
+        return;
+      }
+
+      if (!manager.isCatalogReference(packageRange)) {
+        return;
+      }
+
+      try {
+        manager.validateCatalogReference(
+          workspaceRoot,
+          packageName,
+          packageRange
+        );
+      } catch (error) {
+        context.report({
+          node: node as any,
+          messageId: 'invalidCatalogReference',
+          data: {
+            packageName: packageName,
+            error: error.message,
+          },
+        });
+      }
+    }
+
     function validateVersionMatchesInstalled(
       node: AST.JSONProperty,
       packageName: string,
       packageRange: string
     ) {
-      if (!checkVersionMismatches) {
+      if (!checkVersionMismatches) return;
+
+      const dependencySection = getDependencySection(node);
+
+      if (
+        dependencySection === 'peerDependencies' &&
+        peerDepsVersionStrategy === 'workspace' &&
+        !packageRange.startsWith('workspace:')
+      ) {
+        context.report({
+          node: node as any,
+          messageId: 'versionMismatch',
+          data: { packageName, version: WORKSPACE_VERSION_WILDCARD },
+          fix: (fixer) =>
+            fixer.replaceText(
+              node as any,
+              `"${packageName}": "${WORKSPACE_VERSION_WILDCARD}"`
+            ),
+        });
         return;
       }
+
+      // Resolve catalog references before validation
+      let resolvedPackageRange = packageRange;
+      const manager = getCatalogManager(workspaceRoot);
+
+      if (manager?.isCatalogReference(packageRange)) {
+        const resolved = manager.resolveCatalogReference(
+          workspaceRoot,
+          packageName,
+          packageRange
+        );
+
+        if (!resolved) {
+          // Catalog resolution failed - this shouldn't happen because
+          // validateCatalogReferenceForPackage should have caught it earlier
+          // But if it does, skip validation gracefully
+          return;
+        }
+
+        resolvedPackageRange = resolved;
+      }
+
       if (
         npmDependencies[packageName].startsWith('file:') ||
-        packageRange.startsWith('file:') ||
+        resolvedPackageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
-        packageRange === '*' ||
-        packageRange.startsWith('workspace:') ||
-        /**
-         * Catalogs can be named, or left unnamed
-         * So just checking up until the : will catch both cases
-         * e.g. catalog:some-catalog or catalog:
-         */
-        packageRange.startsWith('catalog:') ||
-        satisfies(npmDependencies[packageName], packageRange, {
+        resolvedPackageRange === '*' ||
+        resolvedPackageRange.startsWith('workspace:') ||
+        satisfies(npmDependencies[packageName], resolvedPackageRange, {
           includePrerelease: true,
         })
       ) {
@@ -358,6 +465,8 @@ export default ESLintUtils.RuleCreator(
         if (ignoredDependencies.includes(packageName)) {
           return;
         }
+
+        validateCatalogReferenceForPackage(node, packageName, packageRange);
 
         if (expectedDependencyNames.includes(packageName)) {
           validateVersionMatchesInstalled(node, packageName, packageRange);

@@ -30,6 +30,11 @@
       "type": "string",
       "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath",
       "x-completion-type": "directory"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change. If not specified, watch mode will be enabled by default.",
+      "default": true
     }
   },
   "definitions": {},

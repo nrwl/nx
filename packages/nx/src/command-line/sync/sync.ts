@@ -1,4 +1,3 @@
-import * as ora from 'ora';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
@@ -14,6 +13,7 @@ import {
 } from '../../utils/sync-generators';
 import type { SyncArgs } from './command-object';
 import chalk = require('chalk');
+import { globalSpinner } from '../../utils/spinner';
 
 interface SyncOptions extends SyncArgs {
   check?: boolean;
@@ -78,11 +78,19 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       return 1;
     }
 
-    const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
+    const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(
+      results,
+      // log the out of sync details if the user is running `nx sync --check`
+      options.check
+    );
     if (options.check) {
       output.error({
         title: 'The workspace is out of sync',
-        bodyLines: resultBodyLines,
+        bodyLines: [
+          ...resultBodyLines,
+          '',
+          'Run `nx sync` to sync the workspace.',
+        ],
       });
 
       if (anySyncGeneratorsFailed) {
@@ -103,8 +111,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       bodyLines: resultBodyLines,
     });
 
-    const spinner = ora('Syncing the workspace...');
-    spinner.start();
+    const spinner = globalSpinner.start('Syncing the workspace...');
 
     try {
       const flushResult = await flushSyncGeneratorChanges(results);

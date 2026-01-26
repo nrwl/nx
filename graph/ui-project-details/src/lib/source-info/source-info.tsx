@@ -1,4 +1,4 @@
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph-ui-common';
 import { twMerge } from 'tailwind-merge';
 import { SourcemapInfoToolTip } from '../tooltips/sourcemap-info-tooltip';
 

@@ -22,10 +22,9 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
   }
 
   if (options.customProxyConfigPath) {
-    const { nxCloudProxyConfig } = require(join(
-      process.cwd(),
-      options.customProxyConfigPath
-    ));
+    const { nxCloudProxyConfig } = require(
+      join(process.cwd(), options.customProxyConfigPath)
+    );
     axiosConfigBuilder = nxCloudProxyConfig ?? axiosConfigBuilder;
   }
 

@@ -7,6 +7,13 @@ use std::ffi::OsString;
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
 use tracing::debug;
 
+pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
+    task_id TEXT PRIMARY KEY NOT NULL,
+    pid INTEGER NOT NULL,
+    command TEXT NOT NULL,
+    cwd TEXT NOT NULL
+);";
+
 #[napi]
 struct RunningTasksService {
     db: External<NxDbConnection>,
@@ -17,14 +24,10 @@ struct RunningTasksService {
 impl RunningTasksService {
     #[napi(constructor)]
     pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        let s = Self {
+        Ok(Self {
             db,
             added_tasks: Default::default(),
-        };
-
-        s.setup()?;
-
-        Ok(s)
+        })
     }
 
     #[napi]
@@ -42,16 +45,17 @@ impl RunningTasksService {
     }
 
     fn is_task_running(&self, task_id: &String) -> anyhow::Result<bool> {
-        let mut stmt = self
-            .db
-            .prepare("SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?")?;
-        if let Ok((pid, db_process_command, db_process_cwd)) = stmt.query_row([task_id], |row| {
-            let pid: u32 = row.get(0)?;
-            let command: String = row.get(1)?;
-            let cwd: String = row.get(2)?;
+        if let Some((pid, db_process_command, db_process_cwd)) = self.db.query_row(
+            "SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?",
+            [task_id],
+            |row| {
+                let pid: u32 = row.get(0)?;
+                let command: String = row.get(1)?;
+                let cwd: String = row.get(2)?;
 
-            Ok((pid, command, cwd))
-        }) {
+                Ok((pid, command, cwd))
+            },
+        )? {
             debug!("Checking if {} exists", pid);
 
             let mut sys = System::new();
@@ -98,10 +102,10 @@ impl RunningTasksService {
         let cwd = std::env::current_dir()
             .expect("The current working directory does not exist")
             .to_normalized_string();
-        let mut stmt = self.db.prepare(
+        self.db.execute(
             "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
+            [&task_id, &pid.to_string(), &command_str, &cwd],
         )?;
-        stmt.execute([&task_id, &pid.to_string(), &command_str, &cwd])?;
         debug!("Added {} to running tasks", &task_id);
         self.added_tasks.insert(task_id);
         Ok(())
@@ -109,26 +113,9 @@ impl RunningTasksService {
 
     #[napi]
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
-        let mut stmt = self
-            .db
-            .prepare("DELETE FROM running_tasks WHERE task_id = ?")?;
-        stmt.execute([&task_id])?;
+        self.db
+            .execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
         debug!("Removed {} from running tasks", task_id);
-        Ok(())
-    }
-
-    fn setup(&self) -> anyhow::Result<()> {
-        self.db.execute_batch(
-            "
-            CREATE TABLE IF NOT EXISTS running_tasks (
-                task_id TEXT PRIMARY KEY NOT NULL,
-                pid INTEGER NOT NULL,
-                command TEXT NOT NULL,
-                cwd TEXT NOT NULL
-            );
-            ",
-        )?;
-        debug!("Setup running tasks service");
         Ok(())
     }
 }

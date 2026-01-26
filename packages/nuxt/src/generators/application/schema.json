@@ -19,7 +19,7 @@
     "name": {
       "description": "The name of the application.",
       "type": "string",
-      "pattern": "^[a-zA-Z][^:]*$",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
       "x-priority": "important"
     },
     "skipFormat": {
@@ -110,6 +110,11 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "useAppDir": {
+      "type": "boolean",
+      "description": "Use Nuxt 4 app/ directory structure instead of src/ directory. Defaults to true for Nuxt v4, false for Nuxt v3.",
+      "x-priority": "important"
     }
   },
   "required": ["directory"],

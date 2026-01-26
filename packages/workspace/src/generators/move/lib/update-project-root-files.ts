@@ -3,7 +3,7 @@ import { workspaceRoot } from '@nx/devkit';
 import * as path from 'path';
 import { extname, join } from 'path';
 import { NormalizedSchema } from '../schema';
-const allowedExt = ['.ts', '.js', '.json'];
+const allowedExt = ['.ts', '.js', '.json', '.cts', '.cjs'];
 
 /**
  * Updates the files in the root of the project

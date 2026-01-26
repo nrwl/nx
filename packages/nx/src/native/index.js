@@ -1,8 +1,17 @@
 const { join, basename } = require('path');
-const { copyFileSync, existsSync, mkdirSync, renameSync } = require('fs');
+const {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
+
+const MAX_COPY_RETRIES = 3;
 
 // WASI is still experimental and throws a warning when used
 // We spawn many many processes so the warning gets printed a lot
@@ -56,6 +65,18 @@ const localNodeFiles = [
 
 const originalLoad = Module._load;
 
+function statsOrNull(path) {
+  try {
+    return statSync(path);
+  } catch {
+    return null;
+  }
+}
+
+function isNoExecError(e) {
+  return e.code === 'EACCES' || e.code === 'EPERM';
+}
+
 // We override the _load function so that when a native file is required,
 // we copy it to a cache directory and require it from there.
 // This prevents the file being loaded from node_modules and causing file locking issues.
@@ -83,22 +104,61 @@ Module._load = function (request, parent, isMain) {
     );
     // This is the path that will get loaded
     const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
+    const expectedFileSize = statSync(nativeLocation).size;
+    const existingFileStats = statsOrNull(tmpFile);
 
     // If the file to be loaded already exists, just load it
-    if (existsSync(tmpFile)) {
-      return originalLoad.apply(this, [tmpFile, parent, isMain]);
+    if (existingFileStats?.size === expectedFileSize) {
+      try {
+        return originalLoad.apply(this, [tmpFile, parent, isMain]);
+      } catch (e) {
+        // If loading from cache fails due to noexec, fall back to original location
+        if (isNoExecError(e)) {
+          return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+        }
+        throw e;
+      }
     }
     if (!existsSync(nativeFileCacheLocation)) {
       mkdirSync(nativeFileCacheLocation, { recursive: true });
     }
-    // First copy to a unique location for each process
-    copyFileSync(nativeLocation, tmpTmpFile);
 
-    // Then rename to the final location
-    renameSync(tmpTmpFile, tmpFile);
+    // Retry copying up to 3 times, validating after each copy
+    for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
+      // First copy to a unique location for each process
+      copyFileSync(nativeLocation, tmpTmpFile);
 
-    // Load from the final location
-    return originalLoad.apply(this, [tmpFile, parent, isMain]);
+      // Validate the copy - check file size matches expected
+      const copiedFileStats = statsOrNull(tmpTmpFile);
+      if (copiedFileStats?.size === expectedFileSize) {
+        // Copy succeeded, rename to final location and load
+        renameSync(tmpTmpFile, tmpFile);
+        try {
+          return originalLoad.apply(this, [tmpFile, parent, isMain]);
+        } catch (e) {
+          // If loading from cache fails due to noexec, fall back to original location
+          if (isNoExecError(e)) {
+            return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+          }
+          throw e;
+        }
+      }
+
+      // Copy failed validation, clean up the malformed file
+      try {
+        unlinkSync(tmpTmpFile);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+
+    // All retries failed - warn and load from original location
+    console.warn(
+      `Warning: Failed to copy native module to cache after ${MAX_COPY_RETRIES} attempts. ` +
+        `Loading from original location instead. ` +
+        `This may cause file locking issues on Windows.`
+    );
+    return originalLoad.apply(this, [nativeLocation, parent, isMain]);
   } else {
     // call the original _load function for everything else
     return originalLoad.apply(this, arguments);

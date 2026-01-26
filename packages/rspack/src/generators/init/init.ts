@@ -54,6 +54,11 @@ export async function rspackInitGenerator(
           'rspack-serve',
           'serve-rspack',
         ],
+        serveStaticTargetName: [
+          'serve-static',
+          'rspack:serve-static',
+          'rspack-serve-static',
+        ],
         previewTargetName: [
           'preview',
           'rspack:preview',

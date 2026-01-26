@@ -21,6 +21,7 @@ import { join, relative } from 'path';
 import {
   dedupe,
   findStorybookAndBuildTargetsAndCompiler,
+  storybookMajorVersion as getStorybookMajorVersion,
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
@@ -170,6 +171,7 @@ export function createStorybookTsconfigFile(
   isRootProject: boolean,
   mainDir: 'components' | 'src'
 ) {
+  const storybookMajorVersion = getStorybookMajorVersion(tree);
   const offset = offsetFromRoot(projectRoot);
   const useTsSolution = isUsingTsSolutionSetup(tree);
 
@@ -212,11 +214,13 @@ export function createStorybookTsconfigFile(
       outDir: useTsSolution
         ? 'out-tsc/storybook'
         : uiFramework === '@storybook/react-webpack5' ||
-          uiFramework === '@storybook/react-vite'
-        ? ''
-        : undefined,
-      module: useTsSolution ? 'esnext' : undefined,
-      moduleResolution: useTsSolution ? 'bundler' : undefined,
+            uiFramework === '@storybook/react-vite'
+          ? ''
+          : undefined,
+      module:
+        storybookMajorVersion === 10 || useTsSolution ? 'esnext' : undefined,
+      moduleResolution:
+        storybookMajorVersion === 10 || useTsSolution ? 'bundler' : undefined,
       jsx:
         useTsSolution && uiFramework !== '@storybook/angular'
           ? 'preserve'
@@ -605,9 +609,11 @@ export function createProjectStorybookDir(
     return;
   }
 
+  const storybookMajor = (getStorybookMajorVersion(tree) ?? 10) <= 9 ? 9 : 10;
+
   const templatePath = join(
     __dirname,
-    `../project-files${tsConfiguration ? '-ts' : ''}`
+    `../files/v${storybookMajor}/project-files${tsConfiguration ? '-ts' : ''}`
   );
 
   generateFiles(tree, templatePath, root, {
@@ -657,8 +663,8 @@ export function getTsConfigPath(
     path?.length > 0
       ? path
       : getProjectType(tree, root, projectType) === 'application'
-      ? 'tsconfig.app.json'
-      : 'tsconfig.lib.json'
+        ? 'tsconfig.app.json'
+        : 'tsconfig.lib.json'
   );
 }
 

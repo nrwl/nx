@@ -1,41 +1,46 @@
-import { existsSync } from 'node:fs';
-import { dirname, join, parse } from 'node:path';
-import * as rollup from 'rollup';
-import { getBabelInputPlugin } from '@rollup/plugin-babel';
-import * as autoprefixer from 'autoprefixer';
 import {
   logger,
+  normalizePath,
   type ProjectGraph,
   readCachedProjectGraph,
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
-
-import { analyze } from '../analyze';
-import { swc } from '../swc';
-import { generatePackageJson } from '../package-json/generate-package-json';
-import { getProjectNode } from './get-project-node';
-import { deleteOutput } from '../delete-output';
-import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
-import { normalizeOptions } from './normalize-options';
+import * as autoprefixer from 'autoprefixer';
+import { existsSync } from 'node:fs';
+import { dirname, join, parse } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import * as rollup from 'rollup';
+import { analyze } from '../analyze';
+import { deleteOutput } from '../delete-output';
+import { nxCopyAssetsPlugin } from '../nx-copy-assets.plugin';
+import { generatePackageJson } from '../package-json/generate-package-json';
+import { swc } from '../swc';
+import { getProjectNode } from './get-project-node';
+import { normalizeOptions } from './normalize-options';
+import { RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
 
 const json = require('@rollup/plugin-json');
-const copy = require('rollup-plugin-copy');
-const postcss = require('rollup-plugin-postcss');
+
+// Use our inlined postcss plugin instead of external rollup-plugin-postcss
+import { postcss } from '../postcss';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -85,9 +90,10 @@ export function withNx(
     dependencies = result.dependencies;
   }
 
+  const projectSourceRoot = getProjectSourceRoot(projectNode.data);
   const options = normalizeOptions(
     projectNode.data.root,
-    projectNode.data.sourceRoot,
+    projectSourceRoot,
     rawOptions
   );
 
@@ -100,7 +106,7 @@ export function withNx(
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
-          projectRoot,
+          projectNode.data.root,
           dependencies
         );
 
@@ -237,23 +243,22 @@ export function withNx(
       : finalConfig.output.dir;
 
     finalConfig.plugins = [
-      copy({
-        targets: convertCopyAssetsToRollupOptions(
-          options.outputPath,
-          options.assets
-        ),
+      nxCopyAssetsPlugin({
+        assets: options.assets,
+        outputPath: options.outputPath,
+        projectRoot,
       }),
       image(),
       json(),
       // TypeScript compilation and declaration generation
-      // TODO(v22): Change default value of useLegacyTypescriptPlugin to false for Nx 22
-      options.useLegacyTypescriptPlugin !== false
+      options.useLegacyTypescriptPlugin === true
         ? (() => {
             // TODO(v23): Remove in Nx 23
             // Show deprecation warning
             logger.warn(
-              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 23. ` +
-                `Set 'useLegacyTypescriptPlugin: false' to use the official @rollup/plugin-typescript.`
+              `rollup-plugin-typescript2 is deprecated and will be removed in Nx 23. ` +
+                `You are explicitly using it with 'useLegacyTypescriptPlugin: true'. ` +
+                `Consider removing this option to use the official @rollup/plugin-typescript.`
             );
 
             return require('rollup-plugin-typescript2')({
@@ -275,12 +280,11 @@ export function withNx(
               tsconfig: tsConfigPath,
               compilerOptions: {
                 ...tsCompilerOptions,
+                composite: false,
                 outDir: rollupOutputDir,
                 declarationDir: rollupOutputDir,
+                noEmitOnError: !options.skipTypeCheck,
               },
-              declaration: true,
-              declarationMap: !!options.sourceMap,
-              noEmitOnError: !options.skipTypeCheck,
             });
           })(),
       typeDefinitions({
@@ -313,10 +317,7 @@ export function withNx(
             supportsStaticESM: true,
             isModern: true,
           },
-          cwd: join(
-            workspaceRoot,
-            projectNode.data.sourceRoot ?? projectNode.data.root
-          ),
+          cwd: join(workspaceRoot, projectSourceRoot),
           rootMode: options.babelUpwardRootMode ? 'upward' : undefined,
           babelrc: true,
           extensions: fileExtensions,
@@ -353,9 +354,11 @@ function createInput(
   if (global.NX_GRAPH_CREATION) return {};
   const mainEntryFileName = options.outputFileName || options.main;
   const input: Record<string, string> = {};
-  input[parse(mainEntryFileName).name] = join(workspaceRoot, options.main);
+  input[parse(mainEntryFileName).name] = normalizePath(
+    join(workspaceRoot, options.main)
+  );
   options.additionalEntryPoints?.forEach((entry) => {
-    input[parse(entry).name] = join(workspaceRoot, entry);
+    input[parse(entry).name] = normalizePath(join(workspaceRoot, entry));
   });
   return input;
 }
@@ -384,23 +387,6 @@ function createTsCompilerOptions(
     compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
-}
-
-interface RollupCopyAssetOption {
-  src: string;
-  dest: string;
-}
-
-function convertCopyAssetsToRollupOptions(
-  outputPath: string,
-  assets: AssetGlobPattern[]
-): RollupCopyAssetOption[] {
-  return assets
-    ? assets.map((a) => ({
-        src: join(a.input, a.glob).replace(/\\/g, '/'),
-        dest: join(workspaceRoot, outputPath, a.output).replace(/\\/g, '/'),
-      }))
-    : undefined;
 }
 
 function readCompatibleFormats(

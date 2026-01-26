@@ -1,4 +1,4 @@
-import { PodcastDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { PodcastDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { PodcastListItem } from './podcast-list-item';
 
 export interface PodcastListProps {
@@ -8,7 +8,7 @@ export interface PodcastListProps {
 export function PodcastList({ podcasts }: PodcastListProps): JSX.Element {
   return podcasts.length < 1 ? (
     <div>
-      <h2 className="mt-32 text-center text-xl font-semibold text-slate-500 sm:text-2xl xl:mb-24 dark:text-white ">
+      <h2 className="mt-32 text-center text-xl font-semibold text-slate-500 sm:text-2xl xl:mb-24 dark:text-white">
         No podcasts as yet but stay tuned!
       </h2>
     </div>

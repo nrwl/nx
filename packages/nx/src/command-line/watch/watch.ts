@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
+import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
 
 export interface WatchArguments {
@@ -9,6 +10,7 @@ export interface WatchArguments {
   includeGlobalWorkspaceFiles?: boolean;
   verbose?: boolean;
   command?: string;
+  initialRun?: boolean;
 
   projectNameEnvName?: string;
   fileChangesEnvName?: string;
@@ -190,6 +192,18 @@ export async function watch(args: WatchArguments) {
     args.fileChangesEnvName
   );
 
+  // Run the command initially if requested
+  if (args.initialRun) {
+    args.verbose && output.logSingleLine('running command initially...');
+
+    const initialProjects = args.all
+      ? [] // When using --all, we don't need to pass specific projects
+      : args.projects || [];
+
+    // Execute the initial run
+    await batchQueue.enqueue(initialProjects, []);
+  }
+
   await daemonClient.registerFileWatcher(
     {
       watchProjects: whatToWatch,
@@ -197,13 +211,21 @@ export async function watch(args: WatchArguments) {
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
     },
     async (err, data) => {
-      if (err === 'closed') {
+      if (err === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (err === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (err === 'closed') {
         output.error({
-          title: 'Watch connection closed',
-          bodyLines: [
-            'The daemon has closed the connection to this watch process.',
-            'Please restart your watch command.',
-          ],
+          title: 'Failed to reconnect to daemon after multiple attempts',
+          bodyLines: ['Please restart your watch command.'],
+        });
+        process.exit(1);
+      } else if (err instanceof VersionMismatchError) {
+        output.error({
+          title: 'Nx version changed. Please restart your command.',
         });
         process.exit(1);
       } else if (err !== null) {
@@ -225,4 +247,9 @@ export async function watch(args: WatchArguments) {
     }
   );
   args.verbose && output.logSingleLine('watch process waiting...');
+
+  // Keep the process alive while watching for file changes
+  // The file watcher callbacks will handle incoming events
+  // The process will exit when Ctrl+C is pressed or if the connection closes
+  await new Promise(() => {});
 }

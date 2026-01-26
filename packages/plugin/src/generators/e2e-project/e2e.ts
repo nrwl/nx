@@ -19,7 +19,11 @@ import {
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
-import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
+import {
+  addPropertyToJestConfig,
+  configurationGenerator,
+  findJestConfig,
+} from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
@@ -153,33 +157,42 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   const { startLocalRegistryPath, stopLocalRegistryPath } =
     addLocalRegistryScripts(host);
 
+  const jestConfigPath = findJestConfig(host, options.projectRoot);
+  if (!jestConfigPath) {
+    throw new Error(
+      `Could not find Jest config for project ${options.projectName} at ${options.projectRoot}`
+    );
+  }
+
   addPropertyToJestConfig(
     host,
-    join(options.projectRoot, 'jest.config.ts'),
+    jestConfigPath,
     'globalSetup',
     join(offsetFromRoot(options.projectRoot), startLocalRegistryPath)
   );
   addPropertyToJestConfig(
     host,
-    join(options.projectRoot, 'jest.config.ts'),
+    jestConfigPath,
     'globalTeardown',
     join(offsetFromRoot(options.projectRoot), stopLocalRegistryPath)
   );
 
   const project = readProjectConfiguration(host, options.projectName);
   project.targets ??= {};
-  const e2eTarget = project.targets.e2e;
+  if (project.targets.e2e) {
+    const e2eTarget = project.targets.e2e;
 
-  project.targets.e2e = {
-    ...e2eTarget,
-    dependsOn: [`^build`],
-    options: {
-      ...e2eTarget.options,
-      runInBand: true,
-    },
-  };
+    project.targets.e2e = {
+      ...e2eTarget,
+      dependsOn: [`^build`],
+      options: {
+        ...e2eTarget.options,
+        runInBand: true,
+      },
+    };
 
-  updateProjectConfiguration(host, options.projectName, project);
+    updateProjectConfiguration(host, options.projectName, project);
+  }
 
   return jestTask;
 }

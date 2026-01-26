@@ -6,7 +6,7 @@ duration: '2:08'
 
 While remote caching is powerful, it may not be enough when core packages change frequently, invalidating the cache for large portions of your workspace.
 
-Nx Cloud comes with a built-in feature called [Nx Agents](/ci/features/distribute-task-execution) that allows to automatically distribute tasks across multiple machines.
+Nx Cloud comes with a built-in feature called [Nx Agents](/docs/features/ci-features/distribute-task-execution) that allows to automatically distribute tasks across multiple machines.
 
 In this lesson we're going to update the existing CI configuration to enable Nx Agents. Which mostly can be done by adding the following line:
 
@@ -16,4 +16,4 @@ nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
 
 ## Relevant Links
 
-- [Distribute Task Execution](/ci/features/distribute-task-execution)
+- [Distribute Task Execution](/docs/features/ci-features/distribute-task-execution)

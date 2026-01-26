@@ -2,7 +2,7 @@
  * Translates NodeJS signals to numeric exit code
  * @param signal
  */
-export function signalToCode(signal: NodeJS.Signals): number {
+export function signalToCode(signal: NodeJS.Signals | null): number {
   switch (signal) {
     case 'SIGHUP':
       return 128 + 1;

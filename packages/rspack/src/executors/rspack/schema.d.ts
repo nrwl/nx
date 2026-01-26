@@ -12,6 +12,7 @@ export interface RspackExecutorSchema {
   fileReplacements?: FileReplacement[];
   generateIndexHtml?: boolean;
   generatePackageJson?: boolean;
+  runtimeDependencies?: string[];
   index?: string;
   indexHtml?: string;
   main?: string;
@@ -31,7 +32,9 @@ export interface RspackExecutorSchema {
   rspackConfig?: string;
   runtimeChunk?: boolean;
   scripts?: Array<ExtraEntryPointClass | string>;
+  /** @deprecated Use `typeCheckOptions` option instead. */
   skipTypeChecking?: boolean;
+  typeCheckOptions?: boolean | TypeCheckOptions;
   sourceMap?: boolean | DevTool;
   standardRspackConfigFunction?: boolean;
   statsJson?: boolean;
@@ -40,15 +43,14 @@ export interface RspackExecutorSchema {
     sassOptions?: Record<string, any>;
     lessOptions?: Record<string, any>;
   };
-  sassImplementation?: 'sass' | 'sass-embedded';
   styles?: Array<ExtraEntryPointClass | string>;
   target?: 'web' | 'node';
   transformers?: TransformerEntry[];
   tsConfig?: string;
-  typeCheck?: boolean;
   verbose?: boolean;
   vendorChunk?: boolean;
   watch?: boolean;
+  cache?: boolean;
 }
 
 export interface AssetGlobPattern {
@@ -66,6 +68,10 @@ export interface FileReplacement {
 export interface OptimizationOptions {
   scripts: boolean;
   styles: boolean;
+}
+
+export interface TypeCheckOptions {
+  async: boolean;
 }
 
 export interface NormalizedRspackExecutorSchema extends RspackExecutorSchema {

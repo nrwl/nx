@@ -3,8 +3,8 @@ import {
   getSchemaFromResult,
   Lookup,
   LookupResult,
-} from '@nx/nx-dev/data-access-packages';
-import { JsonSchema, JsonSchema1 } from '@nx/nx-dev/models-package';
+} from '@nx/nx-dev-data-access-packages';
+import { JsonSchema, JsonSchema1 } from '@nx/nx-dev-models-package';
 import { ParameterView } from './parameter-view';
 import { shouldShowInStage, Stage } from './stage';
 import { Type } from './types/type';

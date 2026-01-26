@@ -18,6 +18,9 @@ import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/re
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
+let projectsWithoutInferencePromise: Promise<
+  typeof projectsWithoutInference
+> | null = null;
 
 export async function resolveNxPlugin(
   moduleName: string,
@@ -25,11 +28,12 @@ export async function resolveNxPlugin(
   paths: string[]
 ) {
   try {
-    require.resolve(moduleName);
+    require.resolve(moduleName, { paths });
   } catch {
     // If a plugin cannot be resolved, we will need projects to resolve it
-    projectsWithoutInference ??=
-      await retrieveProjectConfigurationsWithoutPluginInference(root);
+    projectsWithoutInferencePromise ??=
+      retrieveProjectConfigurationsWithoutPluginInference(root);
+    projectsWithoutInference ??= await projectsWithoutInferencePromise;
   }
   const { pluginPath, name, shouldRegisterTSTranspiler } = getPluginPathAndName(
     moduleName,

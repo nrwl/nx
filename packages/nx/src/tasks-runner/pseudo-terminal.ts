@@ -184,10 +184,14 @@ export class PseudoTtyProcess implements RunningTask {
     this.outputCallbacks.push(callback);
   }
 
+  getPid(): number | undefined {
+    return this.childProcess.getPid();
+  }
+
   kill(s?: NodeJS.Signals): void {
     if (this.isAlive) {
       try {
-        this.childProcess.kill(s);
+        this.childProcess.kill(s || 'SIGTERM');
       } catch {
         // when the child process completes before we explicitly call kill, this will throw
         // do nothing

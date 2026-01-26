@@ -1,10 +1,9 @@
 import {
   CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
-  getPackageManagerCommand,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
@@ -16,6 +15,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { existsSync, readdirSync } from 'fs';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
@@ -45,7 +45,7 @@ function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
 }
 
 function writeTargetsToCache(
-  cachePath,
+  cachePath: string,
   results?: Record<string, RspackTargets>
 ) {
   writeJsonFile(cachePath, results);
@@ -90,7 +90,7 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
 async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, RspackTargets>,
   isTsSolutionSetup: boolean
 ) {
@@ -156,7 +156,7 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   isTsSolutionSetup: boolean
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);

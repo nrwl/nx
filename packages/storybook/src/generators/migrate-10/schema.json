@@ -1,0 +1,20 @@
+{
+  "cli": "nx",
+  "title": "Migrate Storybook to version 10.",
+  "description": "Migrate Storybook to version 10.",
+  "$id": "migrate-10",
+  "type": "object",
+  "properties": {
+    "autoAcceptAllPrompts": {
+      "type": "boolean",
+      "description": "Say yes to all the prompts from the Storybook CLI migration scripts.",
+      "default": false
+    },
+    "configDir": {
+      "type": "array",
+      "description": "Directory(ies) where to load Storybook configurations from. Use this if you want to customize the Storybook projects you'd like to migrate.",
+      "default": []
+    }
+  },
+  "examplesFile": "../../../docs/migrate-10-generator-examples.md"
+}

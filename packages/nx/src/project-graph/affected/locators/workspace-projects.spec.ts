@@ -12,7 +12,6 @@ import {
 function getFileChanges(files: string[]) {
   return files.map((f) => ({
     file: f,
-    hash: 'some-hash',
     getChanges: () => [new WholeFileChange()],
   }));
 }

@@ -1,6 +1,6 @@
 import { readFileSync, accessSync, constants } from 'fs';
 import { join, basename, parse, resolve } from 'path';
-import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
+import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';
 import { sortPosts } from './blog.util';
 import { BlogPostDataEntry } from './blog.model';
 import { readFile, readdir } from 'fs/promises';
@@ -81,6 +81,7 @@ export class BlogApi {
         podcastAmazonUrl: frontmatter.podcastAmazonUrl,
         published: frontmatter.published ?? true,
         metrics: frontmatter.metrics,
+        hideCoverImage: frontmatter.hideCoverImage ?? false,
       };
       const isDevelopment = process.env.NODE_ENV === 'development';
       const shouldIncludePost = !frontmatter.draft || isDevelopment;

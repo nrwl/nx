@@ -1,0 +1,14 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                "
+" NX    Running Test Tasks...                                 Cache   Duration   "
+" │                                                                             ↑"
+" │·    Waiting for task...                                                     █"
+" │·    Waiting for task...                                                     ║"
+" └                                                                             ║"
+"> ·    task1                                                   ...        ...  ║"
+"  ·    task10                                                  ...        ...  ║"
+"                                                                               ↓"
+"                                                                quit: q  help: ?"

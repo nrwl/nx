@@ -24,6 +24,7 @@ export interface Schema {
   ssr?: boolean;
   serverRouting?: boolean;
   prefix?: string;
+  zoneless?: boolean;
   nxCloudToken?: string;
   useProjectJson?: boolean;
 }

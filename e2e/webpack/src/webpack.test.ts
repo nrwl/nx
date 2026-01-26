@@ -13,11 +13,13 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Webpack Plugin', () => {
-  beforeAll(() => newProject());
+  beforeAll(() =>
+    newProject({ packages: ['@nx/webpack', '@nx/js', '@nx/react', '@nx/web'] })
+  );
   afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {

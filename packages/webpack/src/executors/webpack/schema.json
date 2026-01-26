@@ -41,14 +41,28 @@
       "description": "Target platform for the build, same as the Webpack target option.",
       "enum": ["node", "web", "webworker"]
     },
-    "deleteOutputPath": {
-      "type": "boolean",
-      "description": "Delete the output path before building.",
-      "default": true
-    },
     "watch": {
       "type": "boolean",
       "description": "Enable re-building when files change."
+    },
+    "cache": {
+      "description": "Configure webpack caching behavior. When not specified, defaults to `{ type: 'memory' }` for Node targets in watch mode, and `undefined` otherwise.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of cache to use.",
+              "enum": ["memory", "filesystem"]
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
     },
     "baseHref": {
       "type": "string",
@@ -73,7 +87,27 @@
     "skipTypeChecking": {
       "alias": "typeCheck",
       "type": "boolean",
-      "description": "Skip the type checking. Default is `false`."
+      "description": "Skip the type checking. Default is `false`.",
+      "x-deprecated": "Use `typeCheckOptions` instead. This option will be removed in Nx 24."
+    },
+    "typeCheckOptions": {
+      "description": "Configure type checking during the build. Set to `true` to enable with defaults (async: true). Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "async": {
+              "type": "boolean",
+              "description": "Run type checking in a separate process without blocking the build.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "sourceMap": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
@@ -143,12 +177,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "sassImplementation": {
-      "type": "string",
-      "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
-      "enum": ["sass", "sass-embedded"],
-      "default": "sass"
     },
     "optimization": {
       "description": "Enables optimization of the build output.",
@@ -253,6 +281,13 @@
     "statsJson": {
       "type": "boolean",
       "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`."
+    },
+    "runtimeDependencies": {
+      "description": "Add runtime dependencies to the generated `package.json` file. Useful for Docker install.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "standardWebpackConfigFunction": {
       "type": "boolean",
@@ -370,7 +405,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             },
             "bundleName": {
               "type": "string",
@@ -389,7 +424,7 @@
           "type": "string",
           "description": "The file to include.",
           "x-completion-type": "file",
-          "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+          "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
         }
       ]
     },

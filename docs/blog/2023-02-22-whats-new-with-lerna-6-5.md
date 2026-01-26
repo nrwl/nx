@@ -44,7 +44,7 @@ We've just started this initiative and have already been able to help [Sentry](h
 
 ![](/blog/images/2023-02-22/7Wu1y3L6BNPZmZwE.avif)
 
-This initiative complements [our free tier of unlimited Nx Cloud](/pricing) for any Open Source project.
+This initiative complements [our free tier of unlimited Nx Cloud](/nx-cloud#plans) for any Open Source project.
 
 If you're interested in optimizing your Open Source project to take advantage of the latest Lerna features, [reach out to us on Twitter!](https://twitter.com/lernajs)
 

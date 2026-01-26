@@ -17,6 +17,7 @@ export interface Schema {
   nxCloudToken?: string;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
+  useAppDir?: boolean;
 }
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
@@ -27,4 +28,6 @@ export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   e2eProjectRoot: string;
   parsedTags: string[];
   isUsingTsSolutionConfig: boolean;
+  useAppDir: boolean;
+  nuxtMajorVersion: 3 | 4;
 }

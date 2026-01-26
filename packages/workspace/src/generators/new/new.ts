@@ -13,6 +13,7 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
+import { Agent } from 'nx/src/ai/utils';
 
 interface Schema {
   directory: string;
@@ -37,12 +38,14 @@ interface Schema {
   e2eTestRunner?: string;
   ssr?: boolean;
   prefix?: string;
+  zoneless?: boolean;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
   formatter?: string;
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
+  aiAgents?: Agent[] | Agent;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -50,13 +53,19 @@ export interface NormalizedSchema extends Schema {
   isCustomPreset: boolean;
   nxCloudToken?: string;
   workspaceGlobs?: string[];
+  aiAgents?: Agent[];
 }
 
 export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  options.nxCloudToken = await generateWorkspaceFiles(tree, options);
+  const { token, aiAgentsCallback } = await generateWorkspaceFiles(
+    tree,
+    options
+  );
+
+  options.nxCloudToken = token;
 
   addPresetDependencies(tree, options);
 
@@ -85,6 +94,10 @@ export async function newGenerator(tree: Tree, opts: Schema) {
     // TODO: move all of these into create-nx-workspace
     if (options.preset !== Preset.NPM && !options.isCustomPreset) {
       await generatePreset(tree, options);
+    }
+    // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
+    if (aiAgentsCallback) {
+      await aiAgentsCallback();
     }
   };
 }
@@ -147,8 +160,13 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     workspaceGlobs: Array.isArray(options.workspaceGlobs)
       ? options.workspaceGlobs
       : options.workspaceGlobs
-      ? [options.workspaceGlobs]
-      : undefined,
+        ? [options.workspaceGlobs]
+        : undefined,
+    aiAgents: Array.isArray(options.aiAgents)
+      ? options.aiAgents
+      : options.aiAgents
+        ? [options.aiAgents]
+        : undefined,
   };
 
   if (!options.directory) {

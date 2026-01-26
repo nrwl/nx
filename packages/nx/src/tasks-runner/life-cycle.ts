@@ -1,6 +1,10 @@
 import { Task } from '../config/task-graph';
-import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native';
-import { RunningTask } from './running-tasks/running-task';
+import {
+  BatchInfo,
+  BatchStatus,
+  ExternalObject,
+  TaskStatus as NativeTaskStatus,
+} from '../native';
 import { TaskStatus } from './tasks-runner';
 
 /**
@@ -20,14 +24,6 @@ export type TaskResults = Record<string, TaskResult>;
 
 export interface TaskMetadata {
   groupId: number;
-}
-
-interface RustRunningTask extends RunningTask {
-  getResults(): Promise<{ code: number; terminalOutput: string }>;
-
-  onExit(cb: (code: number, terminalOutput: string) => void): void;
-
-  kill(signal?: NodeJS.Signals): Promise<void> | void;
 }
 
 export interface LifeCycle {
@@ -76,6 +72,15 @@ export interface LifeCycle {
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
   registerForcedShutdownCallback?(callback: () => void): void;
+
+  setEstimatedTaskTimings?(timings: Record<string, number>): void;
+
+  // Batch-specific lifecycle methods
+  registerRunningBatch?(batchId: string, batchInfo: BatchInfo): void;
+
+  appendBatchOutput?(batchId: string, output: string): void;
+
+  setBatchStatus?(batchId: string, status: BatchStatus): void;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -195,6 +200,38 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.registerForcedShutdownCallback) {
         l.registerForcedShutdownCallback(callback);
+      }
+    }
+  }
+
+  setEstimatedTaskTimings(timings: Record<string, number>): void {
+    for (let l of this.lifeCycles) {
+      if (l.setEstimatedTaskTimings) {
+        l.setEstimatedTaskTimings(timings);
+      }
+    }
+  }
+
+  registerRunningBatch(batchId: string, batchInfo: BatchInfo): void {
+    for (let l of this.lifeCycles) {
+      if (l.registerRunningBatch) {
+        l.registerRunningBatch(batchId, batchInfo);
+      }
+    }
+  }
+
+  appendBatchOutput(batchId: string, output: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.appendBatchOutput) {
+        l.appendBatchOutput(batchId, output);
+      }
+    }
+  }
+
+  setBatchStatus(batchId: string, status: BatchStatus): void {
+    for (let l of this.lifeCycles) {
+      if (l.setBatchStatus) {
+        l.setBatchStatus(batchId, status);
       }
     }
   }

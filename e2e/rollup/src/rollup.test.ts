@@ -10,7 +10,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Rollup Plugin', () => {
   beforeAll(() => newProject({ packages: ['@nx/rollup', '@nx/js'] }));
@@ -182,7 +182,7 @@ describe('Rollup Plugin', () => {
 
   it('should work correctly with custom, non-Nx rollup config', () => {
     // ARRANGE
-    packageInstall('@rollup/plugin-babel', undefined, '5.3.0', 'prod');
+    packageInstall('@rollup/plugin-babel', undefined, '6.1.0', 'prod');
     packageInstall('@rollup/plugin-commonjs', undefined, '25.0.7', 'prod');
     packageInstall('rollup-plugin-typescript2', undefined, '0.36.0', 'prod');
     runCLI(`generate @nx/js:init --no-interactive`);
@@ -337,6 +337,8 @@ export default config;
 
       // Verify build succeeded
       expect(output).toContain('Successfully ran target build');
+      // Note: The deprecation warning is shown but may not be captured in the test output
+      // The important thing is that the build succeeds with the legacy plugin when explicitly set
       checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
       checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
       checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);

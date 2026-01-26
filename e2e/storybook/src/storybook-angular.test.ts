@@ -6,7 +6,7 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Storybook executors for Angular', () => {
   const angularStorybookLib = uniq('test-ui-ng-lib');
@@ -31,7 +31,7 @@ describe('Storybook executors for Angular', () => {
       const p = await runCommandUntil(
         `run ${angularStorybookLib}:storybook --port 4400`,
         (output) => {
-          return /Storybook.*started/gi.test(output);
+          return /Storybook.*(started|ready)/gi.test(output);
         }
       );
       p.kill();

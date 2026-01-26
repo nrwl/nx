@@ -23,8 +23,8 @@ nx run mobile:prebuild
 
 ## Examples
 
-{% tabs %}
-{% tab label="Generate Native Code for Different Platforms" %}
+##### Generate Native Code for Different Platforms
+
 The `platform` option allows you to specify the platform to generate native code for (e.g. android, ios, all).
 
 ```json
@@ -36,8 +36,7 @@ The `platform` option allows you to specify the platform to generate native code
     }
 ```
 
-{% /tab %}
-{% tab label="Regenerate Native Code" %}
+##### Regenerate Native Code
 
 The `clean` option allows you to delete the native folders and regenerate them before apply changes.
 
@@ -50,8 +49,7 @@ The `clean` option allows you to delete the native folders and regenerate them b
     }
 ```
 
-{% /tab %}
-{% tab label="Install NPM Packages and CocoaPods" %}
+##### Install NPM Packages and CocoaPods
 
 The `install` option allows you to install NPM Packages and CocoaPods.
 
@@ -63,8 +61,5 @@ The `install` option allows you to install NPM Packages and CocoaPods.
       }
     }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

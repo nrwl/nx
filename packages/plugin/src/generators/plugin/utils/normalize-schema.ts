@@ -8,7 +8,10 @@ import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
 } from '@nx/js/src/utils/generator-prompts';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  shouldConfigureTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -16,6 +19,7 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
+  e2eProjectDirectory: string;
   parsedTags: string[];
   importPath: string;
   bundler: 'swc' | 'tsc';
@@ -38,7 +42,12 @@ export async function normalizeOptions(
     ['jest', 'vitest']
   );
 
-  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
+  // this helper is called before the jsLibraryGenerator is called, so, if the
+  // TS solution setup is not configured, we additionally check if the TS
+  // solution setup will be configured by the jsLibraryGenerator
+  const isTsSolutionSetup =
+    isUsingTsSolutionSetup(host) ||
+    shouldConfigureTsSolutionSetup(host, options.addPlugin);
   const nxJson = readNxJson(host);
   const addPlugin =
     options.addPlugin ??
@@ -70,6 +79,7 @@ export async function normalizeOptions(
     projectName: isTsSolutionSetup && !options.name ? importPath : projectName,
     projectRoot,
     projectDirectory,
+    e2eProjectDirectory: options.e2eProjectDirectory ?? projectDirectory,
     parsedTags,
     importPath,
     publishable: options.publishable ?? false,

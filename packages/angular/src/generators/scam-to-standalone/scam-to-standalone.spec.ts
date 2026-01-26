@@ -39,6 +39,7 @@ describe('scam-to-standalone', () => {
         imports: [CommonModule],
         selector: 'app-bar',
         standalone: false,
+        imports: [],
         templateUrl: './bar.html',
         styleUrl: './bar.css',
       })
@@ -74,7 +75,7 @@ describe('scam-to-standalone', () => {
 
           fixture = TestBed.createComponent(Bar);
           component = fixture.componentInstance;
-          fixture.detectChanges();
+          await fixture.whenStable();
         });
 
         it('should create', () => {

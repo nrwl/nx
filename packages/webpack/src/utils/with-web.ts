@@ -17,7 +17,6 @@ export interface WithWebOptions {
   generateIndexHtml?: boolean;
   index?: string;
   postcssConfig?: string;
-  sassImplementation?: 'sass' | 'sass-embedded';
   scripts?: Array<ExtraEntryPointClass | string>;
   stylePreprocessorOptions?: {
     includePaths?: string[];

@@ -1,8 +1,8 @@
 import { ReactElement } from 'react';
-import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { HetznerCloudIcon } from '@nx/nx-dev-ui-icons';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { PlayIcon } from '@heroicons/react/24/outline';
 
 export function CustomerMetrics(): ReactElement {
@@ -69,7 +69,7 @@ export function CustomerMetrics(): ReactElement {
                   prefetch={false}
                   onClick={() =>
                     sendCustomEvent(
-                      'request-trial-click',
+                      'contact-sales-click',
                       'enterprise-customer-metrics',
                       'enterprise'
                     )

@@ -27,12 +27,14 @@ import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { execSync } from 'node:child_process';
+import { join } from 'node:path';
 import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -48,11 +50,16 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    true, // nuxt always adds plugins
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -70,7 +77,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
-  tasks.push(ensureDependencies(tree, options));
+  tasks.push(await ensureDependencies(tree, options));
 
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -87,10 +94,11 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       packageJson.nx.tags = options.parsedTags;
     }
   } else {
+    const sourceDir = options.useAppDir ? 'app' : 'src';
     addProjectConfiguration(tree, options.projectName, {
       root: options.appProjectRoot,
       projectType: 'application',
-      sourceRoot: `${options.appProjectRoot}/src`,
+      sourceRoot: `${options.appProjectRoot}/${sourceDir}`,
       tags: options.parsedTags?.length ? options.parsedTags : undefined,
       targets: {},
     });
@@ -104,9 +112,13 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
+  // Select template directory based on useAppDir
+  const templateDir = options.useAppDir ? 'app-dir' : 'base';
+  const nxWelcomeDir = options.useAppDir ? 'nx-welcome-app-dir' : 'nx-welcome';
+
   generateFiles(
     tree,
-    joinPathFragments(__dirname, './files/base'),
+    join(__dirname, './files', templateDir),
     options.appProjectRoot,
     {
       ...options,
@@ -126,7 +138,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
+    join(__dirname, './files', nxWelcomeDir, onBoardingStatus),
     options.appProjectRoot,
     {
       ...options,
@@ -142,9 +154,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   );
 
   if (options.style === 'none') {
-    tree.delete(
-      joinPathFragments(options.appProjectRoot, `src/assets/css/styles.none`)
-    );
+    const stylesPath = options.useAppDir
+      ? `app/assets/css/styles.none`
+      : `src/assets/css/styles.none`;
+    tree.delete(joinPathFragments(options.appProjectRoot, stylesPath));
   }
 
   createTsConfig(
@@ -154,6 +167,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
       isUsingTsSolutionConfig: options.isUsingTsSolutionConfig,
+      useAppDir: options.useAppDir,
     },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );

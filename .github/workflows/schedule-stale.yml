@@ -19,7 +19,7 @@ jobs:
       # This handles issues that need more info
       - name: stale-more-info-needed
         id: stale-more-info-needed
-        uses: actions/stale@v9.0.0
+        uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 7
@@ -37,7 +37,7 @@ jobs:
       # This handles PRs that need to be rebased
       - name: stale-needs-rebase
         id: stale-needs-rebase
-        uses: actions/stale@v9.0.0
+        uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 7
@@ -56,7 +56,7 @@ jobs:
       # This handles issues that do not have a repro
       - name: stale-repro-needed
         id: stale-repro-needed
-        uses: actions/stale@v9.0.0
+        uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 7
@@ -75,7 +75,7 @@ jobs:
 
       - name: stale-retry-with-latest
         id: stale-retry-with-latest
-        uses: actions/stale@v9.0.0
+        uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 7
@@ -95,7 +95,7 @@ jobs:
       # This handles issues are really old and were made with a previous major
       - name: stale-bug
         id: stale-bug
-        uses: actions/stale@v9.0.0
+        uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 180

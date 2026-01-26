@@ -331,10 +331,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/react-native/generators/stories',
   },
   {
-    title: '@nx/react-native:upgrade-native',
-    path: '/packages/react-native/generators/upgrade-native',
-  },
-  {
     title: '@nx/react-native:run-android',
     path: '/packages/react-native/executors/run-android',
   },

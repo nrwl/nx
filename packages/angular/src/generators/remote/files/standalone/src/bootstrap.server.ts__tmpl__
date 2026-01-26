@@ -1,7 +1,12 @@
-import { bootstrapApplication } from '@angular/platform-browser';
+import { <% if (useBootstrapContext) { %>BootstrapContext, <% } %>bootstrapApplication } from '@angular/platform-browser';
 import { RemoteEntry<%= componentType %> } from './app/remote-entry/entry<%= componentFileSuffix %>';
 import { config } from './app/app.config.server';
 
+<%_ if (useBootstrapContext) { _%>
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(RemoteEntry<%= componentType %>, config, context);
+<%_ } else { _%>
 const bootstrap = () => bootstrapApplication(RemoteEntry<%= componentType %>, config);
+<%_ } _%>
 
 export default bootstrap;

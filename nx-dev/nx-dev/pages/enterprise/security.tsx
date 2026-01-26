@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   BuiltForEnterprise,
   CachePoisoningProtection,
@@ -10,21 +10,16 @@ import {
   SecurityCallToAction,
   SecurityHero,
   WhyCiSecurityMatters,
-} from '@nx/nx-dev/ui-enterprise';
-import { type ReactElement } from 'react';
+} from '@nx/nx-dev-ui-enterprise';
+import { type ReactElement, useEffect, useState } from 'react';
 
 export function EnterpriseSecurity(): ReactElement {
   const router = useRouter();
+  const [currentPath, setCurrentPath] = useState('/enterprise/security');
 
-  const headerCTAConfig: ButtonLinkProps[] = [
-    {
-      href: '/contact',
-      variant: 'secondary',
-      size: 'small',
-      title: 'Contact us',
-      children: 'Contact us',
-    },
-  ];
+  useEffect(() => {
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
 
   return (
     <>
@@ -33,7 +28,7 @@ export function EnterpriseSecurity(): ReactElement {
         description="Protect your codebase from artifact poisoning with infrastructure-first security."
         canonical="https://nx.dev/enterprise/security"
         openGraph={{
-          url: 'https://nx.dev' + router.asPath,
+          url: 'https://nx.dev' + currentPath,
           title: 'Enterprise-Grade Security, Built Into the Core',
           description:
             'Protect your codebase from artifact poisoning with infrastructure-first security.',
@@ -50,7 +45,7 @@ export function EnterpriseSecurity(): ReactElement {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={headerCTAConfig}>
+      <DefaultLayout>
         <SecurityHero />
         <div className="mt-32 scroll-mt-32 lg:mt-56">
           <WhyCiSecurityMatters />

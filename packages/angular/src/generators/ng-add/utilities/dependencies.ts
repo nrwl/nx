@@ -26,10 +26,13 @@ export function ensureAngularDevKitPeerDependenciesAreInstalled(
 
   const filteredPackages = packagesToInstall
     .filter((pkg) => !devDependencies?.[pkg] && !dependencies?.[pkg])
-    .reduce((allPkgs, pkg) => {
-      allPkgs[pkg] = angularCliVersion;
-      return allPkgs;
-    }, {} as Record<string, string>);
+    .reduce(
+      (allPkgs, pkg) => {
+        allPkgs[pkg] = angularCliVersion;
+        return allPkgs;
+      },
+      {} as Record<string, string>
+    );
 
   addDependenciesToPackageJson(tree, {}, filteredPackages);
 }

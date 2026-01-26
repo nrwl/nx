@@ -1,11 +1,36 @@
 {
   "generators": {
-    "add-vue-to-storybook-config": {
-      "cli": "nx",
-      "version": "19.6.0-beta.0",
-      "description": "Add vue() plugin to viteFinal in Storybook config files when it is missing.",
-      "implementation": "./src/migrations/update-19-6-0/add-vue-plugin-to-storybook-config"
+    "update-22-2-0-create-ai-instructions-for-nuxt-4": {
+      "version": "22.2.0-beta.0",
+      "description": "Create AI Instructions to help migrate workspaces to Nuxt 4.",
+      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-nuxt-4"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "22.2.0": {
+      "version": "22.2.0-beta.0",
+      "packages": {
+        "nuxt": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nuxt/eslint-config": {
+          "version": "^1.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nuxt/kit": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nuxt/schema": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nuxt/devtools": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

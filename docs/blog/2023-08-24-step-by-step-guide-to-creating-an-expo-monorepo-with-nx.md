@@ -36,10 +36,10 @@ To create a new Nx workspace, run the command `npx create-nx-workspace <workspac
 ✔ Enable distributed caching to make your CI faster · No
 ```
 
-This will create an [integrated](/deprecated/integrated-vs-package-based) repo. What is an integrated repo?
+This will create an [integrated](/docs/reference/deprecated/integrated-vs-package-based) repo. What is an integrated repo?
 
-> An integrated repo contains projects that depend on each other through standard import statements. There is typically a [single version of every dependency](/concepts/decisions/dependency-management) defined at the root.  
-> [/deprecated/integrated-vs-package-based](/deprecated/integrated-vs-package-based)
+> An integrated repo contains projects that depend on each other through standard import statements. There is typically a [single version of every dependency](/docs/concepts/decisions/dependency-management) defined at the root.  
+> [/deprecated/integrated-vs-package-based](/docs/reference/deprecated/integrated-vs-package-based)
 
 Now, your Nx workspace should have cats and cats-e2e under the `apps` folder and an empty libs folder:
 
@@ -294,7 +294,7 @@ If you want to create a build locally using your own infrastructure:
 npx nx build cats --local
 ```
 
-Here is the complete list of flags for the build command: [/technologies/react/expo/executors/build](/technologies/react/expo/api/executors/build).
+Here is the complete list of flags for the build command: [/technologies/react/expo/executors/build](/docs/technologies/react/expo/executors).
 
 ## Submit to the App Store
 

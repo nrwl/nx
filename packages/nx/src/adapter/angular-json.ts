@@ -2,29 +2,26 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { readJsonFile } from '../utils/fileutils';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { NxPluginV2 } from '../project-graph/plugins';
+import { CreateNodesV2, NxPluginV2 } from '../project-graph/plugins';
 
 export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
 
-export const NxAngularJsonPlugin: NxPluginV2 = {
-  name: NX_ANGULAR_JSON_PLUGIN_NAME,
-  createNodes: [
-    'angular.json',
-    (f, _, ctx) => ({
-      projects: readAngularJson(ctx.workspaceRoot),
-    }),
-  ],
-  createNodesV2: [
-    'angular.json',
-    (f, _, ctx) => [
-      [
-        'angular.json',
-        {
-          projects: readAngularJson(ctx.workspaceRoot),
-        },
-      ],
+const createNodes: CreateNodesV2 = [
+  'angular.json',
+  (f, _, ctx) => [
+    [
+      'angular.json',
+      {
+        projects: readAngularJson(ctx.workspaceRoot),
+      },
     ],
   ],
+];
+
+export const NxAngularJsonPlugin: NxPluginV2 = {
+  name: NX_ANGULAR_JSON_PLUGIN_NAME,
+  createNodes,
+  createNodesV2: createNodes,
 };
 
 export default NxAngularJsonPlugin;

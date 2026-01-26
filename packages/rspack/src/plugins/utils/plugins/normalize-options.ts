@@ -1,16 +1,17 @@
-import { basename, dirname, join, parse, relative, resolve } from 'path';
-import { statSync } from 'fs';
 import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { statSync } from 'fs';
+import { basename, dirname, join, parse, relative, resolve } from 'path';
 import {
   AssetGlobPattern,
   FileReplacement,
-  NxAppRspackPluginOptions,
   NormalizedNxAppRspackPluginOptions,
+  NxAppRspackPluginOptions,
 } from '../models';
 
 export function normalizeOptions(
@@ -74,7 +75,7 @@ export function normalizeOptions(
     );
   }
 
-  const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
+  const sourceRoot = getProjectSourceRoot(projectNode.data);
 
   if (!combinedPluginAndMaybeExecutorOptions.main) {
     throw new Error(
@@ -128,8 +129,6 @@ export function normalizeOptions(
       combinedPluginAndMaybeExecutorOptions.buildLibsFromSource ?? true,
     commonChunk: combinedPluginAndMaybeExecutorOptions.commonChunk ?? true,
     configurationName,
-    deleteOutputPath:
-      combinedPluginAndMaybeExecutorOptions.deleteOutputPath ?? true,
     extractCss: combinedPluginAndMaybeExecutorOptions.extractCss ?? true,
     fileReplacements: normalizeFileReplacements(
       workspaceRoot,
@@ -153,9 +152,6 @@ export function normalizeOptions(
     projectRoot: projectNode.data.root,
     root: workspaceRoot,
     runtimeChunk: combinedPluginAndMaybeExecutorOptions.runtimeChunk ?? true,
-    sassImplementation:
-      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
-      'sass-embedded',
     scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
     skipTypeChecking: normalizedSkipTypeChecking,
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,

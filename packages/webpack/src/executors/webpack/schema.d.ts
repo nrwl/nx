@@ -36,17 +36,21 @@ export interface OptimizationOptions {
   styles: boolean;
 }
 
+export interface TypeCheckOptions {
+  async: boolean;
+}
+
 export interface WebpackExecutorOptions {
   additionalEntryPoints?: AdditionalEntryPoint[];
   assets?: Array<AssetGlob | string>;
   buildLibsFromSource?: boolean;
   commonChunk?: boolean;
   compiler?: 'babel' | 'swc' | 'tsc';
-  deleteOutputPath?: boolean;
   externalDependencies?: 'all' | 'none' | string[];
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
   generatePackageJson?: boolean;
+  runtimeDependencies?: string[];
   standardWebpackConfigFunction?: boolean;
   main?: string;
   memoryLimit?: number;
@@ -62,11 +66,15 @@ export interface WebpackExecutorOptions {
   sourceMap?: boolean | string;
   statsJson?: boolean;
   target?: string;
+  /** @deprecated Use `typeCheckOptions` option instead. */
+  skipTypeChecking?: boolean;
+  typeCheckOptions?: boolean | TypeCheckOptions;
   transformers?: TransformerEntry[];
   tsConfig?: string;
   vendorChunk?: boolean;
   verbose?: boolean;
   watch?: boolean;
+  cache?: boolean | { type: 'memory' | 'filesystem'; [key: string]: any };
   webpackConfig?: string;
   babelConfig?: string;
   babelUpwardRootMode?: boolean;
@@ -78,7 +86,6 @@ export interface WebpackExecutorOptions {
   index?: string;
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
-  sassImplementation?: 'sass' | 'sass-embedded';
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;

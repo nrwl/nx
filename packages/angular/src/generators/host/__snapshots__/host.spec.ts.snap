@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
@@ -30,9 +30,7 @@ exports[`Host App Generator --ssr should generate the correct files 2`] = `
 import { AppModule } from './app/app-module';
 
 platformBrowser()
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true,
-  })
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
 "
 `;
@@ -43,12 +41,10 @@ exports[`Host App Generator --ssr should generate the correct files 3`] = `
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 4`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
@@ -75,7 +71,7 @@ export function app(): express.Express {
     '*.*',
     express.static(distFolder, {
       maxAge: '1y',
-    })
+    }),
   );
 
   // All regular routes use the Angular engine
@@ -223,23 +219,25 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
+"import {
+  BootstrapContext,
+  bootstrapApplication,
+} from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(App, config);
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 3`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './bootstrap.server';
@@ -266,7 +264,7 @@ export function app(): express.Express {
     '*.*',
     express.static(distFolder, {
       maxAge: '1y',
-    })
+    }),
   );
 
   // All regular routes use the Angular engine
@@ -361,7 +359,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -374,7 +371,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
 };
@@ -451,23 +447,25 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
+"import {
+  BootstrapContext,
+  bootstrapApplication,
+} from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(App, config);
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 3`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './bootstrap.server';
@@ -590,7 +588,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -603,7 +600,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
 };
@@ -700,9 +696,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 import { AppModule } from './app/app-module';
 
 platformBrowser()
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true,
-  })
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
 "
 `;
@@ -713,12 +707,10 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 4`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
@@ -991,7 +983,7 @@ export class App {
 `;
 
 exports[`Host App Generator should generate the correct app component spec file 1`] = `
-"import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+"import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
@@ -1021,23 +1013,22 @@ describe('App', () => {
     expect(app.title).toEqual('host');
   });
 
-  it('should render title', fakeAsync(() => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
-    fixture.ngZone?.run(() => router.navigate(['']));
-    tick();
-    fixture.detectChanges();
+    await router.navigate(['']);
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome host'
     );
-  }));
+  });
 });
 "
 `;
 
 exports[`Host App Generator should generate the correct app component spec file with a directory 1`] = `
-"import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+"import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
@@ -1067,17 +1058,16 @@ describe('App', () => {
     expect(app.title).toEqual('dashboard');
   });
 
-  it('should render title', fakeAsync(() => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
-    fixture.ngZone?.run(() => router.navigate(['']));
-    tick();
-    fixture.detectChanges();
+    await router.navigate(['']);
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome dashboard'
     );
-  }));
+  });
 });
 "
 `;

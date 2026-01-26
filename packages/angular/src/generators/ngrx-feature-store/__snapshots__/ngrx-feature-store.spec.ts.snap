@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 1`] = `
 "export * from './lib/+state/users/users.facade';
@@ -246,7 +246,7 @@ exports[`ngrx-feature-store NgModule should generate the files with the correct 
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
-import { readFirst } from '@nx/angular/testing';
+import { firstValueFrom } from 'rxjs';
 
 import * as UsersActions from './users.actions';
 import { UsersEffects } from './users.effects';
@@ -301,16 +301,16 @@ describe('UsersFacade', () => {
      * The initially generated facade::loadAll() returns empty array
      */
     it('loadAll() should return empty list with loaded == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
 
       facade.init();
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(true);
@@ -320,8 +320,8 @@ describe('UsersFacade', () => {
      * Use \`loadUsersSuccess\` to manually update list
      */
     it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
@@ -329,11 +329,11 @@ describe('UsersFacade', () => {
       store.dispatch(
         UsersActions.loadUsersSuccess({
           users: [createUsersEntity('AAA'), createUsersEntity('BBB')],
-        })
+        }),
       );
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(2);
       expect(isLoaded).toBe(true);
@@ -351,12 +351,12 @@ export const initUsers = createAction('[Users Page] Init');
 
 export const loadUsersSuccess = createAction(
   '[Users/API] Load Users Success',
-  props<{ users: UsersEntity[] }>()
+  props<{ users: UsersEntity[] }>(),
 );
 
 export const loadUsersFailure = createAction(
   '[Users/API] Load Users Failure',
-  props<{ error: any }>()
+  props<{ error: any }>(),
 );
 "
 `;
@@ -379,8 +379,8 @@ export class UsersEffects {
       catchError((error) => {
         console.error('Error', error);
         return of(UsersActions.loadUsersFailure({ error }));
-      })
-    )
+      }),
+    ),
   );
 }
 "
@@ -475,9 +475,12 @@ const reducer = createReducer(
     error: null,
   })),
   on(UsersActions.loadUsersSuccess, (state, { users }) =>
-    usersAdapter.setAll(users, { ...state, loaded: true })
+    usersAdapter.setAll(users, { ...state, loaded: true }),
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -539,33 +542,33 @@ const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
 export const selectUsersLoaded = createSelector(
   selectUsersState,
-  (state: UsersState) => state.loaded
+  (state: UsersState) => state.loaded,
 );
 
 export const selectUsersError = createSelector(
   selectUsersState,
-  (state: UsersState) => state.error
+  (state: UsersState) => state.error,
 );
 
 export const selectAllUsers = createSelector(
   selectUsersState,
-  (state: UsersState) => selectAll(state)
+  (state: UsersState) => selectAll(state),
 );
 
 export const selectUsersEntities = createSelector(
   selectUsersState,
-  (state: UsersState) => selectEntities(state)
+  (state: UsersState) => selectEntities(state),
 );
 
 export const selectSelectedId = createSelector(
   selectUsersState,
-  (state: UsersState) => state.selectedId
+  (state: UsersState) => state.selectedId,
 );
 
 export const selectEntity = createSelector(
   selectUsersEntities,
   selectSelectedId,
-  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined),
 );
 "
 `;
@@ -586,7 +589,7 @@ describe('Users Selectors', () => {
     ({
       id,
       name: name || \`name-\${id}\`,
-    } as UsersEntity);
+    }) as UsersEntity;
 
   let state: UsersPartialState;
 
@@ -603,7 +606,7 @@ describe('Users Selectors', () => {
           selectedId: 'PRODUCT-BBB',
           error: ERROR_MSG,
           loaded: true,
-        }
+        },
       ),
     };
   });
@@ -702,7 +705,7 @@ exports[`ngrx-feature-store Standalone APIs should generate the files with the c
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
-import { readFirst } from '@nx/angular/testing';
+import { firstValueFrom } from 'rxjs';
 
 import * as UsersActions from './users.actions';
 import { UsersEffects } from './users.effects';
@@ -757,16 +760,16 @@ describe('UsersFacade', () => {
      * The initially generated facade::loadAll() returns empty array
      */
     it('loadAll() should return empty list with loaded == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
 
       facade.init();
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(true);
@@ -776,8 +779,8 @@ describe('UsersFacade', () => {
      * Use \`loadUsersSuccess\` to manually update list
      */
     it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
@@ -789,8 +792,8 @@ describe('UsersFacade', () => {
         ]})
       );
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(2);
       expect(isLoaded).toBe(true);

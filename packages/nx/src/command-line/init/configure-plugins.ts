@@ -1,6 +1,4 @@
-import * as createSpinner from 'ora';
 import { bold } from 'chalk';
-import { execSync } from 'child_process';
 
 import {
   getPackageManagerCommand,
@@ -23,6 +21,7 @@ import { readNxJson } from '../../config/configuration';
 import { nxVersion } from '../../utils/versions';
 import { runNxSync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
+import { globalSpinner } from '../../utils/spinner';
 
 export function installPluginPackages(
   repoRoot: string,
@@ -117,15 +116,14 @@ export async function runPluginInitGenerators(
       failedPlugins: {},
     };
   }
-  const spinner = createSpinner();
   let succeededPlugins = [];
   const failedPlugins: {
     [pluginName: string]: Error;
   } = {};
 
   for (const plugin of plugins) {
+    const spinner = globalSpinner.start('Installing plugin ' + plugin);
     try {
-      spinner.start('Installing plugin ' + plugin);
       await runPluginInitGenerator(
         plugin,
         repoRoot,

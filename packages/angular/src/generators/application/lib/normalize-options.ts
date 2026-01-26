@@ -4,6 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -11,6 +12,15 @@ function arePluginsExplicitlyDisabled(host: Tree) {
   const { useInferencePlugins } = readNxJson(host);
   const addPluginEnvVar = process.env.NX_ADD_PLUGINS;
   return useInferencePlugins === false || addPluginEnvVar === 'false';
+}
+
+function validateBundler(bundler: string): 'esbuild' | 'webpack' | 'rspack' {
+  if (['esbuild', 'webpack', 'rspack'].includes(bundler)) {
+    return bundler as 'esbuild' | 'webpack' | 'rspack';
+  }
+  throw new Error(
+    `Invalid bundler: ${bundler}. Please use one of the following: 'esbuild', 'webpack', 'rspack'.`
+  );
 }
 
 export async function normalizeOptions(
@@ -35,10 +45,20 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const bundler = options.bundler ?? 'esbuild';
+  const bundler = validateBundler(options.bundler ?? 'esbuild');
 
   const addPlugin =
     options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+  const zonelessDefaultValue = angularMajorVersion >= 21 ? true : false;
+  const unitTestRunner =
+    options.unitTestRunner ??
+    (angularMajorVersion >= 21 && bundler === 'esbuild'
+      ? UnitTestRunner.VitestAngular
+      : angularMajorVersion >= 21
+        ? UnitTestRunner.VitestAnalog
+        : UnitTestRunner.Jest);
 
   // Set defaults and then overwrite with user options
   return {
@@ -47,7 +67,7 @@ export async function normalizeOptions(
     routing: true,
     inlineStyle: false,
     inlineTemplate: false,
-    skipTests: options.unitTestRunner === UnitTestRunner.None,
+    skipTests: unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Playwright,
     linter: 'eslint',
@@ -68,6 +88,7 @@ export async function normalizeOptions(
       !options.rootProject ? appProjectRoot : appProjectName
     ),
     ssr: options.ssr ?? false,
-    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    unitTestRunner,
+    zoneless: options.zoneless ?? zonelessDefaultValue,
   };
 }

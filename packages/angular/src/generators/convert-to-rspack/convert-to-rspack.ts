@@ -18,16 +18,12 @@ import {
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import type { RspackPluginOptions } from '@nx/rspack/plugins/plugin';
+import type { RspackPluginOptions } from '@nx/rspack/plugin';
 import { prompt } from 'enquirer';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
-import {
-  angularRspackVersion,
-  nxVersion,
-  tsNodeVersion,
-  webpackMergeVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import { getAngularRspackVersion, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -356,6 +352,8 @@ export async function convertToRspack(
   validateSupportedBuildExecutor(Object.values(project.targets));
 
   let projectServePort = DEFAULT_PORT;
+  const projectServeConfigurationOptions: Record<string, { port?: number }> =
+    {};
 
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
@@ -425,6 +423,12 @@ export async function convertToRspack(
             configurationOptions[configurationName].devServer,
             project.root
           );
+
+          if (configuration.port && configuration.port !== DEFAULT_PORT) {
+            projectServeConfigurationOptions[configurationName] ??= {};
+            projectServeConfigurationOptions[configurationName].port =
+              configuration.port;
+          }
         }
       }
       serveTarget = { name: targetName, config: target };
@@ -519,7 +523,6 @@ export async function convertToRspack(
         // which webpack tasks wouldn't have
         const namedInputs = getNamedInputs(project.root, {
           nxJsonConfiguration: nxJson,
-          configFiles: [],
           workspaceRoot,
         });
 
@@ -685,6 +688,15 @@ export async function convertToRspack(
       serveTarget.config.options.port = projectServePort;
     }
 
+    if (Object.keys(projectServeConfigurationOptions).length > 0) {
+      serveTarget.config.configurations = {};
+      for (const [configurationName, options] of Object.entries(
+        projectServeConfigurationOptions
+      )) {
+        serveTarget.config.configurations[configurationName] = options;
+      }
+    }
+
     if (Object.keys(serveTarget.config).length) {
       // there's extra target metadata left that wouldn't be inferred, we keep it
       project.targets[inferredServeTargetName] = serveTarget.config;
@@ -701,6 +713,8 @@ export async function convertToRspack(
   }
 
   if (!schema.skipInstall) {
+    const { webpackMergeVersion, tsNodeVersion } = versions(tree);
+    const angularRspackVersion = getAngularRspackVersion(tree);
     const installTask = addDependenciesToPackageJson(
       tree,
       {},

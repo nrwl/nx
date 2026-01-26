@@ -1,6 +1,9 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
+// nx-ignore-next-line
 import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 
@@ -35,10 +38,13 @@ export function MigrationList(props: {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
   >(
-    props.migrations.reduce((acc, migration) => {
-      acc[migration.id] = false;
-      return acc;
-    }, {} as Record<string, boolean>)
+    props.migrations.reduce(
+      (acc, migration) => {
+        acc[migration.id] = false;
+        return acc;
+      },
+      {} as Record<string, boolean>
+    )
   );
 
   const numberSelected = useMemo(
@@ -70,10 +76,13 @@ export function MigrationList(props: {
   const handleHeaderCheckboxClick = () => {
     const newSelectedState = !anySelected;
     setSelectedMigrations(
-      Object.keys(selectedMigrations).reduce((acc, migrationId) => {
-        acc[migrationId] = newSelectedState;
-        return acc;
-      }, {} as Record<string, boolean>)
+      Object.keys(selectedMigrations).reduce(
+        (acc, migrationId) => {
+          acc[migrationId] = newSelectedState;
+          return acc;
+        },
+        {} as Record<string, boolean>
+      )
     );
   };
 

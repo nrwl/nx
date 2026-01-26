@@ -71,9 +71,9 @@ export class StoreRunInformationLifeCycle implements LifeCycle {
             tr.status === 'remote-cache'
               ? 'remote-cache-hit'
               : tr.status === 'local-cache' ||
-                tr.status === 'local-cache-kept-existing'
-              ? 'local-cache-hit'
-              : 'cache-miss';
+                  tr.status === 'local-cache-kept-existing'
+                ? 'local-cache-hit'
+                : 'cache-miss';
           return {
             taskId: tr.task.id,
             target: tr.task.target.target,

@@ -1,0 +1,217 @@
+---
+title: Testing Without Building Dependencies
+description: Learn how to configure Vitest to test projects using TypeScript project references without building dependency libraries first.
+sidebar:
+  label: Skip Building Dependencies
+filter: 'type:Guides'
+---
+
+When using [TypeScript project references](/docs/concepts/typescript-project-linking) in a monorepo, you might find that running tests requires building all dependency libraries first. This can slow down the test feedback loop, especially during development. This guide shows how to configure Vitest to resolve imports directly to source TypeScript files, eliminating the need to build dependencies before running tests.
+
+## Prerequisites
+
+- A workspace using [TypeScript project references with package manager workspaces](/docs/technologies/typescript/guides/switch-to-workspaces-project-references)
+- Vitest configured for testing your projects
+
+## How It Works
+
+The solution uses **custom export conditions** to tell both TypeScript and Vitest to resolve imports to source `.ts` files instead of built `.js` files. This requires three pieces working together:
+
+1. **`customConditions`** in `tsconfig.base.json` tells TypeScript to recognize a custom export condition
+2. **Library `package.json` exports** include the custom condition pointing to source files
+3. **`resolve.conditions`** in Vitest config tells Vite to use the same condition at runtime
+
+The good news is that **Nx already configures the first two pieces for you** in new workspaces created with workspaces enabled.
+
+## What Nx Configures For You
+
+When you create a new Nx workspace with workspaces enabled (the default), Nx automatically sets up:
+
+### tsconfig.base.json
+
+```json
+// tsconfig.base.json
+{
+  "compilerOptions": {
+    "customConditions": ["@myorg/source"]
+    // ... other options
+  }
+}
+```
+
+### Library package.json exports
+
+```json
+// libs/my-lib/package.json
+{
+  "name": "@myorg/my-lib",
+  "exports": {
+    ".": {
+      "@myorg/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  }
+}
+```
+
+The `@myorg/source` condition points to the source TypeScript file, while the other conditions point to built output. TypeScript uses `customConditions` to resolve types correctly in your IDE, and Vitest needs to be told to use this condition as well.
+
+## Configure Vitest
+
+Add `resolve.conditions` to your `vitest.config.mts` (or `vitest.config.ts`) file:
+
+```ts
+// vitest.config.mts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  resolve: {
+    conditions: ['@myorg/source'],
+  },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  },
+});
+```
+
+This tells Vite (which powers Vitest) to prefer the `@myorg/source` export condition when resolving imports. Now when your test imports `@myorg/my-lib`, it will resolve directly to `./src/index.ts` instead of requiring the built `./dist/index.js`.
+
+{% aside type="caution" title="Use a Separate Config for Testing" %}
+If you also use Vite to **build** your project, keep the `resolve.conditions` configuration in a separate `vitest.config.mts` file rather than in `vite.config.mts`. Vitest automatically merges configuration from both files, so you only need to add the test-specific settings (like `resolve.conditions` and `test` options) to your `vitest.config.mts`. This ensures that your production build still resolves to built artifacts while tests resolve to source files.
+{% /aside %}
+
+## For Migrated Workspaces
+
+If you migrated from an older Nx setup or TypeScript path aliases, you may need to manually add the configuration that Nx now generates automatically.
+
+### Step 1: Add customConditions to tsconfig.base.json
+
+Add the `customConditions` array to your `tsconfig.base.json`:
+
+```json
+// tsconfig.base.json
+{
+  "compilerOptions": {
+    "customConditions": ["@myorg/source"],
+    "composite": true,
+    "declaration": true
+    // ... other options
+  }
+}
+```
+
+{% aside type="note" title="Condition Naming" %}
+You can use any condition name you like (e.g., `@myorg/source`). Just make sure to use the same name consistently across all configuration files. Using an organization-scoped name avoids conflicts with conditions that third-party packages might define.
+{% /aside %}
+
+### Step 2: Update Library package.json Exports
+
+Update each library's `package.json` to include the custom condition in exports:
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```json
+// libs/my-lib/package.json
+{
+  "name": "@myorg/my-lib",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```json
+// libs/my-lib/package.json
+{
+  "name": "@myorg/my-lib",
+  "exports": {
+    ".": {
+      "@myorg/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+The order matters: export conditions are evaluated from top to bottom. When `@myorg/source` is recognized (by TypeScript or Vitest), it will be used. Otherwise, the resolver falls back to `types`, `import`, or `default`.
+
+### Step 3: Configure Vitest
+
+Follow the [Configure Vitest](#configure-vitest) section above to add `resolve.conditions` to your Vitest config.
+
+## Removing dependsOn from Test Targets
+
+If your test targets previously included `dependsOn: ["^build"]` to ensure dependencies were built before testing, you can now remove this:
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```json
+// project.json
+{
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "dependsOn": ["^build"],
+      "options": {
+        "config": "vitest.config.mts"
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```json
+// project.json
+{
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "config": "vitest.config.mts"
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+This can significantly speed up your test runs, especially when you're iterating on changes across multiple libraries.
+
+## Important Considerations
+
+- **IDE support**: TypeScript's `customConditions` setting ensures your IDE correctly resolves types to source files, giving you accurate IntelliSense and error checking
+- **Live changes**: Tests now run against source files directly, so any changes you make are immediately reflected without rebuilding
+- **Production builds**: Keep `resolve.conditions` out of your production Vite build config to ensure builds use the compiled artifacts
+
+## Example Repository
+
+For a complete working example of this pattern, see the [vitest-test-without-build-example](https://github.com/Coly010/vitest-test-without-build-example) repository.
+
+## Related Documentation
+
+- [TypeScript Project Linking](/docs/concepts/typescript-project-linking)
+- [Switch to Workspaces and Project References](/docs/technologies/typescript/guides/switch-to-workspaces-project-references)
+- [Vitest Introduction](/docs/technologies/test-tools/vitest/introduction)

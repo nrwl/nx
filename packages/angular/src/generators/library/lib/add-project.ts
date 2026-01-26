@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { addReleaseConfigForNonTsSolution } from '@nx/js/src/generators/library/utils/add-release-config';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -36,14 +35,13 @@ export async function addProject(
       outputs: ['{workspaceRoot}/dist/{projectRoot}'],
       options: {
         project: `${libraryOptions.projectRoot}/ng-package.json`,
+        tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
       },
       configurations: {
         production: {
           tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.prod.json`,
         },
-        development: {
-          tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
-        },
+        development: {},
       },
       defaultConfiguration: 'production',
     };
@@ -51,7 +49,6 @@ export async function addProject(
     if (libraryOptions.publishable) {
       const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         tree,
         libraryOptions.name,
         project

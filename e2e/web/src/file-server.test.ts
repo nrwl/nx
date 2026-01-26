@@ -8,12 +8,12 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('file-server', () => {
   beforeAll(() => {
-    newProject({ name: uniq('fileserver') });
+    newProject({ name: uniq('fileserver'), packages: ['@nx/web'] });
   });
 
   afterAll(() => cleanupProject());

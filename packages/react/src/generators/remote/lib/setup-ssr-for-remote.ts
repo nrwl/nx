@@ -71,8 +71,8 @@ export async function setupSsrForRemote(
 
   // For hosts to use when running remotes in static mode.
   const originalOutputPath =
-    project.targets.build?.options?.outputPath ??
-    options.isUsingTsSolutionConfig
+    (project.targets.build?.options?.outputPath ??
+    options.isUsingTsSolutionConfig)
       ? 'dist'
       : joinPathFragments(
           offsetFromRoot(options.appProjectRoot),

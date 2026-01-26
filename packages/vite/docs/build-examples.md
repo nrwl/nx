@@ -30,8 +30,7 @@ nx serve my-app
 
 ## Examples
 
-{% tabs %}
-{% tab label="Set a custom path for vite.config.ts" %}
+##### Set a custom path for vite.config.ts
 
 Nx will automatically look in the root of your application for a `vite.config.ts` (or a `vite.config.js`) file. If you want to use a different path, you can set it in your `project.json` file, in the `build` target options:
 
@@ -76,7 +75,3 @@ or even
     }
 }
 ```
-
-{% /tab %}
-
-{% /tabs %}

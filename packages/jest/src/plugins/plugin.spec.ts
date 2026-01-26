@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 import { createNodesV2 } from './plugin';
@@ -10,7 +10,7 @@ jest.mock('nx/src/utils/cache-directory', () => ({
 
 describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -26,7 +26,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     await tempFs.createFiles({
@@ -189,7 +188,12 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                   "test-ci": {
                     "cache": true,
                     "dependsOn": [
-                      "test-ci--src/unit.spec.ts",
+                      {
+                        "options": "forward",
+                        "params": "forward",
+                        "projects": "self",
+                        "target": "test-ci--src/unit.spec.ts",
+                      },
                     ],
                     "executor": "nx:noop",
                     "inputs": [
@@ -492,7 +496,12 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "test-ci": {
                       "cache": true,
                       "dependsOn": [
-                        "test-ci--src/unit.spec.ts",
+                        {
+                          "options": "forward",
+                          "params": "forward",
+                          "projects": "self",
+                          "target": "test-ci--src/unit.spec.ts",
+                        },
                       ],
                       "executor": "nx:noop",
                       "inputs": [
@@ -642,7 +651,12 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "test-ci": {
                       "cache": true,
                       "dependsOn": [
-                        "test-ci--src/unit.spec.ts",
+                        {
+                          "options": "forward",
+                          "params": "forward",
+                          "projects": "self",
+                          "target": "test-ci--src/unit.spec.ts",
+                        },
                       ],
                       "executor": "nx:noop",
                       "inputs": [
@@ -792,7 +806,12 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "testci": {
                       "cache": true,
                       "dependsOn": [
-                        "testci--src/unit.spec.ts",
+                        {
+                          "options": "forward",
+                          "params": "forward",
+                          "projects": "self",
+                          "target": "testci--src/unit.spec.ts",
+                        },
                       ],
                       "executor": "nx:noop",
                       "inputs": [
@@ -870,7 +889,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   });
 });
 
-function mockJestConfig(config: any, context: CreateNodesContext) {
+function mockJestConfig(config: any, context: CreateNodesContextV2) {
   jest.mock(join(context.workspaceRoot, 'proj/jest.config.js'), () => config, {
     virtual: true,
   });

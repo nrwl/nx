@@ -3,6 +3,13 @@ use napi::bindgen_prelude::*;
 use rusqlite::params;
 use tracing::trace;
 
+pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_details (
+    hash    TEXT PRIMARY KEY NOT NULL,
+    project  TEXT NOT NULL,
+    target  TEXT NOT NULL,
+    configuration  TEXT
+);";
+
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
 pub struct HashedTask {
@@ -21,25 +28,7 @@ pub struct TaskDetails {
 impl TaskDetails {
     #[napi(constructor)]
     pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        let r = Self { db };
-
-        r.setup()?;
-
-        Ok(r)
-    }
-
-    fn setup(&self) -> anyhow::Result<()> {
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS task_details (
-                hash    TEXT PRIMARY KEY NOT NULL,
-                project  TEXT NOT NULL,
-                target  TEXT NOT NULL,
-                configuration  TEXT
-            );",
-            params![],
-        )?;
-
-        Ok(())
+        Ok(Self { db })
     }
 
     #[napi]

@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { NormalizedOptions } from '../schema';
 
 export function removeDeadCodeFromRemote(
@@ -8,13 +9,14 @@ export function removeDeadCodeFromRemote(
 ) {
   const projectName = options.appName;
   const project = readProjectConfiguration(tree, projectName);
+  const sourceRoot = getProjectSourceRoot(project, tree);
 
   const { appComponentInfo, nxWelcomeComponentInfo, entryModuleFileName } =
     options;
 
   ['css', 'less', 'scss', 'sass'].forEach((style) => {
     const pathToComponentStyle = joinPathFragments(
-      project.sourceRoot,
+      sourceRoot,
       `app/${appComponentInfo.extensionlessFileName}.${style}`
     );
     if (tree.exists(pathToComponentStyle)) {
@@ -25,19 +27,19 @@ export function removeDeadCodeFromRemote(
   tree.rename(
     nxWelcomeComponentInfo.path,
     joinPathFragments(
-      project.sourceRoot,
+      sourceRoot,
       `app/remote-entry/${nxWelcomeComponentInfo.fileName}`
     )
   );
   tree.delete(
     joinPathFragments(
-      project.sourceRoot,
+      sourceRoot,
       `app/${appComponentInfo.extensionlessFileName}.spec.ts`
     )
   );
   tree.delete(
     joinPathFragments(
-      project.sourceRoot,
+      sourceRoot,
       `app/${appComponentInfo.extensionlessFileName}.html`
     )
   );
@@ -56,9 +58,9 @@ export class ${appComponentInfo.symbolName} {}`;
 
     tree.write(appComponentInfo.path, component);
 
-    let modulePath = joinPathFragments(project.sourceRoot, 'app/app.module.ts');
+    let modulePath = joinPathFragments(sourceRoot, 'app/app.module.ts');
     if (!tree.exists(modulePath)) {
-      modulePath = joinPathFragments(project.sourceRoot, 'app/app-module.ts');
+      modulePath = joinPathFragments(sourceRoot, 'app/app-module.ts');
     }
     tree.write(
       modulePath,

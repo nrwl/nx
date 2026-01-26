@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -155,7 +155,7 @@ describe('Nx Running Tests', () => {
       expect(success).toContain('0');
       expect(success).toContain('1');
 
-      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
+      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrow();
     });
 
     it('should run npm scripts', async () => {
@@ -631,7 +631,7 @@ describe('Nx Running Tests', () => {
   describe('run-many', () => {
     it('should build specific and all projects', () => {
       // This is required to ensure the numbers used in the assertions make sense for this test
-      const proj = newProject();
+      const proj = newProject({ packages: ['@nx/js', '@nx/node', '@nx/web'] });
       const appA = uniq('appa-rand');
       const libA = uniq('liba-rand');
       const libB = uniq('libb-rand');

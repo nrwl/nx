@@ -10,4 +10,4 @@ Learn how Nx migrate functionality helps you:
 - migrate your configuration files (e.g. Jest, ESLint, Nx config)
 - adjust your source code to match the new versions of packages
 
-Read more [in our docs](/features/automate-updating-dependencies)
+Read more [in our docs](/docs/features/automate-updating-dependencies)

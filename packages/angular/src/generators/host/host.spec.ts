@@ -374,6 +374,21 @@ describe('Host App Generator', () => {
       expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
 
+    it('should not import from `zone.js/node` in the server file even when zoneless is false', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+
+      await generateTestHostApplication(tree, {
+        directory: 'test',
+        ssr: true,
+        zoneless: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read(`test/src/main.server.ts`, 'utf-8')).not.toContain(
+        "import 'zone.js/node';"
+      );
+    });
+
     it('should generate the correct files when --typescript=true', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -585,11 +600,10 @@ describe('Host App Generator', () => {
         tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
       ).toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
         import { NxWelcomeComponent } from './nx-welcome.component';
 
         @Component({
-          imports: [CommonModule, NxWelcomeComponent],
+          imports: [NxWelcomeComponent],
           selector: 'app-remote1-entry',
           template: \`<app-nx-welcome></app-nx-welcome>\`
         })
@@ -663,6 +677,28 @@ describe('Host App Generator', () => {
         })
         export class RemoteEntryModule {}"
       `);
+    });
+
+    it('should import from `zone.js/node` in the server file for versions lower than v21', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        };
+        return json;
+      });
+
+      await generateTestHostApplication(tree, {
+        directory: 'test',
+        ssr: true,
+        zoneless: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toContain(
+        "import 'zone.js/node';"
+      );
     });
   });
 });

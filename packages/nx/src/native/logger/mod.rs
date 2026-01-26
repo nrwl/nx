@@ -102,7 +102,18 @@ where
 /// - `NX_NATIVE_LOGGING=nx::native::tasks::hashers::hash_project_files=trace` - enable all logs for the `hash_project_files` module
 /// - `NX_NATIVE_LOGGING=[{project_name=project}]` - enable logs that contain the project in its span
 /// NX_NATIVE_FILE_LOGGING acts the same but logs to .nx/workspace-data/nx.log instead of stdout
+///
+/// This function is idempotent - calling it multiple times is safe and won't create additional threads.
 pub(crate) fn enable_logger() {
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+
+    INIT.call_once(|| {
+        initialize_logger();
+    });
+}
+
+fn initialize_logger() {
     let stdout_layer = tracing_subscriber::fmt::layer()
         .with_ansi(std::io::stdout().is_terminal())
         .with_writer(std::io::stdout)

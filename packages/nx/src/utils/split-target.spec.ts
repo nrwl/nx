@@ -18,22 +18,51 @@ describe('splitTarget', () => {
       },
       type: 'app',
     });
+    builder.addNode({
+      name: ':utils:common',
+      data: {
+        root: '',
+        targets: {
+          target: {
+            configurations: {
+              prod: {},
+              dev: {},
+            },
+          },
+          'target:with:colon': {},
+        },
+      },
+      type: 'app',
+    });
+    builder.addNode({
+      name: ':utils:common:test',
+      data: {
+        root: '',
+        targets: {
+          prod: {},
+        },
+      },
+      type: 'app',
+    });
 
     projectGraph = builder.getUpdatedProjectGraph();
   });
 
   it('should support only project', () => {
     expect(splitTarget('project', projectGraph)).toEqual(['project']);
+    expect(splitTarget(':utils:common', projectGraph)).toEqual([
+      ':utils:common',
+    ]);
   });
 
-  it('should project:target', () => {
+  it('should split project:target', () => {
     expect(splitTarget('project:target', projectGraph)).toEqual([
       'project',
       'target',
     ]);
   });
 
-  it('should project:target:configuration', () => {
+  it('should split project:target:configuration', () => {
     expect(splitTarget('project:target:configuration', projectGraph)).toEqual([
       'project',
       'target',
@@ -41,7 +70,7 @@ describe('splitTarget', () => {
     ]);
   });
 
-  it('should targets that contain colons when present in the graph', () => {
+  it('should support targets that contain colons when present in the graph', () => {
     expect(
       splitTarget('project:target:target:configuration', projectGraph)
     ).toEqual(['project', 'target:target', 'configuration']);
@@ -53,12 +82,24 @@ describe('splitTarget', () => {
     ).toEqual(['project', 'other:other', 'configuration']);
   });
 
-  it('should targets that contain colons when not provided graph but surrounded by quotes', () => {
+  it('should support projects with colons in the name', () => {
+    expect(splitTarget(':utils:common:target', projectGraph)).toEqual([
+      ':utils:common',
+      'target',
+    ]);
+  });
+
+  it('should support projects and targets with colons in the name', () => {
     expect(
-      splitTarget('project:"other:other":configuration', {
-        nodes: {},
-        dependencies: {},
-      } as ProjectGraph)
-    ).toEqual(['project', 'other:other', 'configuration']);
+      splitTarget(':utils:common:target:with:colon', projectGraph)
+    ).toEqual([':utils:common', 'target:with:colon']);
+  });
+
+  it('should support projects with colons in the name and configuration', () => {
+    expect(splitTarget(':utils:common:target:dev', projectGraph)).toEqual([
+      ':utils:common',
+      'target',
+      'dev',
+    ]);
   });
 });

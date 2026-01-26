@@ -24,437 +24,448 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
 
-describe('@nx/storybook:configuration for Storybook v9', () => {
-  describe('dependencies', () => {
-    let tree: Tree;
+describe('@nx/storybook:configuration', () => {
+  describe('v10', () => {
+    describe('dependencies', () => {
+      let tree: Tree;
 
-    beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await libraryGenerator(tree, {
-        directory: 'test-ui-lib',
-        bundler: 'none',
-        skipFormat: true,
-        addPlugin: true,
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+
+        jest.resetModules();
+        // force v9
+        jest.doMock('storybook/package.json', () => ({
+          version: storybookVersion,
+        }));
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = storybookVersion;
+          return json;
+        });
       });
 
-      jest.resetModules();
-      jest.doMock('storybook/package.json', () => ({
-        version: storybookVersion,
-      }));
+      it('should add angular related dependencies when using Angular as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/angular',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/core-server']
+        ).not.toBeDefined();
+        // angular specific
+        expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add react related dependencies when using React as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add html related dependencies when using html as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/html-webpack5',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add web-components related dependencies when using html as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/web-components-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-vite']
+        ).toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add vue related dependencies when using vue as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/vue-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-vite']
+        ).toBeDefined();
+      });
+
+      it('should add vue3 related dependencies when using vue3 as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/vue3-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+        // generic vue3 specific
+        expect(
+          packageJson.devDependencies['@storybook/vue3-vite']
+        ).toBeDefined();
+      });
+
+      it('should add svelte related dependencies when using svelte as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/svelte-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-webpack5']
+        ).not.toBeDefined();
+        // generic vue3 specific
+        expect(
+          packageJson.devDependencies['@storybook/vue3-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-vite']
+        ).toBeDefined();
+      });
     });
 
-    it('should add angular related dependencies when using Angular as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
+    describe('basic functionalities', () => {
+      let tree: Tree;
 
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        standaloneConfig: false,
-        uiFramework: '@storybook/angular',
-        addPlugin: true,
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+          json.namedInputs = {
+            production: ['default'],
+          };
+          return json;
+        });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          addPlugin: true,
+        });
+        writeJson(tree, 'package.json', {
+          devDependencies: {
+            '@storybook/react-webpack5': storybookVersion,
+            storybook: storybookVersion,
+          },
+        });
+
+        jest.resetModules();
+        jest.doMock('storybook/package.json', () => ({
+          version: storybookVersion,
+        }));
       });
 
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/core-server']
-      ).not.toBeDefined();
-      // angular specific
-      expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).not.toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5']
-      ).not.toBeDefined();
-    });
+      it('should generate TypeScript Configuration files by default', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/angular',
+          addPlugin: true,
+        });
 
-    it('should add react related dependencies when using React as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
+        expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
+        expect(
+          tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
       });
 
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).toBeDefined();
-      // angular specific
-      expect(
-        packageJson.devDependencies['@storybook/angular']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).not.toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5']
-      ).not.toBeDefined();
-    });
+      it('should update `tsconfig.lib.json` file', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+        const tsconfigJson = readJson<TsConfig>(
+          tree,
+          'test-ui-lib/tsconfig.lib.json'
+        ) as Required<TsConfig>;
 
-    it('should add html related dependencies when using html as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        uiFramework: '@storybook/html-webpack5',
-        addPlugin: true,
+        expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
+        expect(tsconfigJson.exclude).toContain('**/*.stories.js');
+        expect(tsconfigJson.exclude).toContain('**/*.stories.jsx');
+        expect(tsconfigJson.exclude).toContain('**/*.stories.tsx');
       });
 
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
-      // angular specific
-      expect(
-        packageJson.devDependencies['@storybook/angular']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5']
-      ).not.toBeDefined();
-    });
+      it('should update `tsconfig.json` file', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+        });
+        const tsconfigJson = readJson<TsConfig>(
+          tree,
+          'test-ui-lib/tsconfig.json'
+        );
 
-    it('should add web-components related dependencies when using html as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        uiFramework: '@storybook/web-components-vite',
-        addPlugin: true,
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
-      // angular specific
-      expect(
-        packageJson.devDependencies['@storybook/angular']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).not.toBeDefined();
-      // generic web-components specific
-      expect(
-        packageJson.devDependencies['@storybook/web-components-vite']
-      ).toBeDefined();
-      // generic vue specific
-      expect(
-        packageJson.devDependencies['@storybook/vue-webpack5']
-      ).not.toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5']
-      ).not.toBeDefined();
-    });
-
-    it('should add vue related dependencies when using vue as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        uiFramework: '@storybook/vue-vite',
-        addPlugin: true,
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
-      // angular specific
-      expect(
-        packageJson.devDependencies['@storybook/angular']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).not.toBeDefined();
-      // generic web-components specific
-      expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5']
-      ).not.toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5']
-      ).not.toBeDefined();
-      // generic vue specific
-      expect(packageJson.devDependencies['@storybook/vue-vite']).toBeDefined();
-    });
-
-    it('should add vue3 related dependencies when using vue3 as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        uiFramework: '@storybook/vue3-vite',
-        addPlugin: true,
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
-      // angular specific
-      expect(
-        packageJson.devDependencies['@storybook/angular']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).not.toBeDefined();
-      // generic vue specific
-      expect(
-        packageJson.devDependencies['@storybook/vue-webpack5']
-      ).not.toBeDefined();
-      // generic web-components specific
-      expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5']
-      ).not.toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5']
-      ).not.toBeDefined();
-      // generic vue3 specific
-      expect(packageJson.devDependencies['@storybook/vue3-vite']).toBeDefined();
-    });
-
-    it('should add svelte related dependencies when using svelte as uiFramework', async () => {
-      const existing = 'existing';
-      const existingVersion = '1.0.0';
-      addDependenciesToPackageJson(
-        tree,
-        { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        uiFramework: '@storybook/svelte-vite',
-        addPlugin: true,
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-      // general deps
-      expect(packageJson.dependencies[existing]).toBeDefined();
-      expect(packageJson.devDependencies[existing]).toBeDefined();
-      expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
-      ).not.toBeDefined();
-      // react specific
-      expect(
-        packageJson.devDependencies['@storybook/react-webpack5']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
-      // angular specific
-      expect(
-        packageJson.devDependencies['@storybook/angular']
-      ).not.toBeDefined();
-      expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
-      // generic html specific
-      expect(
-        packageJson.devDependencies['@storybook/html-webpack5']
-      ).not.toBeDefined();
-      // generic vue specific
-      expect(
-        packageJson.devDependencies['@storybook/vue-webpack5']
-      ).not.toBeDefined();
-      // generic web-components specific
-      expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5']
-      ).not.toBeDefined();
-      // generic vue3 specific
-      expect(
-        packageJson.devDependencies['@storybook/vue3-webpack5']
-      ).not.toBeDefined();
-      // generic svelte specific
-      expect(
-        packageJson.devDependencies['@storybook/svelte-vite']
-      ).toBeDefined();
-    });
-  });
-
-  describe('basic functionalities', () => {
-    let tree: Tree;
-
-    beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.namedInputs = {
-          production: ['default'],
-        };
-        return json;
-      });
-      await libraryGenerator(tree, {
-        directory: 'test-ui-lib',
-        bundler: 'none',
-        addPlugin: true,
-      });
-      writeJson(tree, 'package.json', {
-        devDependencies: {
-          '@storybook/react-webpack5': storybookVersion,
-          storybook: storybookVersion,
-        },
-      });
-
-      jest.resetModules();
-      jest.doMock('storybook/package.json', () => ({
-        version: storybookVersion,
-      }));
-    });
-
-    it('should generate TypeScript Configuration files by default', async () => {
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        standaloneConfig: false,
-        uiFramework: '@storybook/angular',
-        addPlugin: true,
-      });
-
-      expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
-      expect(
-        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
-    });
-
-    it('should update `tsconfig.lib.json` file', async () => {
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        standaloneConfig: false,
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
-      });
-      const tsconfigJson = readJson<TsConfig>(
-        tree,
-        'test-ui-lib/tsconfig.lib.json'
-      ) as Required<TsConfig>;
-
-      expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
-      expect(tsconfigJson.exclude).toContain('**/*.stories.js');
-      expect(tsconfigJson.exclude).toContain('**/*.stories.jsx');
-      expect(tsconfigJson.exclude).toContain('**/*.stories.tsx');
-    });
-
-    it('should update `tsconfig.json` file', async () => {
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        standaloneConfig: false,
-        uiFramework: '@storybook/react-webpack5',
-      });
-      const tsconfigJson = readJson<TsConfig>(
-        tree,
-        'test-ui-lib/tsconfig.json'
-      );
-
-      expect(tsconfigJson.references).toMatchInlineSnapshot(`
+        expect(tsconfigJson.references).toMatchInlineSnapshot(`
         [
           {
             "path": "./tsconfig.lib.json",
@@ -467,340 +478,362 @@ describe('@nx/storybook:configuration for Storybook v9', () => {
           },
         ]
       `);
-    });
-
-    it("should update the project's .eslintrc.json if config exists", async () => {
-      await libraryGenerator(tree, {
-        directory: 'test-ui-lib2',
-        linter: 'eslint',
-        addPlugin: true,
       });
 
-      updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
-        json.parserOptions = {
-          project: [],
-        };
-        return json;
-      });
+      it("should update the project's .eslintrc.json if config exists", async () => {
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib2',
+          linter: 'eslint',
+          addPlugin: true,
+        });
 
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib2',
-        standaloneConfig: false,
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
-      });
+        updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
+          json.parserOptions = {
+            project: [],
+          };
+          return json;
+        });
 
-      expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
-        .toMatchInlineSnapshot(`
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib2',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
+          .toMatchInlineSnapshot(`
         {
           "project": [
             "test-ui-lib2/tsconfig.storybook.json",
           ],
         }
       `);
-    });
-
-    it('should have the proper typings', async () => {
-      await libraryGenerator(tree, {
-        directory: 'test-ui-lib2',
-        linter: 'eslint',
-        addPlugin: true,
       });
 
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib2',
-        standaloneConfig: false,
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
+      it('should have the proper typings', async () => {
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib2',
+          linter: 'eslint',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib2',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        expect(
+          tree.read('test-ui-lib2/tsconfig.storybook.json', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          readJson(tree, 'package.json').devDependencies['core-js']
+        ).toBeTruthy();
       });
 
-      expect(
-        tree.read('test-ui-lib2/tsconfig.storybook.json', 'utf-8')
-      ).toMatchSnapshot();
+      it('should generate TS config for project by default', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/angular',
+          addPlugin: true,
+        });
 
-      expect(
-        readJson(tree, 'package.json').devDependencies['core-js']
-      ).toBeTruthy();
-    });
-
-    it('should generate TS config for project by default', async () => {
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        standaloneConfig: false,
-        uiFramework: '@storybook/angular',
-        addPlugin: true,
+        expect(
+          tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
+        expect(tree.exists('test-ui-lib/.storybook/main.js')).toBeFalsy();
+        expect(tree.exists('test-ui-lib/.storybook/preview.js')).toBeFalsy();
       });
 
-      expect(
-        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
-      expect(tree.exists('test-ui-lib/.storybook/main.js')).toBeFalsy();
-      expect(tree.exists('test-ui-lib/.storybook/preview.js')).toBeFalsy();
+      it('should add test-storybook target', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          interactionTests: true,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        expect(
+          readJson(tree, 'package.json').devDependencies['core-js']
+        ).toBeTruthy();
+      });
     });
 
-    it('should add test-storybook target', async () => {
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        interactionTests: true,
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
+    describe('update root tsconfig.json', () => {
+      let tree: Tree;
+
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+
+        jest.resetModules();
+
+        // force v9
+        jest.doMock('storybook/package.json', () => ({
+          version: storybookVersion,
+        }));
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = storybookVersion;
+          return json;
+        });
       });
 
-      expect(
-        readJson(tree, 'package.json').devDependencies['core-js']
-      ).toBeTruthy();
-    });
-  });
-
-  describe('update root tsconfig.json', () => {
-    let tree: Tree;
-
-    beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await libraryGenerator(tree, {
-        directory: 'test-ui-lib',
-        bundler: 'none',
-        skipFormat: true,
-        addPlugin: true,
-      });
-
-      jest.resetModules();
-      jest.doMock('storybook/package.json', () => ({
-        version: storybookVersion,
-      }));
-    });
-
-    it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
-      tree.write(
-        'tsconfig.json',
-        JSON.stringify({
-          extends: './tsconfig.base.json',
-          compilerOptions: {
-            jsx: 'react-jsx',
-            allowJs: true,
-            esModuleInterop: true,
-            allowSyntheticDefaultImports: true,
-            forceConsistentCasingInFileNames: true,
-            strict: true,
-            noImplicitOverride: true,
-            noPropertyAccessFromIndexSignature: true,
-            noImplicitReturns: true,
-            noFallthroughCasesInSwitch: true,
-          },
-          files: [],
-          include: [],
-          references: [
-            {
-              path: './tsconfig.app.json',
-            },
-            {
-              path: './.storybook/tsconfig.json',
-            },
-          ],
-        })
-      );
-
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        addPlugin: true,
-      });
-
-      const tsconfig = readJson(tree, 'tsconfig.json');
-      expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
-    });
-
-    it('should set the tsnode module to commonjs and respect other tsnode settings', async () => {
-      tree.write(
-        'tsconfig.json',
-        JSON.stringify({
-          extends: './tsconfig.base.json',
-          compilerOptions: {
-            jsx: 'react-jsx',
-            allowJs: true,
-            esModuleInterop: true,
-            allowSyntheticDefaultImports: true,
-            forceConsistentCasingInFileNames: true,
-            strict: true,
-            noImplicitOverride: true,
-            noPropertyAccessFromIndexSignature: true,
-            noImplicitReturns: true,
-            noFallthroughCasesInSwitch: true,
-          },
-          files: [],
-          include: [],
-          'ts-node': {
-            otherSetting: 'value',
+      it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
             compilerOptions: {
-              test: 'my-test-value',
-              module: 'my-module-value',
+              jsx: 'react-jsx',
+              allowJs: true,
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+              forceConsistentCasingInFileNames: true,
+              strict: true,
+              noImplicitOverride: true,
+              noPropertyAccessFromIndexSignature: true,
+              noImplicitReturns: true,
+              noFallthroughCasesInSwitch: true,
             },
-          },
-        })
-      );
+            files: [],
+            include: [],
+            references: [
+              {
+                path: './tsconfig.app.json',
+              },
+              {
+                path: './.storybook/tsconfig.json',
+              },
+            ],
+          })
+        );
 
-      await configurationGenerator(tree, {
-        project: 'test-ui-lib',
-        addPlugin: true,
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
       });
 
-      const tsconfig = readJson(tree, 'tsconfig.json');
-      expect(tsconfig['ts-node'].otherSetting).toEqual('value');
-      expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
-      expect(tsconfig['ts-node'].compilerOptions.test).toEqual('my-test-value');
+      it('should set the tsnode module to commonjs and respect other tsnode settings', async () => {
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {
+              jsx: 'react-jsx',
+              allowJs: true,
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+              forceConsistentCasingInFileNames: true,
+              strict: true,
+              noImplicitOverride: true,
+              noPropertyAccessFromIndexSignature: true,
+              noImplicitReturns: true,
+              noFallthroughCasesInSwitch: true,
+            },
+            files: [],
+            include: [],
+            'ts-node': {
+              otherSetting: 'value',
+              compilerOptions: {
+                test: 'my-test-value',
+                module: 'my-module-value',
+              },
+            },
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].otherSetting).toEqual('value');
+        expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
+        expect(tsconfig['ts-node'].compilerOptions.test).toEqual(
+          'my-test-value'
+        );
+      });
     });
-  });
 
-  describe('generate Storybook configuration for all types of projects', () => {
-    let tree: Tree;
-    let testCases: string[][] = [];
+    describe('generate Storybook configuration for all types of projects', () => {
+      let tree: Tree;
+      let testCases: string[][] = [];
 
-    for (const [name, project] of Object.entries(variousProjects)) {
-      testCases.push([
-        `${
-          project.projectType === 'application' ? 'apps' : 'libs'
-        }/${name}/.storybook/`,
-      ]);
-    }
-
-    beforeAll(async () => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       for (const [name, project] of Object.entries(variousProjects)) {
-        addProjectConfiguration(tree, name, project as ProjectConfiguration);
-        writeJson(
-          tree,
+        testCases.push([
           `${
             project.projectType === 'application' ? 'apps' : 'libs'
-          }/${name}/tsconfig.json`,
-          {}
-        );
+          }/${name}/.storybook/`,
+        ]);
       }
 
-      tree.write('libs/react-vite/vite.config.ts', 'export default {}');
-      tree.write('apps/main-vite/vite.config.ts', 'export default {}');
-      tree.write('apps/main-vite-ts/vite.config.ts', 'export default {}');
-      tree.write('apps/reapp/vite.config.ts', 'export default {}');
-      tree.write('apps/wv1/vite.config.ts', 'export default {}');
-      tree.write('apps/nextapp/next.config.js', 'export default {}');
-
-      await configurationGenerator(tree, {
-        project: 'reapp',
-        tsConfiguration: false,
-        uiFramework: '@storybook/react-vite',
-        addPlugin: true,
-      });
-      await configurationGenerator(tree, {
-        project: 'main-vite',
-        tsConfiguration: false,
-        uiFramework: '@storybook/react-vite',
-        addPlugin: true,
-      });
-      await configurationGenerator(tree, {
-        project: 'main-vite-ts',
-        uiFramework: '@storybook/react-vite',
-        addPlugin: true,
-      });
-      await configurationGenerator(tree, {
-        project: 'main-webpack',
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
-      });
-      await configurationGenerator(tree, {
-        project: 'reappw',
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
-      });
-      await configurationGenerator(tree, {
-        project: 'react-rollup',
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
-      });
-
-      await configurationGenerator(tree, {
-        project: 'react-vite',
-        uiFramework: '@storybook/react-vite',
-        addPlugin: true,
-      });
-
-      await configurationGenerator(tree, {
-        project: 'nextapp',
-        uiFramework: '@storybook/nextjs',
-        addPlugin: true,
-      });
-
-      await configurationGenerator(tree, {
-        project: 'react-swc',
-        uiFramework: '@storybook/react-webpack5',
-        addPlugin: true,
-      });
-
-      await configurationGenerator(tree, {
-        project: 'wv1',
-        uiFramework: '@storybook/web-components-vite',
-        addPlugin: true,
-      });
-    });
-
-    test.each(testCases)(
-      'should contain the correct configuration in %p',
-      (storybookConfigPath) => {
-        if (tree.exists(storybookConfigPath)) {
-          if (tree.exists(`${storybookConfigPath}main.ts`)) {
-            expect(
-              tree.read(`${storybookConfigPath}main.ts`, 'utf-8')
-            ).toMatchSnapshot();
-          }
-          if (tree.exists(`${storybookConfigPath}main.js`)) {
-            expect(
-              tree.read(`${storybookConfigPath}main.js`, 'utf-8')
-            ).toMatchSnapshot();
-          }
-          expect(
-            tree.read(`${storybookConfigPath}tsconfig.json`, 'utf-8')
-          ).toMatchSnapshot();
+      beforeAll(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        for (const [name, project] of Object.entries(variousProjects)) {
+          addProjectConfiguration(tree, name, project as ProjectConfiguration);
+          writeJson(
+            tree,
+            `${
+              project.projectType === 'application' ? 'apps' : 'libs'
+            }/${name}/tsconfig.json`,
+            {}
+          );
         }
-      }
-    );
-  });
 
-  describe('TS solution setup', () => {
-    let tree: Tree;
-    beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.workspaces = ['packages/*', 'apps/*'];
-        return json;
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = storybookVersion;
+          return json;
+        });
+
+        tree.write('libs/react-vite/vite.config.ts', 'export default {}');
+        tree.write('apps/main-vite/vite.config.ts', 'export default {}');
+        tree.write('apps/main-vite-ts/vite.config.ts', 'export default {}');
+        tree.write('apps/reapp/vite.config.ts', 'export default {}');
+        tree.write('apps/wv1/vite.config.ts', 'export default {}');
+        tree.write('apps/nextapp/next.config.js', 'export default {}');
+
+        await configurationGenerator(tree, {
+          project: 'reapp',
+          tsConfiguration: false,
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'main-vite',
+          tsConfiguration: false,
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'main-vite-ts',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'main-webpack',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'reappw',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'react-rollup',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'react-vite',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'nextapp',
+          uiFramework: '@storybook/nextjs',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'react-swc',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'wv1',
+          uiFramework: '@storybook/web-components-vite',
+          addPlugin: true,
+        });
       });
-      writeJson(tree, 'tsconfig.base.json', {
-        compilerOptions: {
-          composite: true,
-          declaration: true,
-        },
-      });
-      writeJson(tree, 'tsconfig.json', {
-        extends: './tsconfig.base.json',
-        files: [],
-        references: [],
-      });
+
+      test.each(testCases)(
+        'should contain the correct configuration in %p',
+        (storybookConfigPath) => {
+          if (tree.exists(storybookConfigPath)) {
+            if (tree.exists(`${storybookConfigPath}main.ts`)) {
+              expect(
+                tree.read(`${storybookConfigPath}main.ts`, 'utf-8')
+              ).toMatchSnapshot();
+            }
+            if (tree.exists(`${storybookConfigPath}main.js`)) {
+              expect(
+                tree.read(`${storybookConfigPath}main.js`, 'utf-8')
+              ).toMatchSnapshot();
+            }
+            expect(
+              tree.read(`${storybookConfigPath}tsconfig.json`, 'utf-8')
+            ).toMatchSnapshot();
+          }
+        }
+      );
     });
 
-    it('should add project references when using TS solution', async () => {
-      await libraryGenerator(tree, {
-        directory: 'mylib',
-        bundler: 'none',
-        skipFormat: true,
-        addPlugin: true,
-        useProjectJson: false,
+    describe('TS solution setup', () => {
+      let tree: Tree;
+      beforeEach(() => {
+        tree = createTreeWithEmptyWorkspace();
+        updateJson(tree, 'package.json', (json) => {
+          json.workspaces = ['packages/*', 'apps/*'];
+          return json;
+        });
+        writeJson(tree, 'tsconfig.base.json', {
+          compilerOptions: {
+            composite: true,
+            declaration: true,
+          },
+        });
+        writeJson(tree, 'tsconfig.json', {
+          extends: './tsconfig.base.json',
+          files: [],
+          references: [],
+        });
+
+        // force v9
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = storybookVersion;
+          return json;
+        });
       });
 
-      await configurationGenerator(tree, {
-        project: '@proj/mylib',
-        standaloneConfig: false,
-        uiFramework: '@storybook/react-vite',
-        addPlugin: true,
-      });
+      it('should add project references when using TS solution', async () => {
+        await libraryGenerator(tree, {
+          directory: 'mylib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+          useProjectJson: false,
+        });
 
-      expect(readJson(tree, 'tsconfig.json')).toMatchInlineSnapshot(`
+        await configurationGenerator(tree, {
+          project: '@proj/mylib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        expect(readJson(tree, 'tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "./tsconfig.base.json",
           "files": [],
@@ -817,7 +850,7 @@ describe('@nx/storybook:configuration for Storybook v9', () => {
           },
         }
       `);
-      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",
           "files": [],
@@ -832,8 +865,8 @@ describe('@nx/storybook:configuration for Storybook v9', () => {
           ],
         }
       `);
-      expect(readJson(tree, 'mylib/tsconfig.storybook.json'))
-        .toMatchInlineSnapshot(`
+        expect(readJson(tree, 'mylib/tsconfig.storybook.json'))
+          .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
             "jsx": "preserve",
@@ -873,6 +906,891 @@ describe('@nx/storybook:configuration for Storybook v9', () => {
           ],
         }
       `);
+      });
+    });
+  });
+  describe('v9', () => {
+    describe('dependencies', () => {
+      let tree: Tree;
+
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+
+        jest.resetModules();
+        // force v9
+        jest.doMock('storybook/package.json', () => ({
+          version: '9.1.15',
+        }));
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '9.1.15';
+          return json;
+        });
+      });
+
+      it('should add angular related dependencies when using Angular as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/angular',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/core-server']
+        ).not.toBeDefined();
+        // angular specific
+        expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add react related dependencies when using React as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add html related dependencies when using html as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/html-webpack5',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add web-components related dependencies when using html as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/web-components-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-vite']
+        ).toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+      });
+
+      it('should add vue related dependencies when using vue as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/vue-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-vite']
+        ).toBeDefined();
+      });
+
+      it('should add vue3 related dependencies when using vue3 as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/vue3-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-webpack5']
+        ).not.toBeDefined();
+        // generic vue3 specific
+        expect(
+          packageJson.devDependencies['@storybook/vue3-vite']
+        ).toBeDefined();
+      });
+
+      it('should add svelte related dependencies when using svelte as uiFramework', async () => {
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nx/storybook': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/svelte-vite',
+          addPlugin: true,
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        // general deps
+        expect(packageJson.dependencies[existing]).toBeDefined();
+        expect(packageJson.devDependencies[existing]).toBeDefined();
+        expect(
+          packageJson.devDependencies['@storybook/addon-essentials']
+        ).not.toBeDefined();
+        // react specific
+        expect(
+          packageJson.devDependencies['@storybook/react-webpack5']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+        expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+        // angular specific
+        expect(
+          packageJson.devDependencies['@storybook/angular']
+        ).not.toBeDefined();
+        expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+        // generic html specific
+        expect(
+          packageJson.devDependencies['@storybook/html-webpack5']
+        ).not.toBeDefined();
+        // generic vue specific
+        expect(
+          packageJson.devDependencies['@storybook/vue-webpack5']
+        ).not.toBeDefined();
+        // generic web-components specific
+        expect(
+          packageJson.devDependencies['@storybook/web-components-webpack5']
+        ).not.toBeDefined();
+        // generic vue3 specific
+        expect(
+          packageJson.devDependencies['@storybook/vue3-webpack5']
+        ).not.toBeDefined();
+        // generic svelte specific
+        expect(
+          packageJson.devDependencies['@storybook/svelte-vite']
+        ).toBeDefined();
+      });
+    });
+
+    describe('basic functionalities', () => {
+      let tree: Tree;
+
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+          json.namedInputs = {
+            production: ['default'],
+          };
+          return json;
+        });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          addPlugin: true,
+        });
+        writeJson(tree, 'package.json', {
+          devDependencies: {
+            '@storybook/react-webpack5': '9.1.15',
+            storybook: '9.1.15',
+          },
+        });
+
+        jest.resetModules();
+        jest.doMock('storybook/package.json', () => ({
+          version: '9.1.15',
+        }));
+      });
+
+      it('should generate TypeScript Configuration files by default', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/angular',
+          addPlugin: true,
+        });
+
+        expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
+        expect(
+          tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
+      });
+
+      it('should update `tsconfig.lib.json` file', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+        const tsconfigJson = readJson<TsConfig>(
+          tree,
+          'test-ui-lib/tsconfig.lib.json'
+        ) as Required<TsConfig>;
+
+        expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
+        expect(tsconfigJson.exclude).toContain('**/*.stories.js');
+        expect(tsconfigJson.exclude).toContain('**/*.stories.jsx');
+        expect(tsconfigJson.exclude).toContain('**/*.stories.tsx');
+      });
+
+      it('should update `tsconfig.json` file', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+        });
+        const tsconfigJson = readJson<TsConfig>(
+          tree,
+          'test-ui-lib/tsconfig.json'
+        );
+
+        expect(tsconfigJson.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./tsconfig.lib.json",
+          },
+          {
+            "path": "./tsconfig.spec.json",
+          },
+          {
+            "path": "./tsconfig.storybook.json",
+          },
+        ]
+      `);
+      });
+
+      it("should update the project's .eslintrc.json if config exists", async () => {
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib2',
+          linter: 'eslint',
+          addPlugin: true,
+        });
+
+        updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
+          json.parserOptions = {
+            project: [],
+          };
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib2',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
+          .toMatchInlineSnapshot(`
+        {
+          "project": [
+            "test-ui-lib2/tsconfig.storybook.json",
+          ],
+        }
+      `);
+      });
+
+      it('should have the proper typings', async () => {
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib2',
+          linter: 'eslint',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib2',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        expect(
+          tree.read('test-ui-lib2/tsconfig.storybook.json', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          readJson(tree, 'package.json').devDependencies['core-js']
+        ).toBeTruthy();
+      });
+
+      it('should generate TS config for project by default', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/angular',
+          addPlugin: true,
+        });
+
+        expect(
+          tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
+        expect(tree.exists('test-ui-lib/.storybook/main.js')).toBeFalsy();
+        expect(tree.exists('test-ui-lib/.storybook/preview.js')).toBeFalsy();
+      });
+
+      it('should add test-storybook target', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          interactionTests: true,
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        expect(
+          readJson(tree, 'package.json').devDependencies['core-js']
+        ).toBeTruthy();
+      });
+    });
+
+    describe('update root tsconfig.json', () => {
+      let tree: Tree;
+
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+
+        jest.resetModules();
+
+        // force v9
+        jest.doMock('storybook/package.json', () => ({
+          version: '9.1.15',
+        }));
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '9.1.15';
+          return json;
+        });
+      });
+
+      it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {
+              jsx: 'react-jsx',
+              allowJs: true,
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+              forceConsistentCasingInFileNames: true,
+              strict: true,
+              noImplicitOverride: true,
+              noPropertyAccessFromIndexSignature: true,
+              noImplicitReturns: true,
+              noFallthroughCasesInSwitch: true,
+            },
+            files: [],
+            include: [],
+            references: [
+              {
+                path: './tsconfig.app.json',
+              },
+              {
+                path: './.storybook/tsconfig.json',
+              },
+            ],
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
+      });
+
+      it('should set the tsnode module to commonjs and respect other tsnode settings', async () => {
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {
+              jsx: 'react-jsx',
+              allowJs: true,
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+              forceConsistentCasingInFileNames: true,
+              strict: true,
+              noImplicitOverride: true,
+              noPropertyAccessFromIndexSignature: true,
+              noImplicitReturns: true,
+              noFallthroughCasesInSwitch: true,
+            },
+            files: [],
+            include: [],
+            'ts-node': {
+              otherSetting: 'value',
+              compilerOptions: {
+                test: 'my-test-value',
+                module: 'my-module-value',
+              },
+            },
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].otherSetting).toEqual('value');
+        expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
+        expect(tsconfig['ts-node'].compilerOptions.test).toEqual(
+          'my-test-value'
+        );
+      });
+    });
+
+    describe('generate Storybook configuration for all types of projects', () => {
+      let tree: Tree;
+      let testCases: string[][] = [];
+
+      for (const [name, project] of Object.entries(variousProjects)) {
+        testCases.push([
+          `${
+            project.projectType === 'application' ? 'apps' : 'libs'
+          }/${name}/.storybook/`,
+        ]);
+      }
+
+      beforeAll(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        for (const [name, project] of Object.entries(variousProjects)) {
+          addProjectConfiguration(tree, name, project as ProjectConfiguration);
+          writeJson(
+            tree,
+            `${
+              project.projectType === 'application' ? 'apps' : 'libs'
+            }/${name}/tsconfig.json`,
+            {}
+          );
+        }
+
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '9.1.15';
+          return json;
+        });
+
+        tree.write('libs/react-vite/vite.config.ts', 'export default {}');
+        tree.write('apps/main-vite/vite.config.ts', 'export default {}');
+        tree.write('apps/main-vite-ts/vite.config.ts', 'export default {}');
+        tree.write('apps/reapp/vite.config.ts', 'export default {}');
+        tree.write('apps/wv1/vite.config.ts', 'export default {}');
+        tree.write('apps/nextapp/next.config.js', 'export default {}');
+
+        await configurationGenerator(tree, {
+          project: 'reapp',
+          tsConfiguration: false,
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'main-vite',
+          tsConfiguration: false,
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'main-vite-ts',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'main-webpack',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'reappw',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+        await configurationGenerator(tree, {
+          project: 'react-rollup',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'react-vite',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'nextapp',
+          uiFramework: '@storybook/nextjs',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'react-swc',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: true,
+        });
+
+        await configurationGenerator(tree, {
+          project: 'wv1',
+          uiFramework: '@storybook/web-components-vite',
+          addPlugin: true,
+        });
+      });
+
+      test.each(testCases)(
+        'should contain the correct configuration in %p',
+        (storybookConfigPath) => {
+          if (tree.exists(storybookConfigPath)) {
+            if (tree.exists(`${storybookConfigPath}main.ts`)) {
+              expect(
+                tree.read(`${storybookConfigPath}main.ts`, 'utf-8')
+              ).toMatchSnapshot();
+            }
+            if (tree.exists(`${storybookConfigPath}main.js`)) {
+              expect(
+                tree.read(`${storybookConfigPath}main.js`, 'utf-8')
+              ).toMatchSnapshot();
+            }
+            expect(
+              tree.read(`${storybookConfigPath}tsconfig.json`, 'utf-8')
+            ).toMatchSnapshot();
+          }
+        }
+      );
+    });
+
+    describe('TS solution setup', () => {
+      let tree: Tree;
+      beforeEach(() => {
+        tree = createTreeWithEmptyWorkspace();
+        updateJson(tree, 'package.json', (json) => {
+          json.workspaces = ['packages/*', 'apps/*'];
+          return json;
+        });
+        writeJson(tree, 'tsconfig.base.json', {
+          compilerOptions: {
+            composite: true,
+            declaration: true,
+          },
+        });
+        writeJson(tree, 'tsconfig.json', {
+          extends: './tsconfig.base.json',
+          files: [],
+          references: [],
+        });
+
+        // force v9
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '9.1.15';
+          return json;
+        });
+      });
+
+      it('should add project references when using TS solution', async () => {
+        await libraryGenerator(tree, {
+          directory: 'mylib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+          useProjectJson: false,
+        });
+
+        await configurationGenerator(tree, {
+          project: '@proj/mylib',
+          standaloneConfig: false,
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        expect(readJson(tree, 'tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "./tsconfig.base.json",
+          "files": [],
+          "references": [
+            {
+              "path": "./mylib",
+            },
+          ],
+          "ts-node": {
+            "compilerOptions": {
+              "module": "commonjs",
+              "moduleResolution": "node10",
+            },
+          },
+        }
+      `);
+        expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.storybook.json",
+            },
+          ],
+        }
+      `);
+        expect(readJson(tree, 'mylib/tsconfig.storybook.json'))
+          .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/storybook",
+          },
+          "exclude": [
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.js",
+            "src/**/*.test.js",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.test.js",
+          ],
+          "extends": "../tsconfig.base.json",
+          "files": [
+            "../node_modules/@nx/react/typings/styled-jsx.d.ts",
+            "../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../node_modules/@nx/react/typings/image.d.ts",
+          ],
+          "include": [
+            "src/**/*.stories.ts",
+            "src/**/*.stories.js",
+            "src/**/*.stories.jsx",
+            "src/**/*.stories.tsx",
+            "src/**/*.stories.mdx",
+            ".storybook/*.js",
+            ".storybook/*.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+      });
     });
   });
 });

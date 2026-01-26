@@ -6,7 +6,7 @@ import {
   ApplePodcastsIcon,
   IHeartRadioIcon,
   SpotifyIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
 
 export function EpisodePlayer({
@@ -124,7 +124,7 @@ export function PlatformLinks({
           return (
             <li
               key={platform.name}
-              className="inline-block cursor-pointer place-items-center rounded-2xl border border-slate-100 bg-white p-4 text-slate-600 transition-all hover:scale-[1.02] hover:text-slate-950 dark:border-slate-800/60 dark:bg-slate-950  dark:text-slate-400 dark:hover:text-white"
+              className="inline-block cursor-pointer place-items-center rounded-2xl border border-slate-100 bg-white p-4 text-slate-600 transition-all hover:scale-[1.02] hover:text-slate-950 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-400 dark:hover:text-white"
             >
               <a
                 href={platform.url}

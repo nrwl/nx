@@ -1,28 +1,29 @@
-import { exec, execSync } from 'child_process';
-import { copyFileSync, existsSync, writeFileSync } from 'fs';
-import {
-  Pair,
-  ParsedNode,
-  parseDocument,
-  stringify as YAMLStringify,
-  YAMLMap,
-  YAMLSeq,
-  Scalar,
-} from 'yaml';
+import { exec, execFile, execSync } from 'child_process';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-
+import {
+  Pair,
+  ParsedNode,
+  parseDocument,
+  Scalar,
+  YAMLMap,
+  YAMLSeq,
+  stringify as YAMLStringify,
+} from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
+import { getCatalogManager } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
   readYamlFile,
   writeJsonFile,
 } from './fileutils';
+import { getNxInstallationPath } from './installation-directory';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
@@ -41,6 +42,7 @@ export interface PackageManagerCommands {
   exec: string;
   dlx: string;
   list: string;
+  why: string;
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
@@ -50,6 +52,8 @@ export interface PackageManagerCommands {
     registryConfigKey: string,
     tag: string
   ) => string;
+  // yarn berry doesn't support ignoring scripts via flag
+  ignoreScriptsFlag?: string;
 }
 
 /**
@@ -62,10 +66,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
+        ? 'yarn'
+        : existsSync(join(dir, 'pnpm-lock.yaml'))
+          ? 'pnpm'
+          : 'npm')
   );
 }
 
@@ -79,7 +83,18 @@ export function isWorkspacesEnabled(
   root: string = workspaceRoot
 ): boolean {
   if (packageManager === 'pnpm') {
-    return existsSync(join(root, 'pnpm-workspace.yaml'));
+    if (!existsSync(join(root, 'pnpm-workspace.yaml'))) {
+      return false;
+    }
+
+    try {
+      const content = readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      const { packages } = load(content) ?? {};
+      return packages !== undefined;
+    } catch {
+      return false;
+    }
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json
@@ -116,6 +131,7 @@ export function getPackageManagerCommand(
         useBerry = true;
       }
 
+      // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
         install: 'yarn',
@@ -129,15 +145,17 @@ export function getPackageManagerCommand(
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
         exec: 'yarn',
-        dlx: useBerry ? 'yarn dlx' : 'yarn',
+        dlx: useBerry ? 'yarn dlx' : 'npx',
         run: (script: string, args?: string) =>
           `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
+        why: 'yarn why',
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
       };
     },
     pnpm: () => {
@@ -179,20 +197,19 @@ export function getPackageManagerCommand(
               : ''
           }`,
         list: 'pnpm ls --depth 100',
+        why: 'pnpm why',
         getRegistryUrl: 'pnpm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `pnpm publish "${packageRoot}" --json --"${
             allowRegistryConfigKey ? registryConfigKey : 'registry'
           }=${registry}" --tag=${tag} --no-git-checks`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     npm: () => {
-      // TODO: Remove this
-      process.env.npm_config_legacy_peer_deps ??= 'true';
-
       return {
         install: 'npm install',
-        ciInstall: 'npm ci --legacy-peer-deps',
+        ciInstall: 'npm ci',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',
@@ -202,9 +219,11 @@ export function getPackageManagerCommand(
         run: (script: string, args?: string) =>
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
+        why: 'npm explain',
         getRegistryUrl: 'npm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     bun: () => {
@@ -220,9 +239,11 @@ export function getPackageManagerCommand(
         dlx: 'bunx',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
+        why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
   };
@@ -296,6 +317,10 @@ export function findFileInPackageJsonDirectory(
   directory: string = process.cwd()
 ): string | null {
   while (!existsSync(join(directory, 'package.json'))) {
+    if (directory === workspaceRoot) {
+      // we reached the workspace root and we didn't find a package.json file
+      return null;
+    }
     directory = dirname(directory);
   }
   const path = join(directory, file);
@@ -400,13 +425,23 @@ export function copyPackageManagerConfigurationFiles(
  * For cases where you'd want to install packages that require an `.npmrc` set up,
  * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
  * temp directory.
+ *
+ * @param skipCopy - If true, skips copying package manager configuration files to the temporary directory.
+ *                   This is useful when creating a workspace from scratch (e.g., in create-nx-workspace)
+ *                   where no existing configuration files are available to copy.
  */
-export function createTempNpmDirectory() {
+export function createTempNpmDirectory(skipCopy = false) {
   const dir = dirSync().name;
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
-  copyPackageManagerConfigurationFiles(workspaceRoot, dir);
+  if (!skipCopy) {
+    const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
+    copyPackageManagerConfigurationFiles(
+      isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
+      dir
+    );
+  }
 
   const cleanup = async () => {
     try {
@@ -428,10 +463,31 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    const result = await packageRegistryView(packageName, version, 'version');
+    let resolvedVersion = version;
+    const manager = getCatalogManager(workspaceRoot);
+    if (manager?.isCatalogReference(version)) {
+      resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
+        packageName,
+        version
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Unable to resolve catalog reference ${packageName}@${version}.`
+        );
+      }
+    }
+
+    const result = await packageRegistryView(
+      packageName,
+      resolvedVersion,
+      'version'
+    );
 
     if (!result) {
-      throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+      throw new Error(
+        `Unable to resolve version ${packageName}@${resolvedVersion}.`
+      );
     }
 
     const lines = result.split('\n');
@@ -446,13 +502,13 @@ export async function resolvePackageVersionUsingRegistry(
      *
      * <package>@<version> '<version>'
      */
-    const resolvedVersion = lines
+    const finalResolvedVersion = lines
       .map((line) => line.split(' ')[1])
       .sort()
       .pop()
       .replace(/'/g, '');
 
-    return resolvedVersion;
+    return finalResolvedVersion;
   } catch {
     throw new Error(`Unable to resolve version ${packageName}@${version}.`);
   }
@@ -470,8 +526,23 @@ export async function resolvePackageVersionUsingInstallation(
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
+    let resolvedVersion = version;
+    const manager = getCatalogManager(workspaceRoot);
+    if (manager.isCatalogReference(version)) {
+      resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
+        packageName,
+        version
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Unable to resolve catalog reference ${packageName}@${version}.`
+        );
+      }
+    }
+
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${version}`, {
+    await execAsync(`${pmc.add} ${packageName}@${resolvedVersion}`, {
       cwd: dir,
       windowsHide: true,
     });

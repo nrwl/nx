@@ -38,6 +38,13 @@
       "default": false,
       "x-priority": "internal",
       "hidden": true
+    },
+    "useViteV6": {
+      "type": "boolean",
+      "description": "Use Vite v6",
+      "default": false,
+      "x-priority": "internal",
+      "hidden": true
     }
   }
 }

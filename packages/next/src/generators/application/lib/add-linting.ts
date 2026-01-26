@@ -11,12 +11,17 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { eslintConfigNextVersion } from '../../../utils/versions';
+import {
+  getEslintConfigNextDependenciesVersionsToInstall,
+  isNext16,
+} from '../../../utils/version-utils';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { addImportToFlatConfig } from '@nx/eslint/src/generators/utils/flat-config/ast-utils';
 
 export async function addLinting(
   host: Tree,
@@ -48,16 +53,23 @@ export async function addLinting(
         options.appProjectRoot,
         'flat/react-typescript'
       );
-      // Since Next.js does not support flat configs yet, we need to use compat fixup.
-      const addExtendsTask = addExtendsToLintConfig(
-        host,
-        options.appProjectRoot,
-        [
-          { name: 'next', needCompatFixup: true },
-          { name: 'next/core-web-vitals', needCompatFixup: true },
-        ]
-      );
-      tasks.push(addExtendsTask);
+      if (await isNext16(host)) {
+        addPluginsToLintConfig(host, options.appProjectRoot, ['@next/next']);
+      } else {
+        // Since Next.js < 16 does not support flat configs yet, we need to use compat fixup.
+        const addExtendsTask = addExtendsToLintConfig(
+          host,
+          options.appProjectRoot,
+          [
+            { name: 'next', needCompatFixup: true },
+            {
+              name: 'next/core-web-vitals',
+              needCompatFixup: true,
+            },
+          ]
+        );
+        tasks.push(addExtendsTask);
+      }
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         host,
@@ -91,10 +103,16 @@ export async function addLinting(
         },
       })
     );
-    addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
+    addIgnoresToLintConfig(host, options.appProjectRoot, [
+      '.next/**/*',
+      ...(options.isTsSolutionSetup ? ['**/out-tsc'] : []),
+    ]);
   }
 
   if (!options.skipPackageJson) {
+    const eslintConfigNextVersion =
+      await getEslintConfigNextDependenciesVersionsToInstall(host);
+
     tasks.push(
       addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
         ...extraEslintDependencies.devDependencies,

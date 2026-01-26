@@ -1,12 +1,12 @@
 import React from 'react';
-import { DefaultLayout, SectionHeading } from '@nx/nx-dev/ui-common';
+import { DefaultLayout, SectionHeading } from '@nx/nx-dev-ui-common';
 import {
   learnItems,
   eventItems,
   companyItems,
   MenuItem,
-} from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { Metadata } from 'next';
 
 interface ResourceCardProps {
@@ -51,7 +51,7 @@ function ResourceCard({ item }: ResourceCardProps) {
       >
         <div className="relative z-10">
           {item.icon && (
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 group-hover:bg-blue-100 dark:bg-slate-800  dark:group-hover:bg-blue-900">
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 group-hover:bg-blue-100 dark:bg-slate-800 dark:group-hover:bg-blue-900">
               <item.icon className="h-8 w-8 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:text-blue-400" />
             </div>
           )}

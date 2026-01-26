@@ -1,8 +1,17 @@
 use hashbrown::HashSet;
 
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
+use crate::native::utils::time::current_timestamp_millis;
 
 pub fn format_duration(duration_ms: i64) -> String {
+    #[cfg(test)]
+    {
+        if duration_ms < 1000 {
+            // In tests, return a deterministic value to avoid timing flakiness in snapshots
+            return "<1ms".to_string();
+        }
+    }
+
     if duration_ms == 0 {
         "<1ms".to_string()
     } else if duration_ms < 1000 {
@@ -14,6 +23,70 @@ pub fn format_duration(duration_ms: i64) -> String {
 
 pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
     format_duration(end_ms.saturating_sub(start_ms))
+}
+
+/// Formats the duration from a start time to the current time
+pub fn format_live_duration(start_ms: i64) -> String {
+    let current_ms = current_timestamp_millis();
+    format_duration(current_ms.saturating_sub(start_ms))
+}
+
+/// Formats a duration with an optional estimated time.
+///
+/// Returns a string in the format "{actual} ({estimated} avg)" if estimated is provided,
+/// otherwise just "{actual}".
+///
+/// This is the shared formatting pattern used by both the terminal pane and inline app
+/// for displaying task durations.
+pub fn format_duration_with_estimate(actual_ms: i64, estimated_ms: Option<i64>) -> String {
+    let actual_formatted = format_duration(actual_ms);
+    if let Some(estimated) = estimated_ms {
+        let estimated_formatted = format_duration(estimated);
+        format!("{} ({} avg)", actual_formatted, estimated_formatted)
+    } else {
+        actual_formatted
+    }
+}
+
+/// Calculate actual duration in milliseconds from epoch-based timing.
+///
+/// This handles the different cases:
+/// - For in-progress tasks: duration from start to now
+/// - For completed tasks: duration from start to end
+/// - For other states: None
+///
+/// # Arguments
+///
+/// * `status` - The task's current status
+/// * `start_time` - Task start time in milliseconds since epoch
+/// * `end_time` - Task end time in milliseconds since epoch (for completed tasks)
+///
+/// # Returns
+///
+/// The duration in milliseconds, or None if duration cannot be calculated.
+pub fn calculate_actual_duration_ms(
+    status: TaskStatus,
+    start_time: Option<i64>,
+    end_time: Option<i64>,
+) -> Option<i64> {
+    let start = start_time?;
+    match status {
+        TaskStatus::InProgress => {
+            // For in-progress tasks, calculate duration from start to now
+            let now = current_timestamp_millis();
+            Some(now - start)
+        }
+        TaskStatus::Success
+        | TaskStatus::Failure
+        | TaskStatus::LocalCache
+        | TaskStatus::LocalCacheKeptExisting
+        | TaskStatus::RemoteCache => {
+            // For completed tasks, calculate duration from start to end
+            let end = end_time?;
+            Some(end - start)
+        }
+        _ => None,
+    }
 }
 
 /// Ensures that all newlines in the output are properly handled by converting
@@ -34,6 +107,104 @@ pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
     output
 }
 
+use super::pty::PtyInstance;
+
+/// ANSI escape sequence to hide the cursor
+/// This is appended to output to prevent a confusing blinking cursor
+/// when viewing cache hits or completed task output.
+const HIDE_CURSOR_ESCAPE: &str = "\x1b[?25l";
+
+/// Writes output to a PTY instance, normalizing newlines and hiding the cursor.
+///
+/// This is the common implementation used by both App and InlineApp for
+/// processing terminal output from tasks.
+///
+/// # Arguments
+///
+/// * `pty` - The PTY instance to write output to
+/// * `output` - The raw output string to process
+pub fn write_output_to_pty(pty: &PtyInstance, output: &str) {
+    let output_with_hidden_cursor = format!("{}{}", output, HIDE_CURSOR_ESCAPE);
+    let normalized_output = normalize_newlines(output_with_hidden_cursor.as_bytes());
+    pty.process_output(&normalized_output);
+}
+
+use super::theme::THEME;
+use ratatui::style::{Modifier, Style};
+use ratatui::text::Span;
+
+/// Returns the base style (with foreground color) for a given task status.
+///
+/// This provides consistent color coding across different TUI components:
+/// - Success/Cache: Green
+/// - Failure: Red
+/// - Skipped: Yellow/Warning
+/// - InProgress/Shared: Blue/Info
+/// - NotStarted/Stopped: Gray/Secondary
+pub fn get_task_status_style(status: TaskStatus) -> Style {
+    Style::default().fg(match status {
+        TaskStatus::Success
+        | TaskStatus::LocalCacheKeptExisting
+        | TaskStatus::LocalCache
+        | TaskStatus::RemoteCache => THEME.success,
+        TaskStatus::Failure => THEME.error,
+        TaskStatus::Skipped => THEME.warning,
+        TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
+        TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
+    })
+}
+
+/// Returns a styled icon Span for a given task status.
+///
+/// Icons:
+/// - ✔ for success/cache states
+/// - ✖ for failure
+/// - ⏭ for skipped
+/// - ● for in progress/shared
+/// - ◼ for stopped
+/// - · for not started
+pub fn get_task_status_icon(status: TaskStatus, padding: usize) -> Span<'static> {
+    match status {
+        TaskStatus::Success
+        | TaskStatus::LocalCacheKeptExisting
+        | TaskStatus::LocalCache
+        | TaskStatus::RemoteCache => Span::styled(
+            pad_symbol("✔", padding),
+            Style::default()
+                .fg(THEME.success)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::Failure => Span::styled(
+            pad_symbol("✖", padding),
+            Style::default()
+                .fg(THEME.error)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::Skipped => Span::styled(
+            pad_symbol("⏭", padding),
+            Style::default()
+                .fg(THEME.warning)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
+            pad_symbol("●", padding),
+            Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::Stopped => Span::styled(
+            pad_symbol("◼", padding),
+            Style::default()
+                .fg(THEME.secondary_fg)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::NotStarted => Span::styled(
+            pad_symbol("·", padding),
+            Style::default()
+                .fg(THEME.secondary_fg)
+                .add_modifier(Modifier::BOLD),
+        ),
+    }
+}
+
 /// Sorts a list of TaskItems with a stable, total ordering.
 ///
 /// The sort order is:
@@ -44,6 +215,7 @@ pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
 /// 5. NotStarted tasks last
 ///
 /// Within each status category:
+/// - For in-progress tasks: sort by start_time if available, then by name
 /// - For completed tasks: sort by end_time if available, then by name
 /// - For other statuses: sort by name
 pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<String>) {
@@ -75,6 +247,23 @@ pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<Strin
             return a_category.cmp(&b_category);
         }
 
+        // For in-progress tasks, sort by start_time first, then name
+        if a_category == 0 {
+            match (a.start_time, b.start_time) {
+                (Some(time_a), Some(time_b)) => {
+                    let time_cmp = time_a.cmp(&time_b);
+                    if time_cmp != std::cmp::Ordering::Equal {
+                        return time_cmp;
+                    }
+                }
+                (Some(_), None) => return std::cmp::Ordering::Less,
+                (None, Some(_)) => return std::cmp::Ordering::Greater,
+                (None, None) => {}
+            }
+            // Tiebreaker: sort by name alphabetically
+            return a.name.cmp(&b.name);
+        }
+
         // For completed tasks, sort by end_time if available
         if a_category == 2 || a_category == 3 {
             // Failure or Success categories
@@ -94,6 +283,10 @@ pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<Strin
         // For all other cases or as a tiebreaker, sort by name
         a.name.cmp(&b.name)
     });
+}
+
+fn pad_symbol(symbol: &str, padding: usize) -> String {
+    format!("{:^width$}", symbol, width = padding * 2 + 1)
 }
 
 #[cfg(test)]
@@ -201,6 +394,85 @@ mod tests {
         assert_eq!(tasks[0].name, "a");
         assert_eq!(tasks[1].name, "b");
         assert_eq!(tasks[2].name, "c");
+    }
+
+    #[test]
+    fn test_sort_in_progress_tasks_by_start_time() {
+        // Create in-progress tasks with different start times
+        let mut task1 = TaskItem::new("task1".to_string(), false);
+        task1.status = TaskStatus::InProgress;
+        task1.start_time = Some(300);
+
+        let mut task2 = TaskItem::new("task2".to_string(), false);
+        task2.status = TaskStatus::InProgress;
+        task2.start_time = Some(100);
+
+        let mut task3 = TaskItem::new("task3".to_string(), false);
+        task3.status = TaskStatus::InProgress;
+        task3.start_time = Some(200);
+
+        let mut tasks = vec![task1, task2, task3];
+
+        let empty_highlighted: HashSet<String> = HashSet::new();
+        sort_task_items(&mut tasks, &empty_highlighted);
+
+        // Should be sorted by start_time: 100, 200, 300
+        assert_eq!(tasks[0].name, "task2");
+        assert_eq!(tasks[1].name, "task3");
+        assert_eq!(tasks[2].name, "task1");
+    }
+
+    #[test]
+    fn test_sort_in_progress_tasks_with_same_start_time() {
+        // Create in-progress tasks with the same start time
+        let mut task_c = TaskItem::new("c".to_string(), false);
+        task_c.status = TaskStatus::InProgress;
+        task_c.start_time = Some(100);
+
+        let mut task_a = TaskItem::new("a".to_string(), false);
+        task_a.status = TaskStatus::InProgress;
+        task_a.start_time = Some(100);
+
+        let mut task_b = TaskItem::new("b".to_string(), false);
+        task_b.status = TaskStatus::InProgress;
+        task_b.start_time = Some(100);
+
+        let mut tasks = vec![task_c, task_a, task_b];
+
+        let empty_highlighted: HashSet<String> = HashSet::new();
+        sort_task_items(&mut tasks, &empty_highlighted);
+
+        // When start_times are the same, should sort by name alphabetically
+        assert_eq!(tasks[0].name, "a");
+        assert_eq!(tasks[1].name, "b");
+        assert_eq!(tasks[2].name, "c");
+    }
+
+    #[test]
+    fn test_sort_in_progress_tasks_with_missing_start_times() {
+        // Create in-progress tasks, some without start times
+        let mut task1 = TaskItem::new("task1".to_string(), false);
+        task1.status = TaskStatus::InProgress;
+        task1.start_time = None;
+
+        let mut task2 = TaskItem::new("task2".to_string(), false);
+        task2.status = TaskStatus::InProgress;
+        task2.start_time = Some(100);
+
+        let mut task3 = TaskItem::new("task3".to_string(), false);
+        task3.status = TaskStatus::InProgress;
+        task3.start_time = None;
+
+        let mut tasks = vec![task1, task2, task3];
+
+        let empty_highlighted: HashSet<String> = HashSet::new();
+        sort_task_items(&mut tasks, &empty_highlighted);
+
+        // Tasks with start_time come before those without
+        assert_eq!(tasks[0].name, "task2");
+        // Then alphabetical for those without start_time
+        assert_eq!(tasks[1].name, "task1");
+        assert_eq!(tasks[2].name, "task3");
     }
 
     #[test]
@@ -385,7 +657,7 @@ mod tests {
             let b = &tasks[i];
 
             // Map status to category for comparison
-            let status_to_category = |status: &TaskStatus, name: &str| -> u8 {
+            let status_to_category = |status: &TaskStatus, _: &str| -> u8 {
                 // In this test we're using an empty highlighted list
                 match status {
                     TaskStatus::InProgress | TaskStatus::Shared => 0,

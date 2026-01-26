@@ -4,10 +4,32 @@
   "sourceRoot": "packages/create-nx-workspace",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/dist/packages/create-nx-workspace/bin/create-nx-workspace.js",
+        "{workspaceRoot}/dist/packages/create-nx-workspace/README.md"
+      ],
       "options": {
-        "main": "packages/create-nx-workspace/index.ts",
+        "commands": [
+          {
+            "command": "node ./scripts/chmod dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js create-nx-workspace"
+          },
+          {
+            "command": "node ./scripts/replace-versions.js dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+          }
+        ],
+        "parallel": false
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/create-nx-workspace",
@@ -42,27 +64,6 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/build/packages/create-nx-workspace/bin/create-nx-workspace.js",
-        "{workspaceRoot}/build/packages/create-nx-workspace/README.md"
-      ],
-      "options": {
-        "commands": [
-          {
-            "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
-          },
-          {
-            "command": "node ./scripts/copy-readme.js create-nx-workspace"
-          },
-          {
-            "command": "node ./scripts/replace-versions.js build/packages/create-nx-workspace/bin/create-nx-workspace.js"
-          }
-        ],
-        "parallel": false
       }
     }
   },

@@ -124,8 +124,9 @@ describe('react app generator (legacy)', () => {
         (config) => {
           // Update the webpack config as needed here.
           // e.g. \`config.plugins.push(new MyPlugin())\`
+          config.output.clean = true;
           return config;
-        }
+        },
       );
       "
     `);
@@ -139,7 +140,7 @@ describe('react app generator (legacy)', () => {
       skipFormat: true,
     });
     expect(
-      appTree.read('my-vite-app/vite.config.ts', 'utf-8')
+      appTree.read('my-vite-app/vite.config.mts', 'utf-8')
     ).toMatchSnapshot();
   });
 

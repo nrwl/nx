@@ -16,7 +16,7 @@ export function createAsyncIterable<T = unknown>(
   const pullQueue: Array<
     [
       (x: { value: T | undefined; done: boolean }) => void,
-      (err: unknown) => void
+      (err: unknown) => void,
     ]
   > = [];
 

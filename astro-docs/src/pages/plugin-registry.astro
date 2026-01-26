@@ -1,0 +1,43 @@
+---
+import { getCollection } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { PluginDirectory, type Plugin } from '../components/PluginDirectory';
+
+const communityPlugins = await getCollection('community-plugins');
+const officialPlugins = await getCollection('plugin-docs', (entry) => entry.data.docType === 'overview');
+
+// Transform data into the format expected by the React component
+const allPlugins: Plugin[] = [
+  ...officialPlugins.map(plugin => ({
+    id: plugin.id,
+    name: plugin.data.packageName,
+    description: plugin.data.description,
+    url: `/docs/${plugin.data.slug}`,
+    pluginType: 'official' as const,
+    lastPublishedDate: plugin.data.lastPublishedDate?.toISOString(),
+    npmDownloads: plugin.data.npmDownloads,
+    githubStars: plugin.data.githubStars,
+  })),
+  ...communityPlugins.map(plugin => ({
+    id: plugin.id,
+    name: plugin.id,
+    description: plugin.data.description,
+    url: plugin.data.url,
+    pluginType: 'community' as const,
+    lastPublishedDate: plugin.data.lastPublishedDate?.toISOString(),
+    npmDownloads: plugin.data.npmDownloads,
+    githubStars: plugin.data.githubStars,
+    nxVersion: plugin.data.nxVersion,
+  })),
+];
+---
+
+<StarlightPage frontmatter={{
+  title: 'Nx Plugins',
+  description: 'Discover all available Nx plugins to enhance your development workflow. Each plugin provides generators, executors, and migrations to help you build modern applications.',
+  tableOfContents: false,
+  filter: "type:References"
+}}
+>
+  <PluginDirectory client:load plugins={allPlugins} />
+</StarlightPage>
