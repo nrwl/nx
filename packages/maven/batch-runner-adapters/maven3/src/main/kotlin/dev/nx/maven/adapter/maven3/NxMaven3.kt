@@ -16,15 +16,10 @@ import org.eclipse.aether.RepositorySystemSession
 import org.slf4j.LoggerFactory
 
 /**
- * Nx Maven service for Maven 3.x that extends DefaultMaven and preserves session state across invocations.
+ * Nx Maven 3.x executor that caches project graph and session across invocations.
  *
- * Similar to NxMaven (Maven 4), this class caches the project dependency graph and repository session
- * to enable efficient batch execution without rebuilding the graph for each invocation.
- *
- * Key differences from Maven 4:
- * - Uses PlexusContainer instead of Lookup
- * - No InternalSession - uses MavenSession directly
- * - Uses reflection to copy injected fields from the container's DefaultMaven instance
+ * Uses reflection in copyInjectedFields() because Maven 3's DefaultMaven uses Plexus
+ * field injection - we must copy those injected dependencies to our subclass instance.
  */
 class NxMaven3(
     private val container: PlexusContainer,
@@ -38,13 +33,6 @@ class NxMaven3(
 
     @Volatile private var cachedProjectGraph: ProjectDependencyGraph? = null
     @Volatile private var cachedRepositorySession: RepositorySystemSession? = null
-
-    private val getProjectMapMethod by lazy {
-        DefaultMaven::class.java.getDeclaredMethod(
-            "getProjectMap",
-            Collection::class.java
-        ).apply { isAccessible = true }
-    }
 
     init {
         if (System.getProperty("org.slf4j.simpleLogger.defaultLogLevel") == null) {
@@ -193,10 +181,12 @@ class NxMaven3(
 
         session.projects = selectedProjects
         session.currentProject = selectedProjects.firstOrNull()
+        session.projectMap = buildProjectMap(selectedProjects)
         BuildStateManager.applyBuildStates(selectedProjects)
+    }
 
-        @Suppress("UNCHECKED_CAST")
-        session.projectMap = getProjectMapMethod.invoke(this, selectedProjects) as Map<String, MavenProject>?
+    private fun buildProjectMap(projects: List<MavenProject>): Map<String, MavenProject> {
+        return projects.associateBy { "${it.groupId}:${it.artifactId}:${it.version}" }
     }
 
     fun recordBuildStates(projectSelectors: Set<String>) {
