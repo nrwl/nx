@@ -2,7 +2,6 @@ import {
   appendFileSync,
   existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   writeFileSync,
 } from 'fs';
@@ -11,6 +10,7 @@ import { join } from 'path';
 import { major } from 'semver';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
+import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import {
   canInstallNxConsoleForEditor,
@@ -256,11 +256,10 @@ export async function setupAiAgentsGeneratorImpl(
 
     for (const { agent, src, dest } of agentDirs) {
       if (hasAgent(agent)) {
-        copyDirectoryToTree(
-          tree,
-          join(repoPath, src),
-          join(options.directory, dest)
-        );
+        const srcPath = join(repoPath, src);
+        if (existsSync(srcPath)) {
+          generateFiles(tree, srcPath, join(options.directory, dest), {});
+        }
       }
     }
   }
@@ -439,35 +438,6 @@ function opencodeMcpConfigUpdater(existing: any, nxVersion: string): any {
     };
   }
   return existing;
-}
-
-/**
- * Recursively copy all files and directories from source to destination.
- * If source doesn't exist, does nothing.
- */
-function copyDirectoryToTree(
-  tree: Tree,
-  sourcePath: string,
-  destPath: string
-): void {
-  if (!existsSync(sourcePath)) {
-    return;
-  }
-
-  const entries = readdirSync(sourcePath, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const sourceEntryPath = join(sourcePath, entry.name);
-    const destEntryPath = join(destPath, entry.name);
-
-    if (entry.isDirectory()) {
-      copyDirectoryToTree(tree, sourceEntryPath, destEntryPath);
-    } else if (entry.isFile()) {
-      // Read as buffer to handle any file type (text or binary)
-      const content = readFileSync(sourceEntryPath);
-      tree.write(destEntryPath, content);
-    }
-  }
 }
 
 export default setupAiAgentsGenerator;

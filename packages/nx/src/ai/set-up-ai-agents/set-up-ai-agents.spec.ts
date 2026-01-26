@@ -520,7 +520,7 @@ describe('setup-ai-agents generator', () => {
         });
 
         // Mock readFileSync to fail only for package.json so it falls back to default version
-        // but allow other file reads (needed for copyDirectoryToTree)
+        // but allow other file reads (needed for generateFiles)
         const originalReadFileSync = fs.readFileSync;
         const readFileSyncSpy = jest
           .spyOn(fs, 'readFileSync')
