@@ -168,12 +168,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       log.debug("Preparing to record build states for ${uniqueProjectSelectors.size} unique projects")
       log.debug("Projects: ${uniqueProjectSelectors.joinToString(", ")}")
 
-      // Use executor's recordBuildStates method if available
-      when (val executor = mavenExecutor) {
-        is ResidentMavenExecutor -> executor.recordBuildStates(uniqueProjectSelectors)
-        is EmbeddedMaven3Executor -> executor.recordBuildStates(uniqueProjectSelectors)
-        else -> log.debug("Executor type ${executor.javaClass.simpleName} does not support build state recording")
-      }
+      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(uniqueProjectSelectors)
     } catch (e: Exception) {
       log.error("Error recording build states: ${e.message}", e)
     }

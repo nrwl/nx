@@ -6,16 +6,14 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 /**
- * Resident Maven 4 Executor - keeps Maven instance alive across invocations.
+ * Resident Maven Executor - keeps Maven instance alive across invocations.
  *
- * This executor loads Maven 4 classes at runtime via ClassRealm and uses
- * the AdapterInvoker interface to communicate with the adapter JAR.
+ * Supports both Maven 3.x and 4.x by loading the appropriate adapter at runtime.
  *
  * Architecture:
  * - Maven JARs are loaded from MAVEN_HOME/lib at runtime
  * - Adapter JAR is loaded from nx-maven-adapters directory
- * - Adapter implements AdapterInvoker interface (no reflection needed)
- * - Wraps Maven 4's ResidentMavenInvoker for context caching
+ * - Adapter implements AdapterInvoker interface (no reflection needed for method calls)
  */
 class ResidentMavenExecutor(
     private val workspaceRoot: File,
@@ -26,38 +24,46 @@ class ResidentMavenExecutor(
 
     private val mavenRealm: MavenClassRealm
     private val invoker: AdapterInvoker
-    private var invocationCount = 0
 
     init {
         log.debug("Initializing ResidentMavenExecutor for Maven $mavenMajorVersion")
-        log.debug("Maven home: ${mavenHome.absolutePath}")
+        configureSystemProperties()
 
-        // Configure Maven's logging
-        System.setProperty("maven.logger.showThreadName", "false")
-        System.setProperty("maven.logger.showDateTime", "false")
-        System.setProperty("maven.logger.showLogName", "false")
-        System.setProperty("maven.logger.levelInBrackets", "true")
-        System.setProperty("style.color", "always")
-        System.setProperty("jansi.force", "true")
-        System.setProperty("maven.home", mavenHome.absolutePath)
-
-        // Create realm and load Maven + adapter JAR
         mavenRealm = MavenClassRealm.create(mavenHome)
-        mavenRealm.loadAdapterJar(mavenMajorVersion)
+        try {
+            mavenRealm.loadAdapterJar(mavenMajorVersion)
+            invoker = createInvoker()
+        } catch (e: Exception) {
+            mavenRealm.close()
+            throw e
+        }
+    }
 
-        // Create invoker - ClassRealm delegates to parent classloader for AdapterInvoker interface
-        log.debug("Creating Maven4AdapterInvoker...")
-        invoker = createInvoker()
+    private fun configureSystemProperties() {
+        System.setProperty("maven.home", mavenHome.absolutePath)
+        System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
 
-        log.debug("ResidentMavenExecutor ready")
+        if (mavenMajorVersion == "4") {
+            System.setProperty("maven.logger.showThreadName", "false")
+            System.setProperty("maven.logger.showDateTime", "false")
+            System.setProperty("maven.logger.showLogName", "false")
+            System.setProperty("maven.logger.levelInBrackets", "true")
+            System.setProperty("style.color", "always")
+            System.setProperty("jansi.force", "true")
+        }
     }
 
     private fun createInvoker(): AdapterInvoker {
         val classWorldClass = mavenRealm.loadClass("org.codehaus.plexus.classworlds.ClassWorld")
-        val adapterClass = mavenRealm.loadClass("dev.nx.maven.adapter.maven4.Maven4AdapterInvoker")
 
+        val (adapterClassName, constructorArg) = when (mavenMajorVersion) {
+            "3" -> "dev.nx.maven.adapter.maven3.CachingMaven3Invoker" to workspaceRoot
+            else -> "dev.nx.maven.adapter.maven4.Maven4AdapterInvoker" to mavenHome
+        }
+
+        val adapterClass = mavenRealm.loadClass(adapterClassName)
         val constructor = adapterClass.getConstructor(classWorldClass, File::class.java)
-        return constructor.newInstance(mavenRealm.classWorld, mavenHome) as AdapterInvoker
+        return constructor.newInstance(mavenRealm.classWorld, constructorArg) as AdapterInvoker
     }
 
     override fun execute(
@@ -66,23 +72,8 @@ class ResidentMavenExecutor(
         workingDir: File,
         outputStream: ByteArrayOutputStream
     ): Int {
-        invocationCount++
-        log.debug("execute() Invocation #$invocationCount with goals: $goals")
-        val startTime = System.currentTimeMillis()
-
-        val streamingOutput = TeeOutputStream(outputStream)
-
         val allArguments = goals + arguments
-        log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
-
-        val exitCode = invoker.invoke(allArguments, workingDir, streamingOutput, streamingOutput)
-
-        val duration = System.currentTimeMillis() - startTime
-        if (exitCode == 0) {
-            log.info("Maven execution completed in ${duration}ms with exit code: $exitCode")
-        } else {
-            log.info("Maven execution FAILED in ${duration}ms with exit code: $exitCode")
-        }
+        val exitCode = invoker.invoke(allArguments, workingDir, TeeOutputStream(outputStream), TeeOutputStream(outputStream))
         return exitCode
     }
 
@@ -93,6 +84,6 @@ class ResidentMavenExecutor(
     override fun shutdown() {
         invoker.close()
         mavenRealm.close()
-        log.info("ResidentMavenExecutor shutdown complete")
+        log.debug("ResidentMavenExecutor shutdown complete")
     }
 }

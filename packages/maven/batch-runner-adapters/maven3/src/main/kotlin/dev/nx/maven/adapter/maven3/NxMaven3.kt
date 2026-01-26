@@ -14,7 +14,6 @@ import org.apache.maven.session.scope.internal.SessionScope
 import org.codehaus.plexus.PlexusContainer
 import org.eclipse.aether.RepositorySystemSession
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Nx Maven service for Maven 3.x that extends DefaultMaven and preserves session state across invocations.
@@ -36,13 +35,9 @@ class NxMaven3(
     private val lifecycleStarter: LifecycleStarter
 ) : DefaultMaven() {
     private val log = LoggerFactory.getLogger(NxMaven3::class.java)
-    private val executionCount = AtomicInteger(0)
 
-    @Volatile
-    private var cachedProjectGraph: ProjectDependencyGraph? = null
-
-    @Volatile
-    private var cachedRepositorySession: RepositorySystemSession? = null
+    @Volatile private var cachedProjectGraph: ProjectDependencyGraph? = null
+    @Volatile private var cachedRepositorySession: RepositorySystemSession? = null
 
     private val getProjectMapMethod by lazy {
         DefaultMaven::class.java.getDeclaredMethod(
@@ -52,217 +47,122 @@ class NxMaven3(
     }
 
     init {
-        // Ensure SLF4J SimpleLogger outputs at INFO level (needed for ExecutionEventLogger)
         if (System.getProperty("org.slf4j.simpleLogger.defaultLogLevel") == null) {
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
         }
-
-        log.debug("NxMaven3 initializing - copying injected fields from container's DefaultMaven...")
         copyInjectedFields()
-        log.debug("NxMaven3 initialized - will use cached graph for batch execution")
-        // Initialize BuildStateManager with MavenProjectHelper
+
         val projectHelper = try {
             container.lookup(MavenProjectHelper::class.java)
-        } catch (e: Exception) {
-            log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
-            null
-        }
+        } catch (_: Exception) { null }
         BuildStateManager.initialize(projectHelper)
     }
 
     /**
-     * Copy injected fields from the container's DefaultMaven instance to this instance.
-     * This is necessary because Maven 3 uses field injection, not constructor injection.
+     * Copy injected fields from the container's DefaultMaven instance.
+     * Required because Maven 3 uses field injection, not constructor injection.
      */
     private fun copyInjectedFields() {
-        try {
-            // Lookup the container's DefaultMaven instance (properly wired by Plexus)
-            val defaultMaven = container.lookup(Maven::class.java) as DefaultMaven
+        val defaultMaven = container.lookup(Maven::class.java) as DefaultMaven
 
-            // Get all declared fields from DefaultMaven and copy them
-            val defaultMavenClass = DefaultMaven::class.java
-            for (field in defaultMavenClass.declaredFields) {
-                if (java.lang.reflect.Modifier.isStatic(field.modifiers)) continue
-                if (java.lang.reflect.Modifier.isFinal(field.modifiers)) continue
+        for (field in DefaultMaven::class.java.declaredFields) {
+            if (java.lang.reflect.Modifier.isStatic(field.modifiers)) continue
+            if (java.lang.reflect.Modifier.isFinal(field.modifiers)) continue
 
-                try {
-                    field.isAccessible = true
-                    val value = field.get(defaultMaven)
-                    if (value != null) {
-                        field.set(this, value)
-                        log.debug("  Copied field: ${field.name}")
-                    }
-                } catch (e: Exception) {
-                    log.debug("  Could not copy field ${field.name}: ${e.message}")
-                }
-            }
-            log.debug("Field copying complete")
-        } catch (e: Exception) {
-            log.error("Failed to copy injected fields: ${e.message}", e)
-            throw RuntimeException("Failed to initialize NxMaven3 - could not copy injected fields", e)
+            try {
+                field.isAccessible = true
+                field.get(defaultMaven)?.let { field.set(this, it) }
+            } catch (_: Exception) { }
         }
     }
 
     /**
      * Set up the project dependency graph cache using the first real Maven request.
-     * This should be called before any execute() calls.
      */
     @Synchronized
     fun setupGraphCache(request: MavenExecutionRequest) {
-        if (cachedProjectGraph != null) {
-            log.debug("Graph cache already setup - skipping rebuild")
-            return
-        }
+        if (cachedProjectGraph != null) return
 
-        log.debug("Setting up project graph cache for Maven 3...")
-        val setupStartTime = System.currentTimeMillis()
-
-        // Set our custom execution listener to suppress verbose output during graph building
         request.executionListener = BatchExecutionListener()
-
         request.isRecursive = true
+        ensureSystemProperties(request)
 
-        // Ensure system properties are available for profile activation (especially java.version)
+        cachedRepositorySession = newRepositorySession(request)
+        val result = DefaultMavenExecutionResult()
+        val session = MavenSession(container, cachedRepositorySession, request, result)
+
+        sessionScope.enter()
+        try {
+            sessionScope.seed(MavenSession::class.java, session)
+
+            val graphResult = graphBuilder.build(session)
+            if (graphResult.hasErrors()) {
+                graphResult.problems.forEach { log.warn("Graph problem: ${it.message}") }
+            }
+
+            val graph = graphResult.get() ?: run {
+                log.warn("Failed to build project graph - falling back to non-cached execution")
+                return
+            }
+            cachedProjectGraph = graph
+
+            session.projects = graph.sortedProjects
+            session.allProjects = graph.allProjects
+            session.projectDependencyGraph = graph
+
+            BuildStateManager.applyBuildStates(graph.allProjects)
+            log.debug("Graph cache initialized with ${graph.allProjects.size} projects")
+        } finally {
+            sessionScope.exit()
+        }
+    }
+
+    private fun ensureSystemProperties(request: MavenExecutionRequest) {
         if (request.systemProperties == null || request.systemProperties.isEmpty()) {
             request.systemProperties = java.util.Properties()
         }
-        // Copy all Java system properties to the request
         System.getProperties().forEach { key, value ->
             if (request.systemProperties.getProperty(key.toString()) == null) {
                 request.systemProperties.setProperty(key.toString(), value.toString())
             }
         }
-        log.debug("Added ${request.systemProperties.size} system properties to request")
-
-        // Create repository session using parent's method
-        val repositorySession = newRepositorySession(request)
-        cachedRepositorySession = repositorySession
-
-        val result = DefaultMavenExecutionResult()
-        val session = MavenSession(container, repositorySession, request, result)
-
-        sessionScope.enter()
-        try {
-            sessionScope.seed(MavenSession::class.java, session)
-
-            // Build the project graph
-            val graphBuildStartTime = System.currentTimeMillis()
-            val graphResult = graphBuilder.build(session)
-            val graphBuildTimeMs = System.currentTimeMillis() - graphBuildStartTime
-            log.debug("Graph build completed in ${graphBuildTimeMs}ms")
-
-            if (graphResult.hasErrors()) {
-                log.warn("Graph build had errors:")
-                graphResult.problems.forEach { problem ->
-                    log.warn("Problem: ${problem.message}")
-                }
-            }
-
-            val graph = graphResult.get()
-            if (graph == null) {
-                log.warn("Failed to build project graph - will fall back to non-cached execution mode")
-                log.warn("This typically happens due to profile validation warnings in dependency POMs")
-                return
-            }
-            cachedProjectGraph = graph
-
-            // Set up the session with the graph
-            session.projects = graph.sortedProjects
-            session.allProjects = graph.allProjects
-            session.projectDependencyGraph = graph
-
-            log.debug("Graph cache setup complete with ${graph.allProjects.size} projects")
-            graph.sortedProjects?.forEach { project ->
-                log.debug("  - ${project.groupId}:${project.artifactId}")
-            }
-
-            log.debug("Applying existing build states to ${graph.allProjects.size} projects...")
-            val applyStartTime = System.currentTimeMillis()
-            BuildStateManager.applyBuildStates(graph.allProjects)
-            val applyTimeMs = System.currentTimeMillis() - applyStartTime
-            log.debug("Build state application completed in ${applyTimeMs}ms")
-
-        } finally {
-            sessionScope.exit()
-            val totalSetupTimeMs = System.currentTimeMillis() - setupStartTime
-            log.debug("Total graph cache setup time: ${totalSetupTimeMs}ms")
-        }
     }
 
     override fun execute(request: MavenExecutionRequest): MavenExecutionResult {
-        val count = executionCount.incrementAndGet()
-        val invokeStartTime = System.currentTimeMillis()
-
-        // Set our custom execution listener for batch builds (before any events fire)
         request.executionListener = BatchExecutionListener()
 
-        // If graph cache failed, fall back to standard DefaultMaven execution
-        val result = if (cachedProjectGraph != null) {
+        return if (cachedProjectGraph != null) {
             executeWithCachedGraph(request)
         } else {
-            log.debug("Using fallback DefaultMaven.execute() - no cached graph available")
             super.execute(request)
         }
-
-        val invokeTimeMs = System.currentTimeMillis() - invokeStartTime
-        log.debug("NxMaven3.execute() invocation #$count completed in ${invokeTimeMs}ms")
-        return result
     }
 
-    /**
-     * Executes the build using our cached graph and session.
-     */
     private fun executeWithCachedGraph(request: MavenExecutionRequest): MavenExecutionResult {
         val result = DefaultMavenExecutionResult()
         sessionScope.enter()
 
         try {
-            // Create a new session using the cached repository session
-            val session = MavenSession(
-                container,
-                cachedRepositorySession!!,
-                request,
-                result
-            )
-            // Apply the cached graph to the session
+            val session = MavenSession(container, cachedRepositorySession!!, request, result)
             applyGraphToSession(session, cachedProjectGraph!!, request)
 
-            // Seed the session into scope
             sessionScope.seed(MavenSession::class.java, session)
             legacySupport.session = session
 
-            // Fire project discovery event
             eventCatapult.fire(ExecutionEvent.Type.ProjectDiscoveryStarted, session, null)
-
-            // Set result properties
             result.topologicallySortedProjects = session.projects
             result.project = session.topLevelProject
 
-            // Execute the lifecycle
             lifecycleStarter.execute(session)
 
-            // Record build state after successful execution
             if (!result.hasExceptions()) {
                 session.projects?.forEach { project ->
-                    try {
-                        BuildStateManager.recordBuildState(project)
-                    } catch (e: Exception) {
-                        log.warn("Failed to record build state for ${project.groupId}:${project.artifactId}: ${e.message}")
-                    }
+                    try { BuildStateManager.recordBuildState(project) }
+                    catch (_: Exception) { }
                 }
             }
-
-            // Log exceptions
-            if (result.hasExceptions()) {
-                log.error("Build completed with ${result.exceptions.size} exception(s):")
-                for (e in result.exceptions) {
-                    log.error("Exception: ${e.message}", e)
-                }
-            }
-
             return result
         } catch (e: Exception) {
-            log.error("Error executing with cached session: ${e.message}", e)
             result.addException(e)
             return result
         } finally {
@@ -276,12 +176,9 @@ class NxMaven3(
         graph: ProjectDependencyGraph,
         request: MavenExecutionRequest
     ) {
-        log.debug("Applying project dependency graph to session for ${request.pom}: ${request.goals}")
-
         session.allProjects = graph.allProjects
         session.projectDependencyGraph = graph
 
-        // Find the selected project(s) to build
         val selectedProjects = if (request.selectedProjects.isNotEmpty()) {
             graph.allProjects.filter { project ->
                 request.selectedProjects.any { selector ->
@@ -290,61 +187,27 @@ class NxMaven3(
                 }
             }
         } else {
-            // If no specific projects selected, find the project matching the POM
-            graph.allProjects.filter { project ->
-                project.file?.absolutePath == request.pom?.absolutePath
-            }.ifEmpty {
-                // Fallback to all projects if no match found
-                graph.sortedProjects ?: emptyList()
-            }
+            graph.allProjects.filter { it.file?.absolutePath == request.pom?.absolutePath }
+                .ifEmpty { graph.sortedProjects ?: emptyList() }
         }
 
         session.projects = selectedProjects
         session.currentProject = selectedProjects.firstOrNull()
-
-        // Apply build state to selected projects before execution
-        log.debug("Applying build states to ${selectedProjects.size} selected projects before execution...")
         BuildStateManager.applyBuildStates(selectedProjects)
 
         @Suppress("UNCHECKED_CAST")
         session.projectMap = getProjectMapMethod.invoke(this, selectedProjects) as Map<String, MavenProject>?
     }
 
-    /**
-     * Record build states for the specified projects.
-     */
     fun recordBuildStates(projectSelectors: Set<String>) {
-        if (cachedProjectGraph == null) {
-            log.warn("Cannot record build states - project graph not cached")
-            return
-        }
-
-        val startTime = System.currentTimeMillis()
-        log.debug("Recording build states for ${projectSelectors.size} projects...")
-
-        var recordedCount = 0
-        var failedCount = 0
+        val graph = cachedProjectGraph ?: return
 
         projectSelectors.forEach { selector ->
-            val project = cachedProjectGraph!!.allProjects.find { p ->
-                "${p.groupId}:${p.artifactId}" == selector
-            }
-
-            if (project != null) {
-                try {
-                    BuildStateManager.recordBuildState(project)
-                    recordedCount++
-                } catch (e: Exception) {
-                    log.warn("Failed to record build state for $selector: ${e.message}")
-                    failedCount++
+            graph.allProjects.find { "${it.groupId}:${it.artifactId}" == selector }
+                ?.let { project ->
+                    try { BuildStateManager.recordBuildState(project) }
+                    catch (_: Exception) { }
                 }
-            } else {
-                log.warn("Project not found for selector: $selector")
-                failedCount++
-            }
         }
-
-        val duration = System.currentTimeMillis() - startTime
-        log.debug("Build state recording completed: $recordedCount succeeded, $failedCount failed (took ${duration}ms)")
     }
 }
