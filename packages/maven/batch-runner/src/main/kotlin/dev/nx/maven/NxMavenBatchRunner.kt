@@ -117,9 +117,9 @@ private fun printSummary(successCount: Int, failureCount: Int, skippedCount: Int
     val total = successCount + failureCount + skippedCount
 
     log.info("Nx Maven Summary")
-    log.info("  ✅ Succeeded: $successCount")
-    log.info("  ❌ Failed:    $failureCount")
-    log.info("  ⏭️ Skipped:   $skippedCount")
-    log.info("  📦 Total:     $total")
-    log.info("  ⏱️ Duration:  $duration")
+    log.info("  Succeeded: $successCount")
+    log.info("  Failed:    $failureCount")
+    log.info("  Skipped:   $skippedCount")
+    log.info("  Total:     $total")
+    log.info("  Duration:  $duration")
 }
