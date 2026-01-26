@@ -48,6 +48,24 @@ const isInvokedByTsx: boolean = (() => {
 })();
 
 /**
+ * When process.features.typescript is truthy and the user has opted in via
+ * NX_PREFER_NODE_STRIP_TYPES=true, we can skip registering swc-node or ts-node
+ * transpilers since Node.js will handle TypeScript natively.
+ *
+ * This can significantly improve performance when loading TypeScript config files, but there are some things
+ * that won't work. See: https://nodejs.org/api/typescript.html#full-typescript-support
+ *
+ * TODO(v23): We should turn this on by default, but look at if need to fallback to SWC/ts-node if it fails.
+ */
+const preferNodeStripTypes: boolean = (() => {
+  if (process.env.NX_PREFER_NODE_STRIP_TYPES !== 'true') {
+    return false;
+  }
+  // process.features.typescript is 'strip' | 'transform' | false in Node 22.6+
+  return !!(process as any).features?.typescript;
+})();
+
+/**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
  * register hooks so that .ts files can be used for writing custom workspace projects.
  *
@@ -80,6 +98,13 @@ export function registerTsProject(
   }
 
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
+
+  // See explanation alongside preferNodeStripTypes declaration
+  // When using Node.js native type stripping, skip transpiler registration
+  // but still register tsconfig-paths for path mapping support
+  if (preferNodeStripTypes) {
+    return registerTsConfigPaths(tsConfigPath);
+  }
   const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [

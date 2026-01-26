@@ -490,6 +490,16 @@ function validateProperty(
     value.forEach((valueInArray) =>
       validateProperty(propName, valueInArray, schema.items || {}, definitions)
     );
+  } else if (value === null) {
+    // Special handling for null since typeof null === 'object' in JavaScript
+    // null is valid if schema.type is 'null' or if it's an array containing 'null'
+    if (Array.isArray(schema.type)) {
+      if (!schema.type.includes('null')) {
+        throwInvalidSchema(propName, schema);
+      }
+    } else if (schema.type !== 'null') {
+      throwInvalidSchema(propName, schema);
+    }
   } else {
     if (schema.type !== 'object') throwInvalidSchema(propName, schema);
     validateObject(value, schema, definitions);
