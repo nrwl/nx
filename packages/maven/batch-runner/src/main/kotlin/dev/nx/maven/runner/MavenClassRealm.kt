@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
- * Custom ClassRealm for loading Maven classes and adapter JARs at runtime.
+ * Wrapper for ClassRealm that loads Maven classes and adapter JARs at runtime.
  *
  * Architecture:
  * - Creates a ClassWorld with a "plexus.core" realm
@@ -19,11 +19,15 @@ import java.io.File
  */
 class MavenClassRealm private constructor(
     val classWorld: ClassWorld,
-    id: String,
-    parent: ClassLoader?
-) : ClassRealm(classWorld, id, parent), AutoCloseable {
+    val realm: ClassRealm
+) : AutoCloseable {
 
     private val log = LoggerFactory.getLogger(MavenClassRealm::class.java)
+
+    /**
+     * Load a class from the realm.
+     */
+    fun loadClass(name: String): Class<*> = realm.loadClass(name)
 
     /**
      * Load Maven lib JARs from MAVEN_HOME/lib
@@ -40,7 +44,7 @@ class MavenClassRealm private constructor(
 
         jarFiles.forEach { jarFile ->
             try {
-                addURL(jarFile.toURI().toURL())
+                realm.addURL(jarFile.toURI().toURL())
             } catch (e: Exception) {
                 log.warn("Failed to add JAR to realm: ${jarFile.name} - ${e.message}")
             }
@@ -62,7 +66,7 @@ class MavenClassRealm private constructor(
 
         jarFiles.forEach { jarFile ->
             try {
-                addURL(jarFile.toURI().toURL())
+                realm.addURL(jarFile.toURI().toURL())
             } catch (e: Exception) {
                 log.warn("Failed to add boot JAR to realm: ${jarFile.name} - ${e.message}")
             }
@@ -80,7 +84,7 @@ class MavenClassRealm private constructor(
             ?: throw RuntimeException("Adapter JAR not found for Maven $mavenMajorVersion")
 
         log.debug("Loading adapter JAR: ${adapterJar.absolutePath}")
-        addURL(adapterJar.toURI().toURL())
+        realm.addURL(adapterJar.toURI().toURL())
         log.debug("Loaded adapter JAR: ${adapterJar.name} (${adapterJar.length()} bytes)")
     }
 
@@ -136,41 +140,19 @@ class MavenClassRealm private constructor(
             log.debug("Creating MavenClassRealm for: ${mavenHome.absolutePath}")
 
             val classWorld = ClassWorld()
-            val realm = MavenClassRealm(classWorld, "plexus.core", ClassLoader.getSystemClassLoader())
+            val realm = classWorld.newRealm("plexus.core", ClassLoader.getSystemClassLoader())
 
-            // Register realm with ClassWorld (required for Maven to find it)
-            // ClassRealm constructor doesn't auto-register; ClassWorld.newRealm() does the registration
-            // but we can't use newRealm() since we need our subclass
-            registerRealmWithClassWorld(classWorld, realm)
+            val mavenClassRealm = MavenClassRealm(classWorld, realm)
 
             // Load Maven JARs
-            realm.loadMavenLibJars(mavenHome)
-            realm.loadMavenBootJars(mavenHome)
+            mavenClassRealm.loadMavenLibJars(mavenHome)
+            mavenClassRealm.loadMavenBootJars(mavenHome)
 
             // Set TCCL so Maven classes can load properly
             Thread.currentThread().contextClassLoader = realm
             log.debug("ClassRealm initialized with Maven JARs")
 
-            return realm
-        }
-
-        /**
-         * Register a ClassRealm with ClassWorld using reflection.
-         * This is needed because ClassRealm constructor doesn't auto-register,
-         * and ClassWorld.newRealm() creates a plain ClassRealm (not our subclass).
-         */
-        private fun registerRealmWithClassWorld(classWorld: ClassWorld, realm: ClassRealm) {
-            try {
-                val realmsField = ClassWorld::class.java.getDeclaredField("realms")
-                realmsField.isAccessible = true
-                @Suppress("UNCHECKED_CAST")
-                val realms = realmsField.get(classWorld) as MutableMap<String, ClassRealm>
-                realms[realm.id] = realm
-                log.debug("Registered realm '${realm.id}' with ClassWorld")
-            } catch (e: Exception) {
-                log.error("Failed to register realm with ClassWorld: ${e.message}", e)
-                throw RuntimeException("Failed to register ClassRealm", e)
-            }
+            return mavenClassRealm
         }
 
         /**

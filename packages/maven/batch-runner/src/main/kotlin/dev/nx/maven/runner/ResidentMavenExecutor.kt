@@ -16,7 +16,7 @@ import java.lang.reflect.Method
  *
  * Architecture:
  * - Maven JARs are loaded from MAVEN_HOME/lib at runtime
- * - Adapter JAR is embedded in batch-runner and loaded into ClassRealm
+ * - Adapter JAR is loaded from nx-maven-adapters directory
  * - All Maven interactions happen via reflection
  * - Wraps Maven 4's ResidentMavenInvoker for context caching
  */
