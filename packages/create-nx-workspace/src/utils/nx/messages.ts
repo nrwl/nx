@@ -3,8 +3,25 @@ import { VcsPushStatus } from '../git/git';
 function getSetupMessage(
   url: string | null,
   pushedToVcs: VcsPushStatus,
-  workspaceName?: string
+  workspaceName?: string,
+  isPromo?: boolean
 ): string {
+  const githubUrl = workspaceName
+    ? `https://github.com/new?name=${encodeURIComponent(workspaceName)}`
+    : 'https://github.com/new';
+
+  if (isPromo) {
+    if (pushedToVcs === VcsPushStatus.PushedToVcs) {
+      return url
+        ? `Connect your repo to enable remote caching and self-healing CI at: ${url}`
+        : 'Connect your repo at https://cloud.nx.app to enable remote caching and self-healing CI.';
+    }
+
+    return url
+      ? `Connect your repo (${githubUrl}) to enable remote caching and self-healing CI at: ${url}`
+      : `Connect your repo (${githubUrl}) to enable remote caching and self-healing CI at https://cloud.nx.app`;
+  }
+
   if (pushedToVcs === VcsPushStatus.PushedToVcs) {
     return url
       ? `Go to Nx Cloud and finish the setup: ${url}`
@@ -12,10 +29,6 @@ function getSetupMessage(
   }
 
   // User needs to push first
-  const githubUrl = workspaceName
-    ? `https://github.com/new?name=${encodeURIComponent(workspaceName)}`
-    : 'https://github.com/new';
-
   const action = url ? 'go' : 'return';
   const urlSuffix = url ? `: ${url}` : '.';
   return `Push your repo (${githubUrl}), then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
@@ -35,6 +48,10 @@ const completionMessages = {
   'platform-setup': {
     title: 'Your platform setup is almost complete.',
   },
+  'platform-promo': {
+    title: 'Want faster builds?',
+    subtext: 'Remote caching \u00b7 Self-healing CI \u00b7 Task distribution',
+  },
 } as const;
 
 export type CompletionMessageKey = keyof typeof completionMessages;
@@ -46,10 +63,19 @@ export function getCompletionMessage(
   workspaceName?: string
 ): { title: string; bodyLines: string[] } {
   const key = completionMessageKey ?? 'ci-setup';
+  const messageConfig = completionMessages[key];
+  const isPromo = key === 'platform-promo';
+
+  const bodyLines = [getSetupMessage(url, pushedToVcs, workspaceName, isPromo)];
+
+  if ('subtext' in messageConfig && messageConfig.subtext) {
+    bodyLines.push('');
+    bodyLines.push(messageConfig.subtext);
+  }
 
   return {
-    title: completionMessages[key].title,
-    bodyLines: [getSetupMessage(url, pushedToVcs, workspaceName)],
+    title: messageConfig.title,
+    bodyLines,
   };
 }
 

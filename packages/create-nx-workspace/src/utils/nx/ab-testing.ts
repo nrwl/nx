@@ -32,7 +32,7 @@ function readCachedFlowVariant(): string | null {
       return null;
     }
     const value = readFileSync(FLOW_VARIANT_CACHE_FILE, 'utf-8').trim();
-    return value === '0' || value === '1' ? value : null;
+    return value === '0' || value === '1' || value === '2' ? value : null;
   } catch {
     return null;
   }
@@ -46,6 +46,13 @@ function writeCachedFlowVariant(variant: string): void {
   }
 }
 
+function selectRandomVariant(): string {
+  const rand = Math.random();
+  if (rand < 0.33) return '0';
+  if (rand < 0.66) return '1';
+  return '2';
+}
+
 /**
  * Internal function to determine and cache the flow variant.
  */
@@ -55,7 +62,7 @@ function getFlowVariantInternal(): string {
   const variant =
     process.env.NX_CNW_FLOW_VARIANT ??
     readCachedFlowVariant() ??
-    (Math.random() < 0.5 ? '0' : '1');
+    selectRandomVariant();
 
   flowVariantCache = variant;
 
@@ -79,6 +86,33 @@ export function getFlowVariant(): string {
     return '0';
   }
   return flowVariantCache ?? getFlowVariantInternal();
+}
+
+/**
+ * Returns the completion message key based on the current flow variant.
+ * - Variant 0: 'platform-setup' (shows "Try the full Nx platform?" prompt)
+ * - Variant 1: 'cache-setup' (shows "Would you like remote caching..." prompt)
+ * - Variant 2: 'platform-promo' (skips prompt, auto-connects, shows promo message)
+ */
+export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
+  const variant = getFlowVariant();
+  if (variant === '1') {
+    return 'cache-setup';
+  }
+  if (variant === '2') {
+    return 'platform-promo';
+  }
+  return 'platform-setup';
+}
+
+/**
+ * Returns whether the cloud prompt should be shown.
+ * Variants 0 and 1 show prompts (with different copy).
+ * Variant 2 skips the prompt and auto-connects.
+ */
+export function shouldShowCloudPrompt(): boolean {
+  const variant = getFlowVariant();
+  return variant !== '2';
 }
 
 export const NxCloudChoices = [
