@@ -19,6 +19,7 @@ import {
   sanitizeProjectNameForGitTag,
 } from './git';
 import { NxReleaseConfig } from '../config/config';
+import { findMatchingProjects } from '../../../utils/find-matching-projects';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -460,24 +461,28 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
     // Use the same affected detection logic as `nx affected`
     const affectedGraph = await filterAffected(projectGraph, touchedFiles);
 
+    // Resolve commit scopes using Nx matcher
+    const scopePatterns = commit.scope
+      ? commit.scope.split(',').map((s) => s.trim())
+      : [];
+
+    const scopedProjects =
+      scopePatterns.length > 0
+        ? new Set(findMatchingProjects(scopePatterns, projectGraph.nodes))
+        : null;
+
     for (const projectName of Object.keys(affectedGraph.nodes)) {
       if (projectSet.has(projectName)) {
         if (!relevantCommits.has(projectName)) {
           relevantCommits.set(projectName, []);
         }
-        if (
-          commit.scope === projectName ||
-          commit.scope.split(',').includes(projectName) ||
-          !commit.scope
-        ) {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: true });
-        } else {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: false });
-        }
+
+        const isProjectScopedCommit =
+          scopedProjects === null || scopedProjects.has(projectName);
+
+        relevantCommits
+          .get(projectName)
+          ?.push({ commit, isProjectScopedCommit });
       }
     }
   }

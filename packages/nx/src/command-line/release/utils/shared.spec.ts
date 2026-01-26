@@ -695,11 +695,19 @@ describe('shared', () => {
               root: 'apps/app',
             },
           },
+          '@libs/lib-d': {
+            name: '@libs/lib-d',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-d',
+            },
+          },
         },
         dependencies: {
           'lib-a': [],
           'lib-b': [],
           'lib-c': [],
+          '@libs/lib-d': [],
           app: [
             {
               source: 'app',
@@ -981,6 +989,50 @@ describe('shared', () => {
       );
 
       expect(result.size).toBe(0);
+    });
+
+    it('should match commit scope using short project name', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'abc123',
+          ['libs/lib-d/src/index.ts'],
+          'feat(lib-d): short scope feature'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@libs/lib-d'],
+        mockReleaseConfig!
+      );
+
+      expect(result.get('lib-d')).toHaveLength(1);
+      expect(result.get('lib-d')?.[0]).toMatchObject({
+        isProjectScopedCommit: true,
+      });
+    });
+
+    it('should match commit scope using full project name', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'def456',
+          ['libs/lib-d/src/index.ts'],
+          'feat(@libs/lib-d): full name feature'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@libs/lib-d'],
+        mockReleaseConfig!
+      );
+
+      expect(result.get('@libs/lib-d')).toHaveLength(1);
+      expect(result.get('@libs/lib-d')?.[0]).toMatchObject({
+        isProjectScopedCommit: true,
+      });
     });
 
     function createMockCommit(
