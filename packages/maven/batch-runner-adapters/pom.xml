@@ -19,7 +19,7 @@
     <description>Maven version-specific adapters for the batch runner</description>
 
     <properties>
-        <!-- Skip deployment for adapter modules - they're compiled classes embedded in batch-runner -->
+        <!-- Skip deployment for adapter modules - they're bundled in the @nx/maven npm package -->
         <maven.install.skip>true</maven.install.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.gpg.skip>true</maven.gpg.skip>
