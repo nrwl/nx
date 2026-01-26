@@ -412,6 +412,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         inSourceTests: options.inSourceTests,
         useEsmExtension: true,
       },
+      true,
+      undefined,
       true
     );
   }
