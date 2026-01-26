@@ -12,7 +12,6 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import {
   agentsMdPath,
-  claudeMcpPath,
   claudeMdPath,
   codexConfigTomlPath,
   geminiMdPath,
@@ -101,21 +100,27 @@ async function getAgentConfiguration(
   >;
   switch (agent) {
     case 'claude': {
-      const mcpPath = claudeMcpPath(workspaceRoot);
-      let mcpConfigured: boolean;
+      // Claude uses a plugin from marketplace which includes the MCP server
+      const claudeSettingsPath = resolve(
+        workspaceRoot,
+        '.claude',
+        'settings.json'
+      );
+      let pluginConfigured: boolean;
       try {
-        const mcpContents = readJsonFile(mcpPath);
-        mcpConfigured = !!mcpContents?.['mcpServers']?.['nx-mcp'];
+        const settingsContents = readJsonFile(claudeSettingsPath);
+        pluginConfigured =
+          !!settingsContents?.['enabledPlugins']?.['nx@nx-claude-plugins'];
       } catch {
-        mcpConfigured = false;
+        pluginConfigured = false;
       }
       const rulesPath = claudeMdPath(workspaceRoot);
       const rulesExists = existsSync(rulesPath);
       agentConfiguration = {
         rules: rulesExists,
-        mcp: mcpConfigured,
+        mcp: pluginConfigured,
         rulesPath: rulesPath,
-        mcpPath: mcpPath,
+        mcpPath: claudeSettingsPath,
       };
       break;
     }

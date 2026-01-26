@@ -163,13 +163,7 @@ export async function setupAiAgentsGeneratorImpl(
     const claudePath = join(options.directory, 'CLAUDE.md');
     writeAgentRules(tree, claudePath, options.writeNxCloudRules);
 
-    const mcpJsonPath = join(options.directory, '.mcp.json');
-    if (!tree.exists(mcpJsonPath)) {
-      writeJson(tree, mcpJsonPath, {});
-    }
-    updateJson(tree, mcpJsonPath, (json) => mcpConfigUpdater(json, nxVersion));
-
-    // Configure Claude plugin via marketplace
+    // Configure Claude plugin via marketplace (plugin includes MCP server)
     const claudeSettingsPath = join(
       options.directory,
       '.claude',
@@ -182,7 +176,7 @@ export async function setupAiAgentsGeneratorImpl(
       ...json,
       extraKnownMarketplaces: {
         ...json.extraKnownMarketplaces,
-        nx: {
+        'nx-claude-plugins': {
           source: {
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
@@ -191,7 +185,7 @@ export async function setupAiAgentsGeneratorImpl(
       },
       enabledPlugins: {
         ...json.enabledPlugins,
-        'nx@nx': true,
+        'nx@nx-claude-plugins': true,
       },
     }));
   }

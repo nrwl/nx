@@ -56,7 +56,7 @@ describe('setup-ai-agents generator', () => {
 
     expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
     expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
-    expect(tree.exists('custom-dir/.mcp.json')).toBe(true);
+    expect(tree.exists('custom-dir/.claude/settings.json')).toBe(true);
     expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
   });
 
@@ -200,83 +200,66 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         expect(tree.exists('CLAUDE.md')).toBe(false);
-        expect(tree.exists('.mcp.json')).toBe(false);
+        expect(tree.exists('.claude/settings.json')).toBe(false);
       });
 
-      it('should create .mcp.json with nx-mcp server when file does not exist', async () => {
+      it('should create .claude/settings.json with plugin configuration when file does not exist', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
+          agents: ['claude'],
         };
 
         await setupAiAgentsGenerator(tree, options);
 
-        expect(tree.exists('.mcp.json')).toBe(true);
-        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
+        expect(tree.exists('.claude/settings.json')).toBe(true);
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.extraKnownMarketplaces['nx-claude-plugins']).toEqual({
+          source: {
+            source: 'github',
+            repo: 'nrwl/nx-ai-agents-config',
+          },
         });
+        expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
-      it('should add nx-mcp server to existing .mcp.json without mcpServers', async () => {
+      it('should add plugin configuration to existing .claude/settings.json', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
+          agents: ['claude'],
         };
 
-        // Create existing config without mcpServers
+        // Create existing config
         tree.write(
-          '.mcp.json',
+          '.claude/settings.json',
           JSON.stringify({ someOtherConfig: 'value' }, null, 2)
         );
 
         await setupAiAgentsGenerator(tree, options);
 
-        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
         expect(config.someOtherConfig).toBe('value');
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
+        expect(config.extraKnownMarketplaces['nx-claude-plugins']).toEqual({
+          source: {
+            source: 'github',
+            repo: 'nrwl/nx-ai-agents-config',
+          },
         });
+        expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
-      it('should add nx-mcp server to existing .mcp.json with mcpServers', async () => {
+      it('should NOT write to .mcp.json for claude (MCP is provided by plugin)', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
+          agents: ['claude'],
         };
-
-        // Create existing config with mcpServers
-        tree.write(
-          '.mcp.json',
-          JSON.stringify(
-            {
-              mcpServers: {
-                'other-server': {
-                  type: 'stdio',
-                  command: 'other',
-                  args: ['cmd'],
-                },
-              },
-            },
-            null,
-            2
-          )
-        );
 
         await setupAiAgentsGenerator(tree, options);
 
-        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
-        expect(config.mcpServers['other-server']).toEqual({
-          type: 'stdio',
-          command: 'other',
-          args: ['cmd'],
-        });
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
+        expect(tree.exists('.mcp.json')).toBe(false);
       });
     });
 
@@ -460,9 +443,11 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         expect(tree.exists('CLAUDE.md')).toBe(true);
-        expect(tree.exists('.mcp.json')).toBe(true);
+        expect(tree.exists('.claude/settings.json')).toBe(true);
         expect(tree.exists('.gemini/settings.json')).toBe(true);
         expect(tree.exists('AGENTS.md')).toBe(true);
+        // .mcp.json should NOT be created - Claude uses plugin, Gemini uses .gemini/settings.json
+        expect(tree.exists('.mcp.json')).toBe(false);
       });
     });
 
@@ -483,7 +468,7 @@ describe('setup-ai-agents generator', () => {
     });
 
     describe('Nx version-specific MCP configuration', () => {
-      it('should use "nx mcp" for Nx 22+', async () => {
+      it('should use "nx mcp" for Nx 22+ (gemini)', async () => {
         readModulePackageJsonSpy.mockReturnValue({
           packageJson: { name: 'nx', version: '22.0.0' },
           path: '/fake/path/package.json',
@@ -491,12 +476,14 @@ describe('setup-ai-agents generator', () => {
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
-          agents: ['claude'],
+          agents: ['gemini'],
         };
 
         await setupAiAgentsGenerator(tree, options);
 
-        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
         expect(config.mcpServers['nx-mcp']).toEqual({
           type: 'stdio',
           command: 'npx',
@@ -504,7 +491,7 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should use "nx-mcp" for Nx < 22', async () => {
+      it('should use "nx-mcp" for Nx < 22 (gemini)', async () => {
         readModulePackageJsonSpy.mockReturnValue({
           packageJson: { name: 'nx', version: '21.0.0' },
           path: '/fake/path/package.json',
@@ -512,12 +499,14 @@ describe('setup-ai-agents generator', () => {
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
-          agents: ['claude'],
+          agents: ['gemini'],
         };
 
         await setupAiAgentsGenerator(tree, options);
 
-        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
         expect(config.mcpServers['nx-mcp']).toEqual({
           type: 'stdio',
           command: 'npx',
@@ -525,26 +514,37 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should use "nx mcp" as fallback when version cannot be determined', async () => {
+      it('should use "nx mcp" as fallback when version cannot be determined (gemini)', async () => {
         readModulePackageJsonSpy.mockImplementation(() => {
           throw new Error('Module not found');
         });
 
-        // Also mock readFileSync to fail so it falls back to default version
+        // Mock readFileSync to fail only for package.json so it falls back to default version
+        // but allow other file reads (needed for copyDirectoryToTree)
+        const originalReadFileSync = fs.readFileSync;
         const readFileSyncSpy = jest
           .spyOn(fs, 'readFileSync')
-          .mockImplementation(() => {
-            throw new Error('File not found');
+          .mockImplementation((path: any, ...args: any[]) => {
+            if (
+              typeof path === 'string' &&
+              path.endsWith('package.json') &&
+              !path.includes('node_modules')
+            ) {
+              throw new Error('File not found');
+            }
+            return originalReadFileSync(path, ...args);
           });
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
-          agents: ['claude'],
+          agents: ['gemini'],
         };
 
         await setupAiAgentsGenerator(tree, options);
 
-        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
         expect(config.mcpServers['nx-mcp']).toEqual({
           type: 'stdio',
           command: 'npx',
@@ -554,7 +554,7 @@ describe('setup-ai-agents generator', () => {
         readFileSyncSpy.mockRestore();
       });
 
-      it('should use "nx mcp" for Nx 23+', async () => {
+      it('should use "nx mcp" for Nx 23+ (gemini)', async () => {
         readModulePackageJsonSpy.mockReturnValue({
           packageJson: { name: 'nx', version: '23.1.0' },
           path: '/fake/path/package.json',

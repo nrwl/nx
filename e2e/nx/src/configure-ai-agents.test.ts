@@ -16,7 +16,9 @@ describe('configure-ai-agents', () => {
     runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
     expect(readFile('CLAUDE.md')).toContain('# General Guidelines');
-    expect(readFile('.mcp.json')).toContain('nx-mcp');
+    // Claude uses plugin from marketplace (MCP is included in plugin)
+    expect(readFile('.claude/settings.json')).toContain('nx-claude-plugins');
+    expect(readFile('.claude/settings.json')).toContain('nx@nx-claude-plugins');
   });
 
   it('should do nothing if agent is already configured', () => {
@@ -51,7 +53,7 @@ describe('configure-ai-agents', () => {
     beforeAll(() => {
       // Clean up previous tests
       removeFile('CLAUDE.md');
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
     });
 
     it('should exit 0 with no configured agents', () => {
@@ -70,7 +72,7 @@ describe('configure-ai-agents', () => {
   describe('--check=outdated (explicit outdated mode)', () => {
     it('should exit 0 with no configured agents', () => {
       removeFile('CLAUDE.md');
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       const output = runCLI(
         `configure-ai-agents --agents claude --check=outdated`
@@ -80,7 +82,7 @@ describe('configure-ai-agents', () => {
 
     it('should exit 0 with partially configured agents (ignores partial configs)', () => {
       runCLI(`configure-ai-agents --agents claude --no-interactive`);
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       const output = runCLI(
         `configure-ai-agents --agents claude --check=outdated`
@@ -115,7 +117,7 @@ describe('configure-ai-agents', () => {
   describe('--check=all (comprehensive check)', () => {
     it('should exit 1 on clean workspace with no configured agents', () => {
       removeFile('CLAUDE.md');
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       let didThrow = false;
       try {
@@ -128,7 +130,7 @@ describe('configure-ai-agents', () => {
 
     it('should exit 1 with partially configured agents', () => {
       runCLI(`configure-ai-agents --agents claude --no-interactive`);
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       let didThrow = false;
       try {
