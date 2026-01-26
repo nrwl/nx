@@ -3523,9 +3523,6 @@ importers:
       copy-webpack-plugin:
         specifier: ^10.2.4
         version: 10.2.4(webpack@5.104.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3)))
-      file-loader:
-        specifier: ^6.2.0
-        version: 6.2.0(webpack@5.104.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3)))
       ignore:
         specifier: ^5.0.4
         version: 5.3.2
@@ -3861,9 +3858,6 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.21.2
-      file-loader:
-        specifier: ^6.2.0
-        version: 6.2.0(webpack@5.104.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3)))
       http-proxy-middleware:
         specifier: ^3.0.5
         version: 3.0.5
@@ -43522,12 +43516,6 @@ snapshots:
       loader-utils: 2.0.3
       schema-utils: 3.3.0
       webpack: 5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
-
-  file-loader@6.2.0(webpack@5.104.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))):
-    dependencies:
-      loader-utils: 2.0.3
-      schema-utils: 3.3.0
-      webpack: 5.104.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))
 
   file-type@16.5.4:
     dependencies:

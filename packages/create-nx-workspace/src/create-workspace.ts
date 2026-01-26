@@ -108,7 +108,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     // Connect to Nx Cloud for template flow
-    if (nxCloud !== 'skip') {
+    // For variant 1 (NXC-3628): Skip connection, use GitHub flow for URL generation
+    if (nxCloud !== 'skip' && !options.skipCloudConnect) {
       await connectToNxCloudForTemplate(
         directory,
         'create-nx-workspace',
@@ -190,7 +191,15 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
   if (nxCloud !== 'skip') {
-    const token = readNxCloudToken(directory) as string;
+    // For variant 1 (skipCloudConnect=true): Skip readNxCloudToken() entirely
+    // - We didn't call connectToNxCloudForTemplate(), so no token exists
+    // - The spinner message "Checking Nx Cloud setup" would be misleading
+    // - createNxCloudOnboardingUrl() uses GitHub flow which sends accessToken: null
+    //
+    // For variant 0: Read the token as before (cloud was connected)
+    const token = options.skipCloudConnect
+      ? undefined
+      : readNxCloudToken(directory);
 
     connectUrl = await createNxCloudOnboardingUrl(
       nxCloud,
