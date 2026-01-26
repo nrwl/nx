@@ -165,10 +165,6 @@ export default async function* mavenBatchExecutor(
         console.error('[Maven Batch] Failed to parse result line:', line, e);
       }
     } else if (line.trim()) {
-      // Pass through debug/reflection logs immediately
-      if (line.includes('[NX-REFLECTION]') || line.includes('[NX-DEBUG]')) {
-        console.error(line);
-      }
       // Collect non-empty stderr lines for error reporting
       stderrLines.push(line);
     }
