@@ -48,6 +48,7 @@
     "cliui": "^8.0.1",
     "dotenv": "~16.4.5",
     "dotenv-expand": "~11.0.6",
+    "ejs": "^3.1.7",
     "enquirer": "catalog:",
     "figures": "3.2.0",
     "flat": "^5.0.2",
