@@ -35,6 +35,7 @@ import {
   withUseGitHub,
 } from '../src/internal-utils/yargs-options';
 import {
+  getCompletionMessageKeyForVariant,
   getFlowVariant,
   messages,
   recordStat,
@@ -469,23 +470,22 @@ async function normalizeArgsMiddleware(
 
       let nxCloud: string;
       let completionMessageKey: string | undefined;
+      const flowVariant = getFlowVariant();
 
       if (argv.skipGit === true) {
         nxCloud = 'skip';
         completionMessageKey = undefined;
-      } else if (getFlowVariant() === '1') {
-        // Variant 1 (NXC-3628): Skip cloud prompt, always show platform link
+      } else if (flowVariant === '2') {
+        // Variant 2: Skip cloud prompt, auto-connect
         // Respect --nxCloud=skip if explicitly provided
         nxCloud = argv.nxCloud === 'skip' ? 'skip' : 'yes';
         completionMessageKey =
-          nxCloud === 'skip' ? undefined : 'platform-setup';
+          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
       } else {
-        // Variant 0: Current behavior - show cloud prompt
+        // Variants 0 & 1: Show cloud prompt (different copy based on variant)
         nxCloud = await determineNxCloudV2(argv);
         completionMessageKey =
-          nxCloud === 'skip'
-            ? undefined
-            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
       }
 
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
@@ -497,7 +497,7 @@ async function normalizeArgsMiddleware(
         defaultBase: 'main',
         aiAgents,
         ghAvailable,
-        skipCloudConnect: getFlowVariant() === '1',
+        skipCloudConnect: flowVariant === '2',
       });
 
       await recordStat({
@@ -558,9 +558,7 @@ async function normalizeArgsMiddleware(
         nxCloud = await determineNxCloudV2(argv);
         useGitHub = nxCloud !== 'skip';
         completionMessageKey =
-          nxCloud === 'skip'
-            ? undefined
-            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
       }
 
       Object.assign(argv, {
