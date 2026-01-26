@@ -11,7 +11,7 @@
         <version>0.0.12</version>
     </parent>
 
-    <artifactId>batch-runner-adapters-maven3</artifactId>
+    <artifactId>maven3-adapter</artifactId>
     <packaging>jar</packaging>
 
     <name>Nx Maven Batch Runner - Maven 3.x Adapters</name>

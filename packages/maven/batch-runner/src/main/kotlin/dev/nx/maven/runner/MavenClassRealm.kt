@@ -4,7 +4,6 @@ import org.codehaus.plexus.classworlds.ClassWorld
 import org.codehaus.plexus.classworlds.realm.ClassRealm
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.file.Files
 
 /**
  * Custom ClassRealm for loading Maven classes and adapter JARs at runtime.
@@ -12,7 +11,7 @@ import java.nio.file.Files
  * Architecture:
  * - Creates a ClassWorld with a "plexus.core" realm
  * - Loads Maven JARs from $MAVEN_HOME/lib and /boot
- * - Loads pre-compiled adapter JARs from embedded resources
+ * - Loads adapter JARs from nx-maven-adapters directory (sibling to batch-runner.jar)
  * - Provides a unified classloader for all Maven + adapter classes
  *
  * This allows the batch-runner to have NO Maven compile-time dependencies,
@@ -25,7 +24,6 @@ class MavenClassRealm private constructor(
 ) : ClassRealm(classWorld, id, parent), AutoCloseable {
 
     private val log = LoggerFactory.getLogger(MavenClassRealm::class.java)
-    private val tempFiles = mutableListOf<File>()
 
     /**
      * Load Maven lib JARs from MAVEN_HOME/lib
@@ -72,32 +70,52 @@ class MavenClassRealm private constructor(
     }
 
     /**
-     * Load adapter JAR from embedded resources into the realm.
+     * Load adapter JAR into the realm.
+     * Looks for the adapter JAR in the nx-maven-adapters directory relative to this JAR.
      *
      * @param mavenMajorVersion The major Maven version ("3" or "4")
      */
     fun loadAdapterJar(mavenMajorVersion: String) {
-        val jarName = "maven${mavenMajorVersion}-adapter.jar"
-        val resourcePath = "nx-maven-adapters/$jarName"
+        val adapterJar = findAdapterJar(mavenMajorVersion)
+            ?: throw RuntimeException("Adapter JAR not found for Maven $mavenMajorVersion")
 
-        log.debug("Loading adapter JAR: $resourcePath")
+        log.debug("Loading adapter JAR: ${adapterJar.absolutePath}")
+        addURL(adapterJar.toURI().toURL())
+        log.debug("Loaded adapter JAR: ${adapterJar.name} (${adapterJar.length()} bytes)")
+    }
 
-        val inputStream = javaClass.classLoader.getResourceAsStream(resourcePath)
-            ?: throw RuntimeException("Adapter JAR not found: $resourcePath")
-
-        // Extract JAR to temp file (ClassRealm.addURL needs a file URL)
-        val tempFile = Files.createTempFile("nx-maven-adapter-", ".jar").toFile()
-        tempFile.deleteOnExit()
-        tempFiles.add(tempFile)
-
-        inputStream.use { input ->
-            tempFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
+    /**
+     * Find the adapter JAR for the given Maven version.
+     * Looks in nx-maven-adapters directory relative to this JAR's location.
+     */
+    private fun findAdapterJar(mavenMajorVersion: String): File? {
+        // Find where this class's JAR is located
+        val codeSource = MavenClassRealm::class.java.protectionDomain.codeSource
+        if (codeSource?.location == null) {
+            log.warn("Cannot determine JAR location")
+            return null
         }
 
-        addURL(tempFile.toURI().toURL())
-        log.debug("Loaded adapter JAR: $jarName (${tempFile.length()} bytes)")
+        val batchRunnerJar = File(codeSource.location.toURI())
+        val adaptersDir = File(batchRunnerJar.parentFile, "nx-maven-adapters")
+
+        if (!adaptersDir.isDirectory) {
+            log.warn("Adapters directory not found: ${adaptersDir.absolutePath}")
+            return null
+        }
+
+        // Look for adapter JAR matching the version pattern
+        val pattern = Regex("maven${mavenMajorVersion}-adapter.*\\.jar")
+
+        val adapterJar = adaptersDir.listFiles { file ->
+            pattern.matches(file.name)
+        }?.firstOrNull()
+
+        if (adapterJar == null) {
+            log.warn("No adapter JAR found in ${adaptersDir.absolutePath} for Maven $mavenMajorVersion")
+        }
+
+        return adapterJar
     }
 
     override fun close() {
@@ -106,16 +124,6 @@ class MavenClassRealm private constructor(
         } catch (e: Exception) {
             log.warn("Error disposing realm: ${e.message}")
         }
-
-        // Clean up temp files
-        tempFiles.forEach { file ->
-            try {
-                file.delete()
-            } catch (e: Exception) {
-                log.debug("Failed to delete temp file: ${file.absolutePath}")
-            }
-        }
-        tempFiles.clear()
     }
 
     companion object {

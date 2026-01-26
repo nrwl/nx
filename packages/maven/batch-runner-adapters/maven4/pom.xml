@@ -12,7 +12,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>batch-runner-adapter-maven4</artifactId>
+    <artifactId>maven4-adapter</artifactId>
     <packaging>jar</packaging>
 
     <name>Nx Maven Batch Runner Adapter - Maven 4</name>

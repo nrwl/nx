@@ -67,16 +67,16 @@
         </dependency>
 
         <!-- Adapter modules - provided scope for build ordering only -->
-        <!-- These JARs are copied as resources, not used as classpath dependencies -->
+        <!-- These dependencies ensure adapter modules are built before batch-runner -->
         <dependency>
             <groupId>dev.nx.maven</groupId>
-            <artifactId>batch-runner-adapters-maven3</artifactId>
+            <artifactId>maven3-adapter</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>dev.nx.maven</groupId>
-            <artifactId>batch-runner-adapter-maven4</artifactId>
+            <artifactId>maven4-adapter</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -104,31 +104,6 @@
 
     <build>
         <plugins>
-            <!-- Copy and rename adapter JARs from batch-runner-adapters modules -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-adapter-jars</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <mkdir dir="${project.build.outputDirectory}/nx-maven-adapters"/>
-                                <copy file="${project.basedir}/../batch-runner-adapters/maven3/target/batch-runner-adapters-maven3-${project.version}.jar"
-                                      tofile="${project.build.outputDirectory}/nx-maven-adapters/maven3-adapter.jar"/>
-                                <copy file="${project.basedir}/../batch-runner-adapters/maven4/target/batch-runner-adapter-maven4-${project.version}.jar"
-                                      tofile="${project.build.outputDirectory}/nx-maven-adapters/maven4-adapter.jar"/>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- Kotlin Compiler -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
