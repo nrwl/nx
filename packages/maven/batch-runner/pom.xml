@@ -66,21 +66,6 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
 
-        <!-- Adapter modules - provided scope for build ordering only -->
-        <!-- These dependencies ensure adapter modules are built before batch-runner -->
-        <dependency>
-            <groupId>dev.nx.maven</groupId>
-            <artifactId>maven3-adapter</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.nx.maven</groupId>
-            <artifactId>maven4-adapter</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
