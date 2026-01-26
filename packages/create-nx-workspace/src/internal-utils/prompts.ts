@@ -2,7 +2,12 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import { MessageKey, messages } from '../utils/nx/ab-testing';
+import {
+  getFlowVariant,
+  MessageKey,
+  messages,
+  shouldShowCloudPrompt,
+} from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import { isGitAvailable } from '../utils/git/git';
 import {
@@ -45,26 +50,47 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Show simplified prompt
-  const { message, choices, initial, footer, hint } =
-    messages.getPrompt('setupNxCloudV2');
+  // Variant 2: Skip prompt and auto-connect
+  if (!shouldShowCloudPrompt()) {
+    return 'github';
+  }
 
-  const promptConfig = {
-    name: 'nxCloud',
-    message,
-    type: 'autocomplete',
-    choices,
-    initial,
-  } as any; // types in enquirer are not up to date
-  if (footer) {
-    promptConfig.footer = () => footer;
-  }
-  if (hint) {
-    promptConfig.hint = () => hint;
-  }
+  // Variants 0 & 1: Show cloud prompt with different copy
+  const variant = getFlowVariant();
+  const promptConfig =
+    variant === '1'
+      ? {
+          name: 'nxCloud',
+          message: 'Would you like remote caching to make your build faster?',
+          type: 'autocomplete',
+          choices: [
+            { value: 'yes', name: 'Yes' },
+            { value: 'skip', name: 'Skip' },
+          ],
+          initial: 0,
+          hint: () => chalk.dim('\n(can be disabled any time)'),
+          footer: () =>
+            chalk.dim(
+              '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache'
+            ),
+        }
+      : {
+          name: 'nxCloud',
+          message: 'Try the full Nx platform?',
+          type: 'autocomplete',
+          choices: [
+            { value: 'yes', name: 'Yes' },
+            { value: 'skip', name: 'Skip' },
+          ],
+          initial: 0,
+          footer: () =>
+            chalk.dim(
+              '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud'
+            ),
+        };
 
   const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
-    promptConfig,
+    promptConfig as any, // types in enquirer are not up to date
   ]);
   return result.nxCloud;
 }
