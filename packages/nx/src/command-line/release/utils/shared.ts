@@ -19,6 +19,7 @@ import {
   sanitizeProjectNameForGitTag,
 } from './git';
 import { NxReleaseConfig } from '../config/config';
+import { findMatchingProjects } from 'packages/nx/src/utils/find-matching-projects';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -460,27 +461,53 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
     // Use the same affected detection logic as `nx affected`
     const affectedGraph = await filterAffected(projectGraph, touchedFiles);
 
+    // Resolve commit scopes using Nx matcher
+    const scopePatterns = commit.scope
+      ? commit.scope.split(',').map((s) => s.trim())
+      : [];
+
+    const scopedProjects =
+      scopePatterns.length > 0
+        ? resolveScopedProjects(scopePatterns, projectGraph)
+        : null;
+
     for (const projectName of Object.keys(affectedGraph.nodes)) {
       if (projectSet.has(projectName)) {
         if (!relevantCommits.has(projectName)) {
           relevantCommits.set(projectName, []);
         }
-        if (
-          commit.scope === projectName ||
-          commit.scope.split(',').includes(projectName) ||
-          !commit.scope
-        ) {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: true });
-        } else {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: false });
-        }
+
+        const isProjectScopedCommit =
+          scopedProjects === null || scopedProjects.has(projectName);
+
+        relevantCommits
+          .get(projectName)
+          ?.push({ commit, isProjectScopedCommit });
       }
     }
   }
 
   return relevantCommits;
+}
+
+function resolveScopedProjects(scope: string[], projectGraph: ProjectGraph) {
+  const matched = new Set<string>();
+  const shortNames = Object.keys(projectGraph.nodes).map(
+    (p) => p.split('/').at(-1) || p
+  );
+
+  for (const s of scope) {
+    const full = findMatchingProjects([s], projectGraph.nodes);
+    const short = findMatchingProjects(
+      [s],
+      Object.fromEntries(
+        shortNames.map((n, i) => [n, Object.values(projectGraph.nodes)[i]])
+      )
+    );
+
+    full.forEach((p) => matched.add(p));
+    short.forEach((p) => matched.add(p));
+  }
+
+  return matched;
 }
