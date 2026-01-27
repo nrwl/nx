@@ -108,6 +108,46 @@ import {
   handleGetFlakyTasks,
   handleGetEstimatedTaskTimings,
 } from './handle-task-history';
+import {
+  RECORD_TASK_DETAILS,
+  isHandleRecordTaskDetailsMessage,
+} from '../message-types/task-details';
+import { handleRecordTaskDetails } from './handle-task-details';
+import {
+  GET_RUNNING_TASKS,
+  ADD_RUNNING_TASK,
+  REMOVE_RUNNING_TASK,
+  isHandleGetRunningTasksMessage,
+  isHandleAddRunningTaskMessage,
+  isHandleRemoveRunningTaskMessage,
+} from '../message-types/running-tasks';
+import {
+  handleGetRunningTasks,
+  handleAddRunningTask,
+  handleRemoveRunningTask,
+} from './handle-running-tasks';
+import {
+  CACHE_GET,
+  CACHE_PUT,
+  CACHE_REMOVE_OLD_RECORDS,
+  CACHE_APPLY_REMOTE_RESULTS,
+  CACHE_GET_SIZE,
+  CACHE_CHECK_FS_IN_SYNC,
+  isHandleCacheGetMessage,
+  isHandleCachePutMessage,
+  isHandleCacheRemoveOldRecordsMessage,
+  isHandleCacheApplyRemoteResultsMessage,
+  isHandleCacheGetSizeMessage,
+  isHandleCacheCheckFsInSyncMessage,
+} from '../message-types/cache';
+import {
+  handleCacheGet,
+  handleCachePut,
+  handleCacheRemoveOldRecords,
+  handleCacheApplyRemoteResults,
+  handleCacheGetSize,
+  handleCacheCheckFsInSync,
+} from './handle-cache';
 import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
 import { handleForceShutdown } from './handle-force-shutdown';
 import {
@@ -170,7 +210,7 @@ global.NX_DAEMON = true;
 export type HandlerResult = {
   description: string;
   error?: any;
-  response?: string | object | boolean;
+  response?: string | object | boolean | number;
 };
 
 let numberOfOpenConnections = 0;
@@ -375,6 +415,34 @@ async function handleMessage(socket: Socket, data: string) {
       () => handleRecordTaskRuns(payload.taskRuns),
       mode
     );
+  } else if (isHandleRecordTaskDetailsMessage(payload)) {
+    await handleResult(
+      socket,
+      RECORD_TASK_DETAILS,
+      () => handleRecordTaskDetails(payload.taskDetails),
+      mode
+    );
+  } else if (isHandleGetRunningTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_RUNNING_TASKS,
+      () => handleGetRunningTasks(payload.ids),
+      mode
+    );
+  } else if (isHandleAddRunningTaskMessage(payload)) {
+    await handleResult(
+      socket,
+      ADD_RUNNING_TASK,
+      () => handleAddRunningTask(payload.taskId),
+      mode
+    );
+  } else if (isHandleRemoveRunningTaskMessage(payload)) {
+    await handleResult(
+      socket,
+      REMOVE_RUNNING_TASK,
+      () => handleRemoveRunningTask(payload.taskId),
+      mode
+    );
   } else if (isHandleForceShutdownMessage(payload)) {
     await handleResult(
       socket,
@@ -441,6 +509,59 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
       () => handleSetNxConsolePreferenceAndInstall(payload.preference),
+      mode
+    );
+  } else if (isHandleCacheGetMessage(payload)) {
+    await handleResult(
+      socket,
+      CACHE_GET,
+      () => handleCacheGet(payload.hash),
+      mode
+    );
+  } else if (isHandleCachePutMessage(payload)) {
+    await handleResult(
+      socket,
+      CACHE_PUT,
+      () =>
+        handleCachePut(
+          payload.hash,
+          payload.terminalOutput,
+          payload.outputs,
+          payload.code
+        ),
+      mode
+    );
+  } else if (isHandleCacheRemoveOldRecordsMessage(payload)) {
+    await handleResult(
+      socket,
+      CACHE_REMOVE_OLD_RECORDS,
+      () => handleCacheRemoveOldRecords(),
+      mode
+    );
+  } else if (isHandleCacheApplyRemoteResultsMessage(payload)) {
+    await handleResult(
+      socket,
+      CACHE_APPLY_REMOTE_RESULTS,
+      () =>
+        handleCacheApplyRemoteResults(
+          payload.hash,
+          payload.result,
+          payload.outputs
+        ),
+      mode
+    );
+  } else if (isHandleCacheGetSizeMessage(payload)) {
+    await handleResult(
+      socket,
+      CACHE_GET_SIZE,
+      () => handleCacheGetSize(),
+      mode
+    );
+  } else if (isHandleCacheCheckFsInSyncMessage(payload)) {
+    await handleResult(
+      socket,
+      CACHE_CHECK_FS_IN_SYNC,
+      () => handleCacheCheckFsInSync(),
       mode
     );
   } else {
@@ -769,7 +890,7 @@ export async function startServer(): Promise<Server> {
   });
 }
 function serializeUnserializedResult(
-  response: boolean | object,
+  response: boolean | object | number,
   mode: 'json' | 'v8'
 ) {
   if (mode === 'json') {
