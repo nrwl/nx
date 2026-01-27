@@ -225,7 +225,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
             <Breadcrumbs path={router.asPath} />
           </div>
           <header className="mt-0">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-100">
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-100">
               Nx Changelog
             </h1>
             <p className="mt-4">
@@ -249,10 +249,10 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                     'absolute left-0 top-0 hidden w-6 justify-center sm:flex'
                   )}
                 >
-                  <div className="w-px bg-slate-200 dark:bg-slate-700" />
+                  <div className="w-px bg-zinc-200 dark:bg-zinc-700" />
                 </div>
                 <div className="relative mt-1 hidden h-6 w-6 flex-none items-center justify-center sm:flex">
-                  <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:bg-slate-600 dark:ring-slate-500" />
+                  <div className="h-2 w-2 rounded-full bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-600 dark:ring-zinc-500" />
                 </div>
                 <div
                   id={changelog.version}
@@ -264,7 +264,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       href={`https://github.com/nrwl/nx/releases/tag/${changelog.version}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xl font-medium leading-5 text-slate-900 hover:underline dark:text-slate-100"
+                      className="text-xl font-medium leading-5 text-zinc-900 hover:underline dark:text-zinc-100"
                     >
                       <TagIcon
                         className="inline-flex h-4 w-4"
@@ -276,7 +276,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       <LinkIcon className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
                     </Link>
                   </p>
-                  <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
+                  <p className="py-0.5 text-xs leading-5 text-zinc-400 dark:text-zinc-500">
                     <time
                       dateTime={convertToDate(
                         changelog.date
@@ -288,7 +288,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                 </div>
                 {/* CONTAINER */}
                 <div className="flex flex-grow flex-col gap-8 md:ml-12">
-                  <div className="prose prose-slate dark:prose-invert max-w-none">
+                  <div className="prose prose-zinc dark:prose-invert max-w-none">
                     {changelog.content}
                   </div>
                   {changelog.patches.length > 0 && (
@@ -299,7 +299,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                           href={`https://github.com/nrwl/nx/releases/tag/${version}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 hover:underline dark:bg-slate-600/30 dark:text-slate-500 dark:ring-slate-700"
+                          className="inline-flex items-center rounded-md bg-zinc-50 px-2 py-1 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10 hover:underline dark:bg-zinc-600/30 dark:text-zinc-500 dark:ring-zinc-700"
                         >
                           {version}
                         </a>

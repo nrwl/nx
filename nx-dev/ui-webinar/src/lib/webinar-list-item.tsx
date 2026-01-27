@@ -26,10 +26,10 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
   return (
     <div
       key={webinar.slug}
-      className="border-b border-slate-200 py-5 text-sm last:border-0 dark:border-slate-800 dark:before:bg-slate-800/50"
+      className="border-b border-zinc-200 py-5 text-sm last:border-0 dark:border-zinc-800 dark:before:bg-zinc-800/50"
     >
       <Link href={link} prefetch={false}>
-        <h3 className="text-balance text-lg text-slate-500 sm:w-8/12 dark:text-white">
+        <h3 className="text-balance text-lg text-zinc-500 sm:w-8/12 dark:text-white">
           {webinar.title}
         </h3>
       </Link>
@@ -44,7 +44,7 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
       </span>
       <p className="my-2">{webinar.description}</p>
       <Link href={link} prefetch={false}>
-        <span className="my-4 text-balance text-slate-500 sm:w-8/12 dark:text-white">
+        <span className="my-4 text-balance text-zinc-500 sm:w-8/12 dark:text-white">
           {webinar.status === 'Past - Ungated'
             ? 'Watch the recording'
             : 'Sign up to view the recording'}

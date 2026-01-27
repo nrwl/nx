@@ -43,7 +43,7 @@ export function Solution(): ReactElement {
             description="across teams with repo-aware dependency management"
           />
         </ul>
-        <p className="mt-12 text-balance text-3xl font-normal tracking-tight text-slate-950 sm:text-5xl dark:text-white">
+        <p className="mt-12 text-balance text-3xl font-normal tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
           Works with <strong>any</strong> tech stack. Works with{' '}
           <strong>any</strong> CI provider.
         </p>
@@ -159,7 +159,7 @@ function StatCard({
     indigo:
       'from-indigo-100 to-indigo-300 dark:from-indigo-950 dark:to-indigo-900',
     blue: 'from-blue-100 to-blue-300 dark:from-blue-950 dark:to-blue-900',
-    sky: 'from-sky-100 to-sky-300 dark:from-sky-950 dark:to-sky-900',
+    sky: 'from-blue-100 to-blue-300 dark:from-blue-950 dark:to-blue-900',
     cyan: 'from-cyan-100 to-cyan-300 dark:from-cyan-950 dark:to-cyan-900',
   };
 
@@ -174,7 +174,7 @@ function StatCard({
       <div className="mb-8 flex-grow font-semibold dark:text-white/50">
         {description}
       </div>
-      <div className="mt-auto flex items-center gap-2 text-slate-950 dark:text-white">
+      <div className="mt-auto flex items-center gap-2 text-zinc-950 dark:text-white">
         {company === 'Caseware' && (
           <CasewareIcon aria-hidden="true" className="size-10" />
         )}

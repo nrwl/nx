@@ -36,7 +36,7 @@ export function GetStarted(): ReactElement {
                   y={0}
                   width={4}
                   height={4}
-                  className="text-slate-100 dark:text-slate-800/60"
+                  className="text-zinc-100 dark:text-zinc-800/60"
                   fill="currentColor"
                 />
               </pattern>
@@ -69,7 +69,7 @@ export function GetStarted(): ReactElement {
                   y={0}
                   width={4}
                   height={4}
-                  className="text-slate-100 dark:text-slate-800/60"
+                  className="text-zinc-100 dark:text-zinc-800/60"
                   fill="currentColor"
                 />
               </pattern>
@@ -82,13 +82,13 @@ export function GetStarted(): ReactElement {
           </svg>
           <div className="space-y-6 lg:space-y-12">
             <div className="flex flex-col items-center lg:flex-row lg:items-start lg:gap-6">
-              <div className="mb-4 flex size-10 place-items-center rounded-full p-4 shadow-sm ring-1 ring-slate-200 lg:mb-0 dark:ring-slate-800/60">
-                <span className="text-lg text-slate-900 dark:text-slate-100">
+              <div className="mb-4 flex size-10 place-items-center rounded-full p-4 shadow-sm ring-1 ring-zinc-200 lg:mb-0 dark:ring-zinc-800/60">
+                <span className="text-lg text-zinc-900 dark:text-zinc-100">
                   1
                 </span>
               </div>
               <div className="text-center lg:text-left">
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   Receive an Nx Powerpack license
                 </h4>
                 <p className="mt-2">
@@ -99,13 +99,13 @@ export function GetStarted(): ReactElement {
             </div>
 
             <div className="flex flex-col items-center lg:flex-row lg:items-start lg:gap-6">
-              <div className="mb-4 flex size-10 place-items-center rounded-full p-4 shadow-sm ring-1 ring-slate-200 lg:mb-0 dark:ring-slate-800/60">
-                <span className="text-lg text-slate-900 dark:text-slate-100">
+              <div className="mb-4 flex size-10 place-items-center rounded-full p-4 shadow-sm ring-1 ring-zinc-200 lg:mb-0 dark:ring-zinc-800/60">
+                <span className="text-lg text-zinc-900 dark:text-zinc-100">
                   2
                 </span>
               </div>
               <div className="text-center lg:text-left">
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   Activate Nx Powerpack right from your terminal
                 </h4>
                 <p className="mt-2">
@@ -124,13 +124,13 @@ export function GetStarted(): ReactElement {
             </div>
 
             <div className="flex flex-col items-center lg:flex-row lg:items-start lg:gap-6">
-              <div className="mb-4 flex size-10 place-items-center rounded-full p-4 shadow-sm ring-1 ring-slate-200 lg:mb-0 dark:ring-slate-800/60">
-                <span className="text-lg text-slate-900 dark:text-slate-100">
+              <div className="mb-4 flex size-10 place-items-center rounded-full p-4 shadow-sm ring-1 ring-zinc-200 lg:mb-0 dark:ring-zinc-800/60">
+                <span className="text-lg text-zinc-900 dark:text-zinc-100">
                   3
                 </span>
               </div>
               <div className="text-center lg:text-left">
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   Install Powerpack plugins
                 </h4>
                 <p className="mt-2">

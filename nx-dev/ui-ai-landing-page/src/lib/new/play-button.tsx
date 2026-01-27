@@ -57,7 +57,7 @@ export function PlayButton({
         initial="initial"
         whileHover="hover"
         variants={parent}
-        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-slate-100 bg-white/10 p-6 text-white antialiased backdrop-blur-xl"
+        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-zinc-100 bg-white/10 p-6 text-white antialiased backdrop-blur-xl"
       >
         <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
         <motion.div variants={child} className="absolute left-20 top-4 w-48">

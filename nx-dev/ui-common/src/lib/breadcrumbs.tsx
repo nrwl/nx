@@ -82,15 +82,15 @@ export function Breadcrumbs({
               <div className="flex items-center">
                 {!!index && (
                   <ChevronRightIcon
-                    className="h-5 w-5 flex-shrink-0 text-slate-500"
+                    className="h-5 w-5 flex-shrink-0 text-zinc-500"
                     aria-hidden="true"
                   />
                 )}
                 <a
                   href={crumb.href}
                   className={classNames(
-                    'text-sm font-medium hover:text-slate-600',
-                    crumb.current ? 'text-slate-600' : 'text-slate-400',
+                    'text-sm font-medium hover:text-zinc-600',
+                    crumb.current ? 'text-zinc-600' : 'text-zinc-400',
                     !!index ? 'ml-4' : ''
                   )}
                   aria-current={crumb.current ? 'page' : undefined}

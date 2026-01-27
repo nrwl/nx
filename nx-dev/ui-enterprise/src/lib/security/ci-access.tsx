@@ -49,7 +49,7 @@ export function CiAccess(): ReactElement {
             </SectionDescription>
             <ul className="mt-4 space-y-4 text-base leading-7">
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ArrowPathIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -58,7 +58,7 @@ export function CiAccess(): ReactElement {
                 </span>
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ArrowsUpDownIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"

@@ -25,12 +25,12 @@ export function RemoteCacheSolutions(): ReactElement {
           <div className="-mt-16 grid max-w-full grid-cols-1 gap-12 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4">
             {/* NX CLOUD */}
             <div>
-              <div className="relative rounded-xl border-2 border-blue-500 bg-white p-8 dark:border-sky-500 dark:bg-slate-950">
+              <div className="relative rounded-xl border-2 border-blue-500 bg-white p-8 dark:border-blue-500 dark:bg-zinc-950">
                 <span className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-6 transform items-center rounded-t-md bg-blue-500 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset">
                   Recommended
                 </span>
                 <div className="flex items-center gap-x-2">
-                  <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
+                  <h4 className="text-xl font-semibold leading-8 text-zinc-950 dark:text-white">
                     Nx Cloud remote cache
                   </h4>
                 </div>
@@ -43,7 +43,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     aria-describedby="nx-cloud-remote-cache"
                     title="Start caching your builds with Nx Cloud"
                     size="default"
-                    variant="primary"
+                    variant="contrast"
                     onClick={() =>
                       sendCustomEvent(
                         'manage-remote-cache-with-nx-cloud',
@@ -57,18 +57,18 @@ export function RemoteCacheSolutions(): ReactElement {
                   </ButtonLink>
                 </div>
 
-                <ul className="mt-4 divide-y divide-slate-200 border-t border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
+                <ul className="mt-4 divide-y divide-zinc-200 border-t border-zinc-200 text-sm dark:divide-zinc-800 dark:border-zinc-800">
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>Free plans available, no credit card required</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Secure against cache poisoning (
@@ -86,7 +86,7 @@ export function RemoteCacheSolutions(): ReactElement {
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       SOC 2 compliant (
@@ -103,14 +103,14 @@ export function RemoteCacheSolutions(): ReactElement {
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>Zero configuration</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Hosted on Nx Cloud servers or on-premise with{' '}
@@ -127,7 +127,7 @@ export function RemoteCacheSolutions(): ReactElement {
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Enterprise grade access management and key revocation
@@ -136,14 +136,14 @@ export function RemoteCacheSolutions(): ReactElement {
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>Support</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Includes access to advanced CI features: distributed task
@@ -156,9 +156,9 @@ export function RemoteCacheSolutions(): ReactElement {
             </div>
             {/*OFFICIAL PLUGINS*/}
             <div>
-              <div className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
+              <div className="rounded-xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="flex items-center gap-x-2">
-                  <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
+                  <h4 className="text-xl font-semibold leading-8 text-zinc-950 dark:text-white">
                     Self-hosted cache
                   </h4>
                 </div>
@@ -172,7 +172,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     aria-describedby="official-plugins"
                     title="Free official remote cache plugins"
                     size="default"
-                    variant="primary"
+                    variant="contrast"
                     onClick={() =>
                       sendCustomEvent(
                         'learn-more-self-hosted-cache-plugins',
@@ -185,7 +185,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     Learn more
                   </ButtonLink>
                 </div>
-                <ul className="mt-4 divide-y divide-slate-200 border-t border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
+                <ul className="mt-4 divide-y divide-zinc-200 border-t border-zinc-200 text-sm dark:divide-zinc-800 dark:border-zinc-800">
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <ExclamationCircleIcon
                       aria-hidden="true"
@@ -212,28 +212,28 @@ export function RemoteCacheSolutions(): ReactElement {
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>Free for all users</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>Supports Amazon S3, MinIO, GCP, Azure</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>Supports shared network drives</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Simple migration path from existing 3rd party plugins
@@ -244,9 +244,9 @@ export function RemoteCacheSolutions(): ReactElement {
             </div>
             {/*OPENAPI*/}
             <div>
-              <div className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
+              <div className="rounded-xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="flex items-center gap-x-2">
-                  <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
+                  <h4 className="text-xl font-semibold leading-8 text-zinc-950 dark:text-white">
                     Build your own
                   </h4>
                 </div>
@@ -262,7 +262,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     aria-describedby="open-api"
                     title="Remote cache api specs"
                     size="default"
-                    variant="primary"
+                    variant="contrast"
                     onClick={() =>
                       sendCustomEvent(
                         'build-your-own-openapi',

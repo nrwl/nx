@@ -9,7 +9,7 @@ export function Features(): ReactElement {
         Features
       </SectionHeading>
 
-      <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
+      <p className="mt-4 text-lg text-zinc-500 dark:text-zinc-400">
         Nx allows you to take existing React projects and add powerful
         capabilities to your workflow.
       </p>
@@ -256,8 +256,8 @@ function FeatureCard({
     <a href={href} className="block h-full transform-gpu">
       <div
         className={cx(
-          'group relative h-full w-full overflow-hidden rounded-lg border border-slate-200 bg-white p-6',
-          'dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
+          'group relative h-full w-full overflow-hidden rounded-lg border border-zinc-200 bg-white p-6',
+          'dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
           'before:absolute before:inset-0 before:z-0 before:bg-gradient-to-br before:from-blue-50 before:to-transparent before:opacity-0 before:transition-opacity',
           'transition-all duration-300 ease-out',
           'hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/50',
@@ -265,11 +265,11 @@ function FeatureCard({
         )}
       >
         <div className="relative z-10">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:bg-slate-800 dark:text-blue-400 dark:group-hover:bg-blue-900">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:bg-zinc-800 dark:text-blue-400 dark:group-hover:bg-blue-900">
             {icon}
           </div>
           <h3 className="mb-2 text-lg font-medium">{title}</h3>
-          <p className="text-slate-500 dark:text-slate-400">{description}</p>
+          <p className="text-zinc-500 dark:text-zinc-400">{description}</p>
         </div>
       </div>
     </a>

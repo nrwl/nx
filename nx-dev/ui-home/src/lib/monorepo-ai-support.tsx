@@ -78,7 +78,7 @@ export function MonorepoAiSupport(): ReactElement {
             className="hidden max-w-[40%] lg:max-w-[45%] dark:block"
           />
         </div>
-        <div className="relative hidden text-slate-500 lg:block">
+        <div className="relative hidden text-zinc-500 lg:block">
           <ProjectGraph />
 
           <ReactIcon
@@ -111,7 +111,7 @@ export function MonorepoAiSupport(): ReactElement {
           />
         </div>
         <div className="hidden flex-col items-center justify-center sm:flex">
-          <div className="relative text-slate-100 dark:text-slate-950">
+          <div className="relative text-zinc-100 dark:text-zinc-950">
             <Image
               src="/images/home/nx-ai.avif"
               width={1200}
@@ -134,34 +134,34 @@ export function MonorepoAiSupport(): ReactElement {
           </div>
         </div>
         <div className="relative flex flex-col items-center justify-center gap-6">
-          <div className="flex w-full flex-col rounded-lg border-slate-200 bg-white px-4 py-2 opacity-85 shadow-sm transition-all hover:opacity-100 dark:bg-slate-900">
+          <div className="flex w-full flex-col rounded-lg border-zinc-200 bg-white px-4 py-2 opacity-85 shadow-sm transition-all hover:opacity-100 dark:bg-zinc-900">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                 Instant impact analysis
               </span>
             </div>
-            <p className="mt-1.5 text-sm font-normal text-slate-900 dark:text-white">
+            <p className="mt-1.5 text-sm font-normal text-zinc-900 dark:text-white">
               If I update this shared library, what downstream projects will
               break?
             </p>
           </div>
-          <div className="flex w-full flex-col rounded-lg border-slate-200 bg-white px-4 py-2 opacity-85 shadow-sm transition-all hover:opacity-100 dark:bg-slate-900">
+          <div className="flex w-full flex-col rounded-lg border-zinc-200 bg-white px-4 py-2 opacity-85 shadow-sm transition-all hover:opacity-100 dark:bg-zinc-900">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                 Ownership clarity
               </span>
             </div>
-            <p className="mt-1.5 text-sm font-normal text-slate-900 dark:text-white">
+            <p className="mt-1.5 text-sm font-normal text-zinc-900 dark:text-white">
               Who maintains this module, and what other teams rely on it?
             </p>
           </div>
-          <div className="flex w-full flex-col rounded-lg border-slate-200 bg-white px-4 py-2 opacity-85 shadow-sm transition-all hover:opacity-100 dark:bg-slate-900">
+          <div className="flex w-full flex-col rounded-lg border-zinc-200 bg-white px-4 py-2 opacity-85 shadow-sm transition-all hover:opacity-100 dark:bg-zinc-900">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                 Cross-stack reasoning
               </span>
             </div>
-            <p className="mt-1.5 text-sm font-normal text-slate-900 dark:text-white">
+            <p className="mt-1.5 text-sm font-normal text-zinc-900 dark:text-white">
               How does this frontend change impact our backend services?
             </p>
           </div>
