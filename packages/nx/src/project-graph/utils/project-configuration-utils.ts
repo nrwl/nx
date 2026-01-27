@@ -402,7 +402,7 @@ export async function createProjectConfigurationsWithPlugins(
     | WorkspaceValidityError
   > = [];
 
-  // We iterate over plugins first - this ensures that plugins specified first take precedence.
+  // We iterate over plugins in order - later plugins can override earlier ones for incompatible targets.
   for (const [
     index,
     {

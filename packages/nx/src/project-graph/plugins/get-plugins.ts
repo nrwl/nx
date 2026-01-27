@@ -55,7 +55,7 @@ export async function getPlugins(
     )),
   ]);
 
-  loadedPlugins = specifiedPlugins.concat(defaultPlugins);
+  loadedPlugins = defaultPlugins.concat(specifiedPlugins);
 
   return loadedPlugins;
 }
