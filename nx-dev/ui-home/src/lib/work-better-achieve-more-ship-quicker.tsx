@@ -23,7 +23,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           <Strong>crush the velocity</Strong> of teams and the quality of
           products. Nx is the solution. By defining{' '}
           <TextLink
-            href="/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Enforce module boundaries"
           >
             project boundaries
@@ -31,14 +31,14 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           , developers ensure code stays <Strong>modular</Strong> and easy to
           maintain. By using{' '}
           <TextLink
-            href="/concepts/nx-plugins?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/concepts/nx-plugins?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="What are plugins?"
           >
             Nx plugins
           </TextLink>{' '}
           and{' '}
           <TextLink
-            href="/features/generate-code?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/features/generate-code?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Generate code"
           >
             code generation
@@ -47,7 +47,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           duplication. Plus, they <Strong>keep everything up-to-date</Strong> by
           using Nx's{' '}
           <TextLink
-            href="/features/automate-updating-dependencies?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/features/automate-updating-dependencies?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Automate updating dependencies"
           >
             automated updating mechanism

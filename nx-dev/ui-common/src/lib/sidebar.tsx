@@ -299,11 +299,6 @@ export function SidebarMobile({
       { name: 'Resources', href: '/resources', current: false },
       { name: 'Nx Cloud', href: '/nx-cloud', current: false },
       {
-        name: 'Powerpack',
-        href: '/powerpack',
-        current: false,
-      },
-      {
         name: 'Enterprise',
         href: '/enterprise',
         current: false,
@@ -322,17 +317,17 @@ export function SidebarMobile({
       },
       {
         name: 'Extending Nx',
-        href: '/extending-nx/intro/getting-started',
+        href: '/docs/extending-nx/intro',
         current: isExtendingNx,
       },
       {
         name: 'Plugins',
-        href: '/plugin-registry',
+        href: '/docs/plugin-registry',
         current: isPlugins,
       },
       {
         name: 'API',
-        href: '/nx-api',
+        href: '/docs/reference',
         current: isAPI,
       },
       {

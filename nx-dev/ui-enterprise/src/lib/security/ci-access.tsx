@@ -70,7 +70,7 @@ export function CiAccess(): ReactElement {
 
             <div className="mt-4">
               <Link
-                href="/ci/recipes/security/access-tokens"
+                href="/docs/guides/nx-cloud/access-tokens"
                 title="Learn more about CI Access Tokens"
                 className="text-sm/6 font-semibold"
               >
