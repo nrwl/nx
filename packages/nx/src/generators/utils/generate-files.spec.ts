@@ -8,7 +8,7 @@ describe('generateFiles', () => {
   let tree: Tree;
   beforeAll(() => {
     tree = createTree();
-    generateFiles(tree, join(__dirname, './test-files'), '.', {
+    generateFiles(tree, join(__dirname, '../testing-utils/test-files'), '.', {
       foo: 'bar',
       name: 'my-project',
       projectName: 'my-project-name',
@@ -84,7 +84,7 @@ describe('generateFiles', () => {
     expect(() => {
       generateFiles(
         tree,
-        join(__dirname, './test-files'),
+        join(__dirname, '../testing-utils/test-files'),
         '.',
         {
           foo: 'bar',
@@ -109,7 +109,7 @@ describe('generateFiles', () => {
     // Run generation again
     generateFiles(
       tree,
-      join(__dirname, './test-files'),
+      join(__dirname, '../testing-utils/test-files'),
       '.',
       {
         foo: 'bar',
@@ -134,7 +134,7 @@ describe('generateFiles', () => {
     // Run generation again
     generateFiles(
       tree,
-      join(__dirname, './test-files'),
+      join(__dirname, '../testing-utils/test-files'),
       '.',
       {
         foo: 'bar',
