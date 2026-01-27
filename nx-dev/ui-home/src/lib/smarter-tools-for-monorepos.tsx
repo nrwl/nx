@@ -62,28 +62,28 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <Strong>like VSCode extensions, but for your Nx workspace</Strong>.
             Imagine your{' '}
             <TextLink
-              href="/concepts/inferred-tasks?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
+              href="/docs/concepts/inferred-tasks?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Inferred tasks"
             >
               tools being automatically detected
             </TextLink>
             , with{' '}
             <TextLink
-              href="/features/cache-task-results?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
+              href="/docs/features/cache-task-results?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Caching"
             >
               caching
             </TextLink>
             ,{' '}
             <TextLink
-              href="/ci/features/distribute-task-execution?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
+              href="/docs/features/ci-features/distribute-task-execution?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
             >
               task distribution
             </TextLink>
             , and{' '}
             <TextLink
-              href="/ci/features/distribute-task-execution?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
+              href="/docs/features/ci-features/distribute-task-execution?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
             >
               task splitting
@@ -91,7 +91,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             being pre-configured for you. All in sync with your underlying
             tooling configuration. Plus there are{' '}
             <TextLink
-              href="/features/generate-code?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
+              href="/docs/features/generate-code?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
             >
               code generators
@@ -121,7 +121,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/playwright?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/playwright/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Playwright"
                   className="h-full w-full p-2 sm:p-4"
@@ -135,7 +135,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-2 sm:p-4"
@@ -163,7 +163,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/next?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/react/next/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Nextjs"
                   className="h-full w-full p-2 sm:p-4"
@@ -177,7 +177,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/recipes/storybook?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/storybook/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Storybook"
                   className="h-full w-full p-2 sm:p-4"
@@ -191,7 +191,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/rollup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/rollup/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Rollup"
                   className="h-full w-full p-2 sm:p-4"
@@ -205,7 +205,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/jest?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/jest/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Jest"
                   className="h-full w-full p-2 sm:p-4"
@@ -219,7 +219,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/eslint?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/eslint/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with EsLint"
                   className="h-full w-full p-2 sm:p-4"
@@ -233,7 +233,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/recipes/adopting-nx/adding-to-monorepo?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/guides/adopting-nx/adding-to-monorepo?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Pnpm"
                   className="h-full w-full p-2 sm:p-4"
@@ -247,7 +247,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/vite?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/vite/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Vite"
                   className="h-full w-full p-2 sm:p-4"
@@ -261,7 +261,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-solid?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Solid"
                   className="h-full w-full p-2 sm:p-4"
@@ -292,7 +292,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 </div>
 
                 <Link
-                  href="/getting-started/intro#learn-nx"
+                  href="/docs/getting-started/intro#learn-nx"
                   prefetch={false}
                   title="Nx video tutorials"
                   className="h-full w-full p-2 sm:p-4"
@@ -306,7 +306,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 <div className="grid grid-cols-1 gap-8">
                   <Card>
                     <Link
-                      href="/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/docs/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Java"
                       className="h-full w-full p-2 sm:p-4"
@@ -320,7 +320,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   </Card>
                   <Card>
                     <Link
-                      href="/nx-api/remix?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/docs/technologies/react/remix/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Remix"
                       className="h-full w-full p-2 sm:p-4"
@@ -334,7 +334,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   </Card>
                   <Card>
                     <Link
-                      href="/getting-started/tutorials/angular-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/docs/getting-started/tutorials/angular-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Angular"
                       className="h-full w-full p-2 sm:p-4"
@@ -378,7 +378,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 <div className="grid grid-cols-1 gap-4">
                   <Card>
                     <Link
-                      href="/showcase/example-repos/add-rust?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Rust"
                       className="h-full w-full p-2 sm:p-4"
@@ -392,7 +392,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   </Card>
                   <Card>
                     <Link
-                      href="/nx-api/nuxt?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/docs/technologies/vue/nuxt/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Nuxt"
                       className="h-full w-full p-2 sm:p-4"
@@ -408,7 +408,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </div>
               <Card className="p-4">
                 <Link
-                  href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Webstorm plugin"
                   className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs transition dark:border-zinc-800 dark:bg-zinc-900"
@@ -420,7 +420,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   Editor Integration
                 </FitText>
                 <Link
-                  href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="VSCode plugin"
                   className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900"
@@ -447,7 +447,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-astro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Astro"
                   className="h-full w-full p-2 sm:p-4"
@@ -461,7 +461,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/cypress?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/cypress/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Cypress"
                   className="h-full w-full p-2 sm:p-4"
@@ -475,7 +475,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/react-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/react-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with React"
                   className="h-full w-full p-2 sm:p-4"
@@ -489,7 +489,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/nest?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/node/nest/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with NestJS"
                   className="h-full w-full p-2 sm:p-4"
@@ -503,7 +503,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-fastify?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Vitest"
                   className="h-full w-full p-2 sm:p-4"
@@ -517,7 +517,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/rspack?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/rspack/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with RSpack"
                   className="h-full w-full p-2 sm:p-4"
@@ -531,7 +531,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/express?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/node/express/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Express"
                   className="h-full w-full p-2 sm:p-4"
@@ -545,7 +545,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/webpack?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/webpack/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Webpack"
                   className="h-full w-full p-2 sm:p-4"
@@ -559,7 +559,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/node?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/node/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with NodeJs"
                   className="h-full w-full p-2 sm:p-4"
@@ -587,7 +587,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/expo?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/react/expo/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Expo"
                   className="h-full w-full p-2 sm:p-4"
@@ -633,7 +633,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <div className="grid grid-cols-6 gap-4 sm:grid-cols-8 md:grid-cols-12">
               <Card>
                 <Link
-                  href="/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Gradle"
                   className="h-full w-full p-2 sm:p-4"
@@ -647,7 +647,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/playwright?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/playwright/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Playwright"
                   className="h-full w-full p-2 sm:p-4"
@@ -661,7 +661,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-2 sm:p-4"
@@ -689,7 +689,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/next?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/react/next/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Nextjs"
                   className="h-full w-full p-2 sm:p-4"
@@ -703,7 +703,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/recipes/storybook?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/storybook/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Storybook"
                   className="h-full w-full p-2 sm:p-4"
@@ -717,7 +717,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/rollup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/rollup/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Rollup"
                   className="h-full w-full p-2 sm:p-4"
@@ -731,7 +731,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/jest?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/jest/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Jest"
                   className="h-full w-full p-2 sm:p-4"
@@ -745,7 +745,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/eslint?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/eslint/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with EsLint"
                   className="h-full w-full p-2 sm:p-4"
@@ -759,7 +759,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/recipes/adopting-nx/adding-to-monorepo?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/guides/adopting-nx/adding-to-monorepo?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Pnpm"
                   className="h-full w-full p-2 sm:p-4"
@@ -773,7 +773,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/vite?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/vite/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Vite"
                   className="h-full w-full p-2 sm:p-4"
@@ -787,7 +787,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-solid?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Solid"
                   className="h-full w-full p-2 sm:p-4"
@@ -801,7 +801,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Java"
                   className="h-full w-full p-2 sm:p-4"
@@ -815,7 +815,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/remix?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/react/remix/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Remix"
                   className="h-full w-full p-2 sm:p-4"
@@ -829,7 +829,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/angular-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/angular-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Angular"
                   className="h-full w-full p-2 sm:p-4"
@@ -843,7 +843,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-rust?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Rust"
                   className="h-full w-full p-2 sm:p-4"
@@ -857,7 +857,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/nuxt?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/vue/nuxt/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Nuxt"
                   className="h-full w-full p-2 sm:p-4"
@@ -885,7 +885,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-astro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Astro"
                   className="h-full w-full p-2 sm:p-4"
@@ -899,7 +899,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/cypress?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/test-tools/cypress/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Cypress"
                   className="h-full w-full p-2 sm:p-4"
@@ -913,7 +913,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/react-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/tutorials/react-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with React"
                   className="h-full w-full p-2 sm:p-4"
@@ -927,7 +927,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/nest?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/node/nest/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with NestJS"
                   className="h-full w-full p-2 sm:p-4"
@@ -941,7 +941,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/showcase/example-repos/add-fastify?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Vitest"
                   className="h-full w-full p-2 sm:p-4"
@@ -955,7 +955,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/rspack?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/rspack/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with RSpack"
                   className="h-full w-full p-2 sm:p-4"
@@ -969,7 +969,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/express?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/node/express/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Express"
                   className="h-full w-full p-2 sm:p-4"
@@ -983,7 +983,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/webpack?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/build-tools/webpack/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Webpack"
                   className="h-full w-full p-2 sm:p-4"
@@ -997,7 +997,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/node?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/node/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with NodeJs"
                   className="h-full w-full p-2 sm:p-4"
@@ -1025,7 +1025,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/expo?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/docs/technologies/react/expo/introduction?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Expo"
                   className="h-full w-full p-2 sm:p-4"
@@ -1040,14 +1040,14 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             </div>
             <div className="mt-12 flex w-auto items-center justify-center gap-12">
               <ButtonLink
-                href="/getting-started/intro#learn-nx"
+                href="/docs/getting-started/intro#learn-nx"
                 title="Nx video tutorials"
                 variant="secondary"
               >
                 Watch video tutorials
               </ButtonLink>
               <ButtonLink
-                href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                href="/docs/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                 title="Nx editor integration"
                 variant="secondary"
               >

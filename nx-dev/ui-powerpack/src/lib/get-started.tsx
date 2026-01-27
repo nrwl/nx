@@ -136,14 +136,14 @@ export function GetStarted(): ReactElement {
                 <p className="mt-2">
                   Install Powerpack plugins such as{' '}
                   <TextLink
-                    href={'/docs/enterprise/powerpack/conformance'}
+                    href={'/docs/enterprise/conformance'}
                     title="Workspace conformance"
                   >
                     workspace conformance
                   </TextLink>
                   , and{' '}
                   <TextLink
-                    href={'/docs/enterprise/powerpack/owners'}
+                    href={'/docs/enterprise/owners'}
                     title="Codeowners for monorepos"
                   >
                     Codeowners for monorepos

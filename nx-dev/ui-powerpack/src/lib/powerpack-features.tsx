@@ -78,7 +78,7 @@ export function PowerpackFeatures(): ReactElement {
                 storage, offering a flexible, self-managed solution for faster
                 builds. Nx Powerpack self-hosted cache storage is{' '}
                 <TextLink
-                  href={"/docs/enterprise/powerpack/free-licenses-and-trials"}
+                  href={"/docs/enterprise/activate-license"}
                   title="Get a Powerpack license"
                 >
                   free for small teams
@@ -87,7 +87,7 @@ export function PowerpackFeatures(): ReactElement {
               </p>
               <div className="mt-16">
                 <ButtonLink
-                  href={"/docs/enterprise/powerpack/custom-caching"}
+                  href={"/docs/guides/tasks--caching/self-hosted-caching"}
                   title="Learn more about self-hosted cache storage"
                   variant="secondary"
                   size="default"
@@ -128,7 +128,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href={'/docs/enterprise/powerpack/owners'}
+                href={'/docs/enterprise/owners'}
                 title="Learn more about codeowners"
                 variant="secondary"
                 size="default"
@@ -168,7 +168,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href={'/docs/enterprise/powerpack/conformance'}
+                href={'/docs/enterprise/conformance'}
                 title="Learn how to set up conformance rules"
                 variant="secondary"
                 size="default"
@@ -445,7 +445,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
           >
             <AmazonS3Icon aria-hidden="true" className="size-4" />
             <Link
-              href="/nx-api/powerpack-s3-cache"
+              href="/docs/reference/remote-cache-plugins/s3-cache"
               title="Learn how to configure Amazon S3 caching"
               className="text-center text-xs text-zinc-900 dark:text-white"
             >
@@ -470,7 +470,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
           >
             <MinIOIcon aria-hidden="true" className="size-4" />
             <Link
-              href="/nx-api/powerpack-s3-cache"
+              href="/docs/reference/remote-cache-plugins/s3-cache"
               title="Learn how to configure Amazon S3 caching"
               className="text-center text-xs text-zinc-900 dark:text-white"
             >
@@ -496,7 +496,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             <ServerIcon aria-hidden="true" className="size-4" />
 
             <Link
-              href="/nx-api/powerpack-shared-fs-cache"
+              href="/docs/reference/remote-cache-plugins/shared-fs-cache"
               title="Learn how to configure network drive caching"
               className="text-center text-xs text-zinc-900 dark:text-white"
             >
@@ -522,7 +522,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             <GoogleCloudIcon aria-hidden="true" className="size-4" />
 
             <Link
-              href="/nx-api/powerpack-gcs-cache"
+              href="/docs/reference/remote-cache-plugins/gcs-cache"
               title="Learn how to configure Google Storage caching"
               className="text-center text-xs text-zinc-900 dark:text-white"
             >
@@ -548,7 +548,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             <AzureDevOpsIcon aria-hidden="true" className="size-4" />
 
             <Link
-              href="/nx-api/powerpack-azure-cache"
+              href="/docs/reference/remote-cache-plugins/azure-cache"
               title="Learn how to configure Azure Blob Storage caching"
               className="text-center text-xs text-zinc-900 dark:text-white"
             >

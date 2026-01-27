@@ -39,7 +39,7 @@ export function Faq(): ReactElement {
             after tasks are executed, we have a new API for you to leverage
             which is{' '}
             <Link
-              href="/deprecated/custom-tasks-runner#deprecating-custom-tasks-runner"
+              href="/docs/reference/deprecated/custom-tasks-runner"
               title="See documentation"
               prefetch={false}
               className="font-semibold"

@@ -26,7 +26,7 @@ const features = [
         <p className="flex-auto">
           Establish best practices once and propagate them across teams with{' '}
           <Link
-            href="/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud#publish-conformance-rules-to-nx-cloud"
+            href="/docs/enterprise/publish-conformance-rules-to-nx-cloud"
             title="Nx Conformance rules"
             prefetch={false}
             className="underline"
@@ -37,7 +37,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud#publish-conformance-rules-to-nx-cloud"
+            href="/docs/enterprise/publish-conformance-rules-to-nx-cloud"
             title="Learn more about Nx Conformance rules"
             className="text-sm/6 font-semibold"
           >
