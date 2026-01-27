@@ -74,8 +74,8 @@
     "yargs-parser": "catalog:"
   },
   "peerDependencies": {
-    "@swc-node/register": "^1.8.0",
-    "@swc/core": "^1.3.85"
+    "@swc-node/register": "catalog:swc",
+    "@swc/core": "catalog:swc"
   },
   "peerDependenciesMeta": {
     "@swc-node/register": {
