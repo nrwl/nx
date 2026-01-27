@@ -174,13 +174,14 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                                <!-- Exclude ALL shared classes from batch-runner shaded JAR.
-                                     They're included in the adapter JARs and loaded into ClassRealm
-                                     so they can see Maven's classes. -->
+                                <!-- Exclude Maven-dependent shared classes from batch-runner shaded JAR.
+                                     These are included in the adapter JARs and loaded into ClassRealm
+                                     where they can see Maven's classes. Keep non-Maven classes
+                                     (MavenCommandResolver, PathUtils) for use by ProcessBasedMavenExecutor. -->
                                 <filter>
                                     <artifact>dev.nx.maven:nx-maven-shared</artifact>
                                     <excludes>
-                                        <exclude>dev/nx/maven/shared/**</exclude>
+                                        <exclude>dev/nx/maven/shared/BuildState*.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
