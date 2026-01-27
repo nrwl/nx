@@ -11,7 +11,7 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
           as="h3"
           variant="subtitle"
           id="features-while-scaling-your-organization"
-          className="scroll-mt-24 text-2xl font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+          className="scroll-mt-24 text-2xl font-medium tracking-tight text-zinc-950 sm:text-3xl dark:text-white"
         >
           While Scaling
         </SectionHeading>

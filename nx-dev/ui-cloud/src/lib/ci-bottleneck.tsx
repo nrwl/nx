@@ -13,7 +13,7 @@ export function CiBottleneck(): ReactElement {
   return (
     <section
       id="ci-bottleneck"
-      className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+      className="scroll-mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
@@ -45,7 +45,7 @@ export function CiBottleneck(): ReactElement {
                 key={stat.id}
                 className="flex flex-col bg-white p-8 dark:bg-white/5"
               >
-                <dt className="text-sm/6 font-semibold text-slate-700 dark:text-slate-300">
+                <dt className="text-sm/6 font-semibold text-zinc-700 dark:text-zinc-300">
                   {stat.name}
                 </dt>
                 <dd className="order-first text-3xl font-semibold tracking-tight text-black dark:text-white">

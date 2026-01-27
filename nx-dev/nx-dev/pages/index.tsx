@@ -43,7 +43,7 @@ export default function Index(): JSX.Element {
         <div className="mt-32 lg:mt-56">
           <Problem />
         </div>
-        <div className="bg-white/50 bg-[url(/images/home/wave.svg)] bg-cover bg-center py-32 bg-blend-soft-light lg:py-56 dark:bg-slate-900/50 dark:bg-[url(/images/home/wave-dark.svg)] dark:bg-blend-darken">
+        <div className="bg-white/50 bg-[url(/images/home/wave.svg)] bg-cover bg-center py-32 bg-blend-soft-light lg:py-56 dark:bg-zinc-900/50 dark:bg-[url(/images/home/wave-dark.svg)] dark:bg-blend-darken">
           <Solution />
         </div>
 

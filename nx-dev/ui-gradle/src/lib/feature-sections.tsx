@@ -88,7 +88,7 @@ function FeatureSection({
 }: FeatureSectionProps): ReactElement {
   return (
     <div
-      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10`}
+      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10`}
     >
       <div className="h-0 w-full md:h-72">
         <img
@@ -99,13 +99,13 @@ function FeatureSection({
       </div>
       <div className="relative flex flex-1 flex-col justify-center p-8 lg:p-10">
         <div>
-          <span className="mb-3 inline-flex items-center rounded-full bg-slate-400/10 px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-inset ring-slate-400/20 dark:text-slate-300">
+          <span className="mb-3 inline-flex items-center rounded-full bg-zinc-400/10 px-3 py-1 text-sm font-medium text-zinc-600 ring-1 ring-inset ring-zinc-400/20 dark:text-zinc-300">
             {tag}
           </span>
-          <h3 className="mt-2 text-xl font-medium tracking-tight text-slate-950 lg:text-2xl dark:text-white">
+          <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-950 lg:text-2xl dark:text-white">
             {title}
           </h3>
-          <p className="mt-4 text-base/relaxed text-slate-600 dark:text-slate-300">
+          <p className="mt-4 text-base/relaxed text-zinc-600 dark:text-zinc-300">
             {description}
           </p>
           <div className="mt-6">

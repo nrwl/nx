@@ -58,7 +58,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           <ButtonLink
             href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
             title="Get started"
-            variant="primary"
+            variant="contrast"
             size="large"
           >
             Try Nx for yourself
@@ -67,7 +67,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
       </div>
 
       <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:gap-32">
-        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/30 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
+        <div className="group/card rounded-2xl border border-zinc-100 bg-zinc-50/30 p-6 transition-all duration-500 dark:border-zinc-800/60 dark:bg-black">
           <SectionHeading
             as="h3"
             variant="title"
@@ -90,7 +90,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             className="translation-all hidden max-w-full duration-500 group-hover/card:brightness-200 dark:block"
           />
         </div>
-        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/30 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
+        <div className="group/card rounded-2xl border border-zinc-100 bg-zinc-50/30 p-6 transition-all duration-500 dark:border-zinc-800/60 dark:bg-black">
           <SectionHeading
             as="h3"
             variant="title"

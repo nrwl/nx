@@ -83,7 +83,7 @@ export function SolutionsFaq(): ReactElement {
               Got questions? We've got answers.
             </SectionHeading>
 
-            <p className="text-md mt-4 text-slate-400 dark:text-slate-600">
+            <p className="text-md mt-4 text-zinc-400 dark:text-zinc-600">
               <Link
                 href="/contact"
                 title="Reach out to the team"
@@ -109,14 +109,14 @@ export function SolutionsFaq(): ReactElement {
             }))}
           />
           <div className="mt-12 lg:col-span-2 lg:mt-0">
-            <dl className="mt-6 space-y-6 divide-y divide-slate-100 dark:divide-slate-800">
+            <dl className="mt-6 space-y-6 divide-y divide-zinc-100 dark:divide-zinc-800">
               {faqs.map((faq) => (
                 <Disclosure as="div" key={faq.question} className="pt-6">
                   {({ open }) => (
                     <>
                       <dt className="text-lg">
-                        <DisclosureButton className="flex w-full items-start justify-between text-left text-slate-400">
-                          <span className="font-medium text-slate-800 dark:text-slate-300">
+                        <DisclosureButton className="flex w-full items-start justify-between text-left text-zinc-400">
+                          <span className="font-medium text-zinc-800 dark:text-zinc-300">
                             {faq.question}
                           </span>
                           <span className="ml-6 flex h-7 items-center">
@@ -140,7 +140,7 @@ export function SolutionsFaq(): ReactElement {
                       >
                         <DisclosurePanel
                           as="dd"
-                          className="mt-2 pr-12 text-base text-slate-500 dark:text-slate-400"
+                          className="mt-2 pr-12 text-base text-zinc-500 dark:text-zinc-400"
                         >
                           {faq.answerUi}
                         </DisclosurePanel>

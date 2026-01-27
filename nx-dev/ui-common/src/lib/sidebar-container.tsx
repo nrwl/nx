@@ -103,11 +103,11 @@ export function SidebarContainer({
         toggleNav={toggleNav}
         navIsOpen={navIsOpen}
       />
-      <div className="hidden h-full w-72 flex-col border-r border-slate-200 md:flex dark:border-slate-700 dark:bg-slate-900">
+      <div className="hidden h-full w-72 flex-col border-r border-zinc-200 md:flex dark:border-zinc-700 dark:bg-zinc-900">
         <div className="relative flex flex-grow overflow-y-scroll p-4">
           <Sidebar menu={menuWithAngularRspack} />
         </div>
-        {/*<div className="relative flex flex-col space-y-1 border-t border-slate-200 px-4 py-2 dark:border-slate-700">*/}
+        {/*<div className="relative flex flex-col space-y-1 border-t border-zinc-200 px-4 py-2 dark:border-zinc-700">*/}
         {/*  // another section.*/}
         {/*</div>*/}
       </div>

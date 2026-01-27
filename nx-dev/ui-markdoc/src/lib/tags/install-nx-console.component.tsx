@@ -3,9 +3,9 @@ import { ChevronRightIcon } from '@heroicons/react/24/outline';
 export const InstallNxConsole = () => (
   <div className="not-content my-12 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-16">
     {/* VSCode */}
-    <div className="not-prose group relative mx-auto flex w-full max-w-md items-center gap-4 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
-      <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500" />
-      <div className="w-2 bg-blue-500 dark:bg-sky-500" />
+    <div className="not-prose group relative mx-auto flex w-full max-w-md items-center gap-4 overflow-hidden rounded-lg bg-zinc-50 shadow-md transition hover:text-white dark:bg-zinc-800/60">
+      <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-blue-500" />
+      <div className="w-2 bg-blue-500 dark:bg-blue-500" />
 
       <div className="z-10 flex flex-grow items-center gap-4 py-3">
         <svg
@@ -37,9 +37,9 @@ export const InstallNxConsole = () => (
       <ChevronRightIcon className="mr-4 h-6 w-6 flex-shrink-0 transition-all group-hover:translate-x-3" />
     </div>
     {/* JetBrains */}
-    <div className="not-prose group relative mx-auto flex w-full max-w-md items-center gap-4 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
-      <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500" />
-      <div className="w-2 bg-blue-500 dark:bg-sky-500" />
+    <div className="not-prose group relative mx-auto flex w-full max-w-md items-center gap-4 overflow-hidden rounded-lg bg-zinc-50 shadow-md transition hover:text-white dark:bg-zinc-800/60">
+      <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-blue-500" />
+      <div className="w-2 bg-blue-500 dark:bg-blue-500" />
 
       <div className="z-10 flex flex-grow items-center gap-4 py-3">
         <svg

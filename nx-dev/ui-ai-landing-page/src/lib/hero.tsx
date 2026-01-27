@@ -197,7 +197,7 @@ export function Hero(): JSX.Element {
             <div className="relative">
               <div className="absolute bottom-0 start-0 -z-10 -translate-x-14 translate-y-10">
                 <svg
-                  className="h-auto max-w-40 text-slate-200 dark:text-slate-800"
+                  className="h-auto max-w-40 text-zinc-200 dark:text-zinc-800"
                   width="696"
                   height="653"
                   viewBox="0 0 696 653"
@@ -370,8 +370,7 @@ export function Hero(): JSX.Element {
                       {
                         'bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/50 dark:ring-blue-400':
                           isSelected,
-                        'hover:bg-slate-100 dark:hover:bg-slate-800':
-                          !isSelected,
+                        'hover:bg-zinc-100 dark:hover:bg-zinc-800': !isSelected,
                       }
                     )}
                   >
@@ -398,7 +397,7 @@ export function Hero(): JSX.Element {
                           'relative text-base font-medium leading-6 transition-colors',
                           isSelected
                             ? 'text-blue-900 dark:text-blue-100'
-                            : 'text-slate-900 group-hover:text-blue-600 dark:text-slate-100 dark:group-hover:text-blue-400'
+                            : 'text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400'
                         )}
                       >
                         {feature.title}
@@ -420,7 +419,7 @@ export function Hero(): JSX.Element {
                           'mt-2 text-sm leading-6 transition-colors',
                           isSelected
                             ? 'text-blue-700 dark:text-blue-200'
-                            : 'text-slate-600 dark:text-slate-400'
+                            : 'text-zinc-600 dark:text-zinc-400'
                         )}
                       >
                         {feature.description}
@@ -439,7 +438,7 @@ export function Hero(): JSX.Element {
             >
               <ButtonLink
                 href={'/docs/features/enhance-ai#setting-up-nx-mcp'}
-                variant="primary"
+                variant="contrast"
                 size="default"
                 title="Enhance your AI assistant"
                 onClick={() =>

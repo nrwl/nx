@@ -46,7 +46,7 @@ import {
 
 export function SmarterToolsForMonorepos(): JSX.Element {
   return (
-    <section className="bg-slate-50 py-32 shadow-inner sm:py-40 dark:bg-slate-900">
+    <section className="bg-zinc-50 py-32 shadow-inner sm:py-40 dark:bg-zinc-900">
       <article className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="max-w-5xl">
           <SectionHeading
@@ -297,7 +297,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   title="Nx video tutorials"
                   className="h-full w-full p-2 sm:p-4"
                 >
-                  <FitText className="text-slate-950 dark:text-white">
+                  <FitText className="text-zinc-950 dark:text-white">
                     Video tutorials
                   </FitText>
                 </Link>
@@ -370,7 +370,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                         className="h-[156px] w-[136px]"
                       />
                     </motion.div>
-                    <FitText className="text-slate-950 dark:text-white">
+                    <FitText className="text-zinc-950 dark:text-white">
                       Plugins
                     </FitText>
                   </div>
@@ -411,19 +411,19 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Webstorm plugin"
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs transition dark:border-slate-800 dark:bg-slate-900"
+                  className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs transition dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <JetBrainsIcon aria-hidden="true" className="size-3" />{' '}
                   JetBrains
                 </Link>
-                <FitText className="text-slate-950 dark:text-white">
+                <FitText className="text-zinc-950 dark:text-white">
                   Editor Integration
                 </FitText>
                 <Link
                   href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="VSCode plugin"
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs dark:border-slate-800 dark:bg-slate-900"
+                  className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <VisualStudioCodeIcon aria-hidden="true" className="size-3" />{' '}
                   VS Code
@@ -625,7 +625,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   className="h-[156px] w-[136px]"
                 />
               </motion.div>
-              <FitText className="text-slate-950 dark:text-white">
+              <FitText className="text-zinc-950 dark:text-white">
                 Plugins
               </FitText>
             </div>
@@ -1071,8 +1071,8 @@ const Card = ({
   return (
     <div
       className={cx(
-        'relative col-span-1 row-span-1 grid grid-cols-1 place-items-center rounded-2xl border border-slate-100 bg-white dark:border-slate-800/60 dark:bg-slate-950',
-        'text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white',
+        'relative col-span-1 row-span-1 grid grid-cols-1 place-items-center rounded-2xl border border-zinc-100 bg-white dark:border-zinc-800/60 dark:bg-zinc-950',
+        'text-zinc-600 transition hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white',
         className
       )}
     >

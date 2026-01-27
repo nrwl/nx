@@ -43,8 +43,8 @@ function Menu({ tabs }: { tabs: any[] }): ReactElement {
             href={tab.href}
             className={cx(
               tab.current
-                ? 'border-blue-500 text-blue-600 dark:border-sky-500 dark:text-sky-500'
-                : 'border-transparent hover:text-slate-900 dark:hover:text-sky-400',
+                ? 'border-blue-500 text-blue-600 dark:border-blue-500 dark:text-blue-500'
+                : 'border-transparent hover:text-zinc-900 dark:hover:text-blue-400',
               'whitespace-nowrap border-b-2 py-2 text-sm font-medium'
             )}
             aria-current={tab.current ? 'page' : undefined}
@@ -218,7 +218,7 @@ export function DocumentationHeader({
   ];
 
   return (
-    <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
+    <div className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/60 print:hidden">
       <div className="mx-auto flex w-full items-center gap-4 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
@@ -244,7 +244,7 @@ export function DocumentationHeader({
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
+            className="flex flex-grow items-center px-4 text-zinc-900 lg:px-0 dark:text-white"
             prefetch={false}
             onContextMenu={handleContextMenu}
           >
@@ -255,7 +255,7 @@ export function DocumentationHeader({
           </Link>
           <Link
             href={docsUrl}
-            className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
+            className="ml-2 hidden items-center px-4 text-zinc-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
             onClick={() =>
               sendCustomEvent(
@@ -282,7 +282,7 @@ export function DocumentationHeader({
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Blog
@@ -293,19 +293,19 @@ export function DocumentationHeader({
                 <>
                   <PopoverButton
                     className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                      open ? 'text-blue-500 dark:text-blue-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-zinc-200'
                     )}
                   >
-                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500">
                       Resources
                     </span>
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          ? 'rotate-180 transform text-blue-500 dark:text-blue-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500'
                       )}
                       aria-hidden="true"
                     />
@@ -327,11 +327,11 @@ export function DocumentationHeader({
                 </>
               )}
             </Popover>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <div className="hidden h-6 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
             <Link
               href="/ai"
               title="AI"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               AI
@@ -339,16 +339,16 @@ export function DocumentationHeader({
             <Link
               href="/nx-cloud"
               title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Nx Cloud
             </Link>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <div className="hidden h-6 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
             <Link
               href="/enterprise"
               title="Enterprise"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Enterprise
@@ -379,7 +379,7 @@ export function DocumentationHeader({
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
               title="Try Nx Cloud for free"
-              variant="primary"
+              variant="contrast"
               size="small"
               onClick={() =>
                 sendCustomEvent(

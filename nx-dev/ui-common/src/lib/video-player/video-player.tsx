@@ -47,14 +47,14 @@ const VARIANT_STYLES: Record<
       'bg-[radial-gradient(var(--blue-500)_40%,transparent_60%)] opacity-[0.8] dark:bg-[radial-gradient(var(--pink-500)_40%,transparent_60%)]',
     textColor: 'text-white',
     backgroundColor: 'bg-white/10',
-    borderColor: 'border-slate-100',
+    borderColor: 'border-zinc-100',
   },
   'blue-white-spin': {
     gradient:
       'bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#3B82F6_50%,#FFFFFF_100%)] dark:bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#0EA5E9_50%,#FFFFFF_100%)]',
-    textColor: 'text-slate-950',
+    textColor: 'text-zinc-950',
     backgroundColor: 'bg-white/70',
-    borderColor: 'border-slate-100',
+    borderColor: 'border-zinc-100',
   },
 };
 

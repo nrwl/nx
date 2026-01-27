@@ -25,7 +25,7 @@ import { ReactNode } from 'react';
 
 export function CiForMonorepos(): JSX.Element {
   return (
-    <section className="bg-slate-50 py-32 shadow-inner sm:py-40 dark:bg-slate-900">
+    <section className="bg-zinc-50 py-32 shadow-inner sm:py-40 dark:bg-zinc-900">
       <article className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="max-w-5xl">
           <SectionHeading
@@ -105,7 +105,7 @@ export function Card({
   return (
     <div
       className={cx(
-        'relative h-full w-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800/60 dark:bg-slate-950',
+        'relative h-full w-full overflow-hidden rounded-2xl border border-zinc-100 bg-white p-6 dark:border-zinc-800/60 dark:bg-zinc-950',
         className
       )}
     >
@@ -137,7 +137,7 @@ export function CornerBlur({
   return (
     <div
       className={cx(
-        'absolute bottom-0 left-0 z-0 size-72 -translate-x-1/2 translate-y-1/2 rounded-full bg-slate-50 blur-2xl dark:bg-slate-900',
+        'absolute bottom-0 left-0 z-0 size-72 -translate-x-1/2 translate-y-1/2 rounded-full bg-zinc-50 blur-2xl dark:bg-zinc-900',
         className
       )}
     />
@@ -150,10 +150,10 @@ export function ApplicationCard(): JSX.Element {
       <Card>
         <PulseLine />
         <CornerBlur />
-        <p className="text-2xl text-slate-900 dark:text-slate-100">
+        <p className="text-2xl text-zinc-900 dark:text-zinc-100">
           Powerful and elegant UI
         </p>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
           An application built for monorepo CI, so you can quickly find what
           failed, debug and move on.
         </p>
@@ -163,7 +163,7 @@ export function ApplicationCard(): JSX.Element {
             target="_blank"
             rel="noopener"
             title="See Nx Cloud live demo"
-            className="group font-semibold leading-6 text-slate-950 dark:text-white"
+            className="group font-semibold leading-6 text-zinc-950 dark:text-white"
           >
             View a live demo{' '}
             <span
@@ -174,7 +174,7 @@ export function ApplicationCard(): JSX.Element {
             </span>
           </a>
         </div>
-        <div className="absolute bottom-0 left-4 h-[345px] w-full overflow-hidden rounded-xl border border-slate-200 dark:bg-slate-800">
+        <div className="absolute bottom-0 left-4 h-[345px] w-full overflow-hidden rounded-xl border border-zinc-200 dark:bg-zinc-800">
           <VideoPlayerProvider videoUrl="https://www.youtube.com/embed/4VI-q943J3o?si=3tR-EkCKLfLvHYzL">
             <VideoPlayer>
               <VideoPlayerThumbnail
@@ -208,15 +208,15 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
       <Card className="relative">
         <div className="flex flex-col justify-between text-center drop-shadow">
           <div>
-            <span className="text-9xl font-bold text-slate-950 dark:text-white">
+            <span className="text-9xl font-bold text-zinc-950 dark:text-white">
               <AnimateValue num={20} suffix="k" once />
             </span>
             <br />
-            <span className="text-4xl font-semibold text-slate-950 dark:text-white">
+            <span className="text-4xl font-semibold text-zinc-950 dark:text-white">
               new projects
             </span>
           </div>
-          <span className="text-2xl font-semibold text-slate-600 dark:text-slate-400">
+          <span className="text-2xl font-semibold text-zinc-600 dark:text-zinc-400">
             every month
           </span>
         </div>
@@ -224,7 +224,7 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
           <ButtonLink
             href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
             title="Get started with Nx Cloud"
-            variant="primary"
+            variant="contrast"
             size="large"
             target="_blank"
             rel="nofollow"
@@ -243,39 +243,39 @@ export function HalveYouBill(): JSX.Element {
   return (
     <div className="col-span-2 h-[415px] sm:h-[360px] md:col-span-1">
       <Card>
-        <p className="text-2xl text-slate-900 dark:text-slate-100">
+        <p className="text-2xl text-zinc-900 dark:text-zinc-100">
           Halve your CI bill
         </p>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
           Nx Cloud not only makes your runs{' '}
-          <span className="font-semibold text-slate-800 dark:text-slate-200">
+          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
             30% to 70% faster
           </span>
           , but also significantly cheaper.
         </p>
         <div className="mt-6">
           <div className="flex items-center">
-            <div className="w-28 shrink-0 border-r-2 border-slate-200 py-3 pr-2 text-right text-slate-700 transition duration-200 dark:border-slate-800 dark:text-slate-300">
+            <div className="w-28 shrink-0 border-r-2 border-zinc-200 py-3 pr-2 text-right text-zinc-700 transition duration-200 dark:border-zinc-800 dark:text-zinc-300">
               CI
             </div>
             <div className="flex-grow py-1.5 font-semibold">
-              <div className="w-full flex-grow items-center justify-end rounded-r-lg border border-l-0 border-slate-200 bg-slate-100 px-4 py-2 text-right text-slate-900 transition duration-200 dark:border-slate-800 dark:bg-slate-700 dark:text-white">
+              <div className="w-full flex-grow items-center justify-end rounded-r-lg border border-l-0 border-zinc-200 bg-zinc-100 px-4 py-2 text-right text-zinc-900 transition duration-200 dark:border-zinc-800 dark:bg-zinc-700 dark:text-white">
                 <span className="drop-shadow-sm">$6k</span>
               </div>
             </div>
           </div>
           <div className="flex items-center">
-            <div className="w-28 shrink-0 border-r-2 border-slate-200 py-3 pr-2 text-right font-medium text-slate-700 transition duration-200 dark:border-slate-800 dark:text-slate-300">
+            <div className="w-28 shrink-0 border-r-2 border-zinc-200 py-3 pr-2 text-right font-medium text-zinc-700 transition duration-200 dark:border-zinc-800 dark:text-zinc-300">
               CI + Nx Cloud
             </div>
             <div className="flex-grow py-1.5 font-semibold">
-              <div className="w-1/2 rounded-r-lg border border-l-0 border-slate-200 bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-right text-white transition duration-200 dark:border-slate-800">
+              <div className="w-1/2 rounded-r-lg border border-l-0 border-zinc-200 bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-right text-white transition duration-200 dark:border-zinc-800">
                 <span className="drop-shadow-sm">$3.2k</span>
               </div>
             </div>
           </div>
         </div>
-        <p className="z-10 mt-6 text-xs text-slate-400 transition duration-200 dark:text-slate-600">
+        <p className="z-10 mt-6 text-xs text-zinc-400 transition duration-200 dark:text-zinc-600">
           <span className="underline">Cost per month for CI compute.</span> Data
           collected based on a typical month of CI runs measured on the Nx OSS
           monorepo.
@@ -292,10 +292,10 @@ export function IntegratesToYouCurrentCiProvider(): JSX.Element {
     <div className="col-span-2 h-fit sm:h-[225px]">
       <Card>
         <div className="relative z-20">
-          <p className="text-2xl text-slate-900 dark:text-slate-100">
+          <p className="text-2xl text-zinc-900 dark:text-zinc-100">
             Works with your current CI
           </p>
-          <p className="mt-2 max-w-md text-slate-600 dark:text-slate-400">
+          <p className="mt-2 max-w-md text-zinc-600 dark:text-zinc-400">
             Use your current CI provider, export your compute and slash your CI
             bill by using Nx Agents to save time, improve performance and
             ramp-up your developer experience.
@@ -305,7 +305,7 @@ export function IntegratesToYouCurrentCiProvider(): JSX.Element {
               href="/ci/recipes/set-up?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add Nx Cloud to your CI workflow"
               prefetch={false}
-              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+              className="group font-semibold leading-6 text-zinc-950 dark:text-white"
             >
               Enable faster CI with a single line of code{' '}
               <span
@@ -398,10 +398,10 @@ export function AiSection(): JSX.Element {
           />
         </div>
         <div className="grow">
-          <p className="text-2xl text-slate-900 dark:text-slate-100">
+          <p className="text-2xl text-zinc-900 dark:text-zinc-100">
             AI for your CI
           </p>
-          <p className="mt-2text-slate-600 dark:text-slate-400">
+          <p className="mt-2text-zinc-600 dark:text-zinc-400">
             Identify and <Strong> resolve task failures</Strong> instantly with
             intelligent explanations and actionable solutions. Set your desired
             CI run time, and Nx Cloud will match it. Our{' '}
@@ -415,7 +415,7 @@ export function AiSection(): JSX.Element {
               href="/ci/concepts/nx-cloud-ai?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add AI to your CI with Nx Cloud"
               prefetch={false}
-              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+              className="group font-semibold leading-6 text-zinc-950 dark:text-white"
             >
               Learn more{' '}
               <span

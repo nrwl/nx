@@ -119,7 +119,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+      <body className="h-full bg-white text-zinc-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:selection:bg-blue-500">
         <GlobalSearchHandler />
         {children}
         {bannerCollection.map((bannerConfig) => {

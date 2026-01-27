@@ -198,7 +198,7 @@ export function Footer({
   };
   return (
     <footer
-      className={`bg-white dark:bg-slate-950 ${className}`}
+      className={`bg-white dark:bg-zinc-950 ${className}`}
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
@@ -206,7 +206,7 @@ export function Footer({
       </h2>
       <div className="mx-auto max-w-7xl px-4 pt-12 transition-opacity sm:px-6 lg:px-8 lg:pt-16 lg:opacity-50 lg:hover:opacity-100">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
+          <div className="space-y-4 text-zinc-700 xl:col-span-1 dark:text-zinc-300">
             <svg
               className="h-14 subpixel-antialiased"
               role="img"
@@ -225,7 +225,7 @@ export function Footer({
                   href={item.href}
                   title={item.label}
                   prefetch={false}
-                  className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                  className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -241,7 +241,7 @@ export function Footer({
                     title={item.name}
                     target="_blank"
                     rel="noreferer"
-                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                   >
                     {item.name}
                   </a>
@@ -251,7 +251,7 @@ export function Footer({
                     href={prefixHref(item.href)}
                     title={item.name}
                     prefetch={false}
-                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                   >
                     {item.name}
                   </Link>
@@ -267,7 +267,7 @@ export function Footer({
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Resources
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -279,7 +279,7 @@ export function Footer({
                           target="_blank"
                           title={item.name}
                           rel="noreferer"
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </a>
@@ -288,7 +288,7 @@ export function Footer({
                           href={prefixHref(item.href)}
                           prefetch={false}
                           title={item.name}
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </Link>
@@ -298,7 +298,7 @@ export function Footer({
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Solutions
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -308,7 +308,7 @@ export function Footer({
                         href={prefixHref(item.href)}
                         prefetch={false}
                         title={item.name}
-                        className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                       >
                         {item.name}
                       </Link>
@@ -319,7 +319,7 @@ export function Footer({
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Nx Cloud
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -331,7 +331,7 @@ export function Footer({
                           title={item.name}
                           target="_blank"
                           rel="noreferer"
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </a>
@@ -340,7 +340,7 @@ export function Footer({
                           href={prefixHref(item.href)}
                           prefetch={false}
                           title={item.name}
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </Link>
@@ -350,7 +350,7 @@ export function Footer({
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Company
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -360,7 +360,7 @@ export function Footer({
                         href={prefixHref(item.href)}
                         prefetch={false}
                         title={item.name}
-                        className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                       >
                         {item.name}
                       </Link>
@@ -371,8 +371,8 @@ export function Footer({
             </div>
           </div>
         </div>
-        <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
-          <div className="flex items-center gap-1 text-sm text-slate-400 xl:justify-center">
+        <div className="mt-20 border-t border-zinc-200 p-2 dark:border-zinc-800">
+          <div className="flex items-center gap-1 text-sm text-zinc-400 xl:justify-center">
             <span>&copy; {new Date().getFullYear()} made with</span>
             <HeartIcon className="inline h-4 w-4" />
             <span>by</span>
@@ -380,7 +380,7 @@ export function Footer({
               href={prefixHref('/company')}
               prefetch={false}
               title="Company"
-              className="inline-flex items-center text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+              className="inline-flex items-center text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
             >
               <svg
                 role="img"
