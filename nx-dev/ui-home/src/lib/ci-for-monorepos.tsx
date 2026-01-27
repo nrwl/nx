@@ -50,28 +50,28 @@ export function CiForMonorepos(): JSX.Element {
             <Strong>cost-efficient</Strong>. It plugs right into your existing
             CI setup, enabling features such as{' '}
             <TextLink
-              href="/ci/features/remote-cache?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/docs/features/ci-features/remote-cache?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Remote caching with Nx Replay"
             >
               remote caching
             </TextLink>
             ,{' '}
             <TextLink
-              href="/ci/features/distribute-task-execution?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/docs/features/ci-features/distribute-task-execution?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Distribute task execution with Nx Agents "
             >
               dynamically allocating machines to distribute tasks
             </TextLink>
             , providing{' '}
             <TextLink
-              href="/ci/features/split-e2e-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/docs/features/ci-features/split-e2e-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="E2E test splitting with Atomizer"
             >
               fine-grained e2e test splitting
             </TextLink>{' '}
             and{' '}
             <TextLink
-              href="/ci/features/flaky-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/docs/features/ci-features/flaky-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Flakiness detection with Nx"
             >
               automated flakiness detection
@@ -302,7 +302,7 @@ export function IntegratesToYouCurrentCiProvider(): JSX.Element {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/recipes/set-up?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/docs/guides/nx-cloud/setup-ci?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add Nx Cloud to your CI workflow"
               prefetch={false}
               className="group font-semibold leading-6 text-zinc-950 dark:text-white"
@@ -412,7 +412,7 @@ export function AiSection(): JSX.Element {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/concepts/nx-cloud-ai?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/docs/guides/nx-cloud/enable-ai-features?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add AI to your CI with Nx Cloud"
               prefetch={false}
               className="group font-semibold leading-6 text-zinc-950 dark:text-white"

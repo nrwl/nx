@@ -20,7 +20,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-affected.avif"
             alt="Nx Affected: Run tasks only on affected projects"
             tag="Affected"
-            href={'/docs/ci/features/affected'}
+            href={'/docs/features/ci-features/affected'}
           />
 
           {/* Remote Caching Section */}
@@ -40,7 +40,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-agents.avif"
             alt="Nx Agents: Task distribution"
             tag="Nx Agents"
-            href={'/docs/ci/features/distribute-task-execution'}
+            href={'/docs/features/ci-features/distribute-task-execution'}
           />
 
           {/* Atomizer Section */}
@@ -50,7 +50,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-atomizer.avif"
             alt="Nx Atomizer: Split large test tasks"
             tag="Atomizer"
-            href={'/docs/ci/features/split-e2e-tasks'}
+            href={'/docs/features/ci-features/split-e2e-tasks'}
           />
 
           {/* Flaky Test Retries Section */}
@@ -60,7 +60,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-flaky-tasks-detection.avif"
             alt="Nx flaky task detection & rerun"
             tag="Flaky test retries"
-            href="/nx-api/gradle/documents/overview"
+            href="/docs/features/ci-features/flaky-tasks"
           />
         </div>
       </div>

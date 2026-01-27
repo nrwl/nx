@@ -40,7 +40,7 @@ export function MonorepoAiSupport(): ReactElement {
             monorepo's project relationships, dependencies, and ownership
           </Strong>
           ,{' '}
-          <TextLink href="/features/enhance-AI?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_enhance_ai">
+          <TextLink href="/docs/features/enhance-ai?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_enhance_ai">
             Nx enables your LLM to move beyond local file changes
           </TextLink>{' '}
           to make <Strong>informed architectural decisions</Strong>.

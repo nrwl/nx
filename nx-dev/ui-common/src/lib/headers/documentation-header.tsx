@@ -103,7 +103,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Extending Nx',
-      href: '/extending-nx/intro/getting-started',
+      href: '/docs/extending-nx/intro',
       current: isExtendingNx,
     },
     {

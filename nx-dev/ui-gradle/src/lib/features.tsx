@@ -46,7 +46,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Distributed Task Execution"
           description="Run your project tasks across multiple machines, dramatically reducing build times for large repositories."
-          href="/ci/features/distribute-task-execution"
+          href="/docs/features/ci-features/distribute-task-execution"
           icon={
             <svg
               className="h-6 w-6"
@@ -86,7 +86,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Affected Targets"
           description="Run tasks only on projects affected by your changes, saving time and computing resources."
-          href="/ci/features/affected"
+          href="/docs/features/ci-features/affected"
           icon={
             <svg
               className="h-6 w-6"
@@ -114,7 +114,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Project Graph"
           description="Nx automatically infers your project graph from project's configuration, providing visualization and dependency analysis."
-          href="/features/explore-graph"
+          href="/docs/features/explore-graph"
           icon={
             <svg
               className="h-6 w-6"
@@ -160,7 +160,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Split E2E Tests"
           description="Automatically split your E2E tests for faster parallel execution in CI environments with Atomizer."
-          href="/ci/features/split-e2e-tasks"
+          href="/docs/features/ci-features/split-e2e-tasks"
           icon={
             <svg
               className="h-6 w-6"
@@ -202,7 +202,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Zero Configuration"
           description="Add Nx to your project in minutes with no changes to your existing setup required."
-          href="/nx-api/gradle/documents/overview"
+          href="/docs/technologies/java/gradle/introduction"
           icon={
             <svg
               className="h-6 w-6"

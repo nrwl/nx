@@ -86,7 +86,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Affected Targets"
           description="Run tasks only on projects affected by your changes, saving time and computing resources."
-          href={'/docs/ci/features/affected'}
+          href={'/docs/features/ci-features/affected'}
           icon={
             <svg
               className="h-6 w-6"
@@ -160,7 +160,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Split E2E Tests"
           description="Automatically split your E2E tests for faster parallel execution in CI environments with Atomizer."
-          href={'/docs/ci/features/split-e2e-tasks'}
+          href={'/docs/features/ci-features/split-e2e-tasks'}
           icon={
             <svg
               className="h-6 w-6"
@@ -202,7 +202,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Zero Configuration"
           description="Add Nx to your existing monorepo in minutes."
-          href={'/docs/recipes/adopting-nx/adding-to-monorepo'}
+          href={'/docs/guides/adopting-nx/adding-to-monorepo'}
           icon={
             <svg
               className="h-6 w-6"
