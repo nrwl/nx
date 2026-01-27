@@ -98,6 +98,7 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const { task, status, terminalOutput } of taskResults) {
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
+      tasksToTaskStatus[task.id] = status;
 
       switch (status) {
         case 'remote-cache':
@@ -140,7 +141,7 @@ export function getTuiTerminalSummaryLifeCycle({
       return;
     }
 
-    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
+    const failure = totalSuccessfulTasks !== totalTasks;
     const cancelled =
       // Some tasks were in progress...
       inProgressTasks.size > 0 ||
@@ -322,8 +323,16 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = getTerminalOutput(taskId);
-      // Task Status is null?
-      if (!taskStatus) {
+      // Check stopped tasks first (before other status checks)
+      if (stoppedTasks.has(taskId)) {
+        output.logCommandOutput(taskId, taskStatus, terminalOutput);
+        output.addNewline();
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.cyan(
+            figures.squareSmallFilled
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
+        );
+      } else if (!taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         checklistLines.push(
@@ -392,7 +401,7 @@ export function getTuiTerminalSummaryLifeCycle({
       console.log(line);
     }
 
-    if (totalSuccessfulTasks + stoppedTasks.size === totalTasks) {
+    if (totalSuccessfulTasks === totalTasks) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
         targets,

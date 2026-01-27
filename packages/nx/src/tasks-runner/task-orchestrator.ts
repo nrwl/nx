@@ -22,6 +22,7 @@ import { getDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
+import { signalToCode } from '../utils/exit-codes';
 import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -86,10 +87,11 @@ export class TaskOrchestrator {
   private groups = [];
 
   private bailed = false;
-  private cleaningUp = false;
 
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
+  private stoppingContinuousTasks = new Set<string>();
+  private continuousTaskExitHandled = new Map<string, Promise<void>>();
 
   private batchTaskResultsStreamed = new Set<string>();
 
@@ -110,6 +112,8 @@ export class TaskOrchestrator {
   ) {}
 
   async init() {
+    this.setupSignalHandlers();
+
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
@@ -803,21 +807,38 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit((code) => {
-        if (this.tuiEnabled && !this.completedTasks[task.id]) {
-          this.options.lifeCycle.setTaskStatus(
-            task.id,
-            NativeTaskStatus.Stopped
-          );
-        }
-        this.runningContinuousTasks.delete(task.id);
 
-        // we're not cleaning up, so this is an unexpected exit, fail the task
-        if (!this.cleaningUp) {
-          console.error(
-            `Task "${task.id}" is continuous but exited with code ${code}`
-          );
-          this.complete([{ taskId: task.id, status: 'failure' }]);
+      let resolveExitHandled: () => void;
+      const exitHandled = new Promise<void>((r) => (resolveExitHandled = r));
+      this.continuousTaskExitHandled.set(task.id, exitHandled);
+
+      runningTask.onExit(async (code) => {
+        try {
+          this.runningContinuousTasks.delete(task.id);
+
+          const wasIntentional = this.stoppingContinuousTasks.delete(task.id);
+          if (wasIntentional) {
+            // Intentional kill - success/Stopped
+            await this.complete(
+              [
+                {
+                  task,
+                  status: 'success',
+                  displayStatus: NativeTaskStatus.Stopped,
+                },
+              ],
+              groupId
+            );
+          } else {
+            // Unexpected exit - failure
+            console.error(
+              `Task "${task.id}" is continuous but exited with code ${code}`
+            );
+            await this.complete([{ task, status: 'failure' }], groupId);
+          }
+        } finally {
+          resolveExitHandled();
+          this.continuousTaskExitHandled.delete(task.id);
         }
       });
 
@@ -869,21 +890,39 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit((code) => {
-      // Only set status to Stopped if task hasn't been completed yet
-      if (this.tuiEnabled && !this.completedTasks[task.id]) {
-        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
-      }
-      if (this.runningContinuousTasks.delete(task.id)) {
-        this.runningTasksService.removeRunningTask(task.id);
-      }
+    let resolveExitHandled: () => void;
+    const exitHandled = new Promise<void>((r) => (resolveExitHandled = r));
+    this.continuousTaskExitHandled.set(task.id, exitHandled);
 
-      // we're not cleaning up, so this is an unexpected exit, fail the task
-      if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        this.complete([{ taskId: task.id, status: 'failure' }]);
+    childProcess.onExit(async (code) => {
+      try {
+        if (this.runningContinuousTasks.delete(task.id)) {
+          this.runningTasksService.removeRunningTask(task.id);
+        }
+
+        const wasIntentional = this.stoppingContinuousTasks.delete(task.id);
+        if (wasIntentional) {
+          // Intentional kill - success/Stopped
+          await this.complete(
+            [
+              {
+                task,
+                status: 'success',
+                displayStatus: NativeTaskStatus.Stopped,
+              },
+            ],
+            groupId
+          );
+        } else {
+          // Unexpected exit - failure
+          console.error(
+            `Task "${task.id}" is continuous but exited with code ${code}`
+          );
+          await this.complete([{ task, status: 'failure' }], groupId);
+        }
+      } finally {
+        resolveExitHandled();
+        this.continuousTaskExitHandled.delete(task.id);
       }
     });
     await this.scheduleNextTasksAndReleaseThreads();
@@ -955,43 +994,7 @@ export class TaskOrchestrator {
       );
     }
 
-    const resultsToReportEndTasks: TaskResult[] = [];
-    for (const result of results) {
-      if (!this.batchTaskResultsStreamed.has(result.task.id)) {
-        const code =
-          result.status === 'success' ||
-          result.status === 'local-cache' ||
-          result.status === 'local-cache-kept-existing' ||
-          result.status === 'remote-cache'
-            ? 0
-            : 1;
-        resultsToReportEndTasks.push({
-          code,
-          status: result.status,
-          task: result.task,
-          terminalOutput: result.terminalOutput,
-        });
-      } else {
-        // clean up the task id from the set since we've already verified it
-        this.batchTaskResultsStreamed.delete(result.task.id);
-      }
-    }
-
-    if (resultsToReportEndTasks.length > 0) {
-      await this.options.lifeCycle.endTasks(resultsToReportEndTasks, {
-        groupId,
-      });
-    }
-
-    this.complete(
-      results.map(({ task, status }) => {
-        return {
-          taskId: task.id,
-          status,
-        };
-      })
-    );
-
+    await this.complete(results, groupId);
     await this.scheduleNextTasksAndReleaseThreads();
   }
 
@@ -1003,41 +1006,104 @@ export class TaskOrchestrator {
     this.waitingForTasks.length = 0;
   }
 
-  private complete(
-    taskResults: {
-      taskId: string;
+  private async complete(
+    results: {
+      task: Task;
       status: TaskStatus;
-    }[]
-  ) {
-    this.tasksSchedule.complete(taskResults.map(({ taskId }) => taskId));
-
+      terminalOutput?: string;
+      displayStatus?: NativeTaskStatus;
+    }[],
+    groupId: number
+  ): Promise<void> {
+    await this.completeTasks(results, groupId);
     this.cleanUpUnneededContinuousTasks();
+  }
 
-    for (const { taskId, status } of taskResults) {
-      if (this.completedTasks[taskId] === undefined) {
-        this.completedTasks[taskId] = status;
+  /**
+   * Unified task completion handler for a set of tasks.
+   * - Calls endTasks() lifecycle hook (non-skipped only)
+   * - Marks complete in scheduler
+   * - Sets completedTasks
+   * - Updates TUI status
+   * - Skip dependent tasks
+   */
+  private async completeTasks(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+      displayStatus?: NativeTaskStatus;
+    }[],
+    groupId: number
+  ): Promise<void> {
+    // 1. endTasks FIRST (non-skipped only, and not already streamed for batch)
+    const tasksToReport: TaskResult[] = [];
+    const taskIds: string[] = [];
+    for (const { task, status, terminalOutput } of results) {
+      taskIds.push(task.id);
 
-        if (this.tuiEnabled) {
-          this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+      if (this.completedTasks[task.id] === undefined && status !== 'skipped') {
+        if (!this.batchTaskResultsStreamed.has(task.id)) {
+          tasksToReport.push({
+            task,
+            status,
+            terminalOutput,
+            code:
+              status === 'success' ||
+              status === 'local-cache' ||
+              status === 'local-cache-kept-existing' ||
+              status === 'remote-cache'
+                ? 0
+                : 1,
+          });
+        } else {
+          // clean up the task id from the set since we've already verified it
+          this.batchTaskResultsStreamed.delete(task.id);
         }
+      }
+    }
 
-        if (status === 'failure' || status === 'skipped') {
-          if (this.bail) {
-            // mark the execution as bailed which will stop all further execution
-            // only the tasks that are currently running will finish
-            this.bailed = true;
-          } else {
-            // only mark the packages that depend on the current task as skipped
-            // other tasks will continue to execute
-            this.complete(
-              this.reverseTaskDeps[taskId].map((depTaskId) => ({
-                taskId: depTaskId,
-                status: 'skipped',
-              }))
-            );
+    if (tasksToReport.length > 0) {
+      await this.options.lifeCycle.endTasks(tasksToReport, { groupId });
+    }
+
+    // 2. Mark complete in scheduler
+    this.tasksSchedule.complete(taskIds);
+
+    // 3. Set completedTasks + update TUI + collect dependent tasks to skip
+    const dependentTasksToSkip: { task: Task; status: TaskStatus }[] = [];
+    for (const { task, status, displayStatus } of results) {
+      if (this.completedTasks[task.id] !== undefined) continue;
+
+      this.completedTasks[task.id] = status;
+
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(
+          task.id,
+          displayStatus ?? parseTaskStatus(status)
+        );
+      }
+
+      if (status === 'failure' || status === 'skipped') {
+        if (this.bail) {
+          // mark the execution as bailed which will stop all further execution
+          // only the tasks that are currently running will finish
+          this.bailed = true;
+        } else {
+          // Collect reverse deps to skip
+          for (const depTaskId of this.reverseTaskDeps[task.id]) {
+            const depTask = this.taskGraph.tasks[depTaskId];
+            if (depTask) {
+              dependentTasksToSkip.push({ task: depTask, status: 'skipped' });
+            }
           }
         }
       }
+    }
+
+    // 4. Skip dependent tasks
+    if (dependentTasksToSkip.length > 0) {
+      await this.completeTasks(dependentTasksToSkip, groupId);
     }
   }
 
@@ -1105,22 +1171,21 @@ export class TaskOrchestrator {
   // endregion utils
 
   private async cleanup() {
-    this.cleaningUp = true;
+    // Mark all running continuous tasks for intentional stop
+    for (const taskId of this.runningContinuousTasks.keys()) {
+      this.stoppingContinuousTasks.add(taskId);
+    }
+
+    // Capture exit promises BEFORE killing (map may be modified during kills)
+    const exitPromises = Array.from(this.continuousTaskExitHandled.values());
+
     this.forkedProcessTaskRunner.cleanup();
     await Promise.all([
       ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {
           await t.kill();
-          this.options.lifeCycle.setTaskStatus?.(
-            taskId,
-            NativeTaskStatus.Stopped
-          );
         } catch (e) {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
-        } finally {
-          if (this.runningContinuousTasks.delete(taskId)) {
-            this.runningTasksService.removeRunningTask(taskId);
-          }
         }
       }),
       ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
@@ -1131,6 +1196,21 @@ export class TaskOrchestrator {
         }
       }),
     ]);
+
+    // Wait for all exit handlers to complete their work
+    await Promise.all(exitPromises);
+  }
+
+  private setupSignalHandlers() {
+    process.once('SIGINT', () => {
+      this.cleanup().finally(() => process.exit(signalToCode('SIGINT')));
+    });
+    process.once('SIGTERM', () => {
+      this.cleanup();
+    });
+    process.once('SIGHUP', () => {
+      this.cleanup();
+    });
   }
 
   private cleanUpUnneededContinuousTasks() {
@@ -1153,11 +1233,10 @@ export class TaskOrchestrator {
       if (!neededContinuousTasks.has(taskId)) {
         const runningTask = this.runningContinuousTasks.get(taskId);
         if (runningTask) {
+          // Mark as intentional kill before calling kill()
+          // onExit will see this and use success/Stopped
+          this.stoppingContinuousTasks.add(taskId);
           runningTask.kill();
-          this.options.lifeCycle.setTaskStatus?.(
-            taskId,
-            NativeTaskStatus.Stopped
-          );
         }
       }
     }
