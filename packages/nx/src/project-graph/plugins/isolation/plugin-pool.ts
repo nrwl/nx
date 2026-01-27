@@ -506,17 +506,9 @@ async function startPluginWorker(name: string) {
   worker.unref();
   if (worker.stdout instanceof Socket) {
     worker.stdout.unref();
-  } else {
-    throw new Error(
-      `Expected worker.stdout to be an instance of Socket, but got ${getTypeName(worker.stdout)}`
-    );
   }
   if (worker.stderr instanceof Socket) {
     worker.stderr.unref();
-  } else {
-    throw new Error(
-      `Expected worker.stderr to be an instance of Socket, but got ${getTypeName(worker.stderr)}`
-    );
   }
 
   let attempts = 0;
