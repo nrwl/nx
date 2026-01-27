@@ -44,7 +44,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/flaky-tasks"
+            href="/docs/features/ci-features/flaky-tasks"
             title="Learn more about Flaky Task Retries"
             className="text-sm/6 font-semibold"
           >
@@ -66,7 +66,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/split-e2e-tasks"
+            href="/docs/features/ci-features/split-e2e-tasks"
             title="Learn about Atomizer"
             className="text-sm/6 font-semibold"
           >
@@ -87,7 +87,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/dynamic-agents"
+            href="/docs/features/ci-features/dynamic-agents"
             title="Learn about Nx Agents"
             className="text-sm/6 font-semibold"
           >

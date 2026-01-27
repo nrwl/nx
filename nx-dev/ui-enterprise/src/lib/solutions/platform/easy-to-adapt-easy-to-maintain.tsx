@@ -30,7 +30,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/recipes/set-up"
+            href="/docs/guides/nx-cloud/setup-ci"
             title="Get started with your existing CI provider"
             prefetch={false}
             className="text-sm/6 font-semibold"
