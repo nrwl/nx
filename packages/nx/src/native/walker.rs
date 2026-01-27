@@ -45,6 +45,7 @@ where
 
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
+        .follow_links(true)
         .into_iter()
         .filter_entry(move |entry| {
             let path = entry.path().to_string_lossy();

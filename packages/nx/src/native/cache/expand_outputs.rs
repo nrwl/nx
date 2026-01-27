@@ -239,6 +239,19 @@ mod test {
             .touch()
             .unwrap();
         temp.child("apps/web/.next/content-file").touch().unwrap();
+        temp.child(".next")
+            .child("build-manifest.json")
+            .touch()
+            .unwrap();
+        temp.child(".next")
+            .child("routes-manifest.json")
+            .touch()
+            .unwrap();
+        temp.child(".next/standalone")
+            .child("server.js")
+            .touch()
+            .unwrap();
+        temp.child(".next/server").child("app.js").touch().unwrap();
         temp
     }
     #[test]
@@ -310,6 +323,150 @@ mod test {
                 "test.txt"
             ]
         );
+    }
+
+    #[test]
+    fn should_handle_json_glob_with_directories() {
+        // Reproduces issue #34013: File exists (os error 17) with JSON glob and directory outputs
+        let temp = setup_fs();
+        let entries = vec![
+            ".next/*.json".to_string(),
+            ".next/standalone".to_string(),
+            ".next/server".to_string(),
+        ];
+        let mut result = expand_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+        assert_eq!(
+            result,
+            vec![
+                ".next/build-manifest.json",
+                ".next/routes-manifest.json",
+                ".next/server/app.js",
+                ".next/standalone/server.js"
+            ]
+        );
+    }
+
+    #[test]
+    fn should_handle_json_glob_with_directories_and_copy() {
+        // Full reproduction of issue #34013 including the copy operations
+        use crate::native::cache::file_ops::_copy;
+
+        let temp = setup_fs();
+        let cache_temp = TempDir::new().unwrap();
+
+        // Simulate the cache directory structure
+        let cache_dir = cache_temp.child("cache_hash");
+        cache_dir.create_dir_all().unwrap();
+
+        let entries = vec![
+            ".next/*.json".to_string(),
+            ".next/standalone".to_string(),
+            ".next/server".to_string(),
+        ];
+
+        // Expand outputs from workspace
+        let expanded = expand_outputs(temp.display().to_string(), entries).unwrap();
+
+        // Copy each expanded output to cache (simulating the PUT operation)
+        for output in expanded.iter() {
+            let src = temp.join(output);
+            let dest = cache_dir.join(output);
+
+            if src.exists() {
+                let result = _copy(
+                    src.to_string_lossy().to_string(),
+                    dest.to_string_lossy().to_string(),
+                );
+                assert!(
+                    result.is_ok(),
+                    "Failed to copy {}: {:?}",
+                    output,
+                    result.err()
+                );
+            }
+        }
+
+        // Verify all files were copied correctly
+        assert!(cache_dir.child(".next/build-manifest.json").exists());
+        assert!(cache_dir.child(".next/routes-manifest.json").exists());
+        assert!(cache_dir.child(".next/server/app.js").exists());
+        assert!(cache_dir.child(".next/standalone/server.js").exists());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn should_handle_json_glob_with_symlinked_directories() {
+        // Reproduces issue #34013 with symlinks, which is common in Next.js builds
+        use crate::native::cache::file_ops::_copy;
+        use std::os::unix::fs::symlink;
+
+        enable_logger();
+
+        let temp = TempDir::new().unwrap();
+        let cache_temp = TempDir::new().unwrap();
+
+        // Create the actual target directories outside .next
+        temp.child("real_standalone")
+            .child("server.js")
+            .touch()
+            .unwrap();
+        temp.child("real_server").child("app.js").touch().unwrap();
+
+        // Create JSON files in .next
+        temp.child(".next")
+            .child("build-manifest.json")
+            .touch()
+            .unwrap();
+        temp.child(".next")
+            .child("routes-manifest.json")
+            .touch()
+            .unwrap();
+
+        // Create .next directory structure
+        temp.child(".next").create_dir_all().unwrap();
+
+        // Create symlinks from .next to the real directories
+        symlink(temp.join("real_standalone"), temp.join(".next/standalone")).unwrap();
+        symlink(temp.join("real_server"), temp.join(".next/server")).unwrap();
+
+        // Simulate the cache directory structure
+        let cache_dir = cache_temp.child("cache_hash");
+        cache_dir.create_dir_all().unwrap();
+
+        let entries = vec![
+            ".next/*.json".to_string(),
+            ".next/standalone".to_string(),
+            ".next/server".to_string(),
+        ];
+
+        // Expand outputs from workspace
+        let expanded = expand_outputs(temp.display().to_string(), entries).unwrap();
+
+        // Copy each expanded output to cache (simulating the PUT operation)
+        for output in expanded.iter() {
+            let src = temp.join(output);
+            let dest = cache_dir.join(output);
+
+            if src.exists() {
+                let result = _copy(
+                    src.to_string_lossy().to_string(),
+                    dest.to_string_lossy().to_string(),
+                );
+                assert!(
+                    result.is_ok(),
+                    "Failed to copy {}: {:?}",
+                    output,
+                    result.err()
+                );
+            }
+        }
+
+        // Verify all files were copied correctly
+        assert!(cache_dir.child(".next/build-manifest.json").exists());
+        assert!(cache_dir.child(".next/routes-manifest.json").exists());
+        assert!(cache_dir.child(".next/server/app.js").exists());
+        assert!(cache_dir.child(".next/standalone/server.js").exists());
     }
 
     #[test]
