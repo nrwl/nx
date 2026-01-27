@@ -26,7 +26,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
 
             <p>
               Nx works with your CI provider to compress the entire validation
-              process.{' '}
+              process.
               <TextLink
                 href={
                   '/docs/features/ci-features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
@@ -53,7 +53,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
               >
                 self-healing systems
               </TextLink>{' '}
-              automatically rerun flaky tests and fix code issues—instantly.
+              automatically rerun flaky tests and fix broken PRs—instantly.
             </p>
 
             <p>

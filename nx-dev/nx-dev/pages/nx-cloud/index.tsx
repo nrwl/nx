@@ -8,6 +8,7 @@ import {
   CustomerMetrics,
   Faq,
   Features,
+  FeaturesCallToAction,
   GetStarted,
   NxCloudHero,
   Pricing,
@@ -54,7 +55,7 @@ export function NxCloud(): ReactElement {
           <Features />
         </div>
         <div className="mt-32 lg:mt-56">
-          <CustomerMetrics />
+          <FeaturesCallToAction />
         </div>
         <div className="mt-32 lg:mt-56">
           <GetStarted />
@@ -64,6 +65,9 @@ export function NxCloud(): ReactElement {
         </div>
         <div className="mt-32 lg:mt-56">
           <Pricing />
+        </div>
+        <div className="mt-32 lg:mt-56">
+          <CustomerMetrics />
         </div>
         <div className="mt-32 lg:mt-56">
           <Faq />

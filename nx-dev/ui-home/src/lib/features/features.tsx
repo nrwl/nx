@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 import { FeaturesWhileCoding } from './features-while-coding';
 import { FeaturesWhileRunningCI } from './features-while-running-ci';
 import { FeaturesWhileScalingYourOrganization } from './features-while-scaling-your-organization';
-import { FeaturesCallToAction } from './features-call-to-action';
+import { FeaturesAiVideo } from './features-ai-video';
 
 export function Features(): ReactElement {
   return (
@@ -36,7 +36,7 @@ export function Features(): ReactElement {
         <FeaturesWhileScalingYourOrganization />
       </div>
       <div className="mt-24 lg:mt-24">
-        <FeaturesCallToAction />
+        <FeaturesAiVideo />
       </div>
     </section>
   );

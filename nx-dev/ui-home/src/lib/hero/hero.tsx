@@ -33,9 +33,13 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            <Strong>Get to green PRs in half the time.</Strong> Nx optimizes
-            your builds, scales your CI, and fixes failed PRs. Built for
-            developers and AI agents.
+            <Strong>
+              The Build Intelligence Platform that amplifies both developers and
+              AI agents.
+            </Strong>
+            <br />
+            Nx optimizes your builds, scales your CI, and fixes failed PRs
+            automatically. <br /> Ship in half the time.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink

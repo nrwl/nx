@@ -6,19 +6,15 @@ export function TimeToGreen(): ReactElement {
     <section id="time-to-green" className="scroll-mt-24">
       <div className="mx-auto max-w-4xl px-6 text-center lg:px-8">
         <SectionHeading as="h2" variant="title" id="time-to-green-title">
-          Nx Cloud Cuts{' '}
+          Nx Cloud <br />
           <span className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-            Time To Green
+            Eliminates the CI Bottleneck
           </span>
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-8">
-          Nx Cloud compresses the entire validation process. Its remote cache
-          and automatic task distribution speed up CI, while its self-healing
-          system automatically reruns flaky tests and fixes code issues. <br />
-          <Strong>
-            The result is a short, predictable, and fully automated path to a
-            green PR.
-          </Strong>
+          Time to Green is the window from commit to merge-ready PR. Every
+          minute wasted is a minute not shipping value. <br />
+          <Strong>Nx Cloud compresses it to near-zero.</Strong>
         </SectionHeading>
       </div>
       <div className="mx-auto mt-12 max-w-5xl px-6 lg:px-8">

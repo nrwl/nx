@@ -70,6 +70,12 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               keep everything current without the overhead of managing separate
               repositories.
             </p>
+            <p>
+              Remove technical debt. Nx's code generators and automated
+              migrations keep dependencies current and patterns
+              consistent—eliminating the accumulating friction that slows teams
+              down as codebases grow.
+            </p>
           </div>
           <div className="w-full md:w-1/2">
             <Image
