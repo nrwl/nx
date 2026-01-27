@@ -295,8 +295,17 @@ export function getTuiTerminalSummaryLifeCycle({
     // Collect checklist lines to print after task outputs
     const checklistLines: string[] = [];
 
+    // Sort tasks by status: successful tasks first, failed tasks at the end
+    const sortedTaskIds = [...taskIdsInTheOrderTheyStart].sort((a, b) => {
+      const statusA = tasksToTaskStatus[a];
+      const statusB = tasksToTaskStatus[b];
+      const isFailureA = statusA === 'failure' || !statusA ? 1 : 0;
+      const isFailureB = statusB === 'failure' || !statusB ? 1 : 0;
+      return isFailureA - isFailureB;
+    });
+
     // First pass: Print task outputs and collect checklist lines
-    for (const taskId of taskIdsInTheOrderTheyStart) {
+    for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = tasksToTerminalOutputs[taskId];
       // Task Status is null?

@@ -1201,6 +1201,91 @@ describe('params', () => {
         });
       });
 
+      describe('null', () => {
+        it('should accept null when type is null', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'null',
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: null }, schema)
+          ).not.toThrow();
+        });
+
+        it('should reject null when type is not null', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'string',
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: null }, schema)
+          ).toThrow();
+        });
+
+        it('should accept null when type array includes null', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: ['string', 'null'],
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: null }, schema)
+          ).not.toThrow();
+        });
+
+        it('should accept string when type array includes string and null', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: ['string', 'null'],
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'test' }, schema)
+          ).not.toThrow();
+        });
+
+        it('should reject null when type array does not include null', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: ['string', 'boolean'],
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: null }, schema)
+          ).toThrow();
+        });
+
+        it('should accept null in nested objects when schema allows it', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'object',
+                properties: {
+                  b: {
+                    type: ['string', 'null'],
+                  },
+                },
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: { b: null } }, schema)
+          ).not.toThrow();
+        });
+      });
+
       describe('number', () => {
         it('should handle validating multiples of', () => {
           const schema = {

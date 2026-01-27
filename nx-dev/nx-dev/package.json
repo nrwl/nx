@@ -23,7 +23,6 @@
     "@nx/nx-dev-ui-community": "workspace:*",
     "@nx/nx-dev-ui-company": "workspace:*",
     "@nx/nx-dev-ui-enterprise": "workspace:*",
-    "@nx/nx-dev-ui-conference": "workspace:*",
     "@nx/nx-dev-ui-animations": "workspace:*",
     "@nx/nx-dev-feature-search": "workspace:*",
     "@nx/nx-dev-ui-contact": "workspace:*",

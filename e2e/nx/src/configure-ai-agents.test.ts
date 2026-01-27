@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  listFiles,
   newProject,
   readFile,
   removeFile,
@@ -15,7 +16,9 @@ describe('configure-ai-agents', () => {
     runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
     expect(readFile('CLAUDE.md')).toContain('# General Guidelines');
-    expect(readFile('.mcp.json')).toContain('nx-mcp');
+    // Claude uses plugin from marketplace (MCP is included in plugin)
+    expect(readFile('.claude/settings.json')).toContain('nx-claude-plugins');
+    expect(readFile('.claude/settings.json')).toContain('nx@nx-claude-plugins');
   });
 
   it('should do nothing if agent is already configured', () => {
@@ -28,7 +31,7 @@ describe('configure-ai-agents', () => {
 
   it('should throw with --check if agent rules are out of date', () => {
     updateFile('CLAUDE.md', (content: string) =>
-      content.replace('nx_workspace', 'nx_workspace_outdated')
+      content.replace('nx_docs', 'nx_docs_outdated')
     );
 
     let didThrow = false;
@@ -43,14 +46,14 @@ describe('configure-ai-agents', () => {
   it('should update agent rules if out of date', () => {
     runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
-    expect(readFile('CLAUDE.md')).not.toContain('nx_workspace_outdated');
+    expect(readFile('CLAUDE.md')).not.toContain('nx_docs_outdated');
   });
 
   describe('--check (backward compatible, defaults to outdated mode)', () => {
     beforeAll(() => {
       // Clean up previous tests
       removeFile('CLAUDE.md');
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
     });
 
     it('should exit 0 with no configured agents', () => {
@@ -69,7 +72,7 @@ describe('configure-ai-agents', () => {
   describe('--check=outdated (explicit outdated mode)', () => {
     it('should exit 0 with no configured agents', () => {
       removeFile('CLAUDE.md');
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       const output = runCLI(
         `configure-ai-agents --agents claude --check=outdated`
@@ -79,7 +82,7 @@ describe('configure-ai-agents', () => {
 
     it('should exit 0 with partially configured agents (ignores partial configs)', () => {
       runCLI(`configure-ai-agents --agents claude --no-interactive`);
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       const output = runCLI(
         `configure-ai-agents --agents claude --check=outdated`
@@ -95,7 +98,7 @@ describe('configure-ai-agents', () => {
 
       // Make it outdated
       updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_workspace', 'nx_workspace_outdated')
+        content.replace('nx_docs', 'nx_docs_outdated')
       );
 
       let didThrow = false;
@@ -114,7 +117,7 @@ describe('configure-ai-agents', () => {
   describe('--check=all (comprehensive check)', () => {
     it('should exit 1 on clean workspace with no configured agents', () => {
       removeFile('CLAUDE.md');
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       let didThrow = false;
       try {
@@ -127,7 +130,7 @@ describe('configure-ai-agents', () => {
 
     it('should exit 1 with partially configured agents', () => {
       runCLI(`configure-ai-agents --agents claude --no-interactive`);
-      removeFile('.mcp.json');
+      removeFile('.claude/settings.json');
 
       let didThrow = false;
       try {
@@ -143,7 +146,7 @@ describe('configure-ai-agents', () => {
 
     it('should exit 1 with outdated agents', () => {
       updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_workspace', 'nx_workspace_outdated')
+        content.replace('nx_docs', 'nx_docs_outdated')
       );
 
       let didThrow = false;
@@ -166,6 +169,19 @@ describe('configure-ai-agents', () => {
       expect(output).toContain(
         'All selected AI agents are fully configured and up to date'
       );
+    });
+  });
+
+  describe('opencode agent', () => {
+    it('should create opencode.json and .opencode/skills directory', () => {
+      runCLI(`configure-ai-agents --agents opencode --no-interactive`);
+
+      // Verify opencode.json exists and contains nx-mcp config
+      expect(readFile('opencode.json')).toContain('nx-mcp');
+
+      // Verify .opencode/skills is a directory with content
+      const skillsContents = listFiles('.opencode/skills');
+      expect(skillsContents.length).toBeGreaterThan(0);
     });
   });
 });

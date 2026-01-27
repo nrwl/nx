@@ -4,6 +4,23 @@
 NX_GRADLE_DISABLE = "true"
 NX_MAVEN_DISABLE = "true"
 
+# Edge Functions for tracking LLM/AI tool requests to GA4
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/*.txt"
+
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/**/*.txt"
+
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/*.md"
+
+[[edge_functions]]
+function = "track-asset-requests"
+path = "/**/*.md"
+
 # Permanent redirects (301 by default)
 
 # Storybook docs consolidation

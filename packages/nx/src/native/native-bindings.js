@@ -378,6 +378,7 @@ module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
 module.exports.Watcher = nativeBinding.Watcher
 module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
+module.exports.BatchStatus = nativeBinding.BatchStatus
 module.exports.canInstallNxConsole = nativeBinding.canInstallNxConsole
 module.exports.canInstallNxConsoleForEditor = nativeBinding.canInstallNxConsoleForEditor
 module.exports.closeDbConnection = nativeBinding.closeDbConnection

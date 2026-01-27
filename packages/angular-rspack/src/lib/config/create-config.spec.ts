@@ -381,6 +381,37 @@ describe('createConfig', () => {
       }
     );
 
+    it('should merge user stats options via rspackConfigOverrides', async () => {
+      const config = await createConfig({
+        options: configBase,
+        rspackConfigOverrides: {
+          stats: { all: false, chunks: false },
+        },
+      });
+
+      expect(config[0].stats).toEqual(
+        expect.objectContaining({ all: false, chunks: false })
+      );
+    });
+
+    it('should allow user to fully override stats options', async () => {
+      const customStats = {
+        all: false,
+        assets: true,
+        errors: true,
+        warnings: true,
+      };
+
+      const config = await createConfig({
+        options: configBase,
+        rspackConfigOverrides: {
+          stats: customStats,
+        },
+      });
+
+      expect(config[0].stats).toEqual(expect.objectContaining(customStats));
+    });
+
     it('should successfully merge multiple configurations', () => {
       const config = handleConfigurations(
         {

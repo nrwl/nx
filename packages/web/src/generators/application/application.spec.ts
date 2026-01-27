@@ -579,7 +579,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         addPlugin: true,
       });
-      expect(tree.exists('my-webpack-app/vite.config.mts')).toBeTruthy();
+      expect(tree.exists('my-webpack-app/vitest.config.mts')).toBeTruthy();
       expect(tree.exists('my-webpack-app/jest.config.cts')).toBeFalsy();
       expect(
         readJson(tree, 'my-webpack-app/tsconfig.spec.json').compilerOptions

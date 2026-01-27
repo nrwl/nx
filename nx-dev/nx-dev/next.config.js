@@ -92,7 +92,6 @@ module.exports = withNx({
     '@nx/nx-dev-ui-commands',
     '@nx/nx-dev-ui-community',
     '@nx/nx-dev-ui-company',
-    '@nx/nx-dev-ui-conference',
     '@nx/nx-dev-ui-contact',
     '@nx/nx-dev-ui-courses',
     '@nx/nx-dev-ui-customers',

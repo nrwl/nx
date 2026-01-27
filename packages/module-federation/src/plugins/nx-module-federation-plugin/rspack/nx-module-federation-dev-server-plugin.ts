@@ -46,48 +46,48 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
     if (!isDevServer) {
       return;
     }
-    compiler.hooks.watchRun.tapAsync(
+
+    let initialized = false;
+
+    compiler.hooks.beforeCompile.tapAsync(
       PLUGIN_NAME,
-      async (compiler, callback) => {
-        compiler.hooks.beforeCompile.tapAsync(
-          PLUGIN_NAME,
-          async (params, callback) => {
-            const staticRemotesConfig = await this.setup();
+      async (params, callback) => {
+        if (!initialized) {
+          initialized = true;
+          const staticRemotesConfig = await this.setup();
 
-            logger.info(
-              `NX Starting module federation dev-server for ${pc.bold(
-                this._options.config.name
-              )} with ${Object.keys(staticRemotesConfig).length} remotes`
-            );
+          logger.info(
+            `NX Starting module federation dev-server for ${pc.bold(
+              this._options.config.name
+            )} with ${Object.keys(staticRemotesConfig).length} remotes`
+          );
 
-            const mappedLocationOfRemotes = await buildStaticRemotes(
-              staticRemotesConfig,
-              this._options.devServerConfig,
-              this.nxBin
-            );
-            startStaticRemotesFileServer(
-              staticRemotesConfig,
-              workspaceRoot,
-              this._options.devServerConfig.staticRemotesPort
-            );
-            await startRemoteProxies(
-              staticRemotesConfig,
-              mappedLocationOfRemotes,
-              {
-                pathToCert: this._options.devServerConfig.sslCert,
-                pathToKey: this._options.devServerConfig.sslCert,
-              },
-              false,
-              this._options.devServerConfig.host
-            );
+          const mappedLocationOfRemotes = await buildStaticRemotes(
+            staticRemotesConfig,
+            this._options.devServerConfig,
+            this.nxBin
+          );
+          startStaticRemotesFileServer(
+            staticRemotesConfig,
+            workspaceRoot,
+            this._options.devServerConfig.staticRemotesPort
+          );
+          await startRemoteProxies(
+            staticRemotesConfig,
+            mappedLocationOfRemotes,
+            {
+              pathToCert: this._options.devServerConfig.sslCert,
+              pathToKey: this._options.devServerConfig.sslCert,
+            },
+            false,
+            this._options.devServerConfig.host
+          );
 
-            new DefinePlugin({
-              'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
-            }).apply(compiler);
+          new DefinePlugin({
+            'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
+          }).apply(compiler);
+        }
 
-            callback();
-          }
-        );
         callback();
       }
     );
