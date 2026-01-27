@@ -86,10 +86,15 @@ export default async function handler(
   // Continue to serve the actual file
   const response = await context.next();
 
-  // Add header to indicate edge function processed this request
-  response.headers.set('x-nx-edge-function', 'track-asset-requests');
+  // Netlify Edge Function responses are immutable, so create a new Response
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set('x-nx-edge-function', 'track-asset-requests');
 
-  return response;
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
 }
 
 export const config = {

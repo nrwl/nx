@@ -25,7 +25,8 @@ module.exports = withNx({
   },
   async rewrites() {
     // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
-    const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL;
+    // Remove trailing slash to prevent double slashes in rewrite destinations
+    const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL?.replace(/\/$/, '');
 
     if (!astroDocsUrl) {
       // Skip rewrites if env var is not set
@@ -48,6 +49,10 @@ module.exports = withNx({
       {
         source: '/llms.txt',
         destination: `${astroDocsUrl}/docs/llms.txt`,
+      },
+      {
+        source: '/llms-full.txt',
+        destination: `${astroDocsUrl}/docs/llms-full.txt`,
       },
     ];
 
