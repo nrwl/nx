@@ -102,4 +102,4 @@ For a startup where speed to market is crucial, these improvements translated di
 
 The transformation enabled Payfit to maintain their competitive edge while scaling their engineering organization efficiently.
 
-{% call-to-action title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Looking to transform your teams velocity? Reach out to learn more about Nx Enterprise and see how we can help your team achieve similar results." /%}
+{% call-to-action title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Looking to transform your teams velocity? Reach out to learn more about Nx Enterprise and see how we can help your team achieve similar results." size="lg" /%}

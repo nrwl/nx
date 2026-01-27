@@ -27,9 +27,10 @@ use crate::native::{
 
 use super::action::Action;
 use super::components::countdown_popup::CountdownPopup;
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -62,9 +63,9 @@ pub struct InlineApp {
     core: TuiCore,
 
     // === Inline UI State ===
-    /// The task whose output should be displayed (required for inline mode)
-    /// This is set during mode switching or defaults to the first running task
-    selected_task: Option<String>,
+    /// The item (task or batch) whose output should be displayed (required for inline mode)
+    /// This is set during mode switching or defaults to the first running item
+    selected_item: Option<SelectionEntry>,
     /// Countdown popup for auto-exit (shared with full-screen mode)
     countdown_popup: CountdownPopup,
     /// Whether we're in interactive mode (forwarding keys to PTY)
@@ -116,11 +117,12 @@ impl InlineApp {
             title_text,
             task_graph,
             HashMap::new(), // estimated_task_timings - will be set later via set_estimated_task_timings()
+            None,
         )));
 
         Ok(Self {
             core: TuiCore::new(state),
-            selected_task: None, // Will auto-select first running task on render
+            selected_item: None, // Will auto-select first running item on render
             countdown_popup: CountdownPopup::new(),
             is_interactive: false,
             task_scrollback_lines: HashMap::new(),
@@ -141,11 +143,14 @@ impl InlineApp {
     /// # Arguments
     ///
     /// * `state` - Existing shared TuiState from another app instance
-    /// * `selected_task` - Optional task to display (from full-screen selection)
-    pub fn with_state(state: Arc<Mutex<TuiState>>, selected_task: Option<String>) -> Result<Self> {
+    /// * `selected_item` - Optional item (task or batch) to display (from full-screen selection)
+    pub fn with_state(
+        state: Arc<Mutex<TuiState>>,
+        selected_item: Option<SelectionEntry>,
+    ) -> Result<Self> {
         Ok(Self {
             core: TuiCore::new(state),
-            selected_task, // Use the provided selection from mode switch
+            selected_item, // Use the provided selection from mode switch
             countdown_popup: CountdownPopup::new(),
             is_interactive: false, // Always start non-interactive when switching modes
             // Reset all scrollback tracking when mode switching
@@ -174,9 +179,9 @@ impl InlineApp {
         self.core.quit_immediately();
     }
 
-    /// Get the task ID of the currently running task (if any)
-    fn get_current_running_task(&self) -> Option<String> {
-        self.core.state().lock().get_current_running_task()
+    /// Get the ID of the currently running item (task or batch, if any)
+    fn get_current_running_item(&self) -> Option<String> {
+        self.core.state().lock().get_current_running_item()
     }
 
     /// Internal method to handle Action::EndCommand
@@ -215,38 +220,33 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_all_ptys(&mut self) {
-        let (rows, cols) = self.calculate_pty_dimensions();
-
+    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) -> Option<()> {
+        let (rows, cols) = terminal_dimensions;
         let mut state = self.core.state().lock();
 
-        // Collect task IDs to avoid holding immutable borrow during mutation
-        let task_ids: Vec<String> = state.get_pty_instances().keys().cloned().collect();
+        let task_id = self.selected_item.as_ref()?.id();
+        let pty_arc = state.get_pty_instance(task_id)?;
+        let (current_rows, current_cols) = pty_arc.get_dimensions();
 
-        // Resize each PTY instance by replacing the Arc
-        for task_id in task_ids {
-            if let Some(pty_arc) = state.get_pty_instance(&task_id) {
-                let (current_rows, current_cols) = pty_arc.get_dimensions();
+        // Only resize if dimensions actually changed
+        if current_rows != rows || current_cols != cols {
+            tracing::trace!(
+                "InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                task_id,
+                current_cols,
+                current_rows,
+                cols,
+                rows
+            );
 
-                // Only resize if dimensions actually changed
-                if current_rows != rows || current_cols != cols {
-                    tracing::trace!(
-                        "InlineApp resizing PTY for {} from {}x{} to {}x{}",
-                        task_id,
-                        current_cols,
-                        current_rows,
-                        cols,
-                        rows
-                    );
-
-                    // Clone the PTY instance, resize it, and replace the Arc
-                    let mut pty_clone = pty_arc.as_ref().clone();
-                    if let Ok(()) = pty_clone.resize(rows, cols) {
-                        state.register_pty_instance(task_id, Arc::new(pty_clone));
-                    }
-                }
+            // Clone the PTY instance, resize it, and replace the Arc
+            let mut pty_clone = pty_arc.as_ref().clone();
+            if pty_clone.resize(rows, cols).is_ok() {
+                state.register_pty_instance(task_id.to_string(), Arc::new(pty_clone));
             }
         }
+
+        Some(())
     }
 
     fn dispatch_action(&self, action: Action) {
@@ -279,12 +279,13 @@ impl InlineApp {
 
     /// Handle keyboard input in interactive mode - forward to PTY
     fn handle_interactive_key(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
-        let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
+        let task_id = self
+            .selected_item
+            .as_ref()
+            .map(|s| s.id().to_string())
+            .or_else(|| self.get_current_running_item());
 
-        let Some(task_id) = current_task else {
+        let Some(task_id) = task_id else {
             return Ok(());
         };
 
@@ -468,12 +469,13 @@ impl TuiApp for InlineApp {
                 // Handle 'c' for copying terminal output to clipboard (same as full-screen mode)
                 if matches!(key.code, KeyCode::Char('c')) && key.modifiers.is_empty() {
                     // Get the task to display (selected or first running)
-                    let current_task = self
-                        .selected_task
-                        .clone()
-                        .or_else(|| self.get_current_running_task());
+                    let task_id = self
+                        .selected_item
+                        .as_ref()
+                        .map(|s| s.id().to_string())
+                        .or_else(|| self.get_current_running_item());
 
-                    if let Some(task_id) = current_task {
+                    if let Some(task_id) = task_id {
                         let state = self.core.state().lock();
                         if let Some(pty) = state.get_pty_instance(&task_id) {
                             if let Some(screen) = pty.get_screen() {
@@ -529,8 +531,11 @@ impl TuiApp for InlineApp {
                 // Render scrollback content above the TUI using insert_before
                 self.render_scrollback_above_tui(tui);
 
-                // Draw the inline TUI layout
-                tui.draw(|f| {
+                // Draw the inline TUI layout using draw_without_autoresize
+                // This avoids cursor position queries that conflict with EventStream.
+                // Normal tui.draw() calls autoresize() which queries cursor position,
+                // causing hangs when EventStream is also reading from stdin.
+                tui.draw_without_autoresize(|f| {
                     let area = f.area();
                     self.render_inline_layout(f, area);
                 })
@@ -553,7 +558,12 @@ impl TuiApp for InlineApp {
                 // In inline mode, show hints in the status bar instead of a popup
                 self.show_hint(message);
             }
-            _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
+            Action::Resize(w, h) => {
+                // Resize the PTY to match the new terminal dimensions
+                self.resize_selected_pty((h, w));
+                self.core.state().lock().set_dimensions((w, h));
+            }
+            _ => {} // Ignore other actions
         }
     }
 
@@ -565,38 +575,41 @@ impl TuiApp for InlineApp {
 
     // === Initialization ===
 
-    fn init(&mut self, _area: Size) -> Result<()> {
+    fn init(&mut self, area: Size) -> Result<()> {
         // Resize all existing PTYs to inline dimensions
         // This is critical when switching from full-screen mode
-        self.resize_all_ptys();
+        self.resize_selected_pty((area.height, area.width));
+        self.core
+            .state()
+            .lock()
+            .set_dimensions((area.width, area.height));
         Ok(())
     }
-
-    // === Task Lifecycle (hooks for trait defaults) ===
-
-    fn on_tasks_started(&mut self, tasks: &[Task]) {
-        // Auto-select the first task to display its output
-        if let Some(first_task) = tasks.first() {
-            self.selected_task = Some(first_task.id.clone());
-        }
-    }
-
-    // start_tasks uses trait default which calls on_tasks_started
 
     // === PTY Registration (hooks for trait defaults) ===
 
     fn calculate_pty_dimensions(&self) -> (u16, u16) {
-        // Get terminal size
-        if let Ok((cols, rows)) = crossterm::terminal::size() {
-            // Reserves 2 rows at the bottom - one for the inline chrome,
-            // one for space between terminal output and chrome.
-            let content_height = rows.saturating_sub(2);
-            (content_height, cols)
-        } else {
-            // Fallback to reasonable defaults
-            debug!("Failed to get terminal size, using default PTY dimensions");
-            (20, 80)
-        }
+        let (rows, cols) = self
+            .core
+            .state()
+            .lock()
+            .get_dimensions()
+            .unwrap_or_else(|| {
+                // Get terminal size
+                debug!("Getting terminal size for PTY dimensions inline_app");
+                if let Ok((cols, rows)) = crossterm::terminal::size() {
+                    (rows, cols)
+                } else {
+                    // Fallback to reasonable defaults
+                    debug!("Failed to get terminal size, using default PTY dimensions");
+                    (20, 80)
+                }
+            });
+
+        // Reserves 2 rows at the bottom - one for the inline chrome,
+        // one for space between terminal output and chrome.
+        let content_height = rows.saturating_sub(2);
+        (content_height, cols)
     }
 
     fn on_pty_registered(&mut self, task_id: &str) {
@@ -635,12 +648,19 @@ impl TuiApp for InlineApp {
 
     // === Mode-specific overrides ===
 
-    fn get_selected_task_name(&self) -> Option<String> {
-        // Include fallback to first running task for inline mode
+    fn get_selected_item(&self) -> Option<SelectionEntry> {
+        // Include fallback to first running item for inline mode
         // This ensures can_be_interactive and other trait methods work correctly
-        self.selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task())
+        self.selected_item.clone().or_else(|| {
+            let item_id = self.get_current_running_item()?;
+            let state = self.core.state().lock();
+            // Check if item is a batch or a task
+            if state.get_batch_metadata().contains_key(&item_id) {
+                Some(SelectionEntry::BatchGroup(item_id))
+            } else {
+                Some(SelectionEntry::Task(item_id))
+            }
+        })
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
@@ -661,21 +681,57 @@ impl TuiApp for InlineApp {
                 .iter()
                 .map(|t| &t.task.id)
                 .collect::<Vec<_>>(),
-            self.selected_task
+            self.selected_item
         );
         self.core.end_tasks(&task_results);
-        if task_results
-            .iter()
-            .find(|t| {
-                self.selected_task
-                    .as_ref()
-                    .map_or(false, |id| id == &t.task.id)
-            })
-            .is_some()
-        {
+        if task_results.iter().any(|t| {
+            self.selected_item
+                .as_ref()
+                .is_some_and(|s| s.id() == t.task.id)
+        }) {
             // If the selected task has completed, exit interactive mode
             self.is_interactive = false;
         }
+    }
+
+    fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
+        if batch_id.is_empty() || status == BatchStatus::Running {
+            return;
+        }
+
+        debug!(
+            "Updating batch '{}' status to {:?} in InlineApp",
+            batch_id, status
+        );
+
+        // Get display name from batch_metadata
+        let display_name = {
+            let state = self.core.state().lock();
+            state
+                .get_batch_metadata()
+                .get(&batch_id)
+                .map(|b| {
+                    format!(
+                        "Batch: {} ({})",
+                        b.info.executor_name,
+                        b.info.task_ids.len()
+                    )
+                })
+                .unwrap_or_else(|| format!("Batch: {}", batch_id))
+        };
+
+        // Update batch_metadata with completion status
+        let completion_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0);
+
+        self.core.state().lock().complete_batch_metadata(
+            &batch_id,
+            status,
+            display_name,
+            completion_time,
+        );
     }
 }
 
@@ -691,20 +747,21 @@ impl InlineApp {
 
         // Get the task to display (selected or first running)
         let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
+            .selected_item
+            .as_ref()
+            .map(|s| s.id().to_string())
+            .or_else(|| self.get_current_running_item());
 
-        if let Some(current_task) = current_task {
+        if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
-            if let Some(pty) = state.get_pty_instance(&current_task) {
+            if let Some(pty) = state.get_pty_instance(current_task) {
                 let pty = pty.clone();
                 drop(state);
 
                 // Get last rendered scrollback line count for this task
                 let last_rendered_lines = self
                     .task_last_rendered_scrollback
-                    .get(&current_task)
+                    .get(current_task)
                     .copied()
                     .unwrap_or(0);
 
@@ -803,21 +860,64 @@ impl InlineApp {
         use crate::native::tui::theme::THEME;
         use ratatui::style::Style;
 
-        // Get current task and its status for color coding
-        let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
-
         let (task_name, status, status_style, duration_text) =
-            if let Some(ref task_id) = current_task {
+            if let Some(ref selection) = self.selected_item {
+                let state = self.core.state().lock();
+
+                // Get status based on selection type
+                let (display_name, status, start_time, end_time, estimated_ms) = match selection {
+                    SelectionEntry::Task(task_id) => {
+                        let status = state
+                            .get_task_status(task_id)
+                            .unwrap_or(TaskStatus::NotStarted);
+                        let (start_time, end_time) = state.get_task_timing(task_id);
+                        let estimated_ms = state.estimated_task_timings().get(task_id).copied();
+                        (task_id.clone(), status, start_time, end_time, estimated_ms)
+                    }
+                    SelectionEntry::BatchGroup(batch_id) => {
+                        // Get batch status from batch_metadata
+                        let batch_metadata = state.get_batch_metadata();
+                        if let Some(batch_state) = batch_metadata.get(batch_id) {
+                            let status = match batch_state.final_status {
+                                Some(BatchStatus::Success) => TaskStatus::Success,
+                                Some(BatchStatus::Failure) => TaskStatus::Failure,
+                                Some(BatchStatus::Running) | None => TaskStatus::InProgress,
+                            };
+                            let display_name = batch_state
+                                .display_name
+                                .clone()
+                                .unwrap_or_else(|| batch_id.clone());
+                            (
+                                display_name,
+                                status,
+                                Some(batch_state.start_time),
+                                batch_state.completion_time,
+                                None, // No estimates for batches
+                            )
+                        } else {
+                            // Batch not found in metadata - show as not started
+                            (batch_id.clone(), TaskStatus::NotStarted, None, None, None)
+                        }
+                    }
+                };
+                drop(state);
+
+                let actual_ms = calculate_actual_duration_ms(status, start_time, end_time);
+                let duration = actual_ms
+                    .map(|actual_ms| format_duration_with_estimate(actual_ms, estimated_ms));
+
+                (
+                    display_name,
+                    status,
+                    get_task_status_style(status),
+                    duration,
+                )
+            } else if let Some(ref task_id) = self.get_current_running_item() {
+                // Fallback: no selection but there's a running item
                 let state = self.core.state().lock();
                 let status = state
                     .get_task_status(task_id)
-                    .unwrap_or(TaskStatus::NotStarted);
-
-                // Get timing information and format duration using shared utility
-                // Now both are in milliseconds since epoch
+                    .unwrap_or(TaskStatus::InProgress);
                 let (start_time, end_time) = state.get_task_timing(task_id);
                 let estimated_ms = state.estimated_task_timings().get(task_id).copied();
                 drop(state);
@@ -841,9 +941,6 @@ impl InlineApp {
                 )
             };
 
-        // Get cloud message from state (using trait default implementation)
-        let cloud_message = TuiApp::get_cloud_message(self);
-
         // Get status message (e.g., "Output copied")
         let status_msg = self.status_message.as_ref().map(|(msg, _)| msg.as_str());
 
@@ -865,7 +962,6 @@ impl InlineApp {
         } else {
             0
         };
-        let cloud_size = cloud_message.as_ref().map(|m| m.len() + 1).unwrap_or(0);
 
         // Calculate available width and determine what fits
         let total_width = area.width as usize;
@@ -880,7 +976,6 @@ impl InlineApp {
 
         // Determine if we have space for optional elements
         let available_for_optional = total_width.saturating_sub(required_size);
-        let show_cloud = cloud_size > 0 && available_for_optional >= cloud_size + interactive_size;
         let show_interactive = interactive_size > 0 && available_for_optional >= interactive_size;
 
         // Calculate actual right side size based on what we'll show
@@ -894,7 +989,6 @@ impl InlineApp {
                 } else {
                     0
                 }
-                + if show_cloud { cloud_size } else { 0 }
         };
 
         let chunks = Layout::default()
@@ -924,16 +1018,6 @@ impl InlineApp {
                 Style::default().fg(THEME.info),
             ));
         } else {
-            // Show cloud message only if there's space
-            if show_cloud {
-                if let Some(ref message) = cloud_message {
-                    right_spans.push(Span::styled(
-                        format!("{} ", message),
-                        Style::default().fg(THEME.info),
-                    ));
-                }
-            }
-
             // ESC hint - always shown
             right_spans.push(Span::styled("exit: esc", Style::default().fg(THEME.info)));
             right_spans.push(Span::styled(" ", Style::default().fg(THEME.secondary_fg)));
@@ -967,13 +1051,14 @@ impl InlineApp {
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
         // Show selected task output if available, otherwise first running task
         let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
+            .selected_item
+            .as_ref()
+            .map(|s| s.id().to_string())
+            .or_else(|| self.get_current_running_item());
 
-        if let Some(current_task) = current_task {
+        if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
-            if let Some(pty) = state.get_pty_instance(&current_task) {
+            if let Some(pty) = state.get_pty_instance(current_task) {
                 let pty = pty.clone();
                 drop(state);
                 self.render_inline_task_output(f, area, &pty);
@@ -990,12 +1075,7 @@ impl InlineApp {
         let message = Paragraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Output ")
-                    .border_style(Style::default().fg(THEME.secondary_fg)),
-            );
+            .block(Block::default().borders(Borders::NONE));
 
         f.render_widget(message, area);
     }
@@ -1118,6 +1198,7 @@ mod tests {
             String::from("Existing"),
             existing_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state
@@ -1365,17 +1446,17 @@ mod tests {
     // === Helper Method Tests ===
 
     #[test]
-    fn test_get_current_running_task() {
+    fn test_get_current_running_item() {
         let mut app = create_test_inline_app();
 
         // No running tasks initially
-        assert!(app.get_current_running_task().is_none());
+        assert!(app.get_current_running_item().is_none());
 
         // Start a task
         app.update_task_status(String::from("app1"), TaskStatus::InProgress);
 
         // Should find running task
-        assert_eq!(app.get_current_running_task(), Some(String::from("app1")));
+        assert_eq!(app.get_current_running_item(), Some(String::from("app1")));
     }
 
     #[test]
@@ -1534,6 +1615,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state (simulating mode switch)
@@ -1696,6 +1778,7 @@ mod integration_tests {
             String::from("Shared"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create two apps with same state

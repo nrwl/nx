@@ -135,7 +135,6 @@ export default function Index() {
 exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
@@ -388,7 +387,6 @@ export default function Index() {
 exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {

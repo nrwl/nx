@@ -41,6 +41,11 @@
             "output": "/"
           },
           {
+            "input": "packages/jest",
+            "glob": "PLUGIN.md",
+            "output": "/"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"

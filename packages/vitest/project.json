@@ -41,6 +41,11 @@
             "output": "/"
           },
           {
+            "input": "packages/vitest",
+            "glob": "PLUGIN.md",
+            "output": "/"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"

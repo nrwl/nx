@@ -4,6 +4,7 @@ import type {
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
 import type { BudgetEntry } from '@angular/build/private';
+import type { WatchOptions } from '@rspack/core';
 import { I18nProjectMetadata } from './i18n';
 
 export interface DevServerOptions {
@@ -337,6 +338,11 @@ export interface AngularRspackPluginOptions {
    */
   watch?: boolean;
   /**
+   * Options for the file watcher. Can be used to configure aggregateTimeout,
+   * ignored patterns, and other watcher behavior.
+   */
+  watchOptions?: WatchOptions;
+  /**
    * @deprecated This is a no-op and can be safely removed.
    * The tsconfig file for web workers.
    */
@@ -378,6 +384,11 @@ export interface NormalizedAngularRspackPluginOptions
   supportedBrowsers: string[];
   tsConfig: string;
   vendorChunk: boolean;
+  /**
+   * Adds more details to output logging.
+   */
+  verbose?: boolean;
   watch: boolean;
+  watchOptions?: WatchOptions;
   zoneless: boolean;
 }

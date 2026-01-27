@@ -46,6 +46,8 @@
               "typescript",
               "@swc/core", // Installed to workspace and only used in swc() plugin
               "postcss",
+              "postcss-modules", // Dynamically loaded in postcss plugin
+              "source-map-js", // Used for types only
               "@rollup/plugin-typescript"
             ]
           }

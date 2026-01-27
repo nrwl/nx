@@ -12,19 +12,29 @@ const PLUGIN_NAME = 'AngularRspackWatchFilesLogsPlugin';
 
 export class WatchFilesLogsPlugin implements RspackPluginInstance {
   apply(compiler: Compiler) {
+    let currentModifiedFiles: ReadonlySet<string> | undefined;
+    let currentRemovedFiles: ReadonlySet<string> | undefined;
+
+    // Register compilation hook once - logs modified/removed files
+    compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
+      const logger = compilation.getLogger(PLUGIN_NAME);
+      if (currentModifiedFiles?.size) {
+        logger.log(
+          `Modified files:\n${[...currentModifiedFiles].join('\n')}\n`
+        );
+      }
+
+      if (currentRemovedFiles?.size) {
+        logger.log(`Removed files:\n${[...currentRemovedFiles].join('\n')}\n`);
+      }
+    });
+
+    // Update shared state on each watch cycle
     compiler.hooks.watchRun.tap(
       PLUGIN_NAME,
       ({ modifiedFiles, removedFiles }) => {
-        compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
-          const logger = compilation.getLogger(PLUGIN_NAME);
-          if (modifiedFiles?.size) {
-            logger.log(`Modified files:\n${[...modifiedFiles].join('\n')}\n`);
-          }
-
-          if (removedFiles?.size) {
-            logger.log(`Removed files:\n${[...removedFiles].join('\n')}\n`);
-          }
-        });
+        currentModifiedFiles = modifiedFiles;
+        currentRemovedFiles = removedFiles;
       }
     );
   }
