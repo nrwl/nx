@@ -420,12 +420,14 @@ export async function getReportData(): Promise<ReportData> {
     }
   }
 
-  let cache = dbCacheEnabled()
-    ? {
-        max: resolveMaxCacheSize(nxJson),
-        used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
-      }
-    : null;
+  let cache = null;
+  if (dbCacheEnabled()) {
+    const cacheInstance = new DbCache({ nxCloudRemoteCache: null });
+    cache = {
+      max: resolveMaxCacheSize(nxJson),
+      used: await cacheInstance.getUsedCacheSpace(),
+    };
+  }
 
   return {
     pm,

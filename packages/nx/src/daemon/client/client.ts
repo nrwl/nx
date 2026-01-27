@@ -16,7 +16,13 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  HashedTask,
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -105,6 +111,33 @@ import {
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
 } from '../message-types/task-history';
+import {
+  HandleRecordTaskDetailsMessage,
+  RECORD_TASK_DETAILS,
+} from '../message-types/task-details';
+import {
+  HandleGetRunningTasksMessage,
+  HandleAddRunningTaskMessage,
+  HandleRemoveRunningTaskMessage,
+  GET_RUNNING_TASKS,
+  ADD_RUNNING_TASK,
+  REMOVE_RUNNING_TASK,
+} from '../message-types/running-tasks';
+import {
+  CACHE_GET,
+  CACHE_PUT,
+  CACHE_REMOVE_OLD_RECORDS,
+  CACHE_APPLY_REMOTE_RESULTS,
+  CACHE_GET_SIZE,
+  CACHE_CHECK_FS_IN_SYNC,
+  type HandleCacheGetMessage,
+  type HandleCachePutMessage,
+  type HandleCacheRemoveOldRecordsMessage,
+  type HandleCacheApplyRemoteResultsMessage,
+  type HandleCacheGetSizeMessage,
+  type HandleCacheCheckFsInSyncMessage,
+} from '../message-types/cache';
+import type { CachedResult as NativeCacheResult } from '../../native';
 import {
   type HandleUpdateWorkspaceContextMessage,
   UPDATE_WORKSPACE_CONTEXT,
@@ -888,6 +921,103 @@ export class DaemonClient {
       taskRuns,
     };
     return this.sendToDaemonViaQueue(message);
+  }
+
+  recordTaskDetails(taskDetails: HashedTask[]): Promise<void> {
+    const message: HandleRecordTaskDetailsMessage = {
+      type: RECORD_TASK_DETAILS,
+      taskDetails,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getRunningTasks(ids: string[]): Promise<string[]> {
+    const message: HandleGetRunningTasksMessage = {
+      type: GET_RUNNING_TASKS,
+      ids,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  addRunningTask(taskId: string): Promise<void> {
+    const message: HandleAddRunningTaskMessage = {
+      type: ADD_RUNNING_TASK,
+      taskId,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  removeRunningTask(taskId: string): Promise<void> {
+    const message: HandleRemoveRunningTaskMessage = {
+      type: REMOVE_RUNNING_TASK,
+      taskId,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheGet(hash: string): Promise<NativeCacheResult | null> {
+    const message: HandleCacheGetMessage = {
+      type: CACHE_GET,
+      hash,
+    };
+    return this.sendToDaemonViaQueue(message).then(
+      (r: { result: NativeCacheResult | null }) => r.result
+    );
+  }
+
+  cachePut(
+    hash: string,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ): Promise<string[]> {
+    const message: HandleCachePutMessage = {
+      type: CACHE_PUT,
+      hash,
+      terminalOutput,
+      outputs,
+      code,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheRemoveOldRecords(): Promise<void> {
+    const message: HandleCacheRemoveOldRecordsMessage = {
+      type: CACHE_REMOVE_OLD_RECORDS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheApplyRemoteResults(
+    hash: string,
+    result: NativeCacheResult,
+    outputs: string[]
+  ): Promise<void> {
+    const message: HandleCacheApplyRemoteResultsMessage = {
+      type: CACHE_APPLY_REMOTE_RESULTS,
+      hash,
+      result,
+      outputs,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheGetSize(): Promise<number> {
+    const message: HandleCacheGetSizeMessage = {
+      type: CACHE_GET_SIZE,
+    };
+    return this.sendToDaemonViaQueue(message).then(
+      (r: { size: number }) => r.size
+    );
+  }
+
+  cacheCheckFsInSync(): Promise<boolean> {
+    const message: HandleCacheCheckFsInSyncMessage = {
+      type: CACHE_CHECK_FS_IN_SYNC,
+    };
+    return this.sendToDaemonViaQueue(message).then(
+      (r: { inSync: boolean }) => r.inSync
+    );
   }
 
   getSyncGeneratorChanges(

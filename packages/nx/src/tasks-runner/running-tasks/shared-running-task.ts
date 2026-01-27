@@ -1,5 +1,5 @@
+import { RunningTasksService } from '../../utils/running-tasks';
 import { RunningTask } from './running-task';
-import { RunningTasksService } from '../../native';
 
 export class SharedRunningTask implements RunningTask {
   private exitCallbacks: ((code: number) => void)[] = [];
@@ -31,6 +31,12 @@ export class SharedRunningTask implements RunningTask {
     // wait for the running task to finish
     do {
       await new Promise((resolve) => setTimeout(resolve, 100));
-    } while (this.runningTasksService.getRunningTasks([taskId]).length);
+      const runningTasks = await this.runningTasksService.getRunningTasks([
+        taskId,
+      ]);
+      if (!runningTasks.length) {
+        break;
+      }
+    } while (true);
   }
 }

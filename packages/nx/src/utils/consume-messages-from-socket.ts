@@ -41,9 +41,10 @@ export function isJsonMessage(message: string): boolean {
   return (
     // json objects
     ['[', '{'].some((prefix) => message.startsWith(prefix)) ||
-    // booleans
+    // booleans and null
     message === 'true' ||
     message === 'false' ||
+    message === 'null' ||
     // strings
     (message.startsWith('"') && message.endsWith('"')) ||
     // numbers
