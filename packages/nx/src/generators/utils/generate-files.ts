@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
 import * as path from 'path';
-import { isBinaryPath } from '../utils/binary-extensions';
-
-import { logger, type Tree } from 'nx/src/devkit-exports';
+import { isBinaryPath } from '../../utils/binary-extensions';
+import { Tree } from '../tree';
+import { logger } from '../../utils/logger';
 
 /**
  * Specify what should be done when a file is generated but already exists on the system
@@ -23,7 +23,6 @@ export interface GenerateFilesOptions {
   overwriteStrategy?: OverwriteStrategy;
 }
 
-// TODO(v24): use the version from nx/src/generators/utils
 /**
  * Generates a folder of files based on provided templates.
  *

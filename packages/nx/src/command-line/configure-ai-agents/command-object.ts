@@ -20,7 +20,7 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
         type: 'array',
         string: true,
         description: 'List of AI agents to set up.',
-        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini'],
+        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini', 'opencode'],
       })
       .option('interactive', {
         type: 'boolean',

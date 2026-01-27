@@ -3658,6 +3658,9 @@ importers:
       dotenv-expand:
         specifier: ~11.0.6
         version: 11.0.7
+      ejs:
+        specifier: ^3.1.7
+        version: 3.1.10
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
