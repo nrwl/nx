@@ -52,8 +52,6 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
-  PackageManager,
-  PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
@@ -1540,15 +1538,13 @@ function showConnectToCloudMessage() {
   }
 }
 
-function runInstall(nxWorkspaceRoot?: string) {
-  let packageManager: PackageManager;
-  let pmCommands: PackageManagerCommands;
-  if (nxWorkspaceRoot) {
-    packageManager = detectPackageManager(nxWorkspaceRoot);
-    pmCommands = getPackageManagerCommand(packageManager, nxWorkspaceRoot);
-  } else {
-    pmCommands = getPackageManagerCommand();
-  }
+function runInstall(
+  nxWorkspaceRoot?: string,
+  phase: 'pre-migration' | 'post-migration' = 'pre-migration'
+) {
+  const cwd = nxWorkspaceRoot ?? process.cwd();
+  const packageManager = detectPackageManager(cwd);
+  const pmCommands = getPackageManagerCommand(packageManager, cwd);
 
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
@@ -1556,11 +1552,79 @@ function runInstall(nxWorkspaceRoot?: string) {
   output.log({
     title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
-  execSync(installCommand, {
-    stdio: [0, 1, 2],
-    windowsHide: false,
-    cwd: nxWorkspaceRoot ?? process.cwd(),
-  });
+
+  try {
+    execSync(installCommand, {
+      // For npm, capture stderr to detect peer dependency errors
+      stdio:
+        packageManager === 'npm' ? ['inherit', 'inherit', 'pipe'] : 'inherit',
+      windowsHide: false,
+      cwd,
+    });
+  } catch (e) {
+    if (packageManager === 'npm') {
+      const stderr = e.stderr?.toString().trim() || '';
+      if (isNpmPeerDepsError(stderr)) {
+        logNpmPeerDepsError(phase, stderr || e.message);
+        // Exit immediately to ensure the error message is the last thing displayed to the user
+        process.exit(1);
+      }
+      console.error(stderr);
+    }
+    throw e;
+  }
+}
+
+function isNpmPeerDepsError(stderr: string): boolean {
+  const lowerStderr = stderr.toLowerCase();
+  return (
+    lowerStderr.includes('eresolve') ||
+    lowerStderr.includes('unable to resolve dependency tree') ||
+    lowerStderr.includes('could not resolve dependency') ||
+    lowerStderr.includes('conflicting peer dependency')
+  );
+}
+
+function logNpmPeerDepsError(
+  phase: 'pre-migration' | 'post-migration',
+  error: string
+): void {
+  const peerDepsResolutionSteps = [
+    'Recommended approaches (in order of preference):',
+    '',
+    '1. Use "overrides" in package.json to force compatible versions across the dependency tree and run: npm install',
+    '   (see https://docs.npmjs.com/cli/configuring-npm/package-json#overrides)',
+    '2. Run: npm install --legacy-peer-deps',
+    '   (bypasses peer dependency resolution; use with caution)',
+    '3. Run: npm install --force',
+    '   (last resort; may produce broken installs)',
+  ];
+
+  if (phase === 'pre-migration') {
+    output.error({
+      title: 'Installation failed due to peer dependency conflicts',
+      bodyLines: [error],
+    });
+    output.error({
+      title: 'You need to resolve the peer dependency conflicts',
+      bodyLines: [
+        ...peerDepsResolutionSteps,
+        '',
+        'After resolving the peer dependency conflicts, run the migrations with:',
+        '   NX_MIGRATE_SKIP_INSTALL=true nx migrate --run-migrations',
+      ],
+    });
+  } else {
+    output.error({
+      title: 'Installation failed due to peer dependency conflicts',
+      bodyLines: [error],
+    });
+    output.error({
+      title:
+        'Migrations have completed, but installing updated dependencies failed',
+      bodyLines: peerDepsResolutionSteps,
+    });
+  }
 }
 
 export async function executeMigrations(
@@ -1638,7 +1702,7 @@ class ChangedDepInstaller {
   public installDepsIfChanged() {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
-      runInstall(this.root);
+      runInstall(this.root, 'post-migration');
     }
     this.initialDeps = currentDeps;
   }
@@ -1882,37 +1946,39 @@ export async function migrate(
 }
 
 export async function runMigration() {
-  const runLocalMigrate = () => {
-    runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
-      stdio: ['inherit', 'inherit', 'inherit'],
-    });
-  };
-  if (
-    process.env.NX_USE_LOCAL !== 'true' &&
-    process.env.NX_MIGRATE_USE_LOCAL === undefined
-  ) {
-    const p = await nxCliPath();
-    if (p === null) {
-      runLocalMigrate();
-    } else {
-      // ensure local registry from process is not interfering with the install
-      // when we start the process from temp folder the local registry would override the custom registry
-      if (
-        process.env.npm_config_registry &&
-        process.env.npm_config_registry.match(
-          /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/
-        )
-      ) {
-        delete process.env.npm_config_registry;
-      }
-      execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
+  return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
+    const runLocalMigrate = () => {
+      runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
-        windowsHide: false,
       });
+    };
+    if (
+      process.env.NX_USE_LOCAL !== 'true' &&
+      process.env.NX_MIGRATE_USE_LOCAL === undefined
+    ) {
+      const p = await nxCliPath();
+      if (p === null) {
+        runLocalMigrate();
+      } else {
+        // ensure local registry from process is not interfering with the install
+        // when we start the process from temp folder the local registry would override the custom registry
+        if (
+          process.env.npm_config_registry &&
+          process.env.npm_config_registry.match(
+            /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/
+          )
+        ) {
+          delete process.env.npm_config_registry;
+        }
+        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+          windowsHide: false,
+        });
+      }
+    } else {
+      runLocalMigrate();
     }
-  } else {
-    runLocalMigrate();
-  }
+  });
 }
 
 export function readMigrationCollection(packageName: string, root: string) {
