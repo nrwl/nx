@@ -18,11 +18,26 @@
  */
 
 import { connect, Server, Socket } from 'net';
+import { unlinkSync } from 'fs';
 import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
+import { isWindows } from '../daemon/socket-utils';
+
+/**
+ * Remove a stale socket file if it exists.
+ * This handles cases where a previous process with the same PID
+ * left behind a socket file (e.g., due to PID recycling in containers).
+ */
+function cleanupSocketFile(path: string): void {
+  if (!isWindows) {
+    try {
+      unlinkSync(path);
+    } catch {}
+  }
+}
 
 export interface PseudoIPCMessage {
   type: 'TO_CHILDREN_FROM_PARENT' | 'TO_PARENT_FROM_CHILDREN' | 'CHILD_READY';
@@ -44,6 +59,8 @@ export class PseudoIPCServer {
 
   init(): Promise<void> {
     return new Promise((res) => {
+      cleanupSocketFile(this.path);
+
       this.server = new Server((socket) => {
         this.sockets.add(socket);
         this.registerChildMessages(socket);

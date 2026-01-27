@@ -10,7 +10,11 @@ import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { getProcessMetricsService } from './process-metrics-service';
-import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
+import {
+  createPseudoTerminal as createPseudoTerminalWithShutdown,
+  PseudoTerminal,
+  PseudoTtyProcess,
+} from './pseudo-terminal';
 import { BatchProcess } from './running-tasks/batch-process';
 import {
   NodeChildProcessWithDirectOutput,
@@ -187,7 +191,8 @@ export class ForkedProcessTaskRunner {
   }
 
   private async createPseudoTerminal() {
-    const terminal = new PseudoTerminal(new RustPseudoTerminal());
+    // Use the helper to ensure shutdown callbacks are registered
+    const terminal = createPseudoTerminalWithShutdown(true);
 
     await terminal.init();
 
