@@ -244,15 +244,34 @@ jobs:
               rustup target add armv7-unknown-linux-gnueabihf
             build: |
               CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
-          # Android (not needed)
-          # - host: ubuntu-latest
-          #   target: aarch64-linux-android
-          #   build: |
-          #     pnpm nx run-many --target=build-native -- --target=aarch64-linux-android
-          # - host: ubuntu-latest
-          #   target: armv7-linux-androideabi
-          #   build: |
-          #     pnpm nx run-many --target=build-native -- --target=armv7-linux-androideabi
+          # Android ARM64 (for Termux and other Android environments)
+          - host: ubuntu-latest
+            target: aarch64-linux-android
+            setup: |
+              # Install Android NDK
+              wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+              unzip -q android-ndk-r27c-linux.zip
+              export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
+              export NDK_HOME=$ANDROID_NDK_HOME
+
+              # Add Rust Android target
+              rustup target add aarch64-linux-android
+
+              # Set up cargo config for Android cross-compilation
+              mkdir -p ~/.cargo
+              cat >> ~/.cargo/config.toml << 'CARGO_EOF'
+              [target.aarch64-linux-android]
+              ar = "android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+              linker = "android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+              CARGO_EOF
+            build: |
+              export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
+              export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
+              export CC_aarch64_linux_android=aarch64-linux-android24-clang
+              export CXX_aarch64_linux_android=aarch64-linux-android24-clang++
+              export AR_aarch64_linux_android=llvm-ar
+              export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=aarch64-linux-android24-clang
+              pnpm nx run-many --target=build-native -- --target=aarch64-linux-android
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine

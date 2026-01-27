@@ -133,6 +133,7 @@
               "@nx/nx-linux-arm-gnueabihf",
               "@nx/nx-win32-arm64-msvc",
               "@nx/nx-freebsd-x64",
+              "@nx/nx-android-arm64",
               "@nx/powerpack-license",
               "@nx/key",
               // Powerpack plugin conditionally available dynamically at runtime

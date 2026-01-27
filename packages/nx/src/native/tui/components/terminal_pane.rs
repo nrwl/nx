@@ -1,3 +1,4 @@
+#[cfg(not(target_os = "android"))]
 use arboard::Clipboard;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
@@ -104,6 +105,7 @@ impl TerminalPaneData {
                 }
                 // Handle 'c' for copying when not in interactive mode
                 KeyCode::Char('c') if !self.is_interactive => {
+                    #[cfg(not(target_os = "android"))]
                     let status_message = if let Some(screen) = pty.get_screen() {
                         // Unformatted output (no ANSI escape codes)
                         let output = screen.all_contents();
@@ -120,6 +122,8 @@ impl TerminalPaneData {
                     } else {
                         None
                     };
+                    #[cfg(target_os = "android")]
+                    let status_message: Option<&str> = None; // Clipboard not available on Android
                     // Set status message outside the pty borrow
                     if let Some(msg) = status_message {
                         self.status_message = Some((msg.to_string(), Instant::now()));
