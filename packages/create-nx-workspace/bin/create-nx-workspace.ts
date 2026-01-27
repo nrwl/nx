@@ -35,6 +35,7 @@ import {
   withUseGitHub,
 } from '../src/internal-utils/yargs-options';
 import {
+  getCompletionMessageKeyForVariant,
   getFlowVariant,
   messages,
   recordStat,
@@ -46,6 +47,7 @@ import {
 } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
+import { isGhCliAvailable } from '../src/utils/git/git';
 
 function extractErrorFile(error: Error): string | undefined {
   if (!error.stack) return undefined;
@@ -462,12 +464,30 @@ async function normalizeArgsMiddleware(
       // Template flow - respects CLI arg, otherwise uses detected package manager (from invoking command)
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
-      const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
-      const completionMessageKey =
-        nxCloud === 'skip'
-          ? undefined
-          : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+
+      // Track GH CLI availability for telemetry
+      const ghAvailable = isGhCliAvailable();
+
+      let nxCloud: string;
+      let completionMessageKey: string | undefined;
+      const flowVariant = getFlowVariant();
+
+      if (argv.skipGit === true) {
+        nxCloud = 'skip';
+        completionMessageKey = undefined;
+      } else if (flowVariant === '2') {
+        // Variant 2: Skip cloud prompt, auto-connect
+        // Respect --nxCloud=skip if explicitly provided
+        nxCloud = argv.nxCloud === 'skip' ? 'skip' : 'yes';
+        completionMessageKey =
+          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
+      } else {
+        // Variants 0 & 1: Show cloud prompt (different copy based on variant)
+        nxCloud = await determineNxCloudV2(argv);
+        completionMessageKey =
+          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
+      }
+
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
@@ -476,6 +496,8 @@ async function normalizeArgsMiddleware(
         packageManager,
         defaultBase: 'main',
         aiAgents,
+        ghAvailable,
+        skipCloudConnect: flowVariant === '2',
       });
 
       await recordStat({
@@ -489,6 +511,7 @@ async function normalizeArgsMiddleware(
           preset: '',
           nodeVersion: process.versions.node ?? '',
           packageManager,
+          ghAvailable: ghAvailable ? 'true' : 'false',
         },
       });
     } else {
@@ -535,9 +558,7 @@ async function normalizeArgsMiddleware(
         nxCloud = await determineNxCloudV2(argv);
         useGitHub = nxCloud !== 'skip';
         completionMessageKey =
-          nxCloud === 'skip'
-            ? undefined
-            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
       }
 
       Object.assign(argv, {
