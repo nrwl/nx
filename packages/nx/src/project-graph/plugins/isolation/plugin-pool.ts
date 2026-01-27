@@ -1,5 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import { Socket, connect } from 'net';
+import { Readable, Writable } from 'stream';
 import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
@@ -489,27 +490,13 @@ async function startPluginWorker(name: string) {
   if (stderrMaxListeners !== 0) {
     process.stderr.setMaxListeners(stderrMaxListeners + 1);
   }
-  worker.stdout.pipe(process.stdout);
-  worker.stderr.pipe(process.stderr);
+
+  // Pipe and unref the worker streams. The utility handles cross-runtime compatibility.
+  pipeAndUnrefChildStream(worker.stdout, process.stdout, 'stdout');
+  pipeAndUnrefChildStream(worker.stderr, process.stderr, 'stderr');
 
   // Unref the worker process so it doesn't prevent the parent from exiting.
-  // IMPORTANT: We must also unref the stdout/stderr streams. When streams are
-  // piped, they maintain internal references in Node's event loop. Without
-  // unreferencing them, the parent process will wait for the worker to exit
-  // even after worker.unref() is called. This causes e2e tests to hang on CI
-  // where test frameworks wait for all handles to be released.
-  //
-  // Although TypeScript types these as Readable/Writable, they are actually
-  // net.Socket instances at runtime. Node.js internally creates sockets for
-  // stdio pipes (see lib/internal/child_process.js createSocket function).
-  // Socket.unref() allows the event loop to exit if these are the only handles.
   worker.unref();
-  if (worker.stdout instanceof Socket) {
-    worker.stdout.unref();
-  }
-  if (worker.stderr instanceof Socket) {
-    worker.stderr.unref();
-  }
 
   let attempts = 0;
   return new Promise<{
@@ -560,4 +547,82 @@ function getTypeName(u: unknown): string {
     return `Array<${Array.from(new Set(innerTypes)).join('|')}>`;
   }
   return u.constructor?.name ?? 'unknown object';
+}
+
+/**
+ * Detects if we're running under an alternative JavaScript runtime (Bun or Deno).
+ * Returns the runtime name for helpful error messages, or null if running on Node.js.
+ */
+function detectAlternativeRuntime(): 'bun' | 'deno' | null {
+  // Check for Bun runtime - the Bun global is only available in Bun
+  if ('Bun' in globalThis && typeof (globalThis as any).Bun !== 'undefined') {
+    return 'bun';
+  }
+  // Check for Deno runtime - the Deno global is only available in Deno
+  if ('Deno' in globalThis && typeof (globalThis as any).Deno !== 'undefined') {
+    return 'deno';
+  }
+  return null;
+}
+
+/**
+ * Pipes a child process stream to a destination and attempts to unref it to prevent
+ * the stream from keeping the parent process alive.
+ *
+ * In Node.js, child process stdio streams are actually net.Socket instances when
+ * using 'pipe' stdio option. However, alternative runtimes like Bun and Deno may
+ * use standard Readable/Writable streams instead.
+ *
+ * This function:
+ * 1. Pipes the source to the destination
+ * 2. Attempts to unref the source stream to allow the parent process to exit
+ * 3. Uses duck-typing to check for unref support when not a Socket instance
+ * 4. Emits helpful warnings for alternative runtimes if unref is not available
+ *
+ * @param source - The child process stream (stdout or stderr)
+ * @param destination - The process stream to pipe to (process.stdout or process.stderr)
+ * @param streamName - Name of the stream for warning messages ('stdout' or 'stderr')
+ */
+function pipeAndUnrefChildStream(
+  source: Readable | null,
+  destination: Writable,
+  streamName: 'stdout' | 'stderr'
+): void {
+  if (!source) {
+    return;
+  }
+
+  source.pipe(destination);
+
+  // Node.js creates net.Socket instances for stdio pipes. Use instanceof check first.
+  if (source instanceof Socket) {
+    source.unref();
+    return;
+  }
+
+  // For non-Socket streams (e.g., in Bun/Deno), use duck-typing to check for unref
+  // NOTE: These should also be a Socket, but alternative runtimes may implement differently...
+  // See:
+  // - https://github.com/denoland/deno/issues/31961
+  // - https://github.com/oven-sh/bun/issues/26505
+  if (typeof (source as any).unref === 'function') {
+    (source as any).unref();
+    return;
+  }
+
+  // Stream doesn't support unref - emit a warning with runtime-specific guidance
+  const runtime = detectAlternativeRuntime();
+  if (runtime) {
+    console.warn(
+      `[NX] worker.${streamName} does not support unref() in ${runtime}. ` +
+        `This may cause the process to hang when waiting for plugin workers to exit. ` +
+        `This is a known limitation of ${runtime}'s Node.js compatibility layer.`
+    );
+  } else {
+    console.warn(
+      `[NX] worker.${streamName} is not a net.Socket and does not have an unref() method. ` +
+        `Expected Socket, got ${getTypeName(source)}. ` +
+        `This may cause the process to hang when waiting for plugin workers to exit.`
+    );
+  }
 }
