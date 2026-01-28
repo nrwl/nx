@@ -2081,7 +2081,7 @@ describe('project-configuration-utils', () => {
       ).catch((e) => e);
 
       expect(error.message).toContain(
-        'The {workspaceRoot} token is only valid at the beginning of an option'
+        'The {workspaceRoot} token is only valid at the beginning of a string'
       );
       expect(error.message).toContain('libs/my-app:build');
     });
@@ -2138,7 +2138,7 @@ describe('project-configuration-utils', () => {
       ).catch((e) => e);
 
       expect(error.message).toContain(
-        'The {workspaceRoot} token is only valid at the beginning of an option'
+        'The {workspaceRoot} token is only valid at the beginning of a string'
       );
       expect(error.message).toContain('nx.json[targetDefaults]:test');
     });

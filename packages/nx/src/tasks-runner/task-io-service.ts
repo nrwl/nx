@@ -1,38 +1,37 @@
-import {
-  getProcessMetricsService,
-  MetricsUpdate,
-  GroupInfo,
-  ProcessMetadata,
-} from './process-metrics-service';
-import { Task, TaskGraph } from '../config/task-graph';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
-import { writeFileSync, mkdirSync, rmSync } from 'fs';
-import { dirname } from 'path';
+import { Task, TaskGraph } from '../config/task-graph';
+import { resolveNxTokensInString } from '../project-graph/utils/project-configuration-utils';
+import { workspaceDataDirectory } from '../utils/cache-directory';
 
+/**
+ * Maps taskId -> PID. Note that this only Returns
+ * the PID that the main task process is running under,
+ * not any child processes it may have spawned. To fully
+ * trace the task's processes, you'll need to correlate
+ * spawned processes's PIDs with their parent PID.
+ */
 export type TaskPidUpdate = {
   taskId: string;
-  pids: number[];
-};
-
-export type TaskIOInfo = {
-  /** Expanded file paths that were used as inputs */
-  files: string[];
-  /** Task outputs (glob patterns) */
-  outputs: string[];
+  pid: number;
 };
 
 export type TaskPidCallback = (update: TaskPidUpdate) => void;
 
-export type HashInputsCallback = (
-  taskId: string,
+export type TaskIOInfo = {
+  taskId: string;
   inputs: {
     files: string[];
     runtime: string[];
     environment: string[];
     depOutputs: string[];
     external: string[];
-  }
-) => void;
+  };
+  outputGlobs: string[];
+};
+
+export type TaskIOCallback = (taskIOInfo: TaskIOInfo) => void;
 
 /**
  * Service for tracking task process IDs and providing access to task IO information.
@@ -40,15 +39,13 @@ export type HashInputsCallback = (
  * IO information comes from task.hashInputs (populated during hashing) and task.outputs.
  */
 class TaskIOService {
-  // Accumulated state from metrics updates
-  private groups = new Map<string, GroupInfo>();
-  private processes = new Map<number, ProcessMetadata>();
-  protected taskToPids = new Map<string, Set<number>>();
+  // Used to call subscribers that were late to the party
+  protected taskToPids: Map<string, number> = new Map();
+  protected taskToIO: Map<string, TaskIOInfo> = new Map();
 
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
-  private hashInputsCallbacks: HashInputsCallback[] = [];
-  private metricsSubscribed = false;
+  private taskIOCallbacks: TaskIOCallback[] = [];
 
   // Project graph for output resolution
   private projectGraph: ProjectGraph | null = null;
@@ -73,16 +70,13 @@ class TaskIOService {
    */
   subscribeToTaskPids(callback: TaskPidCallback): void {
     this.pidCallbacks.push(callback);
-    this.ensureMetricsSubscription();
 
     // Emit current state to new subscriber
-    for (const [taskId, pids] of this.taskToPids) {
-      if (pids.size > 0) {
-        callback({
-          taskId,
-          pids: [...pids],
-        });
-      }
+    for (const [taskId, pid] of this.taskToPids) {
+      callback({
+        taskId,
+        pid,
+      });
     }
   }
 
@@ -90,15 +84,15 @@ class TaskIOService {
    * Subscribe to hash inputs as they are computed.
    * Called when a task's hash inputs become available.
    */
-  subscribeToHashInputs(callback: HashInputsCallback): void {
-    this.hashInputsCallbacks.push(callback);
+  subscribeToTaskIO(callback: TaskIOCallback): void {
+    this.taskIOCallbacks.push(callback);
   }
 
   /**
    * Notify subscribers that hash inputs are available for a task.
    * Called from the hasher when inputs are computed.
    */
-  notifyHashInputs(
+  notifyTaskIO(
     taskId: string,
     inputs: {
       files: string[];
@@ -108,9 +102,21 @@ class TaskIOService {
       external: string[];
     }
   ): void {
-    for (const cb of this.hashInputsCallbacks) {
+    if (!this.taskGraph?.tasks?.[taskId]) {
+      // Cannot proceed without task graph to resolve outputs
+      return;
+    }
+
+    const taskIOInfo: TaskIOInfo = {
+      taskId,
+      inputs,
+      outputGlobs: this.getExpandedOutputs(this.taskGraph?.tasks[taskId]),
+    };
+    this.taskToIO.set(taskId, taskIOInfo);
+
+    for (const cb of this.taskIOCallbacks) {
       try {
-        cb(taskId, inputs);
+        cb(taskIOInfo);
       } catch {
         // Silent failure - don't let one callback break others
       }
@@ -120,17 +126,20 @@ class TaskIOService {
   /**
    * Get current PIDs for a task (synchronous).
    */
-  getPidsForTask(taskId: string): number[] {
-    return [...(this.taskToPids.get(taskId) ?? [])];
+  getPidForTask(taskId: string): number | null {
+    return this.taskToPids.get(taskId) ?? null;
   }
 
   /**
    * Get all current task → PIDs mappings.
+   * NOTE: This only returns one PID per task, even if that task
+   * may have spawned multiple processes. To get all PIDs for a task,
+   * you need to correlate spawned processes via their parent PID.
    */
-  getAllTaskPids(): Map<string, number[]> {
-    const result = new Map<string, number[]>();
-    for (const [taskId, pids] of this.taskToPids) {
-      result.set(taskId, [...pids]);
+  getAllTaskPids(): Map<string, number> {
+    const result = new Map<string, number>();
+    for (const [taskId, pid] of this.taskToPids) {
+      result.set(taskId, pid);
     }
     return result;
   }
@@ -140,62 +149,8 @@ class TaskIOService {
    * The task must have been hashed (task.hashInputs must be populated).
    * Returns file inputs and outputs.
    */
-  getTaskIOInfo(task: Task): TaskIOInfo | null {
-    if (!task.hashInputs) {
-      return null;
-    }
-
-    return {
-      files: task.hashInputs.files,
-      outputs: task.outputs ?? [],
-    };
-  }
-
-  /**
-   * Get IO information for multiple tasks.
-   */
-  getMultipleTaskIOInfo(tasks: Task[]): Map<string, TaskIOInfo> {
-    const result = new Map<string, TaskIOInfo>();
-    for (const task of tasks) {
-      const info = this.getTaskIOInfo(task);
-      if (info) {
-        result.set(task.id, info);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Get IO information for all tasks in the task graph.
-   * Returns a map of task ID to TaskIOInfo for tasks that have been hashed.
-   * Tasks without hashInputs are excluded from the result.
-   */
-  getAllTaskGraphIOInfo(): Map<string, TaskIOInfo> {
-    if (!this.taskGraph) {
-      return new Map();
-    }
-
-    return this.getMultipleTaskIOInfo(Object.values(this.taskGraph.tasks));
-  }
-
-  /**
-   * Get expected outputs for all tasks in the task graph.
-   * Unlike getAllTaskGraphIOInfo, this includes all tasks regardless of hash status.
-   * Files will be empty for unhashed tasks.
-   */
-  getAllExpectedTaskIO(): Map<string, TaskIOInfo> {
-    if (!this.taskGraph) {
-      return new Map();
-    }
-
-    const result = new Map<string, TaskIOInfo>();
-    for (const task of Object.values(this.taskGraph.tasks)) {
-      result.set(task.id, {
-        files: task.hashInputs?.files ?? [],
-        outputs: task.outputs ?? [],
-      });
-    }
-    return result;
+  getTaskIOInfo(task: string): TaskIOInfo | null {
+    return this.taskToIO.get(task);
   }
 
   /**
@@ -213,110 +168,19 @@ class TaskIOService {
     }
 
     return task.outputs.map((output) =>
-      output
-        .replace('{projectRoot}', projectNode.data.root)
-        .replace('{workspaceRoot}', '')
+      resolveNxTokensInString(
+        output,
+        this.projectGraph.nodes[task.target.project].data
+      )
     );
   }
 
-  // --- Private methods ---
-
-  protected ensureMetricsSubscription(): void {
-    if (this.metricsSubscribed) return;
-    this.metricsSubscribed = true;
-
-    try {
-      getProcessMetricsService()
-        .subscribe((update) => {
-          this.handleMetricsUpdate(update);
-        })
-        .subscribeToBatchPidRegistration((batchId, taskIds, pid) => {
-          // TODO: Figure out how to handle batches
-        })
-        .subscribeToPidRegistration((taskId, pid) => {
-          let pids = this.taskToPids.get(taskId);
-          if (!pids) {
-            pids = new Set();
-            this.taskToPids.set(taskId, pids);
-          }
-          pids.add(pid);
-          this.notifyPidUpdate({ taskId, pids: [...pids] });
-        });
-    } catch {
-      // Silent failure - PID tracking is optional
-    }
-  }
-
-  private handleMetricsUpdate(update: MetricsUpdate): void {
-    // Merge incremental metadata
-    for (const [id, group] of Object.entries(update.metadata.groups)) {
-      this.groups.set(id, group);
-      this.initTaskPids(group);
-    }
-    for (const [pid, meta] of Object.entries(update.metadata.processes)) {
-      this.processes.set(+pid, meta);
-    }
-
-    const livePids = new Set(update.processes.map((p) => p.pid));
-
-    // Add newly discovered PIDs to each task (preserve existing PIDs)
-    for (const [taskId, existingPids] of this.taskToPids) {
-      const discoveredPids = this.findPidsForTask(taskId, livePids);
-      const newPids = [...discoveredPids].filter((p) => !existingPids.has(p));
-
-      // Merge newly discovered PIDs into existing set (don't replace)
-      for (const pid of newPids) {
-        existingPids.add(pid);
-      }
-
-      if (newPids.length) {
-        this.notifyPidUpdate({
-          taskId,
-          pids: [...existingPids],
-        });
-      }
-    }
-
-    // Cleanup dead processes
-    for (const pid of this.processes.keys()) {
-      if (!livePids.has(pid)) this.processes.delete(pid);
-    }
-  }
-
-  private initTaskPids(group: GroupInfo): void {
-    if (group.groupType === 'Task') {
-      if (!this.taskToPids.has(group.id)) {
-        this.taskToPids.set(group.id, new Set());
-      }
-    } else if (group.groupType === 'Batch' && group.taskIds) {
-      for (const taskId of group.taskIds) {
-        if (!this.taskToPids.has(taskId)) {
-          this.taskToPids.set(taskId, new Set());
-        }
-      }
-    }
-  }
-
-  private findPidsForTask(taskId: string, livePids: Set<number>): Set<number> {
-    const result = new Set<number>();
-    for (const pid of livePids) {
-      const meta = this.processes.get(pid);
-      if (!meta) continue;
-
-      const group = this.groups.get(meta.groupId);
-      if (meta.groupId === taskId) {
-        result.add(pid);
-      } else if (
-        group?.groupType === 'Batch' &&
-        group.taskIds?.includes(taskId)
-      ) {
-        result.add(pid);
-      }
-    }
-    return result;
-  }
-
-  protected notifyPidUpdate(update: TaskPidUpdate): void {
+  /**
+   * Registers a PID to a task and notifies subscribers.
+   * @param update The TaskPidUpdate containing taskId and pid.
+   */
+  notifyPidUpdate(update: TaskPidUpdate): void {
+    this.taskToPids.set(update.taskId, update.pid);
     for (const cb of this.pidCallbacks) {
       try {
         cb(update);
@@ -355,19 +219,19 @@ class DebugTaskIOService extends TaskIOService {
         taskGraph ? 'taskGraph' : 'no taskGraph'
       }`
     );
-    this.subscribeToTaskPids(({ pids, taskId }) => {
-      this.log(`Task ${taskId} PIDs updated: [${pids.join(',')}]`);
+    this.subscribeToTaskPids(({ pid, taskId }) => {
+      this.log(`Task ${taskId} PID updated: [${pid}]`);
     }); // Ensure metrics subscription for debugging
     process.on('exit', () => {
       this.log(
         [
           `Final Task to PIDs mapping: ${JSON.stringify(
             Array.from(this.taskToPids.entries()).reduce(
-              (acc, [taskId, pids]) => {
-                acc[taskId] = [...pids];
+              (acc, [taskId, pid]) => {
+                acc[taskId] = pid;
                 return acc;
               },
-              {} as Record<string, number[]>
+              {} as Record<string, number>
             ),
             null,
             2
@@ -375,9 +239,11 @@ class DebugTaskIOService extends TaskIOService {
           ...(taskGraph
             ? [
                 'Expected task IO:',
-                ...[...this.getAllTaskGraphIOInfo().entries()].map(
+                ...[...this.taskToIO.entries()].map(
                   ([taskId, io]) =>
-                    `Task ${taskId}:\n  Files: [${io.files.slice(0, 5).join(', ')}${io.files.length > 5 ? `, ... (${io.files.length} total)` : ''}]\n  Outputs: [${io.outputs.join(', ')}]`
+                    `Task ${taskId}:
+    Files: [${io.inputs.files?.slice(0, 5).join(', ')}${io.inputs.files?.length > 5 ? `, ... (${io.inputs.files.length} total)` : ''}]
+    Outputs: [${io.outputGlobs.join(', ')}]`
                 ),
               ]
             : []),
@@ -389,29 +255,25 @@ class DebugTaskIOService extends TaskIOService {
 
   override notifyPidUpdate(update: TaskPidUpdate): void {
     this.log(
-      `notifyPidUpdate called for task ${update.taskId} with PIDs [${update.pids.join(',')}]`
+      `notifyPidUpdate called for task ${update.taskId} with PID [${update.pid}]`
     );
     super.notifyPidUpdate(update);
   }
 
-  override ensureMetricsSubscription(): void {
-    super.ensureMetricsSubscription();
-    getProcessMetricsService()
-      .subscribe((update) => {
-        this.log(
-          `Processed MetricsUpdate: ${new Date(
-            update.timestamp
-          ).toLocaleTimeString()}`
-        );
-      })
-      .subscribeToPidRegistration((taskId, pid) => {
-        this.log(`PID registration: taskId=${taskId}, pid=${pid}`);
-      })
-      .subscribeToBatchPidRegistration((batchId, taskIds, pid) => {
-        this.log(
-          `Batch PID registration: batchId=${batchId}, taskIds=[${taskIds.join(',')}], pid=${pid}`
-        );
-      });
+  override notifyTaskIO(
+    taskId: string,
+    inputs: {
+      files: string[];
+      runtime: string[];
+      environment: string[];
+      depOutputs: string[];
+      external: string[];
+    }
+  ): void {
+    this.log(
+      `notifyTaskIO called for task ${taskId} with ${inputs.files.length} file inputs`
+    );
+    super.notifyTaskIO(taskId, inputs);
   }
 }
 
@@ -425,7 +287,9 @@ export function getTaskIOService(): TaskIOService {
   if (!instance) {
     // TODO: Remove debug service option once stable
     instance = process.env.NX_TASK_IO_DEBUG
-      ? new DebugTaskIOService('tmp/task-io-debug.log')
+      ? new DebugTaskIOService(
+          join(workspaceDataDirectory, 'task-io-service-debug.log')
+        )
       : new TaskIOService();
   }
   return instance;

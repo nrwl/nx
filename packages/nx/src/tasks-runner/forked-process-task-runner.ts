@@ -1,24 +1,25 @@
-import { writeFileSync } from 'fs';
 import { fork, Serializable } from 'child_process';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { output } from '../utils/output';
-import { getCliPath, getPrintableCommandArgsForTask } from './utils';
-import { Batch } from './tasks-schedule';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
-import { BatchMessageType } from './batch/batch-messages';
-import { stripIndents } from '../utils/strip-indents';
-import { Task, TaskGraph } from '../config/task-graph';
-import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
-import { signalToCode } from '../utils/exit-codes';
 import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
+import { RustPseudoTerminal } from '../native';
+import { signalToCode } from '../utils/exit-codes';
+import { output } from '../utils/output';
+import { stripIndents } from '../utils/strip-indents';
+import { BatchMessageType } from './batch/batch-messages';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { getProcessMetricsService } from './process-metrics-service';
+import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
+import { BatchProcess } from './running-tasks/batch-process';
 import {
   NodeChildProcessWithDirectOutput,
   NodeChildProcessWithNonDirectOutput,
 } from './running-tasks/node-child-process';
-import { BatchProcess } from './running-tasks/batch-process';
 import { RunningTask } from './running-tasks/running-task';
-import { RustPseudoTerminal } from '../native';
-import { getProcessMetricsService } from './process-metrics-service';
+import { getTaskIOService } from './task-io-service';
+import { Batch } from './tasks-schedule';
+import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -228,6 +229,7 @@ export class ForkedProcessTaskRunner {
     // Register forked process for metrics collection
     const pid = p.getPid();
     if (pid) {
+      getTaskIOService().notifyPidUpdate({ taskId: task.id, pid });
       getProcessMetricsService().registerTaskProcess(task.id, pid);
     }
 
@@ -293,6 +295,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
+        getTaskIOService().notifyPidUpdate({ taskId: task.id, pid: p.pid });
         getProcessMetricsService().registerTaskProcess(task.id, p.pid);
       }
 
@@ -359,6 +362,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
+        getTaskIOService().notifyPidUpdate({ taskId: task.id, pid: p.pid });
         getProcessMetricsService().registerTaskProcess(task.id, p.pid);
       }
 

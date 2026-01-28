@@ -5,6 +5,25 @@ import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 
+// Helper to normalize hash results for deterministic snapshot comparison
+// (parallel processing may produce inputs in arbitrary order)
+function sortHashInputs(hashResults: any[] | any): any[] | any {
+  const sortOne = (result: any) => ({
+    ...result,
+    inputs: {
+      ...result.inputs,
+      files: [...result.inputs.files].sort(),
+      runtime: [...result.inputs.runtime].sort(),
+      environment: [...result.inputs.environment].sort(),
+      depOutputs: [...result.inputs.depOutputs].sort(),
+      external: [...result.inputs.external].sort(),
+    },
+  });
+  return Array.isArray(hashResults)
+    ? hashResults.map(sortOne)
+    : sortOne(hashResults);
+}
+
 describe('native task hasher', () => {
   let tempFs: TempFs;
   const packageJson = {
@@ -147,7 +166,7 @@ describe('native task hasher', () => {
       TESTENV: 'test',
     });
 
-    expect(hash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
         {
           "details": {
@@ -244,7 +263,7 @@ describe('native task hasher', () => {
       { selectivelyHashTsConfig: false }
     ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
 
-    expect(hash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       {
         "details": {
           "AllExternalDependencies": "3244421341483603138",
@@ -345,7 +364,7 @@ describe('native task hasher', () => {
       { selectivelyHashTsConfig: false }
     ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
 
-    expect(hash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       {
         "details": {
           "AllExternalDependencies": "3244421341483603138",
@@ -434,7 +453,7 @@ describe('native task hasher', () => {
       { selectivelyHashTsConfig: false }
     ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {});
 
-    expect(hash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
         {
           "details": {
@@ -564,7 +583,7 @@ describe('native task hasher', () => {
       MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE',
     });
 
-    expect(hash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
         {
           "details": {
@@ -649,7 +668,7 @@ describe('native task hasher', () => {
       { selectivelyHashTsConfig: true }
     ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
 
-    expect(hash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       {
         "details": {
           "AllExternalDependencies": "3244421341483603138",
@@ -742,7 +761,7 @@ describe('native task hasher', () => {
       {}
     );
 
-    expect(taskHash).toMatchInlineSnapshot(`
+    expect(sortHashInputs(taskHash)).toMatchInlineSnapshot(`
       {
         "details": {
           "AllExternalDependencies": "3244421341483603138",
@@ -786,7 +805,7 @@ describe('native task hasher', () => {
       {}
     );
 
-    expect(hashb).toMatchInlineSnapshot(`
+    expect(sortHashInputs(hashb)).toMatchInlineSnapshot(`
       {
         "details": {
           "AllExternalDependencies": "3244421341483603138",
