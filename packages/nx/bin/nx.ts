@@ -21,6 +21,12 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
+import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
+import {
+  flushAnalytics,
+  reportCommandRunEvent,
+  startAnalytics,
+} from '../src/analytics';
 
 async function main() {
   if (
@@ -94,6 +100,14 @@ async function main() {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
+    // Prompt for analytics preference if not set
+    try {
+      await ensureAnalyticsPreferenceSet();
+    } catch {}
+    await startAnalytics();
+
+    reportCommandRunEvent(process.argv[2]);
+
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
       // nx-cloud commands can run without local Nx installation
@@ -111,6 +125,8 @@ async function main() {
         require(localNx);
       }
     }
+
+    await flushAnalytics();
   }
 }
 
