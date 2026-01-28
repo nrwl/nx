@@ -20,7 +20,7 @@ fun testListener(
         val success = getTaskFinishEventSuccess(event, taskPath)
 
         tasks.entries
-            .filter { it.value.taskName == taskPath }
+            .filter { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
             .map { it.key }
             .forEach { nxTaskId ->
               testTaskStatus.computeIfAbsent(nxTaskId) { success }
