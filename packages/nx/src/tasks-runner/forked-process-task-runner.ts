@@ -9,7 +9,6 @@ import { BatchMessageType } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
 import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
-import { signalToCode } from '../utils/exit-codes';
 import { ProjectGraph } from '../config/project-graph';
 import {
   NodeChildProcessWithDirectOutput,
@@ -437,23 +436,6 @@ export class ForkedProcessTaskRunner {
       this.cleanup();
       process.off('message', messageHandler);
     });
-    process.once('SIGINT', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
-    });
-    process.once('SIGTERM', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.once('SIGHUP', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    // Signal handlers removed - TaskOrchestrator owns signal handling
   }
 }
