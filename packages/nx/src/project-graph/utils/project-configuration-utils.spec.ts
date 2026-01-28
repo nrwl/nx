@@ -457,6 +457,297 @@ describe('project-configuration-utils', () => {
       });
     });
 
+    describe('spread syntax in merging', () => {
+      describe('array spread with "..."', () => {
+        it('should spread base array at the position of "..."', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input-1', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            }
+          );
+          expect(result.inputs).toEqual([
+            'new-input-1',
+            'base-input-1',
+            'base-input-2',
+            'new-input-2',
+          ]);
+        });
+
+        it('should spread base array at the beginning when "..." is first', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              outputs: ['...', 'new-output'],
+            },
+            {
+              executor: 'target',
+              outputs: ['base-output-1', 'base-output-2'],
+            }
+          );
+          expect(result.outputs).toEqual([
+            'base-output-1',
+            'base-output-2',
+            'new-output',
+          ]);
+        });
+
+        it('should spread base array at the end when "..." is last', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input', '...'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            }
+          );
+          expect(result.inputs).toEqual([
+            'new-input',
+            'base-input-1',
+            'base-input-2',
+          ]);
+        });
+
+        it('should handle "..." when base array is empty', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input-1', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+              inputs: [],
+            }
+          );
+          expect(result.inputs).toEqual(['new-input-1', 'new-input-2']);
+        });
+
+        it('should spread in dependsOn array', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              dependsOn: ['new-dep', '...'],
+            },
+            {
+              executor: 'target',
+              dependsOn: ['^build', 'test'],
+            }
+          );
+          expect(result.dependsOn).toEqual(['new-dep', '^build', 'test']);
+        });
+
+        it('should spread array option values within options', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                assets: ['new-asset', '...'],
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                assets: ['base-asset-1', 'base-asset-2'],
+              },
+            }
+          );
+          expect(result.options).toEqual({
+            assets: ['new-asset', 'base-asset-1', 'base-asset-2'],
+          });
+        });
+      });
+
+      describe('object spread with "..." in nested options', () => {
+        it('should spread base object properties in nested option objects', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                  '...': '...',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  BASE_VAR: 'base',
+                  EXISTING: 'existing',
+                },
+              },
+            }
+          );
+          expect(result.options?.env).toEqual({
+            NEW_VAR: 'new',
+            BASE_VAR: 'base',
+            EXISTING: 'existing',
+          });
+        });
+
+        it('should allow new values to override spread base values when defined after "..."', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  '...': '...',
+                  sharedKey: 'new-value',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'base-value',
+                  baseOnly: 'base',
+                },
+              },
+            }
+          );
+          expect(result.options?.config).toEqual({
+            sharedKey: 'new-value',
+            baseOnly: 'base',
+          });
+        });
+
+        it('should preserve base values when "..." comes after in object iteration', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'new-value',
+                  '...': '...',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'base-value',
+                  baseOnly: 'base',
+                },
+              },
+            }
+          );
+          // The order of spread determines which value wins
+          // When "..." comes after sharedKey, the base value overwrites
+          expect(result.options?.config).toEqual({
+            sharedKey: 'base-value',
+            baseOnly: 'base',
+          });
+        });
+      });
+
+      describe('spread in configurations', () => {
+        it('should spread arrays in configuration options', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'new.ts', with: 'new.prod.ts' },
+                    '...',
+                  ],
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'base.ts', with: 'base.prod.ts' },
+                  ],
+                },
+              },
+            }
+          );
+          expect(result.configurations?.prod.fileReplacements).toEqual([
+            { replace: 'new.ts', with: 'new.prod.ts' },
+            { replace: 'base.ts', with: 'base.prod.ts' },
+          ]);
+        });
+
+        it('should spread objects in configuration options', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  env: {
+                    NEW_VAR: 'new',
+                    '...': '...',
+                  },
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  env: {
+                    BASE_VAR: 'base',
+                  },
+                },
+              },
+            }
+          );
+          expect(result.configurations?.prod.env).toEqual({
+            NEW_VAR: 'new',
+            BASE_VAR: 'base',
+          });
+        });
+
+        it('should spread arrays in multiple configurations', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                dev: {
+                  scripts: ['dev-script', '...'],
+                },
+                prod: {
+                  scripts: ['...', 'prod-script'],
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                dev: {
+                  scripts: ['base-dev-1', 'base-dev-2'],
+                },
+                prod: {
+                  scripts: ['base-prod'],
+                },
+              },
+            }
+          );
+          expect(result.configurations?.dev.scripts).toEqual([
+            'dev-script',
+            'base-dev-1',
+            'base-dev-2',
+          ]);
+          expect(result.configurations?.prod.scripts).toEqual([
+            'base-prod',
+            'prod-script',
+          ]);
+        });
+      });
+    });
+
     describe('metadata', () => {
       it('should be added', () => {
         const rootMap = new RootMapBuilder()
@@ -2520,6 +2811,383 @@ describe('project-configuration-utils', () => {
       // Command was defined by a core plugin so it should
       // not be replaced by target default
       expect(result.dependsOn).toEqual([]);
+    });
+
+    describe('spread syntax', () => {
+      it('should spread arrays in target default options using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.assets': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  assets: ['project-asset-1', 'project-asset-2'],
+                },
+              },
+            },
+          },
+          {
+            options: {
+              assets: ['default-asset', '...'],
+            },
+          },
+          sourceMap
+        );
+
+        // Target defaults should override non-core plugin values, and spread should work
+        expect(result.options.assets).toEqual([
+          'default-asset',
+          'project-asset-1',
+          'project-asset-2',
+        ]);
+      });
+
+      it('should spread objects in target default options using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.env': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    PROJECT_VAR: 'project-value',
+                  },
+                },
+              },
+            },
+          },
+          {
+            options: {
+              env: {
+                DEFAULT_VAR: 'default-value',
+                '...': '...',
+              },
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.options.env).toEqual({
+          DEFAULT_VAR: 'default-value',
+          PROJECT_VAR: 'project-value',
+        });
+      });
+
+      it('should spread arrays in target default configurations using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.configurations': ['dummy', 'dummy.ts'],
+          'targets.build.configurations.prod': ['dummy', 'dummy.ts'],
+          'targets.build.configurations.prod.fileReplacements': [
+            'dummy',
+            'dummy.ts',
+          ],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                configurations: {
+                  prod: {
+                    fileReplacements: [
+                      { replace: 'env.ts', with: 'env.prod.ts' },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          {
+            configurations: {
+              prod: {
+                fileReplacements: [
+                  { replace: 'default.ts', with: 'default.prod.ts' },
+                  '...',
+                ],
+              },
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.configurations?.prod.fileReplacements).toEqual([
+          { replace: 'default.ts', with: 'default.prod.ts' },
+          { replace: 'env.ts', with: 'env.prod.ts' },
+        ]);
+      });
+
+      it('should spread top-level arrays like inputs using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.inputs': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                inputs: ['default', '{projectRoot}/**/*'],
+              },
+            },
+          },
+          {
+            inputs: ['production', '...', '{workspaceRoot}/.eslintrc.json'],
+          },
+          sourceMap
+        );
+
+        expect(result.inputs).toEqual([
+          'production',
+          'default',
+          '{projectRoot}/**/*',
+          '{workspaceRoot}/.eslintrc.json',
+        ]);
+      });
+    });
+  });
+
+  describe('mergeProjectConfigurationIntoRootMap spread syntax', () => {
+    it('should spread arrays in target options when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                scripts: ['existing-script-1', 'existing-script-2'],
+              },
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            options: {
+              scripts: ['new-script', '...'],
+            },
+          },
+        },
+      });
+
+      expect(rootMap['libs/lib-a'].targets?.build.options.scripts).toEqual([
+        'new-script',
+        'existing-script-1',
+        'existing-script-2',
+      ]);
+    });
+
+    it('should spread objects in target options when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                env: {
+                  EXISTING_VAR: 'existing',
+                  SHARED_VAR: 'existing-shared',
+                },
+              },
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            options: {
+              env: {
+                NEW_VAR: 'new',
+                '...': '...',
+                SHARED_VAR: 'new-shared',
+              },
+            },
+          },
+        },
+      });
+
+      expect(rootMap['libs/lib-a'].targets?.build.options.env).toEqual({
+        NEW_VAR: 'new',
+        EXISTING_VAR: 'existing',
+        SHARED_VAR: 'new-shared',
+      });
+    });
+
+    it('should spread arrays in top-level target properties when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: ['default', '{projectRoot}/**/*'],
+              outputs: ['{projectRoot}/dist'],
+              dependsOn: ['^build'],
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            inputs: ['production', '...'],
+            outputs: ['...', '{projectRoot}/coverage'],
+            dependsOn: ['prebuild', '...'],
+          },
+        },
+      });
+
+      expect(rootMap['libs/lib-a'].targets?.build.inputs).toEqual([
+        'production',
+        'default',
+        '{projectRoot}/**/*',
+      ]);
+      expect(rootMap['libs/lib-a'].targets?.build.outputs).toEqual([
+        '{projectRoot}/dist',
+        '{projectRoot}/coverage',
+      ]);
+      expect(rootMap['libs/lib-a'].targets?.build.dependsOn).toEqual([
+        'prebuild',
+        '^build',
+      ]);
+    });
+
+    it('should spread arrays in configuration options when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'env.ts', with: 'env.prod.ts' },
+                  ],
+                },
+              },
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            configurations: {
+              prod: {
+                fileReplacements: [
+                  { replace: 'config.ts', with: 'config.prod.ts' },
+                  '...',
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      expect(
+        rootMap['libs/lib-a'].targets?.build.configurations?.prod
+          .fileReplacements
+      ).toEqual([
+        { replace: 'config.ts', with: 'config.prod.ts' },
+        { replace: 'env.ts', with: 'env.prod.ts' },
+      ]);
+    });
+
+    it('should handle spread with source maps correctly', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                scripts: ['base-script'],
+              },
+            },
+          },
+        })
+        .getRootMap();
+      const sourceMap: ConfigurationSourceMaps = {
+        'libs/lib-a': {
+          'targets.build': ['base', 'base-plugin'],
+          'targets.build.options': ['base', 'base-plugin'],
+          'targets.build.options.scripts': ['base', 'base-plugin'],
+        },
+      };
+
+      mergeProjectConfigurationIntoRootMap(
+        rootMap,
+        {
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              options: {
+                scripts: ['new-script', '...'],
+              },
+            },
+          },
+        },
+        sourceMap,
+        ['new', 'new-plugin']
+      );
+
+      expect(rootMap['libs/lib-a'].targets?.build.options.scripts).toEqual([
+        'new-script',
+        'base-script',
+      ]);
+      expect(sourceMap['libs/lib-a']['targets.build.options.scripts']).toEqual([
+        'new',
+        'new-plugin',
+      ]);
     });
   });
 });
