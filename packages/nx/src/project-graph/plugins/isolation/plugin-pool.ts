@@ -4,6 +4,8 @@ import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
+import { logger } from '../../../utils/logger';
+
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
@@ -186,6 +188,9 @@ function createWorkerHandler(
           const { name, createNodesPattern, include, exclude } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
+          logger.verbose(
+            `[plugin-pool] loaded plugin "${name}" from worker (pid: ${worker.pid})`
+          );
           onload({
             name,
             include,
@@ -469,6 +474,10 @@ async function startPluginWorker(name: string) {
     }
   );
 
+  logger.verbose(
+    `[plugin-pool] spawned worker for "${name}" (pid: ${worker.pid}, socket: ${ipcPath})`
+  );
+
   // To make debugging easier and allow plugins to communicate things
   // like performance metrics, we pipe the stdout/stderr of the worker
   // to the main process.
@@ -527,6 +536,9 @@ async function startPluginWorker(name: string) {
       if (socket) {
         socket.unref();
         clearInterval(id);
+        logger.verbose(
+          `[plugin-pool] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
+        );
         resolve({
           worker,
           socket,

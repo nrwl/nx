@@ -3,6 +3,7 @@ import { performance } from 'node:perf_hooks';
 performance.mark(`plugin worker ${process.pid} code loading -- start`);
 
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
@@ -17,7 +18,7 @@ type Environment = Pick<
 
 const environment: Environment = process.env as Environment;
 
-if (process.env.NX_PERF_LOGGING === 'true') {
+if (environment.NX_PERF_LOGGING === 'true') {
   require('../../../utils/perf-logging');
 }
 
@@ -44,6 +45,9 @@ let connectErrorTimeout = setErrorTimeout(
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
+  logger.verbose(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) connected`
+  );
   // This handles cases where the host process was killed
   // after the worker connected but before the worker was
   // instructed to load the plugin.
@@ -86,6 +90,9 @@ const server = createServer((socket) => {
               pluginConfiguration,
               pluginPath,
               name
+            );
+            logger.verbose(
+              `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
             );
             return {
               type: 'load-result',
@@ -230,6 +237,9 @@ const server = createServer((socket) => {
 });
 
 server.listen(socketPath);
+logger.verbose(
+  `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
+);
 
 function setErrorTimeout(
   timeoutMs: number,
