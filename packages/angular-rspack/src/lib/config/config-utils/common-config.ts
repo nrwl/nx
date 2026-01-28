@@ -81,9 +81,18 @@ export async function getCommonConfig(
       tsConfig: {
         configFile: normalizedOptions.tsConfig,
       },
-      ...(i18n.shouldInline && normalizedOptions.aot
-        ? { alias: { '@angular/localize/init': false } }
-        : {}),
+      alias: {
+        ...(i18n.shouldInline && normalizedOptions.aot
+          ? { '@angular/localize/init': false }
+          : {}),
+        ...(normalizedOptions.fileReplacements?.reduce(
+          (aliases, replacement) => ({
+            ...aliases,
+            [replacement.replace]: replacement.with,
+          }),
+          {}
+        ) ?? {}),
+      },
     },
     resolveLoader: {
       symlinks: !normalizedOptions.preserveSymlinks,
