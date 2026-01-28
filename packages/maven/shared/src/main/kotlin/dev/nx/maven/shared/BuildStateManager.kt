@@ -1,10 +1,6 @@
-package dev.nx.maven.runner
+package dev.nx.maven.shared
 
 import com.google.gson.Gson
-import dev.nx.maven.shared.BuildState
-import dev.nx.maven.shared.BuildStateApplier
-import dev.nx.maven.shared.BuildStateRecorder
-import org.apache.maven.api.services.Lookup
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.slf4j.LoggerFactory
@@ -12,6 +8,7 @@ import java.io.File
 
 /**
  * Manager for applying and recording build states to/from MavenProject objects.
+ * Works with both Maven 3.x and 4.x since they share the same MavenProject API.
  */
 object BuildStateManager {
     private const val BUILD_STATE_FILE = "nx-build-state.json"
@@ -20,15 +17,16 @@ object BuildStateManager {
     private var projectHelper: MavenProjectHelper? = null
 
     /**
-     * Initialize the BuildStateManager with Maven's lookup container
+     * Initialize the BuildStateManager with MavenProjectHelper.
+     * The caller is responsible for looking up the helper via their DI container
+     * (Lookup for Maven 4, PlexusContainer for Maven 3).
      */
-    fun initialize(lookup: Lookup) {
-        try {
-            projectHelper = lookup.lookup(MavenProjectHelper::class.java)
+    fun initialize(helper: MavenProjectHelper?) {
+        projectHelper = helper
+        if (helper != null) {
             log.debug("MavenProjectHelper initialized successfully")
-        } catch (e: Exception) {
-            log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
-            projectHelper = null
+        } else {
+            log.warn("MavenProjectHelper is null - artifact attachment will be disabled")
         }
     }
 

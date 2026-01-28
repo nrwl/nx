@@ -1,5 +1,6 @@
-package dev.nx.maven.runner
+package dev.nx.maven.adapter.maven4
 
+import dev.nx.maven.shared.BuildStateManager
 import org.apache.maven.DefaultMaven
 import org.apache.maven.api.Session
 import org.apache.maven.api.SessionData
@@ -16,6 +17,7 @@ import org.apache.maven.lifecycle.internal.LifecycleStarter
 import org.apache.maven.model.superpom.SuperPomProvider
 import org.apache.maven.plugin.LegacySupport
 import org.apache.maven.project.MavenProject
+import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.resolver.MavenChainedWorkspaceReader
 import org.apache.maven.resolver.RepositorySystemSessionFactory
 import org.apache.maven.session.scope.internal.SessionScope
@@ -84,8 +86,14 @@ class NxMaven(
 
   init {
     log.debug("NxMaven initialized - will use lifecycleStarter with cached graph")
-    // Initialize BuildStateManager with Maven's lookup container
-    BuildStateManager.initialize(lookup)
+    // Initialize BuildStateManager with MavenProjectHelper
+    val projectHelper = try {
+      lookup.lookup(MavenProjectHelper::class.java)
+    } catch (e: Exception) {
+      log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
+      null
+    }
+    BuildStateManager.initialize(projectHelper)
   }
 
   /**
@@ -105,7 +113,7 @@ class NxMaven(
           mbSession
         )
     } catch (e: Exception) {
-      log.warn("   ⚠️  Failed to initialize ModelBuilderSession: ${e.message}", e)
+      log.warn("   ⚠️ Failed to initialize ModelBuilderSession: ${e.message}", e)
     }
   }
 
@@ -121,7 +129,7 @@ class NxMaven(
       return
     }
 
-    log.debug("🏗️  Setting up project graph cache...")
+    log.debug("🏗️ Setting up project graph cache...")
     val setupStartTime = System.currentTimeMillis()
     request.isRecursive = true
 
@@ -154,7 +162,7 @@ class NxMaven(
       log.debug("   ✅ Graph build completed in ${graphBuildTimeMs}ms")
 
       if (graphResult.hasErrors()) {
-        log.warn("   ⚠️  Graph build had errors, but continuing anyway")
+        log.warn("   ⚠️ Graph build had errors, but continuing anyway")
       }
 
       val graph = graphResult.get()
@@ -174,7 +182,7 @@ class NxMaven(
     } finally {
       sessionScope.exit()
       val totalSetupTimeMs = System.currentTimeMillis() - setupStartTime
-      log.debug("   ⏱️  Total graph cache setup time: ${totalSetupTimeMs}ms")
+      log.debug("   Total graph cache setup time: ${totalSetupTimeMs}ms")
     }
   }
 
@@ -210,7 +218,7 @@ class NxMaven(
     // Use doExecute() with our cached session
     val result = executeWithCachedGraph(request)
     val invokeTimeMs = System.currentTimeMillis() - invokeStartTime
-    log.debug("🏁 NxMaven.execute() invocation #$count completed in ${invokeTimeMs}ms")
+    log.debug("NxMaven.execute() invocation #$count completed in ${invokeTimeMs}ms")
     return result
   }
 
@@ -303,7 +311,7 @@ class NxMaven(
 
       return result
     } catch (e: Exception) {
-      log.error("   ❌ Error executing with cached session: ${e.message}", e)
+      log.error("   Error executing with cached session: ${e.message}", e)
       result.addException(e)
       return result
     } finally {
@@ -341,7 +349,7 @@ class NxMaven(
     }
 
     val startTime = System.currentTimeMillis()
-    log.debug("🔄 Recording build states for ${projectSelectors.size} projects...")
+    log.debug("Recording build states for ${projectSelectors.size} projects...")
 
     var recordedCount = 0
     var failedCount = 0
@@ -357,17 +365,17 @@ class NxMaven(
           BuildStateManager.recordBuildState(project)
           recordedCount++
         } catch (e: Exception) {
-          log.warn("  ✗ Failed to record build state for $selector: ${e.message}")
+          log.warn("  Failed to record build state for $selector: ${e.message}")
           failedCount++
         }
       } else {
-        log.warn("  ✗ Project not found for selector: $selector")
+        log.warn("  Project not found for selector: $selector")
         failedCount++
       }
     }
 
     val duration = System.currentTimeMillis() - startTime
-    log.debug("✅ Build state recording completed: $recordedCount succeeded, $failedCount failed (took ${duration}ms)")
+    log.debug("Build state recording completed: $recordedCount succeeded, $failedCount failed (took ${duration}ms)")
   }
 
 }
