@@ -11,7 +11,7 @@ export function SideBySide({ align, children }: SideBySideProps) {
   return (
     <div
       className={cx(
-        'not-prose grid divide-x divide-solid divide-slate-50 md:grid-cols-2 dark:divide-slate-800',
+        'not-prose grid divide-x divide-solid divide-zinc-50 md:grid-cols-2 dark:divide-zinc-800',
         align === 'top' ? 'items-start' : 'items-center'
       )}
     >

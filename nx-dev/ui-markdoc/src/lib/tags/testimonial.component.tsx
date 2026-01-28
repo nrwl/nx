@@ -35,7 +35,7 @@ export function Testimonial({
     <figure className="not-content not-prose">
       <blockquote className="relative pt-6">
         <svg
-          className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"
+          className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-zinc-200 dark:text-zinc-800"
           width="16"
           height="16"
           viewBox="0 0 16 16"
@@ -50,7 +50,7 @@ export function Testimonial({
         </svg>
 
         <div className="relative z-10">
-          <div className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
+          <div className="text-xl font-medium italic text-zinc-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
             {children}
           </div>
         </div>
@@ -63,7 +63,7 @@ export function Testimonial({
           />
           <div className="flex-auto">
             <div className="text-base font-semibold">{name}</div>
-            <div className="text-xs text-slate-600 dark:text-slate-500">
+            <div className="text-xs text-zinc-600 dark:text-zinc-500">
               {title}
             </div>
           </div>

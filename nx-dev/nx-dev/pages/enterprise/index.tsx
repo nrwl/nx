@@ -36,7 +36,7 @@ export function Enterprise(): ReactElement {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/enterprise/trial',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       title: 'Request a free trial',
       children: 'Request a free trial',

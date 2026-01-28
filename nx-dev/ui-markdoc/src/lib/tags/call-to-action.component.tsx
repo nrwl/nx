@@ -21,30 +21,30 @@ const variantClasses: Record<
   }
 > = {
   default: {
-    container: 'bg-slate-50 dark:bg-slate-800/60',
-    accent: 'bg-blue-500 dark:bg-sky-500',
+    container: 'bg-zinc-50 dark:bg-zinc-800/60',
+    accent: 'bg-blue-500 dark:bg-blue-500',
     hoverText: 'hover:text-white',
     expandBg: 'group-hover:w-full',
   },
   gradient: {
     container:
-      'bg-gradient-to-r from-blue-500 via-sky-400 to-blue-500 dark:from-sky-600 dark:via-blue-500 dark:to-sky-600',
+      'bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 dark:from-blue-600 dark:via-blue-500 dark:to-blue-600',
     accent: 'dark:bg-white bg-blue-500',
-    hoverText: 'hover:text-sky-100 dark:hover:text-slate-900 text-white',
+    hoverText: 'hover:text-blue-100 dark:hover:text-zinc-900 text-white',
     expandBg: 'group-hover:w-full',
   },
   inverted: {
-    container: 'bg-slate-800 dark:bg-slate-100',
-    accent: 'bg-sky-400 dark:bg-blue-600',
+    container: 'bg-zinc-800 dark:bg-zinc-100',
+    accent: 'bg-blue-400 dark:bg-blue-600',
     hoverText:
-      'hover:text-slate-900 dark:hover:text-white text-white dark:text-slate-900',
+      'hover:text-zinc-900 dark:hover:text-white text-white dark:text-zinc-900',
     expandBg: 'group-hover:w-full',
   },
   'gradient-alt': {
     container:
-      'bg-gradient-to-br from-blue-600 via-sky-400 to-blue-300 dark:from-blue-800 dark:via-sky-600 dark:to-blue-400',
-    accent: 'bg-blue-800 dark:bg-sky-500',
-    hoverText: 'hover:text-blue-100 dark:hover:text-sky-200 text-white',
+      'bg-gradient-to-br from-blue-600 via-blue-400 to-blue-300 dark:from-blue-800 dark:via-blue-600 dark:to-blue-400',
+    accent: 'bg-blue-800 dark:bg-blue-500',
+    hoverText: 'hover:text-blue-100 dark:hover:text-blue-200 text-white',
     expandBg: 'group-hover:w-full',
   },
   simple: {

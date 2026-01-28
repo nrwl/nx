@@ -38,7 +38,7 @@ export function Company(): JSX.Element {
               as="h2"
               variant="subtitle"
               id="trusted"
-              className="scroll-mt-24 font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+              className="scroll-mt-24 font-medium tracking-tight text-zinc-950 sm:text-3xl dark:text-white"
             >
               Trusted by leading OSS projects and Fortune 500 companies.
             </SectionHeading>

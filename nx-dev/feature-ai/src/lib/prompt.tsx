@@ -62,7 +62,7 @@ export function Prompt({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 py-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-zinc-300 bg-white px-2 py-2 shadow-lg dark:border-zinc-900 dark:bg-zinc-700"
     >
       <div
         className={cx(
@@ -74,7 +74,7 @@ export function Prompt({
           <Button
             variant="secondary"
             size="small"
-            className={cx('bg-white dark:bg-slate-900')}
+            className={cx('bg-white dark:bg-zinc-900')}
             onClick={handleStopGenerating}
           >
             <StopIcon aria-hidden="true" className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function Prompt({
           <Button
             variant="secondary"
             size="small"
-            className={cx('bg-white dark:bg-slate-900')}
+            className={cx('bg-white dark:bg-zinc-900')}
             onClick={handleNewChat}
           >
             <XMarkIcon aria-hidden="true" className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function Prompt({
           <Button
             variant="secondary"
             size="small"
-            className={cx('bg-white dark:bg-slate-900')}
+            className={cx('bg-white dark:bg-zinc-900')}
             onClick={onRegenerate}
           >
             <ArrowPathIcon aria-hidden="true" className="h-5 w-5" />
@@ -123,14 +123,14 @@ export function Prompt({
           name="query"
           maxLength={500}
           disabled={isGenerating}
-          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-slate-500 focus-within:outline-none focus:placeholder-slate-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-slate-300"
+          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-zinc-500 focus-within:outline-none focus:placeholder-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-zinc-300"
           placeholder="How does caching work?"
           rows={1}
         />
       </div>
       <div className="flex">
         <Button
-          variant="primary"
+          variant="contrast"
           size="small"
           type="submit"
           disabled={isGenerating}

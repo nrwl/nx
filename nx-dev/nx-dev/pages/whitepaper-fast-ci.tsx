@@ -104,7 +104,7 @@ export function WhitePaperFastCI(): ReactElement {
                     </ButtonLink>
                   </div>
 
-                  <figure className="mt-16 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+                  <figure className="mt-16 rounded-lg bg-zinc-100 p-4 pl-8 dark:bg-zinc-800">
                     <blockquote className="text-base/7">
                       <p>
                         “The decision to jump to Nx Cloud was really something
@@ -124,13 +124,13 @@ export function WhitePaperFastCI(): ReactElement {
                         <div className="font-semibold">
                           Justin Schwartzenberger
                         </div>
-                        <div className="text-slate-500">
+                        <div className="text-zinc-500">
                           Principal Software Engineer, SiriusXM
                         </div>
                       </div>
                       <SiriusxmAlternateIcon
                         aria-hidden="true"
-                        className="ml-auto size-10 rounded text-[#0000EB] dark:bg-slate-200"
+                        className="ml-auto size-10 rounded text-[#0000EB] dark:bg-zinc-200"
                       />
                     </figcaption>
                   </figure>
@@ -156,7 +156,7 @@ export function WhitePaperFastCI(): ReactElement {
                     />
                   </div>
                 </section>
-                <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
+                <section className="flex-1 rounded-xl border border-zinc-200 bg-white p-8 md:self-start dark:border-zinc-800/40">
                   <HubspotForm
                     region="na1"
                     portalId="2757427"

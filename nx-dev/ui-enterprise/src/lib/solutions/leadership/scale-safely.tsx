@@ -53,7 +53,7 @@ export function ScaleSafely(): ReactElement {
       className="mx-auto max-w-7xl scroll-mt-32 px-6 lg:px-8"
     >
       <div className="mx-auto max-w-2xl lg:mx-0">
-        <div className="h-8 w-36 border-t-2 border-blue-500 dark:border-sky-500" />
+        <div className="h-8 w-36 border-t-2 border-blue-500 dark:border-blue-500" />
         <SectionHeading as="h2" variant="title" id="scale-safely-title">
           Scale Safely
         </SectionHeading>
@@ -67,7 +67,7 @@ export function ScaleSafely(): ReactElement {
           {features.map((feature) => (
             <div key={feature.name} className="flex flex-col">
               <dt className="text-base/7 font-semibold">
-                <div className="mb-6 flex size-10 items-center justify-center rounded-lg bg-blue-500 dark:bg-sky-500">
+                <div className="mb-6 flex size-10 items-center justify-center rounded-lg bg-blue-500 dark:bg-blue-500">
                   <feature.icon
                     aria-hidden="true"
                     className="size-6 text-white"

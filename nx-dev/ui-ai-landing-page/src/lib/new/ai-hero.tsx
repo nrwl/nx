@@ -27,7 +27,7 @@ export function AiHero(): ReactElement {
             <ButtonLink
               href={'/docs/getting-started/ai-setup'}
               title="Nx AI Integration"
-              variant="primary"
+              variant="contrast"
               size="small"
             >
               Integrate Nx with your Coding Assistant
@@ -36,7 +36,7 @@ export function AiHero(): ReactElement {
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
               href="#while-coding"
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               aria-label="Jump to While Coding section"
             >
               <CodeBracketIcon aria-hidden="true" className="size-4 shrink-0" />
@@ -44,7 +44,7 @@ export function AiHero(): ReactElement {
             </a>
             <a
               href="#while-running-ci"
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               aria-label="Jump to While Running CI section"
             >
               <ServerStackIcon aria-hidden="true" className="size-4 shrink-0" />
@@ -52,7 +52,7 @@ export function AiHero(): ReactElement {
             </a>
             <a
               href="#while-scaling-your-organization"
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               aria-label="Jump to Scaling Your Organization section"
             >
               <UserGroupIcon aria-hidden="true" className="size-4 shrink-0" />

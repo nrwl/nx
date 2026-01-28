@@ -32,7 +32,7 @@ export function TrialNxEnterprise(): ReactElement {
         </div>
         <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
           <section className="flex-1">
-            <h3 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <h3 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
               Much more than a simple trial
             </h3>
 
@@ -121,7 +121,7 @@ export function TrialNxEnterprise(): ReactElement {
               />
             </div>
           </section>
-          <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
+          <section className="flex-1 rounded-xl border border-zinc-200 bg-white p-8 md:self-start dark:border-zinc-800/40">
             <HubspotForm
               formId="e7f05c82-b56c-4a31-8cf8-a53ca8d69c5b"
               calendlyFormId="fd9d9be5-55cd-4b49-874b-ee54deb141f1"
@@ -132,7 +132,7 @@ export function TrialNxEnterprise(): ReactElement {
             />
           </section>
         </div>
-        <figure className="mx-auto mt-16 max-w-4xl rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+        <figure className="mx-auto mt-16 max-w-4xl rounded-lg bg-zinc-100 p-4 pl-8 dark:bg-zinc-800">
           <blockquote className="text-base/7">
             <p>
               “They asked me a few years ago, ‘Do you want to trial Nx
@@ -150,7 +150,7 @@ export function TrialNxEnterprise(): ReactElement {
             />
             <div>
               <div className="font-semibold">Amir Toole</div>
-              <div className="text-slate-500">VP of Engineering, Caseware</div>
+              <div className="text-zinc-500">VP of Engineering, Caseware</div>
             </div>
             <CasewareIcon
               aria-hidden="true"

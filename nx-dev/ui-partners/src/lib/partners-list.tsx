@@ -126,7 +126,7 @@ export function PartnersList(): JSX.Element {
 
   return (
     <section>
-      <div className="col-span-2 border-y border-slate-200 bg-slate-50 px-6 py-8 md:col-span-4 lg:py-16 dark:border-slate-800 dark:bg-slate-900">
+      <div className="col-span-2 border-y border-zinc-200 bg-zinc-50 px-6 py-8 md:col-span-4 lg:py-16 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto max-w-7xl text-center">
           <dl className="grid grid-cols-1 justify-between gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {partners.map((partner) => (

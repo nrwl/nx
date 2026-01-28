@@ -46,7 +46,7 @@ export function PersonalAccess(): ReactElement {
 
             <ul className="mt-4 space-y-4 text-base leading-7">
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <IdentificationIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -55,7 +55,7 @@ export function PersonalAccess(): ReactElement {
                 </span>
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <LinkSlashIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -68,7 +68,7 @@ export function PersonalAccess(): ReactElement {
 
             <div className="mt-4">
               <Link
-                href="/ci/recipes/security/personal-access-tokens"
+                href="/docs/guides/nx-cloud/personal-access-tokens"
                 prefetch={false}
                 title="Learn more about Personal Access Tokens"
                 className="text-sm/6 font-semibold"

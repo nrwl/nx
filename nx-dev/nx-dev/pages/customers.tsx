@@ -18,7 +18,7 @@ export function Customers(): JSX.Element {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/contact/sales',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       target: '_blank',
       title: 'Book a demo',

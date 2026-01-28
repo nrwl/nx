@@ -30,5 +30,16 @@
   "enableAllProjectMcpServers": true,
   "env": {
     "BASH_MAX_TIMEOUT_MS": "1800000"
+  },
+  "extraKnownMarketplaces": {
+    "nx-claude-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "nrwl/nx-ai-agents-config"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "nx@nx-claude-plugins": true
   }
 }

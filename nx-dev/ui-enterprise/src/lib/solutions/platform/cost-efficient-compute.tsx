@@ -14,7 +14,7 @@ const features = [
       <p className="flex-auto">
         Nx runs only{' '}
         <Link
-          href="/ci/features/affected"
+          href="/docs/features/ci-features/affected"
           title="Nx affected tasks"
           prefetch={false}
           className="underline"
@@ -36,7 +36,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/distribute-task-execution"
+            href="/docs/features/ci-features/distribute-task-execution"
             title="Learn about Nx Agents"
             className="text-sm/6 font-semibold"
           >

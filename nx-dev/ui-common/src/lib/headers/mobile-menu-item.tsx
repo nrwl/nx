@@ -20,7 +20,7 @@ export function MobileMenuItem({
     <Tag
       className={cx(
         'items-top relative flex flex-1 gap-2 rounded-lg py-3',
-        item.isHighlight ? 'bg-slate-50 px-2 dark:bg-slate-800/80' : '',
+        item.isHighlight ? 'bg-zinc-50 px-2 dark:bg-zinc-800/80' : '',
         className
       )}
       {...rest}
@@ -33,19 +33,19 @@ export function MobileMenuItem({
           href={item.href}
           title={item.name}
           target={hasExternalLink ? '_blank' : '_self'}
-          className="text-sm font-medium text-slate-900 dark:text-slate-200"
+          className="text-sm font-medium text-zinc-900 dark:text-zinc-200"
           prefetch={false}
         >
           {item.name}
           {item.isNew ? (
-            <span className="float-right inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-sky-400 dark:ring-sky-400/30">
+            <span className="float-right inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30">
               new
             </span>
           ) : null}
           <span className="absolute inset-0" />
         </Link>
         {item.description ? (
-          <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+          <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
             {item.description}
           </p>
         ) : null}

@@ -7,7 +7,7 @@ import { FeaturesCallToAction } from './features-call-to-action';
 
 export function Features(): ReactElement {
   return (
-    <section className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
+    <section className="scroll-mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900">
       <article className="mx-auto max-w-7xl px-6 lg:px-8">
         <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
           Build Products,

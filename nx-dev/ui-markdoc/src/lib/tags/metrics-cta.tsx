@@ -8,13 +8,13 @@ import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 export function MetricsCTA() {
   return (
     <div className="not-prose flex flex-col space-y-3">
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+      <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
         Ready to get started?
       </h3>
       <ButtonLink
         href="/contact/sales"
         title="Reach out"
-        variant="primary"
+        variant="contrast"
         size="default"
         onClick={() =>
           sendCustomEvent(

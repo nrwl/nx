@@ -50,7 +50,7 @@ export function FeatureCard({
   return (
     <div key={id} className="flex flex-col">
       <dt className="text-base/7 font-semibold">
-        <div className="relative mb-6 aspect-video max-h-52 w-full overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-700/60">
+        <div className="relative mb-6 aspect-video max-h-52 w-full overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-700/60">
           <Image
             src={imageUrl}
             alt={`Thumbnail for ${title}`}

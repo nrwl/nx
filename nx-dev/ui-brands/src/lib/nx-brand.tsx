@@ -26,12 +26,12 @@ export function NxBrand() {
               a way that confuses Nx with another brand.
             </SectionDescription>
           </header>
-          <h4 className="mt-4 text-lg leading-8 text-slate-700 sm:text-xl dark:text-slate-300">
+          <h4 className="mt-4 text-lg leading-8 text-zinc-700 sm:text-xl dark:text-zinc-300">
             Spelling
           </h4>
-          <p className="mt-2 text-base text-slate-700 dark:text-slate-400">
+          <p className="mt-2 text-base text-zinc-700 dark:text-zinc-400">
             The preferred written format is Nx. <br /> For social media usage,
-            <span className="mx-1 inline-flex items-center rounded-full bg-slate-100 px-3 py-0.5 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-300">
+            <span className="mx-1 inline-flex items-center rounded-full bg-zinc-100 px-3 py-0.5 text-sm font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-300">
               #NxDevTools
             </span>{' '}
             is an accepted format.
@@ -51,9 +51,9 @@ export function NxBrand() {
           </ButtonLink>
         </div>
         <div aria-hidden="true">
-          <div className="w-full rounded-md border border-slate-100 bg-slate-50/20 p-4 dark:border-slate-800 dark:bg-slate-800/60">
-            <div className="grid grid-cols-1 items-center justify-items-center rounded-sm bg-white p-2 ring-1 ring-slate-50 dark:bg-slate-800/80 dark:ring-slate-800">
-              <NxIcon className="m-20 h-28 w-28 text-slate-900 dark:text-slate-100" />
+          <div className="w-full rounded-md border border-zinc-100 bg-zinc-50/20 p-4 dark:border-zinc-800 dark:bg-zinc-800/60">
+            <div className="grid grid-cols-1 items-center justify-items-center rounded-sm bg-white p-2 ring-1 ring-zinc-50 dark:bg-zinc-800/80 dark:ring-zinc-800">
+              <NxIcon className="m-20 h-28 w-28 text-zinc-900 dark:text-zinc-100" />
             </div>
           </div>
         </div>

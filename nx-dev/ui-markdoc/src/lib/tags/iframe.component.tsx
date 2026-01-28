@@ -10,7 +10,7 @@ export function Iframe(props: IframeProps) {
       {...props}
       title={props.title}
       frameBorder="0"
-      className="not-content rounded-lg border border-slate-200 shadow-lg dark:border-slate-700"
+      className="not-content rounded-lg border border-zinc-200 shadow-lg dark:border-zinc-700"
     />
   );
 }

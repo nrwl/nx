@@ -41,12 +41,12 @@ export function SvgAnimation({
   }, [src]);
 
   return (
-    <div className="w-full rounded-md border border-slate-100 bg-slate-50/20 p-4 dark:border-slate-800 dark:bg-slate-800/60">
+    <div className="w-full rounded-md border border-zinc-100 bg-zinc-50/20 p-4 dark:border-zinc-800 dark:bg-zinc-800/60">
       <object
         ref={objectRef}
         type="image/svg+xml"
         title={title}
-        className="rounded-sm bg-white p-2 ring-1 ring-slate-50 dark:bg-slate-800/80 dark:ring-slate-800"
+        className="rounded-sm bg-white p-2 ring-1 ring-zinc-50 dark:bg-zinc-800/80 dark:ring-zinc-800"
       >
         {title}
       </object>

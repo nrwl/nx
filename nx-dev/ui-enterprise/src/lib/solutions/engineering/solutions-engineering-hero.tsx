@@ -27,7 +27,7 @@ export function SolutionsEngineeringHero(): ReactElement {
             className="mt-8 text-pretty tracking-tight"
           >
             Build confidently, ship faster{' '}
-            <span className="rounded-lg bg-gradient-to-r from-blue-500 to-sky-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent">
               without waiting on your tools
             </span>
           </SectionHeading>
@@ -43,7 +43,7 @@ export function SolutionsEngineeringHero(): ReactElement {
             <ButtonLink
               href="/contact/sales"
               title="Talk to our team"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
                 sendCustomEvent(

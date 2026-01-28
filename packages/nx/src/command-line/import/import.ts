@@ -9,6 +9,8 @@ import { output } from '../../utils/output';
 const createSpinner = require('ora');
 import { detectPlugins } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
+import { readJsonFile } from '../../utils/fileutils';
+import { PackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   addPackagePathToWorkspaces,
@@ -263,8 +265,15 @@ export async function importHandler(options: ImportOptions) {
 
   resetWorkspaceContext();
 
+  let packageJson: PackageJson | null;
+  try {
+    packageJson = readJsonFile<PackageJson>('package.json');
+  } catch {
+    packageJson = null;
+  }
   const { plugins, updatePackageScripts } = await detectPlugins(
     nxJson,
+    packageJson,
     options.interactive,
     true
   );

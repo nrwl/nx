@@ -2,10 +2,10 @@ export const nxVersion = require('../../package.json').version;
 
 export const esbuildVersion = '^0.19.2';
 export const prettierVersion = '~3.6.2';
-export const swcCliVersion = '~0.6.0';
-export const swcCoreVersion = '~1.5.7';
-export const swcHelpersVersion = '~0.5.11';
-export const swcNodeVersion = '~1.9.1';
+export const swcCliVersion = '~0.7.2';
+export const swcCoreVersion = '~1.15.5';
+export const swcHelpersVersion = '~0.5.18';
+export const swcNodeVersion = '~1.11.1';
 export const tsLibVersion = '^2.3.0';
 export const typesNodeVersion = '20.19.9';
 export const verdaccioVersion = '^6.0.5';

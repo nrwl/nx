@@ -103,13 +103,13 @@ export function PluginDirectory({
           </label>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon className="h-5 w-5 text-slate-500" />
+              <MagnifyingGlassIcon className="h-5 w-5 text-zinc-500" />
             </div>
             <input
               id="search"
               ref={searchRef}
               name="search"
-              className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-500 transition focus:placeholder-slate-400 dark:border-slate-900 dark:bg-slate-700"
+              className="block w-full rounded-md border border-zinc-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-zinc-500 transition focus:placeholder-zinc-400 dark:border-zinc-900 dark:bg-zinc-700"
               placeholder="Quick search"
               onChange={(event) =>
                 setModifiers({ ...modifiers, term: event.target.value })
@@ -121,7 +121,7 @@ export function PluginDirectory({
             <div className="mr-1 py-1">Order by:</div>
             <div className="flex flex-wrap gap-1">
               <button
-                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-zinc-200 bg-white px-1 py-1 font-semibold transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                 onClick={() => setOrderBy('lastPublishDate')}
               >
                 <ClockIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></ClockIcon>
@@ -136,7 +136,7 @@ export function PluginDirectory({
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-zinc-200 bg-white px-1 py-1 font-semibold transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                 onClick={() => setOrderBy('npmDownloads')}
               >
                 <ArrowDownTrayIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></ArrowDownTrayIcon>
@@ -151,7 +151,7 @@ export function PluginDirectory({
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-zinc-200 bg-white px-1 py-1 font-semibold transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                 onClick={() => setOrderBy('githubStars')}
               >
                 <StarIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></StarIcon>
@@ -166,7 +166,7 @@ export function PluginDirectory({
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-zinc-200 bg-white px-1 py-1 font-semibold transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                 onClick={() => setOrderBy('nxVersion')}
               >
                 {/* Nx Logo */}

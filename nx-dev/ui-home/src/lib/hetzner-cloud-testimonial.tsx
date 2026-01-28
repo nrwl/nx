@@ -26,7 +26,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           as="h2"
           variant="subtitle"
           id="trusted"
-          className="scroll-mt-24 text-center font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+          className="scroll-mt-24 text-center font-medium tracking-tight text-zinc-950 sm:text-3xl dark:text-white"
         >
           Trusted by leading OSS projects and Fortune 500 companies.
         </SectionHeading>
@@ -69,7 +69,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           <figure>
             <blockquote className="relative">
               <svg
-                className="absolute start-0 top-0 size-12 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"
+                className="absolute start-0 top-0 size-12 -translate-x-8 -translate-y-4 transform text-zinc-200 dark:text-zinc-800"
                 width="16"
                 height="16"
                 viewBox="0 0 16 16"
@@ -84,11 +84,11 @@ export function HetznerCloudTestimonial(): ReactElement {
               </svg>
 
               <div className="relative z-10">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-200">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-neutral-200">
                   Featured client
                 </p>
 
-                <p className="mt-2 text-xl font-medium italic text-slate-800 md:leading-normal dark:text-neutral-200">
+                <p className="mt-2 text-xl font-medium italic text-zinc-800 md:leading-normal dark:text-neutral-200">
                   Nx is speed and scalability. Before we only had a few features
                   and CI was slow and now it’s fast with way more features.
                   That’s a huge win for us.
@@ -103,7 +103,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                 />
                 <div className="flex-auto">
                   <div className="text-base font-semibold">Pavlo Grosse</div>
-                  <div className="text-xs text-slate-600 dark:text-slate-500">
+                  <div className="text-xs text-zinc-600 dark:text-zinc-500">
                     Senior Software Engineer, Hetzner Cloud
                   </div>
                 </div>

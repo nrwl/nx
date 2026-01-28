@@ -203,7 +203,7 @@ export function Persona({
   const ui = typeMap[type];
 
   return (
-    <section className="not-content relative flex overflow-hidden rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-50/40 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
+    <section className="not-content relative flex overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 p-4 transition hover:bg-zinc-50/40 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800">
       <div className="flex-shrink-0">{ui.image}</div>
       <div className="ml-4">
         {title && <h5 className="mt-0 text-base font-medium">{title}</h5>}

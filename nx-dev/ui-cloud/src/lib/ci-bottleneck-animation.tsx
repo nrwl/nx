@@ -23,7 +23,7 @@ const Card = forwardRef<
     <div
       ref={ref}
       className={cx(
-        'rounded-lg border border-slate-200 bg-slate-50 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800/40 dark:bg-slate-800/60',
+        'rounded-lg border border-zinc-200 bg-zinc-50 p-4 shadow-sm backdrop-blur-sm dark:border-zinc-800/40 dark:bg-zinc-800/60',
         className
       )}
       onMouseEnter={onMouseEnter}
@@ -57,7 +57,7 @@ export function CiBottleneckAnimation(): ReactElement {
               className="border-green-400/60 bg-green-400/40 dark:border-green-800/60 dark:bg-green-800/40"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-slate-900 dark:text-slate-100">
+                <div className="flex items-center space-x-3 text-zinc-900 dark:text-zinc-100">
                   <ServerStackIcon
                     aria-hidden="true"
                     className="size-5 shrink-0"
@@ -75,7 +75,7 @@ export function CiBottleneckAnimation(): ReactElement {
               className="border-green-400/60 bg-green-400/40 dark:border-green-800/60 dark:bg-green-800/40"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-slate-900 dark:text-slate-100">
+                <div className="flex items-center space-x-3 text-zinc-900 dark:text-zinc-100">
                   <UserPlusIcon
                     aria-hidden="true"
                     className="size-5 shrink-0"
@@ -95,7 +95,7 @@ export function CiBottleneckAnimation(): ReactElement {
               className="border-green-400/60 bg-green-400/40 dark:border-green-800/60 dark:bg-green-800/40"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-slate-900 dark:text-slate-100">
+                <div className="flex items-center space-x-3 text-zinc-900 dark:text-zinc-100">
                   <WrenchScrewdriverIcon
                     aria-hidden="true"
                     className="size-5 shrink-0"
@@ -114,9 +114,9 @@ export function CiBottleneckAnimation(): ReactElement {
           <div className="flex flex-col items-center">
             <Card
               ref={ciBottleneck}
-              className="relative bg-white dark:border-slate-800/60 dark:bg-slate-950"
+              className="relative bg-white dark:border-zinc-800/60 dark:bg-zinc-950"
             >
-              <span className="absolute -bottom-8 right-0 hidden items-center gap-x-1.5 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-200 sm:inline-flex dark:bg-slate-950 dark:ring-slate-800/60">
+              <span className="absolute -bottom-8 right-0 hidden items-center gap-x-1.5 rounded-md bg-white px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-200 sm:inline-flex dark:bg-zinc-950 dark:ring-zinc-800/60">
                 <span className="relative flex size-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400/80 opacity-75" />
                   <span className="relative inline-flex size-1.5 rounded-full bg-orange-500/80" />
@@ -124,7 +124,7 @@ export function CiBottleneckAnimation(): ReactElement {
                 Queue increasing
               </span>
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-slate-900 dark:text-slate-100">
+                <div className="flex items-center space-x-3 text-zinc-900 dark:text-zinc-100">
                   <FunnelIcon aria-hidden="true" className="size-5 shrink-0" />
                   <div className="flex-1">
                     <p className="font-mono text-xs leading-tight">
@@ -143,7 +143,7 @@ export function CiBottleneckAnimation(): ReactElement {
               className="border-red-400/60 bg-red-400/40 dark:border-red-800/60 dark:bg-red-800/40"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-slate-900 dark:text-slate-100">
+                <div className="flex items-center space-x-3 text-zinc-900 dark:text-zinc-100">
                   <ClockIcon aria-hidden="true" className="size-5 shrink-0" />
                   <div className="flex-1">
                     <p className="font-mono text-xs leading-tight">

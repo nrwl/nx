@@ -40,11 +40,11 @@ export function ResourceContainer({ resources }: ResourceContainerProps) {
         <header className="mb-8 mt-20">
           <h1
             id="resources-title"
-            className="text-3xl font-semibold tracking-tight text-slate-900 md:text-5xl dark:text-slate-100"
+            className="text-3xl font-semibold tracking-tight text-zinc-900 md:text-5xl dark:text-zinc-100"
           >
             {selectedFilterHeading}
           </h1>
-          <p className="mt-2 text-slate-600 dark:text-slate-400">
+          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
             Download whitepapers, books, case studies, and cheatsheets to learn
             more about Nx and modern development practices.
           </p>
@@ -59,7 +59,7 @@ export function ResourceContainer({ resources }: ResourceContainerProps) {
           <ResourceGrid resources={filteredList} />
         ) : (
           <div className="py-12 text-center">
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-zinc-600 dark:text-zinc-400">
               No resources found in this category.
             </p>
           </div>

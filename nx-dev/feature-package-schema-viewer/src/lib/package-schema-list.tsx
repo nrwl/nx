@@ -125,7 +125,7 @@ export function PackageSchemaList({
 
             <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Migrations'} />
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {!!filesAndLabels.length
                 ? filesAndLabels.map((schema) =>
                     typeof schema === 'string' ? (

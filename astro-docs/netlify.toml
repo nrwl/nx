@@ -21,6 +21,11 @@ path = "/*.md"
 function = "track-asset-requests"
 path = "/**/*.md"
 
+# Edge Function to add HTTP Link headers for LLM resource discovery
+[[edge_functions]]
+function = "add-link-headers"
+path = "/docs/*"
+
 # Permanent redirects (301 by default)
 
 # Storybook docs consolidation

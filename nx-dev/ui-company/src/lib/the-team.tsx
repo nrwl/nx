@@ -207,7 +207,7 @@ export function TheTeam(): ReactElement {
                     <div className="space-y-2">
                       <div className="text-xs font-medium lg:text-sm">
                         <h3>{teamMember.name}</h3>
-                        <p className="text-slate-400 dark:text-slate-600">
+                        <p className="text-zinc-400 dark:text-zinc-600">
                           {teamMember.title}
                         </p>
                       </div>

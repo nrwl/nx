@@ -8,9 +8,9 @@ interface ResourceCardProps {
 
 export function ResourceCard({ resource }: ResourceCardProps) {
   return (
-    <article className="group relative flex h-full flex-row overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <article className="group relative flex h-full flex-row overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
       {/* Cover Image */}
-      <div className="relative flex min-w-[140px] max-w-[240px] shrink-0 items-center overflow-hidden bg-slate-100 dark:bg-slate-800">
+      <div className="relative flex min-w-[140px] max-w-[240px] shrink-0 items-center overflow-hidden bg-zinc-100 dark:bg-zinc-800">
         <img
           src={resource.coverImage}
           alt={resource.title}
@@ -31,13 +31,13 @@ export function ResourceCard({ resource }: ResourceCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           {resource.title}
         </h3>
 
         {/* Description */}
         {resource.description && (
-          <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
             {resource.description}
           </p>
         )}
@@ -46,7 +46,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
         <div>
           <Link
             href={resource.downloadUrl}
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-600 dark:bg-sky-500 dark:hover:bg-sky-600"
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600"
             aria-label={`Download ${resource.title}`}
           >
             <ArrowDownTrayIcon className="h-4 w-4" />

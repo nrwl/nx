@@ -111,18 +111,18 @@ function NxDevProjectGraphInner({
 
       <NxGraphElementPanel
         element={element}
-        panelContainerClassName="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-        panelHeaderClassName="border-slate-300 dark:border-slate-700"
-        panelContentContainerClassName="divide-slate-300 dark:divide-slate-700"
+        panelContainerClassName="border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+        panelHeaderClassName="border-zinc-300 dark:border-zinc-700"
+        panelContentContainerClassName="divide-zinc-300 dark:divide-zinc-700"
         header={{
           project: (element, { open, close }) => (
             <NxGraphProjectNodePanelHeader
               element={element}
               open={open}
               close={close}
-              badgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 uppercase"
-              elementNameClassName="text-slate-900 dark:text-slate-100"
-              closeButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
+              badgeClassName="bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-600 uppercase"
+              elementNameClassName="text-zinc-900 dark:text-zinc-100"
+              closeButtonClassName="hover:bg-zinc-100 dark:hover:bg-zinc-700"
             />
           ),
           'composite-project': (element, { open, close }) => (
@@ -130,9 +130,9 @@ function NxDevProjectGraphInner({
               element={element}
               open={open}
               close={close}
-              badgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 uppercase"
-              elementNameClassName="text-slate-900 dark:text-slate-100"
-              closeButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
+              badgeClassName="bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-600 uppercase"
+              elementNameClassName="text-zinc-900 dark:text-zinc-100"
+              closeButtonClassName="hover:bg-zinc-100 dark:hover:bg-zinc-700"
             />
           ),
         }}
@@ -141,35 +141,35 @@ function NxDevProjectGraphInner({
           project: (element) => (
             <NxGraphProjectNodePanelContent
               element={element}
-              sectionHeadingClassName="text-slate-900 dark:text-slate-100"
-              sectionTextClassName="text-slate-700 dark:text-slate-300"
-              tagBadgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600"
-              actionButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
+              sectionHeadingClassName="text-zinc-900 dark:text-zinc-100"
+              sectionTextClassName="text-zinc-700 dark:text-zinc-300"
+              tagBadgeClassName="bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-600"
+              actionButtonClassName="bg-zinc-100/60 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 border-zinc-300 dark:border-zinc-600"
               cancelActionButtonClassName="bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 border-red-500 dark:border-red-600"
-              dependencyItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-              dependentItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-              emptyItemListClassName="text-slate-600 dark:text-slate-400"
-              traceAlgorithmButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
-              traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white hover:bg-sky-600 dark:hover:bg-sky-700 border-sky-500 dark:border-sky-600"
-              traceableProjectItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 justify-between"
-              traceableProjectSelectedItemClassName="bg-sky-500/10 dark:bg-sky-600/10 text-slate-900 dark:text-slate-100"
+              dependencyItemClassName="text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              dependentItemClassName="text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              emptyItemListClassName="text-zinc-600 dark:text-zinc-400"
+              traceAlgorithmButtonClassName="bg-zinc-100/60 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 border-zinc-300 dark:border-zinc-600"
+              traceAlgorithmActiveButtonClassName="bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 border-blue-500 dark:border-blue-600"
+              traceableProjectItemClassName="text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 justify-between"
+              traceableProjectSelectedItemClassName="bg-blue-500/10 dark:bg-blue-600/10 text-zinc-900 dark:text-zinc-100"
             />
           ),
           'composite-project': (element) => (
             <NxGraphCompositeProjectNodePanelContent
               element={element}
-              sectionHeadingClassName="text-slate-900 dark:text-slate-100"
-              sectionTextClassName="text-slate-700 dark:text-slate-300"
-              actionButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
+              sectionHeadingClassName="text-zinc-900 dark:text-zinc-100"
+              sectionTextClassName="text-zinc-700 dark:text-zinc-300"
+              actionButtonClassName="bg-zinc-100/60 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 border-zinc-300 dark:border-zinc-600"
               cancelActionButtonClassName="bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 border-red-500 dark:border-red-600"
-              confirmActionButtonClassName="bg-sky-500 dark:bg-sky-600 text-white hover:bg-sky-600 dark:hover:bg-sky-700 border-sky-500 dark:border-sky-600"
-              multiselectContainerClassName="text-slate-700 dark:text-slate-300"
-              multiselectFilterInputClassName="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-sky-500 dark:focus:border-sky-400"
-              multiselectEmptyStateClassName="text-slate-600 dark:text-slate-400"
-              multiselectListItemClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
-              multiselectCheckboxClassName="border-slate-300 dark:border-slate-600 accent-sky-500"
-              multiselectLabelClassName="text-slate-700 dark:text-slate-300"
-              multiselectSectionHeaderClassName="text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700"
+              confirmActionButtonClassName="bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 border-blue-500 dark:border-blue-600"
+              multiselectContainerClassName="text-zinc-700 dark:text-zinc-300"
+              multiselectFilterInputClassName="bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-zinc-100 focus:border-blue-500 dark:focus:border-blue-400"
+              multiselectEmptyStateClassName="text-zinc-600 dark:text-zinc-400"
+              multiselectListItemClassName="hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              multiselectCheckboxClassName="border-zinc-300 dark:border-zinc-600 accent-blue-500"
+              multiselectLabelClassName="text-zinc-700 dark:text-zinc-300"
+              multiselectSectionHeaderClassName="text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700"
             />
           ),
         }}

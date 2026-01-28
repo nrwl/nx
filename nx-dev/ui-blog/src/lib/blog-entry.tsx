@@ -10,7 +10,7 @@ export interface BlogEntryProps {
 
 export function BlogEntry({ post, overrideLink }: BlogEntryProps) {
   return (
-    <div className="relative flex h-full transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg dark:border-slate-800">
+    <div className="relative flex h-full transform-gpu flex-col overflow-hidden rounded-2xl border border-zinc-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg dark:border-zinc-800">
       {post.cover_image && (
         <div className="aspect-[1.7] w-full">
           <Image
@@ -28,7 +28,7 @@ export function BlogEntry({ post, overrideLink }: BlogEntryProps) {
         <Link
           href={overrideLink ? overrideLink : `/blog/${post.slug}`}
           title={post.title}
-          className="text-balance text-lg font-semibold text-slate-900 dark:text-white"
+          className="text-balance text-lg font-semibold text-zinc-900 dark:text-white"
           prefetch={false}
         >
           <span className="absolute inset-0" aria-hidden="true" />

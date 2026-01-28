@@ -135,7 +135,7 @@ export function DocViewer({
                   ref={ref}
                   data-document="main"
                   className={cx(
-                    'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
+                    'prose prose-zinc dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
                     { 'xl:max-w-2xl': !hideTableOfContent }
                   )}
                 >
@@ -146,7 +146,7 @@ export function DocViewer({
                 <div>
                   <div
                     className={cx(
-                      'sticky top-2 z-20 ml-[max(2rem,calc(50%-8rem))] hidden w-60 space-y-6 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                      'sticky top-2 z-20 ml-[max(2rem,calc(50%-8rem))] hidden w-60 space-y-6 overflow-y-auto bg-white text-sm xl:block dark:bg-zinc-900'
                     )}
                   >
                     {widgetData.githubStarsCount > 0 && (
@@ -163,18 +163,18 @@ export function DocViewer({
                       document={document}
                     >
                       <>
-                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-zinc-200 pl-2 pr-2 hover:border-zinc-400 dark:border-zinc-700 print:hidden">
                           <button
                             type="button"
                             aria-label="Give feedback on this page"
                             title="Give feedback of this page"
-                            className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+                            className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-zinc-900 dark:hover:text-blue-400"
                             onClick={() => setShowFeedback(true)}
                           >
                             Feedback
                           </button>
                         </div>
-                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-zinc-200 pl-2 pr-2 hover:border-zinc-400 dark:border-zinc-700 print:hidden">
                           {document.filePath ? (
                             <a
                               aria-hidden="true"
@@ -190,7 +190,7 @@ export function DocViewer({
                               target="_blank"
                               rel="noreferrer"
                               title="Edit this page on GitHub"
-                              className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+                              className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-zinc-900 dark:hover:text-blue-400"
                             >
                               Edit this page
                             </a>
@@ -207,7 +207,7 @@ export function DocViewer({
             <div
               data-document="related"
               className={cx(
-                'prose prose-slate dark:prose-invert w-full max-w-none pt-8 2xl:max-w-4xl',
+                'prose prose-zinc dark:prose-invert w-full max-w-none pt-8 2xl:max-w-4xl',
                 { 'xl:max-w-2xl': !hideTableOfContent }
               )}
             >
@@ -221,7 +221,7 @@ export function DocViewer({
               hideTableOfContent ? '' : 'xl:hidden'
             }`}
           >
-            <div className="ml-4 flex h-0.5 w-full flex-grow rounded bg-slate-50 dark:bg-slate-800/60" />
+            <div className="ml-4 flex h-0.5 w-full flex-grow rounded bg-zinc-50 dark:bg-zinc-800/60" />
             <div className="relative z-0 inline-flex flex-shrink-0 rounded-md shadow-sm">
               <button
                 type="button"
@@ -230,7 +230,7 @@ export function DocViewer({
                 className={`relative inline-flex items-center rounded-l-md ${
                   // If there is no file path for this page then don't show edit button.
                   document.filePath ? '' : 'rounded-r-md'
-                }border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800`}
+                }border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-600 focus-within:ring-blue-500 hover:bg-zinc-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800`}
                 onClick={() => setShowFeedback(true)}
               >
                 Feedback
@@ -247,7 +247,7 @@ export function DocViewer({
                   target="_blank"
                   rel="noreferrer"
                   title="Edit this page on GitHub"
-                  className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                  className="relative -ml-px inline-flex items-center rounded-r-md border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-600 focus-within:ring-blue-500 hover:bg-zinc-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800"
                 >
                   Edit this page
                 </a>

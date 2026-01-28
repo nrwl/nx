@@ -25,9 +25,9 @@
       "description": "The agents to setup Nx configuration for.",
       "items": {
         "type": "string",
-        "enum": ["claude", "gemini", "codex", "cursor", "copilot"]
+        "enum": ["claude", "gemini", "codex", "cursor", "copilot", "opencode"]
       },
-      "default": ["claude", "gemini", "codex", "cursor", "copilot"]
+      "default": ["claude", "gemini", "codex", "cursor", "copilot", "opencode"]
     }
   },
   "required": ["directory"]

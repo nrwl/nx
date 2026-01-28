@@ -12,7 +12,7 @@ export function FeaturesWhileCoding(): ReactElement {
           as="h3"
           variant="subtitle"
           id="features-while-coding"
-          className="scroll-mt-24 text-2xl font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+          className="scroll-mt-24 text-2xl font-medium tracking-tight text-zinc-950 sm:text-3xl dark:text-white"
         >
           While Coding
         </SectionHeading>
@@ -90,7 +90,7 @@ export function FeaturesWhileCoding(): ReactElement {
                 }
                 title="Find out about Nx"
                 prefetch={false}
-                className="group font-semibold leading-6 text-slate-950 dark:text-white"
+                className="group font-semibold leading-6 text-zinc-950 dark:text-white"
               >
                 Learn more about Nx{' '}
                 <span
