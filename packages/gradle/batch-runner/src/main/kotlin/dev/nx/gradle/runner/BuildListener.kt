@@ -16,12 +16,13 @@ fun buildListener(
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
+      val taskPath = event.descriptor.taskPath
       tasks.entries
-          .find { it.value.taskName == event.descriptor.taskPath }
+          .find { it.value.taskName == taskPath }
           ?.key
           ?.let { nxTaskId ->
             taskStartTimes[nxTaskId] = event.eventTime
-            logger.info("🏁 Task start: $nxTaskId ${event.descriptor.taskPath}")
+            logger.info("🏁 Task start: $nxTaskId $taskPath")
           }
     }
 
