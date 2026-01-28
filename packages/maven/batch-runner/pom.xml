@@ -174,14 +174,16 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                                <!-- Exclude Maven-dependent shared classes from batch-runner shaded JAR.
-                                     These are included in the adapter JARs and loaded into ClassRealm
-                                     where they can see Maven's classes. Keep non-Maven classes
-                                     (MavenCommandResolver, PathUtils) for use by ProcessBasedMavenExecutor. -->
+                                <!-- Exclude shared classes that have SLF4J dependencies from batch-runner shaded JAR.
+                                     These are included in the adapter JARs and loaded into ClassRealm.
+                                     batch-runner relocates SLF4J, which would cause method signature mismatches
+                                     if these classes were included (e.g., PathUtils methods would expect
+                                     dev.nx.maven.shaded.slf4j.Logger instead of org.slf4j.Logger). -->
                                 <filter>
                                     <artifact>dev.nx.maven:nx-maven-shared</artifact>
                                     <excludes>
                                         <exclude>dev/nx/maven/shared/BuildState*.class</exclude>
+                                        <exclude>dev/nx/maven/shared/PathUtils*.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
