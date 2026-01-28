@@ -279,11 +279,10 @@ export function runCommandAsync(
 export function runCommandUntil(
   command: string,
   criteria: (output: string) => boolean,
-  opts: RunCmdOpts = {
-    env: undefined,
-  }
+  opts: RunCmdOpts & { timeout?: number } = {}
 ): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
+  const timeout = opts.timeout ?? 30_000;
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
     encoding: 'utf-8',
@@ -301,18 +300,10 @@ export function runCommandUntil(
     let output = '';
     let complete = false;
 
-    function checkCriteria(c) {
-      output += c.toString();
-      if (criteria(stripConsoleColors(output)) && !complete) {
-        complete = true;
-        res(p);
-      }
-    }
-
-    p.stdout?.on('data', checkCriteria);
-    p.stderr?.on('data', checkCriteria);
-    p.on('exit', (code) => {
+    const timeoutId = setTimeout(() => {
       if (!complete) {
+        complete = true;
+        p.kill();
         logError(
           `Original output:`,
           output
@@ -320,9 +311,35 @@ export function runCommandUntil(
             .map((l) => `    ${l}`)
             .join('\n')
         );
-        rej(`Exited with ${code}`);
-      } else {
+        rej(new Error(`Timed out after ${timeout}ms waiting for criteria`));
+      }
+    }, timeout);
+
+    function checkCriteria(c) {
+      output += c.toString();
+      const strippedOutput = stripConsoleColors(output);
+      if (criteria(strippedOutput) && !complete) {
+        complete = true;
+        clearTimeout(timeoutId);
+        p.kill();
         res(p);
+      }
+    }
+
+    p.stdout?.on('data', checkCriteria);
+    p.stderr?.on('data', checkCriteria);
+    p.on('close', (code) => {
+      if (!complete) {
+        complete = true;
+        clearTimeout(timeoutId);
+        logError(
+          `Original output:`,
+          output
+            .split('\n')
+            .map((l) => `    ${l}`)
+            .join('\n')
+        );
+        rej(new Error(`Exited with ${code}`));
       }
     });
   });
