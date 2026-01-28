@@ -10,7 +10,6 @@ import org.gradle.tooling.BuildCancelledException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
 
-
 fun runTasksInParallel(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
