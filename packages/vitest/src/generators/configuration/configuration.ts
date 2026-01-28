@@ -22,19 +22,19 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { typesNodeVersion } from '@nx/js/src/utils/versions';
 import { join } from 'path';
+import { clean, coerce, major } from 'semver';
+import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
-import initGenerator from '../init/init';
-import { VitestGeneratorSchema } from './schema';
-import { detectUiFramework } from '../../utils/detect-ui-framework';
 import {
   getInstalledViteMajorVersion,
   getVitestDependenciesVersionsToInstall,
 } from '../../utils/version-utils';
-import { clean, coerce, major } from 'semver';
+import initGenerator from '../init/init';
+import { VitestGeneratorSchema } from './schema';
 
 /**
  * Determines whether to use vitest.config.mts instead of vite.config.mts.
@@ -198,7 +198,10 @@ getTestBed().initTestEnvironment(
               : `import react from '@vitejs/plugin-react'`,
           ],
           plugins: ['react()'],
-          coverageProvider: schema.coverageProvider,
+          coverageProvider:
+            schema.coverageProvider === 'none'
+              ? undefined
+              : schema.coverageProvider,
           useEsmExtension: true,
         },
         true,
@@ -436,6 +439,8 @@ async function getCoverageProviderDependency(
       return {
         '@vitest/coverage-istanbul': vitestCoverageIstanbul,
       };
+    case 'none':
+      return {};
     default:
       return {
         '@vitest/coverage-v8': vitestCoverageV8,

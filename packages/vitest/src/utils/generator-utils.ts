@@ -3,18 +3,15 @@ import {
   joinPathFragments,
   logger,
   offsetFromRoot,
-  readJson,
   readNxJson,
   readProjectConfiguration,
-  TargetConfiguration,
   Tree,
   updateProjectConfiguration,
-  writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { VitestExecutorOptions } from '../executors/test/schema';
-import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { nxVersion } from './versions';
+import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -22,7 +19,7 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export interface VitestGeneratorSchema {
   project: string;
   uiFramework?: 'angular' | 'react' | 'vue' | 'none';
-  coverageProvider: 'v8' | 'istanbul' | 'custom';
+  coverageProvider: 'v8' | 'istanbul' | 'custom' | 'none';
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
   testTarget?: string;
@@ -87,7 +84,7 @@ export interface ViteConfigFileOptions {
   rollupOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
-  coverageProvider?: 'v8' | 'istanbul' | 'custom';
+  coverageProvider?: 'v8' | 'istanbul' | 'custom' | 'none';
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
@@ -201,7 +198,9 @@ ${
     ? `    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],\n`
     : ''
 }\
-    reporters: ['default'],
+    reporters: ['default']${
+      options.coverageProvider !== 'none'
+        ? `,
     coverage: {
       reportsDirectory: '${reportsDirectory}',
       provider: ${
@@ -209,6 +208,8 @@ ${
           ? `'${options.coverageProvider}' as const`
           : `'v8' as const`
       },
+    }`
+        : ''
     }
   },`
     : '';
