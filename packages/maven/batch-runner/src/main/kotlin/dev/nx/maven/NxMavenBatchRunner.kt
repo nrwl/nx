@@ -16,7 +16,7 @@ private val log = run {
     System.setProperty("maven.logger.showLogName", "false")
     System.setProperty("maven.logger.levelInBrackets", "true")
     System.setProperty("maven.logger.defaultLogLevel", "info")
-    // Log to stdout (stderr is used for NX_RESULT streaming)
+    // NOTE: We use --raw-streams in ResidentMavenExecutor to prevent recursion
     System.setProperty("maven.logger.logFile", "System.out")
     // Enable colored output (jansi.force needed when stdout isn't a TTY)
     System.setProperty("style.color", "always")

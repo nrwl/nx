@@ -12,6 +12,7 @@ object ArgParser {
     fun parseArgs(args: Array<String>): MavenBatchOptions {
         var workspaceRoot = ""
         var verbose = false
+        var communicationPort: Int? = null
 
         var i = 0
         while (i < args.size) {
@@ -21,6 +22,12 @@ object ArgParser {
                 }
                 args[i].startsWith("--workspaceRoot=") -> {
                     workspaceRoot = args[i].substringAfter("=")
+                }
+                args[i] == "--communicationPort" && i + 1 < args.size -> {
+                    communicationPort = args[++i].toIntOrNull()
+                }
+                args[i].startsWith("--communicationPort=") -> {
+                    communicationPort = args[i].substringAfter("=").toIntOrNull()
                 }
                 args[i] == "--verbose" -> {
                     verbose = true
@@ -36,8 +43,16 @@ object ArgParser {
             throw IllegalArgumentException("workspaceRoot is required")
         }
 
+        if (communicationPort == null) {
+            throw IllegalArgumentException("communicationPort is required")
+        }
+
         // Read combined payload from stdin (taskGraph, tasks, and args)
         val stdinJson = System.`in`.bufferedReader().readText()
+
+        if (verbose) {
+            println("[DEBUG] Read stdin payload, size: ${stdinJson.length} bytes")
+        }
 
         // Parse the combined payload
         val payload = if (stdinJson.isNotEmpty() && stdinJson != "{}") {
@@ -107,7 +122,8 @@ object ArgParser {
             taskOptions = tasksMap,
             args = argsList,
             verbose = verbose,
-            taskGraph = taskGraph
+            taskGraph = taskGraph,
+            communicationPort = communicationPort
         )
     }
 }
