@@ -319,15 +319,13 @@ export function formatAggregateCreateNodesError(
   error: AggregateCreateNodesError,
   pluginName: string
 ) {
+  const errorCount =
+    error.errors.length > 1 ? `${error.errors.length} errors` : 'An error';
+  const pluginLocation = error.pluginIndex
+    ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
+    : '';
   const errorBodyLines = [
-    `${
-      error.errors.length > 1 ? `${error.errors.length} errors` : 'An error'
-    } occurred while processing files for the ${pluginName} plugin${
-      error.pluginIndex
-        ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
-        : ''
-    }`,
-    `.`,
+    `${errorCount} occurred while processing files for the ${pluginName} plugin${pluginLocation}.`,
   ];
   const errorStackLines = [];
 
