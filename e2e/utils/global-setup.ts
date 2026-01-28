@@ -1,7 +1,7 @@
 import { Config } from '@jest/types';
 import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
-import { exec, execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
@@ -36,12 +36,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     }
 
     process.env.npm_config_registry = registry;
-    execSync(
-      `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
-      {
-        windowsHide: false,
-      }
-    );
+    // Use environment variable instead of npm config command to avoid polluting other tests
+    process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
+      authToken;
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;
@@ -55,12 +52,8 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
     global.e2eTeardown = () => {
-      execSync(
-        `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
-        {
-          windowsHide: false,
-        }
-      );
+      // Clean up environment variable instead of npm config command
+      delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
     };
 
     /**
@@ -99,9 +92,6 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 }
 
 function getPublishedVersion(): Promise<string | undefined> {
-  execSync(`npm config get registry`, {
-    stdio: 'inherit',
-  });
   return new Promise((resolve) => {
     // Resolve the published nx version from verdaccio
     exec(
