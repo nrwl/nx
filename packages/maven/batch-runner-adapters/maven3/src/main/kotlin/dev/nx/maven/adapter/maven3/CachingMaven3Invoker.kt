@@ -43,7 +43,6 @@ class CachingMaven3Invoker(
         log.debug("Initializing CachingMaven3Invoker...")
 
         System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
-        System.setProperty("maven.home", System.getenv("MAVEN_HOME") ?: "")
 
         val coreRealm = classWorld.getRealm("plexus.core") as ClassRealm
 

@@ -20,24 +20,23 @@ class MavenClassRealm private constructor(
     fun loadClass(name: String): Class<*> = realm.loadClass(name)
 
     fun loadAdapterJar(mavenMajorVersion: String) {
-        val adapterJar = findAdapterJar(mavenMajorVersion)
-            ?: throw RuntimeException("Adapter JAR not found for Maven $mavenMajorVersion")
-
-        realm.addURL(adapterJar.toURI().toURL())
-        log.debug("Loaded adapter JAR: ${adapterJar.name}")
-    }
-
-    private fun findAdapterJar(mavenMajorVersion: String): File? {
         val codeSource = MavenClassRealm::class.java.protectionDomain.codeSource
-            ?: return null
+            ?: throw RuntimeException("Cannot locate batch-runner JAR: codeSource is null")
 
         val batchRunnerJar = File(codeSource.location.toURI())
         val adaptersDir = File(batchRunnerJar.parentFile, "nx-maven-adapters")
+        val adapterJarName = "maven${mavenMajorVersion}-adapter.jar"
+        val adapterJar = File(adaptersDir, adapterJarName)
 
-        if (!adaptersDir.isDirectory) return null
+        if (!adapterJar.exists()) {
+            throw RuntimeException(
+                "Adapter JAR not found: ${adapterJar.absolutePath}\n" +
+                "Expected Maven $mavenMajorVersion adapter at: ${adapterJar.absolutePath}"
+            )
+        }
 
-        val pattern = Regex("maven${mavenMajorVersion}-adapter.*\\.jar")
-        return adaptersDir.listFiles { file -> pattern.matches(file.name) }?.firstOrNull()
+        realm.addURL(adapterJar.toURI().toURL())
+        log.debug("Loaded adapter JAR: ${adapterJar.name}")
     }
 
     override fun close() {
