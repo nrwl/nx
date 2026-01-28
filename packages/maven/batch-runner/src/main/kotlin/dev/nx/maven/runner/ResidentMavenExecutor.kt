@@ -31,8 +31,11 @@ class ResidentMavenExecutor(
 
         mavenRealm = MavenClassRealm.create(mavenHome)
         try {
-            mavenRealm.loadAdapterJar(mavenMajorVersion)
-            invoker = createInvoker()
+            // TCCL needed for adapter loading and invoker creation
+            invoker = mavenRealm.withContextClassLoader {
+                mavenRealm.loadAdapterJar(mavenMajorVersion)
+                createInvoker()
+            }
         } catch (e: Exception) {
             mavenRealm.close()
             throw e
@@ -73,8 +76,7 @@ class ResidentMavenExecutor(
         outputStream: ByteArrayOutputStream
     ): Int {
         val allArguments = goals + arguments
-        val exitCode = invoker.invoke(allArguments, workingDir, TeeOutputStream(outputStream), TeeOutputStream(outputStream))
-        return exitCode
+        return invoker.invoke(allArguments, workingDir, TeeOutputStream(outputStream), TeeOutputStream(outputStream))
     }
 
     fun recordBuildStates(projectSelectors: Set<String>) {
@@ -86,4 +88,7 @@ class ResidentMavenExecutor(
         mavenRealm.close()
         log.debug("ResidentMavenExecutor shutdown complete")
     }
+
+    override fun <T> withClassLoaderContext(action: () -> T): T =
+        mavenRealm.withContextClassLoader(action)
 }

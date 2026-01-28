@@ -28,4 +28,11 @@ interface MavenExecutor {
      * Shutdown and cleanup.
      */
     fun shutdown()
+
+    /**
+     * Execute an action with the appropriate class loader context.
+     * For resident executors, this sets the Thread Context ClassLoader.
+     * For process-based executors, this is a no-op passthrough.
+     */
+    fun <T> withClassLoaderContext(action: () -> T): T = action()
 }

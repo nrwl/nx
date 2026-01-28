@@ -13,8 +13,7 @@ import java.io.File
  */
 class MavenClassRealm private constructor(
     val classWorld: ClassWorld,
-    val realm: ClassRealm,
-    private val previousContextClassLoader: ClassLoader?
+    val realm: ClassRealm
 ) : AutoCloseable {
 
     fun loadClass(name: String): Class<*> = realm.loadClass(name)
@@ -39,9 +38,21 @@ class MavenClassRealm private constructor(
         log.debug("Loaded adapter JAR: ${adapterJar.name}")
     }
 
+    /**
+     * Execute an action with the Thread Context ClassLoader set to this realm.
+     * TCCL is restored after the action completes (or throws).
+     */
+    fun <T> withContextClassLoader(action: () -> T): T {
+        val originalClassLoader = Thread.currentThread().contextClassLoader
+        Thread.currentThread().contextClassLoader = realm
+        return try {
+            action()
+        } finally {
+            Thread.currentThread().contextClassLoader = originalClassLoader
+        }
+    }
+
     override fun close() {
-        // Restore previous TCCL before disposing realm
-        Thread.currentThread().contextClassLoader = previousContextClassLoader
         try {
             classWorld.disposeRealm("plexus.core")
         } catch (e: Exception) {
@@ -55,9 +66,6 @@ class MavenClassRealm private constructor(
         fun create(mavenHome: File): MavenClassRealm {
             log.debug("Creating MavenClassRealm for: ${mavenHome.absolutePath}")
 
-            // Save TCCL before changing it - will be restored on close()
-            val previousContextClassLoader = Thread.currentThread().contextClassLoader
-
             val classWorld = ClassWorld()
             val realm = classWorld.newRealm("plexus.core", ClassLoader.getSystemClassLoader())
 
@@ -65,10 +73,7 @@ class MavenClassRealm private constructor(
             loadJarsFromDirectory(realm, File(mavenHome, "lib"))
             loadJarsFromDirectory(realm, File(mavenHome, "boot"))
 
-            // Set TCCL so Maven classes can load properly
-            Thread.currentThread().contextClassLoader = realm
-
-            return MavenClassRealm(classWorld, realm, previousContextClassLoader)
+            return MavenClassRealm(classWorld, realm)
         }
 
         private fun loadJarsFromDirectory(realm: ClassRealm, dir: File) {
