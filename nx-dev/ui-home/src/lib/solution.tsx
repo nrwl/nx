@@ -84,7 +84,7 @@ function StatsSection(): ReactElement {
           title="700+"
           description="projects easily managed at scale"
           company="Caseware"
-          link="https://youtu.be/lvS8HjjFwEM"
+          link="/blog/caseware-success-story"
           color="purple"
         />
       </motion.div>
