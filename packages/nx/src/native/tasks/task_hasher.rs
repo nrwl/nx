@@ -235,6 +235,24 @@ impl TaskHasher {
         HashInstructionArgs {
             js_env,
             ts_config_hash,
+
+            // Sort input arrays for deterministic ordering
+            hash_details.inputs.environment.sort();
+            hash_details.inputs.runtime.sort();
+            hash_details.inputs.dep_outputs.sort();
+            hash_details.inputs.external.sort();
+            // Sort file_sets by project name, then by first pattern
+            hash_details
+                .inputs
+                .file_sets
+                .sort_by(|a, b| match (&a.project, &b.project) {
+                    (None, None) => a.patterns.first().cmp(&b.patterns.first()),
+                    (None, Some(_)) => std::cmp::Ordering::Less,
+                    (Some(_), None) => std::cmp::Ordering::Greater,
+                    (Some(ap), Some(bp)) => ap
+                        .cmp(bp)
+                        .then_with(|| a.patterns.first().cmp(&b.patterns.first())),
+                });
             project_root_mappings,
             sorted_externals,
             selectively_hash_tsconfig,
