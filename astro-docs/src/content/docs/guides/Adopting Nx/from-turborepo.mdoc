@@ -258,7 +258,7 @@ Here's how Turborepo commands map to Nx:
 | `turbo run test lint build` | [`nx run-many -t test lint build`](/docs/reference/nx-commands#nx-run-many)                                                                                                  |
 | `--cache-dir`               | Set in [`nx.json` under `cacheDirectory`](/docs/reference/nx-json#task-options)                                                                                              |
 | `--concurrency`             | [`--parallel`](/docs/reference/nx-commands#nx-run-many)                                                                                                                      |
-| `--continue`                | [Use `--nx-bail`](/docs/reference/nx-commands#nx-run-many) with the inverse value                                                                                            |
+| `--continue`                | [Use `--nx-bail`](/docs/reference/nx-commands#nx-run-many) with the inverse value. Nx also supports `--nx-bail=N` to stop after N failures.                                  |
 | `--cpuprofile`              | Use [`NX_PROFILE=profile.json`](/docs/troubleshooting/performance-profiling) j                                                                                               |
 | `--cwd`                     | Available in [`run-commands` executor](/docs/reference/nx/executors#run-commands#cwd)                                                                                        |
 | `--daemon`                  | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/concepts/nx-daemon#turning-it-off)                                                                            |
