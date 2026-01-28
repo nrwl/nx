@@ -104,6 +104,7 @@
     </dependencies>
 
     <build>
+        <finalName>maven4-adapter</finalName>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
 
         <plugins>

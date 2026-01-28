@@ -87,6 +87,7 @@
     </dependencies>
 
     <build>
+        <finalName>maven3-adapter</finalName>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <plugins>
             <plugin>
