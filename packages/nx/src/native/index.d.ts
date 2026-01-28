@@ -309,6 +309,8 @@ export declare export declare function hashArray(input: Array<string | undefined
 export interface HashDetails {
   value: string
   details: Record<string, string>
+  /** Structured inputs used for hashing (file patterns, env vars, etc.) */
+  inputs: HashInputs
 }
 
 export interface HashedTask {
@@ -323,6 +325,19 @@ export interface HasherOptions {
 }
 
 export declare export declare function hashFile(file: string): string | null
+
+export interface HashInputs {
+  /** Expanded file paths that were used as inputs */
+  files: Array<string>
+  /** Runtime commands */
+  runtime: Array<string>
+  /** Environment variable names */
+  environment: Array<string>
+  /** Dependent task outputs */
+  depOutputs: Array<string>
+  /** External dependencies */
+  external: Array<string>
+}
 
 export interface InputsInput {
   input: string

@@ -1,12 +1,12 @@
-import { Task, TaskGraph } from '../config/task-graph';
-import { getCustomHasher } from '../tasks-runner/utils';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { getInputs, TaskHasher } from './task-hasher';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { readNxJson } from '../config/nx-json';
-import { HashedTask, IS_WASM, TaskDetails } from '../native';
+import { Task, TaskGraph } from '../config/task-graph';
+import { IS_WASM, TaskDetails } from '../native';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
+import { getInputs, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
 
@@ -53,9 +53,16 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     .map((t) => t.task);
 
   const hashes = await hasher.hashTasks(tasksToHash, taskGraph, process.env);
+  const ioService = getTaskIOService();
   for (let i = 0; i < tasksToHash.length; i++) {
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
+    tasksToHash[i].hashInputs = hashes[i].inputs;
+
+    // Notify TaskIOService of hash inputs
+    if (hashes[i].inputs) {
+      ioService.notifyTaskIO(tasksToHash[i].id, hashes[i].inputs);
+    }
   }
   if (tasksDetails?.recordTaskDetails) {
     tasksDetails.recordTaskDetails(
@@ -90,7 +97,7 @@ export async function hashTask(
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
 
-  const { value, details } = await (customHasher
+  const { value, details, inputs } = await (customHasher
     ? customHasher(task, {
         hasher,
         projectGraph,
@@ -103,6 +110,12 @@ export async function hashTask(
     : hasher.hashTask(task, taskGraph, env));
   task.hash = value;
   task.hashDetails = details;
+  task.hashInputs = inputs;
+
+  // Notify TaskIOService of hash inputs
+  if (inputs) {
+    getTaskIOService().notifyTaskIO(task.id, inputs);
+  }
 
   if (taskDetails?.recordTaskDetails) {
     taskDetails.recordTaskDetails([
@@ -152,9 +165,10 @@ export async function hashTasks(
   }
 
   // Hash tasks with custom hashers individually
+  const ioService = getTaskIOService();
   const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
     const customHasher = getCustomHasher(task, projectGraph);
-    const { value, details } = await customHasher(task, {
+    const { value, details, inputs } = await customHasher(task, {
       hasher,
       projectGraph,
       taskGraph,
@@ -165,6 +179,12 @@ export async function hashTasks(
     } as any);
     task.hash = value;
     task.hashDetails = details;
+    task.hashInputs = inputs;
+
+    // Notify TaskIOService of hash inputs
+    if (inputs) {
+      ioService.notifyTaskIO(task.id, inputs);
+    }
   });
 
   // Hash tasks without custom hashers in batch
@@ -176,6 +196,15 @@ export async function hashTasks(
         for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
           tasksWithoutCustomHashers[i].hash = hashes[i].value;
           tasksWithoutCustomHashers[i].hashDetails = hashes[i].details;
+          tasksWithoutCustomHashers[i].hashInputs = hashes[i].inputs;
+
+          // Notify TaskIOService of hash inputs
+          if (hashes[i].inputs) {
+            ioService.notifyTaskIO(
+              tasksWithoutCustomHashers[i].id,
+              hashes[i].inputs
+            );
+          }
         }
       });
   }

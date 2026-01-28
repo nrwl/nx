@@ -167,6 +167,30 @@ describe('native task hasher', () => {
             "unrelated:{projectRoot}/**/*": "4127219831408253695",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
           },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "NONEXISTENTENV",
+              "TESTENV",
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "files": [
+              "nx.json",
+              "libs/tagged/project.json",
+              "libs/unrelated/filec.ts",
+              "libs/unrelated/project.json",
+              "libs/parent/filea.spec.ts",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
+            ],
+            "runtime": [
+              "echo runtime123",
+            ],
+          },
           "value": "15987635381237972716",
         },
       ]
@@ -232,6 +256,27 @@ describe('native task hasher', () => {
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+        },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "files": [
+            "nx.json",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
+          ],
+          "runtime": [],
         },
         "value": "10262178246623018030",
       }
@@ -313,6 +358,26 @@ describe('native task hasher', () => {
           "parent:TsConfig": "2264969541778889434",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
         },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "files": [
+            "nx.json",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
+          ],
+          "runtime": [],
+        },
         "value": "14320402761058545796",
       }
     `);
@@ -380,6 +445,22 @@ describe('native task hasher', () => {
             "parent:TsConfig": "2264969541778889434",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
           },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "files": [
+              "nx.json",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
+            ],
+            "runtime": [],
+          },
           "value": "2453961902871518313",
         },
         {
@@ -390,6 +471,23 @@ describe('native task hasher', () => {
             "parent:TsConfig": "2264969541778889434",
             "parent:{projectRoot}/**/*": "17059468255294227635",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
+          },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "files": [
+              "nx.json",
+              "libs/parent/filea.spec.ts",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
+            ],
+            "runtime": [],
           },
           "value": "5894031627295207190",
         },
@@ -483,6 +581,29 @@ describe('native task hasher', () => {
             "workspace:[{workspaceRoot}/global2]": "6389465682922235219",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "1359893257201181462",
           },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "MY_TEST_HASH_ENV",
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "files": [
+              "global1",
+              "global2",
+              "nx.json",
+              "libs/parent/filea.spec.ts",
+              "libs/parent/filea.ts",
+              "libs/parent/project.json",
+              "libs/parent/src/index.ts",
+              "libs/child/fileb.ts",
+              "libs/child/project.json",
+              "libs/child/src/index.ts",
+            ],
+            "runtime": [],
+          },
           "value": "12394084267697729491",
         },
       ]
@@ -537,6 +658,23 @@ describe('native task hasher', () => {
           "parent:TsConfig": "8661678577354855152",
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+        },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "files": [
+            "nx.json",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
+          ],
+          "runtime": [],
         },
         "value": "16657264716563422624",
       }
@@ -617,6 +755,27 @@ describe('native task hasher', () => {
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "files": [
+            "nx.json",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+          ],
+          "runtime": [],
+        },
         "value": "1325637283470296766",
       }
     `);
@@ -639,6 +798,27 @@ describe('native task hasher', () => {
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+        },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "files": [
+            "nx.json",
+            "libs/child/fileb.spec.ts",
+            "libs/child/fileb.ts",
+            "libs/child/project.json",
+            "libs/child/src/index.ts",
+            "libs/parent/filea.spec.ts",
+            "libs/parent/filea.ts",
+            "libs/parent/project.json",
+            "libs/parent/src/index.ts",
+          ],
+          "runtime": [],
         },
         "value": "1325637283470296766",
       }

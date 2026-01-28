@@ -68,6 +68,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import chalk = require('chalk');
+import { getTaskIOService } from './task-io-service';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -512,6 +513,12 @@ export async function runCommandForTasks(
     extraTargetDependencies,
     extraOptions
   );
+
+  // TODO: Remove after task IO service is stable
+  if (process.env.NX_TASK_IO_DEBUG === 'true') {
+    getTaskIOService().init(projectGraph, taskGraph);
+  }
+
   const tasks = Object.values(taskGraph.tasks);
 
   const initiatingTasks = tasks.filter(

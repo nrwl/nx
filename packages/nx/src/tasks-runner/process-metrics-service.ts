@@ -1,23 +1,23 @@
+import { getDaemonProcessIdSync } from '../daemon/cache';
 import {
-  ProcessMetricsCollector,
-  ProcessMetadata,
-  ProcessMetrics,
-  MetricsUpdate,
-  SystemInfo,
-  Metadata,
   GroupInfo,
   GroupType,
+  Metadata,
+  MetricsUpdate,
+  ProcessMetadata,
+  ProcessMetrics,
+  ProcessMetricsCollector,
+  SystemInfo,
 } from '../native';
-import { getDaemonProcessIdSync } from '../daemon/cache';
 
 export type {
-  ProcessMetadata,
-  ProcessMetrics,
-  MetricsUpdate,
-  SystemInfo,
-  Metadata,
   GroupInfo,
   GroupType,
+  Metadata,
+  MetricsUpdate,
+  ProcessMetadata,
+  ProcessMetrics,
+  SystemInfo,
 };
 
 export type MetricsCallback = (event: MetricsUpdate) => void;
@@ -71,9 +71,9 @@ class ProcessMetricsService {
    * Subscribe to push-based metrics notifications
    * Collection starts automatically on first subscription (lazy start)
    */
-  subscribe(callback: MetricsCallback): void {
+  subscribe(callback: MetricsCallback): ProcessMetricsService {
     if (!this.collector) {
-      return;
+      throw new Error('Metrics collector not initialized');
     }
 
     try {
@@ -100,6 +100,7 @@ class ProcessMetricsService {
     } catch {
       // Silent failure - metrics collection is optional
     }
+    return this;
   }
 
   /**

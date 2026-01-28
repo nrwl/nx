@@ -4,6 +4,7 @@ import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -14,7 +15,7 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service';
+import { getTaskIOService } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
   LARGE_BUFFER,
@@ -355,6 +356,7 @@ export class SeriallyRunningTasks implements RunningTask {
       const pid = pseudoTtyProcess.getPid();
       if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
         getProcessMetricsService().registerTaskProcess(taskId, pid);
+        getTaskIOService().notifyPidUpdate({ taskId, pid });
       }
 
       return pseudoTtyProcess;
@@ -407,6 +409,10 @@ class RunningNodeProcess implements RunningTask {
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
     if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+      getTaskIOService().notifyPidUpdate({
+        taskId,
+        pid: this.childProcess.pid,
+      });
       getProcessMetricsService().registerTaskProcess(
         this.taskId,
         this.childProcess.pid
@@ -556,6 +562,7 @@ export async function runSingleCommandWithPseudoTerminal(
   // Skip registration if we're in a forked executor - the fork wrapper already registered
   const pid = pseudoTtyProcess.getPid();
   if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+    getTaskIOService().notifyPidUpdate({ taskId, pid });
     getProcessMetricsService().registerTaskProcess(taskId, pid);
   }
 
