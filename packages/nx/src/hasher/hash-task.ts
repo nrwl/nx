@@ -1,13 +1,12 @@
-import { Task, TaskGraph } from '../config/task-graph';
-import { getCustomHasher } from '../tasks-runner/utils';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { getInputs, TaskHasher } from './task-hasher';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { readNxJson } from '../config/nx-json';
+import { Task, TaskGraph } from '../config/task-graph';
 import { IS_WASM, TaskDetails } from '../native';
-import { getDbConnection } from '../utils/db-connection';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { getCustomHasher } from '../tasks-runner/utils';
+import { getDbConnection } from '../utils/db-connection';
+import { getInputs, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
 
@@ -62,7 +61,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 
     // Notify TaskIOService of hash inputs
     if (hashes[i].inputs) {
-      ioService.notifyHashInputs(tasksToHash[i].id, hashes[i].inputs);
+      ioService.notifyTaskIO(tasksToHash[i].id, hashes[i].inputs);
     }
   }
   if (tasksDetails?.recordTaskDetails) {
@@ -115,7 +114,7 @@ export async function hashTask(
 
   // Notify TaskIOService of hash inputs
   if (inputs) {
-    getTaskIOService().notifyHashInputs(task.id, inputs);
+    getTaskIOService().notifyTaskIO(task.id, inputs);
   }
 
   if (taskDetails?.recordTaskDetails) {
@@ -184,7 +183,7 @@ export async function hashTasks(
 
     // Notify TaskIOService of hash inputs
     if (inputs) {
-      ioService.notifyHashInputs(task.id, inputs);
+      ioService.notifyTaskIO(task.id, inputs);
     }
   });
 
@@ -201,7 +200,7 @@ export async function hashTasks(
 
           // Notify TaskIOService of hash inputs
           if (hashes[i].inputs) {
-            ioService.notifyHashInputs(
+            ioService.notifyTaskIO(
               tasksWithoutCustomHashers[i].id,
               hashes[i].inputs
             );

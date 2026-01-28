@@ -14,7 +14,7 @@ pub struct ProjectFilesHashResult {
 
 /// Expands project file set patterns by replacing `{projectRoot}` with the actual project root.
 /// For root projects (project_root == "."), strips `{projectRoot}/` instead.
-pub fn expand_project_globs(project_root: &str, file_sets: &[String]) -> Vec<String> {
+pub fn globs_from_project_globs(project_root: &str, file_sets: &[String]) -> Vec<String> {
     file_sets
         .iter()
         .map(|f| {
@@ -62,7 +62,7 @@ pub fn collect_project_files<'a>(
     file_sets: &[String],
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
-    let globs = expand_project_globs(project_root, file_sets);
+    let globs = globs_from_project_globs(project_root, file_sets);
     let now = std::time::Instant::now();
     let glob_set = build_glob_set(&globs)?;
     trace!("build_glob_set for {:?}", now.elapsed());

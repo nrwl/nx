@@ -6,16 +6,22 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../config/workspace-json-project-json';
-import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
+import { NX_PREFIX } from '../../utils/logger';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import { minimatch } from 'minimatch';
+import { existsSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { existsSync } from 'node:fs';
 
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isGlobPattern } from '../../utils/globs';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -33,14 +39,8 @@ import {
   ProjectWithNoNameError,
   WorkspaceValidityError,
 } from '../error-types';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
-import {
-  getExecutorInformation,
-  parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -1141,6 +1141,8 @@ function mergeOptions(
   return mergedOptions;
 }
 
+class WorkspaceRootInMiddleOfStringError extends Error {}
+
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
   project: ProjectConfiguration,
@@ -1149,17 +1151,16 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
   for (let [opt, value] of Object.entries(object ?? {})) {
     if (typeof value === 'string') {
-      const workspaceRootMatch = /^(\{workspaceRoot\}\/?)/.exec(value);
-      if (workspaceRootMatch?.length) {
-        value = value.replace(workspaceRootMatch[0], '');
+      try {
+        value = resolveNxTokensInString(value, project);
+        result[opt] = value;
+      } catch (e) {
+        if (e instanceof WorkspaceRootInMiddleOfStringError) {
+          throw new WorkspaceRootInMiddleOfStringError(
+            `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of a string. (${key}.${opt})`
+          );
+        }
       }
-      if (value.includes('{workspaceRoot}')) {
-        throw new Error(
-          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
-        );
-      }
-      value = value.replace(/\{projectRoot\}/g, project.root);
-      result[opt] = value.replace(/\{projectName\}/g, project.name);
     } else if (typeof value === 'object' && value) {
       result[opt] = resolveNxTokensInOptions(
         value,
@@ -1169,6 +1170,24 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
     }
   }
   return result;
+}
+
+export function resolveNxTokensInString(
+  value: string,
+  project: ProjectConfiguration
+) {
+  const workspaceRootMatch = /^(\{workspaceRoot\}\/?)/.exec(value);
+  if (workspaceRootMatch?.length) {
+    value = value.replace(workspaceRootMatch[0], '');
+  }
+  if (value.includes('{workspaceRoot}')) {
+    throw new WorkspaceRootInMiddleOfStringError(
+      `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of a string.`
+    );
+  }
+  value = value.replace(/\{projectRoot\}/g, project.root);
+  value = value.replace(/\{projectName\}/g, project.name);
+  return value;
 }
 
 export function readTargetDefaultsForTarget(

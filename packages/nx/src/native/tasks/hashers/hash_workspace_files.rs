@@ -15,7 +15,7 @@ pub struct WorkspaceFilesHashResult {
 
 /// Expands workspace file set patterns by stripping `{workspaceRoot}/` prefix.
 /// Handles negation patterns (e.g., `!{workspaceRoot}/...`).
-pub fn expand_workspace_globs(workspace_file_sets: &[String]) -> Vec<String> {
+pub fn globs_from_workspace_globs(workspace_file_sets: &[String]) -> Vec<String> {
     workspace_file_sets
         .iter()
         .inspect(|&x| trace!("Workspace file set: {}", x))
@@ -44,7 +44,7 @@ pub fn get_workspace_files<'a, 'b>(
     workspace_file_sets: &'a [String],
     all_workspace_files: &'b [FileData],
 ) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
-    let globs = expand_workspace_globs(workspace_file_sets);
+    let globs = globs_from_workspace_globs(workspace_file_sets);
     glob_files(all_workspace_files, globs, None)
 }
 
@@ -53,7 +53,7 @@ pub fn hash_workspace_files_with_inputs(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
 ) -> Result<WorkspaceFilesHashResult> {
-    let globs = expand_workspace_globs(workspace_file_sets);
+    let globs = globs_from_workspace_globs(workspace_file_sets);
 
     if globs.is_empty() {
         return Ok(WorkspaceFilesHashResult {
