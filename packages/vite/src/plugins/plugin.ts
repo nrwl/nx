@@ -219,6 +219,7 @@ async function buildViteTargets(
     {
       configFile: absoluteConfigFilePath,
       mode: 'development',
+      root: projectRoot,
     },
     'build'
   );
@@ -617,6 +618,7 @@ function getOutputs(
 
   const isBuildable =
     build?.lib ||
+    build?.outDir ||
     build?.rollupOptions?.input ||
     existsSync(join(workspaceRoot, projectRoot, 'index.html'));
 
