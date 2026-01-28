@@ -141,35 +141,39 @@ export {
 } from './ensure-browser-installation';
 
 export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => {
-      if (key.startsWith('NX_E2E_')) {
+  return {
+    ...Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => {
+        if (key.startsWith('NX_E2E_')) {
+          return true;
+        }
+
+        const allowedKeys = [
+          'NX_ADD_PLUGINS',
+          'NX_ISOLATE_PLUGINS',
+          'NX_VERBOSE_LOGGING',
+          'NX_NATIVE_LOGGING',
+        ];
+
+        if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
+          return false;
+        }
+
+        if (key === 'JEST_WORKER_ID') {
+          return false;
+        }
+
+        // Remove NODE_PATH to prevent module resolution conflicts with original workspace.
+        // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
+        // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
+        if (key === 'NODE_PATH') {
+          return false;
+        }
+
         return true;
-      }
-
-      const allowedKeys = [
-        'NX_ADD_PLUGINS',
-        'NX_ISOLATE_PLUGINS',
-        'NX_VERBOSE_LOGGING',
-        'NX_NATIVE_LOGGING',
-      ];
-
-      if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
-        return false;
-      }
-
-      if (key === 'JEST_WORKER_ID') {
-        return false;
-      }
-
-      // Remove NODE_PATH to prevent module resolution conflicts with original workspace.
-      // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
-      // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
-      if (key === 'NODE_PATH') {
-        return false;
-      }
-
-      return true;
-    })
-  );
+      })
+    ),
+    // Prevent corepack from enforcing the packageManager field in generated workspaces
+    COREPACK_ENABLE_PROJECT_FIELD: '0',
+  };
 }

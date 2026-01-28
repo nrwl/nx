@@ -12,6 +12,7 @@ import * as nxSchema from 'nx/schemas/nx-schema.json';
 import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
+import { packageManagerSnapshotSerializer } from './test-utils/package-manager-snapshot-serializer';
 
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
@@ -30,6 +31,8 @@ jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
 }));
+
+expect.addSnapshotSerializer(packageManagerSnapshotSerializer);
 
 describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
@@ -234,6 +237,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "license": "MIT",
         "name": "@proj/source",
+        "packageManager": "npm@<version>",
         "private": true,
         "scripts": {},
         "version": "0.0.0",
@@ -263,6 +267,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "license": "MIT",
         "name": "@proj/source",
+        "packageManager": "pnpm@<version>",
         "private": true,
         "scripts": {},
         "version": "0.0.0",
@@ -314,6 +319,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "license": "MIT",
         "name": "@proj/source",
+        "packageManager": "npm@<version>",
         "private": true,
         "scripts": {},
         "version": "0.0.0",
