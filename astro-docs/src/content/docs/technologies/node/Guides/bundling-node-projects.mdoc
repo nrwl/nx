@@ -2,7 +2,7 @@
 title: Bundling Node.js Applications and Libraries
 description: Learn how to configure bundling for Node.js applications and libraries in an Nx monorepo using Webpack, esbuild, and Vite.
 sidebar:
-  label: Bundling
+  label: Understand Bundling with Node
 filter: 'type:Guides'
 ---
 
@@ -132,7 +132,7 @@ nx build my-app
 
 ## When NOT to Bundle
 
-If you're publishing a library package to npm, avoid bundling dependencies. Instead, declare them in `package.json` so package mangers can handle versioning and deduplication.
+If you're publishing a library package to npm, avoid bundling dependencies. Instead, declare them in `package.json` so package managers can handle versioning and deduplication.
 
 For Docker based deployments, non-bundled builds can improve build times through layer caching. When dependencies don't change, Docker reuses the cached `node_modules` layer, only rebuilding your application code.
 
