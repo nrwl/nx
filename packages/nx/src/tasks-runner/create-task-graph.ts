@@ -14,6 +14,7 @@ import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
+import { reverse } from '../project-graph/operators';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -163,6 +164,15 @@ export class ProcessTasks {
         );
       } else if (dependencyConfig.dependencies) {
         this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
+          dependencyConfig,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else if (dependencyConfig.dependents) {
+        this.processTasksForDependents(
           projectUsedToDeriveDependencies,
           dependencyConfig,
           configuration,
@@ -347,6 +357,39 @@ export class ProcessTasks {
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
+    }
+  }
+
+  private processTasksForDependents(
+    projectUsedToDeriveDependencies: string,
+    dependencyConfig: TargetDependencyConfig,
+    configuration: string,
+    task: Task,
+    taskOverrides: Object | { __overrides_unparsed__: any[] },
+    overrides: Object
+  ): void {
+    // Use the reversed project graph to find dependents
+    // In the reversed graph, dependencies become dependents
+    const reversedGraph = reverse(this.projectGraph);
+
+    // Temporarily swap the graph to use the reversed one
+    const originalGraph = this.projectGraph;
+    this.projectGraph = reversedGraph;
+
+    try {
+      // Process as if we're processing dependencies, but on the reversed graph
+      // This means we'll process all projects that depend on the current project
+      this.processTasksForDependencies(
+        projectUsedToDeriveDependencies,
+        dependencyConfig,
+        configuration,
+        task,
+        taskOverrides,
+        overrides
+      );
+    } finally {
+      // Restore the original graph
+      this.projectGraph = originalGraph;
     }
   }
 
