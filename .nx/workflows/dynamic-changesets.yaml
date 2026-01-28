@@ -7,6 +7,11 @@ distribute-on:
 assignment-rules:
   - projects:
       - e2e-gradle
+      - e2e-node
+      - e2e-angular
+      - e2e-react
+      - e2e-next
+      - e2e-plugin
     targets:
       - e2e-ci**
     run-on:
@@ -29,9 +34,7 @@ assignment-rules:
 
   - projects:
       - e2e-release
-      - e2e-angular
-      - e2e-react
-      - e2e-next
+      - e2e-nuxt
       - e2e-web
       - e2e-eslint
       - e2e-remix
