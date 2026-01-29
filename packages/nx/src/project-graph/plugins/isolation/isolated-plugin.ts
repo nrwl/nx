@@ -21,7 +21,6 @@ import type {
   ProjectsMetadata,
 } from '../public-api';
 import { resolveNxPlugin } from '../resolve-plugin';
-import { Hook, PluginLifecycleManager } from './plugin-lifecycle-manager';
 import type {
   MessageResult,
   PluginWorkerLoadResult,
@@ -29,6 +28,7 @@ import type {
   PluginWorkerResult,
 } from './messaging';
 import { isPluginWorkerResult, sendMessageOverSocket } from './messaging';
+import { Hook, PluginLifecycleManager } from './plugin-lifecycle-manager';
 
 const PLUGIN_TIMEOUT_HINT_TEXT =
   'As a last resort, you can set NX_PLUGIN_NO_TIMEOUTS=true to bypass this timeout.';
@@ -163,9 +163,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           tx: '',
           payload: {
             success: false,
-            error: new Error(
-              `Plugin worker ${this.name} exited unexpectedly.`
-            ),
+            error: new Error(`Plugin worker ${this.name} exited unexpectedly.`),
           },
         } as PluginWorkerResult);
       }
@@ -395,7 +393,11 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         resolve(msg.payload as MessageResult<TType>['payload']);
       });
 
-      sendMessageOverSocket(this.socket, { type, payload, tx } as PluginWorkerMessage);
+      sendMessageOverSocket(this.socket, {
+        type,
+        payload,
+        tx,
+      } as PluginWorkerMessage);
     });
   }
 
@@ -470,7 +472,10 @@ async function startPluginWorker(name: string) {
     ...process.env,
     ...(isWorkerTypescript
       ? {
-          TS_NODE_PROJECT: path.join(__dirname, '../../../../tsconfig.lib.json'),
+          TS_NODE_PROJECT: path.join(
+            __dirname,
+            '../../../../tsconfig.lib.json'
+          ),
         }
       : {}),
   };

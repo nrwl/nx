@@ -95,118 +95,81 @@ const server = createServer((socket) => {
               `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
             );
             return {
-              type: 'loadResult',
-              payload: {
-                name: plugin.name,
-                include: plugin.include,
-                exclude: plugin.exclude,
-                createNodesPattern: plugin.createNodes?.[0],
-                hasCreateDependencies:
-                  'createDependencies' in plugin && !!plugin.createDependencies,
-                hasProcessProjectGraph:
-                  'processProjectGraph' in plugin &&
-                  !!plugin.processProjectGraph,
-                hasCreateMetadata:
-                  'createMetadata' in plugin && !!plugin.createMetadata,
-                hasPreTasksExecution:
-                  'preTasksExecution' in plugin && !!plugin.preTasksExecution,
-                hasPostTasksExecution:
-                  'postTasksExecution' in plugin && !!plugin.postTasksExecution,
-                success: true,
-              },
+              name: plugin.name,
+              include: plugin.include,
+              exclude: plugin.exclude,
+              createNodesPattern: plugin.createNodes?.[0],
+              hasCreateDependencies:
+                'createDependencies' in plugin && !!plugin.createDependencies,
+              hasProcessProjectGraph:
+                'processProjectGraph' in plugin && !!plugin.processProjectGraph,
+              hasCreateMetadata:
+                'createMetadata' in plugin && !!plugin.createMetadata,
+              hasPreTasksExecution:
+                'preTasksExecution' in plugin && !!plugin.preTasksExecution,
+              hasPostTasksExecution:
+                'postTasksExecution' in plugin && !!plugin.postTasksExecution,
+              success: true,
             };
           } catch (e) {
             return {
-              type: 'loadResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-              },
+              success: false,
+              error: createSerializableError(e),
             };
           }
         },
         createNodes: async function createNodes({ configFiles, context }) {
           try {
             const result = await plugin.createNodes[1](configFiles, context);
-            return {
-              type: 'createNodesResult',
-              payload: { result, success: true },
-            };
+            return { result, success: true };
           } catch (e) {
             return {
-              type: 'createNodesResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-              },
+              success: false,
+              error: createSerializableError(e),
             };
           }
         },
         createDependencies: async function createDependencies({ context }) {
           try {
             const result = await plugin.createDependencies(context);
-            return {
-              type: 'createDependenciesResult',
-              payload: { dependencies: result, success: true },
-            };
+            return { dependencies: result, success: true };
           } catch (e) {
             return {
-              type: 'createDependenciesResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-              },
+              success: false,
+              error: createSerializableError(e),
             };
           }
         },
         createMetadata: async function createMetadata({ graph, context }) {
           try {
             const result = await plugin.createMetadata(graph, context);
-            return {
-              type: 'createMetadataResult',
-              payload: { metadata: result, success: true },
-            };
+            return { metadata: result, success: true };
           } catch (e) {
             return {
-              type: 'createMetadataResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-              },
+              success: false,
+              error: createSerializableError(e),
             };
           }
         },
         preTasksExecution: async ({ context }) => {
           try {
             const mutations = await plugin.preTasksExecution?.(context);
-            return {
-              type: 'preTasksExecutionResult',
-              payload: { success: true, mutations },
-            };
+            return { success: true, mutations };
           } catch (e) {
             return {
-              type: 'preTasksExecutionResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-              },
+              success: false,
+              error: createSerializableError(e),
             };
           }
         },
         postTasksExecution: async ({ context }) => {
           try {
             await plugin.postTasksExecution?.(context);
-            return {
-              type: 'postTasksExecutionResult',
-              payload: { success: true },
-            };
+            return { success: true };
           } catch (e) {
             return {
-              type: 'postTasksExecutionResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-              },
+              success: false,
+              error: createSerializableError(e),
             };
           }
         },
