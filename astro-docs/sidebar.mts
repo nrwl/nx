@@ -87,19 +87,45 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     collapsed: true,
     items: [
       { label: 'Run Tasks', link: 'features/run-tasks' },
-      { label: 'Explore Graph', link: 'features/explore-graph' },
-      { label: 'Generate Code', link: 'features/generate-code' },
       // TODO: techincally can be technology specific w/ eslint
       // so maybe we flip to talk about the theory and mention the 2 ways to use it w/ links?
-      {
-        label: 'Enforce Module Boundaries',
-        link: 'features/enforce-module-boundaries',
-      },
-      { label: 'Manage Releases', link: 'features/manage-releases' },
       // TODO: do we need this page? or should we merge w/ the getting started ai setup stuff?
       { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
-      // TODO:
-      { label: 'Sync Generators', link: 'concepts/sync-generators' },
+      {
+        label: 'Code Organization',
+        collapsed: true,
+        items: [
+          { label: 'Explore Graph', link: 'features/explore-graph' },
+          { label: 'Sync Generators', link: 'concepts/sync-generators' },
+          { label: 'Generate Code', link: 'features/generate-code' },
+          {
+            label: 'Enforce Module Boundaries',
+            collapsed: true,
+            items: [
+              {
+                label: 'Overview',
+                link: 'features/enforce-module-boundaries',
+              },
+              {
+                label: 'Ban Dependencies with Tags',
+                link: 'guides/enforce-module-boundaries/ban-dependencies-with-tags',
+              },
+              {
+                label: 'Ban External Imports',
+                link: 'guides/enforce-module-boundaries/ban-external-imports',
+              },
+              {
+                label: 'Tag Multiple Dimensions',
+                link: 'guides/enforce-module-boundaries/tag-multiple-dimensions',
+              },
+              {
+                label: 'Tags Allow List',
+                link: 'guides/enforce-module-boundaries/tags-allow-list',
+              },
+            ],
+          },
+        ],
+      },
       {
         label: 'CI & Orchestration',
         collapsed: true,
@@ -126,34 +152,72 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             label: 'Dynamically Allocate Agents',
             link: 'features/ci-features/dynamic-agents',
           },
+          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
+          { label: 'Access Tokens', link: 'guides/nx-cloud/access-tokens' },
+          {
+            label: 'Personal Access Tokens',
+            link: 'guides/nx-cloud/personal-access-tokens',
+          },
+          {
+            label: 'CI Resource Usage',
+            link: 'guides/nx-cloud/ci-resource-usage',
+          },
+          {
+            label: 'Optimize Your TTG',
+            link: 'guides/nx-cloud/optimize-your-ttg',
+          },
+          {
+            label: 'Record Commands',
+            link: 'guides/nx-cloud/record-commands',
+          },
+          {
+            // TODO: this needs a better name since we have vcs integrations already
+            // but this page is detailing a few things like github org permissions in cloud probs split
+            label: 'GitHub Integration',
+            link: 'features/ci-features/github-integration',
+          },
+          {
+            label: 'CIPE Affected Project Graph',
+            link: 'guides/nx-cloud/cipe-affected-project-graph',
+          },
+          { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
+          { label: 'Google Auth', link: 'guides/nx-cloud/google-auth' },
+          {
+            label: 'Enable AI Features',
+            link: 'guides/nx-cloud/enable-ai-features',
+          },
+          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
+          {
+            label: 'Source Control Integration',
+            link: 'guides/nx-cloud/source-control-integration',
+          },
+          {
+            label: 'Configuring the Cloud Runner',
+            link: 'reference/nx-cloud/config',
+          },
+          {
+            label: 'Custom Images',
+            link: 'reference/nx-cloud/custom-images',
+          },
+          {
+            label: 'Assignment Rules',
+            link: 'reference/nx-cloud/assignment-rules',
+          },
+          {
+            label: 'Custom Steps',
+            link: 'reference/nx-cloud/custom-steps',
+          },
+          {
+            label: 'Launch Templates',
+            link: 'reference/nx-cloud/launch-templates',
+          },
         ],
       },
       {
-        label: 'Enforce Module Boundaries',
+        label: 'Release & Publishing',
         collapsed: true,
         items: [
-          {
-            label: 'Ban Dependencies with Tags',
-            link: 'guides/enforce-module-boundaries/ban-dependencies-with-tags',
-          },
-          {
-            label: 'Ban External Imports',
-            link: 'guides/enforce-module-boundaries/ban-external-imports',
-          },
-          {
-            label: 'Tag Multiple Dimensions',
-            link: 'guides/enforce-module-boundaries/tag-multiple-dimensions',
-          },
-          {
-            label: 'Tags Allow List',
-            link: 'guides/enforce-module-boundaries/tags-allow-list',
-          },
-        ],
-      },
-      {
-        label: 'Nx Release',
-        collapsed: true,
-        items: [
+          { label: 'Nx Release Overview', link: 'features/manage-releases' },
           // TODO: only keeep nx release things, and move anything specific to a technology to KB space
           {
             label: 'Publish in CI/CD',
@@ -214,67 +278,31 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         ],
       },
       {
-        label: 'Nx Cloud',
-        collapsed: true,
+        label: 'Maintaince',
         items: [
-          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
-          { label: 'Access Tokens', link: 'guides/nx-cloud/access-tokens' },
           {
-            label: 'Personal Access Tokens',
-            link: 'guides/nx-cloud/personal-access-tokens',
+            label: 'Nx Console Migratation Assistance',
+            link: 'guides/nx-console/console-migrate-ui',
           },
           {
-            label: 'CI Resource Usage',
-            link: 'guides/nx-cloud/ci-resource-usage',
+            label: 'Advanced Update Process',
+            link: 'guides/tips-n-tricks/advanced-update',
           },
           {
-            label: 'Optimize Your TTG',
-            link: 'guides/nx-cloud/optimize-your-ttg',
+            label: 'Automate Importing Projects',
+            link: 'guides/adopting-nx/import-project',
           },
           {
-            label: 'Record Commands',
-            link: 'guides/nx-cloud/record-commands',
+            label: 'Manual Migrations',
+            link: 'guides/adopting-nx/manual',
           },
           {
-            // TODO: this needs a better name since we have vcs integrations already
-            // but this page is detailing a few things like github org permissions in cloud probs split
-            label: 'GitHub Integration',
-            link: 'features/ci-features/github-integration',
+            label: 'Preserving Git Histories',
+            link: 'guides/adopting-nx/preserving-git-histories',
           },
           {
-            label: 'CIPE Affected Project Graph',
-            link: 'guides/nx-cloud/cipe-affected-project-graph',
-          },
-          { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
-          { label: 'Google Auth', link: 'guides/nx-cloud/google-auth' },
-          {
-            label: 'Enable AI Features',
-            link: 'guides/nx-cloud/enable-ai-features',
-          },
-          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
-          {
-            label: 'Source Control Integration',
-            link: 'guides/nx-cloud/source-control-integration',
-          },
-          {
-            label: 'Configuring the Cloud Runner',
-            link: 'reference/nx-cloud/config',
-          },
-          {
-            label: 'Custom Images',
-            link: 'reference/nx-cloud/custom-images',
-          },
-          {
-            label: 'Assignment Rules',
-            link: 'reference/nx-cloud/assignment-rules',
-          },
-          {
-            label: 'Custom Steps',
-            link: 'reference/nx-cloud/custom-steps',
-          },
-          {
-            label: 'Launch Templates',
-            link: 'reference/nx-cloud/launch-templates',
+            label: 'Migrating From Turborepo',
+            link: 'guides/adopting-nx/from-turborepo',
           },
         ],
       },
@@ -366,39 +394,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           {
             label: 'Enterprise Release Notes',
             link: 'reference/nx-cloud/release-notes',
-          },
-        ],
-      },
-      {
-        label: 'Migrating to Nx',
-        collapsed: true,
-        items: [
-          // TODO: this should go away and we only maintain the 2 setup processes in getting-started + quickstart
-          // e.g. nx init or create-nx-workspace based flows
-          // anything extra like nx import would make sense here as a "advanced nx adoption guides" or move to KB if it's tech specific like "how to import <framework> specific project"
-          // {
-          //   label: 'Adding to Existing Project',
-          //   link: 'guides/adopting-nx/adding-to-existing-project',
-          // },
-          // {
-          //   label: 'Adding to Monorepo',
-          //   link: 'guides/adopting-nx/adding-to-monorepo',
-          // },
-          {
-            label: 'Automate Importing Projects',
-            link: 'guides/adopting-nx/import-project',
-          },
-          {
-            label: 'Manual Migrations',
-            link: 'guides/adopting-nx/manual',
-          },
-          {
-            label: 'Preserving Git Histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
-          },
-          {
-            label: 'Migrating From Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
           },
         ],
       },
@@ -566,10 +561,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             link: 'guides/tips-n-tricks/browser-support',
           },
           {
-            label: 'Advanced Update Process',
-            link: 'guides/tips-n-tricks/advanced-update',
-          },
-          {
             label: 'Define Environment Variables',
             link: 'guides/tips-n-tricks/define-environment-variables',
           },
@@ -641,10 +632,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           {
             label: 'Troubleshooting',
             link: 'guides/nx-console/console-troubleshooting',
-          },
-          {
-            label: 'Migrate UI',
-            link: 'guides/nx-console/console-migrate-ui',
           },
         ],
       },
