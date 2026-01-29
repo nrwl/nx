@@ -506,7 +506,10 @@ class RunningNodeProcess implements RunningTask {
         cb(1, this.terminalOutput);
       }
     });
-    this.childProcess.on('exit', (code) => {
+    this.childProcess.on('exit', (code, signal) => {
+      if (code === null) {
+        code = signalToCode(signal);
+      }
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
         for (const cb of this.exitCallbacks) {
           cb(code, this.terminalOutput);
