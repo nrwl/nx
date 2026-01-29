@@ -137,7 +137,10 @@
           }
         ],
         "color": true,
-        "parallel": false
+        "parallel": false,
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=4096"
+        }
       }
     }
   },

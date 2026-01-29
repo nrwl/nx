@@ -154,4 +154,11 @@ module.exports = withNx({
 
     return rules;
   },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      // Disable source maps for smaller memory footprint
+      config.devtool = false;
+    }
+    return config;
+  },
 });
