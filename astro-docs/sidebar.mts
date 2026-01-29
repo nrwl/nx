@@ -96,8 +96,8 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         items: [
           { label: 'Explore Graph', link: 'features/explore-graph' },
-          { label: 'Sync Generators', link: 'concepts/sync-generators' },
           { label: 'Generate Code', link: 'features/generate-code' },
+          { label: 'Sync Generators', link: 'concepts/sync-generators' },
           {
             label: 'Enforce Module Boundaries',
             collapsed: true,
@@ -127,14 +127,14 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         ],
       },
       {
-        label: 'CI & Orchestration',
+        label: 'Orchestration & CI',
         collapsed: true,
         items: [
+          { label: 'Affected', link: 'features/ci-features/affected' },
           {
             label: 'Remote Cache (Nx Replay)',
             link: 'features/ci-features/remote-cache',
           },
-          { label: 'Affected', link: 'features/ci-features/affected' },
           {
             label: 'Self-Healing CI',
             link: 'features/ci-features/self-healing-ci',
@@ -151,12 +151,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           {
             label: 'Dynamically Allocate Agents',
             link: 'features/ci-features/dynamic-agents',
-          },
-          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
-          { label: 'Access Tokens', link: 'guides/nx-cloud/access-tokens' },
-          {
-            label: 'Personal Access Tokens',
-            link: 'guides/nx-cloud/personal-access-tokens',
           },
           {
             label: 'CI Resource Usage',
@@ -182,35 +176,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           },
           { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
           { label: 'Google Auth', link: 'guides/nx-cloud/google-auth' },
-          {
-            label: 'Enable AI Features',
-            link: 'guides/nx-cloud/enable-ai-features',
-          },
-          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
-          {
-            label: 'Source Control Integration',
-            link: 'guides/nx-cloud/source-control-integration',
-          },
-          {
-            label: 'Configuring the Cloud Runner',
-            link: 'reference/nx-cloud/config',
-          },
-          {
-            label: 'Custom Images',
-            link: 'reference/nx-cloud/custom-images',
-          },
-          {
-            label: 'Assignment Rules',
-            link: 'reference/nx-cloud/assignment-rules',
-          },
-          {
-            label: 'Custom Steps',
-            link: 'reference/nx-cloud/custom-steps',
-          },
-          {
-            label: 'Launch Templates',
-            link: 'reference/nx-cloud/launch-templates',
-          },
+          // TODO: this page probs needs to be axed since it's essentially self-healing CI only
+          // {
+          //   label: 'Enable AI Features',
+          //   link: 'guides/nx-cloud/enable-ai-features',
+          // },
         ],
       },
       {
@@ -279,6 +249,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       },
       {
         label: 'Maintaince',
+        collapsed: true,
         items: [
           {
             label: 'Nx Console Migratation Assistance',
@@ -750,6 +721,38 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         label: 'Continuous Integration',
         collapsed: true,
         items: [
+          // TODO: maybe this stays up above
+          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
+          { label: 'Access Tokens', link: 'guides/nx-cloud/access-tokens' },
+          {
+            label: 'Personal Access Tokens',
+            link: 'guides/nx-cloud/personal-access-tokens',
+          },
+          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
+          {
+            label: 'Source Control Integration',
+            link: 'guides/nx-cloud/source-control-integration',
+          },
+          {
+            label: 'Configuring the Cloud Runner',
+            link: 'reference/nx-cloud/config',
+          },
+          {
+            label: 'Custom Images',
+            link: 'reference/nx-cloud/custom-images',
+          },
+          {
+            label: 'Assignment Rules',
+            link: 'reference/nx-cloud/assignment-rules',
+          },
+          {
+            label: 'Custom Steps',
+            link: 'reference/nx-cloud/custom-steps',
+          },
+          {
+            label: 'Launch Templates',
+            link: 'reference/nx-cloud/launch-templates',
+          },
           {
             label: 'Reduce Waste in CI',
             link: 'concepts/ci-concepts/reduce-waste',
@@ -763,10 +766,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
           },
         ],
-      },
-      {
-        label: 'Buildable and Publishable Libraries',
-        link: 'concepts/buildable-and-publishable-libraries',
       },
       // TODO: this section is werid and doesn't really explain what's going on. maybe a better way to structure the information esp that is which is more generic to Nx but specificly still a guide
       {
@@ -852,6 +851,10 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         items: [
           ...getTechnologyKBItems('typescript'),
+          {
+            label: 'Buildable and Publishable Libraries',
+            link: 'concepts/buildable-and-publishable-libraries',
+          },
           {
             label: 'TypeScript Project Linking',
             link: 'concepts/typescript-project-linking',
