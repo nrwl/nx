@@ -92,6 +92,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 }
 
 function getPublishedVersion(): Promise<string | undefined> {
+  execSync(`npm config get registry`, {
+    stdio: 'inherit',
+  });
   return new Promise((resolve) => {
     // Resolve the published nx version from verdaccio
     exec(
