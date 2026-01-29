@@ -1,9 +1,9 @@
 distribute-on:
   extra-small-changeset: 8 linux-large, 3 linux-extra-large
-  small-changeset: 10 linux-large, 4 linux-extra-large
-  medium-changeset: 12 linux-large, 4 linux-extra-large
-  large-changeset: 14 linux-large, 5 linux-extra-large
-  extra-large-changeset: 16 linux-large, 6 linux-extra-large
+  small-changeset: 8 linux-large, 4 linux-extra-large
+  medium-changeset: 8 linux-large, 5 linux-extra-large
+  large-changeset: 10 linux-large, 6 linux-extra-large
+  extra-large-changeset: 12 linux-large, 6 linux-extra-large
 assignment-rules:
   - projects:
       - e2e-gradle
@@ -16,7 +16,7 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 2
 
   - projects:
       - nx
@@ -51,7 +51,7 @@ assignment-rules:
       - agent: linux-large
         parallelism: 1
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 2
 
   # All other e2e tests can run in parallel
   - targets:
