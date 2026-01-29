@@ -1,7 +1,7 @@
 import { Config } from '@jest/types';
 import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
-import { exec } from 'node:child_process';
+import { exec, execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';

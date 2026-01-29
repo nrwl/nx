@@ -321,7 +321,6 @@ export function runCommandUntil(
       if (criteria(strippedOutput) && !complete) {
         complete = true;
         clearTimeout(timeoutId);
-        p.kill();
         res(p);
       }
     }
