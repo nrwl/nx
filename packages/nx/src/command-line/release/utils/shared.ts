@@ -465,19 +465,20 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
         if (!relevantCommits.has(projectName)) {
           relevantCommits.set(projectName, []);
         }
-        if (
-          commit.scope === projectName ||
-          commit.scope.split(',').includes(projectName) ||
-          !commit.scope
-        ) {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: true });
-        } else {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: false });
-        }
+
+        const scopes = commit.scope
+          ? commit.scope.split(',').map((s) => s.trim())
+          : [];
+
+        const projectShortName = projectName.split('/').pop();
+        const isProjectScopedCommit =
+          !commit.scope ||
+          scopes.includes(projectName) || // full name: @foo/bar
+          scopes.includes(projectShortName); // short name: bar
+
+        relevantCommits
+          .get(projectName)
+          ?.push({ commit, isProjectScopedCommit });
       }
     }
   }
