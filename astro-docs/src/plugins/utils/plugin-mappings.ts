@@ -84,6 +84,58 @@ export function getAllTechnologyCategories(): string[] {
   return Array.from(new Set(Object.values(pluginToTechnology))).sort();
 }
 
+/**
+ * Get the flattened sidebar items for a given plugin's static guide content.
+ * Returns an array of sidebar items that can be spread into a custom group.
+ *
+ * @param plugin The plugin name (e.g., 'angular', 'react', 'next')
+ * @param technologyCategory Optional category override (e.g., 'react' for 'next')
+ */
+export function getTechnologyKBItems(
+  plugin: string,
+  technologyCategory?: string
+): SidebarSubItem[] {
+  const remappedPluginName = pluginSpecialCasePluginRemapping(plugin);
+  const baseUrl =
+    technologyCategory && technologyCategory !== remappedPluginName
+      ? `/technologies/${technologyCategory}/${remappedPluginName}`
+      : `/technologies/${remappedPluginName}`;
+
+  const contentDir = join(
+    workspaceRoot,
+    'astro-docs',
+    'src',
+    'content',
+    'docs',
+    baseUrl
+  );
+
+  // Get all static files for this plugin
+  const staticFiles = getStaticPluginFiles(contentDir);
+
+  // Filter out the Introduction item (already linked in Technologies & Tools section)
+  const filteredItems: SidebarItem[] = staticFiles.filter((file) => {
+    if (typeof file === 'string') return false;
+    return file.label !== 'Introduction';
+  });
+
+  // Flatten: hoist children of nested groups (e.g. "Guides" → its children)
+  const flatItems: SidebarItem[] = [];
+  for (const item of filteredItems) {
+    if (
+      typeof item === 'object' &&
+      'items' in item &&
+      Array.isArray((item as SidebarSubItem).items)
+    ) {
+      flatItems.push(...(item as SidebarSubItem).items);
+    } else {
+      flatItems.push(item);
+    }
+  }
+
+  return flatItems as SidebarSubItem[];
+}
+
 const pluginBasePath = join(workspaceRoot, 'packages');
 /**
  * get all the linkable pages for a given plugin for the sidebar

@@ -1,4 +1,5 @@
 import type { StarlightUserConfig } from '@astrojs/starlight/types';
+import { getTechnologyKBItems } from './src/plugins/utils/plugin-mappings';
 
 export const sidebar: StarlightUserConfig['sidebar'] = [
   // GETTING STARTED - Focus: immediate value, essential setup
@@ -691,20 +692,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           },
         ],
       },
-      // TODO: unsure what these should be mapped into tbh
-      {
-        label: 'TypeScript Project References',
-        items: [
-          {
-            label: 'TypeScript Project Linking',
-            link: 'concepts/typescript-project-linking',
-          },
-          {
-            label: 'Maintain TypeScript Monorepos',
-            link: 'features/maintain-typescript-monorepos',
-          },
-        ],
-      },
       {
         label: 'Extending Nx',
         collapsed: true,
@@ -774,6 +761,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       },
       {
         label: 'Continuous Integration',
+        collapsed: true,
         items: [
           {
             label: 'Reduce Waste in CI',
@@ -870,6 +858,96 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             link: 'reference/benchmarks/tsc-batch-mode',
           },
         ],
+      },
+      // Technology-specific guides auto-populated from static content
+      {
+        label: 'TypeScript',
+        collapsed: true,
+        items: [
+          ...getTechnologyKBItems('typescript'),
+          {
+            label: 'TypeScript Project Linking',
+            link: 'concepts/typescript-project-linking',
+          },
+          {
+            label: 'Maintain TypeScript Monorepos',
+            link: 'features/maintain-typescript-monorepos',
+          },
+        ],
+      },
+      {
+        label: 'Angular',
+        collapsed: true,
+        items: [
+          ...getTechnologyKBItems('angular'),
+          ...getTechnologyKBItems('angular-rspack', 'angular'),
+        ],
+      },
+      {
+        label: 'React',
+        collapsed: true,
+        items: [
+          ...getTechnologyKBItems('react'),
+          ...getTechnologyKBItems('next', 'react'),
+        ],
+      },
+      {
+        label: 'Vue',
+        collapsed: true,
+        items: [...getTechnologyKBItems('nuxt', 'vue')],
+      },
+      {
+        label: 'Node',
+        collapsed: true,
+        items: [...getTechnologyKBItems('node')],
+      },
+      {
+        label: '.NET',
+        collapsed: true,
+        items: [...getTechnologyKBItems('dotnet')],
+      },
+      {
+        label: 'Module Federation',
+        collapsed: true,
+        items: [...getTechnologyKBItems('module-federation')],
+      },
+      {
+        label: 'ESLint',
+        collapsed: true,
+        items: [
+          ...getTechnologyKBItems('eslint'),
+          ...getTechnologyKBItems('eslint-plugin', 'eslint'),
+        ],
+      },
+      {
+        label: 'Vite',
+        collapsed: true,
+        items: [...getTechnologyKBItems('vite', 'build-tools')],
+      },
+      {
+        label: 'Webpack',
+        collapsed: true,
+        items: [...getTechnologyKBItems('webpack', 'build-tools')],
+      },
+      {
+        label: 'Cypress',
+        collapsed: true,
+        items: [...getTechnologyKBItems('cypress', 'test-tools')],
+      },
+      {
+        label: 'Playwright',
+        collapsed: true,
+        items: [...getTechnologyKBItems('playwright', 'test-tools')],
+      },
+      {
+        label: 'Storybook',
+        collapsed: true,
+        items: [...getTechnologyKBItems('storybook', 'test-tools')],
+      },
+      {
+        label: 'Vitest',
+        collapsed: true,
+        items: [...getTechnologyKBItems('vitest', 'test-tools')],
       },
     ],
   },
