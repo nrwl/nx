@@ -136,6 +136,56 @@ export function getTechnologyKBItems(
   return flatItems as SidebarSubItem[];
 }
 
+/**
+ * Get the API reference sidebar items (Generators, Executors, Migrations) for a given plugin.
+ * Returns an array of link items that can be spread into a custom group.
+ *
+ * @param plugin The plugin name (e.g., 'angular', 'react', 'next')
+ * @param technologyCategory Optional category override (e.g., 'react' for 'next')
+ * @param labelPrefix Optional prefix for labels (e.g., 'Next.js' → 'Next.js Generators')
+ */
+export function getTechnologyAPIItems(
+  plugin: string,
+  technologyCategory?: string,
+  labelPrefix?: string
+): SidebarSubItem[] {
+  const remappedPluginName = pluginSpecialCasePluginRemapping(plugin);
+  const baseUrl =
+    technologyCategory && technologyCategory !== remappedPluginName
+      ? `/technologies/${technologyCategory}/${remappedPluginName}`
+      : `/technologies/${remappedPluginName}`;
+
+  const pluginPath = join(pluginBasePath, plugin);
+  const items: SidebarSubItem[] = [];
+
+  if (!existsSync(pluginPath) || !lstatSync(pluginPath).isDirectory()) {
+    return items;
+  }
+
+  const prefix = labelPrefix ? `${labelPrefix} ` : '';
+
+  if (hasValidConfig(pluginPath, 'generators')) {
+    items.push({
+      label: `${prefix}Generators`,
+      link: `${baseUrl}/generators`,
+    });
+  }
+  if (hasValidConfig(pluginPath, 'executors')) {
+    items.push({
+      label: `${prefix}Executors`,
+      link: `${baseUrl}/executors`,
+    });
+  }
+  if (hasValidConfig(pluginPath, 'migrations')) {
+    items.push({
+      label: `${prefix}Migrations`,
+      link: `${baseUrl}/migrations`,
+    });
+  }
+
+  return items;
+}
+
 const pluginBasePath = join(workspaceRoot, 'packages');
 /**
  * get all the linkable pages for a given plugin for the sidebar
