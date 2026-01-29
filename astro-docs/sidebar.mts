@@ -485,6 +485,10 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         label: 'Detox',
         link: 'technologies/test-tools/detox/introduction',
       },
+      {
+        label: 'Plugin Registry',
+        link: 'plugin-registry',
+      },
     ],
   },
 
@@ -901,6 +905,10 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       {
         label: 'Remote Cache Plugins',
         link: 'reference/remote-cache-plugins',
+      },
+      {
+        label: 'Changelog',
+        link: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
       },
       {
         label: 'Deprecatations',
