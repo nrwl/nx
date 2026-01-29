@@ -9,6 +9,10 @@ filter: 'type:References'
 
 The Nx MCP server is a [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that gives LLMs deep access to your monorepo's structure: project relationships, file mappings, runnable tasks, ownership info, tech stacks, Nx generators, and Nx documentation.
 
+{% aside type="tip" title="Quick Setup" %}
+To configure your Nx workspace for AI agents (MCP, skills, and more), run `npx nx configure-ai-agents`. See the [AI Integration guide](/docs/getting-started/ai-setup) for details.
+{% /aside %}
+
 For an overview of how Nx enhances AI assistants and powerful use cases, see the [Enhance Your LLM](/docs/features/enhance-ai) guide.
 
 ## Installation
@@ -21,10 +25,10 @@ You can still use the standalone `nx-mcp` package if you prefer.
 All args are passed through to the underlying MCP server.
 {% /aside %}
 
-### via mcp.json
+### via .mcp.json
 
 ```json
-// mcp.json
+// .mcp.json
 {
   "servers": {
     "nx-mcp": {
@@ -151,9 +155,18 @@ This is useful when you want to restrict the LLM's capabilities or reduce noise 
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `nx_visualize_graph` | Opens interactive project or task graph visualizations (requires a running IDE instance with Nx Console) |
 
+### Nx Cloud CI Tools
+
+These tools enable AI agents to interact with CI pipelines and self-healing capabilities:
+
+| Tool                      | Description                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci_information`          | Retrieves CI pipeline execution information from Nx Cloud for the current branch. Returns pipeline status, failed tasks, and self-healing status. |
+| `update_self_healing_fix` | Apply or reject a self-healing CI fix from Nx Cloud. Records the decision on the suggested fix.                                                   |
+
 ### Nx Cloud Analytics Tools
 
-These tools are only available when connected to an Nx Cloud-enabled workspace. They provide analytics and insights into your CI/CD data:
+These tools provide analytics and insights into your CI/CD data:
 
 | Tool                                         | Description                                                                                      |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -164,8 +177,17 @@ These tools are only available when connected to an Nx Cloud-enabled workspace. 
 | `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
 | `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
 
-{% aside type="note" title="Limited Tools Without Workspace" %}
-When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available.
+### Nx Cloud Polygraph Tools
+
+These tools enable multi-repository agent coordination:
+
+| Tool                       | Description                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `cloud_polygraph_init`     | Initialize Polygraph for the Nx Cloud workspace                                         |
+| `cloud_polygraph_delegate` | Delegate a task to a child Claude agent in a dependent repository and return the result |
+
+{% aside type="note" title="Tool Availability" %}
+When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
 {% /aside %}
 
 ## Available Resources
@@ -246,3 +268,18 @@ Using the Nx Cloud tools, the AI can:
 1. Access detailed information about the failed build
 2. Retrieve terminal output from failed tasks
 3. Understand what changed and suggest fixes
+
+### Autonomous CI Monitoring
+
+With the `ci_information` and `update_self_healing_fix` tools, AI agents can monitor CI pipelines and interact with self-healing:
+
+```text
+Monitor CI and fix any failures
+```
+
+The AI agent can:
+
+1. Poll CI pipeline status via `ci_information`
+2. Receive failure context and self-healing suggestions
+3. Apply verified fixes via `update_self_healing_fix`
+4. Continue iterating until CI passes
