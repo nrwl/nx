@@ -95,7 +95,7 @@ const server = createServer((socket) => {
               `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
             );
             return {
-              type: 'load-result',
+              type: 'loadResult',
               payload: {
                 name: plugin.name,
                 include: plugin.include,
@@ -117,7 +117,7 @@ const server = createServer((socket) => {
             };
           } catch (e) {
             return {
-              type: 'load-result',
+              type: 'loadResult',
               payload: {
                 success: false,
                 error: createSerializableError(e),
@@ -125,12 +125,12 @@ const server = createServer((socket) => {
             };
           }
         },
-        createNodes: async function createNodes({ configFiles, context, tx }) {
+        createNodes: async function createNodes({ configFiles, context }) {
           try {
             const result = await plugin.createNodes[1](configFiles, context);
             return {
               type: 'createNodesResult',
-              payload: { result, success: true, tx },
+              payload: { result, success: true },
             };
           } catch (e) {
             return {
@@ -138,17 +138,16 @@ const server = createServer((socket) => {
               payload: {
                 success: false,
                 error: createSerializableError(e),
-                tx,
               },
             };
           }
         },
-        createDependencies: async function createDependencies({ context, tx }) {
+        createDependencies: async function createDependencies({ context }) {
           try {
             const result = await plugin.createDependencies(context);
             return {
               type: 'createDependenciesResult',
-              payload: { dependencies: result, success: true, tx },
+              payload: { dependencies: result, success: true },
             };
           } catch (e) {
             return {
@@ -156,17 +155,16 @@ const server = createServer((socket) => {
               payload: {
                 success: false,
                 error: createSerializableError(e),
-                tx,
               },
             };
           }
         },
-        createMetadata: async function createMetadata({ graph, context, tx }) {
+        createMetadata: async function createMetadata({ graph, context }) {
           try {
             const result = await plugin.createMetadata(graph, context);
             return {
               type: 'createMetadataResult',
-              payload: { metadata: result, success: true, tx },
+              payload: { metadata: result, success: true },
             };
           } catch (e) {
             return {
@@ -174,17 +172,16 @@ const server = createServer((socket) => {
               payload: {
                 success: false,
                 error: createSerializableError(e),
-                tx,
               },
             };
           }
         },
-        preTasksExecution: async ({ tx, context }) => {
+        preTasksExecution: async ({ context }) => {
           try {
             const mutations = await plugin.preTasksExecution?.(context);
             return {
               type: 'preTasksExecutionResult',
-              payload: { success: true, tx, mutations },
+              payload: { success: true, mutations },
             };
           } catch (e) {
             return {
@@ -192,17 +189,16 @@ const server = createServer((socket) => {
               payload: {
                 success: false,
                 error: createSerializableError(e),
-                tx,
               },
             };
           }
         },
-        postTasksExecution: async ({ tx, context }) => {
+        postTasksExecution: async ({ context }) => {
           try {
             await plugin.postTasksExecution?.(context);
             return {
               type: 'postTasksExecutionResult',
-              payload: { success: true, tx },
+              payload: { success: true },
             };
           } catch (e) {
             return {
@@ -210,7 +206,6 @@ const server = createServer((socket) => {
               payload: {
                 success: false,
                 error: createSerializableError(e),
-                tx,
               },
             };
           }

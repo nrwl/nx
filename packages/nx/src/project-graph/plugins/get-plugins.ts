@@ -3,17 +3,16 @@ import { join } from 'node:path';
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
 import { PluginConfiguration, readNxJson } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
-import { IS_WASM } from '../../native';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin } from './in-process-loader';
+import { loadIsolatedNxPlugin } from './isolation';
 
+import { isIsolationEnabled } from './isolation/enabled';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
   pluginTranspilerIsRegistered,
 } from './transpiler';
-import { isIsolationEnabled } from './isolation/enabled';
 
 /**
  * Stuff for specified NX Plugins.
@@ -29,7 +28,7 @@ const loadingMethod = (
   index?: number
 ) =>
   isIsolationEnabled()
-    ? loadNxPluginInIsolation(plugin, root, index)
+    ? loadIsolatedNxPlugin(plugin, root, index)
     : loadNxPlugin(plugin, root);
 
 export async function getPlugins(
@@ -234,7 +233,6 @@ async function loadSpecifiedNxPlugins(
 
       cleanupFunctions.push(cleanup);
       const res = await loadedPluginPromise;
-      res.index = index;
       performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
       performance.measure(
         `Load Nx Plugin: ${pluginPath}`,
