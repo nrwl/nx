@@ -1,14 +1,12 @@
 distribute-on:
-  extra-small-changeset: 8 linux-large, 3 linux-extra-large
-  small-changeset: 8 linux-large, 4 linux-extra-large
-  medium-changeset: 8 linux-large, 5 linux-extra-large
-  large-changeset: 10 linux-large, 6 linux-extra-large
-  extra-large-changeset: 12 linux-large, 6 linux-extra-large
+  extra-small-changeset: 6 linux-large, 3 linux-extra-large
+  small-changeset: 6 linux-large, 4 linux-extra-large
+  medium-changeset: 6 linux-large, 5 linux-extra-large
+  large-changeset: 6 linux-large, 6 linux-extra-large
+  extra-large-changeset: 8 linux-large, 8 linux-extra-large
 assignment-rules:
   - projects:
       - e2e-gradle
-      - e2e-node
-      - e2e-react
       - e2e-next
       - e2e-plugin
     targets:
@@ -18,6 +16,8 @@ assignment-rules:
         parallelism: 2
   - projects:
       - e2e-angular
+      - e2e-node
+      - e2e-react
     targets:
       - e2e-ci**
     run-on:

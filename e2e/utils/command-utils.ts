@@ -305,7 +305,7 @@ export function runCommandUntil(
         complete = true;
         p.kill();
         logError(
-          `Original output:`,
+          `Output did not meet the criteria:`,
           output
             .split('\n')
             .map((l) => `    ${l}`)
