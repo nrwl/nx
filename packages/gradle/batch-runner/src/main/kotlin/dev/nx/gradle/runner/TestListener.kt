@@ -20,11 +20,9 @@ fun testListener(
         val success = getTaskFinishEventSuccess(event, taskPath)
 
         tasks.entries
-            .filter {
-              it.value.taskName == taskPath
-            } // Filters the entries to keep only matching ones
+            .filter { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
             .map { it.key }
-            .forEach { nxTaskId -> // Iterate over the filtered entries
+            .forEach { nxTaskId ->
               testTaskStatus.computeIfAbsent(nxTaskId) { success }
               testEndTimes.computeIfAbsent(nxTaskId) { event.result.endTime }
             }

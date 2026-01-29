@@ -34,6 +34,9 @@ export default async function gradleExecutor(
     args.push(`--tests`, options.testClassName);
   }
 
+  // Skip Gradle caching since we use Nx caching
+  args.push('--rerun-tasks');
+
   // Pass any additional options not defined in the schema as gradle arguments
   const knownOptions = new Set([
     'taskName',
