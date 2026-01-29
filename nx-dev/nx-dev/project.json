@@ -33,8 +33,8 @@
       },
       "inputs": [
         "{workspaceRoot}/docs/**/*",
-        "{workspaceRoot}/dist/nx-dev/nx-dev/public/sitemap.xml",
-        "{workspaceRoot}/astro-docs/dist/sitemap-index.xml",
+        "{workspaceRoot}/dist/nx-dev/nx-dev/public/sitemap*.xml",
+        "{workspaceRoot}/astro-docs/dist/sitemap*.xml",
         "{workspaceRoot}/scripts/tsconfig.scripts.json",
         "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
       ]
