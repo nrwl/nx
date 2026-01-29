@@ -22,7 +22,10 @@ import { getDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
-import { signalToCode } from '../utils/exit-codes';
+import {
+  EXPECTED_TERMINATION_SIGNALS,
+  signalToCode,
+} from '../utils/exit-codes';
 import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -817,8 +820,8 @@ export class TaskOrchestrator {
           this.runningContinuousTasks.delete(task.id);
 
           const wasIntentional = this.stoppingContinuousTasks.delete(task.id);
-          if (wasIntentional) {
-            // Intentional kill - success/Stopped
+          if (wasIntentional || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+            // Terminated by user or orchestrator - success/Stopped
             await this.complete(
               [
                 {
@@ -901,8 +904,8 @@ export class TaskOrchestrator {
         }
 
         const wasIntentional = this.stoppingContinuousTasks.delete(task.id);
-        if (wasIntentional) {
-          // Intentional kill - success/Stopped
+        if (wasIntentional || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+          // Terminated by user or orchestrator - success/Stopped
           await this.complete(
             [
               {
