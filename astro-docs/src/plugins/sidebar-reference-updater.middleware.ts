@@ -61,30 +61,9 @@ export const onRequest = defineRouteMiddleware(async (context) => {
     context.locals.starlightRoute
   );
 
-  // Add Plugin Registry and Changelog links
-  const pluginRegistryLink: SidebarLink = {
-    type: 'link',
-    label: 'Plugin Registry',
-    href: '/docs/plugin-registry',
-    badge: undefined,
-    isCurrent: context.locals.starlightRoute.entry.slug === 'plugin-registry',
-    attrs: {},
-  };
-
-  const changelogLink: SidebarLink = {
-    type: 'link',
-    label: 'Changelog',
-    href: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
-    badge: undefined,
-    isCurrent: false, // This is on Next.js
-    attrs: {},
-  };
-
   // Apply sorting to reference entries
   const newEntries = [
     ...commandSection,
-    pluginRegistryLink,
-    changelogLink,
     nxSection,
     devkitSection,
     webSection,
