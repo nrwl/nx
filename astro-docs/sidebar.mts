@@ -1,5 +1,8 @@
 import type { StarlightUserConfig } from '@astrojs/starlight/types';
-import { getTechnologyKBItems } from './src/plugins/utils/plugin-mappings';
+import {
+  getTechnologyKBItems,
+  getTechnologyAPIItems,
+} from './src/plugins/utils/plugin-mappings';
 
 export const sidebar: StarlightUserConfig['sidebar'] = [
   // GETTING STARTED - Focus: immediate value, essential setup
@@ -981,6 +984,148 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       {
         label: 'Deprecatations',
         link: 'reference/deprecated',
+      },
+      // Technology API docs (Generators, Executors, Migrations)
+      {
+        label: 'TypeScript',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('js')],
+      },
+      {
+        label: 'Angular',
+        collapsed: true,
+        items: [
+          ...getTechnologyAPIItems('angular', undefined, 'Angular'),
+          ...getTechnologyAPIItems(
+            'angular-rspack',
+            'angular',
+            'Angular Rspack'
+          ),
+          ...getTechnologyAPIItems(
+            'angular-rsbuild',
+            'angular',
+            'Angular Rsbuild'
+          ),
+          ...getTechnologyAPIItems(
+            'angular-rspack-compiler',
+            'angular',
+            'Angular Rspack Compiler'
+          ),
+        ],
+      },
+      {
+        label: 'React',
+        collapsed: true,
+        items: [
+          ...getTechnologyAPIItems('react', undefined, 'React'),
+          ...getTechnologyAPIItems('next', 'react', 'Next.js'),
+          ...getTechnologyAPIItems('remix', 'react', 'Remix'),
+          ...getTechnologyAPIItems('react-native', 'react', 'React Native'),
+          ...getTechnologyAPIItems('expo', 'react', 'Expo'),
+        ],
+      },
+      {
+        label: 'Vue',
+        collapsed: true,
+        items: [
+          ...getTechnologyAPIItems('vue', undefined, 'Vue'),
+          ...getTechnologyAPIItems('nuxt', 'vue', 'Nuxt'),
+        ],
+      },
+      {
+        label: 'Node',
+        collapsed: true,
+        items: [
+          ...getTechnologyAPIItems('node', undefined, 'Node'),
+          ...getTechnologyAPIItems('express', 'node', 'Express'),
+          ...getTechnologyAPIItems('nest', 'node', 'Nest'),
+        ],
+      },
+      {
+        label: 'Java',
+        collapsed: true,
+        items: [
+          ...getTechnologyAPIItems('gradle', 'java', 'Gradle'),
+          ...getTechnologyAPIItems('maven', 'java', 'Maven'),
+        ],
+      },
+      {
+        label: '.NET',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('dotnet')],
+      },
+      {
+        label: 'Module Federation',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('module-federation')],
+      },
+      {
+        label: 'ESLint',
+        collapsed: true,
+        items: [
+          ...getTechnologyAPIItems('eslint', undefined, 'ESLint'),
+          ...getTechnologyAPIItems('eslint-plugin', 'eslint', 'ESLint Plugin'),
+        ],
+      },
+      {
+        label: 'Webpack',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('webpack', 'build-tools')],
+      },
+      {
+        label: 'Vite',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('vite', 'build-tools')],
+      },
+      {
+        label: 'Rollup',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('rollup', 'build-tools')],
+      },
+      {
+        label: 'ESBuild',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('esbuild', 'build-tools')],
+      },
+      {
+        label: 'Rspack',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('rspack', 'build-tools')],
+      },
+      {
+        label: 'Rsbuild',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('rsbuild', 'build-tools')],
+      },
+      {
+        label: 'Cypress',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('cypress', 'test-tools')],
+      },
+      {
+        label: 'Jest',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('jest', 'test-tools')],
+      },
+      {
+        label: 'Playwright',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('playwright', 'test-tools')],
+      },
+      {
+        label: 'Storybook',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('storybook', 'test-tools')],
+      },
+      {
+        label: 'Detox',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('detox', 'test-tools')],
+      },
+      {
+        label: 'Vitest',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('vitest', 'test-tools')],
       },
     ],
   },
