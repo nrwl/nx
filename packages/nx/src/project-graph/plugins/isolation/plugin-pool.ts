@@ -4,8 +4,7 @@ import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
-// TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
-// import { logger } from '../../utils/logger';
+import { logger } from '../../../utils/logger';
 
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
@@ -189,6 +188,9 @@ function createWorkerHandler(
           const { name, createNodesPattern, include, exclude } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
+          logger.verbose(
+            `[plugin-pool] loaded plugin "${name}" from worker (pid: ${worker.pid})`
+          );
           onload({
             name,
             include,
@@ -431,6 +433,7 @@ function registerPendingPromise(
 global.nxPluginWorkerCount ??= 0;
 
 async function startPluginWorker(name: string) {
+  performance.mark(`start-plugin-worker:${name}`);
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
@@ -469,6 +472,10 @@ async function startPluginWorker(name: string) {
       shell: false,
       windowsHide: true,
     }
+  );
+
+  logger.verbose(
+    `[plugin-pool] spawned worker for "${name}" (pid: ${worker.pid}, socket: ${ipcPath})`
   );
 
   // To make debugging easier and allow plugins to communicate things
@@ -529,6 +536,9 @@ async function startPluginWorker(name: string) {
       if (socket) {
         socket.unref();
         clearInterval(id);
+        logger.verbose(
+          `[plugin-pool] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
+        );
         resolve({
           worker,
           socket,
@@ -536,11 +546,19 @@ async function startPluginWorker(name: string) {
       } else if (attempts > 10000) {
         // daemon fails to start, the process probably exited
         // we print the logs and exit the client
-        reject('Failed to start plugin worker.');
+        clearInterval(id);
+        reject(new Error(`Failed to start plugin worker for plugin ${name}`));
       } else {
         attempts++;
       }
     }, 10);
+  }).finally(() => {
+    performance.mark(`start-plugin-worker-end:${name}`);
+    performance.measure(
+      `start-plugin-worker:${name}`,
+      `start-plugin-worker:${name}`,
+      `start-plugin-worker-end:${name}`
+    );
   });
 }
 
