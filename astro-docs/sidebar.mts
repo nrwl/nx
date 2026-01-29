@@ -48,27 +48,25 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     label: 'How Nx Works',
     collapsed: true,
     items: [
-      // Core concepts
       { label: 'Mental Model', link: 'concepts/mental-model' },
       { label: 'How Caching Works', link: 'concepts/how-caching-works' },
-      { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
+      // TODO: we have too many "configuration" pages. we should consolidate these
       {
         label: 'Task Pipeline Configuration',
         link: 'concepts/task-pipeline-configuration',
       },
       {
-        label: 'Executors and Configurations',
-        link: 'concepts/executors-and-configurations',
-      },
-      { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
-      { label: 'Sync Generators', link: 'concepts/sync-generators' },
-      { label: 'Common Tasks', link: 'concepts/common-tasks' },
-      {
         label: 'Types of Configuration',
         link: 'concepts/types-of-configuration',
       },
-      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
-      // CI Concepts (flattened - no nested group)
+      {
+        label: 'Executors and Configurations',
+        link: 'concepts/executors-and-configurations',
+      },
+      // TODO: probably combine these two nx plugin pages
+      { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
+      { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
+      // TODO: we most likely just need 1 "Nx in CI" page that is a combo of these two pages
       {
         label: 'Building Blocks of Fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
@@ -77,10 +75,12 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         label: 'Parallelization and Distribution',
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
+      // TODO: techincally a how nx works, but is it really helpful here or maybe a better fit inside the KB?
+      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
 
-  // 3. PLATFORM - Focus: Power features that apply to everyone, agnostic to a given framework/tool
+  // PLATFORM - Focus: Power features that apply to everyone, agnostic to a given framework/tool
   {
     label: 'Platform Features',
     collapsed: true,
@@ -88,76 +88,47 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       { label: 'Run Tasks', link: 'features/run-tasks' },
       { label: 'Explore Graph', link: 'features/explore-graph' },
       { label: 'Generate Code', link: 'features/generate-code' },
+      // TODO: techincally can be technology specific w/ eslint
+      // so maybe we flip to talk about the theory and mention the 2 ways to use it w/ links?
       {
         label: 'Enforce Module Boundaries',
         link: 'features/enforce-module-boundaries',
       },
       { label: 'Manage Releases', link: 'features/manage-releases' },
-      { label: 'Enhance AI', link: 'features/enhance-ai' },
+      // TODO: do we need this page? or should we merge w/ the getting started ai setup stuff?
+      { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
+      // TODO:
+      { label: 'Sync Generators', link: 'concepts/sync-generators' },
       {
         label: 'CI & Orchestration',
         collapsed: true,
         items: [
-          { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Remote Cache',
+            label: 'Remote Cache (Nx Replay)',
             link: 'features/ci-features/remote-cache',
           },
+          { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Distribute Task Execution',
-            link: 'features/ci-features/distribute-task-execution',
+            label: 'Self-Healing CI',
+            link: 'features/ci-features/self-healing-ci',
           },
+          { label: 'Flaky Tasks', link: 'features/ci-features/flaky-tasks' },
           {
-            label: 'Dynamic Agents',
-            link: 'features/ci-features/dynamic-agents',
+            label: 'Distribute Task Execution (Nx Agents)',
+            link: 'features/ci-features/distribute-task-execution',
           },
           {
             label: 'Split E2E Tasks',
             link: 'features/ci-features/split-e2e-tasks',
           },
-          { label: 'Flaky Tasks', link: 'features/ci-features/flaky-tasks' },
           {
-            label: 'Self-Healing CI',
-            link: 'features/ci-features/self-healing-ci',
-          },
-          {
-            label: 'GitHub Integration',
-            link: 'features/ci-features/github-integration',
+            label: 'Dynamically Allocate Agents',
+            link: 'features/ci-features/dynamic-agents',
           },
         ],
       },
       {
-        label: 'Adopting Nx',
-        collapsed: true,
-        items: [
-          {
-            label: 'Adding to Existing Project',
-            link: 'guides/adopting-nx/adding-to-existing-project',
-          },
-          {
-            label: 'Adding to Monorepo',
-            link: 'guides/adopting-nx/adding-to-monorepo',
-          },
-          {
-            label: 'Import Project',
-            link: 'guides/adopting-nx/import-project',
-          },
-          {
-            label: 'Manual Setup',
-            link: 'guides/adopting-nx/manual',
-          },
-          {
-            label: 'From Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
-          },
-          {
-            label: 'Preserving Git Histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
-          },
-        ],
-      },
-      {
-        label: 'Module Boundaries',
+        label: 'Enforce Module Boundaries',
         collapsed: true,
         items: [
           {
@@ -263,7 +234,12 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             label: 'Record Commands',
             link: 'guides/nx-cloud/record-commands',
           },
-          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
+          {
+            // TODO: this needs a better name since we have vcs integrations already
+            // but this page is detailing a few things like github org permissions in cloud probs split
+            label: 'GitHub Integration',
+            link: 'features/ci-features/github-integration',
+          },
           {
             label: 'CIPE Affected Project Graph',
             link: 'guides/nx-cloud/cipe-affected-project-graph',
@@ -274,6 +250,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             label: 'Enable AI Features',
             link: 'guides/nx-cloud/enable-ai-features',
           },
+          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
           {
             label: 'Source Control Integration',
             link: 'guides/nx-cloud/source-control-integration',
@@ -388,6 +365,39 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           {
             label: 'Enterprise Release Notes',
             link: 'reference/nx-cloud/release-notes',
+          },
+        ],
+      },
+      {
+        label: 'Migrating to Nx',
+        collapsed: true,
+        items: [
+          // TODO: this should go away and we only maintain the 2 setup processes in getting-started + quickstart
+          // e.g. nx init or create-nx-workspace based flows
+          // anything extra like nx import would make sense here as a "advanced nx adoption guides" or move to KB if it's tech specific like "how to import <framework> specific project"
+          // {
+          //   label: 'Adding to Existing Project',
+          //   link: 'guides/adopting-nx/adding-to-existing-project',
+          // },
+          // {
+          //   label: 'Adding to Monorepo',
+          //   link: 'guides/adopting-nx/adding-to-monorepo',
+          // },
+          {
+            label: 'Automate Importing Projects',
+            link: 'guides/adopting-nx/import-project',
+          },
+          {
+            label: 'Manual Migrations',
+            link: 'guides/adopting-nx/manual',
+          },
+          {
+            label: 'Preserving Git Histories',
+            link: 'guides/adopting-nx/preserving-git-histories',
+          },
+          {
+            label: 'Migrating From Turborepo',
+            link: 'guides/adopting-nx/from-turborepo',
           },
         ],
       },
@@ -599,7 +609,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         ],
       },
       {
-        // TODO: we can probs condense and split this section up
+        // TODO: we can probs condense and split this section up some
         label: 'Nx Console',
         collapsed: true,
         items: [
@@ -633,44 +643,30 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           },
         ],
       },
+      // TODO: this should be a consolidated version of what encapsulated installation is IMO
       {
-        // TODO: do we even need this? feels like it should be apart of the main setup in getting started or fully removed
-        label: 'Installation',
-        collapsed: true,
-        items: [
-          {
-            label: 'Install Nx in Non-JavaScript Repo',
-            link: 'guides/installation/install-non-javascript',
-          },
-          {
-            label: 'Update Global Installation',
-            link: 'guides/installation/update-global-installation',
-          },
-        ],
+        label: 'Install Nx in Non-JavaScript Repo',
+        link: 'guides/installation/install-non-javascript',
       },
       {
-        label: 'Organization Decisions',
+        label: 'Update Global Installation',
+        link: 'guides/installation/update-global-installation',
+      },
+      {
+        label: 'Organizational Decisions',
         collapsed: true,
         items: [
-          {
-            label: 'Monorepo or Polyrepo',
-            link: 'concepts/decisions/overview',
-          },
           {
             label: 'Why Monorepos',
             link: 'concepts/decisions/why-monorepos',
           },
           {
+            label: 'Monorepo or Polyrepo',
+            link: 'concepts/decisions/overview',
+          },
+          {
             label: 'Dependency Management',
             link: 'concepts/decisions/dependency-management',
-          },
-          {
-            label: 'Code Ownership',
-            link: 'concepts/decisions/code-ownership',
-          },
-          {
-            label: 'Project Dependency Rules',
-            link: 'concepts/decisions/project-dependency-rules',
           },
           {
             label: 'Folder Structure',
@@ -680,10 +676,20 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             label: 'Project Size',
             link: 'concepts/decisions/project-size',
           },
+          {
+            label: 'Code Ownership',
+            link: 'concepts/decisions/code-ownership',
+          },
+          // TODO: update this to talk about module boundaries in general and have examples for eslint and conformance
+          {
+            label: 'Project Dependency Rules',
+            link: 'concepts/decisions/project-dependency-rules',
+          },
         ],
       },
+      // TODO: unsure what these should be mapped into tbh
       {
-        label: 'TypeScript Monorepos',
+        label: 'TypeScript Project References',
         items: [
           {
             label: 'TypeScript Project Linking',
@@ -699,6 +705,8 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         label: 'Extending Nx',
         collapsed: true,
         items: [
+          // TODO: we should shorten this into each of the ways to use a plugin. e.g. generators, executors, migrations, CreateNodes, lifecycle hooks, presets
+          // OR walk through making a full lifecycle of a plugin that's step by step using all the APIs
           { label: 'Intro', link: 'extending-nx/intro' },
           { label: 'Local Generators', link: 'extending-nx/local-generators' },
           {
@@ -761,19 +769,26 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         ],
       },
       {
-        label: 'Reduce Waste in CI',
-        link: 'concepts/ci-concepts/reduce-waste',
-      },
-      { label: 'Cache Security', link: 'concepts/ci-concepts/cache-security' },
-      {
-        label: 'Heartbeat and Manual Shutdown Handling',
-        link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
+        label: 'Continuous Integration',
+        items: [
+          {
+            label: 'Reduce Waste in CI',
+            link: 'concepts/ci-concepts/reduce-waste',
+          },
+          {
+            label: 'Cache Security',
+            link: 'concepts/ci-concepts/cache-security',
+          },
+          {
+            label: 'Heartbeat and Manual Shutdown Handling',
+            link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
+          },
+        ],
       },
       {
         label: 'Buildable and Publishable Libraries',
         link: 'concepts/buildable-and-publishable-libraries',
       },
-
       // TODO: this section is werid and doesn't really explain what's going on. maybe a better way to structure the information esp that is which is more generic to Nx but specificly still a guide
       {
         label: 'Tasks & Caching',
@@ -834,6 +849,24 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           { label: 'Terminal UI', link: 'guides/tasks--caching/terminal-ui' },
         ],
       },
+      {
+        label: 'Benchmarks',
+        collapsed: true,
+        items: [
+          {
+            label: 'Nx Agents at Scale',
+            link: 'reference/benchmarks/nx-agents',
+          },
+          {
+            label: 'Large Next.js Apps with Caching',
+            link: 'reference/benchmarks/caching',
+          },
+          {
+            label: 'TSC Batch Mode',
+            link: 'reference/benchmarks/tsc-batch-mode',
+          },
+        ],
+      },
     ],
   },
   // REFERENCE  - Focus: Exhaustive facts, no narrative
@@ -870,92 +903,8 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         link: 'reference/remote-cache-plugins',
       },
       {
-        label: 'Benchmarks',
-        collapsed: true,
-        items: [
-          {
-            label: 'Nx Agents at Scale',
-            link: 'reference/benchmarks/nx-agents',
-          },
-          {
-            label: 'Large Next.js Apps with Caching',
-            link: 'reference/benchmarks/caching',
-          },
-          {
-            label: 'TSC Batch Mode',
-            link: 'reference/benchmarks/tsc-batch-mode',
-          },
-        ],
-      },
-      {
-        label: 'Deprecated',
-        collapsed: true,
-        items: [
-          {
-            label: 'Workspace Generators',
-            link: 'reference/deprecated/workspace-generators',
-          },
-          {
-            label: 'affected:graph',
-            link: 'reference/deprecated/affected-graph',
-          },
-          {
-            label: 'workspace.json',
-            link: 'reference/deprecated/workspace-json',
-          },
-          {
-            label: 'Cacheable Operations',
-            link: 'reference/deprecated/cacheable-operations',
-          },
-          {
-            label: 'v1 Nx Plugin API',
-            link: 'reference/deprecated/v1-nx-plugin-api',
-          },
-          {
-            label: 'Legacy Cache',
-            link: 'reference/deprecated/legacy-cache',
-          },
-          {
-            label: 'Workspace Executors',
-            link: 'reference/deprecated/workspace-executors',
-          },
-          {
-            label: 'print-affected',
-            link: 'reference/deprecated/print-affected',
-          },
-          {
-            label: 'Custom Tasks Runner',
-            link: 'reference/deprecated/custom-tasks-runner',
-          },
-          {
-            label: 'NPM Scope',
-            link: 'reference/deprecated/npm-scope',
-          },
-          {
-            label: 'Rescoping @nrwl to @nx',
-            link: 'reference/deprecated/rescope',
-          },
-          {
-            label: 'Runtime Cache Inputs',
-            link: 'reference/deprecated/runtime-cache-inputs',
-          },
-          {
-            label: 'Global Implicit Dependencies',
-            link: 'reference/deprecated/global-implicit-dependencies',
-          },
-          {
-            label: 'As Provided vs Derived',
-            link: 'reference/deprecated/as-provided-vs-derived',
-          },
-          {
-            label: 'Integrated vs Package-Based',
-            link: 'reference/deprecated/integrated-vs-package-based',
-          },
-          {
-            label: 'Angular Schematics and Builders',
-            link: 'reference/deprecated/angular-schematics-builders',
-          },
-        ],
+        label: 'Deprecatations',
+        link: 'reference/deprecated',
       },
     ],
   },
