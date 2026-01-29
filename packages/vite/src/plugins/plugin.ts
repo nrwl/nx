@@ -23,6 +23,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
+import type { ResolvedConfig } from 'vite';
 
 const pmc = getPackageManagerCommand();
 
@@ -219,6 +220,7 @@ async function buildViteTargets(
     {
       configFile: absoluteConfigFilePath,
       mode: 'development',
+      root: projectRoot,
     },
     'build'
   );
@@ -596,7 +598,7 @@ function serveStaticTarget(
 }
 
 function getOutputs(
-  viteBuildConfig: Record<string, any> | undefined,
+  viteBuildConfig: ResolvedConfig | undefined,
   projectRoot: string,
   workspaceRoot: string
 ): {
@@ -615,10 +617,12 @@ function getOutputs(
     'dist'
   );
 
-  const isBuildable =
+  const isBuildable = Boolean(
     build?.lib ||
-    build?.rollupOptions?.input ||
-    existsSync(join(workspaceRoot, projectRoot, 'index.html'));
+      viteBuildConfig?.builder?.buildApp ||
+      build?.rollupOptions?.input ||
+      existsSync(join(workspaceRoot, projectRoot, 'index.html'))
+  );
 
   const hasServeConfig = Boolean(server?.host || server?.port);
 

@@ -1,4 +1,4 @@
-package dev.nx.maven.runner
+package dev.nx.maven.adapter.maven4
 
 import org.apache.maven.api.services.Lookup
 import org.apache.maven.execution.BuildResumptionAnalyzer

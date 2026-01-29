@@ -53,6 +53,18 @@
             "glob": "batch-runner.jar",
             "output": "/",
             "includeIgnoredFiles": true
+          },
+          {
+            "input": "packages/maven/batch-runner-adapters/maven3/target",
+            "glob": "maven3-adapter.jar",
+            "output": "/nx-maven-adapters",
+            "includeIgnoredFiles": true
+          },
+          {
+            "input": "packages/maven/batch-runner-adapters/maven4/target",
+            "glob": "maven4-adapter.jar",
+            "output": "/nx-maven-adapters",
+            "includeIgnoredFiles": true
           }
         ]
       }
