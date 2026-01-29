@@ -91,7 +91,7 @@ export default defineConfig({
         // since the sidebar doesn't auto generate w/ dynamic routes from src/pages/reference
         // only the src/content/docs/reference files
         './src/plugins/sidebar-reference-updater.middleware.ts',
-        './src/plugins/sidebar-icons.middleware.ts',
+        // './src/plugins/sidebar-icons.middleware.ts',
         './src/plugins/og.middleware.ts',
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
