@@ -79,6 +79,7 @@
     "@nestjs/schematics": "^9.1.0",
     "@nestjs/swagger": "^6.0.0",
     "@nestjs/testing": "^9.0.0",
+    "@netlify/plugin-nextjs": "^5.15.7",
     "@notionhq/client": "^2.2.15",
     "@nuxt/kit": "^3.10.0",
     "@nuxt/schema": "^3.10.0",

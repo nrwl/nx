@@ -82,7 +82,10 @@
         "development": {
           "outputPath": "nx-dev/nx-dev"
         },
-        "production": {}
+        "production": {},
+        "netlify": {
+          "outputPath": "nx-dev/nx-dev"
+        }
       }
     },
     "copy-docs": {
