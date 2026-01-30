@@ -98,9 +98,6 @@ export default defineConfig({
         './src/plugins/canonical.middleware.ts',
       ],
       markdown: {
-        // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
-        // as to _why_ it has to normalize a path?
-        // idk just working around the issue for now but we'll want to have linked headers so will need to fix
         headingLinks: true,
       },
       social: [

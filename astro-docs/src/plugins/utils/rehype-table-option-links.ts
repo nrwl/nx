@@ -8,7 +8,11 @@
  */
 
 import type { Element, ElementContent, Root, Text } from 'hast';
-import { LINK_ICON_PATH, optionSlug } from './option-slug';
+import {
+  LINK_ICON_PATH,
+  optionSlug,
+  TABLE_HEADERS_TO_MATCH,
+} from './option-slug';
 
 function getTextContent(node: ElementContent | Root): string {
   if (node.type === 'text') return (node as Text).value;
@@ -81,7 +85,7 @@ function isOptionsTable(table: Element): boolean {
   const firstTh = findElement(thead.children as ElementContent[], 'th');
   if (!firstTh) return false;
   const text = getTextContent(firstTh).trim();
-  return text === 'Option' || text === 'Options';
+  return TABLE_HEADERS_TO_MATCH.includes(text.toLowerCase());
 }
 
 function processOptionsTable(table: Element): void {
