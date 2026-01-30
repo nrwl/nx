@@ -16,7 +16,7 @@ export function NxBrand() {
               Nx
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-4">
-              Smart Repos · Fast Builds
+              Smart Monorepos · Fast Builds
             </SectionHeading>
             <SectionDescription as="p" className="mt-2">
               The Nx trademark includes the Nx name & logo, and any word,

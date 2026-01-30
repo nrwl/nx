@@ -139,7 +139,7 @@ export const GET: APIRoute = async ({ site }) => {
     '',
     '> Complete Nx documentation compiled into a single file for LLM consumption.',
     '',
-    'Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx provides intelligent task execution, caching, and CI optimization.',
+    'Nx is a powerful, open-source, technology-agnostic monorepo platform designed to efficiently manage codebases of any scale. From small workspaces to large enterprise monorepos, Nx provides intelligent task execution, caching, and CI optimization.',
     '',
     `This file was generated from ${entries.length} documentation pages.`,
     `Individual pages are available at: ${siteUrl}/docs/{slug}.md`,

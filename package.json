@@ -1,6 +1,6 @@
 {
   "name": "@nx/nx-source",
-  "description": "Smart Repos · Fast Builds",
+  "description": "Smart Monorepos · Fast Builds",
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
