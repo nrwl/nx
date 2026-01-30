@@ -215,6 +215,18 @@ async function buildViteTargets(
   } catch {
     // Plugin not installed or not needed, ignore
   }
+  // Workaround for race condition with vitest/node on Node 24+
+  // When multiple vitest.config files are processed in parallel, Node can throw:
+  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
+  // because it is not yet fully loaded.
+  // See: https://github.com/nrwl/nx/issues/34028
+  try {
+    const importVitestNode = () =>
+      new Function('return import("vitest/node")')();
+    await importVitestNode();
+  } catch {
+    // vitest/node not available or not needed, ignore
+  }
   const { resolveConfig } = await loadViteDynamicImport();
   const viteBuildConfig = await resolveConfig(
     {
