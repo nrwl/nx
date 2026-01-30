@@ -29,7 +29,7 @@ const loadingMethod = (
 ) =>
   isIsolationEnabled()
     ? loadIsolatedNxPlugin(plugin, root, index)
-    : loadNxPlugin(plugin, root);
+    : loadNxPlugin(plugin, root, index);
 
 export async function getPlugins(
   root = workspaceRoot
