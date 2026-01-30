@@ -39,19 +39,16 @@ try {
   process.exit(1);
 }
 
-// Check for rust
+// Check for rust (optional: only required for building native Nx binaries)
 try {
   let rustVersion = childProcess.execSync('rustc --version');
   if (semverLessThan(rustVersion.toString().split(' ')[1], '1.70.0')) {
-    console.log(`Found ${rustVersion}`);
-    console.error(
-      'Please make sure that your installed Rust version is greater than v1.70. You can update your installed Rust version with `rustup update`'
+    console.warn(
+      `Found ${rustVersion}. Rust 1.70+ is required to build Nx native binaries. Update with: rustup update`
     );
-    process.exit(1);
   }
 } catch {
-  console.error(
-    'Could not find the Rust compiler on this system. Please make sure that it is installed with https://rustup.rs'
+  console.warn(
+    'Rust (rustc) was not found. pnpm install will continue, but building the Nx native package (e.g. nx build nx) requires Rust: https://rustup.rs'
   );
-  process.exit(1);
 }
