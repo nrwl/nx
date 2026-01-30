@@ -408,6 +408,13 @@ h6:hover .anchor-link {
   border-inline-start: none;
 }
 
+@media (min-width: 84rem) {
+  .right-sidebar-panel {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
 .content-panel + .content-panel {
   border-top: 0;
 }
