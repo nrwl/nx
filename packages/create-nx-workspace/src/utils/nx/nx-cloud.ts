@@ -5,7 +5,7 @@ import {
   getSkippedCloudMessage,
   CompletionMessageKey,
 } from './messages';
-import { getFlowVariant } from './ab-testing';
+import { getBannerVariant, getFlowVariant } from './ab-testing';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -115,11 +115,15 @@ export async function getNxCloudInfo(
   workspaceName?: string
 ) {
   const out = new CLIOutput(false);
+  // Get the banner variant based on the cloud URL
+  // Enterprise URLs automatically get variant 0 (plain link)
+  const bannerVariant = getBannerVariant(connectCloudUrl);
   const message = getCompletionMessage(
     completionMessageKey,
     connectCloudUrl,
     pushedToVcs,
-    workspaceName
+    workspaceName,
+    bannerVariant
   );
   out.success(message);
   return out.getOutput();
