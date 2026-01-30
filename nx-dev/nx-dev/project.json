@@ -22,7 +22,12 @@
         { "env": "NEXT_PUBLIC_FRAMER_URL" },
         { "env": "NEXT_PUBLIC_FRAMER_REWRITES" }
       ],
-      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"],
+      "configurations": {
+        "netlify": {
+          "outputs": ["{workspaceRoot}/nx-dev/nx-dev/.next"]
+        }
+      }
     },
     "check-links": {
       "cache": true,
@@ -143,6 +148,16 @@
         "parallel": false,
         "env": {
           "NODE_OPTIONS": "--max-old-space-size=4096"
+        }
+      },
+      "configurations": {
+        "netlify": {
+          "commands": [
+            {
+              "command": "nx run nx-dev:build-base:netlify && nx run nx-dev:sitemap",
+              "description": "NextJs build for Netlify"
+            }
+          ]
         }
       }
     }
