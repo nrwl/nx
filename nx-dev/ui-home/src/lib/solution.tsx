@@ -25,7 +25,7 @@ export function Solution(): ReactElement {
           Skip the tedium. Get to coding.
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
-          We built Nx, an open-source build platform to solve exactly these
+          We built Nx, an open-source monorepo platform to solve exactly these
           problems. Drop it into any codebase and it immediately maps your
           project structure, delivering:
         </SectionHeading>

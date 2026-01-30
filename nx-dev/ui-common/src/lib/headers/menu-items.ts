@@ -138,7 +138,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
 export const ossProducts: MenuItem[] = [
   {
     name: 'Nx',
-    description: 'Smart Repos - Fast Builds',
+    description: 'Smart Monorepos - Fast Builds',
     href: '/docs/getting-started/intro',
     icon: null,
     isNew: false,
