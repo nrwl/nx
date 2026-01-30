@@ -23,6 +23,10 @@ module.exports = withNx({
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Limit static generation workers to reduce memory usage on CI (Netlify 8GB limit)
+  experimental: {
+    cpus: 1,
+  },
   async rewrites() {
     // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
     // Remove trailing slash to prevent double slashes in rewrite destinations
@@ -153,5 +157,12 @@ module.exports = withNx({
     }
 
     return rules;
+  },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      // Disable source maps for smaller memory footprint
+      config.devtool = false;
+    }
+    return config;
   },
 });
