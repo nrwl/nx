@@ -357,11 +357,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
               },
               {
                 label: 'Generators',
-                link: 'reference/conformance/Generators',
+                link: 'reference/conformance/generators',
               },
               {
                 label: 'Executors',
-                link: 'reference/conformance/Executors',
+                link: 'reference/conformance/executors',
               },
             ],
           },
