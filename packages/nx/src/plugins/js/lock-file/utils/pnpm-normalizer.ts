@@ -46,9 +46,9 @@ export function loadPnpmHoistedDepsDefinition() {
     const content = readFileSync(fullPath, 'utf-8');
     const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
-  } else {
-    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
+  // .modules.yaml is created by pnpm install; return empty when missing (e.g. fresh clone or repro without install)
+  return {};
 }
 
 /**
