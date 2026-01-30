@@ -36,7 +36,7 @@ export function WhitePaperFastCI(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
