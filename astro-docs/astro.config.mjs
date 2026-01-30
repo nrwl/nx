@@ -97,7 +97,7 @@ export default defineConfig({
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
         // as to _why_ it has to normalize a path?
         // idk just working around the issue for now but we'll want to have linked headers so will need to fix
-        headingLinks: false,
+        headingLinks: true,
       },
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/nrwl/nx' },
