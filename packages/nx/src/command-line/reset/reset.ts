@@ -2,6 +2,7 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
+import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
 import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
@@ -55,6 +56,11 @@ export async function resetHandler(args: ResetCommandOptions) {
     } catch (e) {
       errors.push('Failed to stop the Nx Daemon.', e.toString());
     }
+    try {
+      await cleanupDaemonDir();
+    } catch (e) {
+      errors.push('Failed to clean up the daemon directory.', e.toString());
+    }
   }
   if (all || args.onlyCache) {
     try {
@@ -103,6 +109,19 @@ async function killDaemon(): Promise<void> {
   if (daemonClient.enabled()) {
     return daemonClient.stop();
   }
+}
+
+function cleanupDaemonDir() {
+  return incrementalBackoff(
+    INCREMENTAL_BACKOFF_FIRST_DELAY,
+    INCREMENTAL_BACKOFF_MAX_DURATION,
+    () => {
+      rmSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, {
+        recursive: true,
+        force: true,
+      });
+    }
+  );
 }
 
 async function resetCloudClient() {
