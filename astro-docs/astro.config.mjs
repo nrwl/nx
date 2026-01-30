@@ -6,6 +6,7 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
+import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 
 const BASE = '/docs';
 
@@ -32,6 +33,9 @@ export default defineConfig({
         limitInputPixels: false, // Disable pixel limit
       },
     },
+  },
+  markdown: {
+    rehypePlugins: [rehypeTableOptionLinks],
   },
   trailingSlash: 'never',
   // This adapter doesn't support local previews, so only load it on Netlify.
