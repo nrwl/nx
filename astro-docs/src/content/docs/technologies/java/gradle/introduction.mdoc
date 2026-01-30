@@ -172,6 +172,50 @@ Once a Gradle configuration file has been identified, the targets are created wi
 By default, the @nx/gradle plugin executes the Gradle wrapper found in your project root. If no wrapper exists there, it searches up through parent directories to the workspace root.
 To use a Gradle wrapper from a custom location, specify the directory path in your nx.json under the plugins array using the gradleExecutableDirectory option.
 
+### Batch Mode
+
+Batch mode allows Nx to send multiple Gradle tasks to Gradle in a single invocation rather than running each task separately. This significantly reduces the overhead of starting multiple Gradle processes and allows Gradle to optimize task execution internally.
+
+Set the `NX_BATCH_MODE` environment variable to `true`:
+
+```shell
+NX_BATCH_MODE=true nx run-many -t build test
+```
+
+#### Enabling Batch Mode in CI
+
+For CI environments, add the `NX_BATCH_MODE` environment variable to your workflow configuration:
+
+{% tabs %}
+{% tabitem label="GitHub Actions" %}
+
+```yaml
+env:
+  NX_BATCH_MODE: true
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # ... rest of your workflow
+```
+
+{% /tabitem %}
+{% tabitem label="CircleCI" %}
+
+```yaml
+env:
+  NX_BATCH_MODE: true
+
+jobs:
+  main:
+    # ... rest of your workflow
+```
+
+{% /tabitem %}
+{% /tabs %}
+
 ### Test Distribution
 
 Nx provides powerful features for distributing tasks in CI, including test splitting (also known as atomization) and optimized build targets. For Gradle projects, this is facilitated by the `@nx/gradle` plugin, allowing you to run your tests and builds more efficiently in your Continuous Integration (CI) environment.
