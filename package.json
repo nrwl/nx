@@ -416,7 +416,10 @@
     "onlyBuiltDependencies": [
       "@nestjs/core",
       "nx"
-    ]
+    ],
+    "patchedDependencies": {
+      "@astrojs/starlight": "patches/@astrojs__starlight.patch"
+    }
   },
   "nx": {
     "includedScripts": [
