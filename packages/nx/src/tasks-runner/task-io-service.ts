@@ -3,6 +3,7 @@ import { dirname, join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { TaskGraph } from '../config/task-graph';
 import { workspaceDataDirectory } from '../utils/cache-directory';
+import { getProcessMetricsService } from './process-metrics-service';
 
 /**
  * Maps taskId -> PID. Note that this only Returns
@@ -18,7 +19,7 @@ export type TaskPidUpdate = {
 
 export type TaskPidCallback = (update: TaskPidUpdate) => void;
 
-export type TaskIOInfo = {
+export type TaskInputInfo = {
   taskId: string;
   inputs: {
     files: string[];
@@ -29,7 +30,7 @@ export type TaskIOInfo = {
   };
 };
 
-export type TaskIOCallback = (taskIOInfo: TaskIOInfo) => void;
+export type TaskInputCallback = (taskInputInfo: TaskInputInfo) => void;
 
 export type TaskOutputsUpdate = {
   taskId: string;
@@ -47,11 +48,11 @@ export type TaskOutputsCallback = (update: TaskOutputsUpdate) => void;
 class TaskIOService {
   // Used to call subscribers that were late to the party
   protected taskToPids: Map<string, number> = new Map();
-  protected taskToIO: Map<string, TaskIOInfo> = new Map();
+  protected taskToInputs: Map<string, TaskInputInfo> = new Map();
 
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
-  private taskIOCallbacks: TaskIOCallback[] = [];
+  private taskInputCallbacks: TaskInputCallback[] = [];
   private taskOutputsCallbacks: TaskOutputsCallback[] = [];
 
   // Project graph and task graph for resolving task information
@@ -87,8 +88,8 @@ class TaskIOService {
    * Subscribe to hash inputs as they are computed.
    * Called when a task's hash inputs become available.
    */
-  subscribeToTaskIO(callback: TaskIOCallback): void {
-    this.taskIOCallbacks.push(callback);
+  subscribeToTaskInputs(callback: TaskInputCallback): void {
+    this.taskInputCallbacks.push(callback);
   }
 
   /**
@@ -103,7 +104,7 @@ class TaskIOService {
    * Notify subscribers that hash inputs are available for a task.
    * Called from the hasher when inputs are computed.
    */
-  notifyTaskIO(
+  notifyTaskInputs(
     taskId: string,
     inputs: {
       files: string[];
@@ -113,15 +114,15 @@ class TaskIOService {
       external: string[];
     }
   ): void {
-    const taskIOInfo: TaskIOInfo = {
+    const taskInputInfo: TaskInputInfo = {
       taskId,
       inputs,
     };
-    this.taskToIO.set(taskId, taskIOInfo);
+    this.taskToInputs.set(taskId, taskInputInfo);
 
-    for (const cb of this.taskIOCallbacks) {
+    for (const cb of this.taskInputCallbacks) {
       try {
-        cb(taskIOInfo);
+        cb(taskInputInfo);
       } catch {
         // Silent failure - don't let one callback break others
       }
@@ -202,11 +203,11 @@ class DebugTaskIOService extends TaskIOService {
           )}\n`,
           ...(this.taskGraph
             ? [
-                'Expected task IO:',
-                ...[...this.taskToIO.entries()].map(
-                  ([taskId, io]) =>
+                'Expected task inputs:',
+                ...[...this.taskToInputs.entries()].map(
+                  ([taskId, info]) =>
                     `Task ${taskId}:
-    Files: [${io.inputs.files?.slice(0, 5).join(', ')}${io.inputs.files?.length > 5 ? `, ... (${io.inputs.files.length} total)` : ''}]`
+    Files: [${info.inputs.files?.slice(0, 5).join(', ')}${info.inputs.files?.length > 5 ? `, ... (${info.inputs.files.length} total)` : ''}]`
                 ),
               ]
             : []),
@@ -231,7 +232,7 @@ class DebugTaskIOService extends TaskIOService {
     super.notifyPidUpdate(update);
   }
 
-  override notifyTaskIO(
+  override notifyTaskInputs(
     taskId: string,
     inputs: {
       files: string[];
@@ -242,9 +243,9 @@ class DebugTaskIOService extends TaskIOService {
     }
   ): void {
     this.log(
-      `notifyTaskIO called for task ${taskId} with ${inputs.files.length} file inputs`
+      `notifyTaskInputs called for task ${taskId} with ${inputs.files.length} file inputs`
     );
-    super.notifyTaskIO(taskId, inputs);
+    super.notifyTaskInputs(taskId, inputs);
   }
 
   override notifyTaskOutputs(taskId: string, outputs: string[]): void {
@@ -277,4 +278,15 @@ export function getTaskIOService(
       : new TaskIOService(projectGraph, taskGraph);
   }
   return instance;
+}
+
+/**
+ * Register a task process start with both IO and metrics services.
+ * This is the standard way to notify the system that a task process has started.
+ * Both services need to be notified together - TaskIOService for external subscribers
+ * and ProcessMetricsService for native resource monitoring.
+ */
+export function registerTaskProcessStart(taskId: string, pid: number): void {
+  getTaskIOService().notifyPidUpdate({ taskId, pid });
+  getProcessMetricsService().registerTaskProcess(taskId, pid);
 }

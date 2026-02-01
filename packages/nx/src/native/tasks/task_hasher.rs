@@ -13,9 +13,9 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        hash_all_externals, hash_external, hash_project_config, hash_project_files_with_inputs,
-        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_with_inputs,
-        CachedTaskOutput,
+        CachedTaskOutput, hash_all_externals, hash_external, hash_project_config,
+        hash_project_files_with_inputs, hash_task_output, hash_tsconfig_selectively,
+        hash_workspace_files_with_inputs,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -186,7 +186,8 @@ impl TaskHasher {
                             .push("AllExternalDependencies".to_string());
                     }
                     // WorkspaceFileSet and ProjectFileSet - add files as inputs
-                    HashInstruction::WorkspaceFileSet(_) | HashInstruction::ProjectFileSet(_, _) => {
+                    HashInstruction::WorkspaceFileSet(_)
+                    | HashInstruction::ProjectFileSet(_, _) => {
                         entry.inputs.files.extend(files);
                     }
                     // ProjectConfiguration, TsConfiguration, Cwd don't produce file lists

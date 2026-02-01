@@ -17,7 +17,7 @@ import {
   NodeChildProcessWithNonDirectOutput,
 } from './running-tasks/node-child-process';
 import { RunningTask } from './running-tasks/running-task';
-import { getTaskIOService } from './task-io-service';
+import { registerTaskProcessStart } from './task-io-service';
 import { Batch } from './tasks-schedule';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 
@@ -229,8 +229,7 @@ export class ForkedProcessTaskRunner {
     // Register forked process for metrics collection
     const pid = p.getPid();
     if (pid) {
-      getTaskIOService().notifyPidUpdate({ taskId: task.id, pid });
-      getProcessMetricsService().registerTaskProcess(task.id, pid);
+      registerTaskProcessStart(task.id, pid);
     }
 
     p.send({
@@ -295,8 +294,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
-        getTaskIOService().notifyPidUpdate({ taskId: task.id, pid: p.pid });
-        getProcessMetricsService().registerTaskProcess(task.id, p.pid);
+        registerTaskProcessStart(task.id, p.pid);
       }
 
       // Send message to run the executor
@@ -362,8 +360,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
-        getTaskIOService().notifyPidUpdate({ taskId: task.id, pid: p.pid });
-        getProcessMetricsService().registerTaskProcess(task.id, p.pid);
+        registerTaskProcessStart(task.id, p.pid);
       }
 
       const cp = new NodeChildProcessWithDirectOutput(p, temporaryOutputPath);

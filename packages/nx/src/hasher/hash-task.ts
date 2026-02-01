@@ -60,7 +60,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 
     // Notify TaskIOService of hash inputs
     if (hashes[i].inputs) {
-      ioService.notifyTaskIO(tasksToHash[i].id, hashes[i].inputs);
+      ioService.notifyTaskInputs(tasksToHash[i].id, hashes[i].inputs);
     }
   }
   if (tasksDetails?.recordTaskDetails) {
@@ -112,7 +112,7 @@ export async function hashTask(
 
   // Notify TaskIOService of hash inputs
   if (inputs) {
-    getTaskIOService().notifyTaskIO(task.id, inputs);
+    getTaskIOService().notifyTaskInputs(task.id, inputs);
   }
 
   if (taskDetails?.recordTaskDetails) {
@@ -180,7 +180,7 @@ export async function hashTasks(
 
     // Notify TaskIOService of hash inputs
     if (inputs) {
-      ioService.notifyTaskIO(task.id, inputs);
+      ioService.notifyTaskInputs(task.id, inputs);
     }
   });
 
@@ -196,7 +196,7 @@ export async function hashTasks(
 
           // Notify TaskIOService of hash inputs
           if (hashes[i].inputs) {
-            ioService.notifyTaskIO(
+            ioService.notifyTaskInputs(
               tasksWithoutCustomHashers[i].id,
               hashes[i].inputs
             );
