@@ -6092,6 +6092,232 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
   });
+
+  describe('non-standard config directories (issue #34243)', () => {
+    it('should infer build target when tsconfig extends from a non-standard directory like .config/', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        // Base tsconfig in .config directory (non-standard location)
+        '.config/tsconfig.base.json': JSON.stringify({
+          compilerOptions: {
+            target: 'ES2022',
+            module: 'NodeNext',
+            moduleResolution: 'NodeNext',
+            composite: true,
+            declaration: true,
+            outDir: 'dist',
+            rootDir: 'src',
+            strict: true,
+          },
+        }),
+        // Project tsconfig that extends the base
+        'packages/domains/tsconfig.json': JSON.stringify({
+          extends: '../../.config/tsconfig.base.json',
+          compilerOptions: {
+            outDir: 'dist',
+            rootDir: 'src',
+          },
+          include: ['src/**/*'],
+        }),
+        'packages/domains/package.json': JSON.stringify({
+          name: '@repro/domains',
+          exports: {
+            '.': {
+              import: './dist/index.js',
+              types: './dist/index.d.ts',
+            },
+          },
+        }),
+        'packages/domains/src/index.ts':
+          'export const hello = () => "Hello World";',
+      });
+
+      const result = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {
+          typecheck: { targetName: 'check' },
+          build: { targetName: 'build', configName: 'tsconfig.json' },
+        }
+      );
+
+      // Should have both typecheck and build targets
+      expect(result.projects['packages/domains'].targets.check).toBeDefined();
+      expect(result.projects['packages/domains'].targets.build).toBeDefined();
+      expect(result.projects['packages/domains'].targets.build.command).toBe(
+        'tsc --build tsconfig.json'
+      );
+    });
+
+    it('should NOT infer build target when outDir is only defined in extended base config (TypeScript resolves outDir relative to base config)', async () => {
+      // When outDir is defined in a base config at a different directory (like .config/),
+      // TypeScript resolves it relative to that directory. So outDir: "dist" in .config/tsconfig.base.json
+      // resolves to ".config/dist", NOT "packages/lib/dist". Users must override outDir in their project config.
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        '.config/tsconfig.base.json': JSON.stringify({
+          compilerOptions: {
+            target: 'ES2022',
+            composite: true,
+            declaration: true,
+            outDir: 'dist', // This resolves to .config/dist, not packages/lib/dist!
+          },
+        }),
+        'packages/lib/tsconfig.json': JSON.stringify({
+          extends: '../../.config/tsconfig.base.json',
+          include: ['src/**/*'],
+          // NOTE: No outDir override - this is the problem!
+        }),
+        'packages/lib/package.json': JSON.stringify({
+          name: '@test/lib',
+          exports: {
+            '.': './dist/index.js', // Points to packages/lib/dist, but outDir is .config/dist
+          },
+        }),
+        'packages/lib/src/index.ts': 'export const foo = 1;',
+      });
+
+      const result = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {
+          build: { targetName: 'build', configName: 'tsconfig.json' },
+        }
+      );
+
+      // Build target should NOT be created because exports (packages/lib/dist) don't match outDir (.config/dist)
+      expect(result.projects['packages/lib'].targets.build).toBeUndefined();
+    });
+
+    it('should infer build target when project overrides outDir from base config', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        '.config/tsconfig.base.json': JSON.stringify({
+          compilerOptions: {
+            target: 'ES2022',
+            composite: true,
+            declaration: true,
+            outDir: 'dist', // This would resolve to .config/dist
+          },
+        }),
+        'packages/lib/tsconfig.json': JSON.stringify({
+          extends: '../../.config/tsconfig.base.json',
+          compilerOptions: {
+            outDir: 'dist', // Override to make it relative to project
+          },
+          include: ['src/**/*'],
+        }),
+        'packages/lib/package.json': JSON.stringify({
+          name: '@test/lib',
+          exports: {
+            '.': './dist/index.js',
+          },
+        }),
+        'packages/lib/src/index.ts': 'export const foo = 1;',
+      });
+
+      const result = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {
+          build: { targetName: 'build', configName: 'tsconfig.json' },
+        }
+      );
+
+      // Build target should be created because project overrides outDir
+      expect(result.projects['packages/lib'].targets.build).toBeDefined();
+    });
+
+    it('should NOT infer build target when exports point to source files (not dist)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        '.config/tsconfig.base.json': JSON.stringify({
+          compilerOptions: {
+            target: 'ES2022',
+            composite: true,
+            declaration: true,
+            outDir: 'dist',
+          },
+        }),
+        'packages/lib/tsconfig.json': JSON.stringify({
+          extends: '../../.config/tsconfig.base.json',
+          include: ['src/**/*'],
+        }),
+        'packages/lib/package.json': JSON.stringify({
+          name: '@test/lib',
+          // exports point to source, not dist - should NOT create build target
+          exports: {
+            '.': './src/index.ts',
+          },
+        }),
+        'packages/lib/src/index.ts': 'export const foo = 1;',
+      });
+
+      const result = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {
+          build: { targetName: 'build', configName: 'tsconfig.json' },
+        }
+      );
+
+      // Build target should NOT be created because exports point to source files
+      expect(result.projects['packages/lib'].targets.build).toBeUndefined();
+    });
+
+    it('should handle user issue #34243 scenario: tsconfig.check.json for typecheck', async () => {
+      // This reproduces the exact user scenario where they want:
+      // - typecheck to use tsconfig.check.json (but this option doesn't exist!)
+      // - build to use tsconfig.json
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        '.config/tsconfig.base.json': JSON.stringify({
+          compilerOptions: {
+            target: 'ES2022',
+            module: 'NodeNext',
+            composite: true,
+            declaration: true,
+            outDir: 'dist',
+            rootDir: 'src',
+          },
+        }),
+        'packages/domains/tsconfig.json': JSON.stringify({
+          extends: '../../.config/tsconfig.base.json',
+          compilerOptions: {
+            outDir: 'dist',
+            rootDir: 'src',
+          },
+          include: ['src/**/*'],
+        }),
+        'packages/domains/package.json': JSON.stringify({
+          name: '@repro/domains',
+          exports: {
+            '.': {
+              import: './dist/index.js',
+              types: './dist/index.d.ts',
+            },
+          },
+        }),
+        'packages/domains/src/index.ts':
+          'export const hello = () => "Hello World";',
+      });
+
+      // User's exact plugin options (minus the invalid configName on typecheck)
+      const result = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {
+          typecheck: { targetName: 'check' },
+          build: { targetName: 'build', configName: 'tsconfig.json' },
+        }
+      );
+
+      // Both targets should be created
+      expect(result.projects['packages/domains'].targets.check).toBeDefined();
+      expect(result.projects['packages/domains'].targets.build).toBeDefined();
+      expect(result.projects['packages/domains'].targets.build.command).toBe(
+        'tsc --build tsconfig.json'
+      );
+      expect(
+        result.projects['packages/domains'].targets.build.outputs
+      ).toContain('{projectRoot}/dist');
+    });
+  });
 });
 
 async function applyFilesToTempFsAndContext(
