@@ -33,11 +33,11 @@ export function Statistics(): JSX.Element {
               key={stat.id}
               className="mx-auto flex max-w-sm flex-col gap-y-2"
             >
-              <dt className="text-base leading-7 text-slate-600 dark:text-slate-400">
+              <dt className="text-base leading-7 text-zinc-600 dark:text-zinc-400">
                 {stat.name}
               </dt>
-              <dd className="order-first text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
-                <span className="text-blue-500 dark:text-sky-500">
+              <dd className="order-first text-3xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+                <span className="text-blue-500 dark:text-blue-500">
                   {stat.prefix}
                   {stat.value}
                   {stat.suffix}

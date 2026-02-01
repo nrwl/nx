@@ -12,12 +12,12 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import {
   agentsMdPath,
-  claudeMcpPath,
   claudeMdPath,
   codexConfigTomlPath,
   geminiMdPath,
   geminiSettingsPath,
   nxMcpTomlHeader,
+  opencodeMcpPath,
   parseGeminiSettings,
 } from './constants';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
@@ -30,6 +30,7 @@ export const supportedAgents = [
   'copilot',
   'cursor',
   'gemini',
+  'opencode',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
 export const agentDisplayMap: Record<Agent, string> = {
@@ -38,6 +39,7 @@ export const agentDisplayMap: Record<Agent, string> = {
   codex: 'OpenAI Codex',
   copilot: 'GitHub Copilot for VSCode',
   cursor: 'Cursor',
+  opencode: 'OpenCode',
 };
 
 export type AgentConfiguration = {
@@ -98,21 +100,27 @@ async function getAgentConfiguration(
   >;
   switch (agent) {
     case 'claude': {
-      const mcpPath = claudeMcpPath(workspaceRoot);
-      let mcpConfigured: boolean;
+      // Claude uses a plugin from marketplace which includes the MCP server
+      const claudeSettingsPath = resolve(
+        workspaceRoot,
+        '.claude',
+        'settings.json'
+      );
+      let pluginConfigured: boolean;
       try {
-        const mcpContents = readJsonFile(mcpPath);
-        mcpConfigured = !!mcpContents?.['mcpServers']?.['nx-mcp'];
+        const settingsContents = readJsonFile(claudeSettingsPath);
+        pluginConfigured =
+          !!settingsContents?.['enabledPlugins']?.['nx@nx-claude-plugins'];
       } catch {
-        mcpConfigured = false;
+        pluginConfigured = false;
       }
       const rulesPath = claudeMdPath(workspaceRoot);
       const rulesExists = existsSync(rulesPath);
       agentConfiguration = {
         rules: rulesExists,
-        mcp: mcpConfigured,
+        mcp: pluginConfigured,
         rulesPath: rulesPath,
-        mcpPath: mcpPath,
+        mcpPath: claudeSettingsPath,
       };
       break;
     }
@@ -203,6 +211,27 @@ async function getAgentConfiguration(
         rules: agentsMdExists,
         rulesPath,
         mcpPath: codexConfigTomlPath,
+      };
+      break;
+    }
+    case 'opencode': {
+      const rulesPath = agentsMdPath(workspaceRoot);
+      const agentsMdExists = existsSync(rulesPath);
+      const mcpPath = opencodeMcpPath(workspaceRoot);
+      let mcpConfigured: boolean;
+      try {
+        const mcpContents = readJsonFile(mcpPath);
+        // OpenCode uses 'mcp' property, not 'mcpServers'
+        mcpConfigured = !!mcpContents?.['mcp']?.['nx-mcp'];
+      } catch {
+        mcpConfigured = false;
+      }
+
+      agentConfiguration = {
+        mcp: mcpConfigured,
+        rules: agentsMdExists,
+        rulesPath,
+        mcpPath,
       };
       break;
     }

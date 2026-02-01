@@ -18,6 +18,7 @@
 
   <modules>
     <module>shared</module>
+    <module>batch-runner-adapters</module>
     <module>batch-runner</module>
     <module>maven-plugin</module>
   </modules>

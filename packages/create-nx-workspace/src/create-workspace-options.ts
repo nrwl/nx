@@ -58,6 +58,7 @@ export const supportedAgents = [
   'copilot',
   'cursor',
   'gemini',
+  'opencode',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
 export const agentDisplayMap: Record<Agent, string> = {
@@ -66,4 +67,5 @@ export const agentDisplayMap: Record<Agent, string> = {
   codex: 'OpenAI Codex',
   copilot: 'GitHub Copilot for VSCode',
   cursor: 'Cursor',
+  opencode: 'OpenCode',
 };

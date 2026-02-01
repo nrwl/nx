@@ -79,7 +79,7 @@ export function PackageSchemaList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -125,7 +125,7 @@ export function PackageSchemaList({
 
             <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Migrations'} />
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {!!filesAndLabels.length
                 ? filesAndLabels.map((schema) =>
                     typeof schema === 'string' ? (

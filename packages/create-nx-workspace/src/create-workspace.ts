@@ -22,6 +22,10 @@ import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
 import { cloneTemplate } from './utils/template/clone-template';
+import {
+  addConnectUrlToReadme,
+  amendOrCommitReadme,
+} from './utils/template/update-readme';
 import { execAndWait } from './utils/child-process-utils';
 import {
   generatePackageManagerFiles,
@@ -190,6 +194,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   // Create onboarding URL AFTER git operations so getVcsRemoteInfo() can detect the repo
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
+
   if (nxCloud !== 'skip') {
     // For variant 1 (skipCloudConnect=true): Skip readNxCloudToken() entirely
     // - We didn't call connectToNxCloudForTemplate(), so no token exists
@@ -211,6 +216,16 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Store for SIGINT handler
     cloudConnectUrl = connectUrl;
 
+    // Update README with connect URL (strips markers, adds connect section)
+    // Then commit the change - amend if not pushed, new commit if already pushed
+    if (isTemplate) {
+      const readmeUpdated = addConnectUrlToReadme(directory, connectUrl);
+      if (readmeUpdated && !skipGit && commit) {
+        const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
+        await amendOrCommitReadme(directory, alreadyPushed);
+      }
+    }
+
     nxCloudInfo = await getNxCloudInfo(
       connectUrl,
       pushedToVcs,
@@ -218,6 +233,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       name
     );
   } else if (isTemplate && nxCloud === 'skip') {
+    // Strip marker comments from README even when cloud is skipped
+    // so users don't see raw <!-- BEGIN/END: nx-cloud --> markers
+    const readmeUpdated = addConnectUrlToReadme(directory, undefined);
+    if (readmeUpdated && !skipGit && commit) {
+      const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
+      await amendOrCommitReadme(directory, alreadyPushed);
+    }
+
     // Show nx connect message when user skips cloud in template flow
     nxCloudInfo = getSkippedNxCloudInfo();
   }

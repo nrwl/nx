@@ -41,7 +41,7 @@ export function Security(): ReactElement {
               and other regulated industries. Don't compromise.
             </SectionHeading>
             <div className="mt-8 flex flex-wrap items-center gap-4 md:gap-8">
-              <div className="flex w-52 shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-xs text-slate-950 ring-1 ring-slate-200 dark:text-slate-50 dark:ring-slate-700">
+              <div className="flex w-52 shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-xs text-zinc-950 ring-1 ring-zinc-200 dark:text-zinc-50 dark:ring-zinc-700">
                 <svg
                   role="img"
                   xmlns="http://www.w3.org/2000/svg"

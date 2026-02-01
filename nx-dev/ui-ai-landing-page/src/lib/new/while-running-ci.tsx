@@ -65,7 +65,7 @@ export function WhileRunningCi(): ReactElement {
   const [openVideoUrl, setOpenVideoUrl] = useState<string | null>(null);
 
   return (
-    <div className="relative bg-slate-50 py-32 dark:bg-slate-800">
+    <div className="relative bg-zinc-50 py-32 dark:bg-zinc-800">
       <div
         id="while-running-ci"
         className="mx-auto max-w-7xl scroll-mt-32 px-6 lg:px-8"

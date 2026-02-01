@@ -13,7 +13,7 @@ export function TrialCallout({
   return (
     <section id="start-trial" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="relative isolate overflow-hidden bg-white px-6 pt-16 shadow-2xl ring-1 ring-slate-200 sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0 dark:bg-slate-900 dark:ring-slate-800">
+        <div className="relative isolate overflow-hidden bg-white px-6 pt-16 shadow-2xl ring-1 ring-zinc-200 sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0 dark:bg-zinc-900 dark:ring-zinc-800">
           <svg
             viewBox="0 0 1024 1024"
             aria-hidden="true"
@@ -34,7 +34,7 @@ export function TrialCallout({
             </defs>
           </svg>
           <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left">
-            <h2 className="texxt-slate-950 text-balance text-3xl font-semibold tracking-tight sm:text-4xl dark:text-white">
+            <h2 className="texxt-zinc-950 text-balance text-3xl font-semibold tracking-tight sm:text-4xl dark:text-white">
               Start a Trial
             </h2>
             <p className="mt-6 text-pretty text-lg/8">
@@ -45,7 +45,7 @@ export function TrialCallout({
             <div className="mt-4 flex items-center justify-center gap-x-6 lg:justify-start">
               <ButtonLink
                 href="https://cloud.nx.app"
-                variant="primary"
+                variant="contrast"
                 size="default"
                 title="Start free trial"
                 onClick={() =>
@@ -71,7 +71,7 @@ export function TrialCallout({
                     'trial-callout'
                   )
                 }
-                className="font-semibold text-blue-500 dark:text-sky-500"
+                className="font-semibold text-blue-500 dark:text-blue-500"
               >
                 reach out to us and we'll help you get started with a trial
               </Link>{' '}
@@ -86,7 +86,7 @@ export function TrialCallout({
               height={1622}
               loading="eager"
               priority
-              className="absolute left-0 top-0 w-[57rem] max-w-none rounded-md bg-white/5 ring-1 ring-slate-950/10"
+              className="absolute left-0 top-0 w-[57rem] max-w-none rounded-md bg-white/5 ring-1 ring-zinc-950/10"
             />
           </div>
         </div>

@@ -32,7 +32,7 @@ export function NxPowerAi({
           <li className="relative isolate flex aspect-square h-20 items-center justify-center">
             <HexagonShape
               aria-hidden="true"
-              className="absolute inset-0 z-0 text-slate-50/90 drop-shadow-sm dark:text-white/5"
+              className="absolute inset-0 z-0 text-zinc-50/90 drop-shadow-sm dark:text-white/5"
             />
           </li>
           <li className="relative isolate flex aspect-square h-20 items-center justify-center">
@@ -48,7 +48,7 @@ export function NxPowerAi({
           <li className="relative isolate flex aspect-square h-20 items-center justify-center">
             <HexagonShape
               aria-hidden="true"
-              className="absolute inset-0 z-0 text-slate-50/90 drop-shadow-sm dark:text-white/5"
+              className="absolute inset-0 z-0 text-zinc-50/90 drop-shadow-sm dark:text-white/5"
             />
           </li>
           <li className="invisible aspect-square" />
@@ -57,7 +57,7 @@ export function NxPowerAi({
           <li className="flex aspect-square translate-x-1/2 items-center justify-center">
             <HexagonShape
               aria-hidden="true"
-              className="absolute inset-0 z-0 text-slate-50/90 drop-shadow-sm dark:text-white/5"
+              className="absolute inset-0 z-0 text-zinc-50/90 drop-shadow-sm dark:text-white/5"
             />
           </li>
           <li className="relative isolate flex aspect-square h-20 translate-x-1/2 items-center justify-center">
@@ -83,7 +83,7 @@ export function NxPowerAi({
           <li className="flex aspect-square translate-x-1/2 items-center justify-center">
             <HexagonShape
               aria-hidden="true"
-              className="absolute inset-0 z-0 text-slate-50/90 drop-shadow-sm dark:text-white/5"
+              className="absolute inset-0 z-0 text-zinc-50/90 drop-shadow-sm dark:text-white/5"
             />
           </li>
           <li className="invisible"></li>
@@ -93,7 +93,7 @@ export function NxPowerAi({
           <li className="relative isolate flex aspect-square h-20 items-center justify-center">
             <HexagonShape
               aria-hidden="true"
-              className="absolute inset-0 z-0 text-slate-50/90 drop-shadow-sm dark:text-white/5"
+              className="absolute inset-0 z-0 text-zinc-50/90 drop-shadow-sm dark:text-white/5"
             />
           </li>
           <li className="relative isolate flex aspect-square h-20 items-center justify-center">
@@ -109,7 +109,7 @@ export function NxPowerAi({
           <li className="relative isolate flex aspect-square h-20 items-center justify-center">
             <HexagonShape
               aria-hidden="true"
-              className="absolute inset-0 z-0 text-slate-50/90 drop-shadow-sm dark:text-white/5"
+              className="absolute inset-0 z-0 text-zinc-50/90 drop-shadow-sm dark:text-white/5"
             />
           </li>
           <li className="invisible" />
@@ -119,20 +119,20 @@ export function NxPowerAi({
       {/* Steps List */}
       <div className="relative mt-12 space-y-2">
         {/* Active Step */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800/40 dark:bg-slate-800/60">
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 shadow-sm backdrop-blur-sm dark:border-zinc-800/40 dark:bg-zinc-800/60">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex size-5 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-slate-200 to-slate-300 dark:border-slate-900 dark:from-slate-700 dark:to-slate-800">
-                <div className="size-2 rounded-full bg-white dark:bg-slate-900" />
+              <div className="flex size-5 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-zinc-200 to-zinc-300 dark:border-zinc-900 dark:from-zinc-700 dark:to-zinc-800">
+                <div className="size-2 rounded-full bg-white dark:bg-zinc-900" />
               </div>
               <div className="flex-1">
-                <p className="font-mono text-xs leading-tight text-slate-900 dark:text-slate-100">
+                <p className="font-mono text-xs leading-tight text-zinc-900 dark:text-zinc-100">
                   Generating a fix for test "ui-profile:test:save-preferences"
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-slate-600 dark:text-slate-400">
+              <span className="text-xs text-zinc-600 dark:text-zinc-400">
                 Working...
               </span>
               <span className="relative flex size-1.5">
@@ -144,20 +144,20 @@ export function NxPowerAi({
         </div>
 
         {/* Completed Step */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-50 shadow-sm backdrop-blur-sm dark:border-slate-800/40 dark:bg-slate-800/60">
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 opacity-50 shadow-sm backdrop-blur-sm dark:border-zinc-800/40 dark:bg-zinc-800/60">
           <div className="flex items-center justify-between gap-4">
             <div className="flex grow items-center space-x-3">
-              <div className="flex size-5 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-slate-200 to-slate-300 dark:border-slate-900 dark:from-slate-700 dark:to-slate-800">
-                <div className="size-2 rounded-full bg-white dark:bg-slate-900" />
+              <div className="flex size-5 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-zinc-200 to-zinc-300 dark:border-zinc-900 dark:from-zinc-700 dark:to-zinc-800">
+                <div className="size-2 rounded-full bg-white dark:bg-zinc-900" />
               </div>
 
               <div className="w-full grow space-y-1">
-                <div className="h-1 w-8 rounded-sm bg-slate-800/15 dark:bg-slate-200/35" />
-                <div className="h-1 w-1/2 rounded-sm bg-slate-500/10 dark:bg-slate-400/35" />
+                <div className="h-1 w-8 rounded-sm bg-zinc-800/15 dark:bg-zinc-200/35" />
+                <div className="h-1 w-1/2 rounded-sm bg-zinc-500/10 dark:bg-zinc-400/35" />
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-slate-600 dark:text-slate-300">
+              <span className="text-xs text-zinc-600 dark:text-zinc-300">
                 Done
               </span>
               <div className="size-1.5 rounded-full bg-green-500 shadow-sm" />
@@ -166,13 +166,13 @@ export function NxPowerAi({
         </div>
 
         {/* Pending Step */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-40 shadow-sm backdrop-blur-sm dark:border-slate-800/40 dark:bg-slate-800/60">
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 opacity-40 shadow-sm backdrop-blur-sm dark:border-zinc-800/40 dark:bg-zinc-800/60">
           <div className="flex items-center space-x-3">
-            <div className="flex size-5 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-slate-200 to-slate-300 dark:border-slate-900 dark:from-slate-700 dark:to-slate-800">
-              <div className="size-2 rounded-full bg-white dark:bg-slate-900" />
+            <div className="flex size-5 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-zinc-200 to-zinc-300 dark:border-zinc-900 dark:from-zinc-700 dark:to-zinc-800">
+              <div className="size-2 rounded-full bg-white dark:bg-zinc-900" />
             </div>
             <div className="flex-1">
-              <div className="h-1 w-16 rounded-sm bg-slate-400/20" />
+              <div className="h-1 w-16 rounded-sm bg-zinc-400/20" />
             </div>
           </div>
         </div>

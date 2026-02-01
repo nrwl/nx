@@ -11,6 +11,10 @@ import {
   getLatestGitTagForPattern,
 } from '../utils/git';
 import type { VersionData } from '../utils/shared';
+import type {
+  CheckAllBranchesWhen,
+  RepoGitTags,
+} from '../utils/repository-git-tags';
 
 /**
  * Filters version plans to only include those that were committed between the specified SHAs
@@ -128,15 +132,17 @@ export async function resolveChangelogFromSHA({
   requireSemver,
   strictPreid,
   useAutomaticFromRef,
+  resolveRepositoryTags,
 }: {
   fromRef?: string;
   tagPattern: string;
   tagPatternValues: Record<string, string>;
-  checkAllBranchesWhen: boolean | string[];
+  checkAllBranchesWhen: CheckAllBranchesWhen;
   preid?: string;
   requireSemver: boolean;
   strictPreid: boolean;
   useAutomaticFromRef: boolean;
+  resolveRepositoryTags: RepoGitTags['resolveTags'];
 }): Promise<string | null> {
   // If user provided a from ref, resolve it to a SHA
   if (fromRef) {
@@ -146,6 +152,7 @@ export async function resolveChangelogFromSHA({
   const latestTag = await getLatestGitTagForPattern(
     tagPattern,
     tagPatternValues,
+    resolveRepositoryTags,
     {
       checkAllBranchesWhen,
       preid,
@@ -172,10 +179,12 @@ export async function resolveWorkspaceChangelogFromSHA({
   args,
   nxReleaseConfig,
   useAutomaticFromRef,
+  resolveRepositoryTags,
 }: {
   args: ChangelogOptions;
   nxReleaseConfig: NxReleaseConfig;
   useAutomaticFromRef: boolean;
+  resolveRepositoryTags: RepoGitTags['resolveTags'];
 }): Promise<string | null> {
   const workspacePreid = extractPreidFromVersion(args.version);
   const projectsPreid = extractProjectsPreidFromVersionData(args.versionData);
@@ -189,6 +198,7 @@ export async function resolveWorkspaceChangelogFromSHA({
     requireSemver: nxReleaseConfig.releaseTag.requireSemver,
     strictPreid: nxReleaseConfig.releaseTag.strictPreid,
     useAutomaticFromRef,
+    resolveRepositoryTags,
   });
 }
 

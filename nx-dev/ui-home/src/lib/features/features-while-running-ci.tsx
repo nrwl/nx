@@ -12,7 +12,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
           as="h3"
           variant="subtitle"
           id="features-while-running-ci"
-          className="scroll-mt-24 text-2xl font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+          className="scroll-mt-24 text-2xl font-medium tracking-tight text-zinc-950 sm:text-3xl dark:text-white"
         >
           While Running CI
         </SectionHeading>
@@ -66,7 +66,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
                 href="/nx-cloud?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
                 title="Add Nx Cloud to your CI workflow"
                 prefetch={false}
-                className="group font-semibold leading-6 text-slate-950 dark:text-white"
+                className="group font-semibold leading-6 text-zinc-950 dark:text-white"
               >
                 Learn more about Nx Cloud{' '}
                 <span

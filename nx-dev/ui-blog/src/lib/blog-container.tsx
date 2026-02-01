@@ -77,7 +77,7 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
           <header className="mb-8 mt-20">
             <h1
               id="blog-title"
-              className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
+              className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl dark:text-zinc-100"
             >
               {selectedFilterHeading}
             </h1>
@@ -100,7 +100,7 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
         <FeaturedBlogs blogs={firstFiveBlogs} />
         {!!remainingBlogs.length && (
           <>
-            <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
+            <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-zinc-300 pb-3 text-sm dark:border-zinc-700">
               <h2 className="font-semibold">All blogs</h2>
               <div className="flex gap-2">
                 <Link
@@ -108,14 +108,14 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
                   aria-label="RSS feed"
                   prefetch={false}
                 >
-                  <RssIcon className="h-5 w-5 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" />
+                  <RssIcon className="h-5 w-5 text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200" />
                 </Link>
                 <Link
                   href="/blog/atom.xml"
                   aria-label="Atom feed"
                   prefetch={false}
                 >
-                  <AtSymbolIcon className="h-5 w-5 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" />
+                  <AtSymbolIcon className="h-5 w-5 text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200" />
                 </Link>
               </div>
             </div>

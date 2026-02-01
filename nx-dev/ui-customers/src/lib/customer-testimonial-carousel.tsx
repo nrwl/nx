@@ -249,10 +249,10 @@ export function CustomerTestimonialCarousel(): ReactElement {
           <div className="flex h-full flex-col justify-center space-y-8">
             {currentTestimonial.metrics?.map((metric, index) => (
               <div key={index} className="space-y-2">
-                <div className="border-l-2 border-blue-900/70 pl-4 text-3xl font-bold text-slate-700 dark:border-sky-300/60 dark:text-slate-200">
+                <div className="border-l-2 border-blue-900/70 pl-4 text-3xl font-bold text-zinc-700 dark:border-blue-300/60 dark:text-zinc-200">
                   {metric.value}
                 </div>
-                <div className="text-balance pl-[18px] text-lg text-slate-500 dark:text-slate-400">
+                <div className="text-balance pl-[18px] text-lg text-zinc-500 dark:text-zinc-400">
                   {metric.label}
                 </div>
               </div>
@@ -267,7 +267,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
             <button
               disabled={currentIndex === 0}
               title={`See ${testimonials[currentIndex - 1]?.company}`}
-              className="flex h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:hidden dark:hover:text-white"
+              className="flex h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-zinc-950 disabled:pointer-events-none disabled:opacity-0 md:hidden dark:hover:text-white"
               onClick={() => {
                 setCurrentIndex(
                   (currentIndex - 1 + testimonials.length) % testimonials.length
@@ -307,7 +307,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
             </div>
             {/* Next Button - Mobile only */}
             <button
-              className="flex h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:hidden dark:hover:text-white"
+              className="flex h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-zinc-950 disabled:pointer-events-none disabled:opacity-0 md:hidden dark:hover:text-white"
               disabled={currentIndex === testimonials.length - 1}
               title={`Next ${testimonials[currentIndex + 1]?.company}`}
               onClick={() => {
@@ -332,7 +332,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   index === currentIndex
                     ? 'w-12 bg-blue-500'
-                    : 'w-4 bg-slate-200 dark:bg-slate-700'
+                    : 'w-4 bg-zinc-200 dark:bg-zinc-700'
                 }`}
               />
             ))}
@@ -347,9 +347,9 @@ export function CustomerTestimonialCarousel(): ReactElement {
             onClick={() => setCurrentIndex(i)}
             key={`logo-${i}`}
             title={company}
-            className={`relative grid h-full w-full place-items-center border border-slate-200/15 transition-all dark:border-slate-800/20 ${
+            className={`relative grid h-full w-full place-items-center border border-zinc-200/15 transition-all dark:border-zinc-800/20 ${
               i !== currentIndex &&
-              'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
+              'text-zinc-400 hover:text-zinc-500 dark:text-zinc-700 dark:hover:text-zinc-500'
             }`}
           >
             <span className="sr-only">{company} Logo</span>
@@ -365,7 +365,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
             {i === currentIndex && !isOpen && (
               <div className="absolute left-0 top-0 h-[2px] w-full overflow-hidden bg-gray-300/80 transition-all">
                 <div
-                  className="animate-progress h-full w-full bg-blue-600/80 dark:bg-sky-600/80"
+                  className="animate-progress h-full w-full bg-blue-600/80 dark:bg-blue-600/80"
                   style={{ animationDuration: `${slideLogoTimeOut}ms` }}
                 />
               </div>

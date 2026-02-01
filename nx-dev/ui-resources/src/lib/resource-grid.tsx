@@ -80,10 +80,10 @@ export function ResourceGrid({ resources }: ResourceGridProps) {
         return (
           <section key={category}>
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
                 {CATEGORY_LABELS[category]}
               </h2>
-              <div className="mt-2 h-px bg-slate-200 dark:bg-slate-700" />
+              <div className="mt-2 h-px bg-zinc-200 dark:bg-zinc-700" />
             </div>
             <div className="mx-auto grid auto-rows-fr grid-cols-1 gap-5 lg:grid-cols-2">
               {sortedCategoryResources.map((resource) => (

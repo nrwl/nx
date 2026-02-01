@@ -437,7 +437,7 @@ From my experience, I've often seen teams start with a single application, which
 
 ## Q: Isn't Nx just for Angular projects?
 
-This is a common but understandable misconception. Although Nx was heavily inspired by the Angular CLI initially, it is now a completely independent build system and CLI with first-class support for Angular, React, Node, Next.js, TypeScript and more. And with tons of [community plugins](/community) that extend Nx beyond that.
+This is a common but understandable misconception. Although Nx was heavily inspired by the Angular CLI initially, it is now a completely independent monorepo platform and CLI with first-class support for Angular, React, Node, Next.js, TypeScript and more. And with tons of [community plugins](/community) that extend Nx beyond that.
 
 ## Conclusion
 
