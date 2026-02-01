@@ -71,7 +71,7 @@ class ProcessMetricsService {
    * Subscribe to push-based metrics notifications
    * Collection starts automatically on first subscription (lazy start)
    */
-  subscribe(callback: MetricsCallback): ProcessMetricsService {
+  subscribe(callback: MetricsCallback): void {
     if (!this.collector) {
       throw new Error('Metrics collector not initialized');
     }
@@ -100,7 +100,6 @@ class ProcessMetricsService {
     } catch {
       // Silent failure - metrics collection is optional
     }
-    return this;
   }
 
   /**
