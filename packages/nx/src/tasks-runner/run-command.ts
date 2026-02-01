@@ -516,7 +516,7 @@ export async function runCommandForTasks(
 
   // TODO: Remove after task IO service is stable
   if (process.env.NX_TASK_IO_DEBUG === 'true') {
-    getTaskIOService().init(projectGraph, taskGraph);
+    getTaskIOService(projectGraph, taskGraph);
   }
 
   const tasks = Object.values(taskGraph.tasks);

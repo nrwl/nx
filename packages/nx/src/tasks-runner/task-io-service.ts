@@ -1,8 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { resolveNxTokensInString } from '../project-graph/utils/project-configuration-utils';
+import { TaskGraph } from '../config/task-graph';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 
 /**
@@ -28,15 +27,22 @@ export type TaskIOInfo = {
     depOutputs: string[];
     external: string[];
   };
-  outputGlobs: string[];
 };
 
 export type TaskIOCallback = (taskIOInfo: TaskIOInfo) => void;
 
+export type TaskOutputsUpdate = {
+  taskId: string;
+  outputs: string[];
+};
+
+export type TaskOutputsCallback = (update: TaskOutputsUpdate) => void;
+
 /**
  * Service for tracking task process IDs and providing access to task IO information.
  * Subscribes to ProcessMetricsService for PID discovery.
- * IO information comes from task.hashInputs (populated during hashing) and task.outputs.
+ * IO information comes from hash inputs (populated during hashing).
+ * Output files are reported when tasks are stored to cache.
  */
 class TaskIOService {
   // Used to call subscribers that were late to the party
@@ -46,19 +52,16 @@ class TaskIOService {
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
   private taskIOCallbacks: TaskIOCallback[] = [];
+  private taskOutputsCallbacks: TaskOutputsCallback[] = [];
 
-  // Project graph for output resolution
-  private projectGraph: ProjectGraph | null = null;
+  // Project graph and task graph for resolving task information
+  protected projectGraph: ProjectGraph | null = null;
+  protected taskGraph: TaskGraph | null = null;
 
-  // Task graph for accessing all tasks
-  private taskGraph: TaskGraph | null = null;
-
-  /**
-   * Initialize the service with a project graph and optional task graph.
-   * Required for resolving task outputs and accessing all task IO information.
-   */
-  init(projectGraph: ProjectGraph, taskGraph?: TaskGraph): void {
-    this.projectGraph = projectGraph;
+  constructor(projectGraph?: ProjectGraph, taskGraph?: TaskGraph) {
+    if (projectGraph) {
+      this.projectGraph = projectGraph;
+    }
     if (taskGraph) {
       this.taskGraph = taskGraph;
     }
@@ -89,6 +92,14 @@ class TaskIOService {
   }
 
   /**
+   * Subscribe to task outputs as they are stored to cache.
+   * Called when a task's output files are collected for caching.
+   */
+  subscribeToTaskOutputs(callback: TaskOutputsCallback): void {
+    this.taskOutputsCallbacks.push(callback);
+  }
+
+  /**
    * Notify subscribers that hash inputs are available for a task.
    * Called from the hasher when inputs are computed.
    */
@@ -102,15 +113,9 @@ class TaskIOService {
       external: string[];
     }
   ): void {
-    if (!this.taskGraph?.tasks?.[taskId]) {
-      // Cannot proceed without task graph to resolve outputs
-      return;
-    }
-
     const taskIOInfo: TaskIOInfo = {
       taskId,
       inputs,
-      outputGlobs: this.getExpandedOutputs(this.taskGraph?.tasks[taskId]),
     };
     this.taskToIO.set(taskId, taskIOInfo);
 
@@ -124,55 +129,22 @@ class TaskIOService {
   }
 
   /**
-   * Get current PIDs for a task (synchronous).
+   * Notify subscribers that task outputs have been collected.
+   * Called from the cache when outputs are stored.
    */
-  getPidForTask(taskId: string): number | null {
-    return this.taskToPids.get(taskId) ?? null;
-  }
+  notifyTaskOutputs(taskId: string, outputs: string[]): void {
+    const update: TaskOutputsUpdate = {
+      taskId,
+      outputs,
+    };
 
-  /**
-   * Get all current task → PIDs mappings.
-   * NOTE: This only returns one PID per task, even if that task
-   * may have spawned multiple processes. To get all PIDs for a task,
-   * you need to correlate spawned processes via their parent PID.
-   */
-  getAllTaskPids(): Map<string, number> {
-    const result = new Map<string, number>();
-    for (const [taskId, pid] of this.taskToPids) {
-      result.set(taskId, pid);
+    for (const cb of this.taskOutputsCallbacks) {
+      try {
+        cb(update);
+      } catch {
+        // Silent failure - don't let one callback break others
+      }
     }
-    return result;
-  }
-
-  /**
-   * Get IO information for a task.
-   * The task must have been hashed (task.hashInputs must be populated).
-   * Returns file inputs and outputs.
-   */
-  getTaskIOInfo(task: string): TaskIOInfo | null {
-    return this.taskToIO.get(task);
-  }
-
-  /**
-   * Get expanded output paths for a task.
-   * Resolves {projectRoot} and {workspaceRoot} placeholders.
-   */
-  getExpandedOutputs(task: Task): string[] {
-    if (!this.projectGraph || !task.outputs) {
-      return task.outputs ?? [];
-    }
-
-    const projectNode = this.projectGraph.nodes[task.target.project];
-    if (!projectNode) {
-      return task.outputs;
-    }
-
-    return task.outputs.map((output) =>
-      resolveNxTokensInString(
-        output,
-        this.projectGraph.nodes[task.target.project].data
-      )
-    );
   }
 
   /**
@@ -192,20 +164,12 @@ class TaskIOService {
 }
 
 class DebugTaskIOService extends TaskIOService {
-  constructor(private dbgFilePath: string) {
-    super();
-  }
-
-  log(message: string): void {
-    writeFileSync(
-      this.dbgFilePath,
-      `[${new Date().toISOString()}] ${message}\n`,
-      { flag: 'a' }
-    );
-  }
-
-  override init(projectGraph: ProjectGraph, taskGraph?: TaskGraph): void {
-    super.init(projectGraph, taskGraph);
+  constructor(
+    private dbgFilePath: string,
+    projectGraph?: ProjectGraph,
+    taskGraph?: TaskGraph
+  ) {
+    super(projectGraph, taskGraph);
     mkdirSync(dirname(this.dbgFilePath), { recursive: true });
     try {
       rmSync(this.dbgFilePath, { force: true });
@@ -215,13 +179,13 @@ class DebugTaskIOService extends TaskIOService {
       }
     }
     this.log(
-      `DebugTaskIOService initialized with projectGraph and ${
+      `DebugTaskIOService initialized with ${projectGraph ? 'projectGraph' : 'no projectGraph'} and ${
         taskGraph ? 'taskGraph' : 'no taskGraph'
       }`
     );
     this.subscribeToTaskPids(({ pid, taskId }) => {
       this.log(`Task ${taskId} PID updated: [${pid}]`);
-    }); // Ensure metrics subscription for debugging
+    });
     process.on('exit', () => {
       this.log(
         [
@@ -236,14 +200,13 @@ class DebugTaskIOService extends TaskIOService {
             null,
             2
           )}\n`,
-          ...(taskGraph
+          ...(this.taskGraph
             ? [
                 'Expected task IO:',
                 ...[...this.taskToIO.entries()].map(
                   ([taskId, io]) =>
                     `Task ${taskId}:
-    Files: [${io.inputs.files?.slice(0, 5).join(', ')}${io.inputs.files?.length > 5 ? `, ... (${io.inputs.files.length} total)` : ''}]
-    Outputs: [${io.outputGlobs.join(', ')}]`
+    Files: [${io.inputs.files?.slice(0, 5).join(', ')}${io.inputs.files?.length > 5 ? `, ... (${io.inputs.files.length} total)` : ''}]`
                 ),
               ]
             : []),
@@ -251,6 +214,14 @@ class DebugTaskIOService extends TaskIOService {
       );
       console.log(`DebugTaskIOService log written to ${this.dbgFilePath}`);
     });
+  }
+
+  log(message: string): void {
+    writeFileSync(
+      this.dbgFilePath,
+      `[${new Date().toISOString()}] ${message}\n`,
+      { flag: 'a' }
+    );
   }
 
   override notifyPidUpdate(update: TaskPidUpdate): void {
@@ -275,6 +246,13 @@ class DebugTaskIOService extends TaskIOService {
     );
     super.notifyTaskIO(taskId, inputs);
   }
+
+  override notifyTaskOutputs(taskId: string, outputs: string[]): void {
+    this.log(
+      `notifyTaskOutputs called for task ${taskId} with ${outputs.length} outputs`
+    );
+    super.notifyTaskOutputs(taskId, outputs);
+  }
 }
 
 // Singleton
@@ -282,15 +260,21 @@ let instance: TaskIOService | null = null;
 
 /**
  * Get or create the singleton TaskIOService instance.
+ * Optionally provide projectGraph and taskGraph to initialize with context.
  */
-export function getTaskIOService(): TaskIOService {
+export function getTaskIOService(
+  projectGraph?: ProjectGraph,
+  taskGraph?: TaskGraph
+): TaskIOService {
   if (!instance) {
     // TODO: Remove debug service option once stable
     instance = process.env.NX_TASK_IO_DEBUG
       ? new DebugTaskIOService(
-          join(workspaceDataDirectory, 'task-io-service-debug.log')
+          join(workspaceDataDirectory, 'task-io-service-debug.log'),
+          projectGraph,
+          taskGraph
         )
-      : new TaskIOService();
+      : new TaskIOService(projectGraph, taskGraph);
   }
   return instance;
 }
