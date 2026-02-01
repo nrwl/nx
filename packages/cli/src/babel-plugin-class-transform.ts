@@ -1,23 +1,12 @@
 import type { PluginObj } from '@babel/core';
 import { types as t } from '@babel/core';
 import type { NodePath } from '@babel/traverse';
+import { parseMethodBody } from './BabelHelpers.js';
+import type { BabelPluginClassTransformState } from './interfaces/BabelPluginClassTransformState.js';
 
-export interface ClassTransformOptions
-{
-    className: string;
-    originalSuperClass?: string;
-    newSuperClass?: string;
-    injectMethods?: {
-        name: string; body: string;
-    }[];
-}
+export type { ClassTransformOptions } from './interfaces/ClassTransformOptions.js';
 
-interface PluginState
-{
-    opts: ClassTransformOptions;
-}
-
-export default function classTransformPlugin(): PluginObj<PluginState>
+export default function classTransformPlugin(): PluginObj<BabelPluginClassTransformState>
 {
     return {
         name: 'babel-plugin-class-transform', visitor: {
@@ -45,9 +34,8 @@ export default function classTransformPlugin(): PluginObj<PluginState>
 
                     for (const method of injectMethods)
                     {
-                        const methodNode = t.classMethod('method', t.identifier(method.name), [], t.blockStatement([
-                            t.expressionStatement(t.identifier(`__INJECT_${method.name}__`))
-                        ]));
+                        const bodyStatements = parseMethodBody(method.body);
+                        const methodNode = t.classMethod('method', t.identifier(method.name), [], t.blockStatement(bodyStatements));
                         newMethods.push(methodNode);
                     }
 
@@ -60,15 +48,4 @@ export default function classTransformPlugin(): PluginObj<PluginState>
             }
         }
     };
-}
-
-export function injectMethodBodies(code: string, methods: { name: string; body: string }[]): string
-{
-    let result = code;
-    for (const method of methods)
-    {
-        const placeholder = `__INJECT_${method.name}__;`;
-        result = result.replace(placeholder, method.body);
-    }
-    return result;
 }

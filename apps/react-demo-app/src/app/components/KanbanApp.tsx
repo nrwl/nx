@@ -90,9 +90,9 @@ const initialTasks: Task[] = [
 ];
 
 const columns: Column[] = [
-    {id: 'todo', title: 'To Do', color: '#e74c3c'},
-    {id: 'in-progress', title: 'In Progress', color: '#f39c12'},
-    {id: 'done', title: 'Done', color: '#27ae60'}
+    { id: 'todo', title: 'To Do', color: '#e74c3c' },
+    { id: 'in-progress', title: 'In Progress', color: '#f39c12' },
+    { id: 'done', title: 'Done', color: '#27ae60' }
 ];
 
 export function KanbanAppComponent()
@@ -190,12 +190,12 @@ export function KanbanAppComponent()
 
     const moveTask = (taskId: number, newStatus: TaskStatus) =>
     {
-        setTasks(tasks.map(t => t.id === taskId ? {...t, status: newStatus} : t));
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
     };
 
     const updateTask = (taskId: number, updates: Partial<Task>) =>
     {
-        setTasks(tasks.map(t => t.id === taskId ? {...t, ...updates} : t));
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, ...updates } : t));
         setEditingTaskId(null);
     };
 

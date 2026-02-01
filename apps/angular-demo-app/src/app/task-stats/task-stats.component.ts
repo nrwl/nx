@@ -13,8 +13,8 @@ export class TaskStatsComponent implements OnInit, OnDestroy
 {
     @Input() stats: TaskStats = {
         total: 0,
-        byStatus: {'todo': 0, 'in-progress': 0, 'done': 0},
-        byPriority: {'low': 0, 'medium': 0, 'high': 0, 'urgent': 0},
+        byStatus: { 'todo': 0, 'in-progress': 0, 'done': 0 },
+        byPriority: { 'low': 0, 'medium': 0, 'high': 0, 'urgent': 0 },
         overdue: 0,
         dueToday: 0
     };
@@ -25,7 +25,7 @@ export class TaskStatsComponent implements OnInit, OnDestroy
 
     get completionPercent(): number
     {
-        if(this.stats.total === 0) return 0;
+        if (this.stats.total === 0) return 0;
         return Math.round((this.stats.byStatus.done / this.stats.total) * 100);
     }
 
@@ -36,7 +36,7 @@ export class TaskStatsComponent implements OnInit, OnDestroy
 
     ngOnDestroy(): void
     {
-        if(this.intervalId !== null)
+        if (this.intervalId !== null)
         {
             clearInterval(this.intervalId);
         }

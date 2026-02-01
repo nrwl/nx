@@ -1,25 +1,14 @@
 import type { PluginObj } from '@babel/core';
 import { types as t } from '@babel/core';
 import type { NodePath } from '@babel/traverse';
+import type { BabelPluginComponentState } from './interfaces/BabelPluginComponentState.js';
+import type { ComponentMetadata } from './interfaces/ComponentMetadata.js';
 
-export interface ComponentMetadata
-{
-    selector: string;
-    templateUrl?: string;
-    template?: string;
-    styleUrl?: string;
-    styles?: string;
-    className: string;
-}
+export type { ComponentMetadata } from './interfaces/ComponentMetadata.js';
 
 export const componentMetadataMap = new Map<string, ComponentMetadata>();
 
-interface PluginState
-{
-    filename?: string;
-}
-
-export default function componentPlugin(): PluginObj<PluginState>
+export default function componentPlugin(): PluginObj<BabelPluginComponentState>
 {
     return {
         name: 'babel-plugin-component', visitor: {
@@ -39,6 +28,17 @@ export default function componentPlugin(): PluginObj<PluginState>
 
                 if (!componentDecorator) return;
                 if (!t.isCallExpression(componentDecorator.expression)) return;
+
+                const { superClass } = path.node;
+                if (!superClass || !t.isIdentifier(superClass) || superClass.name !== 'HTMLElement')
+                {
+                    const className = path.node.id?.name ?? 'Unknown';
+                    const filename = state.filename ?? 'unknown';
+                    throw path.buildCodeFrameError(
+                        `Component class '${className}' must extend HTMLElement.\n` +
+                        `Add 'extends HTMLElement' to the class declaration in ${filename}`
+                    );
+                }
 
                 const args = componentDecorator.expression.arguments;
                 if (args.length === 0) return;

@@ -90,9 +90,9 @@ const initialTasks: Task[] = [
 ];
 
 const columns: Column[] = [
-  {id: 'todo', title: 'To Do', color: '#e74c3c'},
-  {id: 'in-progress', title: 'In Progress', color: '#f39c12'},
-  {id: 'done', title: 'Done', color: '#27ae60'}
+  { id: 'todo', title: 'To Do', color: '#e74c3c' },
+  { id: 'in-progress', title: 'In Progress', color: '#f39c12' },
+  { id: 'done', title: 'Done', color: '#27ae60' }
 ];
 
 const currentTime = ref(new Date().toLocaleTimeString());
@@ -116,7 +116,7 @@ onMounted(() =>
 
 onUnmounted(() =>
 {
-  if(intervalId !== null)
+  if (intervalId !== null)
   {
     clearInterval(intervalId);
   }
@@ -197,12 +197,12 @@ const addTask = (data: { title: string; description: string; priority: TaskPrior
 
 const moveTask = (taskId: number, newStatus: TaskStatus) =>
 {
-  tasks.value = tasks.value.map(t => t.id === taskId ? {...t, status: newStatus} : t);
+  tasks.value = tasks.value.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
 };
 
 const updateTask = (taskId: number, updates: Partial<Task>) =>
 {
-  tasks.value = tasks.value.map(t => t.id === taskId ? {...t, ...updates} : t);
+  tasks.value = tasks.value.map(t => t.id === taskId ? { ...t, ...updates } : t);
   editingTaskId.value = null;
 };
 

@@ -3,7 +3,9 @@ import { Component, Reactive } from '@fluffjs/fluff';
 import type { Column, Task, TaskPriority, TaskStats, TaskStatus } from './models.js';
 
 @Component({
-    selector: 'kanban-app', templateUrl: './kanban-app.component.html', styleUrl: './kanban-app.component.css'
+    selector: 'kanban-app',
+    templateUrl: './kanban-app.component.html',
+    styleUrl: './kanban-app.component.css'
 })
 export class KanbanAppComponent extends HTMLElement implements OnInit, OnDestroy
 {

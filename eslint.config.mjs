@@ -36,6 +36,7 @@ const sharedTypeScriptRules = {
     '@typescript-eslint/no-dynamic-delete': 'off',
     'no-empty': 'off',
     '@typescript-eslint/naming-convention': ['error', { selector: 'enumMember', format: null }],
+    'max-classes-per-file': ["error", 1]
 };
 
 export default tseslint.config(

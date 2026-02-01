@@ -38,7 +38,7 @@ export class TaskFormComponent
     toggleForm(): void
     {
         this.isExpanded = !this.isExpanded;
-        if(!this.isExpanded)
+        if (!this.isExpanded)
         {
             this.resetForm();
         }
@@ -56,7 +56,7 @@ export class TaskFormComponent
 
     handleSubmit(): void
     {
-        if(!this.taskTitle.trim()) return;
+        if (!this.taskTitle.trim()) return;
 
         this.submitTask.emit({
             title: this.taskTitle.trim(),

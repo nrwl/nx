@@ -1,0 +1,881 @@
+<div class="container">
+    <div class="card">
+        <div class="logo">🧸</div>
+        <h1>Hello, <span class="highlight"><span data-lid="l22">World</span></span>!</h1>
+        <p class="tagline">Welcome to Fluff.js</p>
+        <style>:host {
+            display: block;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 50px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            color: #1a1a2e;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            color: #666;
+            margin: 0 0 30px 0;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .counter-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .counter-section p {
+            margin: 0 0 15px 0;
+            color: #444;
+        }
+
+        .counter-section strong {
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        footer {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        footer em {
+            color: #764ba2;
+        }
+        </style>
+        <div class="input-group">
+            <label for="name-input">What's your name?</label>
+            <input id="name-input" type="text" placeholder="Enter your name..." data-lid="l23">
+        </div>
+
+        <div class="counter-section">
+            <p>You've clicked <strong><span data-lid="l24">2</span></strong> times</p>
+            <button class="btn" data-lid="l25">Click me! 🎉</button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- EDGE CASE TESTS - Trying to break the compiler -->
+        <!-- ============================================== -->
+
+        <!-- TEST 1: Object literal in interpolation -->
+        <div class="edge-test">
+            <p>Object literal: <span data-lid="l26">Hello</span></p>
+        </div>
+
+        <!-- TEST 2: Object spread in property binding -->
+        <div class="edge-test">
+            <p data-lid="l27" title="[object Object]">Object spread binding</p>
+        </div>
+
+        <!-- TEST 3: Deeply nested property access -->
+        <div class="edge-test">
+            <p>Nested: <span data-lid="l28">NYC</span> - <span data-lid="l29">10001</span></p>
+        </div>
+
+        <!-- TEST 4: Optional chaining -->
+        <div class="edge-test">
+            <p>Optional: <span data-lid="l30"></span></p>
+            <p>Deep optional: <span data-lid="l31">NYC</span></p>
+        </div>
+
+        <!-- TEST 5: Ternary expressions -->
+        <div class="edge-test">
+            <p>Ternary: <span data-lid="l32">2</span></p>
+            <p>Nested ternary: <span data-lid="l33">2</span></p>
+        </div>
+
+        <!-- TEST 6: Logical operators -->
+        <div class="edge-test">
+            <p>AND: <span data-lid="l34">true</span></p>
+            <p>OR: <span data-lid="l35"></span></p>
+            <p>Nullish: <span data-lid="l36"></span></p>
+        </div>
+
+        <!-- TEST 7: Array expressions -->
+        <!-- BUG #8: Array access like items[0] generates malformed code in text binding -->
+        <!-- The restPath logic splits on '.' which breaks array access -->
+        <div class="edge-test">
+            <p>Array length: <span data-lid="l37">3</span></p>
+            <!-- REMOVED: items[0], items[selectedIndex], [1,2,3].join('-') -->
+        </div>
+
+        <!-- TEST 8: Method calls with complex args -->
+        <div class="edge-test">
+            <p>Method: <span data-lid="l38">complexMethod(a, b, c) {
+                return `${a}-${b}-${c ?? "default"}`;
+  }</span></p>
+            <p>Chained: <span data-lid="l39">apple, banana, cherry</span></p>
+        </div>
+
+        <!-- TEST 9: Template literals in expressions -->
+        <div class="edge-test">
+            <p>Template: <span data-lid="l40">Hello World!</span></p>
+            <p>Complex template: <span data-lid="l41">Count: 0, Items: 3</span></p>
+        </div>
+
+        <!-- TEST 10: Pipes with various arguments -->
+        <div class="edge-test">
+            <p>Uppercase: <span data-lid="l42">WORLD</span></p>
+            <p>Currency: <span data-lid="l43">$99.99</span></p>
+            <p>Currency with arg: <span data-lid="l44">€99.99</span></p>
+            <p>Truncate: <span data-lid="l45">String with "quotes"...</span></p>
+            <p>Chained pipes: <span data-lid="l46">WORLD</span></p>
+        </div>
+
+        <!-- TEST 11: Pipes with complex expressions -->
+        <div class="edge-test">
+            <p>Pipe on ternary: <span data-lid="l47">FEW</span></p>
+            <p>Pipe on method: <span data-lid="l48">APPLE BANANA CHERRY</span></p>
+        </div>
+
+        <!-- TEST 12: Event bindings with complex expressions -->
+        <!-- BUG: Assignment expressions don't get this. prefix on right side -->
+        <!-- COMMENTED OUT - causes runtime error -->
+        <!--
+        <div class="edge-test">
+            <button (click)="count = count + 1">Inline increment</button>
+            <button (click)="items = [...items, 'new']">Spread in event</button>
+            <input (keydown.enter)="addItem()" placeholder="Press enter"/>
+            <input (input)="searchQuery = $event.target.value.trim().toLowerCase()" placeholder="Complex event"/>
+        </div>
+        -->
+
+        <!-- TEST 13: Two-way binding -->
+        <div class="edge-test">
+            <input placeholder="Two-way binding" data-lid="l49">
+        </div>
+
+        <!-- TEST 14: Class bindings -->
+        <div class="edge-test">
+            <div data-lid="l50" class="active">Class binding</div>
+            <div data-lid="l51" class="highlight">Conditional class</div>
+            <div data-lid="l52">Expression class</div>
+        </div>
+
+        <!-- TEST 15: Style bindings -->
+        <!-- BUG FOUND: Generated code has TypeScript 'as HTMLElement' type assertion -->
+        <!-- Error: (el as HTMLElement).style.color is invalid JS -->
+        <!-- REMOVED - causes build failure -->
+        <!--
+        <div class="edge-test">
+            <div [style.color]="isEnabled ? 'green' : 'red'">Style ternary</div>
+            <div [style.font-size]="(count + 10) + 'px'">Dynamic size</div>
+            <div [style.opacity]="count / 10">Computed opacity</div>
+        </div>
+        -->
+
+        <!-- TEST 16: Control flow - @if -->
+        <div class="edge-test">
+            <!--l20--><p>Click to show advanced</p><!--/l20-->
+            <button data-lid="l53">Toggle</button>
+        </div>
+
+        <!-- TEST 17: Control flow - @for -->
+        <div class="edge-test">
+            <!--l3--><span>apple, </span><span>banana, </span><span>cherry, </span><!--/l3-->
+        </div>
+
+        <!-- TEST 18: Nested control flow -->
+        <div class="edge-test">
+            <!--l21--><!--l4--><!--l5--><!--/l5--><!--l5--><!--/l5--><!--l5--><span class="short"><span
+                data-text-bind="this.item ?? ''" data-lid="l7"></span></span><!--/l5--><!--/l4--><!--/l21-->
+        </div>
+
+        <!-- TEST 19: @for with index and complex expressions -->
+        <div class="edge-test">
+            <!--l8-->
+            <div data-l8-for-bind-class-first-0="[&quot;class.first&quot;,&quot;first&quot;]"
+                 data-l8-for-bind-class-last-1="[&quot;class.last&quot;,&quot;last&quot;]" class.first="undefined"
+                 class.last="undefined">
+                <span data-text-bind="this.i ?? ''" data-lid="l9"></span>: apple <span
+                    data-text-bind="this.first?'(first)':'' ?? ''" data-lid="l10"></span> <span
+                    data-text-bind="this.last?'(last)':'' ?? ''" data-lid="l11"></span>
+            </div>
+            <div data-l8-for-bind-class-first-0="[&quot;class.first&quot;,&quot;first&quot;]"
+                 data-l8-for-bind-class-last-1="[&quot;class.last&quot;,&quot;last&quot;]" class.first="undefined"
+                 class.last="undefined">
+                <span data-text-bind="this.i ?? ''" data-lid="l9"></span>: banana <span
+                    data-text-bind="this.first?'(first)':'' ?? ''" data-lid="l10"></span> <span
+                    data-text-bind="this.last?'(last)':'' ?? ''" data-lid="l11"></span>
+            </div>
+            <div data-l8-for-bind-class-first-0="[&quot;class.first&quot;,&quot;first&quot;]"
+                 data-l8-for-bind-class-last-1="[&quot;class.last&quot;,&quot;last&quot;]" class.first="undefined"
+                 class.last="undefined">
+                <span data-text-bind="this.i ?? ''" data-lid="l9"></span>: cherry <span
+                    data-text-bind="this.first?'(first)':'' ?? ''" data-lid="l10"></span> <span
+                    data-text-bind="this.last?'(last)':'' ?? ''" data-lid="l11"></span>
+            </div><!--/l8-->
+        </div>
+
+        <!-- TEST 20: @switch -->
+        <div class="edge-test">
+            __SWITCH_BLOCK_0
+            <button data-lid="l54">Next</button>
+        </div>
+
+        <!-- TEST 21: Special characters in strings -->
+        <div class="edge-test">
+            <p>Special: <span data-lid="l55">String with "quotes" and 'apostrophes' and `backticks`</span></p>
+            <p data-lid="l56" title="String with &quot;quotes&quot; and 'apostrophes' and `backticks`">Hover for special
+                chars</p>
+        </div>
+
+        <!-- TEST 22: Regex-like patterns -->
+        <div class="edge-test">
+            <p>Regex test: <span data-lid="l57">Match</span></p>
+        </div>
+
+        <!-- TEST 23: Arithmetic expressions -->
+        <div class="edge-test">
+            <p>Math: <span data-lid="l58">2</span></p>
+            <p>Modulo: <span data-lid="l59">2</span></p>
+            <p>Power: <span data-lid="l60">2</span></p>
+        </div>
+
+        <!-- TEST 24: Comparison operators -->
+        <div class="edge-test">
+            <p>Equals: <span data-lid="l61">2</span></p>
+            <p>Not equals: <span data-lid="l62">2</span></p>
+            <p>Greater: <span data-lid="l63">2</span></p>
+        </div>
+
+        <!-- TEST 25: typeof and instanceof -->
+        <div class="edge-test">
+            <p>Type: <span data-lid="l64">World</span></p>
+            <p>Is array: <span data-lid="l65"></span></p>
+        </div>
+
+        <!-- TEST 26: Destructuring in @for -->
+        <div class="edge-test">
+            <!--l12--><span>0: apple</span><span>1: banana</span><span>2: cherry</span><!--/l12-->
+        </div>
+
+        <!-- TEST 27: Spread in array -->
+        <div class="edge-test">
+            <p>Spread array: <span data-lid="l66">apple, banana, cherry, extra</span></p>
+        </div>
+
+        <!-- TEST 28: Object.keys/values -->
+        <div class="edge-test">
+            <p>Keys: <span data-lid="l67"></span></p>
+            <p>Values: <span data-lid="l68"></span></p>
+        </div>
+
+        <!-- TEST 29: JSON stringify -->
+        <div class="edge-test">
+            <p>JSON: <span data-lid="l69"></span></p>
+        </div>
+
+        <!-- TEST 30: Multiple interpolations in one text -->
+        <div class="edge-test">
+            <p><span data-lid="l70">World</span> has <span data-lid="l71">2</span> clicks and <span
+                    data-lid="l72">3</span> items</p>
+        </div>
+
+        <!-- TEST 31: Interpolation with HTML-like content -->
+        <div class="edge-test">
+            <p>HTML content: <span data-lid="l73">&lt;script&gt;alert("xss")&lt;/script&gt;</span></p>
+        </div>
+
+        <!-- TEST 32: Empty/whitespace expressions -->
+        <div class="edge-test">
+            <p>Before <span data-lid="l74">World</span> after</p>
+        </div>
+
+        <!-- TEST 33: Unicode in expressions -->
+        <div class="edge-test">
+            <p>Emoji: <span data-lid="l75">🎉World🎉</span></p>
+            <p>Unicode: <span data-lid="l76">Hello</span></p>
+        </div>
+
+        <!-- TEST 34: Getter access -->
+        <div class="edge-test">
+            <p>Full name: <span data-lid="l77">John Doe</span></p>
+            <p>Item count: <span data-lid="l78">3</span></p>
+        </div>
+
+        <!-- TEST 35: Bitwise operators (might conflict with pipes) -->
+        <div class="edge-test">
+            <p>Bitwise OR: <span data-lid="l79">2</span></p>
+            <p>Bitwise AND: <span data-lid="l80">2</span></p>
+        </div>
+
+        <!-- TEST 36: Comma operator -->
+        <!-- BUG FOUND: Comma operator generates invalid code -->
+        <!-- Error: this.count++,this.count causes parse error -->
+        <!-- REMOVED - causes build failure -->
+        <!--
+        <div class="edge-test">
+            <p>Comma: {{ (count++, count) }}</p>
+        </div>
+        -->
+
+        <!-- TEST 37: void operator -->
+        <!-- BUG FOUND: void keyword treated as property, generates this.void -->
+        <!-- Error: this.void increment() is invalid -->
+        <!-- REMOVED - causes build failure -->
+        <!--
+        <div class="edge-test">
+            <button (click)="void increment()">Void click</button>
+        </div>
+        -->
+
+        <!-- TEST 38: new expressions -->
+        <div class="edge-test">
+            <p>Date: <span data-lid="l81">2026-01-23T14:16:18.997Z</span></p>
+        </div>
+
+        <!-- TEST 39: Template ref usage -->
+        <div class="edge-test">
+            <input #myinput="" type="text" value="ref test" data-ref="myInput">
+            <button data-lid="l82">Use ref</button>
+        </div>
+
+        <!-- TEST 40: Complex nested everything -->
+        <!-- BUG FOUND: Pipes inside @for with iterator variable fail in expressionUsesVariable -->
+        <!-- Error: "item | uppercase | truncate:10" parsed as JS, | treated as bitwise OR -->
+        <!-- REMOVED - causes build failure -->
+
+        <!-- ============================================== -->
+        <!-- MORE EDGE CASES - Round 2 -->
+        <!-- ============================================== -->
+
+        <!-- TEST 41: Async/await (if supported) -->
+        <div class="edge-test">
+            <button data-lid="l83">Async click</button>
+        </div>
+
+        <!-- TEST 42: delete operator - REMOVED -->
+        <!-- BUG #6: delete keyword treated as identifier, generates this.delete -->
+
+        <!-- TEST 43: in operator -->
+        <div class="edge-test">
+            <p>Has address: <span data-lid="l84">true</span></p>
+        </div>
+
+        <!-- TEST 44: instanceof -->
+        <div class="edge-test">
+            <p>Is array: <span data-lid="l85">apple,banana,cherry</span></p>
+        </div>
+
+        <!-- TEST 45: Unary operators -->
+        <div class="edge-test">
+            <p>Negative: <span data-lid="l86">2</span></p>
+            <p>Not: <span data-lid="l87">true</span></p>
+            <p>Bitwise not: <span data-lid="l88">2</span></p>
+            <p>Plus: <span data-lid="l89">2</span></p>
+        </div>
+
+        <!-- TEST 46: Increment/decrement in expression -->
+        <div class="edge-test">
+            <p>Pre-increment result: <span data-lid="l90">1</span></p>
+            <p>Post-increment result: <span data-lid="l91">1</span></p>
+        </div>
+
+        <!-- TEST 47: Assignment operators in expression -->
+        <div class="edge-test">
+            <p>Assign: <span data-lid="l92">2</span></p>
+            <p>Add assign: <span data-lid="l93">2</span></p>
+        </div>
+
+        <!-- TEST 48: Nullish assignment -->
+        <div class="edge-test">
+            <p>Nullish assign: <span data-lid="l94"></span></p>
+        </div>
+
+        <!-- TEST 49: Logical assignment -->
+        <div class="edge-test">
+            <p>And assign: <span data-lid="l95">true</span></p>
+            <p>Or assign: <span data-lid="l96"></span></p>
+        </div>
+
+        <!-- TEST 50: Exponentiation -->
+        <div class="edge-test">
+            <p>Power: <span data-lid="l97">1024</span></p>
+            <p>Power assign: <span data-lid="l98">2</span></p>
+        </div>
+
+        <!-- TEST 51: Tagged template literal -->
+        <div class="edge-test">
+            <p>Tagged: <span data-lid="l99">Hello\nWorld</span></p>
+        </div>
+
+        <!-- TEST 52: Destructuring in expression - REMOVED -->
+        <!-- BUG #7: Destructuring shorthand {firstName} becomes {firstName:this.firstName} -->
+
+        <!-- TEST 53: Rest/spread in function call -->
+        <div class="edge-test">
+            <p>Spread call: <span data-lid="l100"></span></p>
+        </div>
+
+        <!-- TEST 54: Computed property access with expression - REMOVED -->
+        <!-- BUG #8: Array access items[x] generates malformed code -->
+
+        <!-- TEST 55: Chained optional calls -->
+        <div class="edge-test">
+            <p>Optional call: <span data-lid="l101"></span></p>
+        </div>
+
+        <!-- TEST 56: Nested template literals -->
+        <div class="edge-test">
+            <p>Nested template: <span data-lid="l102">outer inner World</span></p>
+        </div>
+
+        <!-- TEST 57: Arrow function in expression - REMOVED -->
+        <!-- BUG #9: Arrow function params get this. prefix: (this.x)=>this.x*2 -->
+
+        <!-- TEST 58: IIFE - REMOVED -->
+        <!-- BUG #10: IIFE generates malformed code: function(){...})(; -->
+
+        <!-- TEST 59: Short-circuit with function call -->
+        <div class="edge-test">
+            <p>Short circuit: <span data-lid="l103">true</span></p>
+        </div>
+
+        <!-- TEST 60: Chained ternary with method calls - REMOVED -->
+        <!-- BUG #11: Chained ternary generates malformed code -->
+
+        <!-- TEST 61: Multiple event modifiers -->
+        <div class="edge-test">
+            <input placeholder="Shift+Enter" data-lid="l104">
+            <input placeholder="Ctrl+S" data-lid="l105">
+        </div>
+
+        <!-- TEST 62: Event with preventDefault/stopPropagation -->
+        <div class="edge-test">
+            <a href="#" data-lid="l106">Prevent default</a>
+        </div>
+
+        <!-- TEST 63: Multiple statements in event -->
+        <div class="edge-test">
+            <button data-lid="l107">Multi statement</button>
+        </div>
+
+        <!-- TEST 64: Regex in expression -->
+        <div class="edge-test">
+            <p>Regex match: <span data-lid="l108">false</span></p>
+            <p>Regex replace: <span data-lid="l109">World</span></p>
+        </div>
+
+        <!-- TEST 65: Unicode property escapes -->
+        <div class="edge-test">
+            <p>Unicode: <span data-lid="l110">2</span></p>
+        </div>
+
+        <!-- TEST 66: BigInt (if supported) -->
+        <div class="edge-test">
+            <p>BigInt: <span data-lid="l111"></span></p>
+        </div>
+
+        <!-- TEST 67: Symbol (if supported) -->
+        <div class="edge-test">
+            <p>Symbol: <span data-lid="l112"></span></p>
+        </div>
+
+        <!-- TEST 68: Proxy/Reflect -->
+        <div class="edge-test">
+            <p>Reflect: <span data-lid="l113"></span></p>
+        </div>
+
+        <!-- TEST 69: Array methods with callbacks -->
+        <div class="edge-test">
+            <p>Find: <span data-lid="l114">apple</span></p>
+            <p>FindIndex: <span data-lid="l115">1</span></p>
+            <p>Some: <span data-lid="l116">true</span></p>
+            <p>Every: <span data-lid="l117">true</span></p>
+            <p>Reduce: <span data-lid="l118">17</span></p>
+        </div>
+
+        <!-- TEST 70: String methods -->
+        <div class="edge-test">
+            <p>Pad: <span data-lid="l119"></span></p>
+            <p>Repeat: <span data-lid="l120">World</span></p>
+            <p>Split join: <span data-lid="l121">World</span></p>
+        </div>
+
+        <!-- TEST 71: Number methods -->
+        <div class="edge-test">
+            <p>ToFixed: <span data-lid="l122">99.99</span></p>
+            <p>ToExponential: <span data-lid="l123">2</span></p>
+            <p>ParseInt: <span data-lid="l124"></span></p>
+        </div>
+
+        <!-- TEST 72: Date methods -->
+        <div class="edge-test">
+            <p>Now: <span data-lid="l125"></span></p>
+        </div>
+
+        <!-- TEST 73: Math methods -->
+        <div class="edge-test">
+            <p>Random: <span data-lid="l126"></span></p>
+            <p>Round: <span data-lid="l127"></span></p>
+            <p>Abs: <span data-lid="l128"></span></p>
+        </div>
+
+        <!-- TEST 74: Nested @for with same variable name -->
+        <!-- BUG: Outer iterator 'item' incorrectly gets this. prefix in nested @for iterable -->
+        <!-- COMMENTED OUT - causes runtime error: this.item is undefined -->
+        <!--
+        <div class="edge-test">
+            <!--l13--><!--/l13-->
+    </div>
+    --&gt;
+
+    <!-- TEST 75: @for with object entries - REMOVED -->
+    <!-- BUG #8: entry[0] in text binding generates malformed ternary code -->
+
+    <!-- TEST 76: @switch with complex expressions -->
+    <div class="edge-test">
+        __SWITCH_BLOCK_1
+    </div>
+
+    <!-- TEST 77: Binding to data attributes -->
+    <div class="edge-test">
+        <div data-lid="l129" attr.datacount="2" attr.dataname="World">Data attrs</div>
+    </div>
+
+    <!-- TEST 78: Binding to aria attributes -->
+    <div class="edge-test">
+        <button data-lid="l130" attr.ariapressed="true" attr.arialabel="Count: 2">Aria</button>
+    </div>
+
+    <!-- TEST 79: SVG bindings -->
+    <div class="edge-test">
+        <svg width="100" height="100">
+            <circle fill="blue" data-lid="l131" attr.cx="50" attr.cy="50" attr.r="2"></circle>
+        </svg>
+    </div>
+
+    <!-- TEST 80: Multiple bindings on same element -->
+    <div class="edge-test">
+        <div data-lid="l132" class="a b" attr.datax="2" title="World">
+            Multi-binding
+        </div>
+    </div>
+
+    <!-- TEST 81: Self-closing custom elements -->
+    <div class="edge-test">
+        <input data-lid="l133">
+    </div>
+
+    <!-- TEST 82: Boolean attributes -->
+    <div class="edge-test">
+        <input type="checkbox" data-lid="l134">
+        <button data-lid="l135" disabled="">Disabled test</button>
+        <input value="readonly test" data-lid="l136" readonly="true">
+    </div>
+
+    <!-- TEST 83: Textarea binding -->
+    <div class="edge-test">
+        <textarea data-lid="l137"></textarea>
+    </div>
+
+    <!-- TEST 84: Select binding -->
+    <div class="edge-test">
+        <select data-lid="l138">
+            <!--for-l15-->
+            <option data-l15-for-bind-value-0="[&quot;value&quot;,&quot;i&quot;]" value="undefined">apple</option>
+            <option data-l15-for-bind-value-0="[&quot;value&quot;,&quot;i&quot;]" value="undefined">banana</option>
+            <option data-l15-for-bind-value-0="[&quot;value&quot;,&quot;i&quot;]" value="undefined">cherry</option>
+            <!--/for-l15-->
+        </select>
+    </div>
+
+    <!-- TEST 85: Deeply nested HTML structure -->
+    <div class="edge-test">
+        <div>
+            <div>
+                <div>
+                    <div>
+                        <div>
+                            <p><span data-lid="l139">World</span> - deeply nested</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEST 86: Table with bindings -->
+    <div class="edge-test">
+        <table>
+            <thead>
+            <tr>
+                <th>Index</th>
+                <th>Item</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!--l16-->
+            <span data-text-bind="this.i ?? ''" data-lid="l17"></span>
+            apple
+
+            <span data-text-bind="this.i ?? ''" data-lid="l17"></span>
+            banana
+
+            <span data-text-bind="this.i ?? ''" data-lid="l17"></span>
+            cherry
+            <!--/l16-->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TEST 87: Empty @for - REMOVED -->
+    <!-- BUG #5: @for with array literal [] fails in extractBaseProp -->
+
+    <!-- TEST 88: @if with @empty -->
+    <div class="edge-test">
+        <!--l18--><!--/l18--> @empty {
+        <p>No matches</p>
+    }
+    </div>
+
+    <!-- TEST 89: Whitespace handling -->
+    <div class="edge-test">
+        <p><span data-lid="l140">World</span></p>
+        <p><span data-lid="l141">World</span></p>
+        <p><span data-lid="l142">World</span><span data-lid="l143">2</span></p>
+    </div>
+
+    <!-- TEST 90: HTML entities in interpolation -->
+    <div class="edge-test">
+        <p>Entity: <span data-lid="l144">&lt;script&gt;</span></p>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- XSS SECURITY TESTS -->
+    <!-- Testing if user input can execute arbitrary JS -->
+    <!-- ============================================== -->
+
+    <div class="xss-tests" style="border: 3px solid red; padding: 20px; margin: 20px 0;">
+        <h2 style="color: red;">🔒 XSS Security Tests</h2>
+        <p><strong>Try entering XSS payloads in the inputs below:</strong></p>
+
+        <!-- XSS TEST 1: Basic text interpolation -->
+        <div class="xss-test">
+            <h3>Test 1: Text Interpolation</h3>
+            <p>Try: <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code></p>
+            <input type="text" placeholder="Enter XSS payload..." style="width: 100%;" data-lid="l145">
+            <p>Output: <span data-lid="l146"></span></p>
+        </div>
+
+        <!-- XSS TEST 2: HTML content injection -->
+        <div class="xss-test">
+            <h3>Test 2: HTML in Text</h3>
+            <p>Try: <code>&lt;img src=x onerror=alert('xss')&gt;</code></p>
+            <input type="text" placeholder="Enter HTML..." style="width: 100%;" data-lid="l147">
+            <p>Output: <span data-lid="l148"></span></p>
+        </div>
+
+        <!-- XSS TEST 3: Attribute injection via title -->
+        <div class="xss-test">
+            <h3>Test 3: Attribute Binding (title)</h3>
+            <p>Try: <code>" onclick="alert('xss')" x="</code></p>
+            <input type="text" placeholder="Enter attribute value..." style="width: 100%;" data-lid="l149">
+            <p data-lid="l150" title="">Hover over this text (title bound to input)</p>
+        </div>
+
+        <!-- XSS TEST 4: URL injection -->
+        <div class="xss-test">
+            <h3>Test 4: URL Binding (href)</h3>
+            <p>Try: <code>javascript:alert('xss')</code></p>
+            <input type="text" placeholder="Enter URL..." style="width: 100%;" data-lid="l151">
+            <a data-lid="l152" attr.href="">Click this link (href bound to input)</a>
+        </div>
+
+        <!-- XSS TEST 5: Style injection -->
+        <div class="xss-test">
+            <h3>Test 5: Style Binding</h3>
+            <p>Try: <code>red; background-image: url(javascript:alert('xss'))</code></p>
+            <input type="text" placeholder="Enter color..." style="width: 100%;" data-lid="l153">
+            <p data-lid="l154">This text color is bound to input</p>
+        </div>
+
+        <!-- XSS TEST 6: Template literal injection -->
+        <div class="xss-test">
+            <h3>Test 6: Template Literal</h3>
+            <p>Try: <code>${alert('xss')}</code></p>
+            <input type="text" placeholder="Enter template..." style="width: 100%;" data-lid="l155">
+            <p>Template: <span data-lid="l156">User said: </span></p>
+        </div>
+
+        <!-- XSS TEST 7: SVG injection -->
+        <div class="xss-test">
+            <h3>Test 7: SVG Text</h3>
+            <p>Try: <code>&lt;svg onload=alert('xss')&gt;</code></p>
+            <svg width="200" height="50">
+                <text x="10" y="30"><span data-lid="l157"></span></text>
+            </svg>
+        </div>
+
+        <!-- XSS TEST 8: Data attribute injection -->
+        <div class="xss-test">
+            <h3>Test 8: Data Attribute</h3>
+            <p>Try: <code>" onclick="alert('xss')" data-x="</code></p>
+            <div data-lid="l158" attr.datauser="">Data attribute bound (inspect element)</div>
+        </div>
+
+        <!-- XSS TEST 9: Class name injection -->
+        <div class="xss-test">
+            <h3>Test 9: Class Binding</h3>
+            <p>Try: <code>true" onclick="alert('xss')" class="</code></p>
+            <div data-lid="l159">Class binding test</div>
+        </div>
+
+        <!-- XSS TEST 10: Existing htmlContent property -->
+        <div class="xss-test">
+            <h3>Test 10: Pre-defined HTML Content</h3>
+            <p>This displays the htmlContent property which contains a script tag:</p>
+            <p>Output: <span data-lid="l160">&lt;script&gt;alert("xss")&lt;/script&gt;</span></p>
+        </div>
+
+        <!-- XSS TEST 11: Breaking out of interpolation -->
+        <div class="xss-test">
+            <h3>Test 11: Breaking Interpolation</h3>
+            <p>Try: <code>}}&lt;script&gt;alert('xss')&lt;/script&gt;{{</code></p>
+            <input type="text" placeholder="Try to break out..." style="width: 100%;" data-lid="l161">
+            <p>Output: <span data-lid="l162"></span></p>
+        </div>
+
+        <!-- XSS TEST 12: Event handler string -->
+        <div class="xss-test">
+            <h3>Test 12: Event Handler Value</h3>
+            <p>Try entering code and clicking the button:</p>
+            <input type="text" placeholder="Enter code..." style="width: 100%;" data-lid="l163">
+            <button data-lid="l164">Log Input Value</button>
+            <p>Note: The button logs the VALUE, not executes it</p>
+        </div>
+
+        <!-- XSS TEST 13: Nested quotes -->
+        <div class="xss-test">
+            <h3>Test 13: Quote Escaping</h3>
+            <p>Try: <code>"'`&lt;/script&gt;&lt;script&gt;alert('xss')&lt;/script&gt;</code></p>
+            <input type="text" placeholder="Enter quotes..." style="width: 100%;" data-lid="l165">
+            <p data-lid="l166" title="">Hover (title with quotes): <span data-lid="l167"></span></p>
+        </div>
+
+        <!-- XSS TEST 14: Unicode escapes -->
+        <div class="xss-test">
+            <h3>Test 14: Unicode Escapes</h3>
+            <p>Try: <code>
+                <script>alert('xss')</script>
+            </code></p>
+            <input type="text" placeholder="Enter unicode..." style="width: 100%;" data-lid="l168">
+            <p>Output: <span data-lid="l169"></span></p>
+        </div>
+
+        <!-- XSS TEST 15: HTML entities -->
+        <div class="xss-test">
+            <h3>Test 15: HTML Entity Encoding</h3>
+            <p>Try: <code>&amp;lt;script&amp;gt;alert('xss')&amp;lt;/script&amp;gt;</code></p>
+            <input type="text" placeholder="Enter entities..." style="width: 100%;" data-lid="l170">
+            <p>Output: <span data-lid="l171"></span></p>
+        </div>
+
+        <!-- XSS TEST 16: @for loop with user input - CRITICAL TEST -->
+        <div class="xss-test" style="border: 2px solid orange;">
+            <h3>⚠️ Test 16: @for Loop (CRITICAL)</h3>
+            <p>Try: <code>&lt;img src=x onerror=alert('XSS-FOR')&gt;</code></p>
+            <p>This tests if innerHTML in @for loops is vulnerable</p>
+            <input type="text" placeholder="Enter XSS payload..." style="width: 80%;" data-lid="l172">
+            <button data-lid="l173">Add to List</button>
+            <div style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+                <p>Items in list:</p>
+                <!--l19--><!--/l19--> @empty {
+                <p style="color: #999;">No items yet</p>
+            }
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Built with Fluff.js — <em>"Just the good stuff"</em></p>
+    </footer>
+</div>

@@ -1,6 +1,10 @@
 export { ComponentCompiler } from './ComponentCompiler.js';
 export { TemplateParser } from './TemplateParser.js';
 export { CodeGenerator } from './CodeGenerator.js';
-export { Cli, parseArgs } from './Cli.js';
-export type * from './types.js';
+export { Cli } from './Cli.js';
+export type { ComponentInfo } from './interfaces/ComponentInfo.js';
+export type { CompilerOptions } from './interfaces/CompilerOptions.js';
+export type { ControlFlow, SwitchCaseOld } from './interfaces/ControlFlow.js';
+export type { ParsedTemplateOld } from './interfaces/ParsedTemplateOld.js';
+export type { TemplateBinding } from './interfaces/TemplateBinding.js';
 export type * from './types/FluffConfig.js';

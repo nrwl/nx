@@ -7,7 +7,7 @@ interface TaskFormProps
     onSubmit: (data: { title: string; description: string; priority: TaskPriority; tags: string[] }) => void;
 }
 
-export function TaskFormComponent({onSubmit}: TaskFormProps)
+export function TaskFormComponent({ onSubmit }: TaskFormProps)
 {
     const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,7 +33,7 @@ export function TaskFormComponent({onSubmit}: TaskFormProps)
     const toggleForm = () =>
     {
         setIsExpanded(!isExpanded);
-        if(isExpanded)
+        if (isExpanded)
         {
             resetForm();
         }
@@ -51,7 +51,7 @@ export function TaskFormComponent({onSubmit}: TaskFormProps)
 
     const handleSubmit = () =>
     {
-        if(!taskTitle.trim()) return;
+        if (!taskTitle.trim()) return;
 
         onSubmit({
             title: taskTitle.trim(),
@@ -66,7 +66,7 @@ export function TaskFormComponent({onSubmit}: TaskFormProps)
 
     const handleKeyUp = (e: React.KeyboardEvent) =>
     {
-        if(e.key === 'Enter')
+        if (e.key === 'Enter')
         {
             handleSubmit();
         }

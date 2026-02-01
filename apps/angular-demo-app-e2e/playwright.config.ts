@@ -14,7 +14,7 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-    ...nxE2EPreset(__filename, {testDir: './src'}),
+    ...nxE2EPreset(__filename, { testDir: './src' }),
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         baseURL,
@@ -31,17 +31,17 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: {...devices['Desktop Chrome']},
+            use: { ...devices['Desktop Chrome'] },
         },
 
         {
             name: 'firefox',
-            use: {...devices['Desktop Firefox']},
+            use: { ...devices['Desktop Firefox'] },
         },
 
         {
             name: 'webkit',
-            use: {...devices['Desktop Safari']},
+            use: { ...devices['Desktop Safari'] },
         },
 
         // Uncomment for mobile browsers support

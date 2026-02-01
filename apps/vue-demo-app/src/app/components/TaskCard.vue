@@ -26,7 +26,7 @@ const showMoveMenu = ref(false);
 
 watch(() => [props.isEditing, props.task], () =>
 {
-  if(props.isEditing && props.task)
+  if (props.isEditing && props.task)
   {
     editTitle.value = props.task.title;
     editDescription.value = props.task.description;
@@ -34,7 +34,7 @@ watch(() => [props.isEditing, props.task], () =>
     editAssignee.value = props.task.assignee ?? '';
     editDueDate.value = props.task.dueDate ?? '';
   }
-}, {immediate: true});
+}, { immediate: true });
 
 const priorityClass = computed(() => props.task.priority);
 
@@ -50,9 +50,9 @@ const isDueToday = computed(() => props.task.dueDate === today.value);
 
 const formattedDueDate = computed(() =>
 {
-  if(!props.task.dueDate) return '';
+  if (!props.task.dueDate) return '';
   const date = new Date(props.task.dueDate);
-  return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 });
 
 const getStatusLabel = (status: TaskStatus): string =>

@@ -29,8 +29,8 @@
         "dist"
     ],
     "references": [
-      {
-        "path": "../../packages/fluff/tsconfig.lib.json"
-      }
+        {
+            "path": "../../packages/fluff/tsconfig.lib.json"
+        }
     ]
 }

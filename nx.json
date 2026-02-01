@@ -62,7 +62,16 @@
             "preVersionCommand": "npx nx run-many -t build"
         }
     },
+    "tui": {
+        "autoExit": 1
+    },
     "targetDefaults": {
+        "build": {
+            "dependsOn": [
+                "lint",
+                "test"
+            ]
+        },
         "@nx/vitest:test": {
             "cache": true,
             "inputs": [

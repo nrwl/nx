@@ -1,10 +1,13 @@
 {
     "name": "@fluffjs/source",
-    "version": "0.0.8",
+    "version": "0.1.0",
     "license": "MIT",
     "scripts": {
         "cli": "npx tsx ./packages/cli/src/bin.ts",
-        "publish": "node scripts/publish.mjs"
+        "publish": "node scripts/publish.mjs",
+        "inspect:cli": "idea.sh inspect \"$(pwd)/packages/cli\" \"$(pwd)/inspectionProfiles/Fluff.xml\" .output -format plain && find .output -maxdepth 1 -type f -print -exec cat {} \\; && rm -rf .output",
+        "inspect:fluff": "idea.sh inspect \"$(pwd)/packages/fluff\" \"$(pwd)/inspectionProfiles/Fluff.xml\" .output -format plain && find .output -maxdepth 1 -type f -print -exec cat {} \\; && rm -rf .output",
+        "build-demo": "npm run cli build fluff-demo-app"
     },
     "private": true,
     "devDependencies": {
@@ -39,8 +42,10 @@
         "@testing-library/dom": "10.4.0",
         "@testing-library/react": "16.3.0",
         "@types/babel__core": "^7.20.5",
+        "@types/change-case": "^0.0.30",
         "@types/html-minifier-terser": "^7.0.2",
         "@types/node": "20.19.9",
+        "@types/picomatch": "^4.0.2",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "@types/source-map": "^0.5.2",
@@ -91,6 +96,7 @@
         "@angular/platform-browser": "~21.1.0",
         "@angular/router": "~21.1.0",
         "@nx/devkit": "22.4.1",
+        "change-case": "^5.4.4",
         "parse5": "^8.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",

@@ -20,6 +20,774 @@
             <button class="btn" (click)="increment()">Click me! 🎉</button>
         </div>
 
+        <!-- ============================================== -->
+        <!-- EDGE CASE TESTS - Trying to break the compiler -->
+        <!-- ============================================== -->
+
+        <!-- TEST 1: Object literal in interpolation -->
+        <div class="edge-test">
+            <p>Object literal: {{ { greeting: 'Hello' }.greeting }}</p>
+        </div>
+
+        <!-- TEST 2: Object spread in property binding -->
+        <div class="edge-test">
+            <p [title]="{...defaultConfig, name: name}">Object spread binding</p>
+        </div>
+
+        <!-- TEST 3: Deeply nested property access -->
+        <div class="edge-test">
+            <p>Nested: {{ user.address.city }} - {{ user.address.zip }}</p>
+        </div>
+
+        <!-- TEST 4: Optional chaining -->
+        <div class="edge-test">
+            <p>Optional: {{ nullableValue?.length }}</p>
+            <p>Deep optional: {{ user?.address?.city }}</p>
+        </div>
+
+        <!-- TEST 5: Ternary expressions -->
+        <div class="edge-test">
+            <p>Ternary: {{ count > 5 ? 'Many' : 'Few' }}</p>
+            <p>Nested ternary: {{ count > 10 ? 'Lots' : count > 5 ? 'Some' : 'Few' }}</p>
+        </div>
+
+        <!-- TEST 6: Logical operators -->
+        <div class="edge-test">
+            <p>AND: {{ isEnabled && 'Enabled' }}</p>
+            <p>OR: {{ nullableValue || 'Default' }}</p>
+            <p>Nullish: {{ nullableValue ?? 'Fallback' }}</p>
+        </div>
+
+        <!-- TEST 7: Array expressions -->
+        <!-- BUG #8: Array access like items[0] generates malformed code in text binding -->
+        <!-- The restPath logic splits on '.' which breaks array access -->
+        <div class="edge-test">
+            <p>Array length: {{ items.length }}</p>
+            <!-- REMOVED: items[0], items[selectedIndex], [1,2,3].join('-') -->
+        </div>
+
+        <!-- TEST 8: Method calls with complex args -->
+        <div class="edge-test">
+            <p>Method: {{ complexMethod(count, name, isEnabled) }}</p>
+            <p>Chained: {{ items.filter(i = > i.length > 3).join(', ') }}</p>
+        </div>
+
+        <!-- TEST 9: Template literals in expressions -->
+        <div class="edge-test">
+            <p>Template: {{ `Hello ${name}!` }}</p>
+            <p>Complex template: {{ `Count: ${count}, Items: ${items.length}` }}</p>
+        </div>
+
+        <!-- TEST 10: Pipes with various arguments -->
+        <div class="edge-test">
+            <p>Uppercase: {{ name | uppercase }}</p>
+            <p>Currency: {{ price | currency }}</p>
+            <p>Currency with arg: {{ price | currency:'€' }}</p>
+            <p>Truncate: {{ specialChars | truncate:20 }}</p>
+            <p>Chained pipes: {{ name | uppercase | truncate:5 }}</p>
+        </div>
+
+        <!-- TEST 11: Pipes with complex expressions -->
+        <div class="edge-test">
+            <p>Pipe on ternary: {{ (count > 5 ? 'many' : 'few') | uppercase }}</p>
+            <p>Pipe on method: {{ items.join(' ') | uppercase }}</p>
+        </div>
+
+        <!-- TEST 12: Event bindings with complex expressions -->
+        <!-- BUG: Assignment expressions don't get this. prefix on right side -->
+        <!-- COMMENTED OUT - causes runtime error -->
+        <!--
+        <div class="edge-test">
+            <button (click)="count = count + 1">Inline increment</button>
+            <button (click)="items = [...items, 'new']">Spread in event</button>
+            <input (keydown.enter)="addItem()" placeholder="Press enter"/>
+            <input (input)="searchQuery = $event.target.value.trim().toLowerCase()" placeholder="Complex event"/>
+        </div>
+        -->
+
+        <!-- TEST 13: Two-way binding -->
+        <div class="edge-test">
+            <input [(value)]="searchQuery" placeholder="Two-way binding"/>
+        </div>
+
+        <!-- TEST 14: Class bindings -->
+        <div class="edge-test">
+            <div [class.active]="isEnabled">Class binding</div>
+            <div [class.highlight]="count > 5">Conditional class</div>
+            <div [class.error]="items.length === 0">Expression class</div>
+        </div>
+
+        <!-- TEST 15: Style bindings -->
+        <!-- BUG FOUND: Generated code has TypeScript 'as HTMLElement' type assertion -->
+        <!-- Error: (el as HTMLElement).style.color is invalid JS -->
+        <!-- REMOVED - causes build failure -->
+        <!--
+        <div class="edge-test">
+            <div [style.color]="isEnabled ? 'green' : 'red'">Style ternary</div>
+            <div [style.font-size]="(count + 10) + 'px'">Dynamic size</div>
+            <div [style.opacity]="count / 10">Computed opacity</div>
+        </div>
+        -->
+
+        <!-- TEST 16: Control flow - @if -->
+        <div class="edge-test">
+            @if (showAdvanced) {
+                <p>Advanced content visible</p>
+            } @else {
+                <p>Click to show advanced</p>
+            }
+            <button (click)="toggleAdvanced()">Toggle</button>
+        </div>
+
+        <!-- TEST 17: Control flow - @for -->
+        <div class="edge-test">
+            @for (item of items; track item) {
+                <span>{{ item }}, </span>
+            }
+        </div>
+
+        <!-- TEST 18: Nested control flow -->
+        <div class="edge-test">
+            @if (items.length > 0) {
+                @for (item of items; track item) {
+                    @if (item.length > 4) {
+                        <span class="long">{{ item }}</span>
+                    } @else {
+                        <span class="short">{{ item }}</span>
+                    }
+                }
+            } @else {
+                <p>No items</p>
+            }
+        </div>
+
+        <!-- TEST 19: @for with index and complex expressions -->
+        <div class="edge-test">
+            @for (item of filteredItems; track item; let i = $index; let first = $first; let last = $last) {
+                <div [class.first]="first" [class.last]="last">
+                    {{ i }}: {{ item }} {{ first ? '(first)' : '' }} {{ last ? '(last)' : '' }}
+                </div>
+            }
+        </div>
+
+        <!-- TEST 20: @switch -->
+        <!-- BUG: @switch placeholders not replaced in output -->
+        <!-- COMMENTED OUT - causes broken HTML structure -->
+        <!--
+        <div class="edge-test">
+            @switch (selectedIndex) {
+                @case (0) { <p>First selected</p> }
+                @case (1) { <p>Second selected</p> }
+                @case (2) { <p>Third selected</p> }
+                @default { <p>Other selected</p> }
+            }
+            <button (click)="selectedIndex = (selectedIndex + 1) % 4">Next</button>
+        </div>
+        -->
+
+        <!-- TEST 21: Special characters in strings -->
+        <div class="edge-test">
+            <p>Special: {{ specialChars }}</p>
+            <p [title]="specialChars">Hover for special chars</p>
+        </div>
+
+        <!-- TEST 22: Regex-like patterns -->
+        <div class="edge-test">
+            <p>Regex test: {{ 'test.value'.match(regex) ? 'Match' : 'No match' }}</p>
+        </div>
+
+        <!-- TEST 23: Arithmetic expressions -->
+        <div class="edge-test">
+            <p>Math: {{ (count * 2 + 10) / 3 }}</p>
+            <p>Modulo: {{ count % 3 }}</p>
+            <p>Power: {{ count ** 2 }}</p>
+        </div>
+
+        <!-- TEST 24: Comparison operators -->
+        <div class="edge-test">
+            <p>Equals: {{ count === 5 }}</p>
+            <p>Not equals: {{ count !== 0 }}</p>
+            <p>Greater: {{ count >= 10 }}</p>
+        </div>
+
+        <!-- TEST 25: typeof and instanceof -->
+        <div class="edge-test">
+            <p>Type: {{ typeof name }}</p>
+            <p>Is array: {{ Array.isArray(items) }}</p>
+        </div>
+
+        <!-- TEST 26: Destructuring in @for -->
+        <div class="edge-test">
+            @for (item of items.map((v, i) = > ({ value: v, index: i })); track item.value) {
+                <span>{{ item.index }}: {{ item.value }}</span>
+            }
+        </div>
+
+        <!-- TEST 27: Spread in array -->
+        <div class="edge-test">
+            <p>Spread array: {{ [...items, 'extra'].join(', ') }}</p>
+        </div>
+
+        <!-- TEST 28: Object.keys/values -->
+        <div class="edge-test">
+            <p>Keys: {{ Object.keys(user).join(', ') }}</p>
+            <p>Values: {{ Object.values(defaultConfig).join(', ') }}</p>
+        </div>
+
+        <!-- TEST 29: JSON stringify -->
+        <div class="edge-test">
+            <p>JSON: {{ JSON.stringify(user) }}</p>
+        </div>
+
+        <!-- TEST 30: Multiple interpolations in one text -->
+        <div class="edge-test">
+            <p>{{ name }} has {{ count }} clicks and {{ items.length }} items</p>
+        </div>
+
+        <!-- TEST 31: Interpolation with HTML-like content -->
+        <div class="edge-test">
+            <p>HTML content: {{ htmlContent }}</p>
+        </div>
+
+        <!-- TEST 32: Empty/whitespace expressions -->
+        <div class="edge-test">
+            <p>Before {{ name }} after</p>
+        </div>
+
+        <!-- TEST 33: Unicode in expressions -->
+        <div class="edge-test">
+            <p>Emoji: {{ '🎉' + name + '🎉' }}</p>
+            <p>Unicode: {{ '\u0048\u0065\u006C\u006C\u006F' }}</p>
+        </div>
+
+        <!-- TEST 34: Getter access -->
+        <div class="edge-test">
+            <p>Full name: {{ fullName }}</p>
+            <p>Item count: {{ itemCount }}</p>
+        </div>
+
+        <!-- TEST 35: Bitwise operators (might conflict with pipes) -->
+        <div class="edge-test">
+            <p>Bitwise OR: {{ (count | 1) }}</p>
+            <p>Bitwise AND: {{ (count & 3) }}</p>
+        </div>
+
+        <!-- TEST 36: Comma operator -->
+        <!-- BUG FOUND: Comma operator generates invalid code -->
+        <!-- Error: this.count++,this.count causes parse error -->
+        <!-- REMOVED - causes build failure -->
+        <!--
+        <div class="edge-test">
+            <p>Comma: {{ (count++, count) }}</p>
+        </div>
+        -->
+
+        <!-- TEST 37: void operator -->
+        <!-- BUG FOUND: void keyword treated as property, generates this.void -->
+        <!-- Error: this.void increment() is invalid -->
+        <!-- REMOVED - causes build failure -->
+        <!--
+        <div class="edge-test">
+            <button (click)="void increment()">Void click</button>
+        </div>
+        -->
+
+        <!-- TEST 38: new expressions -->
+        <div class="edge-test">
+            <p>Date: {{ new Date().toISOString() }}</p>
+        </div>
+
+        <!-- TEST 39: Template ref usage -->
+        <div class="edge-test">
+            <input #myInput type="text" value="ref test"/>
+            <button (click)="name = myInput.value">Use ref</button>
+        </div>
+
+        <!-- TEST 40: Complex nested everything -->
+        <!-- BUG FOUND: Pipes inside @for with iterator variable fail in expressionUsesVariable -->
+        <!-- Error: "item | uppercase | truncate:10" parsed as JS, | treated as bitwise OR -->
+        <!-- REMOVED - causes build failure -->
+
+        <!-- ============================================== -->
+        <!-- MORE EDGE CASES - Round 2 -->
+        <!-- ============================================== -->
+
+        <!-- TEST 41: Async/await (if supported) -->
+        <div class="edge-test">
+            <button (click)="Promise.resolve().then(() => count++)">Async click</button>
+        </div>
+
+        <!-- TEST 42: delete operator - REMOVED -->
+        <!-- BUG #6: delete keyword treated as identifier, generates this.delete -->
+
+        <!-- TEST 43: in operator -->
+        <div class="edge-test">
+            <p>Has address: {{ 'address' in user }}</p>
+        </div>
+
+        <!-- TEST 44: instanceof -->
+        <div class="edge-test">
+            <p>Is array: {{ items instanceof Array }}</p>
+        </div>
+
+        <!-- TEST 45: Unary operators -->
+        <div class="edge-test">
+            <p>Negative: {{ -count }}</p>
+            <p>Not: {{ !isEnabled }}</p>
+            <p>Bitwise not: {{ ~count }}</p>
+            <p>Plus: {{ +count }}</p>
+        </div>
+
+        <!-- TEST 46: Increment/decrement in expression -->
+        <div class="edge-test">
+            <p>Pre-increment result: {{ ++count }}</p>
+            <p>Post-increment result: {{ count + + }}</p>
+        </div>
+
+        <!-- TEST 47: Assignment operators in expression -->
+        <div class="edge-test">
+            <p>Assign: {{ count = 5 }}</p>
+            <p>Add assign: {{ count += 1 }}</p>
+        </div>
+
+        <!-- TEST 48: Nullish assignment -->
+        <div class="edge-test">
+            <p>Nullish assign: {{ nullableValue ??= 'default' }}</p>
+        </div>
+
+        <!-- TEST 49: Logical assignment -->
+        <div class="edge-test">
+            <p>And assign: {{ isEnabled &&= true }}</p>
+            <p>Or assign: {{ nullableValue ||= 'fallback' }}</p>
+        </div>
+
+        <!-- TEST 50: Exponentiation -->
+        <div class="edge-test">
+            <p>Power: {{ 2 ** 10 }}</p>
+            <p>Power assign: {{ count **= 2 }}</p>
+        </div>
+
+        <!-- TEST 51: Tagged template literal -->
+        <div class="edge-test">
+            <p>Tagged: {{ String.raw`Hello\nWorld` }}</p>
+        </div>
+
+        <!-- TEST 52: Destructuring in expression - REMOVED -->
+        <!-- BUG #7: Destructuring shorthand {firstName} becomes {firstName:this.firstName} -->
+
+        <!-- TEST 53: Rest/spread in function call -->
+        <div class="edge-test">
+            <p>Spread call: {{ Math.max(...[1, 2, 3]) }}</p>
+        </div>
+
+        <!-- TEST 54: Computed property access with expression - REMOVED -->
+        <!-- BUG #8: Array access items[x] generates malformed code -->
+
+        <!-- TEST 55: Chained optional calls -->
+        <div class="edge-test">
+            <p>Optional call: {{ nullableValue?.toString?.() }}</p>
+        </div>
+
+        <!-- TEST 56: Nested template literals -->
+        <div class="edge-test">
+            <p>Nested template: {{ `outer ${`inner ${name}`}` }}</p>
+        </div>
+
+        <!-- TEST 57: Arrow function in expression - REMOVED -->
+        <!-- BUG #9: Arrow function params get this. prefix: (this.x)=>this.x*2 -->
+
+        <!-- TEST 58: IIFE - REMOVED -->
+        <!-- BUG #10: IIFE generates malformed code: function(){...})(; -->
+
+        <!-- TEST 59: Short-circuit with function call -->
+        <div class="edge-test">
+            <p>Short circuit: {{ isEnabled && increment() }}</p>
+        </div>
+
+        <!-- TEST 60: Chained ternary with method calls - REMOVED -->
+        <!-- BUG #11: Chained ternary generates malformed code -->
+
+        <!-- TEST 61: Multiple event modifiers -->
+        <div class="edge-test">
+            <input (keydown.enter.shift)="addItem()" placeholder="Shift+Enter"/>
+            <input (keydown.ctrl.s)="console.log('save')" placeholder="Ctrl+S"/>
+        </div>
+
+        <!-- TEST 62: Event with preventDefault/stopPropagation -->
+        <div class="edge-test">
+            <a href="#" (click)="$event.preventDefault(); increment()">Prevent default</a>
+        </div>
+
+        <!-- TEST 63: Multiple statements in event -->
+        <div class="edge-test">
+            <button (click)="count++; name = 'clicked'; addItem()">Multi statement</button>
+        </div>
+
+        <!-- TEST 64: Regex in expression -->
+        <div class="edge-test">
+            <p>Regex match: {{ /hello / i.test(name) }}</p>
+            <p>Regex replace: {{ name.replace( / o / g, '0') }}</p>
+        </div>
+
+        <!-- TEST 65: Unicode property escapes -->
+        <div class="edge-test">
+            <p>Unicode: {{ '中文'.length }}</p>
+        </div>
+
+        <!-- TEST 66: BigInt (if supported) -->
+        <div class="edge-test">
+            <p>BigInt: {{ BigInt(count) }}</p>
+        </div>
+
+        <!-- TEST 67: Symbol (if supported) -->
+        <div class="edge-test">
+            <p>Symbol: {{ Symbol.for('test').toString() }}</p>
+        </div>
+
+        <!-- TEST 68: Proxy/Reflect -->
+        <div class="edge-test">
+            <p>Reflect: {{ Reflect.has(user, 'firstName') }}</p>
+        </div>
+
+        <!-- TEST 69: Array methods with callbacks -->
+        <div class="edge-test">
+            <p>Find: {{ items.find(i = > i.startsWith('a')) }}</p>
+            <p>FindIndex: {{ items.findIndex(i = > i === 'banana') }}</p>
+            <p>Some: {{ items.some(i = > i.length > 5) }}</p>
+            <p>Every: {{ items.every(i = > i.length > 2) }}</p>
+            <p>Reduce: {{ items.reduce((a, b) = > a + b.length, 0) }}</p>
+        </div>
+
+        <!-- TEST 70: String methods -->
+        <div class="edge-test">
+            <p>Pad: {{ String(count).padStart(5, '0') }}</p>
+            <p>Repeat: {{ name.repeat(3) }}</p>
+            <p>Split join: {{ name.split('').reverse().join('') }}</p>
+        </div>
+
+        <!-- TEST 71: Number methods -->
+        <div class="edge-test">
+            <p>ToFixed: {{ price.toFixed(2) }}</p>
+            <p>ToExponential: {{ count.toExponential(2) }}</p>
+            <p>ParseInt: {{ parseInt('42px') }}</p>
+        </div>
+
+        <!-- TEST 72: Date methods -->
+        <div class="edge-test">
+            <p>Now: {{ Date.now() }}</p>
+        </div>
+
+        <!-- TEST 73: Math methods -->
+        <div class="edge-test">
+            <p>Random: {{ Math.floor(Math.random() * 100) }}</p>
+            <p>Round: {{ Math.round(price) }}</p>
+            <p>Abs: {{ Math.abs(-count) }}</p>
+        </div>
+
+        <!-- TEST 74: Nested @for with same variable name -->
+        <!-- BUG: Outer iterator 'item' incorrectly gets this. prefix in nested @for iterable -->
+        <!-- COMMENTED OUT - causes runtime error: this.item is undefined -->
+        <!--
+        <div class="edge-test">
+            @for (item of items; track item) {
+                @for (char of item.split(''); track char) {
+                    <span>{{ char }}</span>
+                }
+                <br/>
+            }
+        </div>
+        -->
+
+        <!-- TEST 75: @for with object entries - REMOVED -->
+        <!-- BUG #8: entry[0] in text binding generates malformed ternary code -->
+
+        <!-- TEST 76: @switch with complex expressions -->
+        <!-- BUG: @switch placeholders not replaced in output -->
+        <!-- COMMENTED OUT - causes broken HTML structure -->
+        <!--
+        <div class="edge-test">
+            @switch (items.length) {
+                @case (0) { <p>Empty</p> }
+                @case (1) { <p>One</p> }
+                @case (2) { <p>Two</p> }
+                @default { <p>Many: {{ items.length }}</p> }
+            }
+        </div>
+        -->
+
+        <!-- TEST 77: Binding to data attributes -->
+        <div class="edge-test">
+            <div [attr.data-count]="count" [attr.data-name]="name">Data attrs</div>
+        </div>
+
+        <!-- TEST 78: Binding to aria attributes -->
+        <div class="edge-test">
+            <button [attr.aria-pressed]="isEnabled" [attr.aria-label]="'Count: ' + count">Aria</button>
+        </div>
+
+        <!-- TEST 79: SVG bindings -->
+        <div class="edge-test">
+            <svg width="100" height="100">
+                <circle [attr.cx]="50" [attr.cy]="50" [attr.r]="count % 50" fill="blue"/>
+            </svg>
+        </div>
+
+        <!-- TEST 80: Multiple bindings on same element -->
+        <div class="edge-test">
+            <div [class.a]="isEnabled"
+                 [class.b]="count > 5"
+                 [attr.data-x]="count"
+                 [title]="name"
+                 (click)="increment()">
+                Multi-binding
+            </div>
+        </div>
+
+        <!-- TEST 81: Self-closing custom elements -->
+        <div class="edge-test">
+            <input [value]="name" (input)="name = $event.target.value"/>
+        </div>
+
+        <!-- TEST 82: Boolean attributes -->
+        <div class="edge-test">
+            <input type="checkbox" [checked]="isEnabled"/>
+            <button [disabled]="!isEnabled">Disabled test</button>
+            <input [readonly]="!isEnabled" value="readonly test"/>
+        </div>
+
+        <!-- TEST 83: Textarea binding -->
+        <div class="edge-test">
+            <textarea [value]="specialChars" (input)="specialChars = $event.target.value"></textarea>
+        </div>
+
+        <!-- TEST 84: Select binding -->
+        <div class="edge-test">
+            <select [value]="selectedIndex" (change)="selectedIndex = +$event.target.value">
+                @for (item of items; track item; let i = $index) {
+                    <option [value]="i">{{ item }}</option>
+                }
+            </select>
+        </div>
+
+        <!-- TEST 85: Deeply nested HTML structure -->
+        <div class="edge-test">
+            <div>
+                <div>
+                    <div>
+                        <div>
+                            <div>
+                                <p>{{ name }} - deeply nested</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEST 86: Table with bindings -->
+        <div class="edge-test">
+            <table>
+                <thead>
+                <tr>
+                    <th>Index</th>
+                    <th>Item</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @for (item of items; track item; let i = $index) {
+                        <tr [class.even]="i % 2 === 0">
+                            <td>{{ i }}</td>
+                            <td>{{ item }}</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TEST 87: Empty @for - REMOVED -->
+        <!-- BUG #5: @for with array literal [] fails in extractBaseProp -->
+
+        <!-- TEST 88: @for with @empty -->
+        <!-- BUG: @empty clause not parsed by ControlFlowParser -->
+        <!-- COMMENTED OUT - causes broken HTML structure -->
+        <!--
+        <div class="edge-test">
+            @for (item of items.filter(i => i === 'nonexistent'); track item) {
+                <p>{{ item }}</p>
+            } @empty {
+                <p>No matches</p>
+            }
+        </div>
+        -->
+
+        <!-- TEST 89: Whitespace handling -->
+        <div class="edge-test">
+            <p> {{ name }} </p>
+            <p>{{ name }}</p>
+            <p>{{ name }}{{ count }}</p>
+        </div>
+
+        <!-- TEST 90: HTML entities in interpolation -->
+        <div class="edge-test">
+            <p>Entity: {{ '&lt;script&gt;' }}</p>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- XSS SECURITY TESTS -->
+        <!-- Testing if user input can execute arbitrary JS -->
+        <!-- ============================================== -->
+
+        <div class="xss-tests" style="border: 3px solid red; padding: 20px; margin: 20px 0;">
+            <h2 style="color: red;">🔒 XSS Security Tests</h2>
+            <p><strong>Try entering XSS payloads in the inputs below:</strong></p>
+
+            <!-- XSS TEST 1: Basic text interpolation -->
+            <div class="xss-test">
+                <h3>Test 1: Text Interpolation</h3>
+                <p>Try: <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code></p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Enter XSS payload..." style="width: 100%;"/>
+                <p>Output: {{ userInput }}</p>
+            </div>
+
+            <!-- XSS TEST 2: HTML content injection -->
+            <div class="xss-test">
+                <h3>Test 2: HTML in Text</h3>
+                <p>Try: <code>&lt;img src=x onerror=alert('xss')&gt;</code></p>
+                <input type="text" [value]="userHtml" (input)="userHtml = $event.target.value"
+                       placeholder="Enter HTML..." style="width: 100%;"/>
+                <p>Output: {{ userHtml }}</p>
+            </div>
+
+            <!-- XSS TEST 3: Attribute injection via title -->
+            <div class="xss-test">
+                <h3>Test 3: Attribute Binding (title)</h3>
+                <p>Try: <code>" onclick="alert('xss')" x="</code></p>
+                <input type="text" [value]="userAttrValue" (input)="userAttrValue = $event.target.value"
+                       placeholder="Enter attribute value..." style="width: 100%;"/>
+                <p [title]="userAttrValue">Hover over this text (title bound to input)</p>
+            </div>
+
+            <!-- XSS TEST 4: URL injection -->
+            <div class="xss-test">
+                <h3>Test 4: URL Binding (href)</h3>
+                <p>Try: <code>javascript:alert('xss')</code></p>
+                <input type="text" [value]="userUrl" (input)="userUrl = $event.target.value" placeholder="Enter URL..."
+                       style="width: 100%;"/>
+                <a [attr.href]="userUrl">Click this link (href bound to input)</a>
+            </div>
+
+            <!-- XSS TEST 5: Style injection -->
+            <div class="xss-test">
+                <h3>Test 5: Style Binding</h3>
+                <p>Try: <code>red; background-image: url(javascript:alert('xss'))</code></p>
+                <input type="text" [value]="userStyle" (input)="userStyle = $event.target.value"
+                       placeholder="Enter color..." style="width: 100%;"/>
+                <p [style.color]="userStyle">This text color is bound to input</p>
+            </div>
+
+            <!-- XSS TEST 6: Template literal injection -->
+            <div class="xss-test">
+                <h3>Test 6: Template Literal</h3>
+                <p>Try: <code>${alert('xss')}</code></p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Enter template..." style="width: 100%;"/>
+                <p>Template: {{ `User said: ${userInput}` }}</p>
+            </div>
+
+            <!-- XSS TEST 7: SVG injection -->
+            <div class="xss-test">
+                <h3>Test 7: SVG Text</h3>
+                <p>Try: <code>&lt;svg onload=alert('xss')&gt;</code></p>
+                <svg width="200" height="50">
+                    <text x="10" y="30">{{ userInput }}</text>
+                </svg>
+            </div>
+
+            <!-- XSS TEST 8: Data attribute injection -->
+            <div class="xss-test">
+                <h3>Test 8: Data Attribute</h3>
+                <p>Try: <code>" onclick="alert('xss')" data-x="</code></p>
+                <div [attr.data-user]="userInput">Data attribute bound (inspect element)</div>
+            </div>
+
+            <!-- XSS TEST 9: Class name injection -->
+            <div class="xss-test">
+                <h3>Test 9: Class Binding</h3>
+                <p>Try: <code>true" onclick="alert('xss')" class="</code></p>
+                <div [class.active]="userInput === 'active'">Class binding test</div>
+            </div>
+
+            <!-- XSS TEST 10: Existing htmlContent property -->
+            <div class="xss-test">
+                <h3>Test 10: Pre-defined HTML Content</h3>
+                <p>This displays the htmlContent property which contains a script tag:</p>
+                <p>Output: {{ htmlContent }}</p>
+            </div>
+
+            <!-- XSS TEST 11: Breaking out of interpolation -->
+            <div class="xss-test">
+                <h3>Test 11: Breaking Interpolation</h3>
+                <p>Try: <code>}}&lt;script&gt;alert('xss')&lt;/script&gt;{{</code></p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Try to break out..." style="width: 100%;"/>
+                <p>Output: {{ userInput }}</p>
+            </div>
+
+            <!-- XSS TEST 12: Event handler string -->
+            <div class="xss-test">
+                <h3>Test 12: Event Handler Value</h3>
+                <p>Try entering code and clicking the button:</p>
+                <input type="text" [value]="userEventCode" (input)="userEventCode = $event.target.value"
+                       placeholder="Enter code..." style="width: 100%;"/>
+                <button (click)="console.log(userEventCode)">Log Input Value</button>
+                <p>Note: The button logs the VALUE, not executes it</p>
+            </div>
+
+            <!-- XSS TEST 13: Nested quotes -->
+            <div class="xss-test">
+                <h3>Test 13: Quote Escaping</h3>
+                <p>Try: <code>"'`&lt;/script&gt;&lt;script&gt;alert('xss')&lt;/script&gt;</code></p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Enter quotes..." style="width: 100%;"/>
+                <p [title]="userInput">Hover (title with quotes): {{ userInput }}</p>
+            </div>
+
+            <!-- XSS TEST 14: Unicode escapes -->
+            <div class="xss-test">
+                <h3>Test 14: Unicode Escapes</h3>
+                <p>Try: <code>\u003cscript\u003ealert('xss')\u003c/script\u003e</code></p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Enter unicode..." style="width: 100%;"/>
+                <p>Output: {{ userInput }}</p>
+            </div>
+
+            <!-- XSS TEST 15: HTML entities -->
+            <div class="xss-test">
+                <h3>Test 15: HTML Entity Encoding</h3>
+                <p>Try: <code>&amp;lt;script&amp;gt;alert('xss')&amp;lt;/script&amp;gt;</code></p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Enter entities..." style="width: 100%;"/>
+                <p>Output: {{ userInput }}</p>
+            </div>
+
+            <!-- XSS TEST 16: @for loop with user input - CRITICAL TEST -->
+            <div class="xss-test" style="border: 2px solid orange;">
+                <h3>⚠️ Test 16: @for Loop (CRITICAL)</h3>
+                <p>Try: <code>&lt;img src=x onerror=alert('XSS-FOR')&gt;</code></p>
+                <p>This tests if innerHTML in @for loops is vulnerable</p>
+                <input type="text" [value]="userInput" (input)="userInput = $event.target.value"
+                       placeholder="Enter XSS payload..." style="width: 80%;"/>
+                <button (click)="addUserItem()">Add to List</button>
+                <div style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+                    <p>Items in list:</p>
+                    @for (item of userItems; track item) {
+                        <div style="padding: 5px; border-bottom: 1px solid #eee;">{{ item }}</div>
+                    }
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>Built with Fluff.js — <em>"Just the good stuff"</em></p>
         </footer>

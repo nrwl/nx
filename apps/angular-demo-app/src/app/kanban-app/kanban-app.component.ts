@@ -104,9 +104,9 @@ export class KanbanAppComponent implements OnInit, OnDestroy
     ];
 
     columns: Column[] = [
-        {id: 'todo', title: 'To Do', color: '#e74c3c'},
-        {id: 'in-progress', title: 'In Progress', color: '#f39c12'},
-        {id: 'done', title: 'Done', color: '#27ae60'}
+        { id: 'todo', title: 'To Do', color: '#e74c3c' },
+        { id: 'in-progress', title: 'In Progress', color: '#f39c12' },
+        { id: 'done', title: 'Done', color: '#27ae60' }
     ];
 
     searchQuery = '';
@@ -191,12 +191,12 @@ export class KanbanAppComponent implements OnInit, OnDestroy
 
     moveTask(taskId: number, newStatus: TaskStatus): void
     {
-        this.tasks = this.tasks.map(t => t.id === taskId ? {...t, status: newStatus} : t);
+        this.tasks = this.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
     }
 
     updateTask(taskId: number, updates: Partial<Task>): void
     {
-        this.tasks = this.tasks.map(t => t.id === taskId ? {...t, ...updates} : t);
+        this.tasks = this.tasks.map(t => t.id === taskId ? { ...t, ...updates } : t);
         this.editingTaskId = null;
     }
 
@@ -237,7 +237,7 @@ export class KanbanAppComponent implements OnInit, OnDestroy
 
     ngOnDestroy(): void
     {
-        if(this.intervalId !== null)
+        if (this.intervalId !== null)
         {
             clearInterval(this.intervalId);
         }

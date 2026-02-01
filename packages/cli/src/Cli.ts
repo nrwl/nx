@@ -1,20 +1,18 @@
+import * as t from '@babel/types';
+import { randomUUID } from 'crypto';
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';
+import picomatch from 'picomatch';
 import { gzipSync } from 'zlib';
+import { generate } from './BabelHelpers.js';
 import { ComponentCompiler } from './ComponentCompiler.js';
 import { fluffPlugin } from './fluff-esbuild-plugin.js';
-import { transformIndexHtml } from './IndexHtmlTransformer.js';
+import { Generator } from './Generator.js';
+import { IndexHtmlTransformer } from './IndexHtmlTransformer.js';
+import type { CliOptions } from './interfaces/CliOptions.js';
 import type { FluffConfig, FluffTarget } from './types/FluffConfig.js';
 import { DEFAULT_CONFIG } from './types/FluffConfig.js';
-import { Generator } from './Generator.js';
-
-interface CliOptions
-{
-    cwd?: string;
-    nxPackage?: string;
-    noGzip?: boolean;
-}
 
 export class Cli
 {
@@ -401,6 +399,33 @@ Examples:
             ? path.join(srcDir, target.entryPoint)
             : this.generateEntryPoint(srcDir, target.components);
 
+        let inlineStyles = '';
+        if (target.styles && target.styles.length > 0)
+        {
+            const styleContents: string[] = [];
+            for (const styleGlob of target.styles)
+            {
+                const styleFiles = this.findFiles(srcDir, [styleGlob]);
+                for (const styleFile of styleFiles)
+                {
+                    styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                }
+            }
+            if (styleContents.length > 0)
+            {
+                inlineStyles = styleContents.join('\n');
+                if (bundleOptions.minify)
+                {
+                    const cssResult = await esbuild.transform(inlineStyles, {
+                        loader: 'css',
+                        minify: true
+                    });
+                    inlineStyles = cssResult.code;
+                }
+                console.log('   ✓ Bundled global styles');
+            }
+        }
+
         console.log('   Building with esbuild...');
 
         const result = await esbuild.build({
@@ -414,7 +439,15 @@ Examples:
             splitting: bundleOptions.splitting ?? false,
             treeShaking: true,
             metafile: true,
-            plugins: [fluffPlugin({ srcDir: appDir, minify: bundleOptions.minify ?? true })],
+            plugins: [
+                fluffPlugin({
+                    srcDir: appDir,
+                    outDir,
+                    minify: bundleOptions.minify ?? true,
+                    skipDefine: false,
+                    production: true
+                })
+            ],
             external: bundleOptions.external ?? [],
             logLevel: 'warning',
             tsconfigRaw: '{}'
@@ -431,8 +464,8 @@ Examples:
 
             if (bundleOptions.gzip)
             {
-                const jsContent = fs.readFileSync(jsPath);
-                const gzipped = gzipSync(jsContent, { level: 9 });
+                const gzipContent = fs.readFileSync(jsPath);
+                const gzipped = gzipSync(gzipContent, { level: 9 });
                 fs.writeFileSync(`${jsPath}.gz`, gzipped);
                 fs.unlinkSync(jsPath);
                 console.log(`   ✓ Created ${jsBundleName}.gz (${gzipped.length} bytes)`);
@@ -468,9 +501,10 @@ Examples:
             if (fs.existsSync(indexHtmlPath))
             {
                 const indexHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
-                const transformed = await transformIndexHtml(indexHtml, {
+                const transformed = await IndexHtmlTransformer.transform(indexHtml, {
                     jsBundle: jsBundle ? path.basename(jsBundle) : 'main.js',
                     cssBundle: cssBundle ? path.basename(cssBundle) : undefined,
+                    inlineStyles: inlineStyles || undefined,
                     gzip: bundleOptions.gzip,
                     minify: bundleOptions.minify
                 });
@@ -588,14 +622,40 @@ Examples:
         const srcDir = path.resolve(projectRoot, target.srcDir);
         const appDir = path.join(srcDir, 'app');
 
-        const outDir = (workspaceRoot && projectRelativePath)
-            ? path.join(workspaceRoot, 'dist', projectRelativePath)
-            : path.resolve(projectRoot, target.outDir);
+        const fluffDir = path.join(this.cwd, '.fluff');
+        const serveId = randomUUID();
+        const outDir = path.join(fluffDir, serveId);
 
         if (!fs.existsSync(outDir))
         {
             fs.mkdirSync(outDir, { recursive: true });
         }
+
+        const cleanup = (): void =>
+        {
+            try
+            {
+                if (fs.existsSync(outDir))
+                {
+                    fs.rmSync(outDir, { recursive: true, force: true });
+                }
+            }
+            catch
+            {
+            }
+        };
+
+        process.on('exit', cleanup);
+        process.on('SIGINT', () =>
+        {
+            cleanup();
+            process.exit(0);
+        });
+        process.on('SIGTERM', () =>
+        {
+            cleanup();
+            process.exit(0);
+        });
 
         const serveOptions = target.serve ?? {};
         const port = serveOptions.port ?? 3000;
@@ -605,16 +665,35 @@ Examples:
             ? path.join(srcDir, target.entryPoint)
             : this.generateEntryPoint(srcDir, target.components);
 
+        let inlineStyles = '';
+        if (target.styles && target.styles.length > 0)
+        {
+            const styleContents: string[] = [];
+            for (const styleGlob of target.styles)
+            {
+                const styleFiles = this.findFiles(srcDir, [styleGlob]);
+                for (const styleFile of styleFiles)
+                {
+                    styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                }
+            }
+            if (styleContents.length > 0)
+            {
+                inlineStyles = styleContents.join('\n');
+            }
+        }
+
         if (target.indexHtml)
         {
             const indexHtmlPath = path.join(srcDir, target.indexHtml);
             if (fs.existsSync(indexHtmlPath))
             {
                 const indexHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
-                const transformed = await transformIndexHtml(indexHtml, {
+                const transformed = await IndexHtmlTransformer.transform(indexHtml, {
                     jsBundle: path.basename(entryPoint)
                         .replace('.ts', '.js'),
                     cssBundle: undefined,
+                    inlineStyles: inlineStyles || undefined,
                     gzip: false,
                     minify: false,
                     liveReload: true
@@ -659,7 +738,16 @@ Examples:
             minify: false,
             treeShaking: true,
             sourcemap: true,
-            plugins: [fluffPlugin({ srcDir: appDir, minify: false, sourcemap: true })],
+            plugins: [
+                fluffPlugin({
+                    srcDir: appDir,
+                    outDir,
+                    minify: false,
+                    sourcemap: true,
+                    skipDefine: false,
+                    production: false
+                })
+            ],
             logLevel: 'info'
         });
 
@@ -679,14 +767,15 @@ Examples:
     private generateEntryPoint(srcDir: string, componentPatterns: string[]): string
     {
         const componentFiles = this.findFiles(srcDir, componentPatterns);
-        const imports = componentFiles.map(f =>
+        const importDecls = componentFiles.map(f =>
         {
             const relativePath = './' + path.relative(srcDir, f)
                 .replace(/\\/g, '/');
-            return `import '${relativePath}';`;
+            return t.importDeclaration([], t.stringLiteral(relativePath));
         });
 
-        const entryContent = imports.join('\n');
+        const program = t.program(importDecls);
+        const entryContent = generate(program, { compact: false }).code;
         const entryPath = path.join(srcDir, '__generated_entry.ts');
         fs.writeFileSync(entryPath, entryContent);
         return entryPath;
@@ -735,58 +824,52 @@ Examples:
 
     private matchGlob(filePath: string, pattern: string): boolean
     {
-        const regexPattern = pattern
-            .replace(/\./g, '\\.')
-            .replace(/\*\*/g, '{{GLOBSTAR}}')
-            .replace(/\*/g, '[^/]*')
-            .replace(/\{\{GLOBSTAR}}\//g, '(.*\\/)?')
-            .replace(/\{\{GLOBSTAR}}/g, '.*');
-
-        const regex = new RegExp(`^${regexPattern}$`);
-        return regex.test(filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        const isMatch: (path: string) => boolean = picomatch(pattern, { dot: false });
+        return isMatch(normalizedPath);
     }
-}
 
-export function parseArgs(argv: string[]): { options: CliOptions; args: string[] }
-{
-    const options: CliOptions = {};
-    const args: string[] = [];
-
-    let i = 0;
-    while (i < argv.length)
+    public static parseArgs(argv: string[]): { options: CliOptions; args: string[] }
     {
-        const arg = argv[i];
+        const options: CliOptions = {};
+        const args: string[] = [];
 
-        if (arg === '--nx' && argv[i + 1])
+        let i = 0;
+        while (i < argv.length)
         {
-            options.nxPackage = argv[i + 1];
-            i += 2;
+            const arg = argv[i];
+
+            if (arg === '--nx' && argv[i + 1])
+            {
+                options.nxPackage = argv[i + 1];
+                i += 2;
+            }
+            else if (arg === '--cwd' && argv[i + 1])
+            {
+                options.cwd = argv[i + 1];
+                i += 2;
+            }
+            else if (arg === '--no-gzip')
+            {
+                options.noGzip = true;
+                i++;
+            }
+            else if (arg?.startsWith('--'))
+            {
+                console.error(`Unknown option: ${arg}`);
+                process.exit(1);
+            }
+            else if (arg)
+            {
+                args.push(arg);
+                i++;
+            }
+            else
+            {
+                i++;
+            }
         }
-        else if (arg === '--cwd' && argv[i + 1])
-        {
-            options.cwd = argv[i + 1];
-            i += 2;
-        }
-        else if (arg === '--no-gzip')
-        {
-            options.noGzip = true;
-            i++;
-        }
-        else if (arg?.startsWith('--'))
-        {
-            console.error(`Unknown option: ${arg}`);
-            process.exit(1);
-        }
-        else if (arg)
-        {
-            args.push(arg);
-            i++;
-        }
-        else
-        {
-            i++;
-        }
+
+        return { options, args };
     }
-
-    return { options, args };
 }

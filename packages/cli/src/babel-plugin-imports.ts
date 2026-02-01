@@ -1,39 +1,14 @@
 import type { PluginObj } from '@babel/core';
 import { types as t } from '@babel/core';
 import type { NodePath } from '@babel/traverse';
+import { filterDecoratorsFromNode } from './BabelHelpers.js';
+import type { BabelPluginImportsState } from './interfaces/BabelPluginImportsState.js';
 
-export interface ImportTransformOptions
+export type { ImportTransformOptions } from './interfaces/ImportTransformOptions.js';
+
+export default function importsPlugin(): PluginObj<BabelPluginImportsState>
 {
-    removeImportsFrom?: string[];
-    removeDecorators?: string[];
-    pathReplacements?: Record<string, string>;
-    addJsExtension?: boolean;
-}
-
-interface PluginState
-{
-    opts: ImportTransformOptions;
-}
-
-function getDecoratorName(decorator: t.Decorator): string | null
-{
-    const expr = decorator.expression;
-
-    if (t.isCallExpression(expr) && t.isIdentifier(expr.callee))
-    {
-        return expr.callee.name;
-    }
-
-    if (t.isIdentifier(expr))
-    {
-        return expr.name;
-    }
-
-    return null;
-}
-
-export default function importsPlugin(): PluginObj<PluginState>
-{
+    // noinspection JSUnusedGlobalSymbols
     return {
         name: 'babel-plugin-imports', visitor: {
             ImportDeclaration(path: NodePath<t.ImportDeclaration>, state): void
@@ -75,45 +50,21 @@ export default function importsPlugin(): PluginObj<PluginState>
             {
                 const { removeDecorators } = state.opts ?? {};
                 if (!removeDecorators?.length) return;
-
-                const { decorators } = path.node;
-                if (!decorators) return;
-
-                path.node.decorators = decorators.filter(dec =>
-                {
-                    const name = getDecoratorName(dec);
-                    return !name || !removeDecorators.includes(name);
-                });
+                filterDecoratorsFromNode(path.node, removeDecorators);
             },
 
             ClassProperty(path: NodePath<t.ClassProperty>, state): void
             {
                 const { removeDecorators } = state.opts ?? {};
                 if (!removeDecorators?.length) return;
-
-                const { decorators } = path.node;
-                if (!decorators) return;
-
-                path.node.decorators = decorators.filter(dec =>
-                {
-                    const name = getDecoratorName(dec);
-                    return !name || !removeDecorators.includes(name);
-                });
+                filterDecoratorsFromNode(path.node, removeDecorators);
             },
 
             ClassMethod(path: NodePath<t.ClassMethod>, state): void
             {
                 const { removeDecorators } = state.opts ?? {};
                 if (!removeDecorators?.length) return;
-
-                const { decorators } = path.node;
-                if (!decorators) return;
-
-                path.node.decorators = decorators.filter(dec =>
-                {
-                    const name = getDecoratorName(dec);
-                    return !name || !removeDecorators.includes(name);
-                });
+                filterDecoratorsFromNode(path.node, removeDecorators);
             }
         }
     };

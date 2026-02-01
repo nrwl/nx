@@ -6,14 +6,14 @@ describe('App', () =>
 {
     it('should render successfully', () =>
     {
-        const {baseElement} = render(<App/>);
+        const { baseElement } = render(<App/>);
         expect(baseElement)
             .toBeTruthy();
     });
 
     it('should have a greeting as the title', () =>
     {
-        const {getAllByText} = render(<App/>);
+        const { getAllByText } = render(<App/>);
         expect(getAllByText(new RegExp('Welcome react-demo-app', 'gi')).length > 0)
             .toBeTruthy();
     });

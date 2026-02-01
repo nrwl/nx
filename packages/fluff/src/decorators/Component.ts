@@ -62,8 +62,3 @@ export function getComponentMetadata(target: Constructor): ComponentMetadata | u
 {
     return componentRegistry.get(target);
 }
-
-export function getAllComponents(): Map<Constructor, ComponentMetadata>
-{
-    return componentRegistry;
-}

@@ -12,7 +12,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 })
 export class KanbanColumnComponent
 {
-    @Input() column: Column = {id: 'todo', title: 'To Do', color: '#e74c3c'};
+    @Input() column: Column = { id: 'todo', title: 'To Do', color: '#e74c3c' };
     @Input() tasks: Task[] = [];
     @Input() editingTaskId: number | null = null;
 
@@ -42,9 +42,9 @@ export class KanbanColumnComponent
         event.preventDefault();
         this.isDragOver = false;
         const taskId = event.dataTransfer?.getData('text/plain');
-        if(taskId)
+        if (taskId)
         {
-            this.moveTask.emit({taskId: Number(taskId), newStatus: this.column.id});
+            this.moveTask.emit({ taskId: Number(taskId), newStatus: this.column.id });
         }
     }
 
@@ -67,17 +67,17 @@ export class KanbanColumnComponent
 
     onMoveTask(taskId: number, newStatus: TaskStatus): void
     {
-        this.moveTask.emit({taskId, newStatus});
+        this.moveTask.emit({ taskId, newStatus });
     }
 
     onDeleteTask(taskId: number): void
     {
-        this.deleteTask.emit({taskId});
+        this.deleteTask.emit({ taskId });
     }
 
     onStartEdit(taskId: number): void
     {
-        this.startEdit.emit({taskId});
+        this.startEdit.emit({ taskId });
     }
 
     onCancelEdit(): void
@@ -87,6 +87,6 @@ export class KanbanColumnComponent
 
     onSaveEdit(taskId: number, updates: Partial<Task>): void
     {
-        this.saveEdit.emit({taskId, updates});
+        this.saveEdit.emit({ taskId, updates });
     }
 }

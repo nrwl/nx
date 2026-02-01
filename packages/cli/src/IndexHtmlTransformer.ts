@@ -1,139 +1,122 @@
+import he from 'he';
 import { minify } from 'html-minifier-terser';
 import * as parse5 from 'parse5';
-import { html as parse5Html } from 'parse5';
+import type { HtmlTransformOptions } from './interfaces/HtmlTransformOptions.js';
+import { Parse5Helpers } from './Parse5Helpers.js';
+import type { Parse5Node } from './Typeguards.js';
+import { Typeguards } from './Typeguards.js';
 
-type Parse5Node = parse5.DefaultTreeAdapterMap['node'];
-type Parse5Element = parse5.DefaultTreeAdapterMap['element'];
+export type { HtmlTransformOptions } from './interfaces/HtmlTransformOptions.js';
 
-export interface TransformOptions
+export class IndexHtmlTransformer
 {
-    jsBundle: string;
-    cssBundle?: string;
-    gzip?: boolean;
-    minify?: boolean;
-    liveReload?: boolean;
-}
-
-function isElement(node: Parse5Node): node is Parse5Element
-{
-    return 'tagName' in node;
-}
-
-function findElement(node: Parse5Node, tagName: string): Parse5Element | null
-{
-    if (isElement(node) && node.tagName === tagName)
-    {
-        return node;
-    }
-
-    if ('childNodes' in node)
-    {
-        for (const child of node.childNodes)
-        {
-            const found = findElement(child, tagName);
-            if (found) return found;
+    private static readonly LIVE_RELOAD_SCRIPT = `(function() {
+    let firstEvent = true;
+    const es = new EventSource('/esbuild');
+    es.addEventListener('change', e => {
+        if (firstEvent) {
+            firstEvent = false;
+            return;
         }
-    }
-
-    return null;
-}
-
-function appendChild(parent: Parse5Element, child: Parse5Element): void
-{
-    child.parentNode = parent;
-    parent.childNodes.push(child);
-}
-
-function createLinkElement(href: string): Parse5Element
-{
-    return {
-        nodeName: 'link',
-        tagName: 'link',
-        attrs: [
-            { name: 'rel', value: 'stylesheet' },
-            { name: 'href', value: href }
-        ],
-        childNodes: [],
-        namespaceURI: parse5Html.NS.HTML,
-        parentNode: null
-    };
-}
-
-function createScriptElement(src: string): Parse5Element
-{
-    return {
-        nodeName: 'script',
-        tagName: 'script',
-        attrs: [
-            { name: 'type', value: 'module' },
-            { name: 'src', value: src }
-        ],
-        childNodes: [],
-        namespaceURI: parse5Html.NS.HTML,
-        parentNode: null
-    };
-}
-
-function getLiveReloadScript(): string
-{
-    return `<script>new EventSource('/esbuild').addEventListener('change', e => {
-    const { added, removed, updated } = JSON.parse(e.data);
-    if (!added.length && !removed.length && updated.length === 1) {
-        for (const link of document.getElementsByTagName("link")) {
-            const url = new URL(link.href);
-            if (url.host === location.host && url.pathname === updated[0]) {
-                const next = link.cloneNode();
-                next.href = updated[0] + '?' + Math.random().toString(36).slice(2);
-                next.onload = () => link.remove();
-                link.parentNode.insertBefore(next, link.nextSibling);
-                return;
+        const { added, removed, updated } = JSON.parse(e.data);
+        if (!added.length && !removed.length && updated.length === 1) {
+            for (const link of document.getElementsByTagName("link")) {
+                const url = new URL(link.href);
+                if (url.host === location.host && url.pathname === updated[0]) {
+                    const next = link.cloneNode();
+                    next.href = updated[0] + '?' + Math.random().toString(36).slice(2);
+                    next.onload = () => link.remove();
+                    link.parentNode.insertBefore(next, link.nextSibling);
+                    return;
+                }
             }
         }
-    }
-    location.reload();
-});</script>`;
-}
+        location.reload();
+    });
+})();`;
 
-export async function transformIndexHtml(html: string, options: TransformOptions): Promise<string>
-{
-    const doc = parse5.parse(html);
-
-    const jsSrc = options.gzip ? `${options.jsBundle}.gz` : options.jsBundle;
-    const cssSrc = options.cssBundle
-        ? (options.gzip ? `${options.cssBundle}.gz` : options.cssBundle)
-        : null;
-
-    const head = findElement(doc, 'head');
-    const body = findElement(doc, 'body');
-
-    if (head && cssSrc)
+    public static async transform(html: string, options: HtmlTransformOptions): Promise<string>
     {
-        appendChild(head, createLinkElement(cssSrc));
+        const doc = parse5.parse(html);
+
+        const jsSrc = options.gzip ? `${options.jsBundle}.gz` : options.jsBundle;
+        const cssSrc = options.cssBundle
+            ? (options.gzip ? `${options.cssBundle}.gz` : options.cssBundle)
+            : null;
+
+        const head = Parse5Helpers.findElement(doc, 'head');
+        const body = Parse5Helpers.findElement(doc, 'body');
+
+        if (head && options.inlineStyles)
+        {
+            const styleEl = Parse5Helpers.createElement('style', []);
+            Parse5Helpers.appendText(styleEl, options.inlineStyles);
+            Parse5Helpers.appendChild(head, styleEl);
+        }
+
+        if (head && cssSrc)
+        {
+            const linkEl = Parse5Helpers.createElement('link', [
+                { name: 'rel', value: 'stylesheet' },
+                { name: 'href', value: cssSrc }
+            ]);
+            Parse5Helpers.appendChild(head, linkEl);
+        }
+
+        if (body)
+        {
+            const scriptEl = Parse5Helpers.createElement('script', [
+                { name: 'type', value: 'module' },
+                { name: 'src', value: jsSrc }
+            ]);
+            Parse5Helpers.appendChild(body, scriptEl);
+        }
+
+        if (body && options.liveReload)
+        {
+            const inlineScriptEl = Parse5Helpers.createElement('script', []);
+            Parse5Helpers.appendText(inlineScriptEl, IndexHtmlTransformer.LIVE_RELOAD_SCRIPT);
+            Parse5Helpers.appendChild(body, inlineScriptEl);
+        }
+
+        if (options.liveReload)
+        {
+            IndexHtmlTransformer.decodeScriptTextNodes(doc);
+        }
+
+        let result = parse5.serialize(doc);
+
+        if (options.minify)
+        {
+            result = await minify(result, {
+                collapseWhitespace: true,
+                removeComments: true,
+                removeRedundantAttributes: true,
+                removeEmptyAttributes: true,
+                minifyCSS: true,
+                minifyJS: true
+            });
+        }
+
+        return result;
     }
 
-    if (body)
+    private static decodeScriptTextNodes(node: Parse5Node): void
     {
-        appendChild(body, createScriptElement(jsSrc));
-    }
-
-    let result = parse5.serialize(doc);
-
-    if (options.liveReload)
-    {
-        result = result.replace('</body>', getLiveReloadScript() + '</body>');
-    }
-
-    if (options.minify)
-    {
-        result = await minify(result, {
-            collapseWhitespace: true,
-            removeComments: true,
-            removeRedundantAttributes: true,
-            removeEmptyAttributes: true,
-            minifyCSS: true,
-            minifyJS: true
+        Parse5Helpers.walkNodes(node, (n) =>
+        {
+            if (Typeguards.isElement(n) && n.tagName === 'script')
+            {
+                for (const child of n.childNodes)
+                {
+                    if ('value' in child && typeof child.value === 'string')
+                    {
+                        child.value = he.decode(child.value);
+                    }
+                }
+            }
+            return undefined;
         });
     }
 
-    return result;
 }

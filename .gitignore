@@ -1,6 +1,7 @@
 dist
 tmp
 out-tsc
+.fluff
 
 # dependencies
 node_modules

@@ -1,14 +1,14 @@
+import * as t from '@babel/types';
 import * as fs from 'fs';
+import * as parse5 from 'parse5';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { generate } from './BabelHelpers.js';
+import type { GeneratorOptions } from './interfaces/GeneratorOptions.js';
+import { Parse5Helpers } from './Parse5Helpers.js';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-interface GeneratorOptions
-{
-    appName: string;
-    outputDir: string;
-}
 
 export class Generator
 {
@@ -40,7 +40,7 @@ export class Generator
         this.writeFile(path.join(appDir, 'src', 'app', `${kebabName}.component.ts`), this.getComponentTs(kebabName, pascalName));
         this.writeFile(path.join(appDir, 'src', 'app', `${kebabName}.component.html`), this.getComponentHtml());
         this.writeFile(path.join(appDir, 'src', 'app', `${kebabName}.component.css`), this.getComponentCss());
- 
+
         console.log('   ✓ Created package.json');
         console.log('   ✓ Created tsconfig.json');
         console.log('   ✓ Created fluff.json');
@@ -79,7 +79,9 @@ export class Generator
     {
         return str
             .split(/[-_\s]+/)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .map(word => word.charAt(0)
+                .toUpperCase() + word.slice(1)
+                .toLowerCase())
             .join('');
     }
 
@@ -87,7 +89,9 @@ export class Generator
     {
         return str
             .split(/[-_\s]+/)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .map(word => word.charAt(0)
+                .toUpperCase() + word.slice(1)
+                .toLowerCase())
             .join(' ');
     }
 
@@ -177,13 +181,21 @@ export class Generator
 
     private getIndexHtml(kebabName: string, titleName: string): string
     {
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${titleName} - Fluff.js</title>
-    <style>
+        const doc = Parse5Helpers.createDocument();
+        const html = Parse5Helpers.createElement('html', [{ name: 'lang', value: 'en' }]);
+        const head = Parse5Helpers.createElement('head', []);
+        const body = Parse5Helpers.createElement('body', []);
+
+        const charset = Parse5Helpers.createElement('meta', [{ name: 'charset', value: 'UTF-8' }]);
+        const viewport = Parse5Helpers.createElement('meta', [
+            { name: 'name', value: 'viewport' },
+            { name: 'content', value: 'width=device-width, initial-scale=1.0' }
+        ]);
+        const title = Parse5Helpers.createElement('title', []);
+        Parse5Helpers.appendText(title, `${titleName} - Fluff.js`);
+
+        const style = Parse5Helpers.createElement('style', []);
+        Parse5Helpers.appendText(style, `
         * {
             margin: 0;
             padding: 0;
@@ -193,76 +205,181 @@ export class Generator
         body {
             min-height: 100vh;
         }
-    </style>
-</head>
-<body>
-<${kebabName}></${kebabName}>
-<script type="module" src="./main.js"></script>
-</body>
-</html>
-`;
+    `);
+
+        Parse5Helpers.appendChild(head, charset);
+        Parse5Helpers.appendChild(head, viewport);
+        Parse5Helpers.appendChild(head, title);
+        Parse5Helpers.appendChild(head, style);
+
+        const appElement = Parse5Helpers.createElement(kebabName, []);
+        const script = Parse5Helpers.createElement('script', [
+            { name: 'type', value: 'module' },
+            { name: 'src', value: './main.js' }
+        ]);
+
+        Parse5Helpers.appendChild(body, appElement);
+        Parse5Helpers.appendChild(body, script);
+
+        Parse5Helpers.appendChild(html, head);
+        Parse5Helpers.appendChild(html, body);
+
+        doc.childNodes.push(html);
+        html.parentNode = doc;
+
+        return '<!DOCTYPE html>\n' + parse5.serialize(doc);
     }
 
     private getMainTs(kebabName: string, pascalName: string): string
     {
-        return `import { ${pascalName}Component } from './app/${kebabName}.component.js';
+        const componentName = `${pascalName}Component`;
+        const importPath = `./app/${kebabName}.component.js`;
 
-customElements.define('${kebabName}', ${pascalName}Component);
-`;
+        const importDecl = t.importDeclaration(
+            [t.importSpecifier(t.identifier(componentName), t.identifier(componentName))],
+            t.stringLiteral(importPath)
+        );
+
+        const defineCall = t.expressionStatement(
+            t.callExpression(
+                t.memberExpression(t.identifier('customElements'), t.identifier('define')),
+                [t.stringLiteral(kebabName), t.identifier(componentName)]
+            )
+        );
+
+        const program = t.program([importDecl, defineCall]);
+        return generate(program, { compact: false }).code + '\n';
     }
 
     private getComponentTs(kebabName: string, pascalName: string): string
     {
-        return `import { Component, Reactive } from '@fluffjs/fluff';
+        const componentName = `${pascalName}Component`;
 
-@Component({
-    selector: '${kebabName}',
-    templateUrl: './${kebabName}.component.html',
-    styleUrl: './${kebabName}.component.css'
-})
-export class ${pascalName}Component extends HTMLElement
-{
-    @Reactive() public name = 'World';
-    @Reactive() public count = 0;
+        const importDecl = t.importDeclaration(
+            [
+                t.importSpecifier(t.identifier('Component'), t.identifier('Component')),
+                t.importSpecifier(t.identifier('Reactive'), t.identifier('Reactive'))
+            ],
+            t.stringLiteral('@fluffjs/fluff')
+        );
 
-    public increment(): void
-    {
-        this.count++;
-    }
-}
-`;
+        const componentDecorator = t.decorator(
+            t.callExpression(t.identifier('Component'), [
+                t.objectExpression([
+                    t.objectProperty(t.identifier('selector'), t.stringLiteral(kebabName)),
+                    t.objectProperty(t.identifier('templateUrl'), t.stringLiteral(`./${kebabName}.component.html`)),
+                    t.objectProperty(t.identifier('styleUrl'), t.stringLiteral(`./${kebabName}.component.css`))
+                ])
+            ])
+        );
+
+        const reactiveDecorator = t.decorator(t.callExpression(t.identifier('Reactive'), []));
+
+        const nameProperty = t.classProperty(
+            t.identifier('name'),
+            t.stringLiteral('World')
+        );
+        nameProperty.decorators = [reactiveDecorator];
+
+        const reactiveDecorator2 = t.decorator(t.callExpression(t.identifier('Reactive'), []));
+        const countProperty = t.classProperty(
+            t.identifier('count'),
+            t.numericLiteral(0)
+        );
+        countProperty.decorators = [reactiveDecorator2];
+
+        const incrementMethod = t.classMethod(
+            'method',
+            t.identifier('increment'),
+            [],
+            t.blockStatement([
+                t.expressionStatement(
+                    t.updateExpression('++', t.memberExpression(t.thisExpression(), t.identifier('count')))
+                )
+            ])
+        );
+
+        const classDecl = t.classDeclaration(
+            t.identifier(componentName),
+            t.identifier('HTMLElement'),
+            t.classBody([nameProperty, countProperty, incrementMethod])
+        );
+        classDecl.decorators = [componentDecorator];
+
+        const exportDecl = t.exportNamedDeclaration(classDecl, []);
+
+        const program = t.program([importDecl, exportDecl]);
+        return generate(program, { compact: false }).code + '\n';
     }
 
     private getComponentHtml(): string
     {
-        return `<div class="container">
-    <div class="card">
-        <div class="logo">🧸</div>
-        <h1>Hello, <span class="highlight">{{ name }}</span>!</h1>
-        <p class="tagline">Welcome to Fluff.js</p>
+        const fragment = parse5.parseFragment('');
 
-        <div class="input-group">
-            <label for="name-input">What's your name?</label>
-            <input
-                    id="name-input"
-                    type="text"
-                    [value]="name"
-                    (input)="name = $event.target.value"
-                    placeholder="Enter your name..."
-            />
-        </div>
+        const container = Parse5Helpers.createElement('div', [{ name: 'class', value: 'container' }]);
+        const card = Parse5Helpers.createElement('div', [{ name: 'class', value: 'card' }]);
 
-        <div class="counter-section">
-            <p>You've clicked <strong>{{ count }}</strong> times</p>
-            <button class="btn" (click)="increment()">Click me! 🎉</button>
-        </div>
+        const logo = Parse5Helpers.createElement('div', [{ name: 'class', value: 'logo' }]);
+        Parse5Helpers.appendText(logo, '🧸');
 
-        <footer>
-            <p>Built with Fluff.js — <em>"Just the good stuff"</em></p>
-        </footer>
-    </div>
-</div>
-`;
+        const h1 = Parse5Helpers.createElement('h1', []);
+        Parse5Helpers.appendText(h1, 'Hello, ');
+        const highlight = Parse5Helpers.createElement('span', [{ name: 'class', value: 'highlight' }]);
+        Parse5Helpers.appendText(highlight, '{{ name }}');
+        Parse5Helpers.appendChild(h1, highlight);
+        Parse5Helpers.appendText(h1, '!');
+
+        const tagline = Parse5Helpers.createElement('p', [{ name: 'class', value: 'tagline' }]);
+        Parse5Helpers.appendText(tagline, 'Welcome to Fluff.js');
+
+        const inputGroup = Parse5Helpers.createElement('div', [{ name: 'class', value: 'input-group' }]);
+        const label = Parse5Helpers.createElement('label', [{ name: 'for', value: 'name-input' }]);
+        Parse5Helpers.appendText(label, 'What\'s your name?');
+        const input = Parse5Helpers.createElement('input', [
+            { name: 'id', value: 'name-input' },
+            { name: 'type', value: 'text' },
+            { name: '[value]', value: 'name' },
+            { name: '(input)', value: 'name = $event.target.value' },
+            { name: 'placeholder', value: 'Enter your name...' }
+        ]);
+        Parse5Helpers.appendChild(inputGroup, label);
+        Parse5Helpers.appendChild(inputGroup, input);
+
+        const counterSection = Parse5Helpers.createElement('div', [{ name: 'class', value: 'counter-section' }]);
+        const counterP = Parse5Helpers.createElement('p', []);
+        Parse5Helpers.appendText(counterP, 'You\'ve clicked ');
+        const strong = Parse5Helpers.createElement('strong', []);
+        Parse5Helpers.appendText(strong, '{{ count }}');
+        Parse5Helpers.appendChild(counterP, strong);
+        Parse5Helpers.appendText(counterP, ' times');
+        const button = Parse5Helpers.createElement('button', [
+            { name: 'class', value: 'btn' },
+            { name: '(click)', value: 'increment()' }
+        ]);
+        Parse5Helpers.appendText(button, 'Click me! 🎉');
+        Parse5Helpers.appendChild(counterSection, counterP);
+        Parse5Helpers.appendChild(counterSection, button);
+
+        const footer = Parse5Helpers.createElement('footer', []);
+        const footerP = Parse5Helpers.createElement('p', []);
+        Parse5Helpers.appendText(footerP, 'Built with Fluff.js — ');
+        const em = Parse5Helpers.createElement('em', []);
+        Parse5Helpers.appendText(em, '"Just the good stuff"');
+        Parse5Helpers.appendChild(footerP, em);
+        Parse5Helpers.appendChild(footer, footerP);
+
+        Parse5Helpers.appendChild(card, logo);
+        Parse5Helpers.appendChild(card, h1);
+        Parse5Helpers.appendChild(card, tagline);
+        Parse5Helpers.appendChild(card, inputGroup);
+        Parse5Helpers.appendChild(card, counterSection);
+        Parse5Helpers.appendChild(card, footer);
+        Parse5Helpers.appendChild(container, card);
+
+        fragment.childNodes.push(container);
+        container.parentNode = fragment;
+
+        return parse5.serialize(fragment) + '\n';
     }
 
     private getComponentCss(): string
@@ -395,4 +512,5 @@ footer em {
 }
 `;
     }
+
 }

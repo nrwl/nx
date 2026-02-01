@@ -33,7 +33,7 @@ const resetForm = () =>
 const toggleForm = () =>
 {
   isExpanded.value = !isExpanded.value;
-  if(!isExpanded.value)
+  if (!isExpanded.value)
   {
     resetForm();
   }
@@ -51,7 +51,7 @@ const focusTitleRef = () =>
 
 const handleSubmit = () =>
 {
-  if(!taskTitle.value.trim()) return;
+  if (!taskTitle.value.trim()) return;
 
   emit('submit', {
     title: taskTitle.value.trim(),
@@ -66,7 +66,7 @@ const handleSubmit = () =>
 
 const handleKeyUp = (e: KeyboardEvent) =>
 {
-  if(e.key === 'Enter')
+  if (e.key === 'Enter')
   {
     handleSubmit();
   }

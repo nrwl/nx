@@ -68,8 +68,7 @@ export class TaskFormComponent extends HTMLElement
             description: this.description.trim(),
             priority: this.priority,
             tags: this.parsedTags
-        })
-            .catch(console.error);
+        });
 
         this._resetForm();
         this.isExpanded = false;

@@ -15,7 +15,7 @@ I love Angular, but it was too chonky for an embedded project I was working on. 
 - **Angular-like syntax** - Decorators, templates, and component structure you already know
 - **Transparent data binding** - No change detector, zone.js, or digest cycles needed
 - **Zero runtime dependencies** - No rxjs, no zone.js, just vanilla JS
-- **Tiny footprint** - ~3.7 KB gzipped runtime
+- **Tiny footprint** - ~5 KB gzipped runtime
 - **AOT compilation** - Templates are compiled at build time, not runtime
 - **Control flow syntax** - Angular 17+ style `@if`, `@for`, `@switch`, plus `@fallthrough`
 - **Pipes** - Transform template expressions with built-in or custom pipes, component-scoped
@@ -29,7 +29,8 @@ npm install
 npx @fluffjs/cli serve
 ```
 
-You can also check out the [Demo app](https://fluffjs.github.io/fluff/) and its [source](https://github.com/fluffjs/fluff/tree/master/apps/fluff-demo-app)
+You can also check out the [Demo app](https://fluffjs.github.io/fluff/) and
+its [source](https://github.com/fluffjs/fluff/tree/master/apps/fluff-demo-app)
 
 ## What Fluff Doesn't Do
 
@@ -170,7 +171,7 @@ The [fluff demo app](https://fluffjs.github.io/fluff/), vs when ported to other 
 
 | Framework  | Runtime (gzip) | Demo App (gzip) |
 |------------|----------------|-----------------|
-| **Fluff**  | ~3.7 KB        | 19.5 KB         |
+| **Fluff**  | ~6 KB          | 16.4 KB         |
 | Vue 3.5    | ~24 KB         | 31.8 KB         |
 | Angular 21 | ~55 KB         | 60.5 KB         |
 | React 19   | ~60 KB         | 65.5 KB         |

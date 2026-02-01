@@ -10,7 +10,9 @@ export { Reactive } from './decorators/Reactive.js';
 export { ViewChild } from './decorators/ViewChild.js';
 export { Watch } from './decorators/Watch.js';
 
+export { FluffBase } from './runtime/FluffElement.js';
 export { FluffElement } from './runtime/FluffElement.js';
+export { MarkerManager } from './runtime/FluffMarkers.js';
 
 export { Property } from './utils/Property.js';
 export { Publisher } from './utils/Publisher.js';

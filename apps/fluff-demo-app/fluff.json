@@ -10,9 +10,11 @@
             "components": [
                 "**/*.component.ts"
             ],
+            "styles": [
+                "styles.css"
+            ],
             "assets": [
-                "**/*.html",
-                "**/*.css"
+                "**/*.html"
             ],
             "bundle": {
                 "minify": true,

@@ -32,7 +32,7 @@ export class TaskCardComponent implements OnChanges
     @HostListener('dragstart', ['$event'])
     onDragStart(event: DragEvent): void
     {
-        if(this.task)
+        if (this.task)
         {
             event.dataTransfer?.setData('text/plain', String(this.task.id));
             this.isDragging = true;
@@ -60,7 +60,7 @@ export class TaskCardComponent implements OnChanges
 
     ngOnChanges(changes: SimpleChanges): void
     {
-        if((changes['isEditing'] || changes['task']) && this.isEditing && this.task)
+        if ((changes['isEditing'] || changes['task']) && this.isEditing && this.task)
         {
             this.editTitle = this.task.title;
             this.editDescription = this.task.description;
@@ -77,7 +77,7 @@ export class TaskCardComponent implements OnChanges
 
     get isOverdue(): boolean
     {
-        if(!this.task?.dueDate || this.task.status === 'done') return false;
+        if (!this.task?.dueDate || this.task.status === 'done') return false;
         const [today] = new Date().toISOString()
             .split('T');
         return this.task.dueDate < today;
@@ -85,7 +85,7 @@ export class TaskCardComponent implements OnChanges
 
     get isDueToday(): boolean
     {
-        if(!this.task?.dueDate) return false;
+        if (!this.task?.dueDate) return false;
         const [today] = new Date().toISOString()
             .split('T');
         return this.task.dueDate === today;
@@ -93,9 +93,9 @@ export class TaskCardComponent implements OnChanges
 
     get formattedDueDate(): string
     {
-        if(!this.task?.dueDate) return '';
+        if (!this.task?.dueDate) return '';
         const date = new Date(this.task.dueDate);
-        return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
     getStatusLabel(status: TaskStatus): string
@@ -109,7 +109,7 @@ export class TaskCardComponent implements OnChanges
     onMove(newStatus: TaskStatus): void
     {
         this.showMoveMenu = false;
-        this.move.emit({newStatus});
+        this.move.emit({ newStatus });
     }
 
     onDelete(): void

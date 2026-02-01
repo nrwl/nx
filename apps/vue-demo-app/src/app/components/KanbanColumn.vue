@@ -40,7 +40,7 @@ const handleDrop = (e: DragEvent) =>
   e.preventDefault();
   isDragOver.value = false;
   const taskId = e.dataTransfer?.getData('text/plain');
-  if(taskId)
+  if (taskId)
   {
     emit('moveTask', Number(taskId), props.column.id);
   }

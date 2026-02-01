@@ -62,7 +62,7 @@
             <kanban-column
                     [column]="column"
                     [tasks]="getTasksForColumn(column.id)"
-                    [subscribe]="tasks:filteredTasks"
+                    x-fluff-subscribe="tasks:filteredTasks"
                     [editingTaskId]="editingTaskId"
                     (moveTask)="moveTask($event.taskId, $event.newStatus)"
                     (deleteTask)="deleteTask($event.taskId)"

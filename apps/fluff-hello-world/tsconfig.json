@@ -30,8 +30,8 @@
         "dist"
     ],
     "references": [
-      {
-        "path": "../../packages/fluff"
-      }
+        {
+            "path": "../../packages/fluff"
+        }
     ]
 }

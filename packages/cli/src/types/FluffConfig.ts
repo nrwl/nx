@@ -1,37 +1,9 @@
-export interface BundleOptions
-{
-    minify?: boolean;
-    splitting?: boolean;
-    target?: string;
-    gzip?: boolean;
-    external?: string[];
-}
+import type { FluffConfig } from '../interfaces/FluffConfigInterface.js';
 
-export interface ServeOptions
-{
-    port?: number;
-    host?: string;
-}
-
-export interface FluffTarget
-{
-    name: string;
-    srcDir: string;
-    outDir: string;
-    entryPoint?: string;
-    indexHtml?: string;
-    components: string[];
-    assets?: string[];
-    bundle?: BundleOptions;
-    serve?: ServeOptions;
-}
-
-export interface FluffConfig
-{
-    version: string;
-    targets: Record<string, FluffTarget>;
-    defaultTarget?: string;
-}
+export type { BundleOptions } from '../interfaces/BundleOptions.js';
+export type { FluffConfig } from '../interfaces/FluffConfigInterface.js';
+export type { FluffTarget } from '../interfaces/FluffTarget.js';
+export type { ServeOptions } from '../interfaces/ServeOptions.js';
 
 export const DEFAULT_CONFIG: FluffConfig = {
     version: '1.0',

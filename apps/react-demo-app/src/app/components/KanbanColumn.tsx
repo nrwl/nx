@@ -47,7 +47,7 @@ export function KanbanColumnComponent({
         e.preventDefault();
         setIsDragOver(false);
         const taskId = e.dataTransfer.getData('text/plain');
-        if(taskId)
+        if (taskId)
         {
             onMoveTask(Number(taskId), column.id);
         }
@@ -62,7 +62,7 @@ export function KanbanColumnComponent({
             onDrop={handleDrop}
         >
             <div className="column">
-                <div className="column-header" style={{borderColor: column.color}}>
+                <div className="column-header" style={{ borderColor: column.color }}>
                     <h2>{column.title}</h2>
                     <span className="count">{tasks.length}</span>
                 </div>

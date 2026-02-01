@@ -1,7 +1,7 @@
 import { Direction } from '../enums/Direction.js';
 import type { Subscription } from '../interfaces/Subscription.js';
 
-import { Publisher } from '../utils/Publisher.js';
+import { Publisher } from './Publisher.js';
 
 function safeStringify(obj: unknown): string
 {
@@ -28,17 +28,36 @@ export class Property<T>
     private value?: T;
     private committed = true;
     private _isChanging = false;
+    private readonly _propName?: string;
 
-    public constructor(initialValue?: T)
+    public constructor(options: {
+        initialValue: T,
+        propertyName?: string
+    } | T)
     {
-        this.value = initialValue;
+        if (this.isOptionsObject(options))
+        {
+            if (options.initialValue !== undefined)
+            {
+                this.value = options.initialValue;
+            }
+            if (options.propertyName !== undefined)
+            {
+                this._propName = options.propertyName;
+            }
+        }
+        else
+        {
+            this.value = options;
+        }
     }
 
     public setValue(val: T, inbound = false, commit = true): void
     {
         if (this._isChanging)
         {
-            throw new Error('Binding loop detected: setValue called while change is in progress');
+            console.error((this._propName ? this._propName + ': ' : '') + 'Binding loop detected: setValue called while change is in progress');
+            return;
         }
 
         const changed = val !== this.value && safeStringify(val) !== safeStringify(this.value);
@@ -48,11 +67,7 @@ export class Property<T>
         try
         {
             this.value = val;
-            this.onChange.emit(val)
-                .catch((e: unknown) =>
-                {
-                    console.error(e);
-                });
+            this.onChange.emit(val);
 
             if (!commit)
             {
@@ -62,22 +77,14 @@ export class Property<T>
             if (inbound)
             {
                 this.committed = true;
-                this.onInboundChange.emit(val)
-                    .catch((e: unknown) =>
-                    {
-                        console.error(e);
-                    });
+                this.onInboundChange.emit(val);
             }
             else if (commit || !this.committed)
             {
                 this.committed = true;
                 if (this.value !== undefined)
                 {
-                    this.onOutboundChange.emit(this.value)
-                        .catch((e: unknown) =>
-                        {
-                            console.error(e);
-                        });
+                    this.onOutboundChange.emit(this.value);
                 }
             }
         }
@@ -87,17 +94,17 @@ export class Property<T>
         }
     }
 
-    public async triggerChange(direction = Direction.Any): Promise<void>
+    public triggerChange(direction = Direction.Any): void
     {
         if (this.value === undefined) return;
-        await this.onChange.emit(this.value);
+        this.onChange.emit(this.value);
         if (direction == Direction.Outbound)
         {
-            await this.onOutboundChange.emit(this.value);
+            this.onOutboundChange.emit(this.value);
         }
         if (direction == Direction.Inbound)
         {
-            await this.onOutboundChange.emit(this.value);
+            this.onOutboundChange.emit(this.value);
         }
     }
 
@@ -133,5 +140,11 @@ export class Property<T>
             return null;
         }
         return this.value;
+    }
+
+    private isOptionsObject(options: { initialValue?: T, propertyName?: string } | T):
+        options is { initialValue?: T, propertyName?: string }
+    {
+        return typeof options === 'object' && options !== null && ('initialValue' in options);
     }
 }

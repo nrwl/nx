@@ -31,8 +31,11 @@
         "@babel/traverse": "^7.28.6",
         "@babel/types": "^7.28.6",
         "esbuild": "^0.27.2",
+        "he": "^1.2.0",
         "html-minifier-terser": "^7.2.0",
+        "picomatch": "^4.0.2",
         "parse5": "^8.0.0",
+        "parse5-sax-parser": "^8.0.0",
         "source-map": "^0.7.6",
         "tslib": "^2.3.0"
     },
@@ -40,8 +43,9 @@
         "targets": {
             "build": {
                 "executor": "nx:run-commands",
-                "dependsOn": ["lint"],
-                "outputs": ["{projectRoot}/dist"],
+                "outputs": [
+                    "{projectRoot}/dist"
+                ],
                 "options": {
                     "commands": [
                         "tsc --build tsconfig.lib.json",
@@ -61,5 +65,10 @@
                 }
             }
         }
+    },
+    "devDependencies": {
+        "@types/he": "^1.2.3",
+        "@types/jsesc": "^3.0.3",
+        "jsesc": "^3.1.0"
     }
 }

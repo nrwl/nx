@@ -1,33 +1,16 @@
 import type { PluginObj } from '@babel/core';
 import { types as t } from '@babel/core';
 import type { NodePath } from '@babel/traverse';
-
-interface WatchInfo
-{
-    methodName: string;
-    watchedProps: string[];
-}
-
-interface WatchCallInfo
-{
-    propName: string;
-    watchedProps: string[];
-    callbackArg: t.Expression | t.SpreadElement | t.JSXNamespacedName | t.ArgumentPlaceholder;
-}
-
-interface PluginState
-{
-    filename?: string;
-    needsPropertyImport?: boolean;
-    reactiveProperties?: Set<string>;
-    watchMethods?: WatchInfo[];
-    watchCalls?: WatchCallInfo[];
-}
+import { buildHostBindingUpdateStatement, findDecoratorIndex, getDecoratorName } from './BabelHelpers.js';
+import type { BabelPluginReactiveState } from './interfaces/BabelPluginReactiveState.js';
+import type { BabelPluginReactiveWatchCallInfo } from './interfaces/BabelPluginReactiveWatchCallInfo.js';
+import type { BabelPluginReactiveWatchInfo } from './interfaces/BabelPluginReactiveWatchInfo.js';
 
 export const reactivePropertiesMap = new Map<string, Set<string>>();
 
-export default function reactivePlugin(): PluginObj<PluginState>
+export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
 {
+    // noinspection JSUnusedGlobalSymbols
     return {
         name: 'babel-plugin-reactive', visitor: {
             Program: {
@@ -65,7 +48,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
 
             ClassBody(path, state): void
             {
-                const watchCalls: WatchCallInfo[] = [];
+                const watchCalls: BabelPluginReactiveWatchCallInfo[] = [];
                 const watchCallProps: NodePath<t.ClassProperty>[] = [];
 
                 for (const memberPath of path.get('body'))
@@ -103,7 +86,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                 }
                 const newMembers: t.ClassMethod[] = [];
                 const propsToRemove: NodePath<t.ClassProperty>[] = [];
-                const watchMethods: WatchInfo[] = [];
+                const watchMethods: BabelPluginReactiveWatchInfo[] = [];
                 const privateFields: t.ClassProperty[] = [];
                 const getterHostBindingUpdates: string[] = [];
                 const propertyHostBindingInits: { propName: string; privateName: string }[] = [];
@@ -118,14 +101,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                         const methodNode = memberPath.node;
                         const decorators = methodNode.decorators ?? [];
 
-                        const hostListenerIndex = decorators.findIndex(dec =>
-                        {
-                            if (t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee))
-                            {
-                                return dec.expression.callee.name === 'HostListener';
-                            }
-                            return false;
-                        });
+                        const hostListenerIndex = findDecoratorIndex(decorators, 'HostListener');
 
                         if (hostListenerIndex >= 0)
                         {
@@ -147,14 +123,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                             decorators.splice(hostListenerIndex, 1);
                         }
 
-                        const pipeDecoratorIndex = decorators.findIndex(dec =>
-                        {
-                            if (t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee))
-                            {
-                                return dec.expression.callee.name === 'Pipe';
-                            }
-                            return false;
-                        });
+                        const pipeDecoratorIndex = findDecoratorIndex(decorators, 'Pipe');
 
                         if (pipeDecoratorIndex >= 0)
                         {
@@ -176,14 +145,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                             decorators.splice(pipeDecoratorIndex, 1);
                         }
 
-                        const watchDecoratorIndex = decorators.findIndex(dec =>
-                        {
-                            if (t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee))
-                            {
-                                return dec.expression.callee.name === 'Watch';
-                            }
-                            return false;
-                        });
+                        const watchDecoratorIndex = findDecoratorIndex(decorators, 'Watch');
 
                         if (watchDecoratorIndex >= 0)
                         {
@@ -207,14 +169,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
 
                         if (methodNode.kind === 'get')
                         {
-                            const hostBindingIndex = decorators.findIndex(dec =>
-                            {
-                                if (t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee))
-                                {
-                                    return dec.expression.callee.name === 'HostBinding';
-                                }
-                                return false;
-                            });
+                            const hostBindingIndex = findDecoratorIndex(decorators, 'HostBinding');
 
                             if (hostBindingIndex >= 0)
                             {
@@ -227,29 +182,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                                         const hostProperty = args[0].value;
                                         const getterName = methodNode.key.name;
 
-                                        let updateStatement: t.Statement = t.emptyStatement();
-                                        if (hostProperty.startsWith('class.'))
-                                        {
-                                            const className = hostProperty.slice(6);
-                                            updateStatement = t.ifStatement(t.identifier('__v'), t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('classList')), t.identifier('add')), [t.stringLiteral(className)])), t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('classList')), t.identifier('remove')), [t.stringLiteral(className)])));
-                                        }
-                                        else if (hostProperty.startsWith('attr.'))
-                                        {
-                                            const attrName = hostProperty.slice(5);
-                                            updateStatement = t.ifStatement(t.binaryExpression('!=', t.identifier('__v'), t.nullLiteral()), t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier('setAttribute')), [
-                                                t.stringLiteral(attrName),
-                                                t.callExpression(t.identifier('String'), [t.identifier('__v')])
-                                            ])), t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier('removeAttribute')), [t.stringLiteral(attrName)])));
-                                        }
-                                        else if (hostProperty.startsWith('style.'))
-                                        {
-                                            const styleProp = hostProperty.slice(6);
-                                            updateStatement = t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('style')), t.identifier(styleProp)), t.logicalExpression('||', t.identifier('__v'), t.stringLiteral(''))));
-                                        }
-                                        else
-                                        {
-                                            updateStatement = t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.thisExpression(), t.identifier(hostProperty)), t.identifier('__v')));
-                                        }
+                                        const updateStatement = buildHostBindingUpdateStatement(hostProperty);
 
                                         const updateMethod = t.classMethod('method', t.identifier(`__updateHostBinding_${getterName}`), [], t.blockStatement([
                                             t.variableDeclaration('const', [t.variableDeclarator(t.identifier('__v'), t.memberExpression(t.thisExpression(), t.identifier(getterName)))]),
@@ -271,14 +204,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                     const propNode = memberPath.node;
                     const decorators = propNode.decorators ?? [];
 
-                    const hostBindingDecoratorIndex = decorators.findIndex(dec =>
-                    {
-                        if (t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee))
-                        {
-                            return dec.expression.callee.name === 'HostBinding';
-                        }
-                        return false;
-                    });
+                    const hostBindingDecoratorIndex = findDecoratorIndex(decorators, 'HostBinding');
 
                     if (hostBindingDecoratorIndex >= 0)
                     {
@@ -299,29 +225,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                                     t.returnStatement(t.memberExpression(t.thisExpression(), t.identifier(privateName)))
                                 ]));
 
-                                let updateStatement: t.Statement = t.emptyStatement();
-                                if (hostProperty.startsWith('class.'))
-                                {
-                                    const className = hostProperty.slice(6);
-                                    updateStatement = t.ifStatement(t.identifier('__v'), t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('classList')), t.identifier('add')), [t.stringLiteral(className)])), t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('classList')), t.identifier('remove')), [t.stringLiteral(className)])));
-                                }
-                                else if (hostProperty.startsWith('attr.'))
-                                {
-                                    const attrName = hostProperty.slice(5);
-                                    updateStatement = t.ifStatement(t.binaryExpression('!=', t.identifier('__v'), t.nullLiteral()), t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier('setAttribute')), [
-                                        t.stringLiteral(attrName),
-                                        t.callExpression(t.identifier('String'), [t.identifier('__v')])
-                                    ])), t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier('removeAttribute')), [t.stringLiteral(attrName)])));
-                                }
-                                else if (hostProperty.startsWith('style.'))
-                                {
-                                    const styleProp = hostProperty.slice(6);
-                                    updateStatement = t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('style')), t.identifier(styleProp)), t.logicalExpression('||', t.identifier('__v'), t.stringLiteral(''))));
-                                }
-                                else
-                                {
-                                    updateStatement = t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.thisExpression(), t.identifier(hostProperty)), t.identifier('__v')));
-                                }
+                                const updateStatement = buildHostBindingUpdateStatement(hostProperty);
 
                                 const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement([
                                     t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('__v'))),
@@ -338,14 +242,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                         continue;
                     }
 
-                    const viewChildDecoratorIndex = decorators.findIndex(dec =>
-                    {
-                        if (t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee))
-                        {
-                            return dec.expression.callee.name === 'ViewChild';
-                        }
-                        return false;
-                    });
+                    const viewChildDecoratorIndex = findDecoratorIndex(decorators, 'ViewChild');
 
                     if (viewChildDecoratorIndex >= 0)
                     {
@@ -372,7 +269,7 @@ export default function reactivePlugin(): PluginObj<PluginState>
                     const reactiveDecoratorIndices: number[] = [];
                     for (const [idx, dec] of decorators.entries())
                     {
-                        const name = t.isCallExpression(dec.expression) && t.isIdentifier(dec.expression.callee) ? dec.expression.callee.name : t.isIdentifier(dec.expression) ? dec.expression.name : null;
+                        const name = getDecoratorName(dec);
                         if (name === 'Reactive' || name === 'Input')
                         {
                             reactiveDecoratorIndices.push(idx);
@@ -394,7 +291,16 @@ export default function reactivePlugin(): PluginObj<PluginState>
                     state.needsPropertyImport = true;
                     state.reactiveProperties?.add(propName);
 
-                    const privateField = t.classProperty(t.identifier(privateName), t.newExpression(t.identifier('Property'), [initialValue]));
+                    const isProduction = state.opts?.production ?? false;
+                    const propertyArgs = isProduction
+                        ? [initialValue]
+                        : [
+                            t.objectExpression([
+                                t.objectProperty(t.identifier('initialValue'), initialValue),
+                                t.objectProperty(t.identifier('propertyName'), t.stringLiteral(propName))
+                            ])
+                        ];
+                    const privateField = t.classProperty(t.identifier(privateName), t.newExpression(t.identifier('Property'), propertyArgs));
 
                     const getter = t.classMethod('get', t.identifier(propName), [], t.blockStatement([
                         t.returnStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('getValue')), []))

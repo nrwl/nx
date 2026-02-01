@@ -11,7 +11,7 @@ let intervalId: ReturnType<typeof setInterval> | null = null;
 
 const completionPercent = computed(() =>
 {
-  if(props.stats.total === 0) return 0;
+  if (props.stats.total === 0) return 0;
   return Math.round((props.stats.byStatus.done / props.stats.total) * 100);
 });
 
@@ -30,7 +30,7 @@ onMounted(() =>
 
 onUnmounted(() =>
 {
-  if(intervalId !== null)
+  if (intervalId !== null)
   {
     clearInterval(intervalId);
   }

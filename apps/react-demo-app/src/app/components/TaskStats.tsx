@@ -6,7 +6,7 @@ interface TaskStatsProps
     stats: TaskStats;
 }
 
-export function TaskStatsComponent({stats}: TaskStatsProps)
+export function TaskStatsComponent({ stats }: TaskStatsProps)
 {
     const completionPercent = stats.total === 0 ? 0 : Math.round((stats.byStatus.done / stats.total) * 100);
     const urgentAndHighCount = stats.byPriority.urgent + stats.byPriority.high;
@@ -20,7 +20,7 @@ export function TaskStatsComponent({stats}: TaskStatsProps)
                     <span className="stat-label">Completed</span>
                 </div>
                 <div className="progress-bar">
-                    <div className="progress-fill" style={{width: `${completionPercent}%`}}></div>
+                    <div className="progress-fill" style={{ width: `${completionPercent}%` }}></div>
                 </div>
             </div>
 

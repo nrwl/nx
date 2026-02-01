@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { Cli, parseArgs } from './Cli.js';
+import { Cli } from './Cli.js';
 
-const { options, args } = parseArgs(process.argv.slice(2));
+const { options, args } = Cli.parseArgs(process.argv.slice(2));
 const cli = new Cli(options);
 
 cli.run(args)

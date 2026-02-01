@@ -2,14 +2,11 @@ import type { Plugin } from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { CodeGenerator } from './CodeGenerator.js';
 import { ComponentCompiler } from './ComponentCompiler.js';
+import type { FluffPluginOptions } from './interfaces/FluffPluginOptions.js';
 
-export interface FluffPluginOptions
-{
-    srcDir: string;
-    minify?: boolean;
-    sourcemap?: boolean;
-}
+export type { FluffPluginOptions } from './interfaces/FluffPluginOptions.js';
 
 function findFluffSourcePath(): string | null
 {
@@ -32,12 +29,14 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
     let componentsDiscovered = false;
     const fluffSrcPath = findFluffSourcePath();
 
+    // noinspection JSUnusedGlobalSymbols
     return {
         name: 'fluff',
         setup(build): void
         {
             build.onStart(async() =>
             {
+                CodeGenerator.resetGlobalState();
                 if (!componentsDiscovered)
                 {
                     await compiler.discoverComponents(options.srcDir);
@@ -47,7 +46,13 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
 
             build.onLoad({ filter: /\.component\.ts$/ }, async(args) =>
             {
-                const result = await compiler.compileComponentForBundle(args.path, options.minify, options.sourcemap);
+                const result = await compiler.compileComponentForBundle(
+                    args.path,
+                    options.minify,
+                    options.sourcemap,
+                    options.skipDefine,
+                    options.production
+                );
                 return {
                     contents: result.code,
                     loader: 'js',

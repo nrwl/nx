@@ -35,7 +35,7 @@ export function TaskCardComponent({
 
     useEffect(() =>
     {
-        if(isEditing && task)
+        if (isEditing && task)
         {
             setEditTitle(task.title);
             setEditDescription(task.description);
@@ -53,7 +53,7 @@ export function TaskCardComponent({
     const isDueToday = task.dueDate === today;
 
     const formattedDueDate = task.dueDate
-        ? new Date(task.dueDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})
+        ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : '';
 
     const getStatusLabel = (status: TaskStatus): string =>
@@ -93,7 +93,7 @@ export function TaskCardComponent({
         .toLowerCase();
     const truncate = (str: string, len: number) => str.length > len ? str.slice(0, len) + '...' : str;
 
-    if(isEditing)
+    if (isEditing)
     {
         return (
             <div className={`task-card ${isDragging ? 'dragging' : ''}`}>

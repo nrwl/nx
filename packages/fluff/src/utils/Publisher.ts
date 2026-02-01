@@ -6,7 +6,29 @@ export class Publisher<T>
 {
     private readonly callbacks = new Set<Callback<T>>();
 
-    public async emit(value: T): Promise<void>
+    public emit(value: T): void
+    {
+        for (const callback of this.callbacks)
+        {
+            try
+            {
+                const result = callback(value);
+                if (result instanceof Promise)
+                {
+                    result.catch((e: unknown) =>
+                    {
+                        console.error(e);
+                    });
+                }
+            }
+            catch(e: unknown)
+            {
+                console.error(e);
+            }
+        }
+    }
+
+    public async emitAsync(value: T): Promise<void>
     {
         for (const callback of this.callbacks)
         {
