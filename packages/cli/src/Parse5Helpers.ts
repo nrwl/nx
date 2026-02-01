@@ -116,4 +116,25 @@ export class Parse5Helpers
 
         return null;
     }
+
+    public static removeNonMarkerComments(node: Parse5Node): void
+    {
+        if (!('childNodes' in node)) return;
+
+        const markerPattern = /^\/?(fluff:(if|for|switch|text|break):\d+)$/;
+
+        node.childNodes = node.childNodes.filter(child =>
+        {
+            if (Typeguards.isCommentNode(child))
+            {
+                return markerPattern.test(child.data);
+            }
+            return true;
+        });
+
+        for (const child of node.childNodes)
+        {
+            Parse5Helpers.removeNonMarkerComments(child);
+        }
+    }
 }

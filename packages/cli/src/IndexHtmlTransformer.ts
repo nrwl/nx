@@ -39,9 +39,9 @@ export class IndexHtmlTransformer
     {
         const doc = parse5.parse(html);
 
-        const jsSrc = options.gzip ? `${options.jsBundle}.gz` : options.jsBundle;
+        const jsSrc = options.gzScriptTag ? `${options.jsBundle}.gz` : options.jsBundle;
         const cssSrc = options.cssBundle
-            ? (options.gzip ? `${options.cssBundle}.gz` : options.cssBundle)
+            ? (options.gzScriptTag ? `${options.cssBundle}.gz` : options.cssBundle)
             : null;
 
         const head = Parse5Helpers.findElement(doc, 'head');

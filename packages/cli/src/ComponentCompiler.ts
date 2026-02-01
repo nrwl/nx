@@ -4,6 +4,7 @@ import { parse } from '@babel/parser';
 import * as t from '@babel/types';
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
+import * as parse5 from 'parse5';
 import { minify as minifyHtml } from 'html-minifier-terser';
 import * as path from 'path';
 import { SourceMapConsumer, SourceMapGenerator } from 'source-map';
@@ -18,6 +19,7 @@ import { generate } from './BabelHelpers.js';
 import { CodeGenerator } from './CodeGenerator.js';
 import { ErrorHelpers } from './ErrorHelpers.js';
 import { GetterDependencyExtractor } from './GetterDependencyExtractor.js';
+import { Parse5Helpers } from './Parse5Helpers.js';
 import type { CompileResult } from './interfaces/CompileResult.js';
 import { TemplateParser } from './TemplateParser.js';
 
@@ -184,9 +186,13 @@ export class ComponentCompiler
 
         if (minify)
         {
+            const fragment = parse5.parseFragment(generatedHtml);
+            Parse5Helpers.removeNonMarkerComments(fragment);
+            generatedHtml = parse5.serialize(fragment);
+
             generatedHtml = await minifyHtml(generatedHtml, {
                 collapseWhitespace: true,
-                removeComments: true,
+                removeComments: false,
                 removeRedundantAttributes: true,
                 removeEmptyAttributes: true
             });

@@ -19,12 +19,16 @@ export class Cli
     private readonly cwd: string;
     private readonly nxPackage: string | undefined;
     private readonly noGzip: boolean;
+    private readonly noMinify: boolean;
+    private readonly gzScriptTag: boolean;
 
     public constructor(options: CliOptions = {})
     {
         this.cwd = options.cwd ?? process.env.INIT_CWD ?? process.cwd();
         this.nxPackage = options.nxPackage;
         this.noGzip = options.noGzip ?? false;
+        this.noMinify = options.noMinify ?? false;
+        this.gzScriptTag = options.gzScriptTag ?? false;
     }
 
     public async run(args: string[]): Promise<void>
@@ -395,6 +399,10 @@ Examples:
         {
             bundleOptions.gzip = false;
         }
+        if (this.noMinify)
+        {
+            bundleOptions.minify = false;
+        }
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
             : this.generateEntryPoint(srcDir, target.components);
@@ -506,6 +514,7 @@ Examples:
                     cssBundle: cssBundle ? path.basename(cssBundle) : undefined,
                     inlineStyles: inlineStyles || undefined,
                     gzip: bundleOptions.gzip,
+                    gzScriptTag: bundleOptions.gzScriptTag ?? this.gzScriptTag,
                     minify: bundleOptions.minify
                 });
                 fs.writeFileSync(path.join(outDir, 'index.html'), transformed);
@@ -852,6 +861,16 @@ Examples:
             else if (arg === '--no-gzip')
             {
                 options.noGzip = true;
+                i++;
+            }
+            else if (arg === '--no-minify')
+            {
+                options.noMinify = true;
+                i++;
+            }
+            else if (arg === '--gz-script-tag')
+            {
+                options.gzScriptTag = true;
                 i++;
             }
             else if (arg?.startsWith('--'))

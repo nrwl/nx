@@ -4,5 +4,6 @@ export interface BundleOptions
     splitting?: boolean;
     target?: string;
     gzip?: boolean;
+    gzScriptTag?: boolean;
     external?: string[];
 }
