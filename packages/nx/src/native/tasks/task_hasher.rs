@@ -15,6 +15,7 @@ use crate::native::{
     tasks::hashers::{
         hash_all_externals, hash_external, hash_project_config, hash_project_files_with_inputs,
         hash_task_output, hash_tsconfig_selectively, hash_workspace_files_with_inputs,
+        CachedTaskOutput,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -163,10 +164,7 @@ impl TaskHasher {
 
                 entry.details.insert(instruction_key, hash_value);
 
-                // Collect files from file-based instructions
-                entry.inputs.files.extend(files);
-
-                // Collect other structured inputs
+                // Collect structured inputs based on instruction type
                 match instruction {
                     HashInstruction::Runtime(cmd) => {
                         entry.inputs.runtime.push(cmd.clone());
@@ -174,8 +172,9 @@ impl TaskHasher {
                     HashInstruction::Environment(env_var) => {
                         entry.inputs.environment.push(env_var.clone());
                     }
-                    HashInstruction::TaskOutput(task_output, _) => {
-                        entry.inputs.dep_outputs.push(task_output.clone());
+                    HashInstruction::TaskOutput(_, _) => {
+                        // Add the actual files that were hashed from dependent task outputs
+                        entry.inputs.dep_outputs.extend(files);
                     }
                     HashInstruction::External(external) => {
                         entry.inputs.external.push(external.clone());
@@ -186,8 +185,11 @@ impl TaskHasher {
                             .external
                             .push("AllExternalDependencies".to_string());
                     }
-                    // WorkspaceFileSet and ProjectFileSet files already added above
-                    // ProjectConfiguration, TsConfiguration, Cwd don't need to be tracked as inputs
+                    // WorkspaceFileSet and ProjectFileSet - add files as inputs
+                    HashInstruction::WorkspaceFileSet(_) | HashInstruction::ProjectFileSet(_, _) => {
+                        entry.inputs.files.extend(files);
+                    }
+                    // ProjectConfiguration, TsConfiguration, Cwd don't produce file lists
                     _ => {}
                 }
 
@@ -322,10 +324,10 @@ impl TaskHasher {
                 (ts_hash, vec![])
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let hashed_task_output =
+                let result =
                     hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
-                (hashed_task_output, vec![])
+                (result.hash, result.files)
             }
             HashInstruction::External(external) => {
                 let hashed_external = hash_external(
@@ -356,6 +358,6 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    task_output_cache: &'a DashMap<String, String>,
+    task_output_cache: &'a DashMap<String, CachedTaskOutput>,
     cwd: &'a std::path::Path,
 }
