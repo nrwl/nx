@@ -18,7 +18,9 @@ import {
   IS_WASM,
   getDefaultMaxCacheSize,
   HttpRemoteCache,
+  expandOutputs,
 } from '../native';
+import { getTaskIOService } from './task-io-service';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
@@ -156,6 +158,14 @@ export class DbCache {
   ) {
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
+
+      // Notify TaskIOService of actual output files
+      try {
+        const expandedOutputs = expandOutputs(workspaceRoot, outputs);
+        getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
+      } catch {
+        // Silent failure - task IO notification is optional
+      }
 
       if (this.remoteCache) {
         await this.remoteCache.store(
