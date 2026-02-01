@@ -15,7 +15,7 @@ I love Angular, but it was too chonky for an embedded project I was working on. 
 - **Angular-like syntax** - Decorators, templates, and component structure you already know
 - **Transparent data binding** - No change detector, zone.js, or digest cycles needed
 - **Zero runtime dependencies** - No rxjs, no zone.js, just vanilla JS
-- **Tiny footprint** - ~5 KB gzipped runtime
+- **Tiny footprint** - ~6 KB gzipped runtime
 - **AOT compilation** - Templates are compiled at build time, not runtime
 - **Control flow syntax** - Angular 17+ style `@if`, `@for`, `@switch`, plus `@fallthrough`
 - **Pipes** - Transform template expressions with built-in or custom pipes, component-scoped
