@@ -57,7 +57,6 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   for (let i = 0; i < tasksToHash.length; i++) {
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
-    tasksToHash[i].hashInputs = hashes[i].inputs;
 
     // Notify TaskIOService of hash inputs
     if (hashes[i].inputs) {
@@ -110,7 +109,6 @@ export async function hashTask(
     : hasher.hashTask(task, taskGraph, env));
   task.hash = value;
   task.hashDetails = details;
-  task.hashInputs = inputs;
 
   // Notify TaskIOService of hash inputs
   if (inputs) {
@@ -179,7 +177,6 @@ export async function hashTasks(
     } as any);
     task.hash = value;
     task.hashDetails = details;
-    task.hashInputs = inputs;
 
     // Notify TaskIOService of hash inputs
     if (inputs) {
@@ -196,7 +193,6 @@ export async function hashTasks(
         for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
           tasksWithoutCustomHashers[i].hash = hashes[i].value;
           tasksWithoutCustomHashers[i].hashDetails = hashes[i].details;
-          tasksWithoutCustomHashers[i].hashInputs = hashes[i].inputs;
 
           // Notify TaskIOService of hash inputs
           if (hashes[i].inputs) {

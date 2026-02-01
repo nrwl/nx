@@ -11,33 +11,10 @@ import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxWorkspaceFilesExternals } from '../native';
+import { HashInputs, NxWorkspaceFilesExternals } from '../native';
 
-/**
- * Structured inputs used for hashing
- */
-export interface HashInputs {
-  /**
-   * Expanded file paths that were used as inputs
-   */
-  files: string[];
-  /**
-   * Runtime commands
-   */
-  runtime: string[];
-  /**
-   * Environment variable names
-   */
-  environment: string[];
-  /**
-   * Dependent task outputs
-   */
-  depOutputs: string[];
-  /**
-   * External dependencies
-   */
-  external: string[];
-}
+// Re-export HashInputs from native module for public API
+export { HashInputs };
 
 /**
  * A data structure returned by the default hasher.
