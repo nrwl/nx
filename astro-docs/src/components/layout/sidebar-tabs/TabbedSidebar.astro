@@ -68,8 +68,8 @@
         panel.hidden = i !== index;
       });
 
-      // Scroll active tab into view within the tab bar
-      this.tabs[index]?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: store ? 'smooth' : 'instant' });
+      // Scroll active tab into view within the tab bar (vertical layout)
+      this.tabs[index]?.scrollIntoView({ block: 'nearest', behavior: store ? 'smooth' : 'instant' });
 
       if (store && this.tabs[index]) {
         sessionStorage.setItem('nx-sidebar-tab', this.tabs[index].id);
@@ -94,9 +94,11 @@
       let nextIndex: number | null = null;
 
       switch (e.key) {
+        case 'ArrowDown':
         case 'ArrowRight':
           nextIndex = (currentIndex + 1) % this.tabs.length;
           break;
+        case 'ArrowUp':
         case 'ArrowLeft':
           nextIndex = (currentIndex - 1 + this.tabs.length) % this.tabs.length;
           break;

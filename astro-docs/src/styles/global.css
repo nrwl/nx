@@ -369,61 +369,57 @@ pre {
     position: sticky;
     top: 0;
     z-index: 1;
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
     background-color: var(--sl-color-black);
+    border-bottom: 1px solid var(--sl-color-hairline-light);
   }
 
   .nx-tab-bar {
     display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    background-color: var(--sl-color-gray-6);
-    border-radius: var(--radius-lg);
-    overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .nx-tab-bar::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    flex-direction: column;
+    gap: 2px;
   }
 
   .nx-tab-bar [role='tab'] {
-    flex: 0 0 auto;
-    padding: 0.375rem 0.5rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
     border: none;
+    border-left: 2px solid transparent;
     border-radius: var(--radius-md);
     background: transparent;
-    color: var(--sl-color-gray-3);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
+    color: var(--sl-color-gray-2);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
     cursor: pointer;
     transition:
       color 0.15s,
-      background-color 0.15s;
-    white-space: nowrap;
+      background-color 0.15s,
+      border-color 0.15s;
     line-height: 1.4;
   }
 
   .nx-tab-bar [role='tab']:hover {
+    background-color: var(--sl-color-gray-6);
     color: var(--sl-color-gray-1);
   }
 
   .nx-tab-bar [role='tab'][aria-selected='true'] {
-    background-color: var(--sl-color-bg-sidebar);
+    border-left-color: var(--sl-color-text-accent);
     color: var(--sl-color-text-accent);
+    background-color: color-mix(in srgb, var(--sl-color-text-accent) 8%, transparent);
     font-weight: var(--font-weight-semibold);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
   }
 
   @media (min-width: 50rem) {
     .nx-tab-bar-sticky {
-      padding-bottom: 1rem;
+      padding-bottom: 0.5rem;
       background-color: var(--sl-color-bg-sidebar);
     }
 
     .nx-tab-bar [role='tab'] {
-      font-size: var(--text-xs);
-      padding: 0.3rem 0.375rem;
+      font-size: var(--text-base);
+      padding: 0.4rem 0.75rem;
     }
   }
 } /* end component layer */

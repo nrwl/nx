@@ -107,7 +107,7 @@ function getIconPath(iconName: string | undefined): string | null {
 <style>
   @layer starlight.core {
     ul {
-      --sl-sidebar-item-padding-inline: 0.5rem;
+      --sl-sidebar-item-padding-inline: 0.375rem;
       list-style: none;
       padding: 0;
     }
@@ -129,7 +129,7 @@ function getIconPath(iconName: string | undefined): string | null {
     }
 
     .top-level > li + li {
-      margin-top: 0.75rem;
+      margin-top: 0.5rem;
     }
 
     summary {
@@ -165,7 +165,7 @@ function getIconPath(iconName: string | undefined): string | null {
       border-radius: 0.25rem;
       text-decoration: none;
       color: var(--sl-color-gray-2);
-      padding: 0.3em var(--sl-sidebar-item-padding-inline);
+      padding: 0.2em var(--sl-sidebar-item-padding-inline);
       line-height: 1.4;
     }
 
@@ -187,9 +187,14 @@ function getIconPath(iconName: string | undefined): string | null {
       margin-inline-end: 0.25em;
     }
 
+    /* Deep nesting compactness for Reference generators/executors */
+    ul ul ul a {
+      padding-block: 0.15em;
+    }
+
     @media (min-width: 50rem) {
       .top-level > li + li {
-        margin-top: 0.5rem;
+        margin-top: 0.375rem;
       }
 
       .large {
