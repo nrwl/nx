@@ -1,4 +1,4 @@
 export const nxVersion = require('../../package.json').version;
 
-export const expressVersion = '^4.21.2';
-export const expressTypingsVersion = '^4.17.21';
+export const expressVersion = '^5.2.1';
+export const expressTypingsVersion = '^5.0.6';
