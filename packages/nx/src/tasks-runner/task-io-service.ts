@@ -1,8 +1,5 @@
-import { mkdirSync, rmSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { TaskGraph } from '../config/task-graph';
-import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getProcessMetricsService } from './process-metrics-service';
 
 /**
@@ -164,98 +161,6 @@ class TaskIOService {
   }
 }
 
-class DebugTaskIOService extends TaskIOService {
-  constructor(
-    private dbgFilePath: string,
-    projectGraph?: ProjectGraph,
-    taskGraph?: TaskGraph
-  ) {
-    super(projectGraph, taskGraph);
-    mkdirSync(dirname(this.dbgFilePath), { recursive: true });
-    try {
-      rmSync(this.dbgFilePath, { force: true });
-    } catch (e) {
-      if (e.code !== 'ENOENT') {
-        throw e;
-      }
-    }
-    this.log(
-      `DebugTaskIOService initialized with ${projectGraph ? 'projectGraph' : 'no projectGraph'} and ${
-        taskGraph ? 'taskGraph' : 'no taskGraph'
-      }`
-    );
-    this.subscribeToTaskPids(({ pid, taskId }) => {
-      this.log(`Task ${taskId} PID updated: [${pid}]`);
-    });
-    process.on('exit', () => {
-      this.log(
-        [
-          `Final Task to PIDs mapping: ${JSON.stringify(
-            Array.from(this.taskToPids.entries()).reduce(
-              (acc, [taskId, pid]) => {
-                acc[taskId] = pid;
-                return acc;
-              },
-              {} as Record<string, number>
-            ),
-            null,
-            2
-          )}\n`,
-          ...(this.taskGraph
-            ? [
-                'Expected task inputs:',
-                ...[...this.taskToInputs.entries()].map(
-                  ([taskId, info]) =>
-                    `Task ${taskId}:
-    Files: [${info.inputs.files?.slice(0, 5).join(', ')}${info.inputs.files?.length > 5 ? `, ... (${info.inputs.files.length} total)` : ''}]`
-                ),
-              ]
-            : []),
-        ].join('\n')
-      );
-      console.log(`DebugTaskIOService log written to ${this.dbgFilePath}`);
-    });
-  }
-
-  log(message: string): void {
-    writeFileSync(
-      this.dbgFilePath,
-      `[${new Date().toISOString()}] ${message}\n`,
-      { flag: 'a' }
-    );
-  }
-
-  override notifyPidUpdate(update: TaskPidUpdate): void {
-    this.log(
-      `notifyPidUpdate called for task ${update.taskId} with PID [${update.pid}]`
-    );
-    super.notifyPidUpdate(update);
-  }
-
-  override notifyTaskInputs(
-    taskId: string,
-    inputs: {
-      files: string[];
-      runtime: string[];
-      environment: string[];
-      depOutputs: string[];
-      external: string[];
-    }
-  ): void {
-    this.log(
-      `notifyTaskInputs called for task ${taskId} with ${inputs.files.length} file inputs`
-    );
-    super.notifyTaskInputs(taskId, inputs);
-  }
-
-  override notifyTaskOutputs(taskId: string, outputs: string[]): void {
-    this.log(
-      `notifyTaskOutputs called for task ${taskId} with ${outputs.length} outputs`
-    );
-    super.notifyTaskOutputs(taskId, outputs);
-  }
-}
-
 // Singleton
 let instance: TaskIOService | null = null;
 
@@ -268,14 +173,7 @@ export function getTaskIOService(
   taskGraph?: TaskGraph
 ): TaskIOService {
   if (!instance) {
-    // TODO: Remove debug service option once stable
-    instance = process.env.NX_TASK_IO_DEBUG
-      ? new DebugTaskIOService(
-          join(workspaceDataDirectory, 'task-io-service-debug.log'),
-          projectGraph,
-          taskGraph
-        )
-      : new TaskIOService(projectGraph, taskGraph);
+    instance = new TaskIOService(projectGraph, taskGraph);
   }
   return instance;
 }

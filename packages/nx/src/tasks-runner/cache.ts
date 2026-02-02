@@ -1,37 +1,36 @@
-import { workspaceRoot } from '../utils/workspace-root';
-import { join } from 'path';
-import { performance } from 'perf_hooks';
-import {
-  DefaultTasksRunnerOptions,
-  RemoteCache,
-  RemoteCacheV2,
-} from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { machineId } from 'node-machine-id';
 import { existsSync, mkdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { cacheDir } from '../utils/cache-directory';
-import { Task } from '../config/task-graph';
-import { machineId } from 'node-machine-id';
-import {
-  NxCache,
-  CachedResult as NativeCacheResult,
-  IS_WASM,
-  getDefaultMaxCacheSize,
-  HttpRemoteCache,
-  expandOutputs,
-} from '../native';
-import { getTaskIOService } from './task-io-service';
-import { getDbConnection } from '../utils/db-connection';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { join } from 'path';
+import { performance } from 'perf_hooks';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { Task } from '../config/task-graph';
+import {
+  HttpRemoteCache,
+  IS_WASM,
+  CachedResult as NativeCacheResult,
+  NxCache,
+  getDefaultMaxCacheSize,
+} from '../native';
 import {
   NxCloudClientUnavailableError,
   verifyOrUpdateNxCloudClient,
 } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
+import { cacheDir } from '../utils/cache-directory';
+import { getDbConnection } from '../utils/db-connection';
 import { isCI } from '../utils/is-ci';
-import { output } from '../utils/output';
 import { logger } from '../utils/logger';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { output } from '../utils/output';
+import { workspaceRoot } from '../utils/workspace-root';
+import {
+  DefaultTasksRunnerOptions,
+  RemoteCache,
+  RemoteCacheV2,
+} from './default-tasks-runner';
+import { getTaskIOService } from './task-io-service';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -157,15 +156,15 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      this.cache.put(task.hash, terminalOutput, outputs, code);
+      const expandedOutputs = this.cache.put(
+        task.hash,
+        terminalOutput,
+        outputs,
+        code
+      );
 
       // Notify TaskIOService of actual output files
-      try {
-        const expandedOutputs = expandOutputs(workspaceRoot, outputs);
-        getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
-      } catch {
-        // Silent failure - task IO notification is optional
-      }
+      getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
       if (this.remoteCache) {
         await this.remoteCache.store(
