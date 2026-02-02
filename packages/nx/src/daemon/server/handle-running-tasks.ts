@@ -3,7 +3,7 @@ import { getRunningTasksService } from '../../utils/running-tasks';
 export async function handleGetRunningTasks(ids: string[]) {
   const service = getRunningTasksService();
   return {
-    response: JSON.stringify(service?.getRunningTasks(ids) ?? []),
+    response: service?.getRunningTasks(ids) ?? [],
     description: 'handleGetRunningTasks',
   };
 }

@@ -25,7 +25,7 @@ function getCacheInstance(): NxCache {
 export async function handleCacheGet(hash: string) {
   const result = getCacheInstance().get(hash);
   return {
-    response: JSON.stringify(result),
+    response: result,
     description: 'handleCacheGet',
   };
 }
@@ -65,14 +65,14 @@ export async function handleCacheApplyRemoteResults(
 
 export async function handleCacheGetSize() {
   return {
-    response: JSON.stringify(getCacheInstance().getCacheSize()),
+    response: getCacheInstance().getCacheSize(),
     description: 'handleCacheGetSize',
   };
 }
 
 export async function handleCacheCheckFsInSync() {
   return {
-    response: JSON.stringify(getCacheInstance().checkCacheFsInSync()),
+    response: getCacheInstance().checkCacheFsInSync(),
     description: 'handleCacheCheckFsInSync',
   };
 }
