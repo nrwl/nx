@@ -1,20 +1,29 @@
 import type { Context } from 'https://edge.netlify.com';
 
-// Configuration - set these in Netlify environment variables
 const GA_MEASUREMENT_ID =
   Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
 const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
 
-function getClientId(request: Request): string {
-  // Try to extract existing GA client ID from cookie
-  const cookies = request.headers.get('cookie') || '';
-  const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
-  if (gaMatch) {
-    return gaMatch[1];
+function shouldTrack(request: Request): boolean {
+  const accept = request.headers.get('accept') || '';
+
+  // Track if:
+  // - No Accept header (some LLM tools)
+  // - Accept contains text/html (browsers)
+  // - Accept contains */* (curl, browser default)
+  if (!accept || accept.includes('text/html') || accept.includes('*/*')) {
+    return true;
   }
 
-  // Generate a new client ID for this request
-  // For non-browser clients (AI tools), this creates a session-based ID
+  // Skip image/css/js/font requests
+  return false;
+}
+
+function getClientId(request: Request): string {
+  const cookies = request.headers.get('cookie') || '';
+  const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
+  if (gaMatch) return gaMatch[1];
+
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 1000000000);
   return `${random}.${timestamp}`;
@@ -32,8 +41,6 @@ async function sendToGA4(
 
   const clientId = getClientId(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
-
-  // Detect AI tools from user agent
   const isAITool =
     /bot|crawler|spider|gpt|claude|anthropic|openai|perplexity|cohere/i.test(
       userAgent
@@ -48,11 +55,8 @@ async function sendToGA4(
           page_location: request.url,
           page_title: pathname,
           page_path: pathname,
-          // Custom parameters for filtering
-          content_type: pathname.endsWith('.txt')
-            ? 'text/plain'
-            : 'text/markdown',
-          file_extension: pathname.substring(pathname.lastIndexOf('.')),
+          content_type: 'text/html',
+          file_extension: '.html',
           user_agent: userAgent,
           is_ai_tool: isAITool ? 'true' : 'false',
           country: context.geo?.country?.code || 'unknown',
@@ -61,7 +65,7 @@ async function sendToGA4(
     ],
   };
 
-  console.log(`Tracked asset path: ${pathname}`);
+  console.log(`Tracked HTML page: ${pathname}`);
 
   const endpoint = `https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
 
@@ -71,7 +75,6 @@ async function sendToGA4(
       body: JSON.stringify(payload),
     });
   } catch (error) {
-    // Log but don't fail the request
     console.error('Failed to send to GA4:', error);
   }
 }
@@ -80,18 +83,15 @@ export default async function handler(
   request: Request,
   context: Context
 ): Promise<Response> {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
+  const pathname = new URL(request.url).pathname;
 
-  // Send analytics in background (non-blocking)
-  context.waitUntil(sendToGA4(request, context, pathname));
+  if (shouldTrack(request)) {
+    context.waitUntil(sendToGA4(request, context, pathname));
+  }
 
-  // Continue to serve the actual file
   const response = await context.next();
-
-  // Netlify Edge Function responses are immutable, so create a new Response
   const newHeaders = new Headers(response.headers);
-  newHeaders.set('x-nx-edge-function', 'track-asset-requests');
+  newHeaders.set('x-nx-edge-function', 'track-page-requests');
 
   return new Response(response.body, {
     status: response.status,
@@ -101,5 +101,29 @@ export default async function handler(
 }
 
 export const config = {
-  path: ['/**/*.txt', '/**/*.md'],
+  path: ['/docs/*'],
+  excludedPath: [
+    // Text/code files (handled by track-asset-requests or not tracked)
+    '/docs/*.md',
+    '/docs/*.js',
+    '/docs/*.txt',
+    // Images
+    '/docs/*.svg',
+    '/docs/*.png',
+    '/docs/*.jpg',
+    '/docs/*.jpeg',
+    '/docs/*.gif',
+    '/docs/*.webp',
+    '/docs/*.ico',
+    '/docs/images/*',
+    '/docs/og/*',
+    // Fonts
+    '/docs/fonts/*',
+    '/docs/*.woff',
+    '/docs/*.woff2',
+    // Search index (pagefind)
+    '/docs/pagefind/*',
+    // Astro build assets
+    '/docs/_*',
+  ],
 };
