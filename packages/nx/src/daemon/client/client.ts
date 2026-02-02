@@ -1113,13 +1113,13 @@ export class DaemonClient {
 
       // Resend the pending message if one exists
       if (this.currentMessage && this.currentResolve && this.currentReject) {
-        // Decrement the queue counter that was incremented when the error occurred
-        this.queue.decrementQueueCounter();
-        // Retry the message through the normal queue
+        // Retry the message directly (not through the queue) to resolve the
+        // pending promise that the original queue entry is waiting on.
+        // This allows the original queue entry to complete naturally.
         const msg = this.currentMessage;
         const res = this.currentResolve;
         const rej = this.currentReject;
-        this.sendToDaemonViaQueue(msg).then(res, rej);
+        this.sendMessageToDaemon(msg).then(res, rej);
       }
     } else {
       // Failed to reconnect after all attempts, reject the pending request
