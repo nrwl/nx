@@ -23,14 +23,14 @@ describe('Gradle', () => {
       });
       afterAll(() => cleanupProject());
 
-      it('should build', () => {
+      it('should build without batch mode', () => {
         const projects = runCLI(`show projects`);
         expect(projects).toContain('app');
         expect(projects).toContain('list');
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        let buildOutput = runCLI('build app', { verbose: true });
+        let buildOutput = runCLI('build app --no-batch', { verbose: true });
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
 
@@ -48,7 +48,7 @@ describe('Gradle', () => {
         expect(bootJarOutput).toContain(':app:bootJar');
       });
 
-      it('should track dependencies for new app', () => {
+      it('should track dependencies for new app without batch mode', () => {
         if (type === 'groovy') {
           createFile(
             `app2/build.gradle`,
@@ -86,7 +86,7 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2', { verbose: true });
+        let buildOutput = runCLI('build app2 --no-batch', { verbose: true });
         // app2 depends on app
         expect(buildOutput).toContain(':app:classes');
         expect(buildOutput).toContain(':list:classes');
@@ -109,8 +109,12 @@ dependencies {
         });
 
         expect(() => {
-          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
-          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
+          runCLI('run app:test-ci--MessageUtilsTest --no-batch', {
+            verbose: true,
+          });
+          runCLI('run list:test-ci--LinkedListTest --no-batch', {
+            verbose: true,
+          });
         }).not.toThrow();
       });
 
@@ -153,7 +157,7 @@ dependencies {
         expect(output).toContain('gradle-classes');
 
         // Verify prefixed target works
-        const buildOutput = runCLI('run app:gradle-build');
+        const buildOutput = runCLI('run app:gradle-build --no-batch');
         expect(buildOutput).toContain('BUILD SUCCESSFUL');
       });
 
