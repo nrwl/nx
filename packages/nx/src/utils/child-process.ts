@@ -13,6 +13,7 @@ import {
 } from './package-manager';
 import { workspaceRoot, workspaceRootInner } from './workspace-root';
 import { ChildProcess } from '../native';
+import { messageToCode } from './exit-codes';
 
 export function getRunNxBaseCommand(
   packageManagerCommand?: PackageManagerCommands,
@@ -88,25 +89,6 @@ export async function runNxAsync(
       child.stderr?.pipe(process.stderr);
     }
   });
-}
-
-function messageToCode(message: string): number {
-  if (message.startsWith('Terminated by ')) {
-    switch (message.replace('Terminated by ', '').trim()) {
-      case 'Termination':
-        return 143;
-      case 'Interrupt':
-        return 130;
-      default:
-        return 128;
-    }
-  } else if (message.startsWith('Exited with code ')) {
-    return parseInt(message.replace('Exited with code ', '').trim());
-  } else if (message === 'Success') {
-    return 0;
-  } else {
-    return 1;
-  }
 }
 
 export class PseudoTtyProcess {
