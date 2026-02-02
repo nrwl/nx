@@ -46,6 +46,7 @@ class TaskIOService {
   // Used to call subscribers that were late to the party
   protected taskToPids: Map<string, number> = new Map();
   protected taskToInputs: Map<string, TaskInputInfo> = new Map();
+  protected taskToOutputs: Map<string, string[]> = new Map();
 
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
@@ -87,6 +88,11 @@ class TaskIOService {
    */
   subscribeToTaskInputs(callback: TaskInputCallback): void {
     this.taskInputCallbacks.push(callback);
+
+    // Emit current state to new subscriber
+    for (const [, taskInputInfo] of this.taskToInputs) {
+      callback(taskInputInfo);
+    }
   }
 
   /**
@@ -95,6 +101,14 @@ class TaskIOService {
    */
   subscribeToTaskOutputs(callback: TaskOutputsCallback): void {
     this.taskOutputsCallbacks.push(callback);
+
+    // Emit current state to new subscriber
+    for (const [task, outputs] of this.taskToOutputs) {
+      callback({
+        taskId: task,
+        outputs: outputs,
+      });
+    }
   }
 
   /**
@@ -131,6 +145,8 @@ class TaskIOService {
    * Called from the cache when outputs are stored.
    */
   notifyTaskOutputs(taskId: string, outputs: string[]): void {
+    this.taskToOutputs.set(taskId, outputs);
+
     const update: TaskOutputsUpdate = {
       taskId,
       outputs,
