@@ -2,15 +2,62 @@
 import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro'
 import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro'
 import SidebarSublist from './SidebarSublist.astro'
-import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
+import TabbedSidebar from './sidebar-tabs/TabbedSidebar.astro'
+import SidebarTab from './sidebar-tabs/SidebarTab.astro'
+import SidebarTabPanel from './sidebar-tabs/SidebarTabPanel.astro'
+import type { SidebarEntry } from './SidebarSublist.astro'
+import { sidebarTabs } from '../../../sidebar.mts'
 
 const { sidebar } = Astro.locals.starlightRoute
-const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+
+// Check if any entry in a tree has isCurrent
+function hasCurrentPage(entries: SidebarEntry[]): boolean {
+  return entries.some((entry) => {
+    if (entry.type === 'link') return entry.isCurrent
+    return hasCurrentPage(entry.entries)
+  })
+}
+
+// For each tab, resolve its groups from the sidebar using the tab's group labels
+const tabs = sidebarTabs.map((config) => {
+  const groupLabels = config.groups.map((g) =>
+    typeof g === 'string' ? g : g.label
+  )
+  const groups = sidebar.filter(
+    (entry: SidebarEntry) => entry.type === 'group' && groupLabels.includes(entry.label)
+  )
+  // Single-group tabs: unwrap the top-level group to avoid redundant heading
+  const isSingleGroup = groups.length === 1 && groups[0].type === 'group'
+  const entries: SidebarEntry[] = isSingleGroup ? (groups[0] as any).entries : groups
+  const active = hasCurrentPage(groups)
+  return { ...config, entries, active }
+})
+
+// Exactly one tab should be active; if none matched, leave it for the client to decide
+const anyActive = tabs.some((t) => t.active)
 ---
 
 <div class="sidebar-wrapper" data-testid="sidebar-wrapper">
     <SidebarPersister>
-        <SidebarSublist sublist={sidebar}/>
+        <TabbedSidebar>
+            {tabs.map((tab) => (
+                <SidebarTab
+                    slot="tabs"
+                    id={tab.id}
+                    label={tab.label}
+                    active={anyActive ? tab.active : false}
+                />
+            ))}
+            {tabs.map((tab) => (
+                <SidebarTabPanel
+                    slot="panels"
+                    id={`${tab.id}-panel`}
+                    active={anyActive ? tab.active : false}
+                >
+                    <SidebarSublist sublist={tab.entries} />
+                </SidebarTabPanel>
+            ))}
+        </TabbedSidebar>
     </SidebarPersister>
     <div class="md:sl-hidden">
         <MobileMenuFooter/>

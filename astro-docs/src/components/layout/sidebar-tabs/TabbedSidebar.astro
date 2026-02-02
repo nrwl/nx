@@ -1,0 +1,120 @@
+---
+// TabbedSidebar: A custom element that shows/hides tab panels in the sidebar.
+// All panels are rendered at build time; JS toggles visibility.
+---
+
+<nx-tabbed-sidebar>
+  <div class="nx-tab-bar-sticky">
+    <div class="nx-tab-bar" role="tablist" aria-label="Sidebar sections">
+      <slot name="tabs" />
+    </div>
+  </div>
+  <div class="nx-tab-panels">
+    <slot name="panels" />
+  </div>
+</nx-tabbed-sidebar>
+
+<script>
+  class NxTabbedSidebar extends HTMLElement {
+    private tabs: HTMLButtonElement[] = [];
+    private panels: HTMLElement[] = [];
+
+    connectedCallback() {
+      this.tabs = Array.from(this.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+      this.panels = Array.from(this.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+
+      if (this.tabs.length === 0) return;
+
+      // Determine initial active tab
+      const activeIndex = this.getInitialTabIndex();
+      this.switchTab(activeIndex, false);
+
+      // Event listeners
+      this.addEventListener('click', this.handleClick);
+      this.addEventListener('keydown', this.handleKeydown);
+    }
+
+    disconnectedCallback() {
+      this.removeEventListener('click', this.handleClick);
+      this.removeEventListener('keydown', this.handleKeydown);
+    }
+
+    private getInitialTabIndex(): number {
+      // 1. Tab with data-active="true" (set server-side from isCurrent check)
+      const serverActive = this.tabs.findIndex(
+        (tab) => tab.getAttribute('data-active') === 'true'
+      );
+      if (serverActive !== -1) return serverActive;
+
+      // 2. sessionStorage fallback
+      const stored = sessionStorage.getItem('nx-sidebar-tab');
+      if (stored !== null) {
+        const storedIndex = this.tabs.findIndex((tab) => tab.id === stored);
+        if (storedIndex !== -1) return storedIndex;
+      }
+
+      // 3. Default to first tab
+      return 0;
+    }
+
+    private switchTab(index: number, store = true) {
+      this.tabs.forEach((tab, i) => {
+        const selected = i === index;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+
+      this.panels.forEach((panel, i) => {
+        panel.hidden = i !== index;
+      });
+
+      // Scroll active tab into view within the tab bar
+      this.tabs[index]?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: store ? 'smooth' : 'instant' });
+
+      if (store && this.tabs[index]) {
+        sessionStorage.setItem('nx-sidebar-tab', this.tabs[index].id);
+      }
+    }
+
+    private handleClick = (e: Event) => {
+      const tab = (e.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+      if (!tab) return;
+      const index = this.tabs.indexOf(tab);
+      if (index !== -1) {
+        this.switchTab(index);
+        tab.focus();
+      }
+    };
+
+    private handleKeydown = (e: KeyboardEvent) => {
+      const tab = (e.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+      if (!tab) return;
+
+      const currentIndex = this.tabs.indexOf(tab);
+      let nextIndex: number | null = null;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          nextIndex = (currentIndex + 1) % this.tabs.length;
+          break;
+        case 'ArrowLeft':
+          nextIndex = (currentIndex - 1 + this.tabs.length) % this.tabs.length;
+          break;
+        case 'Home':
+          nextIndex = 0;
+          break;
+        case 'End':
+          nextIndex = this.tabs.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      e.preventDefault();
+      this.switchTab(nextIndex);
+      this.tabs[nextIndex].focus();
+    };
+  }
+
+  customElements.define('nx-tabbed-sidebar', NxTabbedSidebar);
+</script>

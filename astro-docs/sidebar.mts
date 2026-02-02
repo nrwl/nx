@@ -4,7 +4,19 @@ import {
   getTechnologyAPIItems,
 } from './src/plugins/utils/plugin-mappings';
 
-export const sidebar: StarlightUserConfig['sidebar'] = [
+type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
+
+/**
+ * Tab configuration for the sidebar. Each tab directly owns its sidebar groups,
+ * making the tab ↔ content relationship explicit and impossible to drift.
+ */
+export interface SidebarTab {
+  id: string;
+  label: string;
+  groups: SidebarItems;
+}
+
+const learnGroups: SidebarItems = [
   // GETTING STARTED - Focus: immediate value, essential setup
   {
     label: 'Getting Started',
@@ -373,7 +385,9 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       },
     ],
   },
+];
 
+const technologiesGroups: SidebarItems = [
   // TECHNOLOGIES - Focus: Context-specific guides, hub pages only that branch off to KB or other areas
   {
     label: 'Technologies & Tools',
@@ -461,7 +475,9 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       },
     ],
   },
+];
 
+const knowledgeBaseGroups: SidebarItems = [
   // KNOWLEDGE BASE - Focus: Specific solutions to specific problems
   {
     label: 'Knowledge Base',
@@ -944,6 +960,9 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       },
     ],
   },
+];
+
+const referenceGroups: SidebarItems = [
   // REFERENCE  - Focus: Exhaustive facts, no narrative
   {
     label: 'Reference',
@@ -1130,3 +1149,18 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     ],
   },
 ];
+
+export const sidebarTabs: SidebarTab[] = [
+  { id: 'tab-learn', label: 'Learn', groups: learnGroups },
+  { id: 'tab-technologies', label: 'Technologies', groups: technologiesGroups },
+  {
+    id: 'tab-knowledge-base',
+    label: 'Knowledge Base',
+    groups: knowledgeBaseGroups,
+  },
+  { id: 'tab-reference', label: 'Reference', groups: referenceGroups },
+];
+
+export const sidebar: StarlightUserConfig['sidebar'] = sidebarTabs.flatMap(
+  (tab) => tab.groups
+);

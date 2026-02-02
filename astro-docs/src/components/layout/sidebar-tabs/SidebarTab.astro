@@ -1,0 +1,21 @@
+---
+interface Props {
+  id: string
+  label: string
+  active?: boolean
+}
+
+const { id, label, active = false } = Astro.props
+const panelId = `${id}-panel`
+---
+
+<button
+  role="tab"
+  id={id}
+  aria-selected={active ? 'true' : 'false'}
+  aria-controls={panelId}
+  data-active={active ? 'true' : undefined}
+  tabindex={active ? 0 : -1}
+>
+  {label}
+</button>
