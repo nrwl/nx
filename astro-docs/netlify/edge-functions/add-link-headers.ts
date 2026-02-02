@@ -11,17 +11,6 @@ export default async function handler(
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // Skip non-page paths (assets, API endpoints, etc.)
-  if (
-    pathname.endsWith('.md') ||
-    pathname.endsWith('.txt') ||
-    pathname.includes('/og/') ||
-    pathname.includes('/_') ||
-    pathname.includes('/assets/')
-  ) {
-    return context.next();
-  }
-
   const acceptHeader = request.headers.get('accept') || '';
 
   // Serve markdown for LLM tools that explicitly request it
@@ -59,4 +48,12 @@ export default async function handler(
 
 export const config = {
   path: ['/docs/*'],
+  excludedPath: [
+    '/docs/*.md',
+    '/docs/*.js',
+    '/docs/*.txt',
+    '/docs/images/*',
+    // _astro and other asset paths
+    '/docs/_*',
+  ],
 };
