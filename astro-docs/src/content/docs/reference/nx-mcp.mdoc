@@ -17,15 +17,28 @@ For an overview of how Nx enhances AI assistants and powerful use cases, see the
 
 ## Installation
 
-There are a few ways to setup the Nx MCP server
-
-{% aside type="note" title="Top level command" %}
-Starting with Nx v21.4.0, you can run the MCP server directly using the `nx mcp` command.
-You can still use the standalone `nx-mcp` package if you prefer.
-All args are passed through to the underlying MCP server.
-{% /aside %}
+There are a few ways to setup the Nx MCP server.
 
 ### via .mcp.json
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```json
+// .mcp.json
+{
+  "servers": {
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx", "mcp"]
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```json
 // .mcp.json
@@ -40,25 +53,54 @@ All args are passed through to the underlying MCP server.
 }
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 ### Via Nx Console Extension
 
-If you're using Cursor, VS Code, or JetBrains IDEs, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
+If you're using Cursor or VS Code, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
 
 ## Client-Specific Setup
 
-> If your preferred client is not listed, then configure your client to run the `npx nx-mcp` command to start up the Nx MCP server.
+> If your preferred client is not listed, configure your client to run `npx nx mcp` (Nx >= 21.4) or `npx nx-mcp@latest` (older versions) to start the Nx MCP server.
 
 ### Claude Code
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+claude mcp add nx-mcp npx nx mcp
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```shell
 claude mcp add nx-mcp npx nx-mcp@latest
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 ### VS Code
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+code --add-mcp '{"name":"nx-mcp","command":"npx","args":["nx","mcp"]}'
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```shell
 code --add-mcp '{"name":"nx-mcp","command":"npx","args":["nx-mcp"]}'
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 Alternatively, configure it in your VS Code settings or use the Nx Console extension for automatic setup.
 
@@ -80,7 +122,7 @@ If you miss the notification, run the `Nx: Setup MCP Server` command from the co
 
 ## Command-Line Options
 
-The `nx-mcp` command accepts the following options:
+The `nx mcp` command (or `npx nx-mcp` for older versions) accepts the following options:
 
 | Option                  | Alias | Description                                                                                                       |
 | ----------------------- | ----- | ----------------------------------------------------------------------------------------------------------------- |
@@ -96,15 +138,48 @@ The `nx-mcp` command accepts the following options:
 
 If you want to host the server instead of communicating via `stdio`, use the `--transport` and `--port` flags:
 
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+npx nx mcp --transport sse --port 9921
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
+
 ```shell
 npx nx-mcp@latest --transport sse --port 9921
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 The HTTP transport supports multiple concurrent connections, allowing different clients to connect simultaneously with independent sessions.
 
 ### Filtering Tools
 
 You can limit which tools are available using the `--tools` option with glob patterns:
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+# Enable all tools (default)
+npx nx mcp --tools "*"
+
+# Disable specific tools
+npx nx mcp --tools "*" "!nx_docs"
+
+# Enable only cloud analytics tools
+npx nx mcp --tools "cloud_*"
+
+# Enable workspace tools only
+npx nx mcp --tools "nx_workspace" "nx_project_details" "nx_docs"
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```shell
 # Enable all tools (default)
@@ -119,6 +194,9 @@ npx nx-mcp@latest --tools "cloud_*"
 # Enable workspace tools only
 npx nx-mcp@latest --tools "nx_workspace" "nx_project_details" "nx_docs"
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 This is useful when you want to restrict the LLM's capabilities or reduce noise in the tool list.
 
@@ -176,15 +254,6 @@ These tools provide analytics and insights into your CI/CD data:
 | `cloud_analytics_run_details`                | Retrieves detailed data for a specific run to investigate command execution performance          |
 | `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
 | `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
-
-### Nx Cloud Polygraph Tools
-
-These tools enable multi-repository agent coordination:
-
-| Tool                       | Description                                                                             |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| `cloud_polygraph_init`     | Initialize Polygraph for the Nx Cloud workspace                                         |
-| `cloud_polygraph_delegate` | Delegate a task to a child Claude agent in a dependent repository and return the result |
 
 {% aside type="note" title="Tool Availability" %}
 When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
@@ -271,7 +340,7 @@ Using the Nx Cloud tools, the AI can:
 
 ### Autonomous CI Monitoring
 
-With the `ci_information` and `update_self_healing_fix` tools, AI agents can monitor CI pipelines and interact with self-healing:
+With the `ci_information` and `update_self_healing_fix` tools, AI agents can monitor CI pipelines and interact with self-healing. For a ready-to-use implementation, see the [CI monitoring skill](/docs/features/enhance-ai#ci-monitoring) in Claude Code:
 
 ```text
 Monitor CI and fix any failures
