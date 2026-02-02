@@ -101,5 +101,5 @@ export default async function handler(
 }
 
 export const config = {
-  path: ['/*.txt', '/**/*.txt', '/*.md', '/**/*.md'],
+  path: ['/**/*.txt', '/**/*.md'],
 };
