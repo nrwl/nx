@@ -103,11 +103,27 @@ export default async function handler(
 export const config = {
   path: ['/docs/*'],
   excludedPath: [
+    // Text/code files (handled by track-asset-requests or not tracked)
     '/docs/*.md',
     '/docs/*.js',
     '/docs/*.txt',
+    // Images
+    '/docs/*.svg',
+    '/docs/*.png',
+    '/docs/*.jpg',
+    '/docs/*.jpeg',
+    '/docs/*.gif',
+    '/docs/*.webp',
+    '/docs/*.ico',
     '/docs/images/*',
-    // _astro and other asset paths
+    '/docs/og/*',
+    // Fonts
+    '/docs/fonts/*',
+    '/docs/*.woff',
+    '/docs/*.woff2',
+    // Search index (pagefind)
+    '/docs/pagefind/*',
+    // Astro build assets
     '/docs/_*',
   ],
 };
