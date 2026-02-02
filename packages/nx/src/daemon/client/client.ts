@@ -1355,7 +1355,13 @@ export class DaemonClient {
         'result-parse-start-' + this.currentMessage.type,
         'result-parse-end-' + this.currentMessage.type
       );
-      if (parsedResult.error) {
+      // Handle primitive responses (null, boolean, number, string)
+      // which don't have an error property
+      if (
+        parsedResult &&
+        typeof parsedResult === 'object' &&
+        parsedResult.error
+      ) {
         this.currentReject(parsedResult.error);
       } else {
         performance.measure(
