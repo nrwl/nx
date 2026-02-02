@@ -74,11 +74,16 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
 
 export class DbCache {
   private nxJson = readNxJson();
+  // Use cache directory for the database so it's shared between worktrees
+  // alongside the cache files. This is separate from workspaceDataDirectory
+  // which contains per-workspace daemon state.
+  // We pass linkTaskDetails=false because task_details table is in the
+  // workspace-data database, not the cache database.
   private cache = new NxCache(
     workspaceRoot,
     cacheDir,
-    getDbConnection(),
-    undefined,
+    getDbConnection({ directory: cacheDir }),
+    false, // linkTaskDetails - disable FK to task_details since it's in a different DB
     resolveMaxCacheSize(this.nxJson)
   );
 
