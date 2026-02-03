@@ -12,6 +12,7 @@ export const DEFAULT_CONFIG: FluffConfig = {
             name: 'app',
             srcDir: 'src',
             outDir: 'dist',
+            componentsDir: 'app',
             entryPoint: 'main.ts',
             indexHtml: 'index.html',
             components: ['**/*.component.ts'],

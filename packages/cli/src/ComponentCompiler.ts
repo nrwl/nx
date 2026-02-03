@@ -83,7 +83,8 @@ export class ComponentCompiler
                 filename: filePath,
                 presets,
                 plugins,
-                parserOpts
+                parserOpts,
+                cwd: path.dirname(new URL(import.meta.url).pathname)
             });
 
             return result?.code ?? code;

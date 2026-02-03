@@ -98,7 +98,7 @@ export class CodeGenerator
             const fragment = parse5.parseFragment(html);
             const styleElement = Parse5Helpers.createElement('style', []);
             Parse5Helpers.appendText(styleElement, styles);
-            fragment.childNodes.unshift(styleElement);
+            fragment.childNodes.push(styleElement);
             styleElement.parentNode = fragment;
             content = parse5.serialize(fragment);
         }

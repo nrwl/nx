@@ -33,6 +33,7 @@
         "esbuild": "^0.27.2",
         "he": "^1.2.0",
         "html-minifier-terser": "^7.2.0",
+        "http-proxy": "^1.18.1",
         "picomatch": "^4.0.2",
         "parse5": "^8.0.0",
         "parse5-sax-parser": "^8.0.0",
@@ -68,6 +69,7 @@
     },
     "devDependencies": {
         "@types/he": "^1.2.3",
+        "@types/http-proxy": "^1.17.16",
         "@types/jsesc": "^3.0.3",
         "jsesc": "^3.1.0"
     }

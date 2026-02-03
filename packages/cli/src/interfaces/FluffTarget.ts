@@ -6,6 +6,8 @@ export interface FluffTarget
     name: string;
     srcDir: string;
     outDir: string;
+    componentsDir?: string;
+    tsConfigPath?: string;
     entryPoint?: string;
     indexHtml?: string;
     components: string[];

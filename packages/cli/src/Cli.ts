@@ -7,6 +7,7 @@ import picomatch from 'picomatch';
 import { gzipSync } from 'zlib';
 import { generate } from './BabelHelpers.js';
 import { ComponentCompiler } from './ComponentCompiler.js';
+import { DevServer } from './DevServer.js';
 import { fluffPlugin } from './fluff-esbuild-plugin.js';
 import { Generator } from './Generator.js';
 import { IndexHtmlTransformer } from './IndexHtmlTransformer.js';
@@ -378,7 +379,7 @@ Examples:
         console.log(`🔨 Building target '${target.name}'...`);
 
         const srcDir = path.resolve(projectRoot, target.srcDir);
-        const appDir = path.join(srcDir, 'app');
+        const appDir = path.join(srcDir, target.componentsDir ?? 'app');
 
         const outDir = (workspaceRoot && projectRelativePath)
             ? path.join(workspaceRoot, 'dist', projectRelativePath)
@@ -411,12 +412,26 @@ Examples:
         if (target.styles && target.styles.length > 0)
         {
             const styleContents: string[] = [];
-            for (const styleGlob of target.styles)
+            for (const stylePath of target.styles)
             {
-                const styleFiles = this.findFiles(srcDir, [styleGlob]);
-                for (const styleFile of styleFiles)
+                const fullPath = path.resolve(srcDir, stylePath);
+                if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile())
                 {
-                    styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                    console.log(`   ✓ Style: ${stylePath}`);
+                    styleContents.push(fs.readFileSync(fullPath, 'utf-8'));
+                }
+                else
+                {
+                    const styleFiles = this.findFiles(srcDir, [stylePath]);
+                    if (styleFiles.length === 0)
+                    {
+                        console.warn(`   ⚠ Style not found: ${fullPath}`);
+                    }
+                    for (const styleFile of styleFiles)
+                    {
+                        console.log(`   ✓ Style: ${path.relative(srcDir, styleFile)}`);
+                        styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                    }
                 }
             }
             if (styleContents.length > 0)
@@ -435,6 +450,10 @@ Examples:
         }
 
         console.log('   Building with esbuild...');
+
+        const tsconfigRaw = target.tsConfigPath
+            ? fs.readFileSync(path.resolve(projectRoot, target.tsConfigPath), 'utf-8')
+            : '{}';
 
         const result = await esbuild.build({
             entryPoints: [entryPoint],
@@ -458,7 +477,7 @@ Examples:
             ],
             external: bundleOptions.external ?? [],
             logLevel: 'warning',
-            tsconfigRaw: '{}'
+            tsconfigRaw
         });
 
         const outputs = Object.keys(result.metafile?.outputs ?? {});
@@ -524,37 +543,7 @@ Examples:
 
         if (target.assets)
         {
-            const compiler = new ComponentCompiler();
-            const assetFiles = this.findFiles(srcDir, target.assets);
-            for (const filePath of assetFiles)
-            {
-                if (filePath.endsWith('.component.ts')) continue;
-                if (filePath.endsWith('.component.html')) continue;
-                if (filePath.endsWith('.component.css')) continue;
-                if (target.indexHtml && filePath.endsWith(target.indexHtml)) continue;
-
-                const relativePath = path.relative(srcDir, filePath);
-                const outPath = path.join(outDir, relativePath);
-
-                const outFileDir = path.dirname(outPath);
-                if (!fs.existsSync(outFileDir))
-                {
-                    fs.mkdirSync(outFileDir, { recursive: true });
-                }
-
-                if (filePath.endsWith('.ts'))
-                {
-                    let content = fs.readFileSync(filePath, 'utf-8');
-                    content = await compiler.stripTypeScript(content, filePath);
-                    fs.writeFileSync(outPath.replace('.ts', '.js'), content);
-                    console.log(`   ✓ Processed ${relativePath}`);
-                }
-                else
-                {
-                    fs.copyFileSync(filePath, outPath);
-                    console.log(`   ✓ Copied ${relativePath}`);
-                }
-            }
+            await this.copyAssets(target.assets, projectRoot, srcDir, outDir);
         }
 
         console.log(`✅ Target '${target.name}' built successfully!`);
@@ -629,7 +618,7 @@ Examples:
     ): Promise<void>
     {
         const srcDir = path.resolve(projectRoot, target.srcDir);
-        const appDir = path.join(srcDir, 'app');
+        const appDir = path.join(srcDir, target.componentsDir ?? 'app');
 
         const fluffDir = path.join(this.cwd, '.fluff');
         const serveId = randomUUID();
@@ -669,6 +658,22 @@ Examples:
         const serveOptions = target.serve ?? {};
         const port = serveOptions.port ?? 3000;
         const host = serveOptions.host ?? 'localhost';
+        const esbuildPort = port + 1;
+
+        let proxyConfig = undefined;
+        if (serveOptions.proxyConfig)
+        {
+            const proxyConfigPath = path.resolve(projectRoot, serveOptions.proxyConfig);
+            proxyConfig = DevServer.loadProxyConfig(proxyConfigPath);
+            if (proxyConfig)
+            {
+                console.log(`   ✓ Proxy config: ${serveOptions.proxyConfig}`);
+                for (const route of Object.keys(proxyConfig))
+                {
+                    console.log(`      ${route} -> ${proxyConfig[route].target}`);
+                }
+            }
+        }
 
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
@@ -678,12 +683,26 @@ Examples:
         if (target.styles && target.styles.length > 0)
         {
             const styleContents: string[] = [];
-            for (const styleGlob of target.styles)
+            for (const stylePath of target.styles)
             {
-                const styleFiles = this.findFiles(srcDir, [styleGlob]);
-                for (const styleFile of styleFiles)
+                const fullPath = path.resolve(srcDir, stylePath);
+                if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile())
                 {
-                    styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                    console.log(`   ✓ Style: ${stylePath}`);
+                    styleContents.push(fs.readFileSync(fullPath, 'utf-8'));
+                }
+                else
+                {
+                    const styleFiles = this.findFiles(srcDir, [stylePath]);
+                    if (styleFiles.length === 0)
+                    {
+                        console.warn(`   ⚠ Style not found: ${fullPath}`);
+                    }
+                    for (const styleFile of styleFiles)
+                    {
+                        console.log(`   ✓ Style: ${path.relative(srcDir, styleFile)}`);
+                        styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                    }
                 }
             }
             if (styleContents.length > 0)
@@ -713,29 +732,14 @@ Examples:
 
         if (target.assets)
         {
-            const assetFiles = this.findFiles(srcDir, target.assets);
-            for (const filePath of assetFiles)
-            {
-                if (filePath.endsWith('.component.ts')) continue;
-                if (filePath.endsWith('.component.html')) continue;
-                if (filePath.endsWith('.component.css')) continue;
-                if (target.indexHtml && filePath.endsWith(target.indexHtml)) continue;
-                if (filePath.endsWith('.ts')) continue;
-
-                const relativePath = path.relative(srcDir, filePath);
-                const outPath = path.join(outDir, relativePath);
-
-                const outFileDir = path.dirname(outPath);
-                if (!fs.existsSync(outFileDir))
-                {
-                    fs.mkdirSync(outFileDir, { recursive: true });
-                }
-
-                fs.copyFileSync(filePath, outPath);
-            }
+            this.copyAssetsForServe(target.assets, projectRoot, srcDir, outDir);
         }
 
         console.log(`🚀 Starting dev server for '${target.name}'...`);
+
+        const tsconfigRaw = target.tsConfigPath
+            ? fs.readFileSync(path.resolve(projectRoot, target.tsConfigPath), 'utf-8')
+            : '{}';
 
         const ctx = await esbuild.context({
             entryPoints: [entryPoint],
@@ -757,25 +761,53 @@ Examples:
                     production: false
                 })
             ],
-            logLevel: 'info'
+            logLevel: 'info',
+            tsconfigRaw
         });
 
         await ctx.watch();
         console.log('   Watching for changes...');
 
-        const { hosts, port: actualPort } = await ctx.serve({
-            servedir: outDir,
-            port,
-            host
-        });
+        if (proxyConfig)
+        {
+            await ctx.serve({
+                servedir: outDir,
+                port: esbuildPort,
+                host: '127.0.0.1'
+            });
 
-        console.log(`   Server running at http://${hosts[0]}:${actualPort}`);
-        console.log('   Press Ctrl+C to stop\n');
+            const devServer = new DevServer({
+                port,
+                host,
+                esbuildPort,
+                esbuildHost: '127.0.0.1',
+                proxyConfig
+            });
+
+            await devServer.start();
+            console.log(`   Server running at http://${host}:${port}`);
+            console.log('   Press Ctrl+C to stop\n');
+        }
+        else
+        {
+            const { hosts, port: actualPort } = await ctx.serve({
+                servedir: outDir,
+                port,
+                host
+            });
+
+            console.log(`   Server running at http://${hosts[0]}:${actualPort}`);
+            console.log('   Press Ctrl+C to stop\n');
+        }
     }
 
     private generateEntryPoint(srcDir: string, componentPatterns: string[]): string
     {
         const componentFiles = this.findFiles(srcDir, componentPatterns);
+        for (const f of componentFiles)
+        {
+            console.log(`   ✓ Component: ${path.relative(srcDir, f)}`);
+        }
         const importDecls = componentFiles.map(f =>
         {
             const relativePath = './' + path.relative(srcDir, f)
@@ -807,7 +839,7 @@ Examples:
                 else if (entry.isFile())
                 {
                     const relativePath = path.relative(dir, fullPath);
-                    if (this.matchesPatterns(relativePath, patterns))
+                    if (this.matchesPatterns(relativePath, patterns, dir))
                     {
                         files.push(fullPath);
                     }
@@ -819,11 +851,21 @@ Examples:
         return files;
     }
 
-    private matchesPatterns(filePath: string, patterns: string[]): boolean
+    private matchesPatterns(filePath: string, patterns: string[], baseDir: string): boolean
     {
         for (const pattern of patterns)
         {
-            if (this.matchGlob(filePath, pattern))
+            const patternPath = path.join(baseDir, pattern);
+            if (fs.existsSync(patternPath) && fs.statSync(patternPath).isDirectory())
+            {
+                const normalizedFile = filePath.replace(/\\/g, '/');
+                const normalizedPattern = pattern.replace(/\\/g, '/');
+                if (normalizedFile.startsWith(normalizedPattern + '/') || normalizedFile === normalizedPattern)
+                {
+                    return true;
+                }
+            }
+            else if (this.matchGlob(filePath, pattern))
             {
                 return true;
             }
@@ -836,6 +878,167 @@ Examples:
         const normalizedPath = filePath.replace(/\\/g, '/');
         const isMatch: (path: string) => boolean = picomatch(pattern, { dot: false });
         return isMatch(normalizedPath);
+    }
+
+    private async copyAssets(
+        assets: string[],
+        projectRoot: string,
+        srcDir: string,
+        outDir: string
+    ): Promise<void>
+    {
+        const compiler = new ComponentCompiler();
+
+        for (const asset of assets)
+        {
+            const assetPath = path.resolve(srcDir, asset);
+
+            if (fs.existsSync(assetPath) && fs.statSync(assetPath).isDirectory())
+            {
+                const dirName = path.basename(assetPath);
+                const targetDir = path.join(outDir, dirName);
+                await this.copyDirectoryRecursive(assetPath, targetDir, compiler);
+                console.log(`   ✓ Copied directory ${dirName}/`);
+            }
+            else
+            {
+                const files = this.findFiles(srcDir, [asset]);
+                for (const filePath of files)
+                {
+                    if (filePath.endsWith('.component.ts')) continue;
+                    if (filePath.endsWith('.component.html')) continue;
+                    if (filePath.endsWith('.component.css')) continue;
+
+                    const relativePath = path.relative(srcDir, filePath);
+                    const outPath = path.join(outDir, relativePath);
+
+                    const outFileDir = path.dirname(outPath);
+                    if (!fs.existsSync(outFileDir))
+                    {
+                        fs.mkdirSync(outFileDir, { recursive: true });
+                    }
+
+                    if (filePath.endsWith('.ts'))
+                    {
+                        let content = fs.readFileSync(filePath, 'utf-8');
+                        content = await compiler.stripTypeScript(content, filePath);
+                        fs.writeFileSync(outPath.replace('.ts', '.js'), content);
+                        console.log(`   ✓ Processed ${relativePath}`);
+                    }
+                    else
+                    {
+                        fs.copyFileSync(filePath, outPath);
+                        console.log(`   ✓ Copied ${relativePath}`);
+                    }
+                }
+            }
+        }
+    }
+
+    private copyAssetsForServe(
+        assets: string[],
+        projectRoot: string,
+        srcDir: string,
+        outDir: string
+    ): void
+    {
+        for (const asset of assets)
+        {
+            const assetPath = path.resolve(srcDir, asset);
+
+            if (fs.existsSync(assetPath) && fs.statSync(assetPath).isDirectory())
+            {
+                const dirName = path.basename(assetPath);
+                const targetDir = path.join(outDir, dirName);
+                this.copyDirectoryRecursiveSync(assetPath, targetDir);
+            }
+            else
+            {
+                const files = this.findFiles(srcDir, [asset]);
+                for (const filePath of files)
+                {
+                    if (filePath.endsWith('.component.ts')) continue;
+                    if (filePath.endsWith('.component.html')) continue;
+                    if (filePath.endsWith('.component.css')) continue;
+                    if (filePath.endsWith('.ts')) continue;
+
+                    const relativePath = path.relative(srcDir, filePath);
+                    const outPath = path.join(outDir, relativePath);
+
+                    const outFileDir = path.dirname(outPath);
+                    if (!fs.existsSync(outFileDir))
+                    {
+                        fs.mkdirSync(outFileDir, { recursive: true });
+                    }
+
+                    fs.copyFileSync(filePath, outPath);
+                }
+            }
+        }
+    }
+
+    private async copyDirectoryRecursive(
+        srcPath: string,
+        destPath: string,
+        compiler: ComponentCompiler
+    ): Promise<void>
+    {
+        if (!fs.existsSync(destPath))
+        {
+            fs.mkdirSync(destPath, { recursive: true });
+        }
+
+        const entries = fs.readdirSync(srcPath, { withFileTypes: true });
+        for (const entry of entries)
+        {
+            const srcEntry = path.join(srcPath, entry.name);
+            const destEntry = path.join(destPath, entry.name);
+
+            if (entry.isDirectory())
+            {
+                await this.copyDirectoryRecursive(srcEntry, destEntry, compiler);
+            }
+            else if (entry.isFile())
+            {
+                if (srcEntry.endsWith('.ts'))
+                {
+                    let content = fs.readFileSync(srcEntry, 'utf-8');
+                    content = await compiler.stripTypeScript(content, srcEntry);
+                    fs.writeFileSync(destEntry.replace('.ts', '.js'), content);
+                }
+                else
+                {
+                    fs.copyFileSync(srcEntry, destEntry);
+                }
+            }
+        }
+    }
+
+    private copyDirectoryRecursiveSync(srcPath: string, destPath: string): void
+    {
+        if (!fs.existsSync(destPath))
+        {
+            fs.mkdirSync(destPath, { recursive: true });
+        }
+
+        const entries = fs.readdirSync(srcPath, { withFileTypes: true });
+        for (const entry of entries)
+        {
+            const srcEntry = path.join(srcPath, entry.name);
+            const destEntry = path.join(destPath, entry.name);
+
+            if (entry.isDirectory())
+            {
+                this.copyDirectoryRecursiveSync(srcEntry, destEntry);
+            }
+            else if (entry.isFile())
+            {
+                if (!srcEntry.endsWith('.ts'))
+                {
+                    fs.copyFileSync(srcEntry, destEntry);
+                }
+            }
+        }
     }
 
     public static parseArgs(argv: string[]): { options: CliOptions; args: string[] }

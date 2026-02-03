@@ -390,8 +390,6 @@ export abstract class FluffElement extends FluffBase
             if (closestComponent && closestComponent !== el) continue;
             if (el instanceof HTMLElement)
             {
-                const tagName = el.tagName.toLowerCase();
-                if (customElements.get(tagName)) continue;
                 this.__processBindingsOnElement(el, scope);
             }
         }

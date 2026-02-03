@@ -160,6 +160,8 @@ export class Generator
                     name,
                     srcDir: 'src',
                     outDir: 'dist',
+                    componentsDir: 'app',
+                    tsConfigPath: 'tsconfig.json',
                     entryPoint: 'main.ts',
                     indexHtml: 'index.html',
                     components: ['**/*.component.ts'],

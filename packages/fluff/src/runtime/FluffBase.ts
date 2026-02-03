@@ -136,6 +136,10 @@ export abstract class FluffBase extends HTMLElement
                     this.__baseSubscriptions.push(sub);
                 }
             }
+            else if (!(propName in scope.locals) && !(propName in scope.host))
+            {
+                console.warn(`Binding dependency "${propName}" not found on component ${scope.host.constructor.name}`);
+            }
         }
     }
 
@@ -231,6 +235,10 @@ export abstract class FluffBase extends HTMLElement
                     if (el instanceof FluffBase)
                     {
                         update();
+                    }
+                    else
+                    {
+                        console.warn(`Element <${tagName}> is not a FluffBase instance after whenDefined - binding for "${binding.n}" skipped`);
                     }
                 });
             }
