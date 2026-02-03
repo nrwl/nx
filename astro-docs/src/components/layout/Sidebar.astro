@@ -64,6 +64,14 @@ const anyActive = tabs.some((t) => t.active)
     </div>
 </div>
 
+<script>
+  // Enable sidebar expand/collapse animations after first paint so that
+  // groups that are already open on page load don't animate from closed.
+  requestAnimationFrame(() => {
+    document.querySelector('.sidebar-wrapper')?.classList.add('sidebar-animate');
+  });
+</script>
+
 <style>
     .sidebar-wrapper :global(a) {
         color: var(--sl-color-gray-3);
@@ -86,7 +94,11 @@ const anyActive = tabs.some((t) => t.active)
         font-weight: var(--font-weight-medium);
     }
 
+    .sidebar-wrapper :global(ul ul summary) {
+        font-weight: var(--font-weight-medium);
+    }
+
     .sidebar-wrapper :global(details[open] summary .group-label) {
-        color: var(--sl-color-gray-2);
+        color: var(--sl-color-text-accent);
     }
 </style>

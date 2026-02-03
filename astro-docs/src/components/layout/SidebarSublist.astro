@@ -3,43 +3,43 @@
  * This is a modified version of the SidebarSublist component from Starlight with support for icons.
  * https://github.com/withastro/starlight/blob/46524ac/packages/starlight/components/SidebarSublist.astro -->
  */
-import { Badge, Icon } from '@astrojs/starlight/components'
+import { Badge, Icon } from '@astrojs/starlight/components';
 
 export interface SidebarLink {
-  type: 'link'
-  label: string
-  href: string
-  isCurrent: boolean
-  badge: any
-  attrs: any
+  type: 'link';
+  label: string;
+  href: string;
+  isCurrent: boolean;
+  badge: any;
+  attrs: any;
 }
 
 export interface SidebarGroup {
-  type: 'group'
-  label: string
-  entries: (SidebarLink | SidebarGroup)[]
-  collapsed: boolean
-  badge: any
-  attrs?: any
+  type: 'group';
+  label: string;
+  entries: (SidebarLink | SidebarGroup)[];
+  collapsed: boolean;
+  badge: any;
+  attrs?: any;
 }
 
-export type SidebarEntry = SidebarLink | SidebarGroup
+export type SidebarEntry = SidebarLink | SidebarGroup;
 
 interface Props {
-  sublist: SidebarEntry[]
+  sublist: SidebarEntry[];
 
-  nested?: boolean
+  nested?: boolean;
 }
 
-const { sublist, nested } = Astro.props
+const { sublist, nested } = Astro.props;
 
 // Copied from https://github.com/withastro/starlight/blob/46524ac/packages/starlight/utils/navigation.ts#L447
 function flattenSidebar(entries: SidebarEntry[]): SidebarEntry[] {
   return entries.reduce<SidebarEntry[]>((acc, entry) => {
-    if (entry.type === 'group') acc.push(...flattenSidebar(entry.entries))
-    else acc.push(entry)
-    return acc
-  }, [])
+    if (entry.type === 'group') acc.push(...flattenSidebar(entry.entries));
+    else acc.push(entry);
+    return acc;
+  }, []);
 }
 
 function getIconPath(iconName: string | undefined): string | null {
@@ -53,7 +53,7 @@ function getIconPath(iconName: string | undefined): string | null {
     sublist.map((entry) => {
       const icon = getIconPath(entry.attrs?.['data-icon']);
       return (
-        <li class={icon ? 'p-0 border-none' : ''}>
+        <li class={icon ? 'border-none p-0' : ''}>
           {entry.type === 'link' ? (
             <a
               href={entry.href}
@@ -66,35 +66,47 @@ function getIconPath(iconName: string | undefined): string | null {
                   aria-hidden="true"
                   src={icon}
                   alt=""
-                  class="sidebar-icon w-4 h-4 dark:invert"
+                  class="sidebar-icon h-4 w-4 dark:invert"
                 />
               )}
               <span>{entry.label}</span>
-              {entry.badge &&
-                <Badge variant={entry.badge.variant} class={entry.badge.class}
-                       text={entry.badge.text}/>}
+              {entry.badge && (
+                <Badge
+                  variant={entry.badge.variant}
+                  class={entry.badge.class}
+                  text={entry.badge.text}
+                />
+              )}
             </a>
           ) : (
             <details
-              open={flattenSidebar(entry.entries).some((i: any) => i.isCurrent) || !entry.collapsed}>
-              <summary class={icon ? 'pl-0 py-2' : ''}>
+              open={
+                flattenSidebar(entry.entries).some((i: any) => i.isCurrent) ||
+                !entry.collapsed
+              }
+            >
+              <summary class={icon ? 'py-2 pl-0' : ''}>
                 <div class="group-label">
                   {icon && (
                     <img
                       aria-hidden="true"
                       src={icon}
                       alt=""
-                      class="sidebar-icon w-4 h-4 dark:invert"
+                      class="sidebar-icon h-4 w-4 dark:invert"
                     />
                   )}
                   <span class="large">{entry.label}</span>
                   {entry.badge && (
-                    <Badge variant={entry.badge.variant} class={entry.badge.class} text={entry.badge.text}/>
+                    <Badge
+                      variant={entry.badge.variant}
+                      class={entry.badge.class}
+                      text={entry.badge.text}
+                    />
                   )}
                 </div>
-                <Icon name="right-caret" class="caret" size="1.25rem"/>
+                <Icon name="right-caret" class="caret" size="1.25rem" />
               </summary>
-              <Astro.self sublist={entry.entries} nested/>
+              <Astro.self sublist={entry.entries} nested />
             </details>
           )}
         </li>
@@ -128,6 +140,10 @@ function getIconPath(iconName: string | undefined): string | null {
       color: var(--sl-color-white);
     }
 
+    .top-level {
+      padding-top: 0.75rem;
+    }
+
     .top-level > li + li {
       margin-top: 0.5rem;
     }
@@ -140,6 +156,17 @@ function getIconPath(iconName: string | undefined): string | null {
       line-height: 1.4;
       cursor: pointer;
       user-select: none;
+      font-weight: 600;
+      color: var(--sl-color-white);
+      border-radius: 0.25rem;
+    }
+
+    summary:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--sl-color-gray-5) 40%,
+        transparent
+      );
     }
 
     summary::marker,
@@ -148,8 +175,16 @@ function getIconPath(iconName: string | undefined): string | null {
     }
 
     .caret {
-      transition: transform 0.2s ease-in-out;
+      transition:
+        transform 0.2s ease-in-out,
+        color 0.15s ease;
       flex-shrink: 0;
+      color: var(--sl-color-gray-4);
+    }
+
+    .caret:hover,
+    summary:hover .caret {
+      color: var(--sl-color-gray-2);
     }
 
     :global([dir='rtl']) .caret {
@@ -158,6 +193,11 @@ function getIconPath(iconName: string | undefined): string | null {
 
     [open] > summary .caret {
       transform: rotateZ(90deg);
+      color: var(--sl-color-text-accent);
+    }
+
+    [open] > summary {
+      color: var(--sl-color-text-accent);
     }
 
     a {
@@ -190,6 +230,45 @@ function getIconPath(iconName: string | undefined): string | null {
     /* Deep nesting compactness for Reference generators/executors */
     ul ul ul a {
       padding-block: 0.15em;
+    }
+
+    /* Deep nesting relief — reduce cramping at 3-4 levels */
+    ul ul ul li {
+      margin-inline-start: 0.25rem;
+      padding-inline-start: 0.25rem;
+    }
+
+    ul ul ul ul li {
+      margin-inline-start: 0.2rem;
+      padding-inline-start: 0.2rem;
+    }
+
+    /* Smooth expand/collapse — progressive enhancement (Chrome 129+, Firefox 131+, Safari 17.5+).
+       Gated behind .sidebar-animate (added by JS after first paint) to prevent
+       already-open groups from animating on page load. */
+    details {
+      interpolate-size: allow-keywords;
+    }
+
+    :global(.sidebar-animate) details > ul {
+      overflow: hidden;
+      height: 0;
+      opacity: 0;
+      transition:
+        height 0.2s ease,
+        opacity 0.15s ease;
+    }
+
+    :global(.sidebar-animate) details[open] > ul {
+      height: auto;
+      opacity: 1;
+    }
+
+    @starting-style {
+      :global(.sidebar-animate) details[open] > ul {
+        height: 0;
+        opacity: 0;
+      }
     }
 
     @media (min-width: 50rem) {

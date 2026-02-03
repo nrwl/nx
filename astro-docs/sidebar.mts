@@ -393,81 +393,121 @@ const technologiesGroups: SidebarItems = [
     label: 'Technologies & Tools',
     collapsed: true,
     items: [
-      { label: 'TypeScript', link: 'technologies/typescript/introduction' },
-      { label: 'Angular', link: 'technologies/angular/introduction' },
       {
-        label: 'Angular Rspack',
-        link: 'technologies/angular/angular-rspack/introduction',
+        label: 'Frameworks & Libraries',
+        collapsed: false,
+        items: [
+          {
+            label: 'TypeScript',
+            link: 'technologies/typescript/introduction',
+          },
+          { label: 'Angular', link: 'technologies/angular/introduction' },
+          {
+            label: 'Angular Rspack',
+            link: 'technologies/angular/angular-rspack/introduction',
+          },
+          {
+            label: 'Angular Rsbuild',
+            link: 'technologies/angular/angular-rsbuild/create-config',
+          },
+          { label: 'React', link: 'technologies/react/introduction' },
+          {
+            label: 'Next.js',
+            link: 'technologies/react/next/introduction',
+          },
+          {
+            label: 'Remix',
+            link: 'technologies/react/remix/introduction',
+          },
+          {
+            label: 'React Native',
+            link: 'technologies/react/react-native/introduction',
+          },
+          { label: 'Expo', link: 'technologies/react/expo/introduction' },
+          { label: 'Vue', link: 'technologies/vue/introduction' },
+          { label: 'Nuxt', link: 'technologies/vue/nuxt/introduction' },
+          { label: 'Node.js', link: 'technologies/node/introduction' },
+          {
+            label: 'Express',
+            link: 'technologies/node/express/introduction',
+          },
+          { label: 'Nest', link: 'technologies/node/nest/introduction' },
+          { label: 'Java', link: 'technologies/java/introduction' },
+          {
+            label: 'Gradle',
+            link: 'technologies/java/gradle/introduction',
+          },
+          {
+            label: 'Maven',
+            link: 'technologies/java/maven/introduction',
+          },
+          { label: '.NET', link: 'technologies/dotnet/introduction' },
+          {
+            label: 'Module Federation',
+            link: 'technologies/module-federation/introduction',
+          },
+          { label: 'ESLint', link: 'technologies/eslint/introduction' },
+        ],
       },
       {
-        label: 'Angular Rsbuild',
-        link: 'technologies/angular/angular-rsbuild/create-config',
-      },
-      { label: 'React', link: 'technologies/react/introduction' },
-      { label: 'Next.js', link: 'technologies/react/next/introduction' },
-      { label: 'Remix', link: 'technologies/react/remix/introduction' },
-      {
-        label: 'React Native',
-        link: 'technologies/react/react-native/introduction',
-      },
-      { label: 'Expo', link: 'technologies/react/expo/introduction' },
-      { label: 'Vue', link: 'technologies/vue/introduction' },
-      { label: 'Nuxt', link: 'technologies/vue/nuxt/introduction' },
-      { label: 'Node.js', link: 'technologies/node/introduction' },
-      { label: 'Express', link: 'technologies/node/express/introduction' },
-      { label: 'Nest', link: 'technologies/node/nest/introduction' },
-      { label: 'Java', link: 'technologies/java/introduction' },
-      { label: 'Gradle', link: 'technologies/java/gradle/introduction' },
-      { label: 'Maven', link: 'technologies/java/maven/introduction' },
-      { label: '.NET', link: 'technologies/dotnet/introduction' },
-      {
-        label: 'Module Federation',
-        link: 'technologies/module-federation/introduction',
-      },
-      { label: 'ESLint', link: 'technologies/eslint/introduction' },
-      // Build Tools
-      {
-        label: 'Webpack',
-        link: 'technologies/build-tools/webpack/introduction',
-      },
-      { label: 'Vite', link: 'technologies/build-tools/vite/introduction' },
-      {
-        label: 'Rollup',
-        link: 'technologies/build-tools/rollup/introduction',
+        label: 'Build Tools',
+        collapsed: true,
+        items: [
+          {
+            label: 'Webpack',
+            link: 'technologies/build-tools/webpack/introduction',
+          },
+          {
+            label: 'Vite',
+            link: 'technologies/build-tools/vite/introduction',
+          },
+          {
+            label: 'Rollup',
+            link: 'technologies/build-tools/rollup/introduction',
+          },
+          {
+            label: 'ESBuild',
+            link: 'technologies/build-tools/esbuild/introduction',
+          },
+          {
+            label: 'Rspack',
+            link: 'technologies/build-tools/rspack/introduction',
+          },
+          {
+            label: 'Rsbuild',
+            link: 'technologies/build-tools/rsbuild/introduction',
+          },
+        ],
       },
       {
-        label: 'ESBuild',
-        link: 'technologies/build-tools/esbuild/introduction',
-      },
-      {
-        label: 'Rspack',
-        link: 'technologies/build-tools/rspack/introduction',
-      },
-      {
-        label: 'Rsbuild',
-        link: 'technologies/build-tools/rsbuild/introduction',
-      },
-      // Test Tools
-      {
-        label: 'Cypress',
-        link: 'technologies/test-tools/cypress/introduction',
-      },
-      {
-        label: 'Vitest',
-        link: 'technologies/test-tools/vitest/introduction',
-      },
-      { label: 'Jest', link: 'technologies/test-tools/jest/introduction' },
-      {
-        label: 'Playwright',
-        link: 'technologies/test-tools/playwright/introduction',
-      },
-      {
-        label: 'Storybook',
-        link: 'technologies/test-tools/storybook/introduction',
-      },
-      {
-        label: 'Detox',
-        link: 'technologies/test-tools/detox/introduction',
+        label: 'Test Tools',
+        collapsed: true,
+        items: [
+          {
+            label: 'Cypress',
+            link: 'technologies/test-tools/cypress/introduction',
+          },
+          {
+            label: 'Vitest',
+            link: 'technologies/test-tools/vitest/introduction',
+          },
+          {
+            label: 'Jest',
+            link: 'technologies/test-tools/jest/introduction',
+          },
+          {
+            label: 'Playwright',
+            link: 'technologies/test-tools/playwright/introduction',
+          },
+          {
+            label: 'Storybook',
+            link: 'technologies/test-tools/storybook/introduction',
+          },
+          {
+            label: 'Detox',
+            link: 'technologies/test-tools/detox/introduction',
+          },
+        ],
       },
       {
         label: 'Plugin Registry',

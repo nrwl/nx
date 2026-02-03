@@ -407,7 +407,11 @@ pre {
   .nx-tab-bar [role='tab'][aria-selected='true'] {
     border-left-color: var(--sl-color-text-accent);
     color: var(--sl-color-text-accent);
-    background-color: color-mix(in srgb, var(--sl-color-text-accent) 8%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--sl-color-text-accent) 8%,
+      transparent
+    );
     font-weight: var(--font-weight-semibold);
   }
 
