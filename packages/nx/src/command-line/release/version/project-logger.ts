@@ -1,17 +1,17 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { output } from '../../../utils/output';
 
 const colors = [
-  { instance: chalk.green, spinnerColor: 'green' },
-  { instance: chalk.greenBright, spinnerColor: 'green' },
-  { instance: chalk.red, spinnerColor: 'red' },
-  { instance: chalk.redBright, spinnerColor: 'red' },
-  { instance: chalk.cyan, spinnerColor: 'cyan' },
-  { instance: chalk.cyanBright, spinnerColor: 'cyan' },
-  { instance: chalk.yellow, spinnerColor: 'yellow' },
-  { instance: chalk.yellowBright, spinnerColor: 'yellow' },
-  { instance: chalk.magenta, spinnerColor: 'magenta' },
-  { instance: chalk.magentaBright, spinnerColor: 'magenta' },
+  { instance: pc.green, spinnerColor: 'green' },
+  { instance: pc.greenBright, spinnerColor: 'green' },
+  { instance: pc.red, spinnerColor: 'red' },
+  { instance: pc.redBright, spinnerColor: 'red' },
+  { instance: pc.cyan, spinnerColor: 'cyan' },
+  { instance: pc.cyanBright, spinnerColor: 'cyan' },
+  { instance: pc.yellow, spinnerColor: 'yellow' },
+  { instance: pc.yellowBright, spinnerColor: 'yellow' },
+  { instance: pc.magenta, spinnerColor: 'magenta' },
+  { instance: pc.magentaBright, spinnerColor: 'magenta' },
 ] as const;
 
 function getColor(projectName: string) {
@@ -41,12 +41,12 @@ export class ProjectLogger {
       return;
     }
     output.logSingleLine(
-      `Running release version for project: ${this.color.instance.bold(
-        this.projectName
+      `Running release version for project: ${pc.bold(
+        this.color.instance(this.projectName)
       )}`
     );
     this.logs.forEach((msg) => {
-      console.log(this.color.instance.bold(this.projectName) + ' ' + msg);
+      console.log(pc.bold(this.color.instance(this.projectName)) + ' ' + msg);
     });
     this.logs = [];
   }
