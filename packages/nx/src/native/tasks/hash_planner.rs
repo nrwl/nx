@@ -358,7 +358,7 @@ impl HashPlanner {
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
             .filter_map(|input| match input {
-                Input::FileSet(file_set) => Some(file_set),
+                Input::FileSet { fileset, .. } => Some(*fileset),
                 _ => None,
             })
             .partition(|file_set| {
