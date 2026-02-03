@@ -548,5 +548,10 @@
     "name": "@berenddeboer/nx-biome",
     "description": "A self-inferring Nx plugin for using biome to format and lint projects. Supports --batch",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-biome"
+  },
+  {
+    "name": "@0zd0/nx-oxfmt",
+    "description": "Nx plugin for oxfmt - the high-performance JavaScript/TypeScript formatter",
+    "url": "https://github.com/0zd0/nx-oxfmt"
   }
 ]
