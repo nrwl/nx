@@ -3,6 +3,7 @@
   "description": "Smart Monorepos · Fast Builds",
   "homepage": "https://nx.dev",
   "private": true,
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "build": "nx run-many --target build --parallel 8 --exclude nx-dev,tools-documentation-create-embeddings,nx-dev-util-ai",
     "commit": "czg",
@@ -407,19 +408,6 @@
     "tslib": "catalog:typescript",
     "webpack-cli": "^5.1.4"
   },
-  "resolutions": {
-    "minimist": "^1.2.6",
-    "underscore": "^1.12.1"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "nx"
-    ],
-    "patchedDependencies": {
-      "@astrojs/starlight": "patches/@astrojs__starlight.patch"
-    }
-  },
   "nx": {
     "includedScripts": [
       "lint-pnpm-lock",
@@ -431,6 +419,5 @@
       "check-lock-files",
       "check-codeowners"
     ]
-  },
-  "packageManager": "pnpm@10.11.1"
+  }
 }
