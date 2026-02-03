@@ -9,9 +9,10 @@ import {
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isCI } from '../ci/is-ci';
-import type { CompletionMessageKey } from './messages';
+import type { BannerVariant, CompletionMessageKey } from './messages';
 
-// TODO(jack): Remove flow variant logic after A/B testing is complete
+// Flow variant controls both tracking and banner display (CLOUD-4147)
+// Variants: 0 = plain link, 1-3 = decorative banners
 const FLOW_VARIANT_CACHE_FILE = join(tmpdir(), 'nx-cnw-flow-variant');
 const FLOW_VARIANT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
@@ -32,7 +33,7 @@ function readCachedFlowVariant(): string | null {
       return null;
     }
     const value = readFileSync(FLOW_VARIANT_CACHE_FILE, 'utf-8').trim();
-    return value === '0' || value === '1' || value === '2' ? value : null;
+    return ['0', '1', '2', '3'].includes(value) ? value : null;
   } catch {
     return null;
   }
@@ -48,9 +49,10 @@ function writeCachedFlowVariant(variant: string): void {
 
 function selectRandomVariant(): string {
   const rand = Math.random();
-  if (rand < 0.33) return '0';
-  if (rand < 0.66) return '1';
-  return '2';
+  if (rand < 0.25) return '0';
+  if (rand < 0.5) return '1';
+  if (rand < 0.75) return '2';
+  return '3';
 }
 
 /**
@@ -89,30 +91,68 @@ export function getFlowVariant(): string {
 }
 
 /**
- * Returns the completion message key based on the current flow variant.
- * - Variant 0: 'platform-setup' (shows "Try the full Nx platform?" prompt)
- * - Variant 1: 'cache-setup' (shows "Would you like remote caching..." prompt)
- * - Variant 2: 'platform-promo' (skips prompt, auto-connects, shows promo message)
+ * Returns the completion message key.
+ * Now locked to 'platform-setup' after concluding the prompt A/B test.
  */
 export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
-  const variant = getFlowVariant();
-  if (variant === '1') {
-    return 'cache-setup';
-  }
-  if (variant === '2') {
-    return 'platform-promo';
-  }
   return 'platform-setup';
 }
 
 /**
  * Returns whether the cloud prompt should be shown.
- * Variants 0 and 1 show prompts (with different copy).
- * Variant 2 skips the prompt and auto-connects.
+ * Now always returns true since we've locked in the prompt flow.
  */
 export function shouldShowCloudPrompt(): boolean {
-  const variant = getFlowVariant();
-  return variant !== '2';
+  return true;
+}
+
+// ============================================================================
+// Banner Variant A/B Testing (CLOUD-4147)
+// ============================================================================
+
+/**
+ * Standard Nx Cloud URLs that should participate in banner A/B testing.
+ * Enterprise URLs (any other URL) always get the plain link (variant 0).
+ */
+const STANDARD_NX_CLOUD_HOSTS = [
+  'cloud.nx.app',
+  'eu.nx.app',
+  'staging.nx.app',
+  'snapshot.nx.app',
+];
+
+/**
+ * Check if the given cloud URL is an enterprise URL.
+ * Enterprise URLs are anything other than cloud.nx.app, eu.nx.app, staging.nx.app, or snapshot.nx.app.
+ */
+export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
+  if (!cloudUrl) return false;
+  try {
+    const url = new URL(cloudUrl);
+    return !STANDARD_NX_CLOUD_HOSTS.includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get the banner variant for completion messages.
+ * Uses NX_CNW_FLOW_VARIANT to determine which banner to show.
+ * - Variant 0: Plain link (control) - always used for enterprise URLs
+ * - Variant 1: "Try the full Nx platform" banner
+ * - Variant 2: "Unlock 70% faster CI" banner
+ * - Variant 3: "Reclaim your team's focus" banner
+ *
+ * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
+ */
+export function getBannerVariant(cloudUrl?: string): BannerVariant {
+  // Enterprise URLs always get plain link (variant 0)
+  if (isEnterpriseCloudUrl(cloudUrl)) {
+    return '0';
+  }
+
+  // Use the flow variant (which handles docs generation, env var, and caching)
+  return getFlowVariant() as BannerVariant;
 }
 
 export const NxCloudChoices = [
@@ -150,24 +190,21 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
+   * Locked to "full platform" messaging (CLOUD-4147)
    */
   setupNxCloud: [
     {
-      code: 'enable-caching2',
-      message: `Would you like remote caching to make your build faster?`,
+      code: 'cloud-v2-full-platform-visit',
+      message: 'Try the full Nx platform?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        {
-          value: 'skip',
-          name: 'No - I would not like remote caching',
-        },
+        { value: 'skip', name: 'Skip' },
       ],
       footer:
-        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
-      hint: `\n(can be disabled any time).`,
+        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
       fallback: undefined,
-      completionMessage: 'cache-setup',
+      completionMessage: 'platform-setup',
     },
   ],
   /**

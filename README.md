@@ -1,7 +1,7 @@
 <p style="text-align: center;">
  <picture>
  <source media="(prefers-color-scheme: dark)" srcset="./images/nx-dark.svg">
- <img alt="Nx - Smart Repos · Fast Builds" src="./images/nx-light.svg" width="100%">
+ <img alt="Nx - Smart Monorepos · Fast Builds" src="./images/nx-light.svg" width="100%">
  </picture>
 </p>
 
@@ -19,7 +19,7 @@
 
 <hr>
 
-# Smart Repos · Fast Builds
+# Smart Monorepos · Fast Builds
 
 Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
@@ -58,7 +58,7 @@ Learn more in the [Nx CI docs &raquo;](https://nx.dev/ci/getting-started/intro?u
 - [Our Twitter/X](https://x.com/nxdevtools)
 
 <p style="text-align: center;"><a href="https://www.youtube.com/@nxdevtools/videos" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart Repos · Fast Builds"></a></p>
+width="100%" alt="Nx - Smart Monorepos · Fast Builds"></a></p>
 
 ## Want to help?
 

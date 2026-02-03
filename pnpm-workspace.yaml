@@ -94,7 +94,7 @@ catalogs:
     tslib: '^2.3.0'
     typescript: '~5.9.2'
   swc:
-    '@swc/core': '^1.15.5'
-    '@swc/helpers': '^0.5.18'
-    '@swc/cli': '^0.7.10'
-    '@swc-node/register': '^1.11.1'
+    '@swc/core': '1.15.8'
+    '@swc/helpers': '0.5.18'
+    '@swc/cli': '0.7.10'
+    '@swc-node/register': '1.11.1'

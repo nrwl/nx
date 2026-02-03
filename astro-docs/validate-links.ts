@@ -11,7 +11,6 @@ const ignoredLinks = [
   '/docs/reference/nx/executors',
   'NxPowerpack-Trial-v1.1.pdf',
   '/blog/',
-  '/launch-nx',
   '/contact',
 ];
 

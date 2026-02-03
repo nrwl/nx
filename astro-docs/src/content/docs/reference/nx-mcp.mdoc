@@ -9,22 +9,39 @@ filter: 'type:References'
 
 The Nx MCP server is a [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that gives LLMs deep access to your monorepo's structure: project relationships, file mappings, runnable tasks, ownership info, tech stacks, Nx generators, and Nx documentation.
 
+{% aside type="tip" title="Quick Setup" %}
+To configure your Nx workspace for AI agents (MCP, skills, and more), run `npx nx configure-ai-agents`. See the [AI Integration guide](/docs/getting-started/ai-setup) for details.
+{% /aside %}
+
 For an overview of how Nx enhances AI assistants and powerful use cases, see the [Enhance Your LLM](/docs/features/enhance-ai) guide.
 
 ## Installation
 
-There are a few ways to setup the Nx MCP server
+There are a few ways to setup the Nx MCP server.
 
-{% aside type="note" title="Top level command" %}
-Starting with Nx v21.4.0, you can run the MCP server directly using the `nx mcp` command.
-You can still use the standalone `nx-mcp` package if you prefer.
-All args are passed through to the underlying MCP server.
-{% /aside %}
+### via .mcp.json
 
-### via mcp.json
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
 
 ```json
-// mcp.json
+// .mcp.json
+{
+  "servers": {
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx", "mcp"]
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
+
+```json
+// .mcp.json
 {
   "servers": {
     "nx-mcp": {
@@ -36,25 +53,54 @@ All args are passed through to the underlying MCP server.
 }
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 ### Via Nx Console Extension
 
-If you're using Cursor, VS Code, or JetBrains IDEs, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
+If you're using Cursor or VS Code, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
 
 ## Client-Specific Setup
 
-> If your preferred client is not listed, then configure your client to run the `npx nx-mcp` command to start up the Nx MCP server.
+> If your preferred client is not listed, configure your client to run `npx nx mcp` (Nx >= 21.4) or `npx nx-mcp@latest` (older versions) to start the Nx MCP server.
 
 ### Claude Code
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+claude mcp add nx-mcp npx nx mcp
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```shell
 claude mcp add nx-mcp npx nx-mcp@latest
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 ### VS Code
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+code --add-mcp '{"name":"nx-mcp","command":"npx","args":["nx","mcp"]}'
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```shell
 code --add-mcp '{"name":"nx-mcp","command":"npx","args":["nx-mcp"]}'
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 Alternatively, configure it in your VS Code settings or use the Nx Console extension for automatic setup.
 
@@ -76,7 +122,7 @@ If you miss the notification, run the `Nx: Setup MCP Server` command from the co
 
 ## Command-Line Options
 
-The `nx-mcp` command accepts the following options:
+The `nx mcp` command (or `npx nx-mcp` for older versions) accepts the following options:
 
 | Option                  | Alias | Description                                                                                                       |
 | ----------------------- | ----- | ----------------------------------------------------------------------------------------------------------------- |
@@ -92,15 +138,48 @@ The `nx-mcp` command accepts the following options:
 
 If you want to host the server instead of communicating via `stdio`, use the `--transport` and `--port` flags:
 
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+npx nx mcp --transport sse --port 9921
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
+
 ```shell
 npx nx-mcp@latest --transport sse --port 9921
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 The HTTP transport supports multiple concurrent connections, allowing different clients to connect simultaneously with independent sessions.
 
 ### Filtering Tools
 
 You can limit which tools are available using the `--tools` option with glob patterns:
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+# Enable all tools (default)
+npx nx mcp --tools "*"
+
+# Disable specific tools
+npx nx mcp --tools "*" "!nx_docs"
+
+# Enable only cloud analytics tools
+npx nx mcp --tools "cloud_*"
+
+# Enable workspace tools only
+npx nx mcp --tools "nx_workspace" "nx_project_details" "nx_docs"
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
 
 ```shell
 # Enable all tools (default)
@@ -115,6 +194,9 @@ npx nx-mcp@latest --tools "cloud_*"
 # Enable workspace tools only
 npx nx-mcp@latest --tools "nx_workspace" "nx_project_details" "nx_docs"
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 This is useful when you want to restrict the LLM's capabilities or reduce noise in the tool list.
 
@@ -151,9 +233,18 @@ This is useful when you want to restrict the LLM's capabilities or reduce noise 
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `nx_visualize_graph` | Opens interactive project or task graph visualizations (requires a running IDE instance with Nx Console) |
 
+### Nx Cloud CI Tools
+
+These tools enable AI agents to interact with CI pipelines and self-healing capabilities:
+
+| Tool                      | Description                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci_information`          | Retrieves CI pipeline execution information from Nx Cloud for the current branch. Returns pipeline status, failed tasks, and self-healing status. |
+| `update_self_healing_fix` | Apply or reject a self-healing CI fix from Nx Cloud. Records the decision on the suggested fix.                                                   |
+
 ### Nx Cloud Analytics Tools
 
-These tools are only available when connected to an Nx Cloud-enabled workspace. They provide analytics and insights into your CI/CD data:
+These tools provide analytics and insights into your CI/CD data:
 
 | Tool                                         | Description                                                                                      |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -164,8 +255,8 @@ These tools are only available when connected to an Nx Cloud-enabled workspace. 
 | `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
 | `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
 
-{% aside type="note" title="Limited Tools Without Workspace" %}
-When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available.
+{% aside type="note" title="Tool Availability" %}
+When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
 {% /aside %}
 
 ## Available Resources
@@ -246,3 +337,18 @@ Using the Nx Cloud tools, the AI can:
 1. Access detailed information about the failed build
 2. Retrieve terminal output from failed tasks
 3. Understand what changed and suggest fixes
+
+### Autonomous CI Monitoring
+
+With the `ci_information` and `update_self_healing_fix` tools, AI agents can monitor CI pipelines and interact with self-healing. For a ready-to-use implementation, see the [CI monitoring skill](/docs/features/enhance-ai#self-healing-ci-integration) in Claude Code:
+
+```text
+Monitor CI and fix any failures
+```
+
+The AI agent can:
+
+1. Poll CI pipeline status via `ci_information`
+2. Receive failure context and self-healing suggestions
+3. Apply verified fixes via `update_self_healing_fix`
+4. Continue iterating until CI passes

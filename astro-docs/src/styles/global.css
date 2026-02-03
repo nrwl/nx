@@ -408,6 +408,13 @@ h6:hover .anchor-link {
   border-inline-start: none;
 }
 
+@media (min-width: 84rem) {
+  .right-sidebar-panel {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
 .content-panel + .content-panel {
   border-top: 0;
 }
@@ -423,4 +430,25 @@ table code {
 [role='tablist'] {
   font-size: var(--text-sm);
   align-items: end; /* Fix tab alignment */
+}
+
+/* Table option anchor links */
+.sl-markdown-content td .sl-option-link {
+  color: inherit;
+  text-decoration: none;
+}
+.sl-markdown-content td .sl-option-link .sl-anchor-icon {
+  opacity: 0;
+  margin-inline-start: 0.25em;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.sl-markdown-content td .sl-option-link .sl-anchor-icon > svg {
+  width: 0.75em;
+  height: 0.75em;
+}
+@media (hover: hover) {
+  .sl-markdown-content tr:hover .sl-option-link .sl-anchor-icon {
+    opacity: 1;
+  }
 }

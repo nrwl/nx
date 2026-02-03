@@ -62,7 +62,9 @@ object OutputProcessor {
       if (header != null) {
         val taskMatch = Regex("> Task (:[^\\s]+)").find(header)
         val taskName = taskMatch?.groupValues?.get(1) ?: continue
-        taskOutputMap[taskName] = section.trim()
+        val trimmedSection = section.trim()
+        taskOutputMap[taskName] =
+            taskOutputMap[taskName]?.let { "$it\n$trimmedSection" } ?: trimmedSection
       }
     }
     return taskOutputMap

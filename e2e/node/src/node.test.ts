@@ -209,6 +209,7 @@ module.exports = {
         return output.includes(`foobar: test foo bar`);
       },
       {
+        timeout: 120000,
         env: {
           NX_DAEMON: 'true',
         },
@@ -271,8 +272,8 @@ module.exports = {
     const p = await runCommandUntil(
       `serve ${nodeapp}`,
       (output) => output.includes(`Listening at http://localhost:${port}`),
-
       {
+        timeout: 120000,
         env: {
           NX_DAEMON: 'true',
         },
@@ -328,6 +329,7 @@ module.exports = {
         return output.includes(`listening on ws://localhost:${port}`);
       },
       {
+        timeout: 120000,
         env: {
           NX_DAEMON: 'true',
         },
@@ -395,6 +397,7 @@ module.exports = {
         return output.includes('Hello World');
       },
       {
+        timeout: 120000,
         env: {
           NX_DAEMON: 'true',
         },

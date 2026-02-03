@@ -1,13 +1,13 @@
 ---
 title: What is Nx?
-description: 'Nx is an AI-first build platform that connects everything from your editor to CI Helping you deliver fast, without breaking things.'
+description: 'Nx is an AI-first monorepo platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
 sidebar:
   order: 1
   label: Introduction
 filter: 'type:Features'
 ---
 
-Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx provides the platform to **efficiently get from starting a feature in your editor to a green PR**.
+Nx is a powerful, open-source, technology-agnostic **monorepo platform** designed to efficiently manage codebases of any scale. From small workspaces to large enterprise monorepos, Nx provides the tools to **efficiently get from starting a feature in your editor to a green PR**.
 
 As teams and codebases grow, productivity bottlenecks multiply: build times increase, CI becomes flaky, and code sharing becomes complex. **Nx reduces friction across your entire development cycle.**
 
@@ -16,6 +16,12 @@ As teams and codebases grow, productivity bottlenecks multiply: build times incr
 ## Start small, extend as you grow
 
 Nx is built in a modular fashion, allowing you to adopt as little or as much as you'd like at any moment in your development lifecycle. You can **start with just the core and add additional capabilities incrementally** as your needs grow and complexity increases.
+
+{% callout type="deepdive" title="Can I add Nx to a single-project repo?" %}
+Yes, Nx provides value even for single-project repositories. You get fast task caching, intelligent task orchestration, and access to Nx plugins for your specific technology stack. As your project grows into a monorepo, the foundation is already in place.
+
+Nx can also connect multiple repositories into a synthetic monorepo, letting you orchestrate large changes across all connected repos.
+{% /callout %}
 
 At the **foundation is Nx Core**, a Rust-based, technology-agnostic task runner. Nx Core creates a knowledge graph of your workspace, understanding project relationships and dependencies. This enables highly optimized and fast task execution regardless of technology stack. It runs `package.json` scripts in [TypeScript monorepos](/docs/technologies/typescript/introduction) or Gradle tasks in [Java projects](/docs/technologies/java/introduction) or [can be extended](/docs/extending-nx/intro) to meet your project's specific needs.
 
@@ -60,7 +66,7 @@ From there, you can gradually enhance your setup by adding features like [task c
 {% /callout %}
 
 Nx Core provides everything you need to get started and works perfectly on its own.
-**When you're ready for more, the Nx platform offers additional capabilities you can adopt incrementally**.
+**When you're ready for more, the Nx monorepo platform offers additional capabilities you can adopt incrementally**.
 Extend your setup with [**Nx Cloud**](/docs/getting-started/nx-cloud) for remote caching, distributed task execution, and [**AI-powered self-healing CI**](/docs/features/ci-features/self-healing-ci) that automatically detects, analyzes, and fixes CI failures.
 Integrate [**Nx Console**](/docs/getting-started/editor-setup) with your editor for powerful autocomplete, project graph visualization, CI notifications, and an MCP to [make your AI coding assistant smarter](/docs/features/enhance-ai).
 Add [**Nx Plugins**](/docs/technologies) for technology-specific automation and DX improvements, or build custom platform capabilities using [Nx Devkit](/docs/extending-nx/intro).

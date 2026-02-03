@@ -36,12 +36,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     }
 
     process.env.npm_config_registry = registry;
-    execSync(
-      `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
-      {
-        windowsHide: false,
-      }
-    );
+    // Use environment variable instead of npm config command to avoid polluting other tests
+    process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
+      authToken;
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;
@@ -55,12 +52,8 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
     global.e2eTeardown = () => {
-      execSync(
-        `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
-        {
-          windowsHide: false,
-        }
-      );
+      // Clean up environment variable instead of npm config command
+      delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
     };
 
     /**

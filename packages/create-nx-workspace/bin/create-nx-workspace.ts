@@ -470,19 +470,13 @@ async function normalizeArgsMiddleware(
 
       let nxCloud: string;
       let completionMessageKey: string | undefined;
-      const flowVariant = getFlowVariant();
 
       if (argv.skipGit === true) {
         nxCloud = 'skip';
         completionMessageKey = undefined;
-      } else if (flowVariant === '2') {
-        // Variant 2: Skip cloud prompt, auto-connect
-        // Respect --nxCloud=skip if explicitly provided
-        nxCloud = argv.nxCloud === 'skip' ? 'skip' : 'yes';
-        completionMessageKey =
-          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
       } else {
-        // Variants 0 & 1: Show cloud prompt (different copy based on variant)
+        // Always show cloud prompt with "full platform" message (CLOUD-4147)
+        // Flow variant only affects completion banners, not this prompt
         nxCloud = await determineNxCloudV2(argv);
         completionMessageKey =
           nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
@@ -497,7 +491,6 @@ async function normalizeArgsMiddleware(
         defaultBase: 'main',
         aiAgents,
         ghAvailable,
-        skipCloudConnect: flowVariant === '2',
       });
 
       await recordStat({

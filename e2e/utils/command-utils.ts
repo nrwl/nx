@@ -279,11 +279,10 @@ export function runCommandAsync(
 export function runCommandUntil(
   command: string,
   criteria: (output: string) => boolean,
-  opts: RunCmdOpts = {
-    env: undefined,
-  }
+  opts: RunCmdOpts & { timeout?: number } = {}
 ): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
+  const timeout = opts.timeout ?? 30_000;
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
     encoding: 'utf-8',
@@ -301,18 +300,37 @@ export function runCommandUntil(
     let output = '';
     let complete = false;
 
+    const timeoutId = setTimeout(() => {
+      if (!complete) {
+        complete = true;
+        p.kill();
+        logError(
+          `Output did not meet the criteria:`,
+          output
+            .split('\n')
+            .map((l) => `    ${l}`)
+            .join('\n')
+        );
+        rej(new Error(`Timed out after ${timeout}ms waiting for criteria`));
+      }
+    }, timeout);
+
     function checkCriteria(c) {
       output += c.toString();
-      if (criteria(stripConsoleColors(output)) && !complete) {
+      const strippedOutput = stripConsoleColors(output);
+      if (criteria(strippedOutput) && !complete) {
         complete = true;
+        clearTimeout(timeoutId);
         res(p);
       }
     }
 
     p.stdout?.on('data', checkCriteria);
     p.stderr?.on('data', checkCriteria);
-    p.on('exit', (code) => {
+    p.on('close', (code) => {
       if (!complete) {
+        complete = true;
+        clearTimeout(timeoutId);
         logError(
           `Original output:`,
           output
@@ -320,9 +338,7 @@ export function runCommandUntil(
             .map((l) => `    ${l}`)
             .join('\n')
         );
-        rej(`Exited with ${code}`);
-      } else {
-        res(p);
+        rej(new Error(`Exited with ${code}`));
       }
     });
   });
