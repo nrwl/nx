@@ -8,5 +8,6 @@ export * from './lib/faq';
 export * from './lib/call-to-action';
 export * from './lib/security';
 export * from './lib/time-to-green';
+export * from './lib/features-call-to-action';
 export { PlayButton } from './lib/hero/play-button';
 export { NxCloudHeroVideo } from './lib/hero/nx-cloud-hero-video';
