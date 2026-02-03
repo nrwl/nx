@@ -10,9 +10,7 @@ interface SidebarLink {
   label: string;
   href: string;
   isCurrent: boolean;
-  // TODO: type badge out if we want to add it
   badge: undefined;
-  // TODO: type attr out if we want to add it
   attrs: Record<string, any>;
 }
 
@@ -21,7 +19,6 @@ interface SidebarGroup {
   label: string;
   entries: (SidebarLink | SidebarGroup)[];
   collapsed: boolean;
-  // TODO: type badge out if we want to add it
   badge: undefined;
 }
 
@@ -35,23 +32,18 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   }
 
   const devkitSection = await getDevKitSection(context.locals.starlightRoute);
-  // TODO: should we move these into different locations?
-  // probably keep in refs but combine with the nx command refs in some way? keep the hub style of technologies for the projects?
   const nxSection = await getNxPackageSection(
     'nx',
     context.locals.starlightRoute
   );
-  // TODO: maybe makes sense in the technologies section now?
   const webSection = await getNxPackageSection(
     'web',
     context.locals.starlightRoute
   );
-  // TODO: probably keep in refs but consensed
   const workspaceSection = await getNxPackageSection(
     'workspace',
     context.locals.starlightRoute
   );
-  // TODO: should move into the extending nx section?
   const pluginSection = await getNxPackageSection(
     'plugin',
     context.locals.starlightRoute

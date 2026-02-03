@@ -1,11 +1,11 @@
 ---
 interface Props {
   id: string
+  tabId: string
   active?: boolean
 }
 
-const { id, active = false } = Astro.props
-const tabId = id.replace('-panel', '')
+const { id, tabId, active = false } = Astro.props
 ---
 
 <div

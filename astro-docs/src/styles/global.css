@@ -370,7 +370,7 @@ pre {
     top: 0;
     z-index: 1;
     padding-bottom: 0.5rem;
-    background-color: var(--sl-color-black);
+    background-color: var(--sl-color-bg-sidebar);
     border-bottom: 1px solid var(--sl-color-hairline-light);
   }
 
@@ -381,12 +381,15 @@ pre {
   }
 
   .nx-tab-bar [role='tab'] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     width: 100%;
     text-align: left;
     padding: 0.5rem 0.75rem;
     border: none;
     border-left: 2px solid transparent;
-    border-radius: var(--radius-md);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     background: transparent;
     color: var(--sl-color-gray-2);
     font-size: var(--text-base);

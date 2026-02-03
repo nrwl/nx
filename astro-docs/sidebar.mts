@@ -13,11 +13,11 @@ type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 export interface SidebarTab {
   id: string;
   label: string;
+  icon?: string;
   groups: SidebarItems;
 }
 
 const learnGroups: SidebarItems = [
-  // GETTING STARTED - Focus: immediate value, essential setup
   {
     label: 'Getting Started',
     collapsed: false,
@@ -59,14 +59,12 @@ const learnGroups: SidebarItems = [
     ],
   },
 
-  // HOW NX WORKS - Focus: Deep understanding, mental models, no terminal needed
   {
     label: 'How Nx Works',
-    collapsed: true,
+    collapsed: false,
     items: [
       { label: 'Mental Model', link: 'concepts/mental-model' },
       { label: 'How Caching Works', link: 'concepts/how-caching-works' },
-      // TODO: we have too many "configuration" pages. we should consolidate these
       {
         label: 'Task Pipeline Configuration',
         link: 'concepts/task-pipeline-configuration',
@@ -79,10 +77,8 @@ const learnGroups: SidebarItems = [
         label: 'Executors and Configurations',
         link: 'concepts/executors-and-configurations',
       },
-      // TODO: probably combine these two nx plugin pages
       { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
       { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
-      // TODO: we most likely just need 1 "Nx in CI" page that is a combo of these two pages
       {
         label: 'Building Blocks of Fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
@@ -91,20 +87,14 @@ const learnGroups: SidebarItems = [
         label: 'Parallelization and Distribution',
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
-      // TODO: techincally a how nx works, but is it really helpful here or maybe a better fit inside the KB?
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
-
-  // PLATFORM - Focus: Power features that apply to everyone, agnostic to a given framework/tool
   {
     label: 'Platform Features',
-    collapsed: true,
+    collapsed: false,
     items: [
       { label: 'Run Tasks', link: 'features/run-tasks' },
-      // TODO: techincally can be technology specific w/ eslint
-      // so maybe we flip to talk about the theory and mention the 2 ways to use it w/ links?
-      // TODO: do we need this page? or should we merge w/ the getting started ai setup stuff?
       { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
       {
         label: 'Code Organization',
@@ -180,8 +170,6 @@ const learnGroups: SidebarItems = [
             link: 'guides/nx-cloud/record-commands',
           },
           {
-            // TODO: this needs a better name since we have vcs integrations already
-            // but this page is detailing a few things like github org permissions in cloud probs split
             label: 'GitHub Integration',
             link: 'features/ci-features/github-integration',
           },
@@ -191,11 +179,6 @@ const learnGroups: SidebarItems = [
           },
           { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
           { label: 'Google Auth', link: 'guides/nx-cloud/google-auth' },
-          // TODO: this page probs needs to be axed since it's essentially self-healing CI only
-          // {
-          //   label: 'Enable AI Features',
-          //   link: 'guides/nx-cloud/enable-ai-features',
-          // },
         ],
       },
       {
@@ -203,7 +186,6 @@ const learnGroups: SidebarItems = [
         collapsed: true,
         items: [
           { label: 'Nx Release Overview', link: 'features/manage-releases' },
-          // TODO: only keeep nx release things, and move anything specific to a technology to KB space
           {
             label: 'Publish in CI/CD',
             link: 'guides/nx-release/publish-in-ci-cd',
@@ -263,11 +245,11 @@ const learnGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Maintaince',
+        label: 'Maintenance',
         collapsed: true,
         items: [
           {
-            label: 'Nx Console Migratation Assistance',
+            label: 'Nx Console Migration Assistance',
             link: 'guides/nx-console/console-migrate-ui',
           },
           {
@@ -388,7 +370,6 @@ const learnGroups: SidebarItems = [
 ];
 
 const technologiesGroups: SidebarItems = [
-  // TECHNOLOGIES - Focus: Context-specific guides, hub pages only that branch off to KB or other areas
   {
     label: 'Technologies & Tools',
     collapsed: true,
@@ -451,7 +432,7 @@ const technologiesGroups: SidebarItems = [
       },
       {
         label: 'Build Tools',
-        collapsed: true,
+        collapsed: false,
         items: [
           {
             label: 'Webpack',
@@ -481,7 +462,7 @@ const technologiesGroups: SidebarItems = [
       },
       {
         label: 'Test Tools',
-        collapsed: true,
+        collapsed: false,
         items: [
           {
             label: 'Cypress',
@@ -518,7 +499,6 @@ const technologiesGroups: SidebarItems = [
 ];
 
 const knowledgeBaseGroups: SidebarItems = [
-  // KNOWLEDGE BASE - Focus: Specific solutions to specific problems
   {
     label: 'Knowledge Base',
     collapsed: true,
@@ -562,7 +542,6 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        // TODO: I don't like 'recipes' as a section title. bc too "catch all" maybe find a way to split things up and keep it obvious to know what is contained in the subgroups 🤔
         label: 'Recipes',
         collapsed: true,
         items: [
@@ -635,7 +614,6 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        // TODO: we can probs condense and split this section up some
         label: 'Nx Console',
         collapsed: true,
         items: [
@@ -665,14 +643,19 @@ const knowledgeBaseGroups: SidebarItems = [
           },
         ],
       },
-      // TODO: this should be a consolidated version of what encapsulated installation is IMO
       {
-        label: 'Install Nx in Non-JavaScript Repo',
-        link: 'guides/installation/install-non-javascript',
-      },
-      {
-        label: 'Update Global Installation',
-        link: 'guides/installation/update-global-installation',
+        label: 'Installation',
+        collapsed: true,
+        items: [
+          {
+            label: 'Install Nx in Non-JavaScript Repo',
+            link: 'guides/installation/install-non-javascript',
+          },
+          {
+            label: 'Update Global Installation',
+            link: 'guides/installation/update-global-installation',
+          },
+        ],
       },
       {
         label: 'Organizational Decisions',
@@ -702,7 +685,6 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Code Ownership',
             link: 'concepts/decisions/code-ownership',
           },
-          // TODO: update this to talk about module boundaries in general and have examples for eslint and conformance
           {
             label: 'Project Dependency Rules',
             link: 'concepts/decisions/project-dependency-rules',
@@ -713,8 +695,6 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'Extending Nx',
         collapsed: true,
         items: [
-          // TODO: we should shorten this into each of the ways to use a plugin. e.g. generators, executors, migrations, CreateNodes, lifecycle hooks, presets
-          // OR walk through making a full lifecycle of a plugin that's step by step using all the APIs
           { label: 'Intro', link: 'extending-nx/intro' },
           { label: 'Local Generators', link: 'extending-nx/local-generators' },
           {
@@ -780,7 +760,6 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'Continuous Integration',
         collapsed: true,
         items: [
-          // TODO: maybe this stays up above
           { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
           { label: 'Access Tokens', link: 'guides/nx-cloud/access-tokens' },
           {
@@ -826,7 +805,6 @@ const knowledgeBaseGroups: SidebarItems = [
           },
         ],
       },
-      // TODO: this section is werid and doesn't really explain what's going on. maybe a better way to structure the information esp that is which is more generic to Nx but specificly still a guide
       {
         label: 'Tasks & Caching',
         collapsed: true,
@@ -904,7 +882,6 @@ const knowledgeBaseGroups: SidebarItems = [
           },
         ],
       },
-      // Technology-specific guides auto-populated from static content
       {
         label: 'TypeScript',
         collapsed: true,
@@ -1003,7 +980,6 @@ const knowledgeBaseGroups: SidebarItems = [
 ];
 
 const referenceGroups: SidebarItems = [
-  // REFERENCE  - Focus: Exhaustive facts, no narrative
   {
     label: 'Reference',
     collapsed: true,
@@ -1028,23 +1004,6 @@ const referenceGroups: SidebarItems = [
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console Settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
-      {
-        label: 'Nx Cloud Credit Pricing',
-        link: 'reference/nx-cloud/credits-pricing',
-      },
-      {
-        label: 'Remote Cache Plugins',
-        link: 'reference/remote-cache-plugins',
-      },
-      {
-        label: 'Changelog',
-        link: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
-      },
-      {
-        label: 'Deprecatations',
-        link: 'reference/deprecated',
-      },
-      // Technology API docs (Generators, Executors, Migrations)
       {
         label: 'TypeScript',
         collapsed: true,
@@ -1186,19 +1145,51 @@ const referenceGroups: SidebarItems = [
         collapsed: true,
         items: [...getTechnologyAPIItems('vitest', 'test-tools')],
       },
+      {
+        label: 'Nx Cloud Credit Pricing',
+        link: 'reference/nx-cloud/credits-pricing',
+      },
+      {
+        label: 'Remote Cache Plugins',
+        link: 'reference/remote-cache-plugins',
+      },
+      {
+        label: 'Changelog',
+        link: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
+      },
+      {
+        label: 'Deprecations',
+        link: 'reference/deprecated',
+      },
     ],
   },
 ];
 
 export const sidebarTabs: SidebarTab[] = [
-  { id: 'tab-learn', label: 'Learn', groups: learnGroups },
-  { id: 'tab-technologies', label: 'Technologies', groups: technologiesGroups },
+  {
+    id: 'tab-learn',
+    label: 'Getting Started',
+    icon: 'open-book',
+    groups: learnGroups,
+  },
+  {
+    id: 'tab-technologies',
+    label: 'Technologies',
+    icon: 'puzzle',
+    groups: technologiesGroups,
+  },
   {
     id: 'tab-knowledge-base',
     label: 'Knowledge Base',
+    icon: 'information',
     groups: knowledgeBaseGroups,
   },
-  { id: 'tab-reference', label: 'Reference', groups: referenceGroups },
+  {
+    id: 'tab-reference',
+    label: 'Reference',
+    icon: 'document',
+    groups: referenceGroups,
+  },
 ];
 
 export const sidebar: StarlightUserConfig['sidebar'] = sidebarTabs.flatMap(

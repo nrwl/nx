@@ -44,6 +44,7 @@ const anyActive = tabs.some((t) => t.active)
                 <SidebarTab
                     slot="tabs"
                     id={tab.id}
+                    icon={tab.icon}
                     label={tab.label}
                     active={anyActive ? tab.active : false}
                 />
@@ -52,6 +53,7 @@ const anyActive = tabs.some((t) => t.active)
                 <SidebarTabPanel
                     slot="panels"
                     id={`${tab.id}-panel`}
+                    tabId={tab.id}
                     active={anyActive ? tab.active : false}
                 >
                     <SidebarSublist sublist={tab.entries} />

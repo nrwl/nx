@@ -1,11 +1,14 @@
 ---
+import { Icon } from '@astrojs/starlight/components'
+
 interface Props {
   id: string
+  icon?: string
   label: string
   active?: boolean
 }
 
-const { id, label, active = false } = Astro.props
+const { id, icon, label, active = false } = Astro.props
 const panelId = `${id}-panel`
 ---
 
@@ -17,5 +20,6 @@ const panelId = `${id}-panel`
   data-active={active ? 'true' : undefined}
   tabindex={active ? 0 : -1}
 >
+  {icon && <Icon name={icon} size="1rem" />}
   {label}
 </button>

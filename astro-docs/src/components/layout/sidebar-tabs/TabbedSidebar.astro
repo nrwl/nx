@@ -5,7 +5,7 @@
 
 <nx-tabbed-sidebar>
   <div class="nx-tab-bar-sticky">
-    <div class="nx-tab-bar" role="tablist" aria-label="Sidebar sections">
+    <div class="nx-tab-bar" role="tablist" aria-label="Sidebar sections" aria-orientation="vertical">
       <slot name="tabs" />
     </div>
   </div>
@@ -68,9 +68,6 @@
         panel.hidden = i !== index;
       });
 
-      // Scroll active tab into view within the tab bar (vertical layout)
-      this.tabs[index]?.scrollIntoView({ block: 'nearest', behavior: store ? 'smooth' : 'instant' });
-
       if (store && this.tabs[index]) {
         sessionStorage.setItem('nx-sidebar-tab', this.tabs[index].id);
       }
@@ -95,11 +92,9 @@
 
       switch (e.key) {
         case 'ArrowDown':
-        case 'ArrowRight':
           nextIndex = (currentIndex + 1) % this.tabs.length;
           break;
         case 'ArrowUp':
-        case 'ArrowLeft':
           nextIndex = (currentIndex - 1 + this.tabs.length) % this.tabs.length;
           break;
         case 'Home':

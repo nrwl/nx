@@ -219,26 +219,7 @@ export function getPluginItems(
       throw new Error(`package.json does not have a name: ${packageJsonPath}`);
     }
 
-    if (hasValidConfig(pluginPath, 'generators')) {
-      items.push({
-        label: 'Generators',
-        link: `${baseUrl}/generators`,
-      });
-    }
-
-    if (hasValidConfig(pluginPath, 'executors')) {
-      items.push({
-        label: 'Executors',
-        link: `${baseUrl}/executors`,
-      });
-    }
-
-    if (hasValidConfig(pluginPath, 'migrations')) {
-      items.push({
-        label: 'Migrations',
-        link: `${baseUrl}/migrations`,
-      });
-    }
+    items.push(...getTechnologyAPIItems(plugin, technologyCategory));
   } else {
     console.warn(
       `Plugin path does not exist: ${pluginPath}. Only attempting to load static files.`

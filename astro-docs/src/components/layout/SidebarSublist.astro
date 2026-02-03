@@ -140,6 +140,12 @@ function getIconPath(iconName: string | undefined): string | null {
       color: var(--sl-color-white);
     }
 
+    a.large {
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+    }
+
     .top-level {
       padding-top: 0.75rem;
     }
@@ -227,20 +233,27 @@ function getIconPath(iconName: string | undefined): string | null {
       margin-inline-end: 0.25em;
     }
 
-    /* Deep nesting compactness for Reference generators/executors */
-    ul ul ul a {
-      padding-block: 0.15em;
+    /*
+     * Deep nesting adjustments (3+ levels).
+     * Uses :is() to target any li that is at least 3 levels deep,
+     * then tightens spacing progressively via custom properties.
+     */
+    ul ul ul {
+      --_nest-indent: 0.25rem;
+      --_nest-link-block: 0.15em;
     }
 
-    /* Deep nesting relief — reduce cramping at 3-4 levels */
+    ul ul ul ul {
+      --_nest-indent: 0.2rem;
+    }
+
     ul ul ul li {
-      margin-inline-start: 0.25rem;
-      padding-inline-start: 0.25rem;
+      margin-inline-start: var(--_nest-indent);
+      padding-inline-start: var(--_nest-indent);
     }
 
-    ul ul ul ul li {
-      margin-inline-start: 0.2rem;
-      padding-inline-start: 0.2rem;
+    ul ul ul a {
+      padding-block: var(--_nest-link-block);
     }
 
     /* Smooth expand/collapse — progressive enhancement (Chrome 129+, Firefox 131+, Safari 17.5+).
