@@ -7,7 +7,7 @@ import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
-
+const blah = 'abc12';
 const BASE = '/docs';
 
 // This is exposed as window.__CONFIG
