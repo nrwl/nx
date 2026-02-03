@@ -47,6 +47,7 @@ import {
 } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
+import { isAiAgent } from '../src/utils/ai/is-ai-agent';
 import { isGhCliAvailable } from '../src/utils/git/git';
 
 function extractErrorFile(error: Error): string | undefined {
@@ -435,6 +436,12 @@ async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   rawArgs = { ...argv };
+
+  // Disable interactive mode when running from an AI agent
+  if (isAiAgent()) {
+    argv.interactive = false;
+  }
+
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
