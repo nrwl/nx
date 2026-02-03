@@ -2,7 +2,12 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
-import { getAgentRules } from './set-up-ai-agents/get-agent-rules';
+import {
+  getAgentRules,
+  AgentRulesOptions,
+} from './set-up-ai-agents/get-agent-rules';
+
+export type { AgentRulesOptions };
 
 export function agentsMdPath(root: string): string {
   return join(root, 'AGENTS.md');
@@ -47,11 +52,14 @@ export const rulesRegex = new RegExp(
   'm'
 );
 
-export const getAgentRulesWrapped = (
-  writeNxCloudRules: boolean,
-  useH1: boolean = true
-) => {
-  const agentRulesString = getAgentRules(writeNxCloudRules, useH1);
+export interface AgentRulesWrappedOptions {
+  writeNxCloudRules: boolean;
+  useH1?: boolean;
+}
+
+export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
+  const { writeNxCloudRules, useH1 = true } = options;
+  const agentRulesString = getAgentRules({ nxCloud: writeNxCloudRules, useH1 });
   return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
 };
 

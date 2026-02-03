@@ -75,9 +75,34 @@ describe('setup-ai-agents generator', () => {
       await setupAiAgentsGenerator(tree, options);
 
       const content = tree.read('AGENTS.md')?.toString();
-      // When appending to existing content, use h2 header
+      // When appending to existing content with an h1 header, use h2 header
       expect(content).toEqual(
-        existing + '\n\n' + getAgentRulesWrapped(true, false)
+        existing +
+          '\n\n' +
+          getAgentRulesWrapped({ writeNxCloudRules: true, useH1: false })
+      );
+    });
+
+    it('should use h1 when appending to AGENTS.md without existing h1 header', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+        writeNxCloudRules: true,
+        agents: ['codex'],
+      };
+
+      // Content without an h1 header (just plain text)
+      const existing = 'Some existing content without a header';
+
+      tree.write('AGENTS.md', existing);
+
+      await setupAiAgentsGenerator(tree, options);
+
+      const content = tree.read('AGENTS.md')?.toString();
+      // When appending to existing content without an h1, use h1 header
+      expect(content).toEqual(
+        existing +
+          '\n\n' +
+          getAgentRulesWrapped({ writeNxCloudRules: true, useH1: true })
       );
     });
 
@@ -88,7 +113,10 @@ describe('setup-ai-agents generator', () => {
         agents: ['codex'],
       };
 
-      const existing = getAgentRulesWrapped(true, true);
+      const existing = getAgentRulesWrapped({
+        writeNxCloudRules: true,
+        useH1: true,
+      });
 
       tree.write('AGENTS.md', existing);
 
@@ -105,7 +133,10 @@ describe('setup-ai-agents generator', () => {
         agents: ['codex'],
       };
 
-      const expected = getAgentRulesWrapped(true, true);
+      const expected = getAgentRulesWrapped({
+        writeNxCloudRules: true,
+        useH1: true,
+      });
       const existing = expected.replace(
         'nx_workspace',
         'nx_workspace_outdated'
@@ -125,7 +156,10 @@ describe('setup-ai-agents generator', () => {
         agents: ['codex'],
       };
 
-      const expected = getAgentRulesWrapped(true, true);
+      const expected = getAgentRulesWrapped({
+        writeNxCloudRules: true,
+        useH1: true,
+      });
       const existing = expected.replace('#', '\n#');
       tree.write('AGENTS.md', existing);
 

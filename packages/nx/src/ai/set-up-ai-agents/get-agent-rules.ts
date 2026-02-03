@@ -1,4 +1,10 @@
-export function getAgentRules(nxCloud: boolean, useH1: boolean = true) {
+export interface AgentRulesOptions {
+  nxCloud: boolean;
+  useH1?: boolean;
+}
+
+export function getAgentRules(options: AgentRulesOptions) {
+  const { nxCloud, useH1 = true } = options;
   const header = useH1 ? '#' : '##';
   return `${header} General Guidelines for working with Nx
 
