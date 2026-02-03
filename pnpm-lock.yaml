@@ -2146,9 +2146,6 @@ importers:
       '@nx/nx-dev-feature-search':
         specifier: workspace:*
         version: link:../feature-search
-      '@nx/nx-dev-ui-ai-landing-page':
-        specifier: workspace:*
-        version: link:../ui-ai-landing-page
       '@nx/nx-dev-ui-animations':
         specifier: workspace:*
         version: link:../ui-animations
@@ -2251,24 +2248,6 @@ importers:
       ai:
         specifier: 3.0.19
         version: 3.0.19(react@19.1.0)(solid-js@1.9.7)(svelte@5.35.5)(vue@3.5.17(typescript@5.9.2))(zod@4.3.5)
-
-  nx-dev/ui-ai-landing-page:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-animations':
-        specifier: workspace:*
-        version: link:../ui-animations
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
 
   nx-dev/ui-animations:
     dependencies:
