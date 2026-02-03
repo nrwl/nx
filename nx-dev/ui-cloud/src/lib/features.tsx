@@ -26,13 +26,13 @@ export function Features(): ReactElement {
                 className="h-80 object-cover object-center"
               />
               <div className="relative p-10 pt-4">
-                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
-                  Secure Remote Cache
+                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                  Nx Remote Cache Replay
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It ensures that tasks are never rebuilt twice, significantly
-                  reducing build times and resource usage. Share cached results
-                  across your team and CI pipelines.
+                  Never rebuild the same code twice. Tasks are cached and shared
+                  across your team and CI pipelines, dramatically reducing build
+                  times and resource usage.
                 </p>
               </div>
             </div>
@@ -45,13 +45,12 @@ export function Features(): ReactElement {
                 className="h-80 object-cover"
               />
               <div className="relative p-10 pt-4">
-                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
-                  Self-Healing CI
+                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                  Agentic Self-Healing CI
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It automatically detects and fixes flaky tests and issues
-                  without developer intervention enhancing the reliability of
-                  your CI processes and minimizing time spent debugging.
+                  Automatically detects, validates, and fixes PR failures—so you
+                  stay in flow.
                 </p>
               </div>
             </div>
@@ -68,9 +67,8 @@ export function Features(): ReactElement {
                   E2E Test Splitting
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It automatically splits large e2e tests into smaller, atomized
-                  tasks, enabling lightning fast testing. Parallelize your tests
-                  to reduce bottlenecks and keep your pipelines fast.
+                  Automatically splits large e2e tests into smaller, atomized
+                  tasks for lightning-fast parallel execution.
                 </p>
               </div>
             </div>
@@ -87,9 +85,10 @@ export function Features(): ReactElement {
                   Distributed Task Execution
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It intelligently distributes tasks across multiple machines,
-                  significantly reducing build times. Dynamically allocate
-                  agents based on PR size to balance speed and cost.
+                  Intelligently distributes tasks across multiple machines,
+                  adapting to PR size automatically. Large refactors or
+                  migrations get maximum parallelization. Small fixes stay
+                  lightweight.
                 </p>
               </div>
             </div>

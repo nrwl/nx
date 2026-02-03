@@ -264,17 +264,6 @@ export function Header({
             </Popover>
             <div className="hidden h-6 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
             <Link
-              href="/ai"
-              title="AI"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
-              prefetch={false}
-              onClick={() =>
-                sendCustomEvent('ai-click', 'header-cta', 'page-header')
-              }
-            >
-              AI
-            </Link>
-            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
@@ -614,21 +603,6 @@ export function Header({
                               </>
                             )}
                           </Disclosure>
-                          <Link
-                            href="/ai"
-                            title="AI"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
-                            prefetch={false}
-                            onClick={() =>
-                              sendCustomEvent(
-                                'ai-click',
-                                'mobile-header-cta',
-                                'page-header'
-                              )
-                            }
-                          >
-                            AI
-                          </Link>
                           <Link
                             href="/nx-cloud"
                             title="Nx Cloud"
