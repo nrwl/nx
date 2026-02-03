@@ -560,8 +560,13 @@
               "fileset": {
                 "type": "string",
                 "description": "A glob"
+              },
+              "dependencies": {
+                "type": "boolean",
+                "description": "Include files matching the fileset for all the project dependencies of this target."
               }
             },
+            "required": ["fileset"],
             "additionalProperties": false
           },
           {

@@ -216,8 +216,13 @@
               "fileset": {
                 "type": "string",
                 "description": "A glob used to determine a fileset."
+              },
+              "dependencies": {
+                "type": "boolean",
+                "description": "Include files matching the fileset for all the project dependencies of this target."
               }
             },
+            "required": ["fileset"],
             "additionalProperties": false
           },
           {
