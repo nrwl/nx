@@ -57,7 +57,7 @@ export const autoprefixerVersion = '10.4.13';
 
 // SSR and Module Federation
 export const expressVersion = '^5.2.1';
-export const expressTypingsVersion = '^5.0.6';
+export const typesExpressVersion = '^5.0.6';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';

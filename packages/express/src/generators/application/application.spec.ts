@@ -195,7 +195,7 @@ describe('app', () => {
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "express": "^4.21.2",
+            "express": "^5.2.1",
           },
           "name": "@proj/myapp",
           "nx": {
