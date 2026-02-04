@@ -33,6 +33,7 @@ import {
 import { deepMergeJson } from './config/deep-merge-json';
 import { printConfigAndExit } from './utils/print-config';
 import { createReleaseGraph } from './utils/release-graph';
+import { reportCommandRunEvent } from '../../analytics';
 
 export interface PublishProjectsResult {
   [projectName: string]: {
@@ -42,6 +43,7 @@ export interface PublishProjectsResult {
 
 export const releasePublishCLIHandler = (args: PublishOptions) =>
   handleErrors(args.verbose, async () => {
+    reportCommandRunEvent('release publish');
     const publishProjectsResult: PublishProjectsResult = await createAPI(
       {},
       false
