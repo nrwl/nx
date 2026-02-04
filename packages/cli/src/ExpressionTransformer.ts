@@ -289,7 +289,7 @@ export class ExpressionTransformer
         }).index === 'number';
     }
 
-    private static tokenizeExpression(code: string, startPos = 0): TokenizeResult
+    private static tokenizeExpression(code: string, delimiters: string[], startPos = 0): TokenizeResult
     {
         const substring = code.slice(startPos);
         let tokens: BabelToken[] = [];
@@ -354,7 +354,7 @@ export class ExpressionTransformer
                 break;
             }
 
-            if (depth === 0 && (token.type.label === '|' || token.type.label === ';' || token.type.label === ':'))
+            if (depth === 0 && delimiters.includes(token.type.label))
             {
                 stopIndex = token.start;
                 stopReason = 'delimiter';
@@ -457,7 +457,7 @@ export class ExpressionTransformer
         const offset = startPos ?? 0;
         const pipes: { name: string; args: string[] }[] = [];
 
-        const tokenResult = ExpressionTransformer.tokenizeExpression(text, offset);
+        const tokenResult = ExpressionTransformer.tokenizeExpression(text, ['|', ';'], offset);
 
         if (tokenResult.tokenCount === 0)
         {
@@ -514,7 +514,7 @@ export class ExpressionTransformer
 
                 const prefix = `_arg${args.length + 1}=`;
                 const argText = prefix + text.slice(pos);
-                const argTokenResult = ExpressionTransformer.tokenizeExpression(argText, 0);
+                const argTokenResult = ExpressionTransformer.tokenizeExpression(argText, ['|', ':', ';'], 0);
                 const argEndPos = argTokenResult.index - prefix.length;
 
                 if (argTokenResult.tokenCount > 0)

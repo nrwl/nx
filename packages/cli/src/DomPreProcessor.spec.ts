@@ -251,6 +251,32 @@ describe('TemplateParser property binding with pipes', () =>
         expect(valueBinding?.pipes?.[0].name)
             .toBe('FormatFlags');
     });
+
+    it('should handle ternary expression without parentheses before pipe', async() =>
+    {
+        const parser = new TemplateParser();
+        const html = '<my-component [value]="isActive ? activeValue : inactiveValue | Format"></my-component>';
+        const ast = await parser.parse(html);
+
+        const [element] = ast.root;
+        expect(element.type)
+            .toBe('element');
+        if (element.type !== 'element') return;
+
+        const valueBinding = element.bindings.find(b => b.name === 'value');
+        expect(valueBinding)
+            .toBeDefined();
+        expect(valueBinding?.expression)
+            .toContain('isActive');
+        expect(valueBinding?.expression)
+            .toContain('activeValue');
+        expect(valueBinding?.expression)
+            .toContain('inactiveValue');
+        expect(valueBinding?.pipes)
+            .toHaveLength(1);
+        expect(valueBinding?.pipes?.[0].name)
+            .toBe('Format');
+    });
 });
 
 describe('DomPreProcessor attribute interpolation', () =>
