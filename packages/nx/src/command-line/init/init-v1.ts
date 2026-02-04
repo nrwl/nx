@@ -13,6 +13,7 @@ import { directoryExists, readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { isMonorepo, printFinalMessage } from './implementation/utils';
+import { reportCommandRunEvent } from '../../analytics';
 
 export interface InitArgs {
   addE2e: boolean;
@@ -26,6 +27,7 @@ export interface InitArgs {
 }
 
 export async function initHandler(options: InitArgs) {
+  reportCommandRunEvent('init-v1');
   // strip the 'init' command itself so we don't forward it
   const args = process.argv.slice(3).join(' ');
 
