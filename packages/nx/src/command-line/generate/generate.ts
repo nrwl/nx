@@ -371,8 +371,7 @@ export async function generate(args: { [k: string]: any }) {
     );
 
     reportNxGenerateCommand(
-      `${opts.collectionName}:${normalizedGeneratorName}`,
-      combinedOpts
+      `${opts.collectionName}:${normalizedGeneratorName}`
     );
 
     if (
