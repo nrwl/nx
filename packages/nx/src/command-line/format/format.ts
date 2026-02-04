@@ -25,7 +25,7 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { reportCommandRunWithArgs } from '../../analytics/analytics';
+import { reportCommandRunWithArgs } from '../../analytics';
 
 export async function format(
   command: 'check' | 'write',

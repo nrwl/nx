@@ -59,7 +59,7 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { reportCommandRunWithArgs } from '../../analytics/analytics';
+import { reportCommandRunWithArgs } from '../../analytics';
 
 export interface GraphError {
   message: string;
