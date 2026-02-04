@@ -40,6 +40,13 @@ export function reportNxAddCommand(packageName: string, version: string) {
   });
 }
 
+export function reportNxGenerateCommand(
+  generator: string,
+  args: Record<string, any>
+) {
+  reportCommandRunWithArgs(generator, args);
+}
+
 export function reportCommandRunWithArgs(command, args: Record<string, any>) {
   reportCommandRunEvent(command, {
     [EventCustomDimension.AdditionalArguments]: JSON.stringify(args),
