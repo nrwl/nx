@@ -171,9 +171,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     };
     worker.on('exit', this.exitHandler);
 
-    worker.stdout.pipe(process.stdout);
-    worker.stderr.pipe(process.stderr);
-
     socket.on('data', consumeMessagesFromSocket(this.handleSocketData));
 
     return this.sendLoadMessage();
@@ -403,8 +400,14 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
   private shutdownIfInactive(): void {
     if (this.pendingCount > 0) {
+      logger.verbose(
+        `[plugin-pool] worker for "${this.name}" has ${this.pendingCount} pending request(s), not shutting down yet`
+      );
       return;
     }
+    logger.verbose(
+      `[plugin-pool] shutting down worker for "${this.name}" after last hook`
+    );
     this.shutdown();
   }
 
