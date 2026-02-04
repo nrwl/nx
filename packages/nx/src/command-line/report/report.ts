@@ -39,6 +39,7 @@ import {
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
+import { reportCommandRunEvent } from '../../analytics';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -72,6 +73,7 @@ const LINE_SEPARATOR = '---------------------------------------';
  *
  */
 export async function reportHandler() {
+  reportCommandRunEvent('report');
   const {
     pm,
     pmVersion,

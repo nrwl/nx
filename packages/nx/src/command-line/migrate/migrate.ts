@@ -85,6 +85,7 @@ import {
   getNxPackageGroup,
 } from '../../utils/provenance';
 import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
+import { reportCommandRunWithArgs } from '../../analytics';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1867,8 +1868,10 @@ export async function migrate(
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const opts = await parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
+      reportCommandRunWithArgs('migrate', { runMigrations: false });
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
+      reportCommandRunWithArgs('migrate', { runMigrations: true });
       await runMigrations(
         root,
         opts,
