@@ -1,6 +1,6 @@
-import * as http from 'node:http';
-import * as fs from 'node:fs';
 import httpProxy from 'http-proxy';
+import * as fs from 'node:fs';
+import * as http from 'node:http';
 
 export interface ProxyConfigEntry
 {

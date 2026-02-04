@@ -56,4 +56,16 @@ export class Typeguards
     {
         return value !== null && typeof value === 'object';
     }
+
+    public static hasPipeN(value: unknown): value is { n: unknown }
+    {
+        return value !== null && typeof value === 'object' && 'n' in value;
+    }
+
+    public static hasPipeA(value: unknown): value is { a: unknown[] }
+    {
+        return value !== null && typeof value === 'object' && 'a' in value && Array.isArray((value as {
+            a: unknown
+        }).a);
+    }
 }

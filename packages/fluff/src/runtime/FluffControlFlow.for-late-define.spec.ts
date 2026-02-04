@@ -2,16 +2,29 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FluffBase } from './FluffBase.js';
 import { TestLateDefineForChildComponent } from './tests/TestLateDefineForChildComponent.js';
 import { type TestLateDefineForColumn, TestLateDefineForComponent } from './tests/TestLateDefineForComponent.js';
+import { isLateDefineForColumn } from './tests/typeguards.js';
 
 describe('fluff:for (late custom element define)', () =>
 {
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: TestLateDefineForComponent): TestLateDefineForColumn[] => t.columns,
-            (_t: TestLateDefineForComponent, l: {
-                column: TestLateDefineForColumn
-            }): TestLateDefineForColumn => l.column
+            (t: unknown): TestLateDefineForColumn[] =>
+            {
+                if (t instanceof TestLateDefineForComponent)
+                {
+                    return t.columns;
+                }
+                throw new Error('Invalid type');
+            },
+            (_t: unknown, l: Record<string, unknown>): TestLateDefineForColumn =>
+            {
+                if (isLateDefineForColumn(l))
+                {
+                    return l.column;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });

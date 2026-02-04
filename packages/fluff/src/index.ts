@@ -4,7 +4,7 @@ export { HostBinding } from './decorators/HostBinding.js';
 export { HostListener } from './decorators/HostListener.js';
 export { Input } from './decorators/Input.js';
 export { Output } from './decorators/Output.js';
-export { Pipe } from './decorators/Pipe.js';
+export { getPipeTransform, Pipe } from './decorators/Pipe.js';
 export type { PipeTransform } from './decorators/Pipe.js';
 export { Reactive } from './decorators/Reactive.js';
 export { ViewChild } from './decorators/ViewChild.js';

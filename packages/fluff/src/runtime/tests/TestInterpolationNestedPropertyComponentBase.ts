@@ -5,7 +5,10 @@ import { TestInterpolationNestedPropertyContainerClass } from './TestInterpolati
 
 export abstract class TestInterpolationNestedPropertyComponentBase extends FluffElement
 {
-    public __hostClass = new Property<TestInterpolationNestedPropertyContainerClass>({ initialValue: new TestInterpolationNestedPropertyContainerClass(), propertyName: 'hostClass' });
+    public __hostClass = new Property<TestInterpolationNestedPropertyContainerClass>({
+        initialValue: new TestInterpolationNestedPropertyContainerClass(),
+        propertyName: 'hostClass'
+    });
 
     public get hostClass(): TestInterpolationNestedPropertyContainerClass
     {

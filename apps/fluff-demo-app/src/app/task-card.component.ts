@@ -1,13 +1,11 @@
 import type { OnDestroy, Subscription } from '@fluffjs/fluff';
 import { Component, HostBinding, HostListener, Input, Output, Publisher, Reactive } from '@fluffjs/fluff';
 import type { Task, TaskPriority, TaskStatus } from './models.js';
-import { CapitalizePipe, DatePipe, LowercasePipe, TruncatePipe, UppercasePipe } from './pipes.js';
 
 @Component({
     selector: 'task-card',
     templateUrl: './task-card.component.html',
-    styleUrl: './task-card.component.css',
-    pipes: [UppercasePipe, LowercasePipe, TruncatePipe, CapitalizePipe, DatePipe]
+    styleUrl: './task-card.component.css'
 })
 export class TaskCardComponent extends HTMLElement implements OnDestroy
 {
@@ -98,26 +96,22 @@ export class TaskCardComponent extends HTMLElement implements OnDestroy
     public onMove(newStatus: TaskStatus): void
     {
         this.showMoveMenu = false;
-        this.move.emit({ newStatus })
-            .catch(console.error);
+        this.move.emit({ newStatus });
     }
 
     public onDelete(): void
     {
-        this.delete.emit()
-            .catch(console.error);
+        this.delete.emit();
     }
 
     public onEdit(): void
     {
-        this.edit.emit()
-            .catch(console.error);
+        this.edit.emit();
     }
 
     public onCancelEdit(): void
     {
-        this.cancelEdit.emit()
-            .catch(console.error);
+        this.cancelEdit.emit();
     }
 
     public onSave(): void
@@ -130,8 +124,7 @@ export class TaskCardComponent extends HTMLElement implements OnDestroy
                 assignee: this.editAssignee || null,
                 dueDate: this.editDueDate || null
             }
-        })
-            .catch(console.error);
+        });
     }
 
     public toggleMoveMenu(): void

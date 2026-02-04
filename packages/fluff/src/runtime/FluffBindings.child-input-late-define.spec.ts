@@ -29,9 +29,30 @@ describe('bindings (child input late define)', () =>
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: TestParentBindsTasksComponent): number[] => t.childList,
-            (t: TestParentBindsTasksComponent): number[] => t.tasksForChild,
-            (t: TestChildTasksListComponent): number[] => t.tasks
+            (t: unknown): number[] =>
+            {
+                if (t instanceof TestParentBindsTasksComponent)
+                {
+                    return t.childList;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): number[] =>
+            {
+                if (t instanceof TestParentBindsTasksComponent)
+                {
+                    return t.tasksForChild;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): number[] =>
+            {
+                if (t instanceof TestChildTasksListComponent)
+                {
+                    return t.tasks;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });

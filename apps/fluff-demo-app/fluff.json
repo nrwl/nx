@@ -5,11 +5,7 @@
             "name": "fluff-demo-app",
             "srcDir": "src",
             "outDir": "dist",
-            "entryPoint": "main.ts",
             "indexHtml": "index.html",
-            "components": [
-                "**/*.component.ts"
-            ],
             "styles": [
                 "styles.css"
             ],

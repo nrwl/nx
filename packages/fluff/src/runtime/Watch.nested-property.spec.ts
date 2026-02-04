@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Property } from '../utils/Property.js';
 import { FluffBase } from './FluffBase.js';
-import { resetTestWatchNestedPropertyState, TestWatchNestedPropertyChildComponent, testWatchNestedPropertyCallCount, testWatchNestedPropertyLastValue } from './tests/TestWatchNestedPropertyChildComponent.js';
+import {
+    resetTestWatchNestedPropertyState,
+    testWatchNestedPropertyCallCount,
+    TestWatchNestedPropertyChildComponent,
+    testWatchNestedPropertyLastValue
+} from './tests/TestWatchNestedPropertyChildComponent.js';
 import { TestWatchNestedPropertyChildComponent2 } from './tests/TestWatchNestedPropertyChildComponent2.js';
 import { TestWatchNestedPropertyContainerClass } from './tests/TestWatchNestedPropertyContainerClass.js';
 import { TestWatchNestedPropertyParentComponent } from './tests/TestWatchNestedPropertyParentComponent.js';
@@ -25,15 +30,26 @@ describe('Watch with nested Property bindings', () =>
     it('should trigger @Watch when parent nested Property value changes', async() =>
     {
         FluffBase.__e = [
-            (t: TestWatchNestedPropertyParentComponent): Property<number> => t.hostClass.childProp
+            (t: unknown): Property<number> =>
+            {
+                if (t instanceof TestWatchNestedPropertyParentComponent)
+                {
+                    return t.hostClass.childProp;
+                }
+                throw new Error('Invalid type');
+            }
         ];
 
         Reflect.set(TestWatchNestedPropertyParentComponent, '__bindings', {
             l0: [{ n: 'property', b: 'property', d: [['hostClass', 'childProp']], e: 0 }]
         });
 
-        const childTag = 'test-watch-nested-child-' + Math.random().toString(36).slice(2);
-        const parentTag = 'test-watch-nested-parent-' + Math.random().toString(36).slice(2);
+        const childTag = 'test-watch-nested-child-' + Math.random()
+            .toString(36)
+            .slice(2);
+        const parentTag = 'test-watch-nested-parent-' + Math.random()
+            .toString(36)
+            .slice(2);
 
         customElements.define(childTag, TestWatchNestedPropertyChildComponent);
         customElements.define(parentTag, TestWatchNestedPropertyParentComponent);
@@ -64,8 +80,10 @@ describe('Watch with nested Property bindings', () =>
             setTimeout(resolve, 0);
         });
 
-        expect(testWatchNestedPropertyCallCount).toBe(initialCallCount + 1);
-        expect(testWatchNestedPropertyLastValue).toBe(42);
+        expect(testWatchNestedPropertyCallCount)
+            .toBe(initialCallCount + 1);
+        expect(testWatchNestedPropertyLastValue)
+            .toBe(42);
 
         parent.remove();
     });
@@ -73,15 +91,26 @@ describe('Watch with nested Property bindings', () =>
     it('should unsubscribe from old nested Property and resubscribe to new one when parent changes', async() =>
     {
         FluffBase.__e = [
-            (t: TestWatchNestedPropertyParentComponent2): Property<number> => t.hostClass.childProp
+            (t: unknown): Property<number> =>
+            {
+                if (t instanceof TestWatchNestedPropertyParentComponent2)
+                {
+                    return t.hostClass.childProp;
+                }
+                throw new Error('Invalid type');
+            }
         ];
 
         Reflect.set(TestWatchNestedPropertyParentComponent2, '__bindings', {
             l0: [{ n: 'property', b: 'property', d: [['hostClass', 'childProp']], e: 0 }]
         });
 
-        const childTag = 'test-watch-nested-resub-child-' + Math.random().toString(36).slice(2);
-        const parentTag = 'test-watch-nested-resub-parent-' + Math.random().toString(36).slice(2);
+        const childTag = 'test-watch-nested-resub-child-' + Math.random()
+            .toString(36)
+            .slice(2);
+        const parentTag = 'test-watch-nested-resub-parent-' + Math.random()
+            .toString(36)
+            .slice(2);
 
         customElements.define(childTag, TestWatchNestedPropertyChildComponent2);
         customElements.define(parentTag, TestWatchNestedPropertyParentComponent2);
@@ -116,7 +145,8 @@ describe('Watch with nested Property bindings', () =>
             setTimeout(resolve, 0);
         });
 
-        expect(testWatchNestedPropertyLastValue).toBe(100);
+        expect(testWatchNestedPropertyLastValue)
+            .toBe(100);
 
         const countAfterSwap = testWatchNestedPropertyCallCount;
 
@@ -127,8 +157,10 @@ describe('Watch with nested Property bindings', () =>
             setTimeout(resolve, 0);
         });
 
-        expect(testWatchNestedPropertyCallCount).toBe(countAfterSwap);
-        expect(testWatchNestedPropertyLastValue).toBe(100);
+        expect(testWatchNestedPropertyCallCount)
+            .toBe(countAfterSwap);
+        expect(testWatchNestedPropertyLastValue)
+            .toBe(100);
 
         newContainer.childProp.setValue(200);
 
@@ -137,8 +169,10 @@ describe('Watch with nested Property bindings', () =>
             setTimeout(resolve, 0);
         });
 
-        expect(testWatchNestedPropertyCallCount).toBe(countAfterSwap + 1);
-        expect(testWatchNestedPropertyLastValue).toBe(200);
+        expect(testWatchNestedPropertyCallCount)
+            .toBe(countAfterSwap + 1);
+        expect(testWatchNestedPropertyLastValue)
+            .toBe(200);
 
         parent.remove();
     });

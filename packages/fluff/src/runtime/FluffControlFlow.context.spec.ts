@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { FluffElement } from './FluffElement.js';
+import { hasItem } from './tests/typeguards.js';
 
 describe('Custom element upgrade timing with setContextOnChildren', () =>
 {
     it('should have __loopContext available when connectedCallback runs', () =>
     {
-        let contextDuringSetup: Record<string, unknown> | undefined = undefined;
+        let contextDuringSetup: Record<string, unknown> = {};
 
         class ChildComponent extends FluffElement
         {
@@ -53,7 +54,7 @@ describe('Custom element upgrade timing with setContextOnChildren', () =>
 
         expect(contextDuringSetup)
             .toBeDefined();
-        if (contextDuringSetup)
+        if (hasItem(contextDuringSetup))
         {
             expect(contextDuringSetup.item)
                 .toBe('test-value');

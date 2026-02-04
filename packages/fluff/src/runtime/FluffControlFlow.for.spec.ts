@@ -8,8 +8,15 @@ describe('fluff:for', () =>
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: TestForComponent): string[] => t.items,
-            (_t: TestForComponent, l: { item: unknown }): unknown => l.item
+            (t: unknown): string[] =>
+            {
+                if (t instanceof TestForComponent)
+                {
+                    return t.items;
+                }
+                throw new Error('Invalid type');
+            },
+            (_t: unknown, l: Record<string, unknown>): unknown => l.item
         ];
         FluffBase.__h = [];
     });

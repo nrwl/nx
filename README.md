@@ -64,6 +64,71 @@ just use Angular :)
 | `@ViewChild`    | Get a reference to a child element in the template                   |
 | `@Pipe`         | Define a reusable transform for template expressions                 |
 
+## @Pipe Example
+
+The `@Pipe` decorator lets you create reusable transforms for template expressions. There are two ways to define pipes:
+
+### Class-level Pipe (Recommended)
+
+Create a standalone pipe class that can be used across your entire application:
+
+```typescript
+import { Pipe, PipeTransform } from '@fluffjs/fluff';
+
+@Pipe('uppercase')
+export class UppercasePipe implements PipeTransform
+{
+    public transform(value: unknown): string
+    {
+        return String(value).toUpperCase();
+    }
+}
+
+@Pipe('truncate')
+export class TruncatePipe implements PipeTransform
+{
+    public transform(value: unknown, length: number = 50): string
+    {
+        const str = String(value);
+        return str.length > length ? str.slice(0, length) + '...' : str;
+    }
+}
+```
+
+Then use in any template:
+
+```html
+<span>{{ title | uppercase }}</span>
+<span>{{ description | truncate:80 }}</span>
+```
+
+The pipe class is automatically registered when it's imported anywhere in your app. Make sure your pipe files are included in your build entry point.
+
+### Method-level Pipe
+
+You can also define pipes as methods within a component:
+
+```typescript
+import { Component, Pipe, Reactive } from '@fluffjs/fluff';
+
+@Component({
+    selector: 'my-component',
+    template: `<span>{{ price | currency }}</span>`
+})
+export class MyComponent extends HTMLElement
+{
+    @Reactive() public price = 99.99;
+
+    @Pipe('currency')
+    public formatCurrency(value: unknown): string
+    {
+        return '$' + Number(value).toFixed(2);
+    }
+}
+```
+
+Method-level pipes are scoped to the component where they're defined.
+
 ## @Watch Example
 
 The `@Watch` decorator lets you react to changes in one or more reactive properties. The callback receives the name of the property that changed:

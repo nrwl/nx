@@ -80,7 +80,7 @@ describe('babel-plugin-reactive', () =>
                 }
             `;
 
-            const result = transform(code, 'my.component.ts');
+            transform(code, 'my.component.ts');
 
             const props = getReactiveProps('my.component.ts');
             expect(props)
@@ -276,7 +276,8 @@ describe('babel-plugin-reactive', () =>
 
             const result = transform(code, 'my.component.ts');
 
-            expect(result).toContain('this.onCountChange("count")');
+            expect(result)
+                .toContain('this.onCountChange("count")');
         });
 
         it('should pass correct property name for each watched property', () =>
@@ -301,8 +302,10 @@ describe('babel-plugin-reactive', () =>
 
             const result = transform(code, 'my.component.ts');
 
-            expect(result).toContain('this.onNameChange("firstName")');
-            expect(result).toContain('this.onNameChange("lastName")');
+            expect(result)
+                .toContain('this.onNameChange("firstName")');
+            expect(result)
+                .toContain('this.onNameChange("lastName")');
         });
 
         it('should push @Watch subscriptions to __baseSubscriptions for cleanup on destroy', () =>
@@ -326,7 +329,8 @@ describe('babel-plugin-reactive', () =>
 
             const result = transform(code, 'my.component.ts');
 
-            expect(result).toContain('__baseSubscriptions.push');
+            expect(result)
+                .toContain('__baseSubscriptions.push');
         });
     });
 
@@ -676,8 +680,10 @@ describe('babel-plugin-reactive', () =>
 
             const result = transform(code, 'my.component.ts');
 
-            expect(result).toContain('__cb("firstName")');
-            expect(result).toContain('__cb("lastName")');
+            expect(result)
+                .toContain('__cb("firstName")');
+            expect(result)
+                .toContain('__cb("lastName")');
         });
     });
 

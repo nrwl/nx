@@ -7,8 +7,22 @@ describe('MarkerManager (template.content markers)', () =>
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: TestTemplateNestedMarkersComponent): boolean => t.show,
-            (t: TestTemplateNestedMarkersComponent): string => t.text
+            (t: unknown): boolean =>
+            {
+                if (t instanceof TestTemplateNestedMarkersComponent)
+                {
+                    return t.show;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): string =>
+            {
+                if (t instanceof TestTemplateNestedMarkersComponent)
+                {
+                    return t.text;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });

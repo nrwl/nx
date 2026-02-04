@@ -2,22 +2,40 @@ import { describe, expect, it } from 'vitest';
 import { FluffBase } from './FluffBase.js';
 import { TestOutputBindingChildComponent } from './tests/TestOutputBindingChildComponent.js';
 import { TestOutputBindingParentComponent } from './tests/TestOutputBindingParentComponent.js';
+import { hasTaskId } from './tests/typeguards.js';
 
 describe('output bindings', () =>
 {
     it('should invoke parent handler when child output emits', async() =>
     {
         FluffBase.__e = [
-            (t: TestOutputBindingParentComponent): boolean => t.show
+            (t: unknown): boolean =>
+            {
+                if (t instanceof TestOutputBindingParentComponent)
+                {
+                    return t.show;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
-        FluffBase.__h[0] = (t: TestOutputBindingParentComponent, _l: unknown, e: { taskId: number }): void =>
+        FluffBase.__h[0] = (t: unknown, _l: Record<string, unknown>, e: unknown): void =>
         {
-            t.onChildEdit(e);
+            if (t instanceof TestOutputBindingParentComponent && hasTaskId(e))
+            {
+                t.onChildEdit(e);
+                return;
+            }
+            throw new Error('Invalid type');
         };
-        FluffBase.__h[1] = (t: TestOutputBindingChildComponent): void =>
+        FluffBase.__h[1] = (t: unknown): void =>
         {
-            t.onEdit();
+            if (t instanceof TestOutputBindingChildComponent)
+            {
+                t.onEdit();
+                return;
+            }
+            throw new Error('Invalid type');
         };
 
         if (!customElements.get('test-output-binding-parent'))

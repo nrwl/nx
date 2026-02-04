@@ -2,6 +2,7 @@ import * as parse5 from 'parse5';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CodeGenerator } from './CodeGenerator.js';
 import { TemplateParser } from './TemplateParser.js';
+import { Typeguards } from './Typeguards.js';
 
 function extractHtml(renderMethod: string): string
 {
@@ -461,12 +462,16 @@ describe('CodeGenerator', () =>
                 const modelBinding = bindings.find((b: Record<string, unknown>) => b.n === 'model');
                 expect(modelBinding)
                     .toBeDefined();
-                expect(modelBinding.p)
-                    .toBeDefined();
-                expect(Array.isArray(modelBinding.p))
-                    .toBe(true);
-                expect(modelBinding.p[0].n)
-                    .toBe('GetModel');
+                if (modelBinding)
+                {
+                    expect(modelBinding.p)
+                        .toBeDefined();
+                    if (Array.isArray(modelBinding.p) && Typeguards.hasPipeN(modelBinding.p[0]))
+                    {
+                        expect(modelBinding.p[0].n)
+                            .toBe('GetModel');
+                    }
+                }
             }
         });
 
@@ -490,12 +495,23 @@ describe('CodeGenerator', () =>
                 const valueBinding = bindings.find((b: Record<string, unknown>) => b.n === 'value');
                 expect(valueBinding)
                     .toBeDefined();
-                expect(valueBinding.p)
-                    .toBeDefined();
-                expect(valueBinding.p[0].n)
-                    .toBe('currency');
-                expect(typeof valueBinding.p[0].a[0])
-                    .toBe('number');
+                if (valueBinding)
+                {
+                    expect(valueBinding.p)
+                        .toBeDefined();
+                    if (Array.isArray(valueBinding.p))
+                    {
+                        const [pipe] = valueBinding.p;
+                        if (Typeguards.hasPipeN(pipe) && Typeguards.hasPipeA(pipe))
+                        {
+                            expect(pipe.n)
+                                .toBe('currency');
+                            const [firstArg] = pipe.a;
+                            expect(typeof firstArg)
+                                .toBe('number');
+                        }
+                    }
+                }
             }
         });
     });

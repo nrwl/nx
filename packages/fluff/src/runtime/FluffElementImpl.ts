@@ -1,3 +1,4 @@
+import { getPipeTransform } from '../decorators/Pipe.js';
 import type { Subscription } from '../interfaces/Subscription.js';
 import { DomUtils } from '../utils/DomUtils.js';
 import { Property } from '../utils/Property.js';
@@ -133,7 +134,7 @@ export abstract class FluffElement extends FluffBase
 
     protected override __getPipeFn(name: string): ((value: unknown, ...args: unknown[]) => unknown) | undefined
     {
-        return this.__pipes[name];
+        return this.__pipes[name] ?? getPipeTransform(name);
     }
 
     protected __getShadowRoot(): ShadowRoot

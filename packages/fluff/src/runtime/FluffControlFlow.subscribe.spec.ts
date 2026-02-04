@@ -53,7 +53,14 @@ describe('binding.subscribe should trigger re-evaluation', () =>
         }
 
         FluffBase.__e = [
-            (t: HostComponent): string[] => t.getTasksForColumn()
+            (t: unknown): string[] =>
+            {
+                if (t instanceof HostComponent)
+                {
+                    return t.getTasksForColumn();
+                }
+                throw new Error('Invalid type');
+            }
         ];
         HostComponent.__bindings = {
             l0: [{ n: 'tasks', b: 'property', e: 0, s: 'filteredTasks' }]

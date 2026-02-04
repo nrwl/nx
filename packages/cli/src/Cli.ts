@@ -15,6 +15,19 @@ import type { CliOptions } from './interfaces/CliOptions.js';
 import type { FluffConfig, FluffTarget } from './types/FluffConfig.js';
 import { DEFAULT_CONFIG } from './types/FluffConfig.js';
 
+interface EntryPointConfig
+{
+    useStdin: boolean;
+    entryPointFile: string | null;
+    generatedEntry: { contents: string; resolveDir: string } | null;
+}
+
+interface EsbuildEntryConfig
+{
+    stdin?: { contents: string; resolveDir: string; loader: 'ts' };
+    entryPoints?: string[];
+}
+
 export class Cli
 {
     private readonly cwd: string;
@@ -402,61 +415,19 @@ Examples:
         {
             bundleOptions.minify = false;
         }
-        const entryPoint = target.entryPoint
-            ? path.join(srcDir, target.entryPoint)
-            : this.generateEntryPoint(srcDir, target.exclude);
-
-        let inlineStyles = '';
-        if (target.styles && target.styles.length > 0)
-        {
-            const styleContents: string[] = [];
-            for (const stylePath of target.styles)
-            {
-                const fullPath = path.resolve(srcDir, stylePath);
-                if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile())
-                {
-                    console.log(`   ✓ Style: ${stylePath}`);
-                    styleContents.push(fs.readFileSync(fullPath, 'utf-8'));
-                }
-                else
-                {
-                    const styleFiles = this.findFiles(srcDir, [stylePath]);
-                    if (styleFiles.length === 0)
-                    {
-                        console.warn(`   ⚠ Style not found: ${fullPath}`);
-                    }
-                    for (const styleFile of styleFiles)
-                    {
-                        console.log(`   ✓ Style: ${path.relative(srcDir, styleFile)}`);
-                        styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
-                    }
-                }
-            }
-            if (styleContents.length > 0)
-            {
-                inlineStyles = styleContents.join('\n');
-                if (bundleOptions.minify)
-                {
-                    const cssResult = await esbuild.transform(inlineStyles, {
-                        loader: 'css',
-                        minify: true
-                    });
-                    inlineStyles = cssResult.code;
-                }
-                console.log('   ✓ Bundled global styles');
-            }
-        }
+        const entry = this.resolveEntryPoint(target, srcDir);
+        const inlineStyles = await this.collectStyles(target, srcDir, bundleOptions.minify ?? true);
 
         console.log('   Building with esbuild...');
 
-        const tsconfigRaw = target.tsConfigPath
-            ? fs.readFileSync(path.resolve(projectRoot, target.tsConfigPath), 'utf-8')
-            : '{}';
+        const tsconfigRaw = this.loadTsConfig(target, projectRoot);
 
         const result = await esbuild.build({
-            entryPoints: [entryPoint],
+            ...this.getEsbuildEntryConfig(entry),
             bundle: true,
-            outdir: outDir,
+            ...(entry.useStdin
+                ? { outfile: path.join(outDir, 'fluff-app.js') }
+                : { outdir: outDir, entryNames: '[name]' }),
             format: 'esm',
             platform: 'browser',
             target: bundleOptions.target ?? 'es2022',
@@ -541,7 +512,7 @@ Examples:
 
         if (target.assets)
         {
-            await this.copyAssets(target.assets, projectRoot, srcDir, outDir);
+            await this.copyAssets(target.assets, projectRoot, srcDir, outDir, target.indexHtml);
         }
 
         console.log(`✅ Target '${target.name}' built successfully!`);
@@ -673,41 +644,8 @@ Examples:
             }
         }
 
-        const entryPoint = target.entryPoint
-            ? path.join(srcDir, target.entryPoint)
-            : this.generateEntryPoint(srcDir, target.exclude);
-
-        let inlineStyles = '';
-        if (target.styles && target.styles.length > 0)
-        {
-            const styleContents: string[] = [];
-            for (const stylePath of target.styles)
-            {
-                const fullPath = path.resolve(srcDir, stylePath);
-                if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile())
-                {
-                    console.log(`   ✓ Style: ${stylePath}`);
-                    styleContents.push(fs.readFileSync(fullPath, 'utf-8'));
-                }
-                else
-                {
-                    const styleFiles = this.findFiles(srcDir, [stylePath]);
-                    if (styleFiles.length === 0)
-                    {
-                        console.warn(`   ⚠ Style not found: ${fullPath}`);
-                    }
-                    for (const styleFile of styleFiles)
-                    {
-                        console.log(`   ✓ Style: ${path.relative(srcDir, styleFile)}`);
-                        styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
-                    }
-                }
-            }
-            if (styleContents.length > 0)
-            {
-                inlineStyles = styleContents.join('\n');
-            }
-        }
+        const entry = this.resolveEntryPoint(target, srcDir);
+        const inlineStyles = await this.collectStyles(target, srcDir, false);
 
         if (target.indexHtml)
         {
@@ -716,8 +654,7 @@ Examples:
             {
                 const indexHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
                 const transformed = await IndexHtmlTransformer.transform(indexHtml, {
-                    jsBundle: path.basename(entryPoint)
-                        .replace('.ts', '.js'),
+                    jsBundle: this.getJsBundleName(entry),
                     cssBundle: undefined,
                     inlineStyles: inlineStyles || undefined,
                     gzip: false,
@@ -730,19 +667,19 @@ Examples:
 
         if (target.assets)
         {
-            this.copyAssetsForServe(target.assets, projectRoot, srcDir, outDir);
+            this.copyAssetsForServe(target.assets, projectRoot, srcDir, outDir, target.indexHtml);
         }
 
         console.log(`🚀 Starting dev server for '${target.name}'...`);
 
-        const tsconfigRaw = target.tsConfigPath
-            ? fs.readFileSync(path.resolve(projectRoot, target.tsConfigPath), 'utf-8')
-            : '{}';
+        const tsconfigRaw = this.loadTsConfig(target, projectRoot);
 
         const ctx = await esbuild.context({
-            entryPoints: [entryPoint],
+            ...this.getEsbuildEntryConfig(entry),
             bundle: true,
-            outdir: outDir,
+            ...(entry.useStdin
+                ? { outfile: path.join(outDir, 'fluff-app.js') }
+                : { outdir: outDir, entryNames: '[name]' }),
             format: 'esm',
             platform: 'browser',
             target: 'es2022',
@@ -799,7 +736,95 @@ Examples:
         }
     }
 
-    private generateEntryPoint(srcDir: string, exclude: string[] = []): string
+    private resolveEntryPoint(target: FluffTarget, srcDir: string): EntryPointConfig
+    {
+        const useStdin = !target.entryPoint;
+        const entryPointFile = target.entryPoint ? path.join(srcDir, target.entryPoint) : null;
+        const generatedEntry = useStdin ? this.generateEntryContent(srcDir, target.exclude) : null;
+        return { useStdin, entryPointFile, generatedEntry };
+    }
+
+    private getEsbuildEntryConfig(entry: EntryPointConfig): EsbuildEntryConfig
+    {
+        if (entry.useStdin && entry.generatedEntry)
+        {
+            return {
+                stdin: {
+                    contents: entry.generatedEntry.contents,
+                    resolveDir: entry.generatedEntry.resolveDir,
+                    loader: 'ts'
+                }
+            };
+        }
+        return { entryPoints: [entry.entryPointFile ?? ''] };
+    }
+
+    private getJsBundleName(entry: EntryPointConfig): string
+    {
+        if (entry.useStdin)
+        {
+            return 'fluff-app.js';
+        }
+        return path.basename(entry.entryPointFile ?? '').replace('.ts', '.js');
+    }
+
+    private async collectStyles(target: FluffTarget, srcDir: string, minify: boolean): Promise<string>
+    {
+        if (!target.styles || target.styles.length === 0)
+        {
+            return '';
+        }
+
+        const styleContents: string[] = [];
+        for (const stylePath of target.styles)
+        {
+            const fullPath = path.resolve(srcDir, stylePath);
+            if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile())
+            {
+                console.log(`   ✓ Style: ${stylePath}`);
+                styleContents.push(fs.readFileSync(fullPath, 'utf-8'));
+            }
+            else
+            {
+                const styleFiles = this.findFiles(srcDir, [stylePath]);
+                if (styleFiles.length === 0)
+                {
+                    console.warn(`   ⚠ Style not found: ${fullPath}`);
+                }
+                for (const styleFile of styleFiles)
+                {
+                    console.log(`   ✓ Style: ${path.relative(srcDir, styleFile)}`);
+                    styleContents.push(fs.readFileSync(styleFile, 'utf-8'));
+                }
+            }
+        }
+
+        if (styleContents.length === 0)
+        {
+            return '';
+        }
+
+        let inlineStyles = styleContents.join('\n');
+        if (minify)
+        {
+            const cssResult = await esbuild.transform(inlineStyles, {
+                loader: 'css',
+                minify: true
+            });
+            inlineStyles = cssResult.code;
+        }
+        console.log('   ✓ Bundled global styles');
+        return inlineStyles;
+    }
+
+    private loadTsConfig(target: FluffTarget, projectRoot: string): string
+    {
+        return target.tsConfigPath
+            ? fs.readFileSync(path.resolve(projectRoot, target.tsConfigPath), 'utf-8')
+            : '{}';
+    }
+
+    private generateEntryContent(srcDir: string, exclude: string[] = []): { contents: string; resolveDir: string }
     {
         const tsFiles = this.findAllTsFiles(srcDir, exclude);
         for (const f of tsFiles)
@@ -815,9 +840,7 @@ Examples:
 
         const program = t.program(importDecls);
         const entryContent = generate(program, { compact: false }).code;
-        const entryPath = path.join(srcDir, '__generated_entry.ts');
-        fs.writeFileSync(entryPath, entryContent);
-        return entryPath;
+        return { contents: entryContent, resolveDir: srcDir };
     }
 
     private findAllTsFiles(dir: string, userExclude: string[] = []): string[]
@@ -837,7 +860,8 @@ Examples:
                 }
                 else if (entry.isFile() && entry.name.endsWith('.ts'))
                 {
-                    const relativePath = path.relative(dir, fullPath).replace(/\\/g, '/');
+                    const relativePath = path.relative(dir, fullPath)
+                        .replace(/\\/g, '/');
                     const isExcluded = excludePatterns.some(pattern =>
                         this.matchGlob(entry.name, pattern) || this.matchGlob(relativePath, pattern)
                     );
@@ -887,7 +911,8 @@ Examples:
         for (const pattern of patterns)
         {
             const patternPath = path.join(baseDir, pattern);
-            if (fs.existsSync(patternPath) && fs.statSync(patternPath).isDirectory())
+            if (fs.existsSync(patternPath) && fs.statSync(patternPath)
+                .isDirectory())
             {
                 const normalizedFile = filePath.replace(/\\/g, '/');
                 const normalizedPattern = pattern.replace(/\\/g, '/');
@@ -915,7 +940,8 @@ Examples:
         assets: string[],
         projectRoot: string,
         srcDir: string,
-        outDir: string
+        outDir: string,
+        indexHtml?: string
     ): Promise<void>
     {
         const compiler = new ComponentCompiler();
@@ -924,7 +950,8 @@ Examples:
         {
             const assetPath = path.resolve(srcDir, asset);
 
-            if (fs.existsSync(assetPath) && fs.statSync(assetPath).isDirectory())
+            if (fs.existsSync(assetPath) && fs.statSync(assetPath)
+                .isDirectory())
             {
                 const dirName = path.basename(assetPath);
                 const targetDir = path.join(outDir, dirName);
@@ -941,6 +968,7 @@ Examples:
                     if (filePath.endsWith('.component.css')) continue;
 
                     const relativePath = path.relative(srcDir, filePath);
+                    if (indexHtml && relativePath === indexHtml) continue;
                     const outPath = path.join(outDir, relativePath);
 
                     const outFileDir = path.dirname(outPath);
@@ -970,14 +998,16 @@ Examples:
         assets: string[],
         projectRoot: string,
         srcDir: string,
-        outDir: string
+        outDir: string,
+        indexHtml?: string
     ): void
     {
         for (const asset of assets)
         {
             const assetPath = path.resolve(srcDir, asset);
 
-            if (fs.existsSync(assetPath) && fs.statSync(assetPath).isDirectory())
+            if (fs.existsSync(assetPath) && fs.statSync(assetPath)
+                .isDirectory())
             {
                 const dirName = path.basename(assetPath);
                 const targetDir = path.join(outDir, dirName);
@@ -994,6 +1024,7 @@ Examples:
                     if (filePath.endsWith('.ts')) continue;
 
                     const relativePath = path.relative(srcDir, filePath);
+                    if (indexHtml && relativePath === indexHtml) continue;
                     const outPath = path.join(outDir, relativePath);
 
                     const outFileDir = path.dirname(outPath);

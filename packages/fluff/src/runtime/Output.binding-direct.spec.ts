@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FluffBase } from './FluffBase.js';
 import { DirectOutputChild } from './tests/DirectOutputChild.js';
 import { DirectOutputParent } from './tests/DirectOutputParent.js';
+import { hasValue } from './tests/typeguards.js';
 
 describe('output bindings (direct child)', () =>
 {
@@ -9,9 +10,14 @@ describe('output bindings (direct child)', () =>
     {
         FluffBase.__e = [];
         FluffBase.__h = [];
-        FluffBase.__h[0] = (t: DirectOutputParent, _l: unknown, e: { value: string }): void =>
+        FluffBase.__h[0] = (t: unknown, _l: Record<string, unknown>, e: unknown): void =>
         {
-            t.onSubmit(e);
+            if (t instanceof DirectOutputParent && hasValue(e))
+            {
+                t.onSubmit(e);
+                return;
+            }
+            throw new Error('Invalid type');
         };
 
         if (!customElements.get('direct-output-parent'))

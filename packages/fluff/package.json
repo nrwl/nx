@@ -22,6 +22,12 @@
     "dependencies": {},
     "nx": {
         "targets": {
+            "lint": {
+                "executor": "@nx/eslint:lint",
+                "options": {
+                    "fix": true
+                }
+            },
             "build": {
                 "executor": "nx:run-commands",
                 "outputs": [
@@ -29,6 +35,7 @@
                 ],
                 "options": {
                     "commands": [
+                        "tsc --noEmit -p tsconfig.spec.json",
                         "tsc --build tsconfig.lib.json",
                         "node scripts/copy-package-json.mjs"
                     ],

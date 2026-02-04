@@ -4,7 +4,10 @@ import { TestPropertyUnwrapContainerClass } from './TestPropertyUnwrapContainerC
 
 export class TestPropertyUnwrapParentComponent extends FluffElement
 {
-    public __hostClass = new Property<TestPropertyUnwrapContainerClass>({ initialValue: new TestPropertyUnwrapContainerClass(), propertyName: 'hostClass' });
+    public __hostClass = new Property<TestPropertyUnwrapContainerClass>({
+        initialValue: new TestPropertyUnwrapContainerClass(),
+        propertyName: 'hostClass'
+    });
 
     public get hostClass(): TestPropertyUnwrapContainerClass
     {

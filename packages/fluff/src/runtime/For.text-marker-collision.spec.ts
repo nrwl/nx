@@ -10,7 +10,14 @@ describe('for text marker collision', () =>
     it('should render a single @for item when only one marker instance exists', async() =>
     {
         FluffBase.__e = [];
-        FluffBase.__e[0] = (t: TestForTextMarkerCollisionParentComponent): string[] => t.tags;
+        FluffBase.__e[0] = (t: unknown): string[] =>
+        {
+            if (t instanceof TestForTextMarkerCollisionParentComponent)
+            {
+                return t.tags;
+            }
+            throw new Error('Invalid type');
+        };
         FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
         FluffBase.__h = [];
 
@@ -55,7 +62,14 @@ describe('for text marker collision', () =>
     it('should render multiple @for iterations when the same text marker id exists multiple times (with pipes)', async() =>
     {
         FluffBase.__e = [];
-        FluffBase.__e[0] = (t: TestForTextMarkerCollisionParentComponent): string[] => t.tags;
+        FluffBase.__e[0] = (t: unknown): string[] =>
+        {
+            if (t instanceof TestForTextMarkerCollisionParentComponent)
+            {
+                return t.tags;
+            }
+            throw new Error('Invalid type');
+        };
         FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
         FluffBase.__h = [];
 
@@ -99,7 +113,14 @@ describe('for text marker collision', () =>
     it('should handle empty + reinsert for @for text markers', async() =>
     {
         FluffBase.__e = [];
-        FluffBase.__e[0] = (t: TestForTextMarkerCollisionParentComponent): string[] => t.tags;
+        FluffBase.__e[0] = (t: unknown): string[] =>
+        {
+            if (t instanceof TestForTextMarkerCollisionParentComponent)
+            {
+                return t.tags;
+            }
+            throw new Error('Invalid type');
+        };
         FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
         FluffBase.__h = [];
 
@@ -168,7 +189,14 @@ describe('for text marker collision', () =>
     it('should render duplicate items when no trackBy is used (no pipes)', async() =>
     {
         FluffBase.__e = [];
-        FluffBase.__e[0] = (t: TestForTextMarkerCollisionNoTrackParentComponent): string[] => t.tags;
+        FluffBase.__e[0] = (t: unknown): string[] =>
+        {
+            if (t instanceof TestForTextMarkerCollisionNoTrackParentComponent)
+            {
+                return t.tags;
+            }
+            throw new Error('Invalid type');
+        };
         FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
         FluffBase.__h = [];
 

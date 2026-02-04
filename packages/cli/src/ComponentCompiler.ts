@@ -4,8 +4,8 @@ import { parse } from '@babel/parser';
 import * as t from '@babel/types';
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
-import * as parse5 from 'parse5';
 import { minify as minifyHtml } from 'html-minifier-terser';
+import * as parse5 from 'parse5';
 import * as path from 'path';
 import { SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import type { ClassTransformOptions } from './babel-plugin-class-transform.js';
@@ -19,8 +19,8 @@ import { generate } from './BabelHelpers.js';
 import { CodeGenerator } from './CodeGenerator.js';
 import { ErrorHelpers } from './ErrorHelpers.js';
 import { GetterDependencyExtractor } from './GetterDependencyExtractor.js';
-import { Parse5Helpers } from './Parse5Helpers.js';
 import type { CompileResult } from './interfaces/CompileResult.js';
+import { Parse5Helpers } from './Parse5Helpers.js';
 import { TemplateParser } from './TemplateParser.js';
 
 interface BabelTransformOptions

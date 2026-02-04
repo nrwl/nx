@@ -7,7 +7,14 @@ describe('getter reactivity', () =>
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: TestGetterReactivityComponent): number => t.itemCount
+            (t: unknown): number =>
+            {
+                if (t instanceof TestGetterReactivityComponent)
+                {
+                    return t.itemCount;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });

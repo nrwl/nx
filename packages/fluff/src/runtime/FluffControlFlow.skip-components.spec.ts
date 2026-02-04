@@ -1,13 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { FluffBase } from './FluffBase.js';
 import { FluffElement } from './FluffElement.js';
+import { hasValue } from './tests/typeguards.js';
 
 describe('__processBindings should not search beneath x-fluff-component elements', () =>
 {
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: { value: string }): string => t.value
+            (t: unknown): string =>
+            {
+                if (hasValue(t))
+                {
+                    return t.value;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });

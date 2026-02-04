@@ -4,7 +4,10 @@ import { TestWatchNestedPropertyContainerClass } from './TestWatchNestedProperty
 
 export class TestWatchNestedPropertyParentComponent extends FluffElement
 {
-    public __hostClass = new Property<TestWatchNestedPropertyContainerClass>({ initialValue: new TestWatchNestedPropertyContainerClass(), propertyName: 'hostClass' });
+    public __hostClass = new Property<TestWatchNestedPropertyContainerClass>({
+        initialValue: new TestWatchNestedPropertyContainerClass(),
+        propertyName: 'hostClass'
+    });
 
     public get hostClass(): TestWatchNestedPropertyContainerClass
     {

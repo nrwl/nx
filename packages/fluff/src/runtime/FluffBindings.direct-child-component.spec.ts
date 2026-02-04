@@ -2,13 +2,21 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FluffBase } from './FluffBase.js';
 import { TestDirectChildComponent } from './tests/TestDirectChildComponent.js';
 import { TestDirectParentComponent } from './tests/TestDirectParentComponent.js';
+import { hasItemName } from './tests/typeguards.js';
 
 describe('bindings on direct custom element children', () =>
 {
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: { itemName: string }): string => t.itemName
+            (t: unknown): string =>
+            {
+                if (hasItemName(t))
+                {
+                    return t.itemName;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });
@@ -25,7 +33,9 @@ describe('bindings on direct custom element children', () =>
             l0: [{ n: 'value', b: 'property', d: ['itemName'], e: 0 }]
         });
 
-        const parentTag = 'test-direct-parent-' + Math.random().toString(36).slice(2);
+        const parentTag = 'test-direct-parent-' + Math.random()
+            .toString(36)
+            .slice(2);
         const childTag = 'test-direct-child';
 
         if (!customElements.get(childTag))
@@ -43,13 +53,15 @@ describe('bindings on direct custom element children', () =>
         });
 
         const child = parent.shadowRoot?.querySelector(childTag);
-        expect(child).toBeInstanceOf(TestDirectChildComponent);
+        expect(child)
+            .toBeInstanceOf(TestDirectChildComponent);
 
         if (!(child instanceof TestDirectChildComponent))
         {
             throw new Error('Expected TestDirectChildComponent');
         }
-        expect(child.value).toBe('test-item');
+        expect(child.value)
+            .toBe('test-item');
 
         parent.remove();
     });

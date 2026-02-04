@@ -1,15 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FluffBase } from './FluffBase.js';
-import type { TestTask } from './tests/TestNullInputTextComponent.js';
 import { TestNullInputTextComponent } from './tests/TestNullInputTextComponent.js';
+import { hasTask } from './tests/typeguards.js';
 
 describe('TextController (null input safety)', () =>
 {
     beforeEach(() =>
     {
         FluffBase.__e = [
-            (t: TestNullInputTextComponent): boolean => !t.isEditing,
-            (t: { task: TestTask }): string => t.task.title
+            (t: unknown): boolean =>
+            {
+                if (t instanceof TestNullInputTextComponent)
+                {
+                    return !t.isEditing;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): string =>
+            {
+                if (hasTask(t))
+                {
+                    return t.task.title;
+                }
+                throw new Error('Invalid type');
+            }
         ];
         FluffBase.__h = [];
     });

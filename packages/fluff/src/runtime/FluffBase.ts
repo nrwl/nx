@@ -117,7 +117,10 @@ export abstract class FluffBase extends HTMLElement
         return fn;
     }
 
-    protected __applyPipes(value: unknown, pipes: { n: string; a: number[] }[], locals: Record<string, unknown>): unknown
+    protected __applyPipes(value: unknown, pipes: {
+        n: string;
+        a: number[]
+    }[], locals: Record<string, unknown>): unknown
     {
         let result = value;
         for (const pipe of pipes)

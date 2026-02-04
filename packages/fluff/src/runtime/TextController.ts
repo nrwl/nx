@@ -1,3 +1,4 @@
+import { getPipeTransform } from '../decorators/Pipe.js';
 import type { TextMarkerConfig } from '../interfaces/TextMarkerConfig.js';
 import { Property } from '../utils/Property.js';
 import { MarkerController } from './MarkerController.js';
@@ -69,9 +70,7 @@ export class TextController extends MarkerController
     private applyPipe(name: string, value: unknown, args: number[]): unknown
     {
         const pipes = this.host.__pipes;
-        if (!pipes) return value;
-
-        const pipeFn = pipes[name];
+        const pipeFn = pipes?.[name] ?? getPipeTransform(name);
         if (!pipeFn)
         {
             console.warn(`Pipe "${name}" not found`);
