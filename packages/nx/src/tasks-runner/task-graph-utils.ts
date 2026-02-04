@@ -9,19 +9,38 @@ function _findCycle(
   },
   id: string,
   visited: { [taskId: string]: boolean },
-  path: string[]
+  pathSet: Set<string>,
+  pathArray: string[]
 ): string[] | null {
   if (visited[id]) return null;
   visited[id] = true;
 
-  for (const d of [
-    ...graph.dependencies[id],
-    ...(graph.continuousDependencies?.[id] ?? []),
-  ]) {
-    if (path.includes(d)) return [...path, d];
-    const cycle = _findCycle(graph, d, visited, [...path, d]);
+  const deps = graph.dependencies[id];
+  const continuousDeps = graph.continuousDependencies?.[id];
+
+  // Iterate without creating intermediate arrays
+  for (const d of deps) {
+    if (pathSet.has(d)) return [...pathArray, d];
+    pathSet.add(d);
+    pathArray.push(d);
+    const cycle = _findCycle(graph, d, visited, pathSet, pathArray);
     if (cycle) return cycle;
+    pathSet.delete(d);
+    pathArray.pop();
   }
+
+  if (continuousDeps) {
+    for (const d of continuousDeps) {
+      if (pathSet.has(d)) return [...pathArray, d];
+      pathSet.add(d);
+      pathArray.push(d);
+      const cycle = _findCycle(graph, d, visited, pathSet, pathArray);
+      if (cycle) return cycle;
+      pathSet.delete(d);
+      pathArray.pop();
+    }
+  }
+
   return null;
 }
 
@@ -33,13 +52,15 @@ export function findCycle(graph: {
   dependencies: Record<string, string[]>;
   continuousDependencies?: Record<string, string[]>;
 }): string[] | null {
-  const visited = {};
+  const visited: { [taskId: string]: boolean } = {};
   for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
 
   for (const t of Object.keys(graph.dependencies)) {
-    const cycle = _findCycle(graph, t, visited, [t]);
+    // Use Set for O(1) path lookup instead of O(n) Array.includes()
+    const pathSet = new Set<string>([t]);
+    const cycle = _findCycle(graph, t, visited, pathSet, [t]);
     if (cycle) return cycle;
   }
 
@@ -54,14 +75,16 @@ export function findCycles(graph: {
   dependencies: Record<string, string[]>;
   continuousDependencies?: Record<string, string[]>;
 }): Set<string> | null {
-  const visited = {};
+  const visited: { [taskId: string]: boolean } = {};
   const cycles = new Set<string>();
   for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
 
   for (const t of Object.keys(graph.dependencies)) {
-    const cycle = _findCycle(graph, t, visited, [t]);
+    // Use Set for O(1) path lookup instead of O(n) Array.includes()
+    const pathSet = new Set<string>([t]);
+    const cycle = _findCycle(graph, t, visited, pathSet, [t]);
     if (cycle) {
       cycle.forEach((t) => cycles.add(t));
     }
@@ -77,34 +100,63 @@ function _makeAcyclic(
   },
   id: string,
   visited: { [taskId: string]: boolean },
-  path: string[]
+  pathSet: Set<string>
 ) {
   if (visited[id]) return;
   visited[id] = true;
 
   const deps = graph.dependencies[id];
-  const continuousDeps = graph.continuousDependencies?.[id] ?? [];
-  for (const d of [...deps, ...continuousDeps]) {
-    if (path.includes(d)) {
-      deps.splice(deps.indexOf(d), 1);
-      continuousDeps.splice(continuousDeps.indexOf(d), 1);
+  const continuousDeps = graph.continuousDependencies?.[id];
+
+  // Collect cyclic deps to remove (avoid mutating during iteration)
+  const cyclicDeps: string[] = [];
+
+  for (const d of deps) {
+    if (pathSet.has(d)) {
+      cyclicDeps.push(d);
     } else {
-      _makeAcyclic(graph, d, visited, [...path, d]);
+      pathSet.add(d);
+      _makeAcyclic(graph, d, visited, pathSet);
+      pathSet.delete(d);
     }
   }
-  return null;
+
+  if (continuousDeps) {
+    for (const d of continuousDeps) {
+      if (pathSet.has(d)) {
+        cyclicDeps.push(d);
+      } else {
+        pathSet.add(d);
+        _makeAcyclic(graph, d, visited, pathSet);
+        pathSet.delete(d);
+      }
+    }
+  }
+
+  // Remove cyclic dependencies after iteration (use Set for O(1) lookup)
+  if (cyclicDeps.length > 0) {
+    const cyclicSet = new Set(cyclicDeps);
+    graph.dependencies[id] = deps.filter((d) => !cyclicSet.has(d));
+    if (continuousDeps) {
+      graph.continuousDependencies[id] = continuousDeps.filter(
+        (d) => !cyclicSet.has(d)
+      );
+    }
+  }
 }
 
 export function makeAcyclic(graph: {
   roots: string[];
   dependencies: Record<string, string[]>;
 }): void {
-  const visited = {};
+  const visited: { [taskId: string]: boolean } = {};
   for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
   for (const t of Object.keys(graph.dependencies)) {
-    _makeAcyclic(graph, t, visited, [t]);
+    // Use Set for O(1) path lookup instead of O(n) Array.includes()
+    const pathSet = new Set<string>([t]);
+    _makeAcyclic(graph, t, visited, pathSet);
   }
   graph.roots = Object.keys(graph.dependencies).filter(
     (t) => graph.dependencies[t].length === 0

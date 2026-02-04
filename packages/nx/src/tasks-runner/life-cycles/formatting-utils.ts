@@ -30,16 +30,20 @@ export function formatTargetsAndProjects(
   let projectsText = '';
   let dependentTasksText = '';
 
-  const tasksTargets = new Set();
-  const tasksProjects = new Set();
-  const dependentTasks = new Set();
+  const tasksTargets = new Set<string>();
+  const tasksProjects = new Set<string>();
+  const dependentTasks = new Set<Task>();
+
+  // Convert to Sets for O(1) lookup instead of O(n) Array.includes()
+  const projectNamesSet = new Set(projectNames);
+  const targetsSet = new Set(targets);
 
   tasks.forEach((task) => {
     tasksTargets.add(task.target.target);
     tasksProjects.add(task.target.project);
     if (
-      !projectNames.includes(task.target.project) ||
-      !targets.includes(task.target.target)
+      !projectNamesSet.has(task.target.project) ||
+      !targetsSet.has(task.target.target)
     ) {
       dependentTasks.add(task);
     }
