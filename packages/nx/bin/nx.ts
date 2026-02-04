@@ -22,11 +22,7 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
 import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
-import {
-  flushAnalytics,
-  reportCommandRunEvent,
-  startAnalytics,
-} from '../src/analytics';
+import { flushAnalytics, startAnalytics } from '../src/analytics';
 
 process.on('exit', () => flushAnalytics());
 
@@ -107,8 +103,6 @@ async function main() {
       await ensureAnalyticsPreferenceSet();
     } catch {}
     await startAnalytics();
-
-    reportCommandRunEvent(process.argv[2]);
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {

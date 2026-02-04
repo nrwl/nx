@@ -60,6 +60,8 @@ export enum EventCustomDimension {
   Command = 'ep.nx_command',
   GeneratorCollectionName = 'ep.generator_collection_name',
   GeneratorName = 'ep.generator_name',
+  PackageName = 'ep.package_name',
+  PackageVersion = 'ep.package_version',
 }
 
 /**
