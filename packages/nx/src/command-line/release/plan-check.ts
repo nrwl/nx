@@ -22,9 +22,13 @@ import {
 } from './config/version-plans';
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
 import { printConfigAndExit } from './utils/print-config';
+import { reportCommandRunEvent } from '../../analytics';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose, () => {
+    reportCommandRunEvent('release plan:check');
+    return createAPI({})(args);
+  });
 
 export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   return async function releasePlanCheck(args: PlanOptions): Promise<number> {

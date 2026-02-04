@@ -37,9 +37,13 @@ import {
   NxReleaseVersionResult,
   createAPI as createReleaseVersionAPI,
 } from './version';
+import { reportCommandRunWithArgs } from '../../analytics';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose, () => {
+    reportCommandRunWithArgs('release', { fullRelease: true });
+    return createAPI({}, false)(args);
+  });
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,

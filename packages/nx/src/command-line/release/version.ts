@@ -41,6 +41,7 @@ import {
 import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
 import { ReleaseGroupProcessor } from './version/release-group-processor';
 import { SemverBumpType } from './version/version-actions';
+import { reportCommandRunEvent } from '../../analytics';
 
 export interface NxReleaseVersionResult {
   /**
@@ -63,7 +64,10 @@ export interface NxReleaseVersionResult {
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose, () => {
+    reportCommandRunEvent('release version');
+    return createAPI({}, false)(args);
+  });
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
