@@ -62,6 +62,7 @@ export enum EventCustomDimension {
   GeneratorName = 'ep.generator_name',
   PackageName = 'ep.package_name',
   PackageVersion = 'ep.package_version',
+  AdditionalArguments = 'ep.additional_arguments',
 }
 
 /**
