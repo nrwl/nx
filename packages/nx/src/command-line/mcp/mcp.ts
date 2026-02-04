@@ -4,8 +4,10 @@ import {
   getPackageManagerCommand,
 } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { reportCommandRunEvent } from '../../analytics';
 
 export async function mcpHandler(args: any) {
+  reportCommandRunEvent('mcp');
   const packageManager = detectPackageManager();
   const packageManagerCommands = getPackageManagerCommand(packageManager);
 

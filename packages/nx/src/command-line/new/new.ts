@@ -2,6 +2,7 @@ import { flushChanges, FsTree } from '../../generators/tree';
 import { combineOptionsForGenerator } from '../../utils/params';
 import { handleErrors } from '../../utils/handle-errors';
 import { getGeneratorInformation } from '../generate/generator-utils';
+import { reportCommandRunEvent } from '../../analytics';
 
 function removeSpecialFlags(generatorOptions: { [p: string]: any }): void {
   delete generatorOptions.interactive;
@@ -15,6 +16,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
   return handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true' || args.verbose,
     async () => {
+      reportCommandRunEvent('new');
       const isInteractive = args.interactive;
       const { normalizedGeneratorName, schema, implementationFactory } =
         getGeneratorInformation(

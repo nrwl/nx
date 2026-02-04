@@ -16,11 +16,13 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
 import { relative } from 'path';
+import { reportCommandRunEvent } from '../../analytics';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
+  reportCommandRunEvent('configure-ai-agents');
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||

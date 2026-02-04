@@ -82,6 +82,7 @@ import {
   areAllVersionPlanProjectsFiltered,
   validateResolvedVersionPlansAgainstFilter,
 } from './utils/version-plan-utils';
+import { reportCommandRunEvent } from '../../analytics';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -104,7 +105,10 @@ export type { ChangelogChange } from './changelog/version-plan-utils';
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose, () => {
+    reportCommandRunEvent('release changelog');
+    return createAPI({}, false)(args);
+  });
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
