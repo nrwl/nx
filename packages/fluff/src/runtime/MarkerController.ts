@@ -122,14 +122,132 @@ export abstract class MarkerController
         const scope = this.getScope();
         for (const dep of deps)
         {
-            const propName = Array.isArray(dep) ? dep[0] : dep;
-            if (propName.startsWith('[')) continue;
-            const reactiveProp = this.getReactivePropFromScope(propName, scope);
-            if (reactiveProp)
+            if (Array.isArray(dep))
             {
-                const sub = reactiveProp.onChange.subscribe(callback);
-                this.subscriptions.push(sub);
+                this.subscribeToPropertyChain(dep, scope, callback);
             }
+            else
+            {
+                if (dep.startsWith('[')) continue;
+                const reactiveProp = this.getReactivePropFromScope(dep, scope);
+                if (reactiveProp)
+                {
+                    const sub = reactiveProp.onChange.subscribe(callback);
+                    this.subscriptions.push(sub);
+                }
+            }
+        }
+    }
+
+    private subscribeToPropertyChain(chain: string[], scope: Scope, callback: () => void): void
+    {
+        if (chain.length === 0) return;
+
+        const [first, ...rest] = chain;
+        if (first.startsWith('[')) return;
+
+        const reactiveProp = this.getReactivePropFromScope(first, scope);
+        if (reactiveProp)
+        {
+            if (rest.length === 0)
+            {
+                this.subscriptions.push(reactiveProp.onChange.subscribe(callback));
+            }
+            else
+            {
+                let nestedSubs: Subscription[] = [];
+
+                const resubscribeNested = (): void =>
+                {
+                    for (const sub of nestedSubs)
+                    {
+                        sub.unsubscribe();
+                    }
+                    nestedSubs = [];
+
+                    const currentValue: unknown = reactiveProp.getValue();
+                    if (currentValue !== null && currentValue !== undefined)
+                    {
+                        this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                        {
+                            nestedSubs.push(sub);
+                            this.subscriptions.push(sub);
+                        });
+                    }
+
+                    callback();
+                };
+
+                this.subscriptions.push(reactiveProp.onChange.subscribe(resubscribeNested));
+
+                const currentValue: unknown = reactiveProp.getValue();
+                if (currentValue !== null && currentValue !== undefined)
+                {
+                    this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                    {
+                        nestedSubs.push(sub);
+                        this.subscriptions.push(sub);
+                    });
+                }
+            }
+        }
+    }
+
+    private subscribeToNestedChain(obj: unknown, chain: string[], callback: () => void, addSub: (sub: Subscription) => void): void
+    {
+        if (chain.length === 0 || obj === null || obj === undefined) return;
+
+        const [first, ...rest] = chain;
+
+        const prop: unknown = Reflect.get(obj as object, first);
+
+        if (prop instanceof Property)
+        {
+            if (rest.length === 0)
+            {
+                addSub(prop.onChange.subscribe(callback));
+            }
+            else
+            {
+                let nestedSubs: Subscription[] = [];
+
+                const resubscribeNested = (): void =>
+                {
+                    for (const sub of nestedSubs)
+                    {
+                        sub.unsubscribe();
+                    }
+                    nestedSubs = [];
+
+                    const currentValue: unknown = prop.getValue();
+                    if (currentValue !== null && currentValue !== undefined)
+                    {
+                        this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                        {
+                            nestedSubs.push(sub);
+                            addSub(sub);
+                        });
+                    }
+
+                    callback();
+                };
+
+                addSub(prop.onChange.subscribe(resubscribeNested));
+
+                const currentValue: unknown = prop.getValue();
+                if (currentValue !== null && currentValue !== undefined)
+                {
+                    this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                    {
+                        nestedSubs.push(sub);
+                        addSub(sub);
+                    });
+                }
+            }
+        }
+        else if (rest.length > 0 && prop !== null && prop !== undefined)
+        {
+            this.subscribeToNestedChain(prop, rest, callback, addSub);
         }
     }
 

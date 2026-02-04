@@ -439,6 +439,67 @@ describe('CodeGenerator', () =>
         });
     });
 
+    describe('property binding with pipes', () =>
+    {
+        it('should include pipes in binding serialization', async() =>
+        {
+            const parser = new TemplateParser();
+            const generator = new CodeGenerator();
+
+            const template = '<my-component [model]="device.spkModel | GetModel"></my-component>';
+
+            const parsed = await parser.parse(template);
+            generator.generateRenderMethod(parsed);
+
+            const bindingsMap = generator.getBindingsMap();
+            const bindings = bindingsMap.l0;
+
+            expect(Array.isArray(bindings))
+                .toBe(true);
+            if (Array.isArray(bindings))
+            {
+                const modelBinding = bindings.find((b: Record<string, unknown>) => b.n === 'model');
+                expect(modelBinding)
+                    .toBeDefined();
+                expect(modelBinding.p)
+                    .toBeDefined();
+                expect(Array.isArray(modelBinding.p))
+                    .toBe(true);
+                expect(modelBinding.p[0].n)
+                    .toBe('GetModel');
+            }
+        });
+
+        it('should intern pipe argument expressions', async() =>
+        {
+            const parser = new TemplateParser();
+            const generator = new CodeGenerator();
+
+            const template = '<my-component [value]="amount | currency:locale"></my-component>';
+
+            const parsed = await parser.parse(template);
+            generator.generateRenderMethod(parsed);
+
+            const bindingsMap = generator.getBindingsMap();
+            const bindings = bindingsMap.l0;
+
+            expect(Array.isArray(bindings))
+                .toBe(true);
+            if (Array.isArray(bindings))
+            {
+                const valueBinding = bindings.find((b: Record<string, unknown>) => b.n === 'value');
+                expect(valueBinding)
+                    .toBeDefined();
+                expect(valueBinding.p)
+                    .toBeDefined();
+                expect(valueBinding.p[0].n)
+                    .toBe('currency');
+                expect(typeof valueBinding.p[0].a[0])
+                    .toBe('number');
+            }
+        });
+    });
+
     describe('@for inside select element', () =>
     {
         it('should use comment markers for @for inside select element', async() =>

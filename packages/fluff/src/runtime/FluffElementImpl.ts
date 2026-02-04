@@ -131,6 +131,11 @@ export abstract class FluffElement extends FluffBase
         return pipe(value, ...args);
     }
 
+    protected override __getPipeFn(name: string): ((value: unknown, ...args: unknown[]) => unknown) | undefined
+    {
+        return this.__pipes[name];
+    }
+
     protected __getShadowRoot(): ShadowRoot
     {
         return this._shadowRoot;

@@ -446,6 +446,14 @@ export class CodeGenerator
         }
         result.e = this.internExpression(binding.expression);
 
+        if (binding.pipes && binding.pipes.length > 0)
+        {
+            result.p = binding.pipes.map(pipe => ({
+                n: pipe.name,
+                a: pipe.args.map(arg => this.internExpression(arg))
+            }));
+        }
+
         return result;
     }
 

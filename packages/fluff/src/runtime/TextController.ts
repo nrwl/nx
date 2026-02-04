@@ -1,4 +1,5 @@
 import type { TextMarkerConfig } from '../interfaces/TextMarkerConfig.js';
+import { Property } from '../utils/Property.js';
 import { MarkerController } from './MarkerController.js';
 
 export class TextController extends MarkerController
@@ -23,6 +24,11 @@ export class TextController extends MarkerController
         const update = (): void =>
         {
             let result = this.evaluateExpr(this.config.exprId);
+
+            if (result instanceof Property)
+            {
+                result = result.getValue();
+            }
 
             for (const pipe of pipes)
             {

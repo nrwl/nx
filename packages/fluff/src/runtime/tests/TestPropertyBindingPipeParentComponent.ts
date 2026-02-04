@@ -1,0 +1,27 @@
+import { Property } from '../../utils/Property.js';
+import { FluffElement } from '../FluffElement.js';
+
+export class TestPropertyBindingPipeParentComponent extends FluffElement
+{
+    public __amount = new Property<number>({ initialValue: 100, propertyName: 'amount' });
+
+    public get amount(): number
+    {
+        return this.__amount.getValue() ?? 0;
+    }
+
+    public set amount(val: number)
+    {
+        this.__amount.setValue(val);
+    }
+
+    public override __pipes: Record<string, (v: unknown, ...args: unknown[]) => unknown> = {
+        double: (v: unknown): number => (typeof v === 'number' ? v * 2 : 0),
+        addSuffix: (v: unknown, suffix: unknown): string => `${String(v)}${String(suffix)}`
+    };
+
+    protected override __render(): void
+    {
+        this.__getShadowRoot().innerHTML = '<test-child data-lid="l0"></test-child>';
+    }
+}
