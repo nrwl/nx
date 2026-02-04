@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
+import { reportCommandRunEvent } from '../../analytics';
 
 export interface WatchArguments {
   projects?: string[];
@@ -153,6 +154,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
 }
 
 export async function watch(args: WatchArguments) {
+  reportCommandRunEvent('watch');
   const projectReplacementRegex = new RegExp(
     args.projectNameEnvName ?? DEFAULT_PROJECT_NAME_ENV,
     'g'

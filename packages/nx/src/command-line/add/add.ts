@@ -21,7 +21,7 @@ import {
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 import { globalSpinner } from '../../utils/spinner';
-import { reportNxAddCommand } from '../../analytics/analytics';
+import { reportNxAddCommand } from '../../analytics';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
