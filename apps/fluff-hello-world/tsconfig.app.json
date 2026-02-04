@@ -3,6 +3,7 @@
         "target": "ES2022",
         "module": "ES2022",
         "moduleResolution": "bundler",
+        "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "strict": true,
         "esModuleInterop": true,

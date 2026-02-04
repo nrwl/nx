@@ -7,9 +7,6 @@
             "outDir": "dist",
             "entryPoint": "main.ts",
             "indexHtml": "index.html",
-            "components": [
-                "**/*.component.ts"
-            ],
             "assets": [],
             "bundle": {
                 "minify": false,

@@ -29,6 +29,8 @@ export class Property<T>
     private committed = true;
     private _isChanging = false;
     private readonly _propName?: string;
+    private _parentProperty?: Property<T>;
+    private _parentSubscription?: Subscription;
 
     public constructor(options: {
         initialValue: T,
@@ -52,8 +54,14 @@ export class Property<T>
         }
     }
 
-    public setValue(val: T, inbound = false, commit = true): void
+    public setValue(val: T | Property<T>, inbound = false, commit = true): void
     {
+        if (val instanceof Property)
+        {
+            this.linkToParent(val);
+            return;
+        }
+
         if (this._isChanging)
         {
             console.error((this._propName ? this._propName + ': ' : '') + 'Binding loop detected: setValue called while change is in progress');
@@ -87,11 +95,93 @@ export class Property<T>
                     this.onOutboundChange.emit(this.value);
                 }
             }
+
+            if (!inbound && this._parentProperty)
+            {
+                this.pushToParent(val);
+            }
         }
         finally
         {
             this._isChanging = false;
         }
+    }
+
+    private linkToParent(source: Property<T>): void
+    {
+        this.clearParentLink();
+
+        let root: Property<T> = source;
+        while (root._parentProperty)
+        {
+            root = root._parentProperty;
+        }
+
+        this._parentProperty = root;
+        this._parentSubscription = root.subscribe(Direction.Any, (val) =>
+        {
+            this.setValueInternal(val, true);
+        });
+
+        const currentValue = root.getValue();
+        if (currentValue !== null)
+        {
+            this.setValueInternal(currentValue, true);
+        }
+    }
+
+    private setValueInternal(val: T, inbound: boolean): void
+    {
+        if (this._isChanging) return;
+
+        const changed = val !== this.value && safeStringify(val) !== safeStringify(this.value);
+        if (!changed) return;
+
+        this._isChanging = true;
+        try
+        {
+            this.value = val;
+            this.onChange.emit(val);
+            if (inbound)
+            {
+                this.onInboundChange.emit(val);
+            }
+        }
+        finally
+        {
+            this._isChanging = false;
+        }
+    }
+
+    private pushToParent(val: T): void
+    {
+        if (!this._parentProperty) return;
+
+        const sub = this._parentSubscription;
+        this._parentSubscription = undefined;
+        sub?.unsubscribe();
+
+        this._parentProperty.setValue(val);
+
+        this._parentSubscription = this._parentProperty.subscribe(Direction.Any, (v) =>
+        {
+            this.setValueInternal(v, true);
+        });
+    }
+
+    private clearParentLink(): void
+    {
+        if (this._parentSubscription)
+        {
+            this._parentSubscription.unsubscribe();
+            this._parentSubscription = undefined;
+        }
+        this._parentProperty = undefined;
+    }
+
+    public reset(): void
+    {
+        this.clearParentLink();
     }
 
     public triggerChange(direction = Direction.Any): void

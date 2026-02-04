@@ -280,11 +280,6 @@ export abstract class FluffElement extends FluffBase
 
     protected override __setChildProperty(el: Element, propName: string, value: unknown): void
     {
-        if (value instanceof Property)
-        {
-            value = value.getValue();
-        }
-
         if (el instanceof HTMLElement && el.hasAttribute('x-fluff-component'))
         {
             const tagName = el.tagName.toLowerCase();

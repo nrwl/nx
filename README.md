@@ -19,6 +19,17 @@ I love Angular, but it was too chonky for an embedded project I was working on. 
 - **AOT compilation** - Templates are compiled at build time, not runtime
 - **Control flow syntax** - Angular 17+ style `@if`, `@for`, `@switch`, plus `@fallthrough`
 - **Pipes** - Transform template expressions with built-in or custom pipes, component-scoped
+## Bundle Size Comparison
+
+
+The [fluff demo app](https://fluffjs.github.io/fluff/), vs when ported to other frameworks
+
+| Framework  | Runtime (gzip) | Demo App (gzip) |
+|------------|----------------|-----------------|
+| **Fluff**  | ~6 KB          | 16.4 KB         |
+| Vue 3.5    | ~24 KB         | 31.8 KB         |
+| Angular 21 | ~55 KB         | 60.5 KB         |
+| React 19   | ~60 KB         | 65.5 KB         |
 
 ## Getting Started
 
@@ -39,7 +50,7 @@ just use Angular :)
 
 - **No JIT compiler** - Templates must be compiled at build time, no dynamic template compilation
 - **No dependency injection** - No providers, services, or DI container
-- **No legacy brower support** - ES2022 or go home
+- **No legacy browser support** - ES2022 or go home
 - **No routing** - No built-in router
 - **No forms module** - No FormControl, FormGroup, or validation framework
 - **No HTTP client** - Use fetch or your preferred HTTP library
@@ -49,6 +60,107 @@ just use Angular :)
 - **No modules/NgModule** - Components register themselves, no module system
 - **No lazy loading provide** (but pretty easy to implement)
 - **Limited tooling** - Basic build + dev server only
+
+## Example Component
+
+```typescript
+import { Component, Input, Output, Reactive, Publisher } from '@fluffjs/fluff';
+
+@Component({
+    selector: 'my-counter',
+    template: `
+        <div class="counter">
+            <span>Count: {{ count }}</span>
+            <button (click)="increment()">+</button>
+        </div>
+    `,
+    styles: `.counter { display: flex; gap: 8px; }`
+})
+export class CounterComponent extends HTMLElement
+{
+    @Input() public initialValue = 0;
+    @Reactive() public count = 0;
+    @Output() public countChange = new Publisher<number>();
+
+    public onInit(): void
+    {
+        this.count = this.initialValue;
+    }
+
+    public increment(): void
+    {
+        this.count++;
+        this.countChange.emit(this.count);
+    }
+}
+```
+
+## Template Syntax
+
+```html
+<!-- Text interpolation -->
+<span>{{ user.name }}</span>
+
+<!-- Property binding -->
+<input [value]="searchQuery"/>
+
+<!-- Event binding -->
+<button (click)="handleClick($event)">Click me</button>
+
+<!-- Two-way binding (manual) -->
+<input [value]="name" (input)="name = $event.target.value"/>
+
+<!-- Class binding -->
+<div [class.active]="isActive">...</div>
+
+<!-- Conditional rendering -->
+@if (isLoading) {
+<spinner-component></spinner-component>
+} @else if (hasError) {
+<error-message [message]="errorText"></error-message>
+} @else {
+<content-component [data]="items"></content-component>
+}
+
+<!-- Loops -->
+@for (item of items; track item.id) {
+<item-card [item]="item" (delete)="removeItem(item)"></item-card>
+} @empty {
+<p>No items found</p>
+}
+
+<!-- Switch -->
+@switch (status) {
+@case ('loading') {
+<spinner></spinner> }
+@case ('error') {
+<error-view></error-view> }
+@default {
+<main-content></main-content> }
+}
+
+<!-- Pipes -->
+<span>{{ title | uppercase }}</span>
+<span>{{ description | truncate:80 }}</span>
+<span>{{ createdAt | date:'short' }}</span>
+```
+
+## Lifecycle Hooks
+
+```typescript
+export class MyComponent extends HTMLElement implements OnInit, OnDestroy
+{
+    public onInit(): void
+    {
+        // Called after component is connected and rendered
+    }
+
+    public onDestroy(): void
+    {
+        // Called when component is disconnected
+    }
+}
+```
 
 ## Decorators
 
@@ -174,127 +286,125 @@ const subscription = this.$watch(['firstName', 'lastName'], (changed) => {
 
 Make sure you unsubscribe from the watch in OnDestroy.
 
-## Example Component
+
+## Services and Data Models
+
+While `@Reactive` can only be used inside components, Fluff provides the `Property<T>` class for reactive state management anywhere in your application - services, data models, stores, or plain classes.
+
+### Basic Usage
 
 ```typescript
-import { Component, Input, Output, Reactive, Publisher } from '@fluffjs/fluff';
+import { Property, Direction } from '@fluffjs/fluff';
+
+class UserService
+{
+    public readonly currentUser = new Property<User | null>({ initialValue: null });
+    public readonly isLoggedIn = new Property<boolean>({ initialValue: false });
+
+    public login(user: User): void
+    {
+        this.currentUser.setValue(user);
+        this.isLoggedIn.setValue(true);
+    }
+
+    public logout(): void
+    {
+        this.currentUser.setValue(null);
+        this.isLoggedIn.setValue(false);
+    }
+}
+
+export const userService = new UserService();
+```
+
+### Two-Way Binding with Data Models
+
+When you pass a `Property` directly to a component's `@Input`, changes flow both ways automatically:
+
+```typescript
+class TaskModel
+{
+    public static readonly selectedTask = new Property<Task | null>({ initialValue: null });
+    public static readonly taskCount = new Property<number>({ initialValue: 0 });
+}
 
 @Component({
-    selector: 'my-counter',
-    template: `
-        <div class="counter">
-            <span>Count: {{ count }}</span>
-            <button (click)="increment()">+</button>
-        </div>
-    `,
-    styles: `.counter { display: flex; gap: 8px; }`
+    selector: 'task-editor',
+    template: `<task-form [task]="TaskModel.selectedTask"></task-form>`
 })
-export class CounterComponent extends HTMLElement
+export class TaskEditorComponent extends HTMLElement
 {
-    @Input() public initialValue = 0;
-    @Reactive() public count = 0;
-    @Output() public countChange = new Publisher<number>();
+    public TaskModel = TaskModel;
+}
 
-    public onInit(): void
-    {
-        this.count = this.initialValue;
-    }
+@Component({
+    selector: 'task-form',
+    template: `<input [value]="task?.name" (input)="updateName($event.target.value)"/>`
+})
+export class TaskFormComponent extends HTMLElement
+{
+    @Input() public task: Task | null = null;
 
-    public increment(): void
+    public updateName(name: string): void
     {
-        this.count++;
-        this.countChange.emit(this.count);
+        if (this.task)
+        {
+            this.task = { ...this.task, name };
+        }
     }
 }
 ```
 
-## Template Syntax
+When `TaskFormComponent` updates `this.task`, the change propagates back to `TaskModel.selectedTask` automatically.
 
-```html
-<!-- Text interpolation -->
-<span>{{ user.name }}</span>
-
-<!-- Property binding -->
-<input [value]="searchQuery"/>
-
-<!-- Event binding -->
-<button (click)="handleClick($event)">Click me</button>
-
-<!-- Two-way binding (manual) -->
-<input [value]="name" (input)="name = $event.target.value"/>
-
-<!-- Class binding -->
-<div [class.active]="isActive">...</div>
-
-<!-- Conditional rendering -->
-@if (isLoading) {
-<spinner-component></spinner-component>
-} @else if (hasError) {
-<error-message [message]="errorText"></error-message>
-} @else {
-<content-component [data]="items"></content-component>
-}
-
-<!-- Loops -->
-@for (item of items; track item.id) {
-<item-card [item]="item" (delete)="removeItem(item)"></item-card>
-} @empty {
-<p>No items found</p>
-}
-
-<!-- Switch -->
-@switch (status) {
-@case ('loading') {
-<spinner></spinner> }
-@case ('error') {
-<error-view></error-view> }
-@default {
-<main-content></main-content> }
-}
-
-<!-- Pipes -->
-<span>{{ title | uppercase }}</span>
-<span>{{ description | truncate:80 }}</span>
-<span>{{ createdAt | date:'short' }}</span>
-```
-
-## Lifecycle Hooks
+### Subscribing to Changes
 
 ```typescript
-export class MyComponent extends HTMLElement implements OnInit, OnDestroy
+import { Direction } from '@fluffjs/fluff';
+
+const subscription = userService.currentUser.subscribe(Direction.Any, (user) =>
 {
-    public onInit(): void
-    {
-        // Called after component is connected and rendered
-    }
+    console.log('User changed:', user);
+});
 
-    public onDestroy(): void
-    {
-        // Called when component is disconnected
-    }
-}
+subscription.unsubscribe();
 ```
 
-## Bundle Size Comparison
+### Important Caveats
 
-The [fluff demo app](https://fluffjs.github.io/fluff/), vs when ported to other frameworks
+**Expressions don't auto-unwrap:** Unlike `@Reactive` properties which use getters, raw `Property` instances in expressions are not automatically unwrapped. Use `getValue()` when you need the raw value:
 
-| Framework  | Runtime (gzip) | Demo App (gzip) |
-|------------|----------------|-----------------|
-| **Fluff**  | ~6 KB          | 16.4 KB         |
-| Vue 3.5    | ~24 KB         | 31.8 KB         |
-| Angular 21 | ~55 KB         | 60.5 KB         |
-| React 19   | ~60 KB         | 65.5 KB         |
+```html
+<!-- This displays the Property object, not the value -->
+<span>{{ myProperty }}</span>
 
-## Getting Started
+<!-- Use getValue() to get the actual value -->
+<span>{{ myProperty.getValue() }}</span>
 
-```bash
-# Install the Fluff packages
-npm install @fluffjs/fluff
-
-# Build your app
-npx fluff build src/main.ts --outdir dist
+<!-- Or bind directly - binding handles unwrapping -->
+<child-component [value]="myProperty"></child-component>
 ```
+
+**Pipes auto-unwrap:** Pipes automatically unwrap `Property` values before transforming them:
+
+```html
+<!-- Works correctly - pipe receives the unwrapped value -->
+<span>{{ myProperty | uppercase }}</span>
+```
+
+**Data binding works naturally:** When binding a `Property` to an `@Input`, the framework handles the connection:
+
+```html
+<!-- The child's @Input receives and links to the Property -->
+<child-component [count]="counterProperty"></child-component>
+```
+
+**Resetting the link:** If you need to disconnect a child `Property` from its parent, call `reset()`:
+
+```typescript
+this.__myInputProperty.reset();
+```
+
 
 ## Project Structure
 
