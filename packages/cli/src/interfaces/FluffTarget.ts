@@ -9,8 +9,8 @@ export interface FluffTarget
     componentsDir?: string;
     tsConfigPath?: string;
     entryPoint?: string;
+    exclude?: string[];
     indexHtml?: string;
-    components: string[];
     styles?: string[];
     assets?: string[];
     bundle?: BundleOptions;

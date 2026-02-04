@@ -15,7 +15,6 @@ export const DEFAULT_CONFIG: FluffConfig = {
             componentsDir: 'app',
             entryPoint: 'main.ts',
             indexHtml: 'index.html',
-            components: ['**/*.component.ts'],
             assets: ['**/*.html', '**/*.css'],
             bundle: {
                 minify: true,

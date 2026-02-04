@@ -120,26 +120,151 @@ export abstract class FluffBase extends HTMLElement
     {
         if (!deps) return;
 
+        const addSub = (sub: Subscription): void =>
+        {
+            if (subscriptions)
+            {
+                subscriptions.push(sub);
+            }
+            else
+            {
+                this.__baseSubscriptions.push(sub);
+            }
+        };
+
         for (const dep of deps)
         {
-            const propName = Array.isArray(dep) ? dep[0] : dep;
-            const reactiveProp = this.__getReactivePropFromScope(propName, scope);
-            if (reactiveProp)
+            if (Array.isArray(dep))
             {
-                const sub = reactiveProp.onChange.subscribe(callback);
-                if (subscriptions)
+                this.__subscribeToPropertyChain(dep, scope, callback, addSub);
+            }
+            else
+            {
+                const reactiveProp = this.__getReactivePropFromScope(dep, scope);
+                if (reactiveProp)
                 {
-                    subscriptions.push(sub);
+                    addSub(reactiveProp.onChange.subscribe(callback));
                 }
-                else
+                else if (!(dep in scope.locals) && !(dep in scope.host))
                 {
-                    this.__baseSubscriptions.push(sub);
+                    console.warn(`Binding dependency "${dep}" not found on component ${scope.host.constructor.name}`);
                 }
             }
-            else if (!(propName in scope.locals) && !(propName in scope.host))
+        }
+    }
+
+    private __subscribeToPropertyChain(chain: string[], scope: Scope, callback: () => void, addSub: (sub: Subscription) => void): void
+    {
+        if (chain.length === 0) return;
+
+        const [first, ...rest] = chain;
+
+        const reactiveProp = this.__getReactivePropFromScope(first, scope);
+        if (reactiveProp)
+        {
+            if (rest.length === 0)
             {
-                console.warn(`Binding dependency "${propName}" not found on component ${scope.host.constructor.name}`);
+                addSub(reactiveProp.onChange.subscribe(callback));
             }
+            else
+            {
+                let nestedSubs: Subscription[] = [];
+
+                const resubscribeNested = (): void =>
+                {
+                    for (const sub of nestedSubs)
+                    {
+                        sub.unsubscribe();
+                    }
+                    nestedSubs = [];
+
+                    const currentValue: unknown = reactiveProp.getValue();
+                    if (currentValue !== null && currentValue !== undefined)
+                    {
+                        this.__subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                        {
+                            nestedSubs.push(sub);
+                            addSub(sub);
+                        });
+                    }
+
+                    callback();
+                };
+
+                addSub(reactiveProp.onChange.subscribe(resubscribeNested));
+
+                const currentValue: unknown = reactiveProp.getValue();
+                if (currentValue !== null && currentValue !== undefined)
+                {
+                    this.__subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                    {
+                        nestedSubs.push(sub);
+                        addSub(sub);
+                    });
+                }
+            }
+        }
+        else if (!(first in scope.locals) && !(first in scope.host))
+        {
+            console.warn(`Binding dependency "${first}" not found on component ${scope.host.constructor.name}`);
+        }
+    }
+
+    private __subscribeToNestedChain(obj: unknown, chain: string[], callback: () => void, addSub: (sub: Subscription) => void): void
+    {
+        if (chain.length === 0 || obj === null || obj === undefined) return;
+
+        const [first, ...rest] = chain;
+
+        const prop: unknown = Reflect.get(obj as object, first);
+
+        if (prop instanceof Property)
+        {
+            if (rest.length === 0)
+            {
+                addSub(prop.onChange.subscribe(callback));
+            }
+            else
+            {
+                let nestedSubs: Subscription[] = [];
+
+                const resubscribeNested = (): void =>
+                {
+                    for (const sub of nestedSubs)
+                    {
+                        sub.unsubscribe();
+                    }
+                    nestedSubs = [];
+
+                    const currentValue: unknown = prop.getValue();
+                    if (currentValue !== null && currentValue !== undefined)
+                    {
+                        this.__subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                        {
+                            nestedSubs.push(sub);
+                            addSub(sub);
+                        });
+                    }
+
+                    callback();
+                };
+
+                addSub(prop.onChange.subscribe(resubscribeNested));
+
+                const currentValue: unknown = prop.getValue();
+                if (currentValue !== null && currentValue !== undefined)
+                {
+                    this.__subscribeToNestedChain(currentValue, rest, callback, (sub) =>
+                    {
+                        nestedSubs.push(sub);
+                        addSub(sub);
+                    });
+                }
+            }
+        }
+        else if (rest.length > 0 && prop !== null && prop !== undefined)
+        {
+            this.__subscribeToNestedChain(prop, rest, callback, addSub);
         }
     }
 

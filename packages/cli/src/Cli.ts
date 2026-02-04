@@ -254,7 +254,6 @@ Examples:
                     name: targetName,
                     srcDir: `src/${targetName}`,
                     outDir: `dist/${targetName}`,
-                    components: ['**/*.component.ts'],
                     assets: ['**/*.html', '**/*.css']
                 };
                 console.log(`Added target '${targetName}' to fluff.json`);
@@ -275,7 +274,6 @@ Examples:
                         name: targetName,
                         srcDir: 'src',
                         outDir: 'dist',
-                        components: ['**/*.component.ts'],
                         assets: ['**/*.html', '**/*.css']
                     }
                 };
@@ -406,7 +404,7 @@ Examples:
         }
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
-            : this.generateEntryPoint(srcDir, target.components);
+            : this.generateEntryPoint(srcDir, target.exclude);
 
         let inlineStyles = '';
         if (target.styles && target.styles.length > 0)
@@ -677,7 +675,7 @@ Examples:
 
         const entryPoint = target.entryPoint
             ? path.join(srcDir, target.entryPoint)
-            : this.generateEntryPoint(srcDir, target.components);
+            : this.generateEntryPoint(srcDir, target.exclude);
 
         let inlineStyles = '';
         if (target.styles && target.styles.length > 0)
@@ -801,14 +799,14 @@ Examples:
         }
     }
 
-    private generateEntryPoint(srcDir: string, componentPatterns: string[]): string
+    private generateEntryPoint(srcDir: string, exclude: string[] = []): string
     {
-        const componentFiles = this.findFiles(srcDir, componentPatterns);
-        for (const f of componentFiles)
+        const tsFiles = this.findAllTsFiles(srcDir, exclude);
+        for (const f of tsFiles)
         {
-            console.log(`   ✓ Component: ${path.relative(srcDir, f)}`);
+            console.log(`   ✓ ${path.relative(srcDir, f)}`);
         }
-        const importDecls = componentFiles.map(f =>
+        const importDecls = tsFiles.map(f =>
         {
             const relativePath = './' + path.relative(srcDir, f)
                 .replace(/\\/g, '/');
@@ -820,6 +818,39 @@ Examples:
         const entryPath = path.join(srcDir, '__generated_entry.ts');
         fs.writeFileSync(entryPath, entryContent);
         return entryPath;
+    }
+
+    private findAllTsFiles(dir: string, userExclude: string[] = []): string[]
+    {
+        const files: string[] = [];
+        const excludePatterns = ['*.spec.ts', '*.test.ts', '__generated_entry.ts', ...userExclude];
+
+        const walk = (currentDir: string): void =>
+        {
+            const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+            for (const entry of entries)
+            {
+                const fullPath = path.join(currentDir, entry.name);
+                if (entry.isDirectory())
+                {
+                    walk(fullPath);
+                }
+                else if (entry.isFile() && entry.name.endsWith('.ts'))
+                {
+                    const relativePath = path.relative(dir, fullPath).replace(/\\/g, '/');
+                    const isExcluded = excludePatterns.some(pattern =>
+                        this.matchGlob(entry.name, pattern) || this.matchGlob(relativePath, pattern)
+                    );
+                    if (!isExcluded)
+                    {
+                        files.push(fullPath);
+                    }
+                }
+            }
+        };
+
+        walk(dir);
+        return files;
     }
 
     private findFiles(dir: string, patterns: string[]): string[]

@@ -254,6 +254,80 @@ describe('babel-plugin-reactive', () =>
             expect(result)
                 .toBeDefined();
         });
+
+        it('should pass property name to @Watch callback', () =>
+        {
+            const code = `
+                import { Component, Reactive, Watch } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() count = 0;
+                    
+                    @Watch('count')
+                    onCountChange(changed: string) {
+                        console.log(changed);
+                    }
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('this.onCountChange("count")');
+        });
+
+        it('should pass correct property name for each watched property', () =>
+        {
+            const code = `
+                import { Component, Reactive, Watch } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() firstName = '';
+                    @Reactive() lastName = '';
+                    
+                    @Watch('firstName', 'lastName')
+                    onNameChange(changed: string) {
+                        console.log(changed);
+                    }
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('this.onNameChange("firstName")');
+            expect(result).toContain('this.onNameChange("lastName")');
+        });
+
+        it('should push @Watch subscriptions to __baseSubscriptions for cleanup on destroy', () =>
+        {
+            const code = `
+                import { Component, Reactive, Watch } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() count = 0;
+                    
+                    @Watch('count')
+                    onCountChange(changed: string) {
+                        console.log(changed);
+                    }
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('__baseSubscriptions.push');
+        });
     });
 
     describe('@Pipe decorator', () =>
@@ -579,6 +653,31 @@ describe('babel-plugin-reactive', () =>
 
             expect(result)
                 .toBeDefined();
+        });
+
+        it('should pass property name to $watch callback', () =>
+        {
+            const code = `
+                import { Component, Reactive } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() firstName = '';
+                    @Reactive() lastName = '';
+                    
+                    sub = this.$watch(['firstName', 'lastName'], (changed) => {
+                        console.log(changed);
+                    });
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('__cb("firstName")');
+            expect(result).toContain('__cb("lastName")');
         });
     });
 

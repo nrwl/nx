@@ -4,7 +4,7 @@ declare global
 {
     interface HTMLElement
     {
-        $watch: (properties: string[], callback: () => void) => Subscription;
+        $watch: (properties: string[], callback: (changed: string) => void) => Subscription;
     }
 }
 

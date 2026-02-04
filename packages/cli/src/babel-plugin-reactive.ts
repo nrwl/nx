@@ -398,7 +398,7 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     {
                         if (reactiveProps.has(prop))
                         {
-                            constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(`__${prop}`)), t.identifier('onChange')), t.identifier('subscribe')), [t.arrowFunctionExpression([], t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(methodName)), []))])));
+                            constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('__baseSubscriptions')), t.identifier('push')), [t.callExpression(t.memberExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(`__${prop}`)), t.identifier('onChange')), t.identifier('subscribe')), [t.arrowFunctionExpression([], t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(methodName)), [t.stringLiteral(prop)]))])])));
                         }
                     }
                 }
@@ -414,7 +414,7 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         if (reactiveProps.has(prop))
                         {
                             iife.push(t.expressionStatement(t.callExpression(t.memberExpression(t.identifier('__subs'), t.identifier('push')), [
-                                t.callExpression(t.memberExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(`__${prop}`)), t.identifier('onChange')), t.identifier('subscribe')), [t.identifier('__cb')])
+                                t.callExpression(t.memberExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(`__${prop}`)), t.identifier('onChange')), t.identifier('subscribe')), [t.arrowFunctionExpression([], t.callExpression(t.identifier('__cb'), [t.stringLiteral(prop)]))])
                             ])));
                         }
                     }

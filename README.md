@@ -64,6 +64,51 @@ just use Angular :)
 | `@ViewChild`    | Get a reference to a child element in the template                   |
 | `@Pipe`         | Define a reusable transform for template expressions                 |
 
+## @Watch Example
+
+The `@Watch` decorator lets you react to changes in one or more reactive properties. The callback receives the name of the property that changed:
+
+```typescript
+import { Component, Input, Reactive, Watch } from '@fluffjs/fluff';
+
+@Component({
+    selector: 'data-grid',
+    template: `<div>...</div>`
+})
+export class DataGridComponent extends HTMLElement
+{
+    @Input() public columns: string[] = [];
+    @Reactive() public headers: string[] = [];
+
+    @Watch('columns', 'headers')
+    public onDataChanged(changed: string): void
+    {
+        if (changed === 'columns')
+        {
+            this.updateVisibleColumns();
+        }
+        else
+        {
+            this.updateVisibleHeaders();
+        }
+    }
+
+    private updateVisibleColumns(): void { /* ... */ }
+    private updateVisibleHeaders(): void { /* ... */ }
+}
+```
+
+You can also use `$watch` for inline computed properties:
+
+```typescript
+const subscription = this.$watch(['firstName', 'lastName'], (changed) => {
+    console.log(`${changed} was updated`);
+    return this.firstName + ' ' + this.lastName;
+});
+```
+
+Make sure you unsubscribe from the watch in OnDestroy.
+
 ## Example Component
 
 ```typescript
