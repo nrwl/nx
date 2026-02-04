@@ -21,11 +21,13 @@ import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
+import { reportCommandRunEvent } from '../../analytics';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
+  reportCommandRunEvent('configure-ai-agents');
   // When called as inner from the tmp install, just run the impl directly
   if (inner) {
     return await configureAiAgentsHandlerImpl(args);

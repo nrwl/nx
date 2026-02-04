@@ -42,7 +42,7 @@ export function reportNxAddCommand(packageName: string, version: string) {
 
 export function reportCommandRunEvent(
   command: string,
-  parameters?: Record<string, ParameterValue>
+  parameters?: Record<string, ParameterValue | any>
 ) {
   command = command === 'g' ? 'generate' : command;
   trackEvent(command, parameters, true);
