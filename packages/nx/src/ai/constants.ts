@@ -29,6 +29,10 @@ export function claudeMdPath(root: string): string {
   return join(root, 'CLAUDE.md');
 }
 
+export function claudeMcpJsonPath(root: string): string {
+  return join(root, '.mcp.json');
+}
+
 export function opencodeMcpPath(root: string): string {
   return join(root, 'opencode.json');
 }

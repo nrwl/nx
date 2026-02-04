@@ -74,7 +74,7 @@ export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
-  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
+  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
@@ -158,7 +158,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, options?: HasherOptions | undefined | null)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
 }
 
@@ -309,6 +309,8 @@ export declare export declare function hashArray(input: Array<string | undefined
 export interface HashDetails {
   value: string
   details: Record<string, string>
+  /** Structured inputs used for hashing (file patterns, env vars, etc.) */
+  inputs: HashInputs
 }
 
 export interface HashedTask {
@@ -323,6 +325,20 @@ export interface HasherOptions {
 }
 
 export declare export declare function hashFile(file: string): string | null
+
+/** NAPI-compatible struct for returning hash inputs to JavaScript */
+export interface HashInputs {
+  /** Expanded file paths that were used as inputs */
+  files: Array<string>
+  /** Runtime commands */
+  runtime: Array<string>
+  /** Environment variable names */
+  environment: Array<string>
+  /** Dependent task outputs */
+  depOutputs: Array<string>
+  /** External dependencies */
+  external: Array<string>
+}
 
 export interface InputsInput {
   input: string
