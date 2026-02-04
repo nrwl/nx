@@ -15,14 +15,17 @@ const TRACKING_ID_PROD = 'G-83SJXKY605';
 
 export class AnalyticsCollector {
   private eventsQueue: Record<string, ParameterValue | undefined>[] | undefined;
-  private requestParameters: Partial<
+  private pageViewQueue:
+    | Record<string, ParameterValue | undefined>[]
+    | undefined;
+  private commonRequestParameters: Partial<
     Record<RequestParameter, ParameterValue | undefined>
   >;
   private userParameters: Record<
     UserCustomDimension,
     ParameterValue | undefined
   >;
-  private currentMachineId: string = null;
+  private currentMachineId: string | null = null;
 
   constructor(
     workspaceId: string,
@@ -31,7 +34,7 @@ export class AnalyticsCollector {
     packageManagerInfo: { name: string; version?: string }
   ) {
     const { major: nxMajorVersion } = parse(nxVersion);
-    this.requestParameters = {
+    this.commonRequestParameters = {
       [RequestParameter.ProtocolVersion]: 2,
       [RequestParameter.ClientId]: workspaceId,
       [RequestParameter.UserId]: userId,
@@ -49,7 +52,7 @@ export class AnalyticsCollector {
         'Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64',
     };
 
-    this.requestParameters[RequestParameter.DebugView] = 1;
+    this.commonRequestParameters[RequestParameter.DebugView] = 1;
 
     const nodeVersion = parse(process.version);
 
@@ -69,18 +72,20 @@ export class AnalyticsCollector {
   }
 
   async flush(): Promise<void> {
-    const pendingEvents = this.eventsQueue;
-    logger.verbose(`Analytics Flush: ${pendingEvents?.length} events.`);
+    const pendingEvents =
+      (this.eventsQueue?.length ?? 0) + (this.pageViewQueue?.length ?? 0);
+    logger.verbose(`Analytics Flush: ${pendingEvents} events.`);
 
-    if (!pendingEvents?.length) {
+    if (!pendingEvents) {
       return;
     }
 
     // Prevents reporting the same event multiple times.
     this.eventsQueue = undefined;
+    this.pageViewQueue = undefined;
 
     try {
-      await this.send(pendingEvents);
+      await this.send();
     } catch (error) {
       // Failure to report analytics shouldn't crash the CLI.
       logger.verbose(`Analytics Send Error: ${error.message}.`);
@@ -93,6 +98,7 @@ export class AnalyticsCollector {
     isPageView?: boolean
   ): void {
     this.eventsQueue ??= [];
+    this.pageViewQueue ??= [];
 
     const eventData: Record<string, ParameterValue | undefined> = {
       ...this.userParameters,
@@ -104,16 +110,40 @@ export class AnalyticsCollector {
     if (isPageView) {
       eventData[RequestParameter.PageLocation] = eventName;
       eventData[RequestParameter.PageTitle] = eventName;
+      this.pageViewQueue.push(eventData);
+    } else {
+      this.eventsQueue.push(eventData);
     }
-
-    this.eventsQueue.push(eventData);
   }
 
-  private async send(
-    data: Record<string, ParameterValue | undefined>[]
-  ): Promise<void> {
+  private async send() {
+    const eventsPromise = this.createRequest(
+      this.commonRequestParameters,
+      this.eventsQueue ?? []
+    );
+    const pageViewsPromises = [];
+    for (const pageView of this.pageViewQueue ?? []) {
+      pageViewsPromises.push(
+        this.createRequest(
+          {
+            ...this.commonRequestParameters,
+            [RequestParameter.PageTitle]: pageView[RequestParameter.PageTitle],
+            [RequestParameter.PageLocation]:
+              pageView[RequestParameter.PageTitle],
+          },
+          [pageView]
+        )
+      );
+    }
+    return Promise.allSettled([eventsPromise, ...pageViewsPromises]);
+  }
+
+  private createRequest(
+    parameters: Partial<Record<RequestParameter, ParameterValue | undefined>>,
+    data: Record<string, ParameterValue>[]
+  ) {
     return new Promise<void>((resolve, reject) => {
-      const stringifiedRequestParameters = stringify(this.requestParameters);
+      const stringifiedRequestParameters = stringify(parameters);
       const request = https.request(
         {
           host: 'www.google-analytics.com',
