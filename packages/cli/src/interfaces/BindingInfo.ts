@@ -10,4 +10,5 @@ export interface BindingInfo
     targetProp?: string;
     deps?: PropertyChain[];
     subscribe?: string;
+    pipes?: { name: string; args: string[] }[];
 }

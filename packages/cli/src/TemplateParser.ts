@@ -435,24 +435,7 @@ export class TemplateParser
                 const parsed: unknown = JSON.parse(pipesAttr);
                 if (Array.isArray(parsed))
                 {
-                    result.pipes = parsed.map(pipe =>
-                    {
-                        if (!Typeguards.isRecord(pipe))
-                        {
-                            return null;
-                        }
-                        if (typeof pipe.name !== 'string' || !Array.isArray(pipe.args))
-                        {
-                            return null;
-                        }
-                        const args = pipe.args.filter((arg): arg is string => typeof arg === 'string')
-                            .map(arg => this.transformWithLocals(arg));
-                        return {
-                            name: pipe.name,
-                            args
-                        };
-                    })
-                        .filter((pipe): pipe is { name: string; args: string[] } => pipe !== null);
+                    result.pipes = this.transformPipes(parsed);
                 }
             }
             catch
@@ -549,6 +532,11 @@ export class TemplateParser
                 result.subscribe = parsed.subscribe;
             }
 
+            if (Array.isArray(parsed.pipes))
+            {
+                result.pipes = this.transformPipes(parsed.pipes);
+            }
+
             return result;
         }
         catch
@@ -576,6 +564,28 @@ export class TemplateParser
             eventReplacementName: options?.eventReplacementName,
             templateRefs: options?.templateRefs
         });
+    }
+
+    private transformPipes(pipes: unknown[]): { name: string; args: string[] }[]
+    {
+        return pipes.map(pipe =>
+        {
+            if (!Typeguards.isRecord(pipe))
+            {
+                return null;
+            }
+            if (typeof pipe.name !== 'string' || !Array.isArray(pipe.args))
+            {
+                return null;
+            }
+            const args = pipe.args.filter((arg): arg is string => typeof arg === 'string')
+                .map(arg => this.transformWithLocals(arg));
+            return {
+                name: pipe.name,
+                args
+            };
+        })
+            .filter((pipe): pipe is { name: string; args: string[] } => pipe !== null);
     }
 
     private pushScope(variables: string[]): void

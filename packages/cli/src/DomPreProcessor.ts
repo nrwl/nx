@@ -167,14 +167,9 @@ export class DomPreProcessor
         if (name.startsWith('[(') && name.endsWith(')]'))
         {
             const propName = name.slice(2, -2);
-            const bindingObj: Record<string, string> = {
-                name: propName, binding: 'two-way', expression: value
-            };
-            const subscribeTo = subscribeMap.get(propName);
-            if (subscribeTo) bindingObj.subscribe = subscribeTo;
-            const json = JSON.stringify(bindingObj);
+            const bindingObj = this.buildBindingObject(propName, 'two-way', value, subscribeMap.get(propName));
             return {
-                name: `x-fluff-attrib-${propName.toLowerCase()}`, value: json
+                name: `x-fluff-attrib-${propName.toLowerCase()}`, value: JSON.stringify(bindingObj)
             };
         }
 
@@ -185,39 +180,24 @@ export class DomPreProcessor
             if (propName.startsWith('class.'))
             {
                 const className = propName.slice(6);
-                const bindingObj: Record<string, string> = {
-                    name: className, binding: 'class', expression: value
-                };
-                const subscribeTo = subscribeMap.get(propName);
-                if (subscribeTo) bindingObj.subscribe = subscribeTo;
-                const json = JSON.stringify(bindingObj);
+                const bindingObj = this.buildBindingObject(className, 'class', value, subscribeMap.get(propName));
                 return {
-                    name: `x-fluff-attrib-class-${className.toLowerCase()}`, value: json
+                    name: `x-fluff-attrib-class-${className.toLowerCase()}`, value: JSON.stringify(bindingObj)
                 };
             }
 
             if (propName.startsWith('style.'))
             {
                 const styleName = propName.slice(6);
-                const bindingObj: Record<string, string> = {
-                    name: styleName, binding: 'style', expression: value
-                };
-                const subscribeTo = subscribeMap.get(propName);
-                if (subscribeTo) bindingObj.subscribe = subscribeTo;
-                const json = JSON.stringify(bindingObj);
+                const bindingObj = this.buildBindingObject(styleName, 'style', value, subscribeMap.get(propName));
                 return {
-                    name: `x-fluff-attrib-style-${styleName.toLowerCase()}`, value: json
+                    name: `x-fluff-attrib-style-${styleName.toLowerCase()}`, value: JSON.stringify(bindingObj)
                 };
             }
 
-            const bindingObj: Record<string, string> = {
-                name: propName, binding: 'property', expression: value
-            };
-            const subscribeTo = subscribeMap.get(propName);
-            if (subscribeTo) bindingObj.subscribe = subscribeTo;
-            const json = JSON.stringify(bindingObj);
+            const bindingObj = this.buildBindingObject(propName, 'property', value, subscribeMap.get(propName));
             return {
-                name: `x-fluff-attrib-${propName.toLowerCase()}`, value: json
+                name: `x-fluff-attrib-${propName.toLowerCase()}`, value: JSON.stringify(bindingObj)
             };
         }
 
@@ -255,6 +235,30 @@ export class DomPreProcessor
         }
 
         return null;
+    }
+
+    private buildBindingObject(
+        name: string,
+        binding: string,
+        value: string,
+        subscribeTo: string | undefined
+    ): Record<string, unknown>
+    {
+        const parsed = ExpressionTransformer.parsePrimaryExpression(value);
+        const bindingObj: Record<string, unknown> = {
+            name,
+            binding,
+            expression: parsed.expression
+        };
+        if (parsed.pipes.length > 0)
+        {
+            bindingObj.pipes = parsed.pipes;
+        }
+        if (subscribeTo)
+        {
+            bindingObj.subscribe = subscribeTo;
+        }
+        return bindingObj;
     }
 
     private convertInterpolationToExpression(value: string): string

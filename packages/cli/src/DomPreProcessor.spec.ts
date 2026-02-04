@@ -134,6 +134,125 @@ describe('TemplateParser x-fluff-subscribe integration', () =>
     });
 });
 
+describe('TemplateParser property binding with pipes', () =>
+{
+    it('should extract pipe in property binding', async() =>
+    {
+        const parser = new TemplateParser();
+        const html = '<my-component [model]="device.spkModel | GetModel"></my-component>';
+        const ast = await parser.parse(html);
+
+        const [element] = ast.root;
+        expect(element.type)
+            .toBe('element');
+        if (element.type !== 'element') return;
+
+        const modelBinding = element.bindings.find(b => b.name === 'model');
+        expect(modelBinding)
+            .toBeDefined();
+        expect(modelBinding?.expression)
+            .toContain('device');
+        expect(modelBinding?.expression)
+            .toContain('spkModel');
+        expect(modelBinding?.pipes)
+            .toHaveLength(1);
+        expect(modelBinding?.pipes?.[0].name)
+            .toBe('GetModel');
+    });
+
+    it('should extract pipe with arguments in property binding', async() =>
+    {
+        const parser = new TemplateParser();
+        const html = '<my-component [value]="amount | currency:\'USD\'"></my-component>';
+        const ast = await parser.parse(html);
+
+        const [element] = ast.root;
+        expect(element.type)
+            .toBe('element');
+        if (element.type !== 'element') return;
+
+        const valueBinding = element.bindings.find(b => b.name === 'value');
+        expect(valueBinding)
+            .toBeDefined();
+        expect(valueBinding?.expression)
+            .toContain('amount');
+        expect(valueBinding?.pipes)
+            .toHaveLength(1);
+        expect(valueBinding?.pipes?.[0].name)
+            .toBe('currency');
+        expect(valueBinding?.pipes?.[0].args)
+            .toContain('\'USD\'');
+    });
+
+    it('should extract multiple chained pipes in property binding', async() =>
+    {
+        const parser = new TemplateParser();
+        const html = '<my-component [text]="name | lowercase | capitalize"></my-component>';
+        const ast = await parser.parse(html);
+
+        const [element] = ast.root;
+        expect(element.type)
+            .toBe('element');
+        if (element.type !== 'element') return;
+
+        const textBinding = element.bindings.find(b => b.name === 'text');
+        expect(textBinding)
+            .toBeDefined();
+        expect(textBinding?.expression)
+            .toContain('name');
+        expect(textBinding?.pipes)
+            .toHaveLength(2);
+        expect(textBinding?.pipes?.[0].name)
+            .toBe('lowercase');
+        expect(textBinding?.pipes?.[1].name)
+            .toBe('capitalize');
+    });
+
+    it('should not treat || as pipe in property binding', async() =>
+    {
+        const parser = new TemplateParser();
+        const html = '<my-component [value]="a || b"></my-component>';
+        const ast = await parser.parse(html);
+
+        const [element] = ast.root;
+        expect(element.type)
+            .toBe('element');
+        if (element.type !== 'element') return;
+
+        const valueBinding = element.bindings.find(b => b.name === 'value');
+        expect(valueBinding)
+            .toBeDefined();
+        expect(valueBinding?.expression)
+            .toContain('||');
+        expect(valueBinding?.pipes)
+            .toBeUndefined();
+    });
+
+    it('should handle bitwise OR inside parentheses before pipe', async() =>
+    {
+        const parser = new TemplateParser();
+        const html = '<my-component [value]="(flags | mask) | FormatFlags"></my-component>';
+        const ast = await parser.parse(html);
+
+        const [element] = ast.root;
+        expect(element.type)
+            .toBe('element');
+        if (element.type !== 'element') return;
+
+        const valueBinding = element.bindings.find(b => b.name === 'value');
+        expect(valueBinding)
+            .toBeDefined();
+        expect(valueBinding?.expression)
+            .toContain('flags');
+        expect(valueBinding?.expression)
+            .toContain('mask');
+        expect(valueBinding?.pipes)
+            .toHaveLength(1);
+        expect(valueBinding?.pipes?.[0].name)
+            .toBe('FormatFlags');
+    });
+});
+
 describe('DomPreProcessor attribute interpolation', () =>
 {
     it('should convert attribute with interpolation to property binding', async() =>
