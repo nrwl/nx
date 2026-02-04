@@ -4,8 +4,8 @@ export const tslibVersion = '^2.3.0';
 
 export const typesNodeVersion = '20.19.9';
 
-export const expressVersion = '^4.21.2';
-export const expressTypingsVersion = '^4.17.21';
+export const expressVersion = '^5.2.1';
+export const expressTypingsVersion = '^5.0.6';
 
 export const koaVersion = '^3.0.3';
 export const koaTypingsVersion = '^3.0.0';

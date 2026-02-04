@@ -31,7 +31,7 @@
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
     "@rspack/core": "catalog:rspack",
-    "express": "^4.21.2",
+    "express": "^5.2.1",
     "http-proxy-middleware": "^3.0.5",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",

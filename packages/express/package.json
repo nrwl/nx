@@ -37,7 +37,7 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "express": "^4.21.2"
+    "express": "^5.2.1"
   },
   "peerDependenciesMeta": {
     "express": {

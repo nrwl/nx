@@ -21,11 +21,11 @@
           "alwaysAddToPackageJson": false
         },
         "express": {
-          "version": "^4.21.2",
+          "version": "^5.2.1",
           "alwaysAddToPackageJson": false
         },
         "@types/express": {
-          "version": "^4.17.21",
+          "version": "^5.0.6",
           "alwaysAddToPackageJson": false
         }
       }

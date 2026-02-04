@@ -10,8 +10,8 @@ export const tsLibVersion = '^2.3.0';
 
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.5';
-export const expressVersion = '^4.21.2';
-export const typesExpressVersion = '^4.17.21';
+export const expressVersion = '^5.2.1';
+export const typesExpressVersion = '^5.0.6';
 export const browserSyncVersion = '^3.0.0';
 export const moduleFederationNodeVersion = '^2.7.21';
 export const moduleFederationEnhancedVersion = '^0.21.2';
