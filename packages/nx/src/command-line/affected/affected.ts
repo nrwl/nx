@@ -21,6 +21,7 @@ import { readNxJson } from '../../config/configuration';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
+import { reportCommandRunEvent } from '../../analytics';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -38,6 +39,7 @@ export async function affected(
   }
 ): Promise<void> {
   performance.mark('code-loading:end');
+  reportCommandRunEvent('affected');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
 
   const nxJson = readNxJson();
