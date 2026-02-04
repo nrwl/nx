@@ -323,6 +323,19 @@ export abstract class MarkerController
         parent.insertBefore(node, this.endMarker);
     }
 
+    protected refreshParentBindings(): void
+    {
+        const parent = this.startMarker.parentNode;
+        if (!(parent instanceof HTMLElement)) return;
+        if (!parent.hasAttribute('data-lid')) return;
+
+        const fluffHost = this.__getFluffElementHost();
+        if (!fluffHost) return;
+
+        const scope = this.getScope();
+        fluffHost.__processBindingsOnElementPublic(parent, scope);
+    }
+
     protected processBindingsOnElement(el: HTMLElement, scope: Scope): void
     {
         const fluffHost = this.__getFluffElementHost();

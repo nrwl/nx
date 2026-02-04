@@ -60,6 +60,8 @@ export class IfController extends MarkerController
                 {
                     this.cloneAndInsertTemplate(this.templates[matchedIndex], this.loopContext, undefined, this.bindingsSubscriptions);
                 }
+
+                this.refreshParentBindings();
             }
         };
 

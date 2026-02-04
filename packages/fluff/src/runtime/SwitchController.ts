@@ -53,6 +53,8 @@ export class SwitchController extends MarkerController
                     shouldFallthrough = caseInfo.fallthrough;
                 }
             }
+
+            this.refreshParentBindings();
         };
 
         this.subscribeTo(deps, update);

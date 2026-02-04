@@ -56,6 +56,7 @@ export class ForController extends MarkerController
                 this.cloneAndInsertTemplate(this.itemTemplate, itemContext, renderContext, this.bindingsSubscriptions);
             }
 
+            this.refreshParentBindings();
         };
 
         this.subscribeTo(deps, update);
