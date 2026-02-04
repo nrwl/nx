@@ -24,7 +24,10 @@ import { removeDbConnections } from '../src/utils/db-connection';
 import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
 import { flushAnalytics, startAnalytics } from '../src/analytics';
 
-process.on('exit', () => flushAnalytics());
+const originalExit = process.exit;
+process.exit = ((code?: string | number) => {
+  flushAnalytics().finally(() => originalExit(code));
+}) as typeof originalExit;
 
 async function main() {
   if (
