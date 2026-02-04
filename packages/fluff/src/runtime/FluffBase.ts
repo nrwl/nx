@@ -123,6 +123,10 @@ export abstract class FluffBase extends HTMLElement
     }[], locals: Record<string, unknown>): unknown
     {
         let result = value;
+        if (result instanceof Property)
+        {
+            result = result.getValue();
+        }
         for (const pipe of pipes)
         {
             result = this.__applyPipe(pipe.n, result, pipe.a, locals);

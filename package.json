@@ -1,6 +1,6 @@
 {
     "name": "@fluffjs/source",
-    "version": "0.1.15",
+    "version": "0.1.16",
     "license": "MIT",
     "scripts": {
         "cli": "npx tsx ./packages/cli/src/bin.ts",
