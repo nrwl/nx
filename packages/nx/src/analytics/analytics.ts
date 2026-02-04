@@ -33,9 +33,19 @@ export async function startAnalytics() {
   );
 }
 
-export function reportCommandRunEvent(command: string) {
+export function reportNxAddCommand(packageName: string, version: string) {
+  reportCommandRunEvent('add', {
+    [EventCustomDimension.PackageName]: packageName,
+    [EventCustomDimension.PackageVersion]: version,
+  });
+}
+
+export function reportCommandRunEvent(
+  command: string,
+  parameters?: Record<string, ParameterValue>
+) {
   command = command === 'g' ? 'generate' : command;
-  trackEvent(command, undefined, true);
+  trackEvent(command, parameters, true);
 }
 
 export function reportProjectGraphCreationEvent(time: number) {

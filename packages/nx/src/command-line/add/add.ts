@@ -21,12 +21,14 @@ import {
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 import { globalSpinner } from '../../utils/spinner';
+import { reportNxAddCommand } from '../../analytics/analytics';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
     output.addNewline();
 
     const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);
+    reportNxAddCommand(pkgName, version);
     const nxJson = readNxJson();
 
     await installPackage(pkgName, version, nxJson);
