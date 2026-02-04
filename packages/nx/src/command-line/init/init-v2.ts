@@ -32,6 +32,7 @@ import {
 import { addNxToCraRepo } from './implementation/react';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
+import { reportCommandRunEvent } from '../../analytics';
 
 export interface InitArgs {
   interactive: boolean;
@@ -47,6 +48,7 @@ export async function initHandler(
   options: InitArgs,
   inner = false
 ): Promise<void> {
+  reportCommandRunEvent('init-v2');
   // Use environment variable to force local execution
   if (process.env.NX_USE_LOCAL === 'true' || inner) {
     return await initHandlerImpl(options);

@@ -35,6 +35,7 @@ import {
   checkCompatibleWithPlugins,
   updatePluginsInNxJson,
 } from '../init/implementation/check-compatible-with-plugins';
+import { reportCommandRunEvent } from '../../analytics';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -65,6 +66,7 @@ export interface ImportOptions {
 }
 
 export async function importHandler(options: ImportOptions) {
+  reportCommandRunEvent('import');
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
   const destinationGitClient = new GitRepository(process.cwd());
