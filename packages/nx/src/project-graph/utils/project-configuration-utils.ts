@@ -6,16 +6,23 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../config/workspace-json-project-json';
-import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
+import { NX_PREFIX } from '../../utils/logger';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { ProjectNameInNodePropsManager } from './project-configuration/name-substitution-manager';
 
 import { minimatch } from 'minimatch';
+import { existsSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { existsSync } from 'node:fs';
 
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isGlobPattern } from '../../utils/globs';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -33,14 +40,8 @@ import {
   ProjectWithNoNameError,
   WorkspaceValidityError,
 } from '../error-types';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
-import {
-  getExecutorInformation,
-  parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -56,7 +57,9 @@ export function mergeProjectConfigurationIntoRootMap(
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean
-): void {
+): {
+  nameChanged: boolean;
+} {
   project.root = project.root === '' ? '.' : project.root;
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -232,6 +235,13 @@ export function mergeProjectConfigurationIntoRootMap(
 
   projectRootMap[updatedProjectConfiguration.root] =
     updatedProjectConfiguration;
+
+  return {
+    nameChanged:
+      matchingProject?.name &&
+      project.name &&
+      matchingProject.name !== project.name,
+  };
 }
 
 export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
@@ -505,6 +515,7 @@ function mergeCreateNodesResults(
   performance.mark('createNodes:merge - start');
   const projectRootMap: Record<string, ProjectConfiguration> = {};
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const projectNameManager = new ProjectNameInNodePropsManager();
   const configurationSourceMaps: Record<
     string,
     Record<string, SourceInformation>
@@ -518,22 +529,26 @@ function mergeCreateNodesResults(
 
     const sourceInfo: SourceInformation = [file, pluginName];
 
-    for (const node in projectNodes) {
+    for (const root in projectNodes) {
       // Handles `{projects: {'libs/foo': undefined}}`.
-      if (!projectNodes[node]) {
+      if (!projectNodes[root]) {
         continue;
       }
       const project = {
-        root: node,
-        ...projectNodes[node],
+        root: root,
+        ...projectNodes[root],
       };
+
       try {
-        mergeProjectConfigurationIntoRootMap(
+        const { nameChanged } = mergeProjectConfigurationIntoRootMap(
           projectRootMap,
           project,
           configurationSourceMaps,
           sourceInfo
         );
+        if (nameChanged) {
+          projectNameManager.markDirty(root);
+        }
       } catch (error) {
         errors.push(
           new MergeNodesError({
@@ -545,10 +560,15 @@ function mergeCreateNodesResults(
         );
       }
     }
+    projectNameManager.registerSubstitutorsForNodeResults(
+      projectNodes,
+      projectRootMap
+    );
     Object.assign(externalNodes, pluginExternalNodes);
   }
 
   try {
+    projectNameManager.applySubstitutions(projectRootMap);
     validateAndNormalizeProjectRootMap(
       workspaceRoot,
       projectRootMap,
