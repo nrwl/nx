@@ -92,36 +92,21 @@ export class AnalyticsCollector {
     parameters?: Record<string, ParameterValue>,
     isPageView?: boolean
   ): void {
-    if (isPageView) {
-      this.handlePageViewEvent(eventName, parameters);
-      return;
-    }
-
     this.eventsQueue ??= [];
-    this.eventsQueue.push({
+
+    const eventData: Record<string, ParameterValue | undefined> = {
       ...this.userParameters,
       ...parameters,
-      en: eventName,
-    });
-  }
+      en: isPageView ? 'page_view' : eventName,
+    };
 
-  /**
-   * These need to be flushed immediately because the request parameters are
-   * linked to the page view event.
-   * @private
-   */
-  private handlePageViewEvent(
-    eventName: string,
-    parameters?: Record<string, ParameterValue>
-  ) {
-    this.requestParameters[RequestParameter.PageLocation] = eventName;
-    this.requestParameters[RequestParameter.PageTitle] = eventName;
-    this.send([
-      { ...this.userParameters, ...parameters, en: 'page_view' },
-    ]).finally(() => {
-      this.requestParameters[RequestParameter.PageLocation] = undefined;
-      this.requestParameters[RequestParameter.PageTitle] = undefined;
-    });
+    // For page views, capture the command name as page location/title
+    if (isPageView) {
+      eventData[RequestParameter.PageLocation] = eventName;
+      eventData[RequestParameter.PageTitle] = eventName;
+    }
+
+    this.eventsQueue.push(eventData);
   }
 
   private async send(
