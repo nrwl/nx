@@ -512,6 +512,7 @@ export async function runCommandForTasks(
     extraTargetDependencies,
     extraOptions
   );
+
   const tasks = Object.values(taskGraph.tasks);
 
   const initiatingTasks = tasks.filter(

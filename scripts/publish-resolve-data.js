@@ -1,5 +1,7 @@
 // @ts-check
 
+const { execSync } = require('node:child_process');
+
 /**
  * This function is invoked by the publish.yml GitHub Action workflow and contains all of the dynamic logic needed
  * for the various workflow trigger types. This avoids the need for the logic to be stored in fragile inline
@@ -149,7 +151,21 @@ async function getPublishResolveData({ github, context }) {
 
       const fullSHA = pr.data.head.sha;
       const shortSHA = fullSHA.slice(0, 7);
-      const version = `0.0.0-pr-${prNumber}-${shortSHA}`;
+
+      // Use the base version from nx@next so PR releases align with the current next/beta release line
+      const currentNextVersion = execSync('npm view nx@next version', {
+        windowsHide: false,
+      })
+        .toString()
+        .trim();
+      const nextVersionMatch = currentNextVersion.match(/^(\d+\.\d+\.\d+)/);
+      if (!nextVersionMatch) {
+        throw new Error(
+          `Unable to parse the current next version from the npm registry: "${currentNextVersion}"`
+        );
+      }
+      const prBaseVersion = nextVersionMatch[1];
+      const version = `${prBaseVersion}-pr.${prNumber}.${shortSHA}`;
       const repo = pr.data.head.repo.full_name;
       const ref = pr.data.head.ref;
       const pr_author = pr.data.user?.login || 'unknown';
