@@ -4,21 +4,6 @@ const GA_MEASUREMENT_ID =
   Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
 const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
 
-function shouldTrack(request: Request): boolean {
-  const accept = request.headers.get('accept') || '';
-
-  // Track if:
-  // - No Accept header (some LLM tools)
-  // - Accept contains text/html (browsers)
-  // - Accept contains */* (curl, browser default)
-  if (!accept || accept.includes('text/html') || accept.includes('*/*')) {
-    return true;
-  }
-
-  // Skip image/css/js/font requests
-  return false;
-}
-
 function getClientId(request: Request): string {
   const cookies = request.headers.get('cookie') || '';
   const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
@@ -85,9 +70,8 @@ export default async function handler(
 ): Promise<Response> {
   const pathname = new URL(request.url).pathname;
 
-  if (shouldTrack(request)) {
-    context.waitUntil(sendToGA4(request, context, pathname));
-  }
+  // Always track - filtering is done at config level via `accept: ['text/html']`
+  context.waitUntil(sendToGA4(request, context, pathname));
 
   const response = await context.next();
   const newHeaders = new Headers(response.headers);
@@ -102,6 +86,9 @@ export default async function handler(
 
 export const config = {
   path: ['/docs/*'],
+  // Only track requests from clients that want HTML (browsers)
+  // This filters out curl, AI agents, and other non-browser clients
+  accept: ['text/html'],
   excludedPath: [
     // Text/code files (handled by track-asset-requests or not tracked)
     '/docs/*.md',
