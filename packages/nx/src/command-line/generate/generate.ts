@@ -23,6 +23,7 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
 import { getCwd } from '../../utils/path';
+import { reportNxGenerateCommand } from '../../analytics/analytics';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -367,6 +368,11 @@ export async function generate(args: { [k: string]: any }) {
       ),
       relative(workspaceRoot, cwd),
       args.verbose
+    );
+
+    reportNxGenerateCommand(
+      `${opts.collectionName}:${normalizedGeneratorName}`,
+      combinedOpts
     );
 
     if (
