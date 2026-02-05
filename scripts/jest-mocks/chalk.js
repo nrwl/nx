@@ -18,6 +18,10 @@ const handler = {
     if (prop === 'default') return chalk;
     return chalk[prop];
   },
+  set(target, prop, value) {
+    chalk[prop] = value;
+    return true;
+  },
   has(target, prop) {
     return prop === '__esModule' || prop === 'default' || prop in chalk;
   },
