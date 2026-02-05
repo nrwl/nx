@@ -5,12 +5,11 @@ use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::utils::git::parent_gitignore_files;
+use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, create_walker};
 use crate::native::watch::types::{
     EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
 use crate::native::watch::watch_filterer;
-use ignore::WalkBuilder;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
     ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
@@ -27,57 +26,9 @@ use watchexec_events::filekind::{CreateKind, FileEventKind};
 use watchexec_events::{Event, FileType, Priority, Tag};
 use watchexec_signals::Signal;
 
-/// Build a WalkBuilder that enumerates non-ignored directories in the workspace.
-/// Reuses the same ignore patterns as `walker.rs::create_walker()`:
-/// - Hardcoded ignores: node_modules, .git, .nx/cache, .nx/workspace-data, .yarn/cache
-/// - .gitignore respect (with parent gitignore traversal)
-/// - .nxignore support
-fn create_watch_walker<P: AsRef<Path>>(directory: P, use_ignores: bool) -> WalkBuilder {
-    let directory: PathBuf = directory.as_ref().into();
-
-    let ignore_glob_set = build_glob_set(&[
-        "**/node_modules",
-        "**/.git",
-        "**/.nx/cache",
-        "**/.nx/workspace-data",
-        "**/.yarn/cache",
-    ])
-    .expect("These static ignores always build");
-
-    let mut walker = WalkBuilder::new(&directory);
-    walker.require_git(false);
-    walker.hidden(false);
-
-    if use_ignores {
-        if let Some(gitignore_paths) = parent_gitignore_files(&directory) {
-            walker.parents(false);
-            for gitignore_path in gitignore_paths {
-                walker.add_ignore(gitignore_path);
-            }
-        } else {
-            walker.parents(true);
-        }
-
-        walker.add_custom_ignore_filename(".nxignore");
-    }
-
-    walker.filter_entry(move |entry| {
-        let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
-    });
-    walker
-}
-
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 fn build_ignore_glob_set() -> NxGlobSet {
-    build_glob_set(&[
-        "**/node_modules",
-        "**/.git",
-        "**/.nx/cache",
-        "**/.nx/workspace-data",
-        "**/.yarn/cache",
-    ])
-    .expect("These static ignores always build")
+    build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
 /// Check if a path should be ignored based on the hardcoded ignore patterns.
@@ -92,7 +43,7 @@ fn enumerate_watch_paths<P: AsRef<Path>>(
     directory: P,
     use_ignores: bool,
 ) -> (Vec<WatchedPath>, HashSet<PathBuf>) {
-    let walker = create_watch_walker(&directory, use_ignores);
+    let walker = create_walker(&directory, use_ignores);
     let mut watched_paths: Vec<WatchedPath> = Vec::new();
     let mut path_set: HashSet<PathBuf> = HashSet::new();
 
