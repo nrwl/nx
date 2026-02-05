@@ -99,13 +99,13 @@ export function runCommand(
       });
     }
 
-    return r as string;
+    return stripVTControlCharacters(r as string);
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
-      return e.stdout + e.stderr;
+      return stripVTControlCharacters(e.stdout + e.stderr);
     }
     throw e;
   }
