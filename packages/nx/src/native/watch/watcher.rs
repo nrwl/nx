@@ -36,6 +36,45 @@ fn is_ignored_path(path: &Path, ignore_globs: &NxGlobSet) -> bool {
     ignore_globs.is_match(path)
 }
 
+/// Process events for new directory creation and register watches for them.
+/// Returns a list of newly added directory paths.
+///
+/// Note: `ignore_globs` should be the hardcoded ignore patterns (node_modules, .git, etc.).
+/// These are always applied regardless of the `use_ignore` flag, which only controls
+/// whether .gitignore and .nxignore are respected for event filtering.
+fn register_new_directory_watches(
+    events: &[Event],
+    ignore_globs: &NxGlobSet,
+    watched_path_set: &Mutex<HashSet<PathBuf>>,
+) -> Vec<PathBuf> {
+    let mut new_directories = Vec::new();
+
+    for event in events.iter() {
+        let is_folder_create = event.tags.iter().any(|tag| {
+            matches!(
+                tag,
+                Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
+            )
+        });
+
+        if is_folder_create {
+            for (path, file_type) in event.paths() {
+                if file_type.map_or(false, |ft| matches!(ft, FileType::Dir))
+                    && !is_ignored_path(path, ignore_globs)
+                {
+                    let mut path_set = watched_path_set.lock();
+                    if path_set.insert(path.to_path_buf()) {
+                        trace!(?path, "dynamically registering new directory watch");
+                        new_directories.push(path.to_path_buf());
+                    }
+                }
+            }
+        }
+    }
+
+    new_directories
+}
+
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
 /// This avoids registering inotify watches on node_modules and other ignored trees.
 /// Returns both the watch paths and a set of their PathBufs for efficient lookup.
@@ -79,25 +118,26 @@ pub struct Watcher {
 #[napi]
 impl Watcher {
     /// Creates a new Watcher instance.
-    /// Will always ignore the following directories:
-    /// * .git/
-    /// * node_modules/
-    /// * .nx/
+    /// Will always ignore directories from HARDCODED_IGNORE_PATTERNS plus
+    /// watcher-specific patterns like vite/vitest timestamp files.
     #[napi(constructor)]
     pub fn new(
         origin: String,
         additional_globs: Option<Vec<String>>,
         use_ignore: Option<bool>,
     ) -> Watcher {
-        // always have these globs come before the additional globs
-        let mut globs = vec![
-            ".git/".into(),
-            "node_modules/".into(),
-            ".nx/".into(),
+        // Start with hardcoded ignore patterns (same as walker.rs)
+        let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
+            .iter()
+            .map(|p| (*p).to_string())
+            .collect();
+
+        // Add watcher-specific patterns (temporary files from build tools)
+        globs.extend([
             "vitest.config.ts.timestamp*.mjs".into(),
             "vite.config.ts.timestamp*.mjs".into(),
-            ".yarn/cache/".into(),
-        ];
+        ]);
+
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);
         }
@@ -154,6 +194,10 @@ impl Watcher {
         // When a new non-ignored directory is created, we add it to the watch set
         // so future file changes inside it are detected.
         let watched_path_set: Arc<Mutex<HashSet<PathBuf>>> = Arc::new(Mutex::new(HashSet::new()));
+
+        // Hardcoded ignore patterns for dynamic directory registration.
+        // These are always applied regardless of use_ignore - we never want to watch
+        // node_modules, .git, etc. even when watching task outputs.
         let ignore_globs: Arc<NxGlobSet> = Arc::new(build_ignore_glob_set());
 
         let origin = self.origin.clone();
@@ -177,32 +221,14 @@ impl Watcher {
 
             // Check for new directory creation events and dynamically register watches.
             // Without this, non-recursive watches would miss changes in newly created dirs.
-            let mut new_dirs_added = false;
-            for event in action.events.iter() {
-                let is_folder_create = event.tags.iter().any(|tag| {
-                    matches!(
-                        tag,
-                        Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
-                    )
-                });
-
-                if is_folder_create {
-                    for (path, file_type) in event.paths() {
-                        if file_type.map_or(false, |ft| matches!(ft, FileType::Dir))
-                            && !is_ignored_path(path, &ignore_globs_for_action)
-                        {
-                            let mut path_set = watched_path_set_for_action.lock();
-                            if path_set.insert(path.to_path_buf()) {
-                                trace!(?path, "dynamically registering new directory watch");
-                                new_dirs_added = true;
-                            }
-                        }
-                    }
-                }
-            }
+            let new_directories = register_new_directory_watches(
+                &action.events,
+                &ignore_globs_for_action,
+                &watched_path_set_for_action,
+            );
 
             // Update the watchexec pathset if new directories were added
-            if new_dirs_added {
+            if !new_directories.is_empty() {
                 let path_set = watched_path_set_for_action.lock();
                 let new_pathset: Vec<WatchedPath> = path_set
                     .iter()
