@@ -45,7 +45,7 @@ export function getInterruptedWorkspaceState(): {
 }
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
-  preset: string,
+  preset: string | undefined,
   options: T,
   rawArgs?: T
 ) {
@@ -145,6 +145,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   } else {
     // Preset flow - existing behavior
+    if (!preset) {
+      throw new Error(
+        'Preset is required when not using a template. Please provide --preset or --template.'
+      );
+    }
     const tmpDir = await createSandbox(packageManager);
     const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
 

@@ -74,8 +74,6 @@ export interface TemplateRequiredResult {
 export interface NextStep {
   title: string;
   url?: string;
-  command?: string;
-  fallbackUrl?: string;
   note?: string;
 }
 
@@ -152,12 +150,6 @@ export function writeAiOutput(message: AiOutputMessage): void {
         plainText += `${i + 1}. ${step.title}`;
         if (step.url) {
           plainText += `: ${step.url}`;
-        }
-        if (step.command) {
-          plainText += `\n   Command: ${step.command}`;
-        }
-        if (step.fallbackUrl) {
-          plainText += `\n   Or visit: ${step.fallbackUrl}`;
         }
         if (step.note) {
           plainText += `\n   ${step.note}`;
@@ -263,13 +255,6 @@ export function buildSuccessResult(options: {
   // Build user-facing next steps
   const steps: NextStep[] = [];
 
-  // GitHub push step first
-  steps.push({
-    title: 'Push to GitHub',
-    command: `gh repo create ${workspaceName} --private --source=. --push`,
-    fallbackUrl: `https://github.com/new?name=${encodeURIComponent(workspaceName)}`,
-  });
-
   // Nx Cloud connection step last (so it stands out)
   if (nxCloudConnectUrl) {
     steps.push({
@@ -280,7 +265,7 @@ export function buildSuccessResult(options: {
   }
 
   const userNextSteps: UserNextSteps = {
-    description: 'CRITICAL: Show the user these exact steps to complete setup',
+    description: 'CRITICAL: Show the user these exact steps to complete setup.',
     steps,
   };
 

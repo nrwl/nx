@@ -87,7 +87,7 @@ type AngularUnitTestRunner =
   | 'vitest-analog';
 
 interface BaseArguments extends CreateWorkspaceOptions {
-  preset: Preset;
+  preset?: Preset;
   linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
@@ -322,6 +322,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             preset: chosenPreset ?? '',
             nodeVersion: process.versions.node ?? '',
             packageManager: packageManager ?? '',
+            aiAgent: isAiAgent(),
           },
         });
 
@@ -466,7 +467,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       connectUrl: workspaceInfo.connectUrl ?? '',
       nodeVersion: process.versions.node,
       packageManager: packageManager ?? '',
-      aiAgent: aiMode ? 'true' : 'false',
+      aiAgent: aiMode,
     },
   });
 
@@ -504,6 +505,25 @@ async function normalizeArgsMiddleware(
 ): Promise<void> {
   rawArgs = { ...argv };
 
+  // Map invalid/legacy presets to templates for all users
+  // These presets don't exist as npm packages and would fail if not mapped
+  const invalidPresetToTemplateMap: Record<string, string> = {
+    empty: 'nrwl/empty-template',
+  };
+
+  if (rawArgs.preset && !rawArgs.template) {
+    const mappedTemplate = invalidPresetToTemplateMap[rawArgs.preset];
+    if (mappedTemplate) {
+      output.log({
+        title: `Mapping preset '${rawArgs.preset}' to template '${mappedTemplate}'`,
+      });
+      argv.template = mappedTemplate;
+      rawArgs.template = mappedTemplate;
+      delete argv.preset;
+      delete rawArgs.preset;
+    }
+  }
+
   // AI Agent Detection: When an AI agent is detected, switch to AI-optimized mode
   const aiMode = isAiAgent();
 
@@ -513,7 +533,7 @@ async function normalizeArgsMiddleware(
 
     // Map legacy presets to templates for AI agents
     // Many AI models were trained on old preset syntax, so we convert them
-    const presetToTemplateMap: Record<string, string> = {
+    const legacyPresetToTemplateMap: Record<string, string> = {
       ts: 'nrwl/empty-template',
       apps: 'nrwl/empty-template',
       react: 'nrwl/react-template',
@@ -526,7 +546,7 @@ async function normalizeArgsMiddleware(
 
     // If AI provided a mappable preset without a template, convert it
     if (rawArgs.preset && !rawArgs.template) {
-      const mappedTemplate = presetToTemplateMap[rawArgs.preset];
+      const mappedTemplate = legacyPresetToTemplateMap[rawArgs.preset];
       if (mappedTemplate) {
         logProgress(
           'starting',
@@ -589,6 +609,7 @@ async function normalizeArgsMiddleware(
       type: 'start',
       flowVariant: getFlowVariant(),
       nodeVersion: process.versions.node,
+      aiAgent: isAiAgent(),
     },
   });
 
@@ -643,6 +664,7 @@ async function normalizeArgsMiddleware(
           nodeVersion: process.versions.node ?? '',
           packageManager,
           ghAvailable: ghAvailable ? 'true' : 'false',
+          aiAgent: isAiAgent(),
         },
       });
     } else {
@@ -701,7 +723,7 @@ async function normalizeArgsMiddleware(
         aiAgents,
       });
 
-      chosenPreset = argv.preset;
+      chosenPreset = argv.preset ?? '';
 
       await recordStat({
         nxVersion,
@@ -714,6 +736,7 @@ async function normalizeArgsMiddleware(
           preset: chosenPreset ?? '',
           nodeVersion: process.versions.node ?? '',
           packageManager,
+          aiAgent: isAiAgent(),
         },
       });
     }
