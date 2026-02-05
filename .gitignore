@@ -71,7 +71,7 @@ dependency-reduced-pom.xml
 *.wasm
 /wasi-sdk*
 
-*.config.timestamp*
+*.config.*.timestamp*
 
 storybook-static
 
