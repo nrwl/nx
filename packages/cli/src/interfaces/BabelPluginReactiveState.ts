@@ -6,6 +6,7 @@ export interface BabelPluginReactiveState
     filename?: string;
     needsPropertyImport?: boolean;
     reactiveProperties?: Set<string>;
+    inputPropertyProperties?: Set<string>;
     watchMethods?: BabelPluginReactiveWatchInfo[];
     watchCalls?: BabelPluginReactiveWatchCallInfo[];
     opts?: { production?: boolean };

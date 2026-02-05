@@ -25,6 +25,7 @@ export class Property<T>
     public readonly onChange = new Publisher<T>();
     public readonly onInboundChange = new Publisher<T>();
     public readonly onOutboundChange = new Publisher<T>();
+    public readonly onMetadataChange = new Publisher<T>();
     private value?: T;
     private committed = true;
     private _isChanging = false;
