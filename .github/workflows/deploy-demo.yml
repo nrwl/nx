@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
       - name: Build fluff package
         run: npx nx build fluff
 
