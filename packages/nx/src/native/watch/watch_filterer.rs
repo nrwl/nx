@@ -109,7 +109,10 @@ impl Filterer for WatchFilterer {
                 } => continue,
 
                 Tag::Source(Source::Filesystem) => continue,
-                _ => return Ok(false),
+                _ => {
+                    trace!(?tag, "tag rejected event");
+                    return Ok(false);
+                }
             }
         }
 

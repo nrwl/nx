@@ -270,10 +270,22 @@ impl Watcher {
             }
             trace!(?origin_path);
 
+            trace!(
+                event_count = action.events.len(),
+                "on_action received events"
+            );
+            for ev in action.events.iter() {
+                trace!(?ev, "raw event");
+            }
+
             let events = action
                 .events
                 .par_iter()
-                .filter_map(|ev| transform_event_to_watch_events(ev, &origin_path).ok())
+                .filter_map(|ev| {
+                    let result = transform_event_to_watch_events(ev, &origin_path);
+                    trace!(?result, "transform result");
+                    result.ok()
+                })
                 .flatten()
                 .collect::<Vec<WatchEventInternal>>();
 
@@ -301,6 +313,14 @@ impl Watcher {
                     }
                 }
             }
+            trace!(
+                event_count = group_events.len(),
+                "sending events to callback"
+            );
+            for (path, ev) in group_events.iter() {
+                trace!(?path, r#type = ?ev.r#type, "callback event");
+            }
+
             callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
 
             action

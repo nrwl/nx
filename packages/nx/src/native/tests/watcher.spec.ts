@@ -208,6 +208,51 @@ describe('watcher', () => {
       done();
     });
   }, 15000);
+
+  it('should detect files deleted in newly created directories', async () => {
+    return new Promise<void>(async (done) => {
+      await wait();
+      watcher = new Watcher(temp.tempDir);
+
+      const allPaths: any[] = [];
+      watcher.watch((err, paths) => {
+        allPaths.push(...paths);
+      });
+
+      await wait();
+      // Create a new subdirectory and file
+      const { mkdirSync, unlinkSync } = require('fs');
+      const { join } = require('path');
+      mkdirSync(join(temp.tempDir, 'app1/newsubdir2'), { recursive: true });
+
+      await wait(2000);
+
+      // Create a file
+      temp.createFileSync('app1/newsubdir2/todelete.ts', 'export const x = 1;');
+
+      await wait(2000);
+
+      // Delete the file
+      unlinkSync(join(temp.tempDir, 'app1/newsubdir2/todelete.ts'));
+
+      await wait(2000);
+
+      // Should detect both the create and delete
+      expect(
+        allPaths.some(
+          ({ path, type }) =>
+            path === 'app1/newsubdir2/todelete.ts' && type === 'create'
+        )
+      ).toBeTruthy();
+      expect(
+        allPaths.some(
+          ({ path, type }) =>
+            path === 'app1/newsubdir2/todelete.ts' && type === 'delete'
+        )
+      ).toBeTruthy();
+      done();
+    });
+  }, 20000);
 });
 
 function wait(timeout = 1000) {
