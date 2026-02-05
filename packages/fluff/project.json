@@ -4,29 +4,12 @@
     "projectType": "library",
     "sourceRoot": "packages/fluff/src",
     "targets": {
-        "build-internal": {
-            "executor": "nx:run-commands",
-            "outputs": [
-                "{projectRoot}/dist"
-            ],
-            "options": {
-                "commands": [
-                    "tsc --noEmit -p tsconfig.spec.json",
-                    "tsc --build tsconfig.lib.json",
-                    "node scripts/copy-package-json.mjs"
-                ],
-                "cwd": "{projectRoot}",
-                "parallel": false
-            }
-        },
         "build": {
             "dependsOn": [
                 "lint",
                 "test",
-                "build-internal",
                 "fluff-e2e:e2e"
-            ],
-            "executor": "nx:noop"
+            ]
         }
     }
 }
