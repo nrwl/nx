@@ -143,3 +143,5 @@ test-results
 packages/nx/**/*.d.ts
 !packages/nx/src/ai/set-up-ai-agents/schema.d.ts
 !packages/nx/src/native/index.d.ts
+e2e/**/*.d.ts
+e2e/**/*.d.ts.map
