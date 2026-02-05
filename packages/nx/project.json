@@ -56,6 +56,15 @@
     "copy-native-package-directories": {
       "command": "node scripts/copy.js packages/nx/dist/native-packages/* dist/packages"
     },
+    "copy-local-native": {
+      "dependsOn": ["build-native", "build-base"],
+      "inputs": [
+        "{projectRoot}/src/native/**/*.{node,wasm,js,mjs,cjs}",
+        "{workspaceRoot}/scripts/copy-local-native.js"
+      ],
+      "outputs": ["{projectRoot}/dist/src/native/**/*.{node,wasm,js,mjs,cjs}"],
+      "command": "node ./scripts/copy-local-native.js nx"
+    },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
       "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
@@ -100,9 +109,6 @@
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/copy-local-native.js nx"
-          },
-          {
             "command": "node ./scripts/copy-graph-client.js"
           },
           {
@@ -145,6 +151,7 @@
       }
     },
     "legacy-post-build": {
+      "dependsOn": ["copy-local-native"],
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{projectRoot}/dist"],
       "options": {
