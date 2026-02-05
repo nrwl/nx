@@ -435,7 +435,7 @@ class ProcessTargetsForProjectTest {
 
     @Test
     fun `should override build target name when buildTargetName is specified`(
-      @TempDir workspaceDir: File
+        @TempDir workspaceDir: File
     ) {
       val workspaceRoot = workspaceDir.absolutePath
       val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
@@ -444,10 +444,10 @@ class ProcessTargetsForProjectTest {
       File(projectDir, "build.gradle").writeText("// test build file")
 
       val checkTask =
-        project.tasks.register("check").get().apply {
-          group = "verification"
-          description = "Runs all checks"
-        }
+          project.tasks.register("check").get().apply {
+            group = "verification"
+            description = "Runs all checks"
+          }
       project.tasks.register("build").get().apply {
         group = "build"
         description = "Assembles and tests"
@@ -459,19 +459,19 @@ class ProcessTargetsForProjectTest {
       val dependencies = mutableSetOf<Dependency>()
 
       val gradleTargets =
-        processTargetsForProject(
-          project = project,
-          dependencies = dependencies,
-          targetNameOverrides = targetNameOverrides,
-          workspaceRoot = workspaceRoot,
-          atomized = false)
+          processTargetsForProject(
+              project = project,
+              dependencies = dependencies,
+              targetNameOverrides = targetNameOverrides,
+              workspaceRoot = workspaceRoot,
+              atomized = false)
 
       assertNotNull(
-        gradleTargets.targets["build-kt"],
-        "Expected 'build-kt' target to be present (overridden from 'build')")
+          gradleTargets.targets["build-kt"],
+          "Expected 'build-kt' target to be present (overridden from 'build')")
       assertTrue(
-        gradleTargets.targetGroups["build"]?.contains("build-kt") == true,
-        "Expected 'build-kt' to be in the 'build' target group")
+          gradleTargets.targetGroups["build"]?.contains("build-kt") == true,
+          "Expected 'build-kt' to be in the 'build' target group")
     }
   }
 }
