@@ -421,13 +421,13 @@ class ProcessTargetsForProjectTest {
 
     val checkDependsOn = gradleTargets.targets["check"]?.get("dependsOn") as? List<*>
     assertTrue(
-        checkDependsOn?.contains(":app:test") == true,
-        "Expected check to depend on ':app:test', got $checkDependsOn")
+        checkDependsOn?.contains("app:test") == true,
+        "Expected check to depend on 'app:test', got $checkDependsOn")
 
     val ciCheckDependsOn = gradleTargets.targets["ci-check"]?.get("dependsOn") as? List<*>
     assertTrue(
-        ciCheckDependsOn?.contains(":app:ci-test") == true,
-        "Expected ci-check to depend on ':app:ci-test', got $ciCheckDependsOn")
+        ciCheckDependsOn?.contains("app:ci-test") == true,
+        "Expected ci-check to depend on 'app:ci-test', got $ciCheckDependsOn")
   }
 
   @Nested
