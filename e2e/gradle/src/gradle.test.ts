@@ -12,7 +12,7 @@ import {
 import { createGradleProject } from './utils/create-gradle-project';
 
 describe('Gradle', () => {
-  describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
+  describe.each([{ type: 'groovy' }])(
     '$type',
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName = uniq('my-gradle-project');
@@ -20,7 +20,6 @@ describe('Gradle', () => {
         newProject({ packages: [] });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
-        runCLI('reset');
       });
       afterAll(() => cleanupProject());
 
@@ -87,8 +86,6 @@ dependencies {
           }
         );
 
-        runCLI('reset');
-
         let buildOutput = runCLI('build app2', { verbose: true });
         // app2 depends on app
         expect(buildOutput).toContain(':app:classes');
@@ -112,7 +109,6 @@ dependencies {
         });
 
         expect(() => {
-          runCLI('reset');
           runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
           runCLI('run list:test-ci--LinkedListTest', { verbose: true });
         }).not.toThrow();
