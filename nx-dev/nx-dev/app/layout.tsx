@@ -10,6 +10,21 @@ import { FrontendObservability } from '../lib/components/frontend-observability'
 
 // Metadata for the entire site
 export const metadata: Metadata = {
+  // Resolve relative URLs in metadata (e.g., OG images) to the correct deployment URL
+  // - Vercel: Use VERCEL_URL for preview deployments
+  // - Netlify: Use CONTEXT to determine environment:
+  //   - deploy-preview/branch-deploy: Use DEPLOY_PRIME_URL for PR preview URLs
+  //   - production: Use URL for canonical production URL (nx.dev)
+  metadataBase: new URL(
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.CONTEXT === 'deploy-preview' ||
+          process.env.CONTEXT === 'branch-deploy'
+        ? process.env.DEPLOY_PRIME_URL ||
+          process.env.DEPLOY_URL ||
+          'https://nx.dev'
+        : process.env.URL || 'https://nx.dev'
+  ),
   appleWebApp: { title: 'Nx' },
   applicationName: 'Nx',
   icons: [
