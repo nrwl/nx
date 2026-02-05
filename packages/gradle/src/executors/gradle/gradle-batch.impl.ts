@@ -192,7 +192,7 @@ async function runTasksInBatch(
   const usePseudoTerminal =
     process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
     PseudoTerminal.isSupported();
-  const debugOptions = ' ' + process.env.NX_GRADLE_BATCH_DEBUG ?? '';
+  const debugOptions = ' ' + (process.env.NX_GRADLE_BATCH_DEBUG ?? '');
   const command = `java${debugOptions} -jar ${batchRunnerPath} --tasks='${JSON.stringify(
     gradlewTasksToRun
   )}' --workspaceRoot=${root} --args='${args
