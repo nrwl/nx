@@ -2,13 +2,6 @@
   "name": "gradle-project-graph",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
-    "test": {
-      "command": "./gradlew :project-graph:test",
-      "options": {
-        "args": []
-      },
-      "cache": true
-    },
     "lint": {
       "command": "./gradlew :project-graph:ktfmtCheck",
       "cache": true
