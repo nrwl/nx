@@ -360,6 +360,75 @@ pre {
     background-color: theme('colors.slate.900');
     box-shadow: none;
   }
+  /* Sidebar tabbed layout */
+  nx-tabbed-sidebar {
+    display: block;
+  }
+
+  .nx-tab-bar-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding-bottom: 0.5rem;
+    background-color: var(--sl-color-bg-sidebar);
+    border-bottom: 1px solid var(--sl-color-hairline-light);
+  }
+
+  .nx-tab-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nx-tab-bar [role='tab'] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-left: 2px solid transparent;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: transparent;
+    color: var(--sl-color-gray-2);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      background-color 0.15s,
+      border-color 0.15s;
+    line-height: 1.4;
+  }
+
+  .nx-tab-bar [role='tab']:hover {
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-gray-1);
+  }
+
+  .nx-tab-bar [role='tab'][aria-selected='true'] {
+    border-left-color: var(--sl-color-text-accent);
+    color: var(--sl-color-text-accent);
+    background-color: color-mix(
+      in srgb,
+      var(--sl-color-text-accent) 8%,
+      transparent
+    );
+    font-weight: var(--font-weight-semibold);
+  }
+
+  @media (min-width: 50rem) {
+    .nx-tab-bar-sticky {
+      padding-bottom: 0.5rem;
+      background-color: var(--sl-color-bg-sidebar);
+    }
+
+    .nx-tab-bar [role='tab'] {
+      font-size: var(--text-base);
+      padding: 0.4rem 0.75rem;
+    }
+  }
 } /* end component layer */
 
 /* Additional custom styles can be added here */
@@ -430,4 +499,25 @@ table code {
 [role='tablist'] {
   font-size: var(--text-sm);
   align-items: end; /* Fix tab alignment */
+}
+
+/* Table option anchor links */
+.sl-markdown-content td .sl-option-link {
+  color: inherit;
+  text-decoration: none;
+}
+.sl-markdown-content td .sl-option-link .sl-anchor-icon {
+  opacity: 0;
+  margin-inline-start: 0.25em;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.sl-markdown-content td .sl-option-link .sl-anchor-icon > svg {
+  width: 0.75em;
+  height: 0.75em;
+}
+@media (hover: hover) {
+  .sl-markdown-content tr:hover .sl-option-link .sl-anchor-icon {
+    opacity: 1;
+  }
 }

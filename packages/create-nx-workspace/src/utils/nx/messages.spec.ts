@@ -292,129 +292,109 @@ describe('Nx Cloud Messages', () => {
     });
   });
 
-  describe('Platform Promo Messages', () => {
-    it('should show promo title and subtext when user has pushed', () => {
+  describe('Banner Variant Messages (CLOUD-4147)', () => {
+    it('variant 0 should show plain link message', () => {
       const message = getCompletionMessage(
-        'platform-promo',
-        'https://nx.app/setup/123',
-        VcsPushStatus.PushedToVcs
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '0'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Connect your repo to enable remote caching and self-healing CI at: https://nx.app/setup/123",
-            "",
-            "Remote caching · Self-healing CI · Task distribution",
+            "Go to Nx Cloud and finish the setup: https://cloud.nx.app/connect/abc123",
           ],
-          "title": "Want faster builds?",
+          "title": "Your platform setup is almost complete.",
         }
       `);
     });
 
-    it('should show promo message with generic cloud URL when pushed without URL', () => {
+    it('variant 1 should show "Try the full Nx platform" banner', () => {
       const message = getCompletionMessage(
-        'platform-promo',
-        null,
-        VcsPushStatus.PushedToVcs
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '1'
       );
-      expect(message).toMatchInlineSnapshot(`
-        {
-          "bodyLines": [
-            "Connect your repo at https://cloud.nx.app to enable remote caching and self-healing CI.",
-            "",
-            "Remote caching · Self-healing CI · Task distribution",
-          ],
-          "title": "Want faster builds?",
-        }
-      `);
+      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.bodyLines.length).toBeGreaterThan(1);
+      expect(message.bodyLines.join('\n')).toContain(
+        'Try the full Nx platform'
+      );
+      expect(message.bodyLines.join('\n')).toContain(
+        'https://cloud.nx.app/connect/abc123'
+      );
+      expect(message.bodyLines.join('\n')).toContain('Remote caching');
     });
 
-    it('should instruct user to push repo first when they opted out of pushing', () => {
+    it('variant 2 should show "Unlock 70% faster CI" banner', () => {
       const message = getCompletionMessage(
-        'platform-promo',
-        'https://nx.app/setup/123',
-        VcsPushStatus.OptedOutOfPushingToVcs,
-        'myworkspace'
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '2'
       );
-      expect(message).toMatchInlineSnapshot(`
-        {
-          "bodyLines": [
-            "Connect your repo (https://github.com/new?name=myworkspace) to enable remote caching and self-healing CI at: https://nx.app/setup/123",
-            "",
-            "Remote caching · Self-healing CI · Task distribution",
-          ],
-          "title": "Want faster builds?",
-        }
-      `);
+      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.bodyLines.length).toBeGreaterThan(1);
+      expect(message.bodyLines.join('\n')).toContain('Unlock 70% faster CI');
+      expect(message.bodyLines.join('\n')).toContain(
+        'https://cloud.nx.app/connect/abc123'
+      );
     });
 
-    it('should show connect message with cloud URL when failed to push and no URL', () => {
+    it('variant 3 should show "Reclaim your team\'s focus" banner', () => {
       const message = getCompletionMessage(
-        'platform-promo',
-        null,
-        VcsPushStatus.FailedToPushToVcs,
-        'myworkspace'
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '3'
       );
-      expect(message).toMatchInlineSnapshot(`
-        {
-          "bodyLines": [
-            "Connect your repo (https://github.com/new?name=myworkspace) to enable remote caching and self-healing CI at https://cloud.nx.app",
-            "",
-            "Remote caching · Self-healing CI · Task distribution",
-          ],
-          "title": "Want faster builds?",
-        }
-      `);
+      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.bodyLines.length).toBeGreaterThan(1);
+      expect(message.bodyLines.join('\n')).toContain(
+        "Reclaim your team's focus"
+      );
+      expect(message.bodyLines.join('\n')).toContain(
+        'https://cloud.nx.app/connect/abc123'
+      );
+      expect(message.bodyLines.join('\n')).toContain('Self-healing CI');
     });
 
-    it('should use generic GitHub URL when workspaceName is not provided', () => {
-      const message = getCompletionMessage(
-        'platform-promo',
-        'https://nx.app/setup/123',
-        VcsPushStatus.FailedToPushToVcs
-      );
-      expect(message).toMatchInlineSnapshot(`
-        {
-          "bodyLines": [
-            "Connect your repo (https://github.com/new) to enable remote caching and self-healing CI at: https://nx.app/setup/123",
-            "",
-            "Remote caching · Self-healing CI · Task distribution",
-          ],
-          "title": "Want faster builds?",
-        }
-      `);
-    });
-
-    it('should always include subtext in body lines', () => {
-      const scenarios = [
-        { url: 'https://nx.app/setup/123', pushed: VcsPushStatus.PushedToVcs },
-        { url: null, pushed: VcsPushStatus.PushedToVcs },
-        {
-          url: 'https://nx.app/setup/123',
-          pushed: VcsPushStatus.FailedToPushToVcs,
-        },
-        { url: null, pushed: VcsPushStatus.FailedToPushToVcs },
-        {
-          url: 'https://nx.app/setup/123',
-          pushed: VcsPushStatus.OptedOutOfPushingToVcs,
-        },
-        { url: null, pushed: VcsPushStatus.OptedOutOfPushingToVcs },
-      ];
-
-      scenarios.forEach(({ url, pushed }) => {
+    it('should fall back to plain link when URL is null (all variants)', () => {
+      const variants = ['0', '1', '2', '3'] as const;
+      variants.forEach((variant) => {
         const message = getCompletionMessage(
-          'platform-promo',
-          url,
-          pushed,
-          'myworkspace'
+          'platform-setup',
+          null,
+          VcsPushStatus.PushedToVcs,
+          'myworkspace',
+          variant
         );
-        expect(message.title).toBe('Want faster builds?');
-        expect(message.bodyLines).toHaveLength(3);
-        expect(message.bodyLines[1]).toBe('');
-        expect(message.bodyLines[2]).toBe(
-          'Remote caching \u00b7 Self-healing CI \u00b7 Task distribution'
+        // All variants fall back to plain message when URL is null
+        expect(message.bodyLines).toHaveLength(1);
+        expect(message.bodyLines[0]).toBe(
+          'Return to Nx Cloud and finish the setup.'
         );
       });
+    });
+
+    it('should default to variant 0 when bannerVariant is not provided', () => {
+      const message = getCompletionMessage(
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace'
+        // no bannerVariant - defaults to '0'
+      );
+      expect(message.bodyLines).toHaveLength(1);
+      expect(message.bodyLines[0]).toContain(
+        'Go to Nx Cloud and finish the setup:'
+      );
     });
   });
 
