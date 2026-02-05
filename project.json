@@ -33,7 +33,7 @@
         },
         {
           "target": "build",
-          "projects": ["tag:maven:dev.nx.maven"]
+          "projects": ["@nx/maven"]
         }
       ],
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
