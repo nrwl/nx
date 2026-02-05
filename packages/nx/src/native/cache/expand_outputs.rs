@@ -313,6 +313,20 @@ mod test {
     }
 
     #[test]
+    fn should_get_files_for_outputs_when_gitignore_hides_files() {
+        let temp = TempDir::new().unwrap();
+        temp.child("out/.gitignore").write_str("*").unwrap();
+        temp.child("out/visible.txt").write_str("content").unwrap();
+
+        let entries = vec!["out".to_string()];
+        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+
+        assert!(result.contains(&"out/visible.txt".to_string()));
+        assert!(result.contains(&"out/.gitignore".to_string()));
+    }
+
+    #[test]
     #[ignore]
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn should_not_leak_threads() {

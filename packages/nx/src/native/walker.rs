@@ -191,6 +191,9 @@ where
         }
 
         walker.add_custom_ignore_filename(".nxignore");
+    } else {
+        // Don't filter out ignored files
+        walker.standard_filters(false);
     }
 
     // We should make sure to always ignore node_modules and the .git folder
