@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::path::MAIN_SEPARATOR;
-use std::sync::Arc;
+use std::path::{MAIN_SEPARATOR, PathBuf};
+use std::sync::{Arc, Weak};
 
 use crate::native::watch::types::{
     EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
@@ -15,9 +15,54 @@ use napi::{Env, JsFunction, JsObject};
 use rayon::prelude::*;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
+use watchexec::WatchedPath;
 use watchexec::Watchexec;
-use watchexec_events::{Event, Priority, Tag};
+use watchexec_events::filekind::{CreateKind, FileEventKind};
+use watchexec_events::{Event, FileType, Priority, Tag};
 use watchexec_signals::Signal;
+
+/// Walk the directory tree starting at `origin`, respecting ignore rules,
+/// and return all non-ignored directories. Used to set up non-recursive
+/// watches so we avoid registering watches for ignored directories like
+/// node_modules (which can have 50k+ subdirectories).
+fn walk_directories(origin: &str, additional_globs: &[String], use_ignore: bool) -> Vec<PathBuf> {
+    use crate::native::utils::git::parent_gitignore_files;
+    use globset::{Glob, GlobSetBuilder};
+    use ignore::WalkBuilder;
+
+    let mut builder = GlobSetBuilder::new();
+    for glob_str in additional_globs {
+        let pattern = format!("**/{}", glob_str.trim_end_matches('/'));
+        if let Ok(glob) = Glob::new(&pattern) {
+            builder.add(glob);
+        }
+    }
+    let ignore_glob_set = builder.build().expect("ignore globs should always build");
+
+    let mut walker = WalkBuilder::new(origin);
+    walker.require_git(false);
+    walker.hidden(false);
+
+    if use_ignore {
+        if let Some(gitignore_paths) = parent_gitignore_files(origin) {
+            walker.parents(false);
+            for path in gitignore_paths {
+                walker.add_ignore(path);
+            }
+        } else {
+            walker.parents(true);
+        }
+        walker.add_custom_ignore_filename(".nxignore");
+    }
+
+    walker
+        .filter_entry(move |entry| !ignore_glob_set.is_match(entry.path()))
+        .build()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().map_or(false, |ft| ft.is_dir()))
+        .map(|e| e.into_path())
+        .collect()
+}
 
 #[napi]
 pub struct Watcher {
@@ -95,6 +140,14 @@ impl Watcher {
 
         callback_tsfn.unref(&env)?;
 
+        // Capture additional state for dynamic directory watching.
+        // When using non-recursive watches, newly created directories
+        // need to be detected and added to the watch set.
+        let watch_exec_weak = Arc::downgrade(&self.watch_exec);
+        let origin_for_walk = self.origin.clone();
+        let globs_for_action = self.additional_globs.clone();
+        let use_ignore_for_action = self.use_ignore;
+
         let origin = self.origin.clone();
         self.watch_exec.config.on_action(move |mut action| {
             let signals: Vec<Signal> = action.signals().collect();
@@ -109,6 +162,35 @@ impl Watcher {
                 trace!("interrupt - ending watch");
                 action.quit();
                 return action;
+            }
+
+            // With non-recursive watches, detect new directory creation
+            // and re-walk the workspace to update the watched path set.
+            {
+                let has_dir_create = action.events.iter().any(|event| {
+                    event.tags.iter().any(|t| {
+                        matches!(
+                            t,
+                            Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
+                        )
+                    })
+                });
+                if has_dir_create {
+                    if let Some(we) = watch_exec_weak.upgrade() {
+                        let dirs = walk_directories(
+                            &origin_for_walk,
+                            &globs_for_action,
+                            use_ignore_for_action,
+                        );
+                        trace!(
+                            count = dirs.len(),
+                            "re-walking directories after new directory creation"
+                        );
+                        let paths: Vec<WatchedPath> =
+                            dirs.into_iter().map(WatchedPath::non_recursive).collect();
+                        we.config.pathset(paths);
+                    }
+                }
             }
 
             let mut origin_path = origin.clone();
@@ -159,7 +241,20 @@ impl Watcher {
         let watch_exec = self.watch_exec.clone();
         let start = async move {
             trace!("configuring watch exec");
-            watch_exec.config.pathset([&origin.as_str()]);
+
+            // Use non-recursive watches to avoid registering watches for
+            // ignored directories. We walk the directory tree ourselves
+            // (respecting .gitignore, .nxignore, and configured globs)
+            // and register a non-recursive watch for each non-ignored directory.
+            let dirs = walk_directories(&origin, &additional_globs, use_ignore);
+            trace!(
+                count = dirs.len(),
+                "setting up non-recursive watches for directories"
+            );
+            let paths: Vec<WatchedPath> =
+                dirs.into_iter().map(WatchedPath::non_recursive).collect();
+            watch_exec.config.pathset(paths);
+
             watch_exec.config.filterer(
                 watch_filterer::create_filter(&origin, &additional_globs, use_ignore).await?,
             );
