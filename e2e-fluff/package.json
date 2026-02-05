@@ -1,0 +1,15 @@
+{
+    "name": "@fluffjs/fluff-e2e",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "build": "fluff build",
+        "serve": "npx serve dist -p 3333"
+    },
+    "dependencies": {
+        "@fluffjs/fluff": "workspace:*"
+    },
+    "devDependencies": {
+        "@fluffjs/cli": "workspace:*"
+    }
+}

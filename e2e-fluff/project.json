@@ -1,0 +1,26 @@
+{
+    "name": "fluff-e2e",
+    "$schema": "../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "e2e-fluff/src",
+    "implicitDependencies": [
+        "@fluffjs/fluff",
+        "@fluffjs/cli"
+    ],
+    "targets": {
+        "build": {
+            "dependsOn": ["@fluffjs/fluff:build-internal"],
+            "command": "npx fluff build",
+            "options": {
+                "cwd": "e2e-fluff"
+            }
+        },
+        "e2e": {
+            "dependsOn": ["build"],
+            "command": "npx playwright test --config=playwright.config.ts",
+            "options": {
+                "cwd": "e2e-fluff"
+            }
+        }
+    }
+}

@@ -1,12 +1,16 @@
 import type { PropertyChain } from '../interfaces/PropertyChain.js';
 import type { Subscription } from '../interfaces/Subscription.js';
-import { DomUtils } from '../utils/DomUtils.js';
 import { Property } from '../utils/Property.js';
 import { Publisher } from '../utils/Publisher.js';
 import type { Scope } from './ScopeRegistry.js';
 
 export type ExpressionFn = (t: unknown, l: Record<string, unknown>) => unknown;
 export type HandlerFn = (t: unknown, l: Record<string, unknown>, e: unknown) => void;
+
+interface ElementWithStyle extends Element
+{
+    style: CSSStyleDeclaration;
+}
 
 export interface BindingInfo
 {
@@ -39,7 +43,7 @@ export abstract class FluffBase extends HTMLElement
         };
     }
 
-    protected __processBindingsOnElement(el: HTMLElement, scope: Scope, subscriptions?: Subscription[]): void
+    protected __processBindingsOnElement(el: Element, scope: Scope, subscriptions?: Subscription[]): void
     {
         const lid = el.getAttribute('data-lid');
         if (!lid) return;
@@ -73,7 +77,7 @@ export abstract class FluffBase extends HTMLElement
 
     }
 
-    protected __applyBindingWithScope(el: HTMLElement, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
+    protected __applyBindingWithScope(el: Element, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
     {
         switch (binding.b)
         {
@@ -333,17 +337,7 @@ export abstract class FluffBase extends HTMLElement
         {
             prop.setValue(value, true);
         }
-        else if (DomUtils.isCustomElement(el))
-        {
-            this.__whenDefined(el.tagName.toLowerCase(), () =>
-            {
-                if (el instanceof FluffBase)
-                {
-                    Reflect.set(el, propName, value);
-                }
-            });
-        }
-        else if (propName in el)
+        else if (propName in el && el instanceof HTMLElement)
         {
             Reflect.set(el, propName, value);
         }
@@ -353,7 +347,7 @@ export abstract class FluffBase extends HTMLElement
         }
     }
 
-    private __applyPropertyBindingWithScope(el: HTMLElement, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
+    private __applyPropertyBindingWithScope(el: Element, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
     {
         const tagName = el.tagName.toLowerCase();
         const isCustomElement = customElements.get(tagName) !== undefined;
@@ -415,7 +409,7 @@ export abstract class FluffBase extends HTMLElement
         }
     }
 
-    private __applyEventBindingWithScope(el: HTMLElement, binding: BindingInfo, scope: Scope): void
+    private __applyEventBindingWithScope(el: Element, binding: BindingInfo, scope: Scope): void
     {
         if (typeof binding.h !== 'number')
         {
@@ -443,7 +437,7 @@ export abstract class FluffBase extends HTMLElement
         }
     }
 
-    private __applyOutputBinding(el: HTMLElement, outputName: string, handlerFn: HandlerFn, scope: Scope): void
+    private __applyOutputBinding(el: Element, outputName: string, handlerFn: HandlerFn, scope: Scope): void
     {
         const trySubscribe = (): boolean =>
         {
@@ -486,7 +480,7 @@ export abstract class FluffBase extends HTMLElement
     }
 
 
-    private __applyTwoWayBindingWithScope(el: HTMLElement, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
+    private __applyTwoWayBindingWithScope(el: Element, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
     {
         this.__applyPropertyBindingWithScope(el, binding, scope, subscriptions);
 
@@ -514,7 +508,7 @@ export abstract class FluffBase extends HTMLElement
         }
     }
 
-    private __applyClassBindingWithScope(el: HTMLElement, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
+    private __applyClassBindingWithScope(el: Element, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
     {
         const update = (): void =>
         {
@@ -545,7 +539,7 @@ export abstract class FluffBase extends HTMLElement
         update();
     }
 
-    private __applyStyleBindingWithScope(el: HTMLElement, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
+    private __applyStyleBindingWithScope(el: Element, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
     {
         const update = (): void =>
         {
@@ -557,7 +551,10 @@ export abstract class FluffBase extends HTMLElement
                 }
                 const fn = this.__getCompiledExprFn(binding.e);
                 const value = fn(this, scope.locals);
-                el.style.setProperty(binding.n, String(value));
+                if (this.__hasStyle(el))
+                {
+                    el.style.setProperty(binding.n, String(value));
+                }
             }
             catch(e)
             {
@@ -567,5 +564,10 @@ export abstract class FluffBase extends HTMLElement
 
         this.__subscribeToExpressionInScope(binding.d, scope, update, subscriptions);
         update();
+    }
+
+    private __hasStyle(el: Element): el is ElementWithStyle
+    {
+        return 'style' in el;
     }
 }

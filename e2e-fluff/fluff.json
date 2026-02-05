@@ -1,0 +1,23 @@
+{
+    "version": "1.0",
+    "targets": {
+        "app": {
+            "name": "fluff-e2e",
+            "srcDir": "src",
+            "outDir": "dist",
+            "indexHtml": "index.html",
+            "styles": [],
+            "assets": [],
+            "bundle": {
+                "minify": false,
+                "gzip": false,
+                "target": "es2022"
+            },
+            "serve": {
+                "port": 3333,
+                "host": "localhost"
+            }
+        }
+    },
+    "defaultTarget": "app"
+}

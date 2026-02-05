@@ -103,7 +103,7 @@ export abstract class FluffElement extends FluffBase
         };
     };
 
-    public __processBindingsOnElementPublic(el: HTMLElement, scope: Scope, subscriptions?: Subscription[]): void
+    public __processBindingsOnElementPublic(el: Element, scope: Scope, subscriptions?: Subscription[]): void
     {
         this.__processBindingsOnElement(el, scope, subscriptions);
     }
@@ -293,20 +293,7 @@ export abstract class FluffElement extends FluffBase
             }
         }
 
-        const prop: unknown = Reflect.get(el, propName);
-
-        if (prop instanceof Property)
-        {
-            prop.setValue(value, true);
-        }
-        else if (propName in el)
-        {
-            Reflect.set(el, propName, value);
-        }
-        else
-        {
-            el.setAttribute(propName, String(value));
-        }
+        super.__setChildProperty(el, propName, value);
     }
 
     protected __bindToChild(id: string, propName: string, value: unknown): void
@@ -394,10 +381,7 @@ export abstract class FluffElement extends FluffBase
         {
             const closestComponent = el.closest('[x-fluff-component]');
             if (closestComponent && closestComponent !== el) continue;
-            if (el instanceof HTMLElement)
-            {
-                this.__processBindingsOnElement(el, scope);
-            }
+            this.__processBindingsOnElement(el, scope);
         }
     }
 

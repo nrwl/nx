@@ -1,0 +1,4 @@
+dist/
+out-tsc/
+test-results/
+playwright-report/
