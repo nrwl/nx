@@ -14,5 +14,5 @@
     }
   },
   "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-shared"]
+  "implicitDependencies": ["maven-shared", "!@nx/maven"]
 }
