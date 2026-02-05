@@ -326,12 +326,12 @@ function getCloudUrl(): string {
  */
 export interface RecordStatMetaStart {
   type: 'start';
-  [key: string]: string;
+  [key: string]: string | boolean;
 }
 
 export interface RecordStatMetaComplete {
   type: 'complete';
-  [key: string]: string;
+  [key: string]: string | boolean;
 }
 
 export interface RecordStatMetaError {
@@ -340,12 +340,13 @@ export interface RecordStatMetaError {
   flowVariant: string;
   errorMessage: string;
   errorFile: string;
-  [key: string]: string;
+  [key: string]: string | boolean;
 }
 
 export interface RecordStatMetaCancel {
   type: 'cancel';
   flowVariant?: string;
+  aiAgent?: boolean;
 }
 
 export interface RecordStatMetaPrecreate {
@@ -356,6 +357,7 @@ export interface RecordStatMetaPrecreate {
   nodeVersion: string;
   packageManager: string;
   ghAvailable?: string;
+  aiAgent?: boolean;
 }
 
 export type RecordStatMeta =
