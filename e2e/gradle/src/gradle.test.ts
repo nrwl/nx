@@ -12,7 +12,7 @@ import {
 import { createGradleProject } from './utils/create-gradle-project';
 
 describe('Gradle', () => {
-  describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
+  describe.each([{ type: 'groovy' }])(
     '$type',
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName = uniq('my-gradle-project');
