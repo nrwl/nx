@@ -18,7 +18,6 @@ jobs:
   main-linux:
     runs-on: ubuntu-latest
     env:
-      NX_BATCH_MODE: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
