@@ -126,6 +126,111 @@ describe('setup-ai-agents generator', () => {
       expect(content).toEqual(existing);
     });
 
+    it('should NOT modify AGENTS.md when up-to-date h2 nx rules exist alongside an external h1', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+        writeNxCloudRules: true,
+        agents: ['codex'],
+      };
+
+      // h2 nx rules make sense when there's already an h1 in the document
+      const nxBlock = getAgentRulesWrapped({
+        writeNxCloudRules: true,
+        useH1: false,
+      });
+      const existing = '# My Project\n\nSome content\n\n' + nxBlock;
+
+      tree.write('AGENTS.md', existing);
+
+      await setupAiAgentsGenerator(tree, options);
+
+      const content = tree.read('AGENTS.md')?.toString();
+      expect(content).toEqual(existing);
+    });
+
+    it('should switch h1 to h2 when user adds their own h1 header', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+        writeNxCloudRules: true,
+        agents: ['codex'],
+      };
+
+      // Simulate: nx block was initially created with h1, then user added their own h1
+      const nxBlock = getAgentRulesWrapped({
+        writeNxCloudRules: true,
+        useH1: true,
+      });
+      const existing = '# My Project\n\nSome content\n\n' + nxBlock;
+
+      tree.write('AGENTS.md', existing);
+
+      await setupAiAgentsGenerator(tree, options);
+
+      const content = tree.read('AGENTS.md')?.toString();
+      // Should have switched the nx block to h2
+      const expectedNxBlock = getAgentRulesWrapped({
+        writeNxCloudRules: true,
+        useH1: false,
+      });
+      expect(content).toEqual(
+        '# My Project\n\nSome content\n\n' + expectedNxBlock
+      );
+    });
+
+    it('should produce no changes when run twice on a fresh file', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+        writeNxCloudRules: true,
+        agents: ['codex'],
+      };
+
+      await setupAiAgentsGenerator(tree, options);
+      const firstContent = tree.read('AGENTS.md')?.toString();
+
+      await setupAiAgentsGenerator(tree, options);
+      const secondContent = tree.read('AGENTS.md')?.toString();
+
+      expect(secondContent).toEqual(firstContent);
+    });
+
+    it('should produce no changes when run twice on a file with existing h1 header', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+        writeNxCloudRules: true,
+        agents: ['codex'],
+      };
+
+      const existing = '# My Project Rules\n\nSome existing content';
+      tree.write('AGENTS.md', existing);
+
+      await setupAiAgentsGenerator(tree, options);
+      const firstContent = tree.read('AGENTS.md')?.toString();
+
+      await setupAiAgentsGenerator(tree, options);
+      const secondContent = tree.read('AGENTS.md')?.toString();
+
+      expect(secondContent).toEqual(firstContent);
+    });
+
+    it('should produce no changes when run twice on a file without h1 header', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+        writeNxCloudRules: true,
+        agents: ['codex'],
+      };
+
+      const existing = 'Some existing content without a header';
+      tree.write('AGENTS.md', existing);
+
+      await setupAiAgentsGenerator(tree, options);
+      const firstContent = tree.read('AGENTS.md')?.toString();
+
+      await setupAiAgentsGenerator(tree, options);
+      const secondContent = tree.read('AGENTS.md')?.toString();
+
+      expect(secondContent).toEqual(firstContent);
+    });
+
     it('should update existing AGENTS.md when outdated nx rules exist', async () => {
       const options: SetupAiAgentsGeneratorSchema = {
         directory: '.',
