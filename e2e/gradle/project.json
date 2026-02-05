@@ -9,9 +9,5 @@
     "gradle-batch-runner"
   ],
   "// targets": "to see all targets run: nx show project e2e-gradle --web",
-  "targets": {
-    "e2e**/**": {
-      "command": "gradle e2e tests are temporarily disabled"
-    }
-  }
+  "targets": {}
 }
