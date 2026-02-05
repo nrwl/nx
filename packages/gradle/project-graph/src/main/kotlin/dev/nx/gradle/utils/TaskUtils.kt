@@ -317,10 +317,12 @@ fun getDependsOnForTask(
       if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
         val taskName =
             applyPrefix(
-                if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-                  targetNameOverrides["testTargetName"]!!
-                } else {
-                  depTask.name
+                when {
+                  depTask.name == "test" && targetNameOverrides.containsKey("testTargetName") ->
+                      targetNameOverrides["testTargetName"]!!
+                  depTask.name == "build" && targetNameOverrides.containsKey("buildTargetName") ->
+                      targetNameOverrides["buildTargetName"]!!
+                  else -> depTask.name
                 })
         "${getNxProjectName(depProject)}:${taskName}"
       } else {

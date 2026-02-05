@@ -6,6 +6,7 @@ import kotlin.test.*
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -427,5 +428,50 @@ class ProcessTargetsForProjectTest {
     assertTrue(
         ciCheckDependsOn?.contains(":app:ci-test") == true,
         "Expected ci-check to depend on ':app:ci-test', got $ciCheckDependsOn")
+  }
+
+  @Nested
+  inner class BuildTargetNameOverrideTests {
+
+    @Test
+    fun `should override build target name when buildTargetName is specified`(
+      @TempDir workspaceDir: File
+    ) {
+      val workspaceRoot = workspaceDir.absolutePath
+      val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
+      val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+
+      File(projectDir, "build.gradle").writeText("// test build file")
+
+      val checkTask =
+        project.tasks.register("check").get().apply {
+          group = "verification"
+          description = "Runs all checks"
+        }
+      project.tasks.register("build").get().apply {
+        group = "build"
+        description = "Assembles and tests"
+        dependsOn(checkTask)
+      }
+
+      val targetNameOverrides = mapOf("buildTargetName" to "build-kt")
+
+      val dependencies = mutableSetOf<Dependency>()
+
+      val gradleTargets =
+        processTargetsForProject(
+          project = project,
+          dependencies = dependencies,
+          targetNameOverrides = targetNameOverrides,
+          workspaceRoot = workspaceRoot,
+          atomized = false)
+
+      assertNotNull(
+        gradleTargets.targets["build-kt"],
+        "Expected 'build-kt' target to be present (overridden from 'build')")
+      assertTrue(
+        gradleTargets.targetGroups["build"]?.contains("build-kt") == true,
+        "Expected 'build-kt' to be in the 'build' target group")
+    }
   }
 }

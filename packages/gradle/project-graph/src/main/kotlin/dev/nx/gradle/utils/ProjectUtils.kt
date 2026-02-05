@@ -118,6 +118,7 @@ fun processTargetsForProject(
 
   val ciTestTargetBaseName = targetNameOverrides["ciTestTargetName"]?.let { applyPrefix(it) }
   val testTargetName = applyPrefix(targetNameOverrides.getOrDefault("testTargetName", "test"))
+  val buildTargetName = applyPrefix(targetNameOverrides.getOrDefault("buildTargetName", "build"))
 
   // Create a snapshot of test tasks to avoid ConcurrentModificationException
   // with Kotlin Multiplatform which adds tasks dynamically
@@ -137,10 +138,12 @@ fun processTargetsForProject(
       // Apply target name override if applicable, then apply prefix
       val targetName =
           applyPrefix(
-              if (task.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-                targetNameOverrides["testTargetName"]!!
-              } else {
-                task.name
+              when {
+                task.name == "test" && targetNameOverrides.containsKey("testTargetName") ->
+                    targetNameOverrides["testTargetName"]!!
+                task.name == "build" && targetNameOverrides.containsKey("buildTargetName") ->
+                    targetNameOverrides["buildTargetName"]!!
+                else -> task.name
               })
 
       // Group task under its group if available, using the overridden name
