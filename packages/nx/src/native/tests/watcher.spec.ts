@@ -175,6 +175,39 @@ describe('watcher', () => {
       temp.appendFile('inner/boo.txt', 'hello');
     });
   }, 15000);
+
+  it('should detect files created in newly created directories', async () => {
+    return new Promise<void>(async (done) => {
+      await wait();
+      watcher = new Watcher(temp.tempDir);
+
+      const allPaths: any[] = [];
+      watcher.watch((err, paths) => {
+        allPaths.push(...paths);
+      });
+
+      await wait();
+      // Create a new subdirectory using mkdirSync directly (no file)
+      const { mkdirSync } = require('fs');
+      const { join } = require('path');
+      mkdirSync(join(temp.tempDir, 'app1/newsubdir'), { recursive: true });
+
+      // Wait for the watcher to register the new directory
+      await wait(2000);
+
+      // Create a file inside the new subdirectory
+      temp.createFileSync('app1/newsubdir/newfile.ts', 'export const x = 1;');
+
+      // Wait for the event to be processed
+      await wait(2000);
+
+      // Should detect the file created in the new subdirectory
+      expect(
+        allPaths.some(({ path }) => path === 'app1/newsubdir/newfile.ts')
+      ).toBeTruthy();
+      done();
+    });
+  }, 15000);
 });
 
 function wait(timeout = 1000) {

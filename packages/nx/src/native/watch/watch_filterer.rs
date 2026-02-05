@@ -80,6 +80,12 @@ impl Filterer for WatchFilterer {
 
                     #[cfg(target_os = "linux")]
                     FileEventKind::Create(CreateKind::Folder) => continue,
+                    #[cfg(target_os = "linux")]
+                    FileEventKind::Create(CreateKind::Any) => continue,
+                    #[cfg(target_os = "linux")]
+                    FileEventKind::Remove(RemoveKind::Any) => continue,
+                    #[cfg(target_os = "linux")]
+                    FileEventKind::Modify(ModifyKind::Any) => continue,
 
                     #[cfg(windows)]
                     FileEventKind::Modify(ModifyKind::Any) => continue,
