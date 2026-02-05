@@ -93,7 +93,7 @@ watchexec-events = "6.0.0"
 watchexec-filterer-ignore = "7.0.0"
 watchexec-signals = "5.0.1"
 machine-uid = "0.5.2"
-interprocess = { version = "2.2.3", features = ["tokio"] }
+interprocess = { version = "=2.2.3", features = ["tokio"] }
 jsonrpsee = { version = "0.25.1", features = [
     "client-core",
     "async-client",
