@@ -11,6 +11,8 @@ import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
+import { isOnDaemon } from '../../../daemon/is-on-daemon';
+import { daemonStreamTransformer } from '../../../daemon/logger';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { resolveNxPlugin } from '../resolve-plugin';
 import {
@@ -608,6 +610,10 @@ function pipeAndUnrefChildStream(
 ): void {
   if (!source) {
     return;
+  }
+
+  if (isOnDaemon()) {
+    destination = daemonStreamTransformer(destination);
   }
 
   source.pipe(destination);
