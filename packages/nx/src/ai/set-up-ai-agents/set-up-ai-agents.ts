@@ -399,10 +399,13 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   const existingNxConfiguration = existing.match(regex);
 
   if (existingNxConfiguration) {
-    // Use h1 for comparison since we're replacing existing content
+    // Check the rest of the file (outside nx block) for an h1 header
+    // to ensure only one h1 exists in the document
+    const contentWithoutNxBlock = existing.replace(regex, '');
+    const hasExternalH1 = /^# /m.test(contentWithoutNxBlock);
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
-      useH1: true,
+      useH1: !hasExternalH1,
     });
     const contentOnly = (str: string) =>
       str
