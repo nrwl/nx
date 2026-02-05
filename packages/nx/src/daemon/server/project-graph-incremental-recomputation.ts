@@ -79,6 +79,7 @@ let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
+let recomputationGeneration = 0;
 
 export async function getCachedSerializedProjectGraphPromise(): Promise<SerializedProjectGraph> {
   try {
@@ -294,6 +295,11 @@ async function processCollectedUpdatedAndDeletedFiles(
 async function processFilesAndCreateAndSerializeProjectGraph(
   plugins: LoadedNxPlugin[]
 ): Promise<SerializedProjectGraph> {
+  const myGeneration = ++recomputationGeneration;
+
+  // Helper to check if this recomputation is stale (a newer one has started)
+  const isStale = () => myGeneration !== recomputationGeneration;
+
   try {
     performance.mark('hash-watched-changes-start');
     const updatedFiles = [...collectedUpdatedFiles.values()];
@@ -334,11 +340,23 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         throw e;
       }
     }
+
+    // Early exit if a newer recomputation has started - chain to the newer one
+    if (isStale()) {
+      return cachedSerializedProjectGraphPromise;
+    }
+
     await processCollectedUpdatedAndDeletedFiles(
       projectConfigurationsResult,
       updatedFileHashes,
       deletedFiles
     );
+
+    // Early exit if a newer recomputation has started - chain to the newer one
+    if (isStale()) {
+      return cachedSerializedProjectGraphPromise;
+    }
+
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
 
     delete global.NX_GRAPH_CREATION;
