@@ -39,31 +39,31 @@ const PHASE_ORDER = keys(HOOKS_BY_PHASE);
  */
 export class PluginLifecycleManager {
   /** Phases where this plugin has at least one registered hook */
-  private readonly activePhases: Partial<Record<Phase, Hook[]>> = {};
+  private readonly registeredPhases: Partial<Record<Phase, Hook[]>> = {};
 
   /** Number of active "phase sessions" (callers between first and last hook) */
   private readonly phaseSessionCount: Partial<Record<Phase, number>> = {};
 
-  /** Ordered list of phases (derived from HOOKS_BY_PHASE key order, narrowed to active phases) */
-  private readonly phaseOrder: Phase[] = [];
+  /** Ordered list of registered phases (derived from HOOKS_BY_PHASE key order, narrowed to registered phases) */
+  private readonly registeredPhaseOrder: Phase[] = [];
 
   constructor(registeredHooks: Iterable<Hook>) {
     const registered = new Set(registeredHooks);
 
-    // Determine which phases are active and find first/last hooks per phase
-    this.activePhases = {};
+    // Determine which phases are registered and find first/last hooks per phase
+    this.registeredPhases = {};
     for (const phase of PHASE_ORDER) {
       const hooksInPhase = HOOKS_BY_PHASE[phase].filter((hook) =>
         registered.has(hook)
       );
       if (hooksInPhase.length > 0) {
-        this.activePhases[phase] = hooksInPhase;
-        this.phaseOrder.push(phase);
+        this.registeredPhases[phase] = hooksInPhase;
+        this.registeredPhaseOrder.push(phase);
       }
     }
 
     // Initialize session counts to 0
-    for (const phase of this.phaseOrder) {
+    for (const phase of this.registeredPhaseOrder) {
       this.phaseSessionCount[phase] = 0;
     }
   }
@@ -92,11 +92,11 @@ export class PluginLifecycleManager {
    */
   enterHook(hook: Hook): void {
     const phase = PHASE_BY_HOOK[hook];
-    const phaseHooks = this.activePhases[phase];
+    const phaseHooks = this.registeredPhases[phase];
 
     if (!phaseHooks || !phaseHooks.includes(hook)) {
       throw new Error(
-        `Hook "${hook}" is not registered for this plugin. Active phases: ${this.phaseOrder.join(', ')}`
+        `Hook "${hook}" is not registered for this plugin. Registered phases: ${this.registeredPhaseOrder.join(', ')}`
       );
     }
 
@@ -117,11 +117,11 @@ export class PluginLifecycleManager {
    */
   exitHook(hook: Hook): boolean {
     const phase = PHASE_BY_HOOK[hook];
-    const phaseHooks = this.activePhases[phase];
+    const phaseHooks = this.registeredPhases[phase];
 
     if (!phaseHooks) {
       throw new Error(
-        `Hook "${hook}" is not registered for this plugin. Active phases: ${this.phaseOrder.join(', ')}`
+        `Hook "${hook}" is not registered for this plugin. Registered phases: ${this.registeredPhaseOrder.join(', ')}`
       );
     }
 
@@ -143,35 +143,35 @@ export class PluginLifecycleManager {
     // Can only shut down if no more active sessions in this phase
     if (newCount > 0) return false;
 
-    // Can only shut down if no later phases are active
-    return !this.hasLaterActivePhases(phase);
+    // Can only shut down if this is the last registered phase
+    return this.isLastRegisteredPhase(phase);
   }
 
   /**
    * Returns true if the worker should shut down immediately after construction.
-   * This happens when the plugin has no hooks in the first phase.
+   * This happens when the plugin has no graph-phase hooks, meaning it won't
+   * be needed until task execution time (pre-task or post-task).
    */
   shouldShutdownImmediately(): boolean {
-    return this.phaseOrder[0] !== PHASE_ORDER[0];
+    return !this.registeredPhases['graph'];
   }
 
   /**
    * Returns true if the plugin has any hooks in the given phase.
    */
   hasHooksInPhase(phase: Phase): boolean {
-    return !!this.activePhases[phase];
+    return !!this.registeredPhases[phase];
   }
 
   /**
-   * Returns true if the plugin has hooks in any phase after the given phase.
+   * Returns true if this is the last phase with registered hooks.
    */
-  hasLaterActivePhases(phase: Phase): boolean {
-    const phaseIndex = this.phaseOrder.indexOf(phase);
+  isLastRegisteredPhase(phase: Phase): boolean {
+    const phaseIndex = this.registeredPhaseOrder.indexOf(phase);
     if (phaseIndex === -1) {
-      throw new Error(`Phase "${phase}" is not active for this plugin.`);
+      throw new Error(`Phase "${phase}" is not registered for this plugin.`);
     }
-    // this.phaseOrder is filtered to only active phases
-    return this.phaseOrder.length > phaseIndex + 1;
+    return phaseIndex === this.registeredPhaseOrder.length - 1;
   }
 
   /**

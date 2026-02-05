@@ -2,20 +2,18 @@ import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
-  getSelectedPackageManager,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   newProject,
   readFile,
   runCLI,
   runCommand,
-  runCommandAsync,
   tmpProjPath,
   uniq,
   updateJson,
-  removeFile,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { setupWorkspaces, prepareAndInstallDependencies } from './utils';
+import { prepareAndInstallDependencies, setupWorkspaces } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -55,7 +53,7 @@ expect.addSnapshotSerializer({
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
         .replaceAll(e2eRegistryUrl, '{registryUrl}')
         // Filter out plugin worker verbose logs
-        .replaceAll(/\[plugin-(pool|worker)\].*\n/g, '')
+        .replaceAll(/\[(isolated-plugin|plugin-worker)\].*\n/g, '')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())

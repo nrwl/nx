@@ -11,83 +11,15 @@ import type {
   PostTasksExecutionContext,
   PreTasksExecutionContext,
 } from '../public-api';
-
-// =============================================================================
-// CORE TYPE SYSTEM
-// =============================================================================
-
-interface BaseMessage {
-  tx: string;
-}
-
-type MaybePromise<T> = T | Promise<T>;
-
-/**
- * Constraint for message definitions.
- * - payload: required, the message payload
- * - result: optional, if present this message expects a response
- */
-type MessageDef = {
-  payload: unknown;
-  result?: unknown;
-};
-
-type MessageDefs = Record<string, MessageDef>;
-
-/**
- * DefineMessages<T> - purely a type-level construct for defining
- * a set of related messages with their payloads and optional results.
- */
-type DefineMessages<TDefs extends MessageDefs> = TDefs;
-
-// =============================================================================
-// TYPE EXTRACTION HELPERS
-// =============================================================================
-
-/** Get keys that have results defined */
-type WithResult<TDefs extends MessageDefs> = {
-  [K in keyof TDefs]: TDefs[K] extends { result: unknown } ? K : never;
-}[keyof TDefs];
-
-/** Extract the full message type for a given key */
-type MessageOf<
-  TDefs extends MessageDefs,
-  K extends keyof TDefs,
-> = BaseMessage & {
-  type: K;
-  payload: TDefs[K]['payload'];
-};
-
-/** Extract the full result type for a given key */
-type ResultOf<
-  TDefs extends MessageDefs,
-  K extends WithResult<TDefs>,
-> = BaseMessage & {
-  type: `${K & string}Result`;
-  payload: TDefs[K]['result'];
-};
-
-/** Union of all message types */
-type AllMessages<TDefs extends MessageDefs> = {
-  [K in keyof TDefs & string]: MessageOf<TDefs, K>;
-}[keyof TDefs & string];
-
-/** Union of all result types */
-type AllResults<TDefs extends MessageDefs> = {
-  [K in WithResult<TDefs> & string]: ResultOf<TDefs, K>;
-}[WithResult<TDefs> & string];
-
-/**
- * Handler map type - handlers return just the result payload directly.
- * The infrastructure wraps the return value in { type: '${key}Result', payload, tx }.
- */
-type Handlers<TDefs extends MessageDefs> = {
-  [K in keyof TDefs & string]: (
-    payload: TDefs[K]['payload']
-  ) => TDefs[K] extends { result: unknown }
-    ? MaybePromise<TDefs[K]['result'] | void>
-    : MaybePromise<void>;
-};
+import type {
+  AllMessages,
+  AllResults,
+  DefineMessages,
+  Handlers,
+  MaybePromise,
+  ResultOf,
+  WithResult,
+} from './message-types';
 
 // =============================================================================
 // PLUGIN MESSAGE DEFINITIONS
@@ -216,58 +148,12 @@ export type PluginWorkerMessage = AllMessages<PluginMessageDefs>;
 /** Union of all plugin worker result types */
 export type PluginWorkerResult = AllResults<PluginMessageDefs>;
 
-/** Any message (request or result) */
-export type AnyMessage = PluginWorkerMessage | PluginWorkerResult;
-
-/** Individual message types (for explicit typing when needed) */
-export type PluginWorkerLoadMessage = MessageOf<PluginMessageDefs, 'load'>;
-export type PluginWorkerCreateNodesMessage = MessageOf<
-  PluginMessageDefs,
-  'createNodes'
->;
-export type PluginCreateDependenciesMessage = MessageOf<
-  PluginMessageDefs,
-  'createDependencies'
->;
-export type PluginCreateMetadataMessage = MessageOf<
-  PluginMessageDefs,
-  'createMetadata'
->;
-export type PluginWorkerPreTasksExecutionMessage = MessageOf<
-  PluginMessageDefs,
-  'preTasksExecution'
->;
-export type PluginWorkerPostTasksExecutionMessage = MessageOf<
-  PluginMessageDefs,
-  'postTasksExecution'
->;
-
-/** Individual result types (for explicit typing when needed) */
+/** Result type for the load message */
 export type PluginWorkerLoadResult = ResultOf<PluginMessageDefs, 'load'>;
-export type PluginWorkerCreateNodesResult = ResultOf<
-  PluginMessageDefs,
-  'createNodes'
->;
-export type PluginCreateDependenciesResult = ResultOf<
-  PluginMessageDefs,
-  'createDependencies'
->;
-export type PluginCreateMetadataResult = ResultOf<
-  PluginMessageDefs,
-  'createMetadata'
->;
-export type PluginWorkerPreTasksExecutionMessageResult = ResultOf<
-  PluginMessageDefs,
-  'preTasksExecution'
->;
-export type PluginWorkerPostTasksExecutionMessageResult = ResultOf<
-  PluginMessageDefs,
-  'postTasksExecution'
->;
 
 /**
  * Maps a message type to its result type.
- * e.g., MessageResult<'createNodes'> gives PluginWorkerCreateNodesResult
+ * e.g., MessageResult<'createNodes'> gives the createNodes result type
  */
 export type MessageResult<T extends PluginWorkerMessage['type']> = ResultOf<
   PluginMessageDefs,

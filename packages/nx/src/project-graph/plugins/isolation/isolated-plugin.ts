@@ -82,6 +82,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
+  private _connectPromise: Promise<LoadResultPayload> | null = null;
   private txId = 0;
   private pendingCount = 0;
 
@@ -150,6 +151,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     this.exitHandler = () => {
       this._alive = false;
+      this._connectPromise = null;
       if (this.worker?.stdout) {
         this.worker.stdout.unpipe(process.stdout);
       }
@@ -180,14 +182,21 @@ export class IsolatedPlugin implements LoadedNxPlugin {
    * Ensures the worker is alive, restarting it if necessary.
    * Called before each hook execution to handle plugins that were
    * eagerly shutdown (e.g., post-task-only plugins).
+   *
+   * Uses a stored promise to coalesce concurrent restart attempts
+   * so that only one worker is ever spawned at a time.
    */
   private async ensureAlive(): Promise<void> {
     if (this._alive) {
       return;
     }
 
-    logger.verbose(`[plugin] restarting worker for "${this.name}"`);
-    await this.spawnAndConnect();
+    if (!this._connectPromise) {
+      logger.verbose(`[plugin-client] restarting worker for "${this.name}"`);
+      this._connectPromise = this.spawnAndConnect();
+    }
+
+    await this._connectPromise;
   }
 
   private handleSocketData = (raw: string) => {
@@ -401,12 +410,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private shutdownIfInactive(): void {
     if (this.pendingCount > 0) {
       logger.verbose(
-        `[plugin-pool] worker for "${this.name}" has ${this.pendingCount} pending request(s), not shutting down yet`
+        `[isolated-plugin] worker for "${this.name}" has ${this.pendingCount} pending request(s), not shutting down yet`
       );
       return;
     }
     logger.verbose(
-      `[plugin-pool] shutting down worker for "${this.name}" after last hook`
+      `[isolated-plugin] shutting down worker for "${this.name}" after last hook`
     );
     this.shutdown();
   }
@@ -414,6 +423,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   shutdown(): void {
     if (!this._alive) return;
     this._alive = false;
+    this._connectPromise = null;
 
     if (this.worker && this.exitHandler) {
       this.worker.off('exit', this.exitHandler);
@@ -434,10 +444,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.worker = null;
     this.socket = null;
     this.exitHandler = null;
-  }
-
-  destroy(): void {
-    this.shutdown();
   }
 
   private registerProcessMetrics(): void {
@@ -505,7 +511,7 @@ async function startPluginWorker(name: string) {
   );
 
   logger.verbose(
-    `[plugin-pool] spawned worker for "${name}" (pid: ${worker.pid}, socket: ${ipcPath})`
+    `[isolated-plugin] spawned worker for "${name}" (pid: ${worker.pid}, socket: ${ipcPath})`
   );
 
   const stdoutMaxListeners = process.stdout.getMaxListeners();
@@ -531,7 +537,7 @@ async function startPluginWorker(name: string) {
           socket.unref();
           clearInterval(id);
           logger.verbose(
-            `[plugin-pool] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
+            `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
           );
           resolve({ worker, socket });
         } else if (attempts > 10000) {

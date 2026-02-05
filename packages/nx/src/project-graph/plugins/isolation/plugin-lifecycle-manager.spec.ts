@@ -5,32 +5,36 @@ describe('PluginLifecycleManager', () => {
     it('should handle empty registered hooks', () => {
       const lifecycle = new PluginLifecycleManager([]);
 
-      expect(lifecycle.hasHooksInPhase('graph')).toBe(false);
-      expect(lifecycle.hasHooksInPhase('pre-task')).toBe(false);
-      expect(lifecycle.hasHooksInPhase('post-task')).toBe(false);
+      expect((lifecycle as any).registeredPhaseOrder).toMatchInlineSnapshot(
+        `[]`
+      );
       expect(lifecycle.shouldShutdownImmediately()).toBe(true);
     });
   });
 
   describe('constructor', () => {
-    it('should identify active phases for single-hook plugin', () => {
+    it('should identify registered phases for single-hook plugin', () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
 
-      expect(lifecycle.hasHooksInPhase('graph')).toBe(true);
-      expect(lifecycle.hasHooksInPhase('pre-task')).toBe(false);
-      expect(lifecycle.hasHooksInPhase('post-task')).toBe(false);
+      expect((lifecycle as any).registeredPhaseOrder).toMatchInlineSnapshot(`
+        [
+          "graph",
+        ]
+      `);
     });
 
-    it('should identify active phases for multi-hook plugin', () => {
+    it('should identify registered phases for multi-hook plugin', () => {
       const lifecycle = new PluginLifecycleManager([
         'createNodes',
         'createDependencies',
         'createMetadata',
       ]);
 
-      expect(lifecycle.hasHooksInPhase('graph')).toBe(true);
-      expect(lifecycle.hasHooksInPhase('pre-task')).toBe(false);
-      expect(lifecycle.hasHooksInPhase('post-task')).toBe(false);
+      expect((lifecycle as any).registeredPhaseOrder).toMatchInlineSnapshot(`
+        [
+          "graph",
+        ]
+      `);
     });
 
     it('should handle plugins with hooks in multiple phases', () => {
@@ -40,48 +44,45 @@ describe('PluginLifecycleManager', () => {
         'postTasksExecution',
       ]);
 
-      expect(lifecycle.hasHooksInPhase('graph')).toBe(true);
-      expect(lifecycle.hasHooksInPhase('pre-task')).toBe(true);
-      expect(lifecycle.hasHooksInPhase('post-task')).toBe(true);
+      expect((lifecycle as any).registeredPhaseOrder).toMatchInlineSnapshot(`
+        [
+          "graph",
+          "pre-task",
+          "post-task",
+        ]
+      `);
     });
   });
 
-  describe('hasLaterActivePhases', () => {
-    it('should return false if no later phases have hooks', () => {
+  describe('isLastRegisteredPhase', () => {
+    it('should return true if no later phases have hooks', () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
 
-      expect(lifecycle.hasLaterActivePhases('graph')).toBe(false);
+      expect(lifecycle.isLastRegisteredPhase('graph')).toBe(true);
     });
 
-    it('should return true if pre-task phase has hooks', () => {
+    it('should return false if later phases have hooks', () => {
       const lifecycle = new PluginLifecycleManager([
         'createNodes',
         'preTasksExecution',
+        'postTasksExecution',
       ]);
 
-      expect(lifecycle.hasLaterActivePhases('graph')).toBe(true);
+      expect(lifecycle.isLastRegisteredPhase('graph')).toBe(false);
+      expect(lifecycle.isLastRegisteredPhase('pre-task')).toBe(false);
+      expect(lifecycle.isLastRegisteredPhase('post-task')).toBe(true);
     });
 
-    it('should return true if post-task phase has hooks', () => {
+    it('should handle non-contiguous phases', () => {
       const lifecycle = new PluginLifecycleManager([
         'createNodes',
         'postTasksExecution',
       ]);
 
       // graph has post-task after it
-      expect(lifecycle.hasLaterActivePhases('graph')).toBe(true);
+      expect(lifecycle.isLastRegisteredPhase('graph')).toBe(false);
       // post-task has nothing after it
-      expect(lifecycle.hasLaterActivePhases('post-task')).toBe(false);
-    });
-
-    it('should return false after post-task phase', () => {
-      const lifecycle = new PluginLifecycleManager([
-        'createNodes',
-        'preTasksExecution',
-        'postTasksExecution',
-      ]);
-
-      expect(lifecycle.hasLaterActivePhases('post-task')).toBe(false);
+      expect(lifecycle.isLastRegisteredPhase('post-task')).toBe(true);
     });
   });
 
@@ -227,14 +228,38 @@ describe('PluginLifecycleManager', () => {
   });
 
   describe('shouldShutdownImmediately', () => {
-    it('should return true if no graph phase hooks', () => {
+    it('should return true if only post-task hooks', () => {
       const lifecycle = new PluginLifecycleManager(['postTasksExecution']);
+
+      expect(lifecycle.shouldShutdownImmediately()).toBe(true);
+    });
+
+    it('should return true if only pre-task hooks (no graph hooks)', () => {
+      const lifecycle = new PluginLifecycleManager(['preTasksExecution']);
+
+      expect(lifecycle.shouldShutdownImmediately()).toBe(true);
+    });
+
+    it('should return true if pre-task and post-task hooks but no graph hooks', () => {
+      const lifecycle = new PluginLifecycleManager([
+        'preTasksExecution',
+        'postTasksExecution',
+      ]);
 
       expect(lifecycle.shouldShutdownImmediately()).toBe(true);
     });
 
     it('should return false if graph phase has hooks', () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
+
+      expect(lifecycle.shouldShutdownImmediately()).toBe(false);
+    });
+
+    it('should return false if graph and task hooks exist', () => {
+      const lifecycle = new PluginLifecycleManager([
+        'createNodes',
+        'postTasksExecution',
+      ]);
 
       expect(lifecycle.shouldShutdownImmediately()).toBe(false);
     });
@@ -278,8 +303,8 @@ describe('PluginLifecycleManager', () => {
   });
 
   describe('error handling', () => {
-    it('should throw when entering hook from inactive phase', () => {
-      // Only graph phase is active, pre-task is not
+    it('should throw when entering hook from unregistered phase', () => {
+      // Only graph phase is registered, pre-task is not
       const lifecycle = new PluginLifecycleManager(['createNodes']);
 
       expect(() => lifecycle.enterHook('preTasksExecution')).toThrow(
@@ -287,8 +312,8 @@ describe('PluginLifecycleManager', () => {
       );
     });
 
-    it('should throw when exiting hook from inactive phase', () => {
-      // Only graph phase is active, post-task is not
+    it('should throw when exiting hook from unregistered phase', () => {
+      // Only graph phase is registered, post-task is not
       const lifecycle = new PluginLifecycleManager(['createNodes']);
 
       expect(() => lifecycle.exitHook('postTasksExecution')).toThrow(
@@ -305,11 +330,11 @@ describe('PluginLifecycleManager', () => {
       );
     });
 
-    it('should throw when checking later phases for inactive phase', () => {
+    it('should throw when checking isLastRegisteredPhase for unregistered phase', () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
 
-      expect(() => lifecycle.hasLaterActivePhases('pre-task')).toThrow(
-        /not active for this plugin/
+      expect(() => lifecycle.isLastRegisteredPhase('pre-task')).toThrow(
+        /not registered for this plugin/
       );
     });
 

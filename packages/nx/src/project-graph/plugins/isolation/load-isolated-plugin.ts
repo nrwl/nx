@@ -32,9 +32,10 @@ export async function loadIsolatedNxPlugin(
   isolatedPluginCache.set(cacheKey, pluginPromise);
 
   const cleanup = async () => {
-    const instance = await isolatedPluginCache.get(cacheKey);
-    instance?.destroy();
+    const instancePromise = isolatedPluginCache.get(cacheKey);
     isolatedPluginCache.delete(cacheKey);
+    const instance = await instancePromise;
+    instance?.shutdown();
   };
 
   return [pluginPromise, cleanup];
