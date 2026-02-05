@@ -29,7 +29,6 @@ fun runTasksInParallel(
   val outputStream2 = ByteArrayOutputStream()
   val errorStream2 = ByteArrayOutputStream()
 
-  // --rerun-tasks used to skip Gradle caching since we use Nx caching
   // --info is for terminal per task
   // --continue is for continue running tasks if one failed in a batch
   // --parallel is for performance
@@ -42,7 +41,6 @@ fun runTasksInParallel(
           "--continue",
           "-Dorg.gradle.daemon.idletimeout=0",
           "--parallel",
-          "--rerun-tasks",
           "-Dorg.gradle.workers.max=$workersMax")
 
   if (additionalArgs.isNotBlank()) {
