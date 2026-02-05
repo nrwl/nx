@@ -1,3 +1,4 @@
+import type { Property } from '../../utils/Property.js';
 import type { TestLateDefineForColumn } from './TestLateDefineForComponent.js';
 import type { TestTask } from './TestNullInputTextComponent.js';
 
@@ -33,4 +34,44 @@ export function hasTaskId(e: unknown): e is { taskId: number }
     return e !== null && typeof e === 'object' && 'taskId' in e && typeof (e as {
         taskId: unknown
     }).taskId === 'number';
+}
+
+export function hasItemSelected(obj: unknown): obj is { item: { selected: Property<boolean> } }
+{
+    if (obj === null || typeof obj !== 'object') return false;
+    if (!('item' in obj)) return false;
+    const { item } = (obj as { item: unknown });
+    if (item === null || typeof item !== 'object') return false;
+    if (!('selected' in item)) return false;
+    return true;
+}
+
+export function hasItemColor(obj: unknown): obj is { item: { color: Property<string> } }
+{
+    if (obj === null || typeof obj !== 'object') return false;
+    if (!('item' in obj)) return false;
+    const { item } = (obj as { item: unknown });
+    if (item === null || typeof item !== 'object') return false;
+    if (!('color' in item)) return false;
+    return true;
+}
+
+export function hasItemDisabled(obj: unknown): obj is { item: { disabled: Property<boolean> } }
+{
+    if (obj === null || typeof obj !== 'object') return false; 
+    if (!('item' in obj)) return false;
+    const { item } = (obj as { item: unknown });
+    if (item === null || typeof item !== 'object') return false;
+    if (!('disabled' in item)) return false;
+    return true;
+}
+
+export function hasItemValue(obj: unknown): obj is { item: { value: Property<string> } }
+{
+    if (obj === null || typeof obj !== 'object') return false;
+    if (!('item' in obj)) return false;
+    const { item } = (obj as { item: unknown });
+    if (item === null || typeof item !== 'object') return false;
+    if (!('value' in item)) return false;
+    return true;
 }

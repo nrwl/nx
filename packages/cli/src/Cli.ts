@@ -1,4 +1,5 @@
 import * as t from '@babel/types';
+import { execSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
@@ -418,6 +419,8 @@ Examples:
         const entry = this.resolveEntryPoint(target, srcDir);
         const inlineStyles = await this.collectStyles(target, srcDir, bundleOptions.minify ?? true);
 
+        this.runTypeCheck(target, projectRoot);
+
         console.log('   Building with esbuild...');
 
         const tsconfigRaw = this.loadTsConfig(target, projectRoot);
@@ -822,6 +825,36 @@ Examples:
         return target.tsConfigPath
             ? fs.readFileSync(path.resolve(projectRoot, target.tsConfigPath), 'utf-8')
             : '{}';
+    }
+
+    private runTypeCheck(target: FluffTarget, projectRoot: string): void
+    {
+        if (!target.tsConfigPath)
+        {
+            return;
+        }
+
+        const tsconfigPath = path.resolve(projectRoot, target.tsConfigPath);
+        if (!fs.existsSync(tsconfigPath))
+        {
+            console.warn(`   ⚠ tsconfig not found: ${tsconfigPath}, skipping type check`);
+            return;
+        }
+
+        console.log('   Checking types...');
+        try
+        {
+            execSync(`npx tsc --noEmit -p ${target.tsConfigPath}`, {
+                cwd: projectRoot,
+                stdio: 'inherit'
+            });
+            console.log('   ✓ Type check passed');
+        }
+        catch
+        {
+            console.error('   ✗ Type check failed');
+            process.exit(1);
+        }
     }
 
     private generateEntryContent(srcDir: string, exclude: string[] = []): { contents: string; resolveDir: string }

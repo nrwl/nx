@@ -243,7 +243,15 @@ export abstract class FluffBase extends HTMLElement
                 }
             }
         }
-        else if (!(first in scope.locals) && !(first in scope.host))
+        else if (first in scope.locals)
+        {
+            const localValue: unknown = scope.locals[first];
+            if (localValue !== null && localValue !== undefined && rest.length > 0)
+            {
+                this.__subscribeToNestedChain(localValue, rest, callback, addSub);
+            }
+        }
+        else if (!(first in scope.host))
         {
             console.warn(`Binding dependency "${first}" not found on component ${scope.host.constructor.name}`);
         }
@@ -337,14 +345,27 @@ export abstract class FluffBase extends HTMLElement
         {
             prop.setValue(value, true);
         }
-        else if (propName in el && el instanceof HTMLElement)
+        else if (el instanceof FluffBase)
         {
             Reflect.set(el, propName, value);
         }
+        else if (propName in el && el instanceof HTMLElement)
+        {
+            Reflect.set(el, propName, this.__unwrap(value));
+        }
         else
         {
-            el.setAttribute(propName, String(value));
+            el.setAttribute(propName, String(this.__unwrap(value)));
         }
+    }
+
+    private __unwrap(value: unknown): unknown
+    {
+        if (value instanceof Property)
+        {
+            return value.getValue();
+        }
+        return value;
     }
 
     private __applyPropertyBindingWithScope(el: Element, binding: BindingInfo, scope: Scope, subscriptions?: Subscription[]): void
@@ -519,7 +540,7 @@ export abstract class FluffBase extends HTMLElement
                     throw new Error(`Class binding for ${binding.n} is missing exprId`);
                 }
                 const fn = this.__getCompiledExprFn(binding.e);
-                const value = fn(this, scope.locals);
+                const value = this.__unwrap(fn(this, scope.locals));
                 if (value)
                 {
                     el.classList.add(binding.n);
@@ -550,7 +571,7 @@ export abstract class FluffBase extends HTMLElement
                     throw new Error(`Style binding for ${binding.n} is missing exprId`);
                 }
                 const fn = this.__getCompiledExprFn(binding.e);
-                const value = fn(this, scope.locals);
+                const value = this.__unwrap(fn(this, scope.locals));
                 if (this.__hasStyle(el))
                 {
                     el.style.setProperty(binding.n, String(value));

@@ -5,6 +5,7 @@
             "name": "fluff-e2e",
             "srcDir": "src",
             "outDir": "dist",
+            "tsConfigPath": "tsconfig.json",
             "indexHtml": "index.html",
             "styles": [],
             "assets": [],
