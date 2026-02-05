@@ -11,15 +11,15 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync } from 'fs';
+import { nxVersion } from '../utils/versions';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
 } from './tmp-dir';
-import { nxVersion } from '../utils/versions';
 
 type LogSource = 'Server' | 'Client';
 
-class DaemonLogger {
+export class DaemonLogger {
   constructor(private source: LogSource) {}
 
   log(...s: unknown[]) {
@@ -75,3 +75,38 @@ class DaemonLogger {
 
 export const serverLogger = new DaemonLogger('Server');
 export const clientLogger = new DaemonLogger('Client');
+
+export function formatLogMessage(message: string, source?: string) {
+  const now = new Date(Date.now()).toISOString();
+  return `[NX v${nxVersion} Daemon${
+    source ? ' ' + source : ''
+  }] - ${now} - ${message}`;
+}
+
+import { Writable } from 'stream';
+
+export function daemonStreamTransformer(outputStream: Writable): Writable {
+  let lineBuffer = '';
+
+  return new Writable({
+    write(chunk, encoding, callback) {
+      const data = lineBuffer + chunk.toString();
+      const lines = data.split('\n');
+
+      lineBuffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.trim()) {
+          outputStream.write(formatLogMessage(line) + '\n');
+        }
+      }
+      callback();
+    },
+    final(callback) {
+      if (lineBuffer.trim()) {
+        outputStream.write(formatLogMessage(lineBuffer) + '\n');
+      }
+      callback();
+    },
+  });
+}
