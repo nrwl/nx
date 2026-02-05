@@ -1,5 +1,21 @@
-import { output, PackageManager, ProjectConfiguration } from '@nx/devkit';
+import {
+  output,
+  PackageManager,
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '@nx/devkit';
+import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
+import { existsSync } from 'fs-extra';
+import * as isCI from 'is-ci';
+import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
+import { gte } from 'semver';
 import { packageInstall, tmpProjPath } from './create-project-utils';
+import {
+  ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
+} from './ensure-browser-installation';
+import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
   getNpmMajorVersion,
@@ -9,18 +25,7 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import {
-  ensureCypressInstallation,
-  ensurePlaywrightBrowsersInstallation,
-} from './ensure-browser-installation';
-import { TargetConfiguration } from '@nx/devkit';
-import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
-import { join } from 'path';
-import * as isCI from 'is-ci';
-import { fileExists, readJson, updateJson } from './file-utils';
-import { logError, stripConsoleColors } from './log-utils';
-import { existsSync } from 'fs-extra';
-import { gte } from 'semver';
+import { logError } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -257,9 +262,9 @@ export function runCommandAsync(
         }
 
         const outputs = {
-          stdout: stripConsoleColors(stdout),
-          stderr: stripConsoleColors(stderr),
-          combinedOutput: stripConsoleColors(`${stdout}${stderr}`),
+          stdout: stripVTControlCharacters(stdout),
+          stderr: stripVTControlCharacters(stderr),
+          combinedOutput: stripVTControlCharacters(`${stdout}${stderr}`),
         };
 
         if (opts.verbose ?? isVerboseE2ERun()) {
@@ -317,7 +322,7 @@ export function runCommandUntil(
 
     function checkCriteria(c) {
       output += c.toString();
-      const strippedOutput = stripConsoleColors(output);
+      const strippedOutput = stripVTControlCharacters(output);
       if (criteria(strippedOutput) && !complete) {
         complete = true;
         clearTimeout(timeoutId);
@@ -381,7 +386,7 @@ export function runNgAdd(
       encoding: 'utf-8',
     });
 
-    const r = stripConsoleColors(result);
+    const r = stripVTControlCharacters(result);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
@@ -438,12 +443,12 @@ export function runCLI(
       });
     }
 
-    const r = stripConsoleColors(logs);
+    const r = stripVTControlCharacters(logs);
 
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return stripConsoleColors(e.stdout + e.stderr);
+      return stripVTControlCharacters(e.stdout + e.stderr);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;
@@ -479,12 +484,12 @@ export function runLernaCLI(
         color: 'green',
       });
     }
-    const r = stripConsoleColors(logs);
+    const r = stripVTControlCharacters(logs);
 
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return stripConsoleColors(e.stdout + e.stderr);
+      return stripVTControlCharacters(e.stdout + e.stderr);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;
