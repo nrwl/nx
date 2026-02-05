@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-[Gradle](https://gradle.org/) is a fast, dependable, and adaptable open-source build automation tool with an elegant and extensible declarative build language. Gradle supports Android, Java, Kotlin Multiplatform, Groovy, Scala, Javascript, and C/C++.
+[Gradle](https://gradle.org/) is a fast, dependable, and adaptable open-source build automation tool with an elegant and extensible declarative build language. Gradle supports Android, Java, Kotlin Multiplatform, Groovy, Scala, JavaScript, and C/C++.
 
 The Nx plugin for Gradle registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
 
@@ -18,7 +18,7 @@ Nx adds the following features to your workspace:
 - [Interactively explore your workspace](/docs/features/explore-graph)
 
 {% aside type="note" title="Java Compatibility" %}
-This plugin requires Java 17 or newer. Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
+This plugin requires Java 17 or newer. Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx)!
 {% /aside %}
 
 ## Setup @nx/gradle
@@ -76,7 +76,7 @@ nx build <your gradle library>
 
 ## How @nx/gradle Infers Tasks
 
-The `@nx/gradle` plugin relies on a companion Gradle plugin, `dev.nx.gradle.project-graph`, to analyze your Gradle build structure. When using `nx add`, the Gradle plugin is added as a dependency to the root Gradle build file. In most cases, the generator will add the task definition to trigger the plugin but if it's missing, add the following configuration to your Gradle configuration:
+The `@nx/gradle` plugin relies on a companion Gradle plugin, `dev.nx.gradle.project-graph`, to analyze your Gradle build structure. When using `nx add`, the Gradle plugin is added as a dependency to the root Gradle build file. In most cases, the generator will add the task definition to trigger the plugin, but if it's missing, add the following to your Gradle build file:
 
 {% tabs syncKey="java-lang" %}
 {% tabitem label="build.gradle.kts" %}
@@ -111,7 +111,7 @@ allprojects {
 {% /tabitem %}
 {% /tabs %}
 
-The `dev.nx.gradle.project-graph` plugin introduces a task named `nxProjectGraph`. This task analyzes your Gradle projects and their tasks, outputting the structure as JSON. The `@nx/gradle` plugin then uses this JSON data to accurately build the Nx project graph. If Nx has any issue generate the project graph JSON, you can run the `nxProjectGraph` task manually:
+The `dev.nx.gradle.project-graph` plugin introduces a task named `nxProjectGraph`. This task analyzes your Gradle projects and their tasks, outputting the structure as JSON. The `@nx/gradle` plugin then uses this JSON data to accurately build the Nx project graph. If Nx has any issues generating the project graph JSON, you can run the `nxProjectGraph` task manually:
 
 {% tabs syncKey="os" %}
 {% tabitem label="Mac OS/Linux" %}
@@ -130,11 +130,21 @@ The `dev.nx.gradle.project-graph` plugin introduces a task named `nxProjectGraph
 {% /tabitem %}
 {% /tabs %}
 
+## Version Compatibility
+
+The `@nx/gradle` Nx plugin requires a compatible version of the `dev.nx.gradle.project-graph` Gradle plugin. When you run `nx migrate`, the correct version is automatically updated in your Gradle build files. If you need to manually verify or set the version, use the following compatibility table.
+
+| dev.nx.gradle.project-graph version | Minimum required @nx/gradle version | Breaking Change                                           |
+| ----------------------------------- | ----------------------------------- | --------------------------------------------------------- |
+| 0.1.11                              | 22.4+                               | Added `includeDependsOn` field to executor options        |
+| 0.1.10                              | 22.2                                | Added `nxConfig` field to project node for Nx DSL support |
+| 0.1.4                               | 21.4                                | Added `excludeDependsOn` field to executor options        |
+
 ## View Inferred Tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
 
-## Setting Up @nx/gradle in a Nx Workspace
+## Setting Up @nx/gradle in an Nx Workspace
 
 In any Nx workspace, you can install `@nx/gradle` by running the following command:
 
@@ -144,7 +154,7 @@ nx add @nx/gradle
 
 ## @nx/gradle Configuration
 
-The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
+The `@nx/gradle` plugin is configured in the `plugins` array in `nx.json`.
 
 ```json
 // nx.json
@@ -154,8 +164,8 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
       "plugin": "@nx/gradle",
       "options": {
         "testTargetName": "test",
-        "buildTargetName": "build",
         "ciTestTargetName": "test-ci",
+        "targetNamePrefix": "gradle-",
         "gradleExecutableDirectory": "./gradle-projects"
       }
     }
@@ -163,12 +173,20 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-Once a Gradle configuration file has been identified, the targets are created with the name you specify under `testTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test` and `build`.
+### Target Name Prefix
+
+In a polyglot workspace supporting projects in different languages, you may have targets with the same name (e.g., `build`, `test`) but different behaviors. By default, Gradle task names are used directly as Nx target names. Use the `targetNamePrefix` option to prefix all Gradle targets with a custom string to distinguish them from other targets in your workspace.
+
+For example, with `"targetNamePrefix": "gradle-"`, Nx will recognize your targets as `gradle-build`, `gradle-test`, `gradle-check`, etc.
+
+### Test Target Name
+
+The `testTargetName` option controls the name of the inferred test target. The default name is `test`.
 
 ### Custom Gradle Executable Directory
 
-By default, the @nx/gradle plugin executes the Gradle wrapper found in your project root. If no wrapper exists there, it searches up through parent directories to the workspace root.
-To use a Gradle wrapper from a custom location, specify the directory path in your nx.json under the plugins array using the gradleExecutableDirectory option.
+By default, the `@nx/gradle` plugin executes the Gradle wrapper found in your project root. If no wrapper exists there, it searches up through parent directories to the workspace root.
+To use a Gradle wrapper from a custom location, specify the directory path in your `nx.json` under the plugins array using the `gradleExecutableDirectory` option.
 
 ### Batch Mode
 
@@ -271,10 +289,6 @@ When you run `nx build-ci <your-gradle-project>`, Nx will:
 4.  The `build-ci` target is cacheable.
 
 This setup ensures that your build process in CI leverages Nx's caching and distribution capabilities effectively.
-
-##### How to Turn it Off?
-
-To disable the `build-ci` target, simply remove the `ciBuildTargetName` option from the `@nx/gradle` plugin configuration in your `nx.json` file. If `ciTestTargetName` is also removed, then the special CI targets for tests and check will also be turned off.
 
 ### Continuous Tasks
 
