@@ -55,6 +55,11 @@ export class Property<T>
         }
     }
 
+    public prop(): Property<T> | undefined
+    {
+        return this._parentProperty;
+    }
+
     public setValue(val: T | Property<T>, inbound = false, commit = true): void
     {
         if (val instanceof Property)

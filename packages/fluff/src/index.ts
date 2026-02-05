@@ -3,7 +3,6 @@ export type { ComponentConfig, ComponentMetadata } from './decorators/Component.
 export { HostBinding } from './decorators/HostBinding.js';
 export { HostListener } from './decorators/HostListener.js';
 export { Input } from './decorators/Input.js';
-export { InputProperty } from './decorators/InputProperty.js';
 export { Output } from './decorators/Output.js';
 export { getPipeTransform, Pipe } from './decorators/Pipe.js';
 export type { PipeTransform } from './decorators/Pipe.js';

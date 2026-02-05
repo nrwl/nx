@@ -18,7 +18,6 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                 {
                     state.needsPropertyImport = false;
                     state.reactiveProperties = new Set();
-                    state.inputPropertyProperties = new Set();
                     state.watchMethods = [];
                 }, exit(path, state): void
                 {
@@ -91,7 +90,6 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                 const privateFields: t.ClassProperty[] = [];
                 const getterHostBindingUpdates: string[] = [];
                 const propertyHostBindingInits: { propName: string; privateName: string }[] = [];
-                const inputPropertyInfos: { propName: string; privateName: string; initialValue: t.Expression | t.Identifier }[] = [];
 
                 const pipeMethods: { pipeName: string; methodName: string }[] = [];
                 const hostListeners: { methodName: string; eventName: string }[] = [];
@@ -268,24 +266,6 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         continue;
                     }
 
-                    const inputPropertyDecoratorIndex = findDecoratorIndex(decorators, 'InputProperty');
-
-                    if (inputPropertyDecoratorIndex >= 0)
-                    {
-                        decorators.splice(inputPropertyDecoratorIndex, 1);
-                        if (!t.isIdentifier(propNode.key)) continue;
-
-                        const propName = propNode.key.name;
-                        const privateName = `__${propName}`;
-                        const initialValue = propNode.value ?? t.identifier('undefined');
-
-                        state.inputPropertyProperties?.add(propName);
-
-                        inputPropertyInfos.push({ propName, privateName, initialValue });
-                        propsToRemove.push(memberPath);
-                        continue;
-                    }
-
                     const reactiveDecoratorIndices: number[] = [];
                     for (const [idx, dec] of decorators.entries())
                     {
@@ -331,53 +311,6 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     ]));
 
                     propsToRemove.push(memberPath);
-                    newMembers.push(getter, setter);
-                    privateFields.push(privateField);
-                }
-
-                for (const { propName, privateName, initialValue } of inputPropertyInfos)
-                {
-                    const watchMethodsForProp = watchMethods
-                        .filter(w => w.watchedProps.includes(propName))
-                        .map(w => w.methodName);
-
-                    const watchCallsForProp = watchCalls
-                        .filter(w => w.watchedProps.includes(propName));
-
-                    const privateField = t.classProperty(t.identifier(privateName), initialValue);
-
-                    const getter = t.classMethod('get', t.identifier(propName), [], t.blockStatement([
-                        t.returnStatement(t.memberExpression(t.thisExpression(), t.identifier(privateName)))
-                    ]));
-
-                    const setterStatements: t.Statement[] = [
-                        t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('__v')))
-                    ];
-
-                    for (const methodName of watchMethodsForProp)
-                    {
-                        setterStatements.push(
-                            t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(methodName)), [t.stringLiteral(propName)]))
-                        );
-                    }
-
-                    for (const watchCall of watchCallsForProp)
-                    {
-                        if (t.isExpression(watchCall.callbackArg))
-                        {
-                            setterStatements.push(
-                                t.expressionStatement(t.callExpression(watchCall.callbackArg, [t.stringLiteral(propName)]))
-                            );
-                        }
-                    }
-
-                    const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement([
-                        t.ifStatement(
-                            t.binaryExpression('!==', t.identifier('__v'), t.memberExpression(t.thisExpression(), t.identifier(privateName))),
-                            t.blockStatement(setterStatements)
-                        )
-                    ]));
-
                     newMembers.push(getter, setter);
                     privateFields.push(privateField);
                 }
