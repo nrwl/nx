@@ -102,6 +102,6 @@ export default async function handler(
 
 export const config = {
   path: ['/**/*.txt', '/**/*.md'],
-  // Something is adding .png.md to get image paths, exclude those.
-  excludedPath: ['/docs/og/*'],
+  // Something is adding .png.md and .svg.md to get image paths, exclude those.
+  excludedPath: ['/docs/og/*', '/docs/*.svg.md', '/docs/*.png.md'],
 };

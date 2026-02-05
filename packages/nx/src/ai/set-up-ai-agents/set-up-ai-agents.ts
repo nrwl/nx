@@ -30,6 +30,7 @@ import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   agentsMdPath,
+  claudeMcpJsonPath,
   codexConfigTomlPath,
   geminiMdPath,
   opencodeMcpPath,
@@ -188,6 +189,27 @@ export async function setupAiAgentsGeneratorImpl(
         'nx@nx-claude-plugins': true,
       },
     }));
+
+    // Clean up .mcp.json (nx-mcp now handled by plugin)
+    const mcpJsonPath = claudeMcpJsonPath(options.directory);
+    if (tree.exists(mcpJsonPath)) {
+      try {
+        const mcpJsonContents = readJson(tree, mcpJsonPath);
+        if (mcpJsonContents?.mcpServers?.['nx-mcp']) {
+          const serverKeys = Object.keys(mcpJsonContents.mcpServers || {});
+          if (serverKeys.length === 1 && serverKeys[0] === 'nx-mcp') {
+            // nx-mcp is the only server, delete the file
+            tree.delete(mcpJsonPath);
+          } else {
+            // Other servers exist, just remove nx-mcp entry
+            delete mcpJsonContents.mcpServers['nx-mcp'];
+            writeJson(tree, mcpJsonPath, mcpJsonContents);
+          }
+        }
+      } catch {
+        // Ignore errors reading .mcp.json
+      }
+    }
   }
 
   if (hasAgent('opencode')) {

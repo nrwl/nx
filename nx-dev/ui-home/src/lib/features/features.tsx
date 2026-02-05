@@ -3,27 +3,27 @@ import { ReactElement } from 'react';
 import { FeaturesWhileCoding } from './features-while-coding';
 import { FeaturesWhileRunningCI } from './features-while-running-ci';
 import { FeaturesWhileScalingYourOrganization } from './features-while-scaling-your-organization';
-import { FeaturesCallToAction } from './features-call-to-action';
+import { FeaturesAiVideo } from './features-ai-video';
 
 export function Features(): ReactElement {
   return (
     <section className="scroll-mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900">
       <article className="mx-auto max-w-7xl px-6 lg:px-8">
         <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
-          Build Products,
-          <br className="sm:hidden" /> Not Build Systems
+          Futureproof your Codebase
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
-          Whether you're a startup shipping fast or managing enterprise{' '}
+          Whether you’re working in a{' '}
           <TextLink
             href={
               '/docs/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
             }
           >
-            monorepos
+            monorepo
           </TextLink>{' '}
-          with thousands of projects, Nx lets you focus on what matters and
-          deliver faster.
+          or connecting thousands of projects in a synthetic monorepo—repository
+          structure determines whether AI agents will amplify your team or
+          create bottlenecks down the road.
         </SectionHeading>
       </article>
       <div className="mt-12 lg:mt-20">
@@ -36,7 +36,7 @@ export function Features(): ReactElement {
         <FeaturesWhileScalingYourOrganization />
       </div>
       <div className="mt-24 lg:mt-24">
-        <FeaturesCallToAction />
+        <FeaturesAiVideo />
       </div>
     </section>
   );

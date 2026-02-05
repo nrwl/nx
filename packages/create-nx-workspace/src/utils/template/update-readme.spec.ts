@@ -67,13 +67,14 @@ More content.`;
     `);
   });
 
-  it('should strip markers and content when no connect URL provided', () => {
+  it('should strip markers but keep content when no connect URL provided', () => {
     const content = `# My Workspace
 
 Some intro content.
 
 <!-- BEGIN: nx-cloud -->
-Placeholder content to remove.
+## Try the full Nx platform
+🚀 If you haven't connected to Nx Cloud yet, complete your setup here.
 <!-- END: nx-cloud -->
 
 ## Other Section
@@ -86,6 +87,9 @@ More content.`;
       "# My Workspace
 
       Some intro content.
+
+      ## Try the full Nx platform
+      🚀 If you haven't connected to Nx Cloud yet, complete your setup here.
 
       ## Other Section
 

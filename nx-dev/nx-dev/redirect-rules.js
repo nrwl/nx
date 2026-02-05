@@ -1538,6 +1538,7 @@ const removeEvolvingNx = {
 const pageCleanUp = {
   '/advent-of-code ': '/',
   '/launch-nx ': '/',
+  '/ai': '/',
 };
 
 /**

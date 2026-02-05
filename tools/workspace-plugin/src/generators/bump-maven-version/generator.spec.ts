@@ -58,6 +58,37 @@ describe('bump-maven-version generator', () => {
   <artifactId>maven-batch-runner</artifactId>
 </project>`;
 
+  const mockBatchRunnerAdaptersPomXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <parent>
+    <groupId>dev.nx.maven</groupId>
+    <artifactId>nx-maven-parent</artifactId>
+    <version>0.0.8</version>
+  </parent>
+  <artifactId>batch-runner-adapters</artifactId>
+  <packaging>pom</packaging>
+</project>`;
+
+  const mockMaven3AdapterPomXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <parent>
+    <groupId>dev.nx.maven</groupId>
+    <artifactId>batch-runner-adapters</artifactId>
+    <version>0.0.8</version>
+  </parent>
+  <artifactId>maven3-adapter</artifactId>
+</project>`;
+
+  const mockMaven4AdapterPomXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <parent>
+    <groupId>dev.nx.maven</groupId>
+    <artifactId>batch-runner-adapters</artifactId>
+    <version>0.0.8</version>
+  </parent>
+  <artifactId>maven4-adapter</artifactId>
+</project>`;
+
   const mockVersionsTs = `export const nxVersion = require('../../package.json').version;
 export const mavenPluginVersion = '0.0.8';`;
 
@@ -83,6 +114,18 @@ export const mavenPluginVersion = '0.0.8';`;
     tree.write('packages/maven/maven-plugin/pom.xml', mockMavenPluginPomXml);
     tree.write('packages/maven/shared/pom.xml', mockSharedPomXml);
     tree.write('packages/maven/batch-runner/pom.xml', mockBatchRunnerPomXml);
+    tree.write(
+      'packages/maven/batch-runner-adapters/pom.xml',
+      mockBatchRunnerAdaptersPomXml
+    );
+    tree.write(
+      'packages/maven/batch-runner-adapters/maven3/pom.xml',
+      mockMaven3AdapterPomXml
+    );
+    tree.write(
+      'packages/maven/batch-runner-adapters/maven4/pom.xml',
+      mockMaven4AdapterPomXml
+    );
     tree.write('packages/maven/src/utils/versions.ts', mockVersionsTs);
     tree.write(
       'packages/maven/migrations.json',

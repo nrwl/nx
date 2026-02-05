@@ -472,11 +472,27 @@ jobs:
             rm -rf ~/.rustup/toolchains/*/share || true
             # Remove other development tool caches
             rm -rf ~/.cache/* || true
+
+            # Remove unnecessary workspace directories
+            rm -rf docs astro-docs nx-dev || true
+
             echo "Checking disk space after cleanup"
             df -h
             
             echo "Building FreeBSD bindings"
-            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            BUILD_EXIT=0
+            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
+
+            echo "=== Disk usage after build ==="
+            df -h
+
+            if [ "$BUILD_EXIT" -ne 0 ]; then
+              echo "Build failed with exit code $BUILD_EXIT"
+              exit $BUILD_EXIT
+            fi
+
+            echo "Build succeeded"
+            
             echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules

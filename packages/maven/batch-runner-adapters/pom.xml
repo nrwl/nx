@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
-        <version>0.0.12</version>
+        <version>0.0.13</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

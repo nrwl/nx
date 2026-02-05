@@ -150,6 +150,35 @@ export default async function runGenerator(
       false
     );
 
+    // 5b. Update batch-runner-adapters pom.xml files
+    logger.info('Updating packages/maven/batch-runner-adapters/pom.xml...');
+    updateXmlVersion(
+      tree,
+      'packages/maven/batch-runner-adapters/pom.xml',
+      newVersion,
+      false
+    );
+
+    logger.info(
+      'Updating packages/maven/batch-runner-adapters/maven3/pom.xml...'
+    );
+    updateXmlVersion(
+      tree,
+      'packages/maven/batch-runner-adapters/maven3/pom.xml',
+      newVersion,
+      false
+    );
+
+    logger.info(
+      'Updating packages/maven/batch-runner-adapters/maven4/pom.xml...'
+    );
+    updateXmlVersion(
+      tree,
+      'packages/maven/batch-runner-adapters/maven4/pom.xml',
+      newVersion,
+      false
+    );
+
     // 6. Update versions.ts
     logger.info('Updating packages/maven/src/utils/versions.ts...');
     const versionsFile = tree.read(
