@@ -8,7 +8,7 @@ export const yargsDownloadCloudClientCommand: CommandModule = {
   handler: async (args: any) => {
     process.exit(
       await (
-        await import('./download-cloud-client')
+        await import('./download-cloud-client.js')
       ).downloadCloudClientHandler(args)
     );
   },
