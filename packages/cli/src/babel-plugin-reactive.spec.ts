@@ -202,6 +202,55 @@ describe('babel-plugin-reactive', () =>
         });
     });
 
+    describe('@LinkedProperty decorator', () =>
+    {
+        it('should call linked method when Property instance is set', () =>
+        {
+            const code = `
+                import { Component, Reactive, LinkedProperty, Property } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() myProp = null;
+                    
+                    @LinkedProperty('myProp')
+                    onLinkedProperty(prop) {
+                        console.log('linked');
+                    }
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toBeDefined();
+            expect(result).toContain('instanceof Property');
+            expect(result).toContain('this.onLinkedProperty(__v)');
+        });
+
+        it('should not add instanceof check when no @LinkedProperty for that prop', () =>
+        {
+            const code = `
+                import { Component, Reactive } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() myProp = null;
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toBeDefined();
+            expect(result).not.toContain('instanceof Property');
+        });
+    });
+
     describe('@Watch decorator', () =>
     {
         it('should handle @Watch decorator on method', () =>

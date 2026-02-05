@@ -93,6 +93,34 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
 
                 const pipeMethods: { pipeName: string; methodName: string }[] = [];
                 const hostListeners: { methodName: string; eventName: string }[] = [];
+                const linkedPropertyMethods: { methodName: string; propertyName: string }[] = [];
+
+                for (const memberPath of path.get('body'))
+                {
+                    if (!memberPath.isClassMethod()) continue;
+                    const methodNode = memberPath.node;
+                    const decorators = methodNode.decorators ?? [];
+                    const linkedPropertyIndex = findDecoratorIndex(decorators, 'LinkedProperty');
+                    if (linkedPropertyIndex >= 0)
+                    {
+                        const linkedPropertyDecorator = decorators[linkedPropertyIndex];
+                        if (t.isCallExpression(linkedPropertyDecorator.expression))
+                        {
+                            const args = linkedPropertyDecorator.expression.arguments;
+                            if (args.length > 0 && t.isStringLiteral(args[0]))
+                            {
+                                const propertyName = args[0].value;
+                                if (t.isIdentifier(methodNode.key))
+                                {
+                                    linkedPropertyMethods.push({
+                                        methodName: methodNode.key.name, propertyName
+                                    });
+                                }
+                            }
+                        }
+                        decorators.splice(linkedPropertyIndex, 1);
+                    }
+                }
 
                 for (const memberPath of path.get('body'))
                 {
@@ -165,6 +193,28 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                                 }
                             }
                             decorators.splice(watchDecoratorIndex, 1);
+                        }
+
+                        const linkedPropertyIndex = findDecoratorIndex(decorators, 'LinkedProperty');
+
+                        if (linkedPropertyIndex >= 0)
+                        {
+                            const linkedPropertyDecorator = decorators[linkedPropertyIndex];
+                            if (t.isCallExpression(linkedPropertyDecorator.expression))
+                            {
+                                const args = linkedPropertyDecorator.expression.arguments;
+                                if (args.length > 0 && t.isStringLiteral(args[0]))
+                                {
+                                    const propertyName = args[0].value;
+                                    if (t.isIdentifier(methodNode.key))
+                                    {
+                                        linkedPropertyMethods.push({
+                                            methodName: methodNode.key.name, propertyName
+                                        });
+                                    }
+                                }
+                            }
+                            decorators.splice(linkedPropertyIndex, 1);
                         }
 
                         if (methodNode.kind === 'get')
@@ -306,9 +356,22 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         t.returnStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('getValue')), []))
                     ]));
 
-                    const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement([
+                    const linkedMethod = linkedPropertyMethods.find(lp => lp.propertyName === propName);
+                    const setterStatements: t.Statement[] = [
                         t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('setValue')), [t.identifier('__v')]))
-                    ]));
+                    ];
+
+                    if (linkedMethod)
+                    {
+                        setterStatements.push(
+                            t.ifStatement(
+                                t.binaryExpression('instanceof', t.identifier('__v'), t.identifier('Property')),
+                                t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(linkedMethod.methodName)), [t.identifier('__v')]))
+                            )
+                        );
+                    }
+
+                    const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement(setterStatements));
 
                     propsToRemove.push(memberPath);
                     newMembers.push(getter, setter);
