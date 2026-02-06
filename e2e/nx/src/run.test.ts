@@ -371,6 +371,55 @@ describe('Nx Running Tests', () => {
         expect(withBail).not.toContain(`- ${myapp1}:error`);
       }
     });
+
+    it('should stop executing tasks after N failures when --nx-bail=N is provided', async () => {
+      const myapp1 = uniq('a');
+      const myapp2 = uniq('b');
+      const myapp3 = uniq('c');
+      runCLI(`generate @nx/web:app apps/${myapp1}`);
+      runCLI(`generate @nx/web:app apps/${myapp2}`);
+      runCLI(`generate @nx/web:app apps/${myapp3}`);
+
+      // All three apps have an error target
+      updateJson(`apps/${myapp1}/project.json`, (c) => {
+        c.targets['error'] = {
+          command: 'echo boom1 && exit 1',
+        };
+        return c;
+      });
+      updateJson(`apps/${myapp2}/project.json`, (c) => {
+        c.targets['error'] = {
+          command: 'echo boom2 && exit 1',
+        };
+        return c;
+      });
+      updateJson(`apps/${myapp3}/project.json`, (c) => {
+        c.targets['error'] = {
+          command: 'echo boom3 && exit 1',
+        };
+        return c;
+      });
+
+      // With --nx-bail=2, should stop after 2 failures (not run the 3rd)
+      let withBailThreshold = runCLI(
+        `run-many --target=error --parallel=1 --nx-bail=2`,
+        {
+          silenceError: true,
+        }
+      )
+        .split('\n')
+        .map((r) => r.trim())
+        .filter((r) => r);
+      withBailThreshold = withBailThreshold.slice(
+        withBailThreshold.indexOf('Failed tasks:')
+      );
+
+      // Should have exactly 2 failed tasks (bailed after 2nd failure)
+      const failedTasks = withBailThreshold.filter((line) =>
+        line.startsWith('- ')
+      );
+      expect(failedTasks.length).toEqual(2);
+    });
   });
 
   describe('run-one', () => {
