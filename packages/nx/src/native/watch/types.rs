@@ -124,6 +124,7 @@ pub fn transform_event_to_watch_events(
 
         #[cfg(target_os = "windows")]
         {
+            use watchexec_events::FileType;
             // Skip directory events - they're handled by register_new_directory_watches
             if path.1.map_or(false, |ft| matches!(ft, FileType::Dir)) {
                 return Ok(vec![]);
