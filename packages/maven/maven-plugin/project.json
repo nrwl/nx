@@ -1,5 +1,4 @@
 {
-  "name": "nx-maven-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/maven-plugin",
   "projectType": "library",
@@ -12,5 +11,5 @@
     }
   },
   "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-shared", "!@nx/maven"]
+  "implicitDependencies": ["dev.nx.maven:nx-maven-shared", "!@nx/maven"]
 }
