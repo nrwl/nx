@@ -45,9 +45,16 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         return false;
       }
 
+      // Tasks with dependentTasksOutputFiles using specific globs (e.g. "**/*.d.ts")
+      // need output files on disk, so they must wait for dependencies to build first.
+      // Tasks with dependentTasksOutputFiles: "**/*" use the dependency task's hash
+      // as a proxy, so they can be hashed upfront without waiting.
+      const depsOutputs = getInputs(task, projectGraph, nxJson).depsOutputs;
+      const hasFileBasedDepsOutputs = depsOutputs.some(
+        (d) => d.dependentTasksOutputFiles !== '**/*'
+      );
       return !(
-        taskGraph.dependencies[task.id].length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
+        taskGraph.dependencies[task.id].length > 0 && hasFileBasedDepsOutputs
       );
     })
     .map((t) => t.task);
