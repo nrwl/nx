@@ -130,7 +130,7 @@ Once the plugin has been added, `@nx/maven` will automatically retrieve informat
 
 In a polyglot workspace supporting projects in different languages, you may have targets with the same name (e.g., `build`, `test`) but different behaviors. By default, Maven phase and goal names are used directly as Nx target names. Use the `targetNamePrefix` option to prefix all Maven targets with a custom string to distinguish them from other targets in your workspace.
 
-For example, with `"targetNamePrefix": "mvn-"`, Nx will recognize your targets as `mvn-compile`, `mvn-test`, `mvn-package`, etc.
+For example, with `"targetNamePrefix": "mvn-"`, Nx will create targets with the prefix `mvn-` for your targets as `mvn-compile`, `mvn-test`, `mvn-package`, etc.
 
 ### Verbose
 
