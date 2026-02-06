@@ -41,5 +41,6 @@
   },
   "enabledPlugins": {
     "nx@nx-claude-plugins": true
-  }
+  },
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": true
 }
