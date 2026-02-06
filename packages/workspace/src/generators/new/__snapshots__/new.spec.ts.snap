@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`new --preset should generate necessary npm dependencies for empty preset 1`] = `
 {
@@ -10,6 +10,7 @@ exports[`new --preset should generate necessary npm dependencies for empty prese
   },
   "license": "MIT",
   "name": "@my-workspace/source",
+  "packageManager": "npm@<version>",
   "private": true,
   "scripts": {},
   "version": "0.0.0",
