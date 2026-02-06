@@ -71,7 +71,10 @@ static_assertions = "1.1"
 wrap-ansi = "0.1"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["fileapi", "psapi", "shellapi"] }
+winapi = { version = "0.3", features = ["fileapi", "psapi"] }
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
 
 [target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
 mio = "1.0"
