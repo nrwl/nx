@@ -1,13 +1,12 @@
 {
-  "name": "nx-maven-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/maven-plugin",
   "projectType": "library",
   "targets": {
     "mvn-install-with-retries": {
-      "command": "for i in {1..5}; do npx nx run nx-maven-plugin:mvn-install && exit 0; sleep 10; done; exit 1"
+      "command": "for i in {1..5}; do npx nx run dev.nx.maven:nx-maven-plugin:mvn-install && exit 0; sleep 10; done; exit 1"
     }
   },
   "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-shared", "!@nx/maven"]
+  "implicitDependencies": ["dev.nx.maven:nx-maven-shared", "!@nx/maven"]
 }

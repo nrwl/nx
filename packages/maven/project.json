@@ -6,7 +6,7 @@
     "nx-release-publish": {
       "dependsOn": [
         "^nx-release-publish",
-        "nx-maven-plugin:mvn-install-with-retries"
+        "dev.nx.maven:nx-maven-plugin:mvn-install-with-retries"
       ],
       "executor": "@nx/js:release-publish",
       "options": {
@@ -25,7 +25,7 @@
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": ["build-base", "maven-batch-runner:_package"],
+      "dependsOn": ["build-base", "dev.nx.maven:maven-batch-runner:_package"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "packages/maven/dist",
@@ -81,8 +81,8 @@
   },
   "tags": ["maven:dev.nx.maven"],
   "implicitDependencies": [
-    "maven-batch-runner",
-    "nx-maven-plugin",
+    "dev.nx.maven:maven-batch-runner",
+    "dev.nx.maven:nx-maven-plugin",
     "!@nx/nx-source"
   ]
 }
