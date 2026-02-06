@@ -61,14 +61,19 @@ function buildTaskData(
  */
 function buildTasks(
   taskGraph: TaskGraph,
-  inputs: Record<string, MavenExecutorSchema>
+  inputs: Record<string, MavenExecutorSchema>,
+  context: ExecutorContext
 ): Record<string, TaskData> {
   const tasks: Record<string, TaskData> = {};
   for (const taskId of Object.keys(taskGraph.tasks)) {
     const task = taskGraph.tasks[taskId];
-    const projectName = task.target.project;
     const options = inputs[taskId];
-    tasks[taskId] = buildTaskData(options, projectName);
+    const nxProjectName = task.target.project;
+    const projectConfig = context.projectGraph?.nodes?.[nxProjectName]?.data;
+    const mavenProject =
+      (projectConfig?.metadata as Record<string, string>)?.mavenProject ||
+      nxProjectName;
+    tasks[taskId] = buildTaskData(options, mavenProject);
   }
   return tasks;
 }
@@ -87,7 +92,7 @@ export default async function* mavenBatchExecutor(
   const batchRunnerJar = getBatchRunnerJar();
 
   // Build task map for batch runner
-  const tasks = buildTasks(taskGraph, inputs);
+  const tasks = buildTasks(taskGraph, inputs, context);
 
   // Build arguments for batch runner
   const args: string[] = [];
