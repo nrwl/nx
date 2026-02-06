@@ -5,14 +5,14 @@ const nxVersion = require('../../package.json').version;
 
 export const latestVersions = {
   nxVersion,
-  jestVersion:       '^30.0.2',
-  babelJestVersion:  '^30.0.2',
-  jestTypesVersion:  '^30.0.0',
-  tsJestVersion:     '^29.4.0',
-  tslibVersion:      '^2.3.0',
-  swcJestVersion:    '~0.2.38',
-  typesNodeVersion:  '20.19.9',
-  tsNodeVersion:     '10.9.1',
+  jestVersion: '^30.0.2',
+  babelJestVersion: '^30.0.2',
+  jestTypesVersion: '^30.0.0',
+  tsJestVersion: '^29.4.0',
+  tslibVersion: '^2.3.0',
+  swcJestVersion: '~0.2.38',
+  typesNodeVersion: '20.19.9',
+  tsNodeVersion: '10.9.1',
 };
 
 // TODO(v23): Remove Jest 29 support
