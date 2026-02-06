@@ -5,11 +5,12 @@ import type { NxPlugin } from './public-api';
 export async function loadResolvedNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   pluginPath: string,
-  name: string
+  name: string,
+  index?: number
 ) {
   const plugin = await importPluginModule(pluginPath);
   plugin.name ??= name;
-  return new LoadedNxPlugin(plugin, pluginConfiguration);
+  return new LoadedNxPlugin(plugin, pluginConfiguration, index);
 }
 
 async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
