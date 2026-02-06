@@ -1,6 +1,5 @@
 package dev.nx.gradle
 
-import com.google.gson.Gson
 import dev.nx.gradle.cli.parseArgs
 import dev.nx.gradle.runner.runTasksInParallel
 import dev.nx.gradle.util.configureSingleLineLogger
@@ -33,6 +32,8 @@ fun main(args: Array<String>) {
     buildConnection = connector.connect()
     logger.info("🏁 Gradle connection open.")
 
+    // Results are now streamed via stderr as tasks complete (NX_RESULT:{json})
+    // No need to collect and print at the end
     val results =
         runTasksInParallel(
             buildConnection,
@@ -41,12 +42,10 @@ fun main(args: Array<String>) {
             options.excludeTasks,
             options.excludeTestTasks)
 
-    val reportJson = Gson().toJson(results)
-    println(reportJson)
-
     val summary = results.values.groupBy { it.success }
     logger.info(
         "📊 Summary: ✅ ${summary[true]?.size ?: 0} succeeded, ❌ ${summary[false]?.size ?: 0} failed")
+    logger.info("✅ Batch execution complete")
   } catch (e: Exception) {
     logger.severe("💥 Failed to run tasks: ${e.message}")
     exitProcess(1)

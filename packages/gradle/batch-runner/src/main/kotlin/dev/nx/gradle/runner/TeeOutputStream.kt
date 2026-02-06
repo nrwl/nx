@@ -1,39 +1,59 @@
 package dev.nx.gradle.runner
 
 import java.io.OutputStream
+import java.io.PrintStream
 
 /**
- * An OutputStream that writes to two destinations simultaneously. Used to capture Gradle output for
- * JSON results while also forwarding it to stderr for real-time terminal display.
+ * Output stream that:
+ * 1. Forwards all output to a delegate stream (for real-time terminal display)
+ * 2. Calls a line callback for each complete line (for per-task buffering)
+ *
+ * This enables streaming Gradle output to the terminal in real-time while also tracking output on a
+ * per-task basis for result attribution.
  */
-class TeeOutputStream(private val primary: OutputStream, private val secondary: OutputStream) :
+class TeeOutputStream(private val delegate: PrintStream, private val onLine: (String) -> Unit) :
     OutputStream() {
 
-  override fun write(b: Int) {
-    primary.write(b)
-    secondary.write(b)
-    secondary.flush()
-  }
+  private val lineBuffer = StringBuilder()
 
-  override fun write(b: ByteArray) {
-    primary.write(b)
-    secondary.write(b)
-    secondary.flush()
+  override fun write(b: Int) {
+    delegate.write(b)
+
+    val char = b.toChar()
+    if (char == '\n') {
+      onLine(lineBuffer.toString())
+      lineBuffer.clear()
+    } else if (char != '\r') {
+      // Skip carriage returns to normalize line endings
+      lineBuffer.append(char)
+    }
   }
 
   override fun write(b: ByteArray, off: Int, len: Int) {
-    primary.write(b, off, len)
-    secondary.write(b, off, len)
-    secondary.flush()
+    delegate.write(b, off, len)
+
+    val str = String(b, off, len, Charsets.UTF_8)
+    for (char in str) {
+      if (char == '\n') {
+        onLine(lineBuffer.toString())
+        lineBuffer.clear()
+      } else if (char != '\r') {
+        lineBuffer.append(char)
+      }
+    }
   }
 
   override fun flush() {
-    primary.flush()
-    secondary.flush()
+    delegate.flush()
   }
 
   override fun close() {
-    primary.close()
-    // Don't close secondary (e.g. System.err) — we don't own it
+    // Flush any remaining content in the buffer
+    if (lineBuffer.isNotEmpty()) {
+      onLine(lineBuffer.toString())
+      lineBuffer.clear()
+    }
+    delegate.flush()
+    // Note: We don't close the delegate (System.out) as it's shared
   }
 }
