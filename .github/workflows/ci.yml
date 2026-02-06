@@ -18,6 +18,7 @@ jobs:
   main-linux:
     runs-on: ubuntu-latest
     env:
+      NX_BATCH_MODE: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
@@ -47,7 +48,7 @@ jobs:
           main-branch-name: 'master'
 
       - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --auto-apply-fixes="*format:check*,*sync:check*,*conformance:check*,*format-native*,*lint-native*,*lint*,*astro-docs:validate-links*" --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
       - name: Install dependencies
         run: |

@@ -16,7 +16,7 @@ export function DocumentList({
   documents: DocumentMetadata[];
 }): JSX.Element {
   return (
-    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+    <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
       {!!documents.length ? (
         documents.map((guide) => (
           <DocumentListItem key={guide.id} document={guide} />
@@ -36,9 +36,9 @@ function DocumentListItem({
   return (
     <li
       key={document.name}
-      className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60"
+      className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-50 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800/60"
     >
-      <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
+      <div className="flex-shrink-0 self-start rounded-lg border-zinc-200 bg-zinc-100 p-2 dark:border-zinc-600 dark:bg-zinc-700">
         <DocumentIcon className="h-5 w-5" role="img" />
       </div>
       <div className="ml-3 py-2">
@@ -61,7 +61,7 @@ export function SchemaList({
   type: 'executor' | 'generator';
 }): JSX.Element {
   return (
-    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+    <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
       {!!files.length ? (
         files.map((schema) => (
           <SchemaListItem key={schema.name} file={schema} />
@@ -77,9 +77,9 @@ function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
   return (
     <li
       key={file.name}
-      className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60"
+      className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-50 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800/60"
     >
-      <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
+      <div className="flex-shrink-0 self-start rounded-lg border-zinc-200 bg-zinc-100 p-2 dark:border-zinc-600 dark:bg-zinc-700">
         {file.type === 'executor' ? (
           <CpuChipIcon className="h-5 w-5" role="img" />
         ) : (
@@ -99,7 +99,7 @@ function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
             </span>
           )}
         </p>
-        <div className="prose prose-slate dark:prose-invert prose-sm">
+        <div className="prose prose-zinc dark:prose-invert prose-sm">
           {
             renderMarkdown(file.description, {
               filePath: '',
@@ -117,10 +117,10 @@ function EmptyList({
   type: 'executor' | 'generator' | 'document';
 }): JSX.Element {
   return (
-    <li className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">
-      <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
+    <li className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-50 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800/60">
+      <div className="flex-shrink-0 self-start rounded-lg border-zinc-200 bg-zinc-100 p-2 dark:border-zinc-600 dark:bg-zinc-700">
         <InformationCircleIcon
-          className="h-5 w-5 flex-shrink-0 rounded-md border-slate-200 bg-slate-50 dark:bg-slate-700 dark:bg-slate-800"
+          className="h-5 w-5 flex-shrink-0 rounded-md border-zinc-200 bg-zinc-50 dark:bg-zinc-700 dark:bg-zinc-800"
           role="img"
         />
       </div>
@@ -136,7 +136,7 @@ function EmptyList({
             {type} available for this package yet!
           </Link>
         </p>
-        <div className="prose prose-slate dark:prose-invert prose-sm">
+        <div className="prose prose-zinc dark:prose-invert prose-sm">
           <a
             href="https://github.com/nrwl/nx/discussions"
             target="_blank"

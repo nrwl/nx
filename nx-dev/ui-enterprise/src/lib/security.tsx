@@ -32,7 +32,7 @@ export function Security(): ReactElement {
             </p>
 
             <div className="mt-16 flex flex-wrap items-center gap-4">
-              <div className="flex w-52 shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-xs text-slate-950 ring-1 ring-slate-200 dark:text-slate-50 dark:ring-slate-700">
+              <div className="flex w-52 shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-xs text-zinc-950 ring-1 ring-zinc-200 dark:text-zinc-50 dark:ring-zinc-700">
                 <svg
                   role="img"
                   xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +60,7 @@ export function Security(): ReactElement {
             <div className="mt-8 flex gap-4">
               <ServerStackIcon aria-hidden="true" className="size-6 shrink-0" />
               <div>
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   Dedicated infrastructure
                 </h4>
                 <p className="mt-2">
@@ -74,7 +74,7 @@ export function Security(): ReactElement {
             <div className="mt-8 flex gap-4">
               <ShieldCheckIcon aria-hidden="true" className="size-6 shrink-0" />
               <div>
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   Application security
                 </h4>
                 <p className="mt-2">
@@ -91,7 +91,7 @@ export function Security(): ReactElement {
                 className="size-6 shrink-0"
               />
               <div>
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   US & EU instances available
                 </h4>
                 <p className="mt-2">
@@ -108,7 +108,7 @@ export function Security(): ReactElement {
                 className="size-6 shrink-0"
               />
               <div>
-                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                <h4 className="relative text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
                   Enterprise-grade CI security
                 </h4>
                 <p className="mt-2">

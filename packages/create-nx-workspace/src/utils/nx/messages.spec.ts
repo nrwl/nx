@@ -39,12 +39,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         'https://nx.app/setup/123',
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -55,12 +56,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         'https://nx.app/setup/123',
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -71,12 +73,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         null,
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -87,12 +90,29 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         null,
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
+          ],
+          "title": "Your CI setup is almost complete.",
+        }
+      `);
+    });
+
+    it('should use generic GitHub URL when workspaceName is not provided', () => {
+      const message = getCompletionMessage(
+        'ci-setup',
+        'https://nx.app/setup/123',
+        VcsPushStatus.FailedToPushToVcs
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Push your repo (https://github.com/new), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -137,12 +157,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         'https://nx.app/setup/456',
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -153,12 +174,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         'https://nx.app/setup/456',
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -169,12 +191,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         null,
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -185,12 +208,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         null,
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -211,12 +235,14 @@ describe('Nx Cloud Messages', () => {
       const messageNotPushedWithUrl = getCompletionMessage(
         'cache-setup',
         'https://nx.app/setup/456',
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       const messageNotPushedWithoutUrl = getCompletionMessage(
         'cache-setup',
         null,
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
 
       expect(messageWithUrl.bodyLines).toHaveLength(1);
@@ -242,7 +268,12 @@ describe('Nx Cloud Messages', () => {
       ];
 
       scenarios.forEach(({ url, pushed }) => {
-        const message = getCompletionMessage('cache-setup', url, pushed);
+        const message = getCompletionMessage(
+          'cache-setup',
+          url,
+          pushed,
+          'myworkspace'
+        );
         expect(message.title).toBe(
           'Your remote cache setup is almost complete.'
         );
@@ -258,6 +289,112 @@ describe('Nx Cloud Messages', () => {
         VcsPushStatus.PushedToVcs
       );
       expect(message.title).toBe('Your platform setup is almost complete.');
+    });
+  });
+
+  describe('Banner Variant Messages (CLOUD-4147)', () => {
+    it('variant 0 should show plain link message', () => {
+      const message = getCompletionMessage(
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '0'
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Go to Nx Cloud and finish the setup: https://cloud.nx.app/connect/abc123",
+          ],
+          "title": "Your platform setup is almost complete.",
+        }
+      `);
+    });
+
+    it('variant 1 should show "Try the full Nx platform" banner', () => {
+      const message = getCompletionMessage(
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '1'
+      );
+      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.bodyLines.length).toBeGreaterThan(1);
+      expect(message.bodyLines.join('\n')).toContain(
+        'Try the full Nx platform'
+      );
+      expect(message.bodyLines.join('\n')).toContain(
+        'https://cloud.nx.app/connect/abc123'
+      );
+      expect(message.bodyLines.join('\n')).toContain('Remote caching');
+    });
+
+    it('variant 2 should show "Unlock 70% faster CI" banner', () => {
+      const message = getCompletionMessage(
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '2'
+      );
+      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.bodyLines.length).toBeGreaterThan(1);
+      expect(message.bodyLines.join('\n')).toContain('Unlock 70% faster CI');
+      expect(message.bodyLines.join('\n')).toContain(
+        'https://cloud.nx.app/connect/abc123'
+      );
+    });
+
+    it('variant 3 should show "Reclaim your team\'s focus" banner', () => {
+      const message = getCompletionMessage(
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace',
+        '3'
+      );
+      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.bodyLines.length).toBeGreaterThan(1);
+      expect(message.bodyLines.join('\n')).toContain(
+        "Reclaim your team's focus"
+      );
+      expect(message.bodyLines.join('\n')).toContain(
+        'https://cloud.nx.app/connect/abc123'
+      );
+      expect(message.bodyLines.join('\n')).toContain('Self-healing CI');
+    });
+
+    it('should fall back to plain link when URL is null (all variants)', () => {
+      const variants = ['0', '1', '2', '3'] as const;
+      variants.forEach((variant) => {
+        const message = getCompletionMessage(
+          'platform-setup',
+          null,
+          VcsPushStatus.PushedToVcs,
+          'myworkspace',
+          variant
+        );
+        // All variants fall back to plain message when URL is null
+        expect(message.bodyLines).toHaveLength(1);
+        expect(message.bodyLines[0]).toBe(
+          'Return to Nx Cloud and finish the setup.'
+        );
+      });
+    });
+
+    it('should default to variant 0 when bannerVariant is not provided', () => {
+      const message = getCompletionMessage(
+        'platform-setup',
+        'https://cloud.nx.app/connect/abc123',
+        VcsPushStatus.PushedToVcs,
+        'myworkspace'
+        // no bannerVariant - defaults to '0'
+      );
+      expect(message.bodyLines).toHaveLength(1);
+      expect(message.bodyLines[0]).toContain(
+        'Go to Nx Cloud and finish the setup:'
+      );
     });
   });
 

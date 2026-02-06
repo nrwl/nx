@@ -34,7 +34,7 @@ export function ConnectWithUs(): JSX.Element {
       <div className="relative flex-none lg:w-7/12 xl:w-7/12">
         <div className="relative flex flex-col space-y-6 md:flex-row md:space-x-6 md:space-y-0">
           <div className="space-y-6 md:mt-24 md:w-1/2">
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-indigo-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-indigo-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-zinc-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-indigo-300 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:border-indigo-900 dark:hover:bg-zinc-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-indigo-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-indigo-900" />
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#5865F2] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
@@ -59,7 +59,7 @@ export function ConnectWithUs(): JSX.Element {
                 </p>
               </a>
             </div>
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-red-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-red-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-zinc-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-red-300 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:border-red-900 dark:hover:bg-zinc-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-red-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-red-900" />
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#FF0000] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
@@ -90,7 +90,7 @@ export function ConnectWithUs(): JSX.Element {
                 </p>
               </a>
             </div>
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-green-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-green-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-zinc-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-green-300 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:border-green-900 dark:hover:bg-zinc-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-green-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-green-800" />
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-green-500 bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
@@ -114,9 +114,9 @@ export function ConnectWithUs(): JSX.Element {
             </div>
           </div>
           <div className="space-y-6 md:w-1/2">
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-slate-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-slate-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-zinc-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-zinc-300 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:border-zinc-900 dark:hover:bg-zinc-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-slate-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-slate-800" />
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-zinc-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-zinc-800" />
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#000000] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
                 <svg
                   fill="currentColor"
@@ -145,7 +145,7 @@ export function ConnectWithUs(): JSX.Element {
               </a>
             </div>
 
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-blue-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-blue-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-zinc-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-blue-300 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:border-blue-900 dark:hover:bg-zinc-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-blue-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-blue-800" />
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#0285FF] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
@@ -176,7 +176,7 @@ export function ConnectWithUs(): JSX.Element {
               </a>
             </div>
 
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-blue-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-blue-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-zinc-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-blue-300 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:border-blue-900 dark:hover:bg-zinc-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-blue-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-blue-900" />
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#0077B5] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />

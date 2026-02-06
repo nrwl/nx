@@ -23,6 +23,7 @@ export interface GenerateFilesOptions {
   overwriteStrategy?: OverwriteStrategy;
 }
 
+// TODO(v24): use the version from nx/src/generators/utils
 /**
  * Generates a folder of files based on provided templates.
  *

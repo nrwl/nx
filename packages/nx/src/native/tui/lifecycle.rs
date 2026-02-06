@@ -3,7 +3,7 @@ use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::io::Write;
 use std::sync::Arc;
-use tracing::debug;
+use tracing::{debug, trace};
 
 #[cfg(not(test))]
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -22,7 +22,7 @@ use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
 #[cfg(not(test))]
-use super::tui::Tui;
+use super::tui::{Event, Tui};
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
 
@@ -75,6 +75,21 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
 pub enum RunMode {
     RunOne,
     RunMany,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchInfo {
+    pub executor_name: String,
+    pub task_ids: Vec<String>,
+}
+
+#[napi(string_enum)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum BatchStatus {
+    Running,
+    Success,
+    Failure,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -198,17 +213,17 @@ fn switch_mode(
     }
 
     // Save UI state before switching (for full-screen mode persistence)
-    // and get the task to display in inline mode
-    let (shared_state, focused_task) = {
+    // and get the item to display in inline mode
+    let (shared_state, focused_item) = {
         let app_instance = shared_app.lock();
         let guard = app_instance.lock();
         // Save the current UI state so it can be restored later
         guard.save_ui_state_for_mode_switch();
-        // For inline mode, prefer the focused pane task over just the selected task
-        let task = guard
-            .get_focused_pane_task()
-            .or_else(|| guard.get_selected_task_name());
-        (guard.get_shared_state(), task)
+        // For inline mode, prefer the focused pane item over just the selected item
+        let item = guard
+            .get_focused_pane_item()
+            .or_else(|| guard.get_selected_item());
+        (guard.get_shared_state(), item)
     };
 
     // Switch terminal viewport
@@ -226,8 +241,8 @@ fn switch_mode(
             TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
         }
         TuiMode::Inline => {
-            debug!("Creating inline app with focused task: {:?}", focused_task);
-            let app_instance = InlineApp::with_state(shared_state, focused_task)
+            debug!("Creating inline app with focused item: {:?}", focused_item);
+            let app_instance = InlineApp::with_state(shared_state, focused_item)
                 .expect("Failed to create inline app");
             TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
         }
@@ -321,6 +336,7 @@ impl AppLifeCycle {
             title_text,
             task_graph,
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
+            None,
         )));
 
         // Default to FullScreen mode for the constructor
@@ -418,8 +434,10 @@ impl AppLifeCycle {
         // Set panic hook (identical for both modes)
         std::panic::set_hook(Box::new(move |panic_info| {
             // Only try to restore terminal if it's still in raw mode
+            // NOTE: We use exit_sync() here because panic handlers are sync context.
+            // The 100ms delay is acceptable during a panic - we just need to restore the terminal.
             if let Ok(mut t) = Tui::new() {
-                if let Err(r) = t.exit() {
+                if let Err(r) = t.exit_sync() {
                     debug!("Unable to exit Terminal: {:?}", r);
                 }
             }
@@ -463,18 +481,116 @@ impl AppLifeCycle {
                 with_shared_app(&app, |a| a.set_console_messenger(connection));
             }
 
+            // Debounce state for resize events - tracks when the last resize occurred.
+            // We wait for RESIZE_DEBOUNCE_MS after the last resize before reinitializing
+            // to avoid rapid reinitialization during window drag operations.
+            // NOTE: Only used for inline mode - fullscreen handles resize automatically.
+            const RESIZE_DEBOUNCE_MS: u64 = 10;
+            // Cooldown period after a resize completes - during this window, we track
+            // resize events but don't start a new debounce cycle. If a resize happens
+            // during cooldown, we'll start a new cycle after cooldown ends.
+            const RESIZE_COOLDOWN_MS: u64 = 100;
+            let mut pending_resize: Option<std::time::Instant> = None;
+            let mut last_resize_completed: Option<std::time::Instant> = None;
+            // Track if a resize occurred during cooldown - we'll need to handle it after
+            let mut resize_during_cooldown = false;
+
             // UNIFIED EVENT LOOP - works for both modes!
             loop {
                 // Handle events through TuiApp trait
+                trace!("Waiting for next event...");
                 if let Some(event) = tui.next().await {
+                    trace!("Received event: {:?}", event);
+                    // some events have global handling
+                    match event {
+                        Event::Resize(_w, _h) => {
+                            // Only need to reinitialize in inline mode.
+                            // Fullscreen mode uses alternate screen which handles resize automatically.
+                            // Inline viewport height is fixed at creation, so we need to recreate it.
+                            if tui_mode == TuiMode::Inline {
+                                // Check if we're in the cooldown period after a recent reinitialize.
+                                let in_cooldown = last_resize_completed
+                                    .map(|t| {
+                                        t.elapsed()
+                                            < std::time::Duration::from_millis(RESIZE_COOLDOWN_MS)
+                                    })
+                                    .unwrap_or(false);
+
+                                if !in_cooldown {
+                                    pending_resize = Some(std::time::Instant::now());
+                                    debug!("Resize event received in inline mode, debouncing");
+                                } else {
+                                    // Remember that a resize happened during cooldown.
+                                    // We'll start a new debounce cycle after cooldown ends.
+                                    resize_during_cooldown = true;
+                                    debug!("Resize event during cooldown - will process after");
+                                }
+                            }
+                        }
+                        _ => {
+                            // no global handler
+                        }
+                    }
                     // Pass event to app - mode switching is handled via Action::SwitchMode
                     // which is dispatched by the apps and processed in the action loop below
-                    let _ = with_shared_app(&app, |a| a.handle_event(event, &action_tx));
+                    let should_pass_event = match (&event, tui_mode) {
+                        (Event::Resize(_, _), TuiMode::Inline) => false,
+                        _ => true,
+                    };
+                    if should_pass_event {
+                        let _ = with_shared_app(&app, |a| a.handle_event(event, &action_tx));
+                    }
 
                     // Check if we should quit (time-based, like master branch)
                     if with_shared_app(&app, |a| a.should_quit()) {
                         debug!("should_quit() returned true - breaking event loop");
                         break;
+                    }
+                }
+
+                // Check if cooldown has ended and we had a resize during it
+                if resize_during_cooldown {
+                    let cooldown_ended = last_resize_completed
+                        .map(|t| {
+                            t.elapsed() >= std::time::Duration::from_millis(RESIZE_COOLDOWN_MS)
+                        })
+                        .unwrap_or(true);
+
+                    if cooldown_ended {
+                        // Cooldown is over, start a new debounce cycle for the resize
+                        // that happened during cooldown
+                        resize_during_cooldown = false;
+                        pending_resize = Some(std::time::Instant::now());
+                        debug!("Cooldown ended, starting debounce for deferred resize");
+                    }
+                }
+
+                // Check if we should process a debounced resize (inline mode only)
+                // This runs after event processing so we check on every loop iteration
+                if let Some(resize_time) = pending_resize {
+                    if resize_time.elapsed() >= std::time::Duration::from_millis(RESIZE_DEBOUNCE_MS)
+                    {
+                        debug!("Debounce period elapsed, reinitializing inline terminal");
+                        pending_resize = None;
+                        resize_during_cooldown = false; // Clear in case it was set
+                        match tui.reinitialize_inline_terminal().await {
+                            Ok(()) => {
+                                debug!("Reinitialize complete, sending resize event to app");
+                                // Get new terminal dimensions and pass resize event to app.
+                                // The app's handle_action will call resize_selected_pty().
+                                let size = tui.size().unwrap_or(ratatui::layout::Size::new(80, 24));
+                                let resize_event = Event::Resize(size.width, size.height);
+                                let _ = with_shared_app(&app, |a| {
+                                    a.handle_event(resize_event, &action_tx)
+                                });
+                            }
+                            Err(e) => {
+                                debug!("Failed to reinitialize inline terminal: {:?}", e);
+                            }
+                        }
+                        // Set a cooldown to track resize events that arrive immediately after.
+                        last_resize_completed = Some(std::time::Instant::now());
+                        debug!("Cooldown set, about to continue loop");
                     }
                 }
 
@@ -504,9 +620,7 @@ impl AppLifeCycle {
 
             // Cleanup and exit
             debug!("Event loop exited - cleaning up");
-            // Exit the TUI before calling done callback (like master branch does)
-            // The idempotent check in exit() will prevent double-exit when Drop runs
-            tui.exit().ok();
+            tui.exit().await.ok();
             debug!("TUI exited, calling done callback");
             with_shared_app(&app, |a| a.call_done_callback());
             debug!("Done callback called");
@@ -567,6 +681,29 @@ impl AppLifeCycle {
         timings: std::collections::HashMap<String, i64>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_estimated_task_timings(timings));
+        Ok(())
+    }
+
+    // Batch lifecycle methods
+    #[napi]
+    pub fn register_running_batch(
+        &self,
+        batch_id: String,
+        batch_info: BatchInfo,
+    ) -> napi::Result<()> {
+        self.with_app(|app| app.register_running_batch(batch_id, batch_info));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn append_batch_output(&self, batch_id: String, output: String) -> napi::Result<()> {
+        self.with_app(|app| app.append_batch_output(batch_id, output));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn set_batch_status(&self, batch_id: String, status: BatchStatus) -> napi::Result<()> {
+        self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }
 }

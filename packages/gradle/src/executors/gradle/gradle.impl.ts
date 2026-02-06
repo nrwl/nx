@@ -24,6 +24,12 @@ export default async function gradleExecutor(
   ); // find gradlew near project root
   gradlewPath = join(context.root, gradlewPath);
 
+  if (options.taskName && options.taskName?.includes(' ')) {
+    throw new Error(
+      `Task "${options.taskName}" contains spaces. Only a single Gradle task is allowed per executor invocation.`
+    );
+  }
+
   let args =
     typeof options.args === 'string'
       ? options.args.trim().split(' ')

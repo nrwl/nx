@@ -9,6 +9,14 @@ packages:
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
+overrides:
+  minimist: '^1.2.6'
+  underscore: '^1.12.1'
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - 'nx'
+patchedDependencies:
+  '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
   '@zkochan/js-yaml': '0.0.7'
   chalk: '^4.1.0'
@@ -61,7 +69,7 @@ catalogs:
   jest:
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'
-    '@jest/types': '^30.0.1'
+    '@jest/types': '30.0.1'
     '@types/jest': '30.0.0'
     babel-jest: '^30.0.2'
     identity-obj-proxy: '3.0.0'
@@ -93,3 +101,8 @@ catalogs:
     tsconfig-paths: '^4.1.2'
     tslib: '^2.3.0'
     typescript: '~5.9.2'
+  swc:
+    '@swc/core': '1.15.8'
+    '@swc/helpers': '0.5.18'
+    '@swc/cli': '0.7.10'
+    '@swc-node/register': '1.11.1'

@@ -7,6 +7,9 @@ export const yargsRecordCommand: CommandModule = {
     'Records a command execution for distributed task execution. This command is an alias for [`nx-cloud record`](/ci/reference/nx-cloud-cli#npx-nxcloud-record).',
   builder: (yargs) =>
     withVerbose(yargs)
+      .parserConfiguration({
+        'populate--': true,
+      })
       .help(false)
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),

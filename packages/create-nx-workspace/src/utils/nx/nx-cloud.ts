@@ -5,7 +5,7 @@ import {
   getSkippedCloudMessage,
   CompletionMessageKey,
 } from './messages';
-import { getFlowVariant, messages } from './ab-testing';
+import { getBannerVariant, getFlowVariant } from './ab-testing';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -74,7 +74,7 @@ export function readNxCloudToken(directory: string) {
 
 export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
-  token: string,
+  token: string | undefined,
   directory: string,
   useGitHub?: boolean
 ): Promise<string> {
@@ -95,7 +95,7 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  const meta = messages.codeOfSelectedPromptMessage('setupNxCloudV2');
+  const meta = `variant-${getFlowVariant()}`;
 
   return createNxCloudOnboardingURL(
     source,
@@ -111,13 +111,19 @@ export async function createNxCloudOnboardingUrl(
 export async function getNxCloudInfo(
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  completionMessageKey?: CompletionMessageKey
+  completionMessageKey?: CompletionMessageKey,
+  workspaceName?: string
 ) {
   const out = new CLIOutput(false);
+  // Get the banner variant based on the cloud URL
+  // Enterprise URLs automatically get variant 0 (plain link)
+  const bannerVariant = getBannerVariant(connectCloudUrl);
   const message = getCompletionMessage(
     completionMessageKey,
     connectCloudUrl,
-    pushedToVcs
+    pushedToVcs,
+    workspaceName,
+    bannerVariant
   );
   out.success(message);
   return out.getOutput();

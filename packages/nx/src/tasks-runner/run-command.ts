@@ -248,6 +248,7 @@ async function getTerminalOutputLifeCycle(
             const trimmedChunk = chunk.toString().trim();
             if (trimmedChunk.length) {
               // Remove ANSI escape codes, the TUI will control the formatting
+              // NOTE: this shows any message from the Nx Cloud client, including errors
               appLifeCycle?.__setCloudMessage(
                 stripVTControlCharacters(trimmedChunk)
               );
@@ -295,6 +296,7 @@ async function getTerminalOutputLifeCycle(
         // Print the intercepted Nx Cloud logs
         for (const log of interceptedNxCloudLogs) {
           const logString = log.toString().trimStart();
+
           process.stdout.write(logString);
           if (logString) {
             process.stdout.write('\n');
@@ -306,13 +308,6 @@ async function getTerminalOutputLifeCycle(
         appLifeCycle.__init(() => {
           resolve();
         });
-      }).finally(() => {
-        restoreTerminal();
-        // Revert the patched methods
-        process.stdout.write = originalStdoutWrite;
-        process.stderr.write = originalStderrWrite;
-        console.log = originalConsoleLog;
-        console.error = originalConsoleError;
       });
     }
 
@@ -325,7 +320,7 @@ async function getTerminalOutputLifeCycle(
         console.error = originalConsoleError;
         restoreTerminal();
       },
-      printSummary,
+      printSummary: () => printSummary(),
       renderIsDone,
     };
   }
@@ -517,6 +512,7 @@ export async function runCommandForTasks(
     extraTargetDependencies,
     extraOptions
   );
+
   const tasks = Object.values(taskGraph.tasks);
 
   const initiatingTasks = tasks.filter(
@@ -550,7 +546,7 @@ export async function runCommandForTasks(
       initiatingTasks,
     });
 
-    await renderIsDone;
+    await renderIsDone.finally(() => restoreTerminal?.());
 
     if (printSummary) {
       printSummary();
@@ -563,9 +559,7 @@ export async function runCommandForTasks(
       completed: didCommandComplete(tasks, taskGraph, taskResults),
     };
   } catch (e) {
-    if (restoreTerminal) {
-      restoreTerminal();
-    }
+    restoreTerminal?.();
     throw e;
   }
 }
@@ -918,6 +912,9 @@ export function setEnvVarsBasedOnArgs(
   if (nxArgs.outputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
+  }
+  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+    process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';

@@ -6,22 +6,53 @@ use tracing::{trace, trace_span};
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
 
-pub fn hash_project_files(
+/// Result of hashing project files, including the matched file paths
+pub struct ProjectFilesHashResult {
+    pub hash: String,
+    pub files: Vec<String>,
+}
+
+/// Expands project file set patterns by replacing `{projectRoot}` with the actual project root.
+/// For root projects (project_root == "."), strips `{projectRoot}/` instead.
+pub fn globs_from_project_globs(project_root: &str, file_sets: &[String]) -> Vec<String> {
+    file_sets
+        .iter()
+        .map(|f| {
+            if project_root == "." {
+                f.replace("{projectRoot}/", "")
+            } else {
+                f.replace("{projectRoot}", project_root)
+            }
+        })
+        .collect()
+}
+
+/// Hashes project files and returns both the hash and the list of matched file paths.
+/// This allows callers to reuse the file list without re-globbing.
+pub fn hash_project_files_with_inputs(
     project_name: &str,
     project_root: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
-) -> Result<String> {
+) -> Result<ProjectFilesHashResult> {
     let _span = trace_span!("hash_project_files", project_name).entered();
     let collected_files =
         collect_project_files(project_name, project_root, file_sets, project_file_map)?;
     trace!("collected_files: {:?}", collected_files.len());
+
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    let mut files = Vec::with_capacity(collected_files.len());
+
     for file in collected_files {
         hasher.update(file.hash.as_bytes());
         hasher.update(file.file.as_bytes());
+        files.push(file.file.clone());
     }
-    Ok(hasher.digest().to_string())
+
+    Ok(ProjectFilesHashResult {
+        hash: hasher.digest().to_string(),
+        files,
+    })
 }
 
 /// base function that should be testable (to make sure that we're getting the proper files back)
@@ -31,16 +62,7 @@ pub fn collect_project_files<'a>(
     file_sets: &[String],
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
-    let globs = file_sets
-        .iter()
-        .map(|f| {
-            if project_root == "." {
-                f.replace("{projectRoot}/", "")
-            } else {
-                f.replace("{projectRoot}", project_root)
-            }
-        })
-        .collect::<Vec<_>>();
+    let globs = globs_from_project_globs(project_root, file_sets);
     let now = std::time::Instant::now();
     let glob_set = build_glob_set(&globs)?;
     trace!("build_glob_set for {:?}", now.elapsed());
@@ -156,9 +178,10 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result =
+            hash_project_files_with_inputs(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
-            hash_result,
+            result.hash,
             hash(
                 &[
                     file_data1.hash.as_bytes(),
@@ -206,9 +229,10 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result =
+            hash_project_files_with_inputs(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
-            hash_result,
+            result.hash,
             hash(
                 &[
                     file_data1.hash.as_bytes(),

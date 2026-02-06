@@ -2,7 +2,7 @@
   "name": "create-nx-workspace",
   "version": "0.0.1",
   "private": false,
-  "description": "Smart Repos · Fast Builds",
+  "description": "Smart Monorepos · Fast Builds",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

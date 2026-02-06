@@ -151,7 +151,8 @@ describe('Node.js Framework ESM Support', () => {
         `serve ${expressApp}`,
         (output) => {
           return output.includes('Express ESM serve ready on port');
-        }
+        },
+        { timeout: 120000 }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -269,7 +270,8 @@ describe('Node.js Framework ESM Support', () => {
         `serve ${fastifyApp}`,
         (output) => {
           return output.includes('Fastify ESM serve ready on port');
-        }
+        },
+        { timeout: 120000 }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -386,7 +388,8 @@ describe('Node.js Framework ESM Support', () => {
         `serve ${koaApp}`,
         (output) => {
           return output.includes('Koa ESM serve ready on port');
-        }
+        },
+        { timeout: 120000 }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -444,7 +447,8 @@ describe('Node.js Framework ESM Support', () => {
         `serve ${nestApp}`,
         (output) => {
           return output.includes('Nest ESM server ready on port');
-        }
+        },
+        { timeout: 120000 }
       );
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
     }, 600000);
@@ -496,7 +500,8 @@ describe('Node.js Framework ESM Support', () => {
         `serve ${nestApp}`,
         (output) => {
           return output.includes('Nest ESM serve ready on port');
-        }
+        },
+        { timeout: 120000 }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');

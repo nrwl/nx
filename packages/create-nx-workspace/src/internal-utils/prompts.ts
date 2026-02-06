@@ -45,26 +45,25 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Show simplified prompt
-  const { message, choices, initial, footer, hint } =
-    messages.getPrompt('setupNxCloudV2');
-
+  // Locked to "full platform" messaging (CLOUD-4147)
+  // Flow variant only affects completion banners, not this prompt
   const promptConfig = {
     name: 'nxCloud',
-    message,
+    message: 'Try the full Nx platform?',
     type: 'autocomplete',
-    choices,
-    initial,
-  } as any; // types in enquirer are not up to date
-  if (footer) {
-    promptConfig.footer = () => footer;
-  }
-  if (hint) {
-    promptConfig.hint = () => hint;
-  }
+    choices: [
+      { value: 'yes', name: 'Yes' },
+      { value: 'skip', name: 'Skip' },
+    ],
+    initial: 0,
+    footer: () =>
+      chalk.dim(
+        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud'
+      ),
+  };
 
   const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
-    promptConfig,
+    promptConfig as any, // types in enquirer are not up to date
   ]);
   return result.nxCloud;
 }

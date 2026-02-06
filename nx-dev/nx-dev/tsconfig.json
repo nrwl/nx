@@ -43,9 +43,6 @@
       "path": "../ui-cloud"
     },
     {
-      "path": "../ui-ai-landing-page"
-    },
-    {
       "path": "../ui-blog"
     },
     {
@@ -80,9 +77,6 @@
     },
     {
       "path": "../ui-animations"
-    },
-    {
-      "path": "../ui-conference"
     },
     {
       "path": "../ui-enterprise"

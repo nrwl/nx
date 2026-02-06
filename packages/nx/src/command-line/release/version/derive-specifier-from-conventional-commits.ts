@@ -5,10 +5,11 @@ import type {
 import { NxReleaseConfig } from '../config/config';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getFirstGitCommit, getLatestGitTagForPattern } from '../utils/git';
+import { ReleaseGraph } from '../utils/release-graph';
 import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
+import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';
 import { ProjectLogger } from './project-logger';
 import { SemverBumpType } from './version-actions';
-import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';
 
 export async function deriveSpecifierFromConventionalCommits(
   nxReleaseConfig: NxReleaseConfig,
@@ -25,6 +26,7 @@ export async function deriveSpecifierFromConventionalCommits(
   latestMatchingGitTag:
     | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
     | undefined,
+  releaseGraph: ReleaseGraph,
   fallbackCurrentVersionResolver?: 'disk',
   preid?: string
 ): Promise<SemverBumpType> {
@@ -55,7 +57,8 @@ export async function deriveSpecifierFromConventionalCommits(
       previousVersionRef,
       projectGraph,
       affectedProjects,
-      nxReleaseConfig
+      nxReleaseConfig,
+      releaseGraph
     );
 
   const getHighestSemverChange = (

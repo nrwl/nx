@@ -52,12 +52,12 @@ export function Hero(): JSX.Element {
             return (
               <div key={statement.title}>
                 <dt>
-                  <statement.icon className="h-8 w-8 text-blue-500 dark:text-sky-500" />
-                  <p className="mt-4 text-lg font-semibold leading-8 tracking-tight text-slate-800 dark:text-slate-200">
+                  <statement.icon className="h-8 w-8 text-blue-500 dark:text-blue-500" />
+                  <p className="mt-4 text-lg font-semibold leading-8 tracking-tight text-zinc-800 dark:text-zinc-200">
                     {statement.title}
                   </p>
                 </dt>
-                <dd className="mt-4 text-slate-500 dark:text-slate-400">
+                <dd className="mt-4 text-zinc-500 dark:text-zinc-400">
                   <p className="leading 7 text-base">{statement.description}</p>
                 </dd>
               </div>

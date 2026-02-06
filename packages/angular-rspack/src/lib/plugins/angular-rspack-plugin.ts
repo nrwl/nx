@@ -282,7 +282,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       if (!currentEmitCompilation) return;
 
       const budgets = this.#_options.budgets;
-      const stats = statsValue.toJson();
       const isPlatformServer = Array.isArray(compiler.options.target)
         ? compiler.options.target.some(
             (target) => target === 'node' || target == 'async-node'
@@ -290,33 +289,51 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         : compiler.options.target === 'node' ||
           compiler.options.target === 'async-node';
 
-      if (budgets?.length && !isPlatformServer) {
-        const budgetFailures = [...checkBudgets(budgets, stats)];
-        for (const { severity, message } of budgetFailures) {
-          switch (severity) {
-            case ThresholdSeverity.Warning:
-              addWarning(currentEmitCompilation, {
-                message,
-                name: PLUGIN_NAME,
-                hideStack: true,
-              });
-              break;
-            case ThresholdSeverity.Error:
-              addError(currentEmitCompilation, {
-                message,
-                name: PLUGIN_NAME,
-                hideStack: true,
-              });
-              break;
-            default:
-              assertNever(severity);
-          }
+      // Early exit - skip expensive toJson() when budgets not needed
+      if (!budgets?.length || isPlatformServer) {
+        return;
+      }
+
+      // Only serialize what's needed for budget checking
+      const stats = statsValue.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
+      });
+
+      const budgetFailures = [...checkBudgets(budgets, stats)];
+      for (const { severity, message } of budgetFailures) {
+        switch (severity) {
+          case ThresholdSeverity.Warning:
+            addWarning(currentEmitCompilation, {
+              message,
+              name: PLUGIN_NAME,
+              hideStack: true,
+            });
+            break;
+          case ThresholdSeverity.Error:
+            addError(currentEmitCompilation, {
+              message,
+              name: PLUGIN_NAME,
+              hideStack: true,
+            });
+            break;
+          default:
+            assertNever(severity);
         }
       }
     });
 
     compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
-      rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
+      // Get stats options - merge defaults with user's config if provided
+      const configStats = compiler.options.stats;
+      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
+      const statsOptions =
+        typeof configStats === 'object' && configStats !== null
+          ? { ...defaultStatsOptions, ...configStats }
+          : defaultStatsOptions;
+
+      rspackStatsLogger(stats, statsOptions);
       if (stats.hasErrors()) {
         process.exit(1);
       }

@@ -419,35 +419,23 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
     type State = TerminalPaneState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        // Add bounds checking to prevent panic when terminal is too narrow
-        // Safety check: ensure area is at least 5x5 to render anything properly
-        if area.width < 5 || area.height < 5 {
-            // Just render a minimal indicator instead of a full pane
-            let safe_area = Rect {
-                x: area.x,
-                y: area.y,
-                width: area.width.min(buf.area().width.saturating_sub(area.x)),
-                height: area.height.min(buf.area().height.saturating_sub(area.y)),
-            };
-
-            if safe_area.width > 0 && safe_area.height > 0 {
-                // Only attempt to render if we have a valid area
-                let text = "...";
-                let paragraph = Paragraph::new(text)
-                    .style(Style::default().fg(THEME.secondary_fg))
-                    .alignment(Alignment::Center);
-                Widget::render(paragraph, safe_area, buf);
-            }
+        // Clamp to the buffer to avoid rendering outside bounds
+        let safe_area = area.intersection(*buf.area());
+        if safe_area.width == 0 || safe_area.height == 0 {
             return;
         }
 
-        // Ensure the area doesn't extend beyond buffer boundaries
-        let safe_area = Rect {
-            x: area.x,
-            y: area.y,
-            width: area.width.min(buf.area().width.saturating_sub(area.x)),
-            height: area.height.min(buf.area().height.saturating_sub(area.y)),
-        };
+        // Add bounds checking to prevent panic when terminal is too narrow
+        // Safety check: ensure area is at least 5x5 to render anything properly
+        if safe_area.width < 5 || safe_area.height < 5 {
+            // Just render a minimal indicator instead of a full pane
+            let text = "...";
+            let paragraph = Paragraph::new(text)
+                .style(Style::default().fg(THEME.secondary_fg))
+                .alignment(Alignment::Center);
+            Widget::render(paragraph, safe_area, buf);
+            return;
+        }
 
         let base_style = self.get_base_style(state.task_status);
         let border_style = if state.is_focused {
@@ -812,6 +800,40 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 .alignment(Alignment::Right)
                                 .style(border_style)
                                 .render(bottom_right_area, buf);
+                        }
+                    }
+
+                    // Show "enter to view full screen" help text in bottom left when focused
+                    if state.is_focused {
+                        let help_line = Line::from(vec![
+                            Span::styled("  <", Style::default().fg(THEME.secondary_fg)),
+                            Span::styled("enter", Style::default().fg(THEME.info)),
+                            Span::styled(
+                                "> full screen  ",
+                                Style::default().fg(THEME.secondary_fg),
+                            ),
+                        ]);
+
+                        let help_text_width: u16 = help_line
+                            .spans
+                            .iter()
+                            .map(|span| span.content.len())
+                            .sum::<usize>()
+                            as u16;
+
+                        // Ensure help text fits within the safe area
+                        if help_text_width + 2 < safe_area.width && safe_area.height > 1 {
+                            let bottom_left_area = Rect {
+                                x: safe_area.x + 1,
+                                y: safe_area.y + safe_area.height - 1,
+                                width: help_text_width,
+                                height: 1,
+                            };
+
+                            Paragraph::new(help_line)
+                                .alignment(Alignment::Left)
+                                .style(border_style)
+                                .render(bottom_left_area, buf);
                         }
                     }
 

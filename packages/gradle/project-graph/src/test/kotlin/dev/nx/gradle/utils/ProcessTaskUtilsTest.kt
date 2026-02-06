@@ -595,4 +595,84 @@ class ProcessTaskUtilsTest {
       assertTrue(result.any { it.contains("task3") }, "Found: $result")
     }
   }
+
+  @Nested
+  inner class SubprojectNamingTests {
+
+    @Test
+    fun `getNxProjectName returns correct name for root and subprojects`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val childDir = java.io.File(appDir, "child").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val childProject =
+            ProjectBuilder.builder()
+                .withParent(appProject)
+                .withProjectDir(childDir)
+                .withName("child")
+                .build()
+
+        assertEquals("root", getNxProjectName(rootProject))
+        assertEquals(":app", getNxProjectName(appProject))
+        assertEquals(":app:child", getNxProjectName(childProject))
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getDependsOnForTask uses buildTreePath for cross-subproject dependencies`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val libDir = java.io.File(rootDir, "lib").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val libProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(libDir)
+                .withName("lib")
+                .build()
+
+        java.io.File(appDir, "build.gradle").writeText("// app")
+        java.io.File(libDir, "build.gradle").writeText("// lib")
+
+        val libTask = libProject.tasks.register("compileJava").get()
+        val appTask = appProject.tasks.register("build").get().apply { dependsOn(libTask) }
+
+        val dependencies = mutableSetOf<Dependency>()
+        val dependsOn = getDependsOnForTask(null, appTask, dependencies)
+
+        assertNotNull(dependsOn)
+        assertTrue(
+            dependsOn!!.contains(":lib:compileJava"),
+            "Expected ':lib:compileJava' but got $dependsOn")
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
+  }
 }

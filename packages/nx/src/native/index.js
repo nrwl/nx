@@ -73,6 +73,10 @@ function statsOrNull(path) {
   }
 }
 
+function isNoExecError(e) {
+  return e.code === 'EACCES' || e.code === 'EPERM';
+}
+
 // We override the _load function so that when a native file is required,
 // we copy it to a cache directory and require it from there.
 // This prevents the file being loaded from node_modules and causing file locking issues.
@@ -105,7 +109,15 @@ Module._load = function (request, parent, isMain) {
 
     // If the file to be loaded already exists, just load it
     if (existingFileStats?.size === expectedFileSize) {
-      return originalLoad.apply(this, [tmpFile, parent, isMain]);
+      try {
+        return originalLoad.apply(this, [tmpFile, parent, isMain]);
+      } catch (e) {
+        // If loading from cache fails due to noexec, fall back to original location
+        if (isNoExecError(e)) {
+          return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+        }
+        throw e;
+      }
     }
     if (!existsSync(nativeFileCacheLocation)) {
       mkdirSync(nativeFileCacheLocation, { recursive: true });
@@ -121,7 +133,15 @@ Module._load = function (request, parent, isMain) {
       if (copiedFileStats?.size === expectedFileSize) {
         // Copy succeeded, rename to final location and load
         renameSync(tmpTmpFile, tmpFile);
-        return originalLoad.apply(this, [tmpFile, parent, isMain]);
+        try {
+          return originalLoad.apply(this, [tmpFile, parent, isMain]);
+        } catch (e) {
+          // If loading from cache fails due to noexec, fall back to original location
+          if (isNoExecError(e)) {
+            return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+          }
+          throw e;
+        }
       }
 
       // Copy failed validation, clean up the malformed file

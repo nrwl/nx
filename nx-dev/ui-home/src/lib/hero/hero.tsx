@@ -33,15 +33,19 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            <Strong>Get to green PRs in half the time.</Strong> Nx optimizes
-            your builds, scales your CI, and fixes failed PRs. Built for
-            developers and AI agents.
+            <Strong>
+              The Monorepo Platform that amplifies both developers and AI
+              agents.
+            </Strong>
+            <br />
+            Nx optimizes your builds, scales your CI, and fixes failed PRs
+            automatically. <br /> Ship in half the time.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
               title="Get started with Nx & Nx Cloud"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
                 sendCustomEvent('get-started-click', 'hero', 'homepage')
