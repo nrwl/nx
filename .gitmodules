@@ -1,3 +1,4 @@
 [submodule "nx-ai-agents-config"]
 	path = nx-ai-agents-config
 	url = https://github.com/nrwl/nx-ai-agents-config.git
+	branch = ct/monitor-ci-timeout-and-outputs
