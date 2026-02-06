@@ -4,7 +4,10 @@
   "projectType": "library",
   "targets": {
     "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:mvn-install"],
+      "dependsOn": [
+        "^nx-release-publish",
+        "nx-maven-plugin:mvn-install-with-retries"
+      ],
       "executor": "@nx/js:release-publish",
       "options": {
         "packageRoot": "packages/maven"
