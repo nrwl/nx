@@ -29,13 +29,10 @@ where
 {
     let base_dir: PathBuf = directory.as_ref().into();
 
-    let mut base_ignores: Vec<String> = vec![
-        "**/node_modules".into(),
-        "**/.git".into(),
-        "**/.nx/cache".into(),
-        "**/.nx/workspace-data".into(),
-        "**/.yarn/cache".into(),
-    ];
+    let mut base_ignores: Vec<String> = HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
 
     if let Some(additional_ignores) = ignores {
         base_ignores.extend(additional_ignores.iter().map(|s| format!("**/{}", s)));
@@ -158,20 +155,24 @@ where
     receiver_thread.join().unwrap()
 }
 
-fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
+/// Hardcoded ignore patterns used by both the walker and the watcher.
+/// These are directories that should never be walked or watched.
+pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
+    "**/node_modules",
+    "**/.git",
+    "**/.nx/cache",
+    "**/.nx/workspace-data",
+    "**/.yarn/cache",
+];
+
+pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
     P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
 
-    let ignore_glob_set = build_glob_set(&[
-        "**/node_modules",
-        "**/.git",
-        "**/.nx/cache",
-        "**/.nx/workspace-data",
-        "**/.yarn/cache",
-    ])
-    .expect("These static ignores always build");
+    let ignore_glob_set =
+        build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);
