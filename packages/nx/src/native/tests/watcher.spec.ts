@@ -187,10 +187,8 @@ describe('watcher', () => {
       });
 
       await wait();
-      // Create a new subdirectory using mkdirSync directly (no file)
-      const { mkdirSync } = require('fs');
-      const { join } = require('path');
-      mkdirSync(join(temp.tempDir, 'app1/newsubdir'), { recursive: true });
+      // Create a new subdirectory (no file)
+      temp.createDirSync('app1/newsubdir');
 
       // Wait for the watcher to register the new directory
       await wait(2000);
@@ -220,10 +218,8 @@ describe('watcher', () => {
       });
 
       await wait();
-      // Create a new subdirectory and file
-      const { mkdirSync, unlinkSync } = require('fs');
-      const { join } = require('path');
-      mkdirSync(join(temp.tempDir, 'app1/newsubdir2'), { recursive: true });
+      // Create a new subdirectory
+      temp.createDirSync('app1/newsubdir2');
 
       await wait(2000);
 
@@ -233,7 +229,7 @@ describe('watcher', () => {
       await wait(2000);
 
       // Delete the file
-      unlinkSync(join(temp.tempDir, 'app1/newsubdir2/todelete.ts'));
+      temp.removeFileSync('app1/newsubdir2/todelete.ts');
 
       await wait(2000);
 

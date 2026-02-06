@@ -102,7 +102,9 @@ impl Filterer for WatchFilterer {
                     file_type: Some(FileType::File) | None,
                 } if !path.display().to_string().ends_with('~') => continue,
 
-                #[cfg(target_os = "linux")]
+                // Allow directory events through on Linux and Windows so that the
+                // action handler can dynamically register watches for new directories.
+                #[cfg(any(target_os = "linux", windows))]
                 Tag::Path {
                     path: _,
                     file_type: Some(FileType::Dir),

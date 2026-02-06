@@ -50,23 +50,26 @@ fn register_new_directory_watches(
     let mut new_directories = Vec::new();
 
     for event in events.iter() {
-        let is_folder_create = event.tags.iter().any(|tag| {
+        // Only process create events (Folder on Linux, Any on Windows).
+        let is_create = event.tags.iter().any(|tag| {
             matches!(
                 tag,
                 Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
+                    | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
             )
         });
 
-        if is_folder_create {
-            for (path, file_type) in event.paths() {
-                if file_type.map_or(false, |ft| matches!(ft, FileType::Dir))
-                    && !is_ignored_path(path, ignore_globs)
-                {
-                    let mut path_set = watched_path_set.lock();
-                    if path_set.insert(path.to_path_buf()) {
-                        trace!(?path, "dynamically registering new directory watch");
-                        new_directories.push(path.to_path_buf());
-                    }
+        if !is_create {
+            continue;
+        }
+
+        for (path, file_type) in event.paths() {
+            let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
+            if is_dir && !is_ignored_path(path, ignore_globs) {
+                let mut path_set = watched_path_set.lock();
+                if path_set.insert(path.to_path_buf()) {
+                    trace!(?path, "dynamically registering new directory watch");
+                    new_directories.push(path.to_path_buf());
                 }
             }
         }

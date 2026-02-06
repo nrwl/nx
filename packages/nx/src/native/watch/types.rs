@@ -118,6 +118,10 @@ pub fn transform_event_to_watch_events(
 
         #[cfg(target_os = "windows")]
         {
+            // Skip directory events - they're handled by register_new_directory_watches
+            if path.1.map_or(false, |ft| matches!(ft, FileType::Dir)) {
+                return Ok(vec![]);
+            }
             Ok(create_watch_event_internal(origin, event_kind, path_ref))
         }
 
@@ -171,6 +175,8 @@ fn create_watch_event_internal(
 ) -> Vec<WatchEventInternal> {
     let event_kind = match event_kind {
         FileEventKind::Create(CreateKind::File) => EventType::create,
+        // Windows reports CreateKind::Any for file creation via ReadDirectoryChangesW
+        FileEventKind::Create(CreateKind::Any) => EventType::create,
         FileEventKind::Modify(Name(RenameMode::To)) => EventType::create,
         FileEventKind::Modify(Name(RenameMode::From)) => EventType::delete,
         FileEventKind::Modify(_) => EventType::update,
