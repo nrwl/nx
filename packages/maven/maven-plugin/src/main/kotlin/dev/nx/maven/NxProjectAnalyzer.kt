@@ -102,6 +102,20 @@ class NxProjectAnalyzer(
       }
     }
 
+    // Collect external dependencies (not in coordinatesMap)
+    val externalDependencies = project.dependencies
+      .filter { dependency ->
+        !coordinatesMap.containsKey("${dependency.groupId}:${dependency.artifactId}")
+      }
+      .map { dependency ->
+        ExternalMavenDependency(
+          groupId = dependency.groupId,
+          artifactId = dependency.artifactId,
+          version = dependency.version,
+          scope = dependency.scope
+        )
+      }
+
     val dependenciesJson = dependencies.map { nxDependency ->
       val dependency = JsonObject()
 
@@ -112,7 +126,7 @@ class NxProjectAnalyzer(
       dependency
     }
 
-    return ProjectAnalysis(project.file, root, nxProject, dependenciesJson)
+    return ProjectAnalysis(project.file, root, nxProject, dependenciesJson, externalDependencies)
   }
 
   private fun determineProjectType(packaging: String): String {
@@ -125,7 +139,20 @@ class NxProjectAnalyzer(
   }
 }
 
-data class ProjectAnalysis(val pomFile: File, val root: String, val project: JsonElement, val dependencies: List<JsonElement>)
+data class ProjectAnalysis(
+  val pomFile: File,
+  val root: String,
+  val project: JsonElement,
+  val dependencies: List<JsonElement>,
+  val externalDependencies: List<ExternalMavenDependency>
+)
+
+data class ExternalMavenDependency(
+  val groupId: String,
+  val artifactId: String,
+  val version: String?,
+  val scope: String?
+)
 
 data class NxDependency(val type: NxDependencyType, val source: String, val target: String, val sourceFile: File)
 
