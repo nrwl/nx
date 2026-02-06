@@ -11,7 +11,7 @@ import type { Mode } from 'node:fs';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
