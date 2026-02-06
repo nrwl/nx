@@ -221,8 +221,8 @@ catalogs:
       specifier: 1.11.1
       version: 1.11.1
     '@swc/cli':
-      specifier: 0.7.10
-      version: 0.7.10
+      specifier: 0.8.0
+      version: 0.8.0
     '@swc/core':
       specifier: 1.15.8
       version: 1.15.8
@@ -577,7 +577,7 @@ importers:
         version: 0.2.4
       '@nestjs/cli':
         specifier: ^10.0.2
-        version: 10.4.9(@swc/cli@0.7.10(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.8(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)
+        version: 10.4.9(@swc/cli@0.8.0(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.8(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)
       '@nestjs/common':
         specifier: ^9.0.0
         version: 9.4.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -757,7 +757,7 @@ importers:
         version: 1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2)
       '@swc/cli':
         specifier: catalog:swc
-        version: 0.7.10(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0)
+        version: 0.8.0(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0)
       '@swc/core':
         specifier: catalog:swc
         version: 1.15.8(@swc/helpers@0.5.18)
@@ -12141,13 +12141,13 @@ packages:
   '@swc-node/sourcemap-support@0.6.1':
     resolution: {integrity: sha512-ovltDVH5QpdHXZkW138vG4+dgcNsxfwxHVoV6BtmTbz2KKl1A8ZSlbdtxzzfNjCjbpayda8Us9eMtcHobm38dA==}
 
-  '@swc/cli@0.7.10':
-    resolution: {integrity: sha512-QQ36Q1VwGTT2YzvMeNe/j1x4DKS277DscNhWc57dIwQn//C+zAgvuSupMB/XkmYqPKQX+8hjn5/cHRJrMvWy0Q==}
-    engines: {node: '>= 16.14.0'}
+  '@swc/cli@0.8.0':
+    resolution: {integrity: sha512-vzUkYzlqLe9dC+B0ZIH62CzfSZOCTjIsmquYyyyi45JCm1xmRfLDKeEeMrEPPyTWnEEN84e4iVd49Tgqa+2GaA==}
+    engines: {node: '>= 20.19.0'}
     hasBin: true
     peerDependencies:
       '@swc/core': ^1.2.66
-      chokidar: ^4.0.1
+      chokidar: ^5.0.0
     peerDependenciesMeta:
       chokidar:
         optional: true
@@ -33880,7 +33880,7 @@ snapshots:
       '@napi-rs/wasm-tools-win32-ia32-msvc': 0.0.2
       '@napi-rs/wasm-tools-win32-x64-msvc': 0.0.2
 
-  '@nestjs/cli@10.4.9(@swc/cli@0.7.10(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.8(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)':
+  '@nestjs/cli@10.4.9(@swc/cli@0.8.0(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.8(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)':
     dependencies:
       '@angular-devkit/core': 17.3.11(chokidar@3.6.0)
       '@angular-devkit/schematics': 17.3.11(chokidar@3.6.0)
@@ -33902,7 +33902,7 @@ snapshots:
       webpack: 5.97.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)
       webpack-node-externals: 3.0.0
     optionalDependencies:
-      '@swc/cli': 0.7.10(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0)
+      '@swc/cli': 0.8.0(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0)
       '@swc/core': 1.15.8(@swc/helpers@0.5.18)
     transitivePeerDependencies:
       - esbuild
@@ -37707,7 +37707,7 @@ snapshots:
       source-map-support: 0.5.21
       tslib: 2.8.1
 
-  '@swc/cli@0.7.10(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0)':
+  '@swc/cli@0.8.0(@swc/core@1.15.8(@swc/helpers@0.5.18))(chokidar@3.6.0)':
     dependencies:
       '@swc/core': 1.15.8(@swc/helpers@0.5.18)
       '@swc/counter': 0.1.3
