@@ -79,25 +79,19 @@ impl Filterer for WatchFilterer {
                     FileEventKind::Remove(RemoveKind::File) => continue,
 
                     #[cfg(target_os = "linux")]
-                    FileEventKind::Create(CreateKind::Folder) => continue,
-                    #[cfg(target_os = "linux")]
-                    FileEventKind::Create(CreateKind::Any) => continue,
-                    #[cfg(target_os = "linux")]
-                    FileEventKind::Remove(RemoveKind::Any) => continue,
-                    #[cfg(target_os = "linux")]
-                    FileEventKind::Modify(ModifyKind::Any) => continue,
+                    FileEventKind::Create(CreateKind::Folder)
+                    | FileEventKind::Create(CreateKind::Any)
+                    | FileEventKind::Remove(RemoveKind::Any)
+                    | FileEventKind::Modify(ModifyKind::Any) => continue,
 
                     #[cfg(target_os = "macos")]
-                    FileEventKind::Create(CreateKind::Folder) => continue,
-                    #[cfg(target_os = "macos")]
-                    FileEventKind::Modify(ModifyKind::Metadata(_)) => continue,
+                    FileEventKind::Create(CreateKind::Folder)
+                    | FileEventKind::Modify(ModifyKind::Metadata(_)) => continue,
 
                     #[cfg(windows)]
-                    FileEventKind::Modify(ModifyKind::Any) => continue,
-                    #[cfg(windows)]
-                    FileEventKind::Create(CreateKind::Any) => continue,
-                    #[cfg(windows)]
-                    FileEventKind::Remove(RemoveKind::Any) => continue,
+                    FileEventKind::Modify(ModifyKind::Any)
+                    | FileEventKind::Create(CreateKind::Any)
+                    | FileEventKind::Remove(RemoveKind::Any) => continue,
 
                     _ => return Ok(false),
                 },
