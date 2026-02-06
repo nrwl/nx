@@ -322,7 +322,7 @@ fun getDependsOnForTask(
                 } else {
                   depTask.name
                 })
-        "${depProject.name}:${taskName}"
+        "${getNxProjectName(depProject)}:${taskName}"
       } else {
         null
       }

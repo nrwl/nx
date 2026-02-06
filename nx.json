@@ -297,12 +297,10 @@
     },
     {
       "plugin": "@nx/gradle",
-      "exclude": [
-        "packages/react-native/src/generators/application/files/**/*"
-      ],
       "options": {
         "testTargetName": "test-kt"
-      }
+      },
+      "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
     "@nx/enterprise-cloud",
     {
