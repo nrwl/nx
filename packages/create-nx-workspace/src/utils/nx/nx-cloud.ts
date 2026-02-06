@@ -68,7 +68,12 @@ export function readNxCloudToken(directory: string) {
   ) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
   const { accessToken, nxCloudId } = getCloudOptions(directory);
-  nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+  const variant = getFlowVariant();
+  const spinnerMessage =
+    variant === '0'
+      ? 'Nx Cloud has been set up successfully'
+      : 'Nx Cloud configuration was successfully added';
+  nxCloudSpinner.succeed(spinnerMessage);
   return accessToken || nxCloudId;
 }
 

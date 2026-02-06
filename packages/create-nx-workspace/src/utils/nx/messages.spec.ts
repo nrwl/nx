@@ -292,7 +292,7 @@ describe('Nx Cloud Messages', () => {
     });
   });
 
-  describe('Banner Variant Messages (CLOUD-4147)', () => {
+  describe('Banner Variant Messages (CLOUD-4235)', () => {
     it('variant 0 should show plain link message', () => {
       const message = getCompletionMessage(
         'platform-setup',
@@ -311,7 +311,7 @@ describe('Nx Cloud Messages', () => {
       `);
     });
 
-    it('variant 1 should show "Try the full Nx platform" banner', () => {
+    it('variant 1 should show "Finish your set up in 5 minutes" banner', () => {
       const message = getCompletionMessage(
         'platform-setup',
         'https://cloud.nx.app/connect/abc123',
@@ -319,18 +319,22 @@ describe('Nx Cloud Messages', () => {
         'myworkspace',
         '1'
       );
-      expect(message.title).toBe('Your platform setup is almost complete.');
+      expect(message.title).toBe(
+        'Nx Cloud configuration was successfully added.'
+      );
       expect(message.bodyLines.length).toBeGreaterThan(1);
       expect(message.bodyLines.join('\n')).toContain(
-        'Try the full Nx platform'
+        'Finish your set up in 5 minutes'
       );
       expect(message.bodyLines.join('\n')).toContain(
         'https://cloud.nx.app/connect/abc123'
       );
-      expect(message.bodyLines.join('\n')).toContain('Remote caching');
+      expect(message.bodyLines.join('\n')).toContain(
+        'Automatically fix CI failures'
+      );
     });
 
-    it('variant 2 should show "Unlock 70% faster CI" banner', () => {
+    it('variant 2 should show "Enable remote caching and automatic fixes when CI fails" banner', () => {
       const message = getCompletionMessage(
         'platform-setup',
         'https://cloud.nx.app/connect/abc123',
@@ -338,35 +342,23 @@ describe('Nx Cloud Messages', () => {
         'myworkspace',
         '2'
       );
-      expect(message.title).toBe('Your platform setup is almost complete.');
-      expect(message.bodyLines.length).toBeGreaterThan(1);
-      expect(message.bodyLines.join('\n')).toContain('Unlock 70% faster CI');
-      expect(message.bodyLines.join('\n')).toContain(
-        'https://cloud.nx.app/connect/abc123'
+      expect(message.title).toBe(
+        'Nx Cloud configuration was successfully added.'
       );
-    });
-
-    it('variant 3 should show "Reclaim your team\'s focus" banner', () => {
-      const message = getCompletionMessage(
-        'platform-setup',
-        'https://cloud.nx.app/connect/abc123',
-        VcsPushStatus.PushedToVcs,
-        'myworkspace',
-        '3'
-      );
-      expect(message.title).toBe('Your platform setup is almost complete.');
       expect(message.bodyLines.length).toBeGreaterThan(1);
       expect(message.bodyLines.join('\n')).toContain(
-        "Reclaim your team's focus"
+        'Enable remote caching and automatic fixes when CI fails'
       );
       expect(message.bodyLines.join('\n')).toContain(
         'https://cloud.nx.app/connect/abc123'
       );
-      expect(message.bodyLines.join('\n')).toContain('Self-healing CI');
+      expect(message.bodyLines.join('\n')).toContain(
+        'Set it up in less than 5 minutes'
+      );
     });
 
     it('should fall back to plain link when URL is null (all variants)', () => {
-      const variants = ['0', '1', '2', '3'] as const;
+      const variants = ['0', '1', '2'] as const;
       variants.forEach((variant) => {
         const message = getCompletionMessage(
           'platform-setup',
