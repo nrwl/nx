@@ -27,7 +27,7 @@ This plugin requires:
 - **Java 17 or newer** - Using older Java versions is unsupported and may lead to issues.
 - **Maven 3.6.0 or newer** - Older Maven versions are not supported.
 
-If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
+If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx)!
 {% /aside %}
 
 ## Setup @nx/maven
@@ -97,7 +97,7 @@ The `@nx/maven` plugin automatically detects Maven projects in your workspace by
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
 
-## Setting Up @nx/maven in a Nx Workspace
+## Setting Up @nx/maven in an Nx Workspace
 
 In any Nx workspace, you can install `@nx/maven` by running the following command:
 
@@ -107,13 +107,31 @@ nx add @nx/maven
 
 ## @nx/maven Configuration
 
-The `@nx/maven` is configured in the `plugins` array in `nx.json`.
+The `@nx/maven` plugin is configured in the `plugins` array in `nx.json`.
 
 ```json
 // nx.json
 {
-  "plugins": ["@nx/maven"]
+  "plugins": [
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn-",
+        "verbose": false
+      }
+    }
+  ]
 }
 ```
 
 Once the plugin has been added, `@nx/maven` will automatically retrieve information about projects from Maven and create targets for each phase, goal, and some additional targets for CI.
+
+### Target Name Prefix
+
+In a polyglot workspace supporting projects in different languages, you may have targets with the same name (e.g., `build`, `test`) but different behaviors. By default, Maven phase and goal names are used directly as Nx target names. Use the `targetNamePrefix` option to prefix all Maven targets with a custom string to distinguish them from other targets in your workspace.
+
+For example, with `"targetNamePrefix": "mvn-"`, Nx will create targets with the prefix `mvn-` for your targets as `mvn-compile`, `mvn-test`, `mvn-package`, etc.
+
+### Verbose
+
+Set the `verbose` option to `true` to enable detailed logging from the Maven analyzer. This can be useful for debugging project graph issues. This can also be enabled by setting the `NX_VERBOSE_LOGGING` environment variable.
