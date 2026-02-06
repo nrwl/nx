@@ -11,8 +11,8 @@ import { tmpdir } from 'node:os';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
-// Flow variant controls both tracking and banner display (CLOUD-4147)
-// Variants: 0 = plain link, 1-3 = decorative banners
+// Flow variant controls both tracking and banner display (CLOUD-4235)
+// Variants: 0 = control, 1 = updated prompt, 2 = no prompt (auto-connect)
 const FLOW_VARIANT_CACHE_FILE = join(tmpdir(), 'nx-cnw-flow-variant');
 const FLOW_VARIANT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
@@ -33,7 +33,7 @@ function readCachedFlowVariant(): string | null {
       return null;
     }
     const value = readFileSync(FLOW_VARIANT_CACHE_FILE, 'utf-8').trim();
-    return ['0', '1', '2', '3'].includes(value) ? value : null;
+    return ['0', '1', '2'].includes(value) ? value : null;
   } catch {
     return null;
   }
@@ -49,10 +49,9 @@ function writeCachedFlowVariant(variant: string): void {
 
 function selectRandomVariant(): string {
   const rand = Math.random();
-  if (rand < 0.25) return '0';
-  if (rand < 0.5) return '1';
-  if (rand < 0.75) return '2';
-  return '3';
+  if (rand < 1 / 3) return '0';
+  if (rand < 2 / 3) return '1';
+  return '2';
 }
 
 /**
@@ -100,14 +99,14 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
 
 /**
  * Returns whether the cloud prompt should be shown.
- * Now always returns true since we've locked in the prompt flow.
+ * Variant 2 skips the prompt (auto-connect). (CLOUD-4235)
  */
 export function shouldShowCloudPrompt(): boolean {
-  return true;
+  return getFlowVariant() !== '2';
 }
 
 // ============================================================================
-// Banner Variant A/B Testing (CLOUD-4147)
+// Banner Variant A/B Testing (CLOUD-4235)
 // ============================================================================
 
 /**
@@ -139,9 +138,8 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
  * Get the banner variant for completion messages.
  * Uses NX_CNW_FLOW_VARIANT to determine which banner to show.
  * - Variant 0: Plain link (control) - always used for enterprise URLs
- * - Variant 1: "Try the full Nx platform" banner
- * - Variant 2: "Unlock 70% faster CI" banner
- * - Variant 3: "Reclaim your team's focus" banner
+ * - Variant 1: "Finish your set up in 5 minutes" banner
+ * - Variant 2: "Enable remote caching and automatic fixes" banner
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
@@ -190,7 +188,7 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
-   * Locked to "full platform" messaging (CLOUD-4147)
+   * Locked to "full platform" messaging (CLOUD-4235)
    */
   setupNxCloud: [
     {
