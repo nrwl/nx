@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "mvn-install-with-retries": {
-      "command": "for i in {1..5}; do npx nx run nx-maven-plugin:mvn-install && break || sleep 10; done"
+      "command": "for i in {1..5}; do npx nx run nx-maven-plugin:mvn-install && exit 0; sleep 10; done; exit 1"
     }
   },
   "tags": ["maven:dev.nx.maven"],
