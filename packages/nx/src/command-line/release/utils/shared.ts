@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
@@ -16,7 +16,7 @@ import {
 } from './git';
 import { ReleaseGraph } from './release-graph';
 
-export const noDiffInChangelogMessage = chalk.yellow(
+export const noDiffInChangelogMessage = pc.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
 );
 

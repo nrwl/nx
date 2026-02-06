@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { isCI } from '../../utils/is-ci';
 import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 export async function determineAiAgents(
   aiAgents?: Agent[],
@@ -29,7 +29,7 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
       message: agentDisplayMap[a],
     })),
     footer: () =>
-      chalk.dim(
+      pc.dim(
         'Multiple selections possible. <Space> to select. <Enter> to confirm.'
       ),
   };

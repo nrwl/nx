@@ -1,23 +1,23 @@
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
-export const NX_PREFIX = chalk.inverse(chalk.bold(chalk.cyan(' NX ')));
+export const NX_PREFIX = pc.inverse(pc.bold(pc.cyan(' NX ')));
 
-export const NX_ERROR = chalk.inverse(chalk.bold(chalk.red(' ERROR ')));
+export const NX_ERROR = pc.inverse(pc.bold(pc.red(' ERROR ')));
 
 export const logger = {
-  warn: (s) => console.warn(chalk.bold(chalk.yellow(s))),
+  warn: (s) => console.warn(pc.bold(pc.yellow(s))),
   error: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
-      console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.slice(3)))}\n`);
+      console.error(`\n${NX_ERROR} ${pc.bold(pc.red(s.slice(3)))}\n`);
     } else if (s instanceof Error && s.stack) {
-      console.error(chalk.bold(chalk.red(s.stack)));
+      console.error(pc.bold(pc.red(s.stack)));
     } else {
-      console.error(chalk.bold(chalk.red(s)));
+      console.error(pc.bold(pc.red(s)));
     }
   },
   info: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
-      console.info(`\n${NX_PREFIX} ${chalk.bold(s.slice(3))}\n`);
+      console.info(`\n${NX_PREFIX} ${pc.bold(s.slice(3))}\n`);
     } else {
       console.info(s);
     }
