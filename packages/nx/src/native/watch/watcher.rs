@@ -31,80 +31,62 @@ fn build_ignore_glob_set() -> NxGlobSet {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
-/// Check if a path should be ignored based on the hardcoded ignore patterns.
-fn is_ignored_path(path: &Path, ignore_globs: &NxGlobSet) -> bool {
-    ignore_globs.is_match(path)
-}
-
 /// Extract new, non-ignored directory paths from creation events.
 ///
 /// Pure function — does not mutate shared state. The caller is responsible
 /// for deduplicating against the existing watched path set.
 fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
-    let mut new_directories = Vec::new();
-
-    for event in events.iter() {
-        // On Linux/Windows: skip events that aren't directory creation.
-        // Linux emits CreateKind::Folder, Windows emits CreateKind::Any.
-        // On macOS: FSEvents doesn't always provide FileEventKind tags,
-        // so we check all events and rely on the is_dir check below.
-        #[cfg(not(target_os = "macos"))]
-        {
-            let is_create = event.tags.iter().any(|tag| {
-                matches!(
-                    tag,
-                    Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
-                        | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
-                )
-            });
-
-            if !is_create {
-                continue;
+    events
+        .iter()
+        .filter(|event| {
+            // On Linux/Windows: only keep directory creation events.
+            // Linux emits CreateKind::Folder, Windows emits CreateKind::Any.
+            // On macOS: FSEvents doesn't always provide FileEventKind tags,
+            // so we accept all events and rely on the is_dir check below.
+            #[cfg(not(target_os = "macos"))]
+            {
+                event.tags.iter().any(|tag| {
+                    matches!(
+                        tag,
+                        Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
+                            | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
+                    )
+                })
             }
-        }
-
-        for (path, file_type) in event.paths() {
+            #[cfg(target_os = "macos")]
+            {
+                let _ = event;
+                true
+            }
+        })
+        .flat_map(|event| event.paths())
+        .filter(|(path, file_type)| {
             let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
-
-            if is_dir && !is_ignored_path(path, ignore_globs) {
-                new_directories.push(path.to_path_buf());
-            }
-        }
-    }
-
-    new_directories
+            is_dir && !ignore_globs.is_match(path)
+        })
+        .map(|(path, _)| path.to_path_buf())
+        .collect()
 }
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
 /// This avoids registering inotify watches on node_modules and other ignored trees.
-/// Returns both the watch paths and a set of their PathBufs for efficient lookup.
-fn enumerate_watch_paths<P: AsRef<Path>>(
-    directory: P,
-    use_ignores: bool,
-) -> (Vec<WatchedPath>, HashSet<PathBuf>) {
+fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
     let walker = create_walker(&directory, use_ignores);
-    let mut watched_paths: Vec<WatchedPath> = Vec::new();
     let mut path_set: HashSet<PathBuf> = HashSet::new();
 
     for entry in walker.build() {
         if let Ok(entry) = entry {
             if entry.file_type().map_or(false, |ft| ft.is_dir()) {
-                let p = entry.into_path();
-                watched_paths.push(WatchedPath::non_recursive(&p));
-                path_set.insert(p);
+                path_set.insert(entry.into_path());
             }
         }
     }
 
     // Always include the root directory itself
-    let root = directory.as_ref().to_path_buf();
-    if !path_set.contains(&root) {
-        watched_paths.push(WatchedPath::non_recursive(&root));
-        path_set.insert(root);
-    }
+    path_set.insert(directory.as_ref().to_path_buf());
 
-    trace!(count = watched_paths.len(), "enumerated watch paths");
-    (watched_paths, path_set)
+    trace!(count = path_set.len(), "enumerated watch paths");
+    path_set
 }
 
 #[napi]
@@ -225,19 +207,14 @@ impl Watcher {
 
             if !new_directories.is_empty() {
                 let mut path_set = watched_path_set_for_action.lock();
-                for dir in &new_directories {
-                    trace!(?dir, "dynamically registering new directory watch");
-                    path_set.insert(dir.clone());
-                }
-                let new_pathset: Vec<WatchedPath> = path_set
-                    .iter()
-                    .map(|p| WatchedPath::non_recursive(p))
-                    .collect();
+                path_set.extend(new_directories);
                 trace!(
-                    count = new_pathset.len(),
+                    count = path_set.len(),
                     "updating pathset with new directories"
                 );
-                watch_exec_for_action.config.pathset(new_pathset);
+                watch_exec_for_action
+                    .config
+                    .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
             }
 
             let mut origin_path = origin.clone();
@@ -309,13 +286,14 @@ impl Watcher {
 
             // Enumerate non-ignored directories and watch each one non-recursively.
             // This prevents inotify watches on node_modules and other ignored trees.
-            let (watched_paths, path_set) = enumerate_watch_paths(&origin, use_ignore);
-            trace!(count = watched_paths.len(), "setting watched paths");
+            let path_set = enumerate_watch_paths(&origin, use_ignore);
+            trace!(count = path_set.len(), "setting watched paths");
 
             // Store the initial path set so the on_action handler can append to it
+            watch_exec
+                .config
+                .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
             *watched_path_set.lock() = path_set;
-
-            watch_exec.config.pathset(watched_paths);
 
             watch_exec.config.filterer(
                 watch_filterer::create_filter(&origin, &additional_globs, use_ignore).await?,
