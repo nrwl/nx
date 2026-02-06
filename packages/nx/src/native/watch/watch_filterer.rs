@@ -87,6 +87,11 @@ impl Filterer for WatchFilterer {
                     #[cfg(target_os = "linux")]
                     FileEventKind::Modify(ModifyKind::Any) => continue,
 
+                    #[cfg(target_os = "macos")]
+                    FileEventKind::Create(CreateKind::Folder) => continue,
+                    #[cfg(target_os = "macos")]
+                    FileEventKind::Modify(ModifyKind::Metadata(_)) => continue,
+
                     #[cfg(windows)]
                     FileEventKind::Modify(ModifyKind::Any) => continue,
                     #[cfg(windows)]
@@ -102,9 +107,9 @@ impl Filterer for WatchFilterer {
                     file_type: Some(FileType::File) | None,
                 } if !path.display().to_string().ends_with('~') => continue,
 
-                // Allow directory events through on Linux and Windows so that the
+                // Allow directory events through on Linux, Windows, and macOS so that the
                 // action handler can dynamically register watches for new directories.
-                #[cfg(any(target_os = "linux", windows))]
+                #[cfg(any(target_os = "linux", target_os = "macos", windows))]
                 Tag::Path {
                     path: _,
                     file_type: Some(FileType::Dir),

@@ -89,6 +89,12 @@ pub fn transform_event_to_watch_events(
         {
             use std::fs;
             use std::os::macos::fs::MetadataExt;
+            use watchexec_events::FileType;
+
+            // Skip directory events - they're handled by register_new_directory_watches
+            if path.1.map_or(false, |ft| matches!(ft, FileType::Dir)) || path_ref.is_dir() {
+                return Ok(vec![]);
+            }
 
             let origin = origin.to_owned();
             let t = fs::metadata(path_ref);

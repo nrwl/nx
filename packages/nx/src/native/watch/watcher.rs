@@ -50,21 +50,35 @@ fn register_new_directory_watches(
     let mut new_directories = Vec::new();
 
     for event in events.iter() {
-        // Only process create events (Folder on Linux, Any on Windows).
-        let is_create = event.tags.iter().any(|tag| {
-            matches!(
-                tag,
-                Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
-                    | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
-            )
-        });
+        // Check for create events.
+        // - Linux: FileEventKind::Create(CreateKind::Folder)
+        // - Windows: FileEventKind::Create(CreateKind::Any)
+        // - macOS: Check all events (FSEvents doesn't always provide FileEventKind tags)
 
-        if !is_create {
-            continue;
+        // On Linux/Windows: skip events that aren't directory creation
+        #[cfg(not(target_os = "macos"))]
+        {
+            let is_create = event.tags.iter().any(|tag| {
+                matches!(
+                    tag,
+                    Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
+                        | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
+                )
+            });
+
+            if !is_create {
+                continue;
+            }
         }
 
+        // On macOS: check all events (no early filtering)
+
         for (path, file_type) in event.paths() {
+            // Check if this is a directory by:
+            // 1. FileType tag (if available)
+            // 2. Checking the filesystem directly (especially important for macOS)
             let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
+
             if is_dir && !is_ignored_path(path, ignore_globs) {
                 let mut path_set = watched_path_set.lock();
                 if path_set.insert(path.to_path_buf()) {
