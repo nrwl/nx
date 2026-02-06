@@ -195,8 +195,25 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
   private fun generateCreateDependenciesResults(projectAnalyses: List<ProjectAnalysis>): JsonArray {
     val result = JsonArray()
+    val pathFormatter = PathFormatter()
+
     projectAnalyses.forEach { analysis ->
+      // Add workspace project dependencies
       analysis.dependencies.forEach { dependency -> result.add(dependency) }
+
+      // Add external dependencies (project -> external node)
+      val canonicalWorkspaceRoot = workspaceRoot.canonicalFile
+      val sourceRoot = analysis.root
+      analysis.externalDependencies.forEach { extDep ->
+        val dependency = JsonObject()
+        dependency.addProperty("type", "static")
+        dependency.addProperty("source", sourceRoot)
+        dependency.addProperty("target", "maven:${extDep.groupId}:${extDep.artifactId}")
+        dependency.addProperty("sourceFile", pathFormatter.normalizeRelativePath(
+          analysis.pomFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path
+        ))
+        result.add(dependency)
+      }
     }
     return result
   }
@@ -204,11 +221,13 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
   private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): JsonArray {
     val createNodesResults = JsonArray()
 
+    // Build a deduplicated map of all external nodes across all projects
+    val allExternalNodes = generateExternalNodes(inMemoryAnalyses)
+
     inMemoryAnalyses.forEach { analysis ->
       val resultTuple = JsonArray()
       resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
 
-      // Group projects by root directory (for now, assume all projects are at workspace root)
       val projects = JsonObject()
 
       val root = analysis.root
@@ -217,12 +236,52 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       val projectsWrapper = JsonObject()
       projects.add(root, project)
       projectsWrapper.add("projects", projects)
+
+      // Embed external nodes in each tuple (matching Gradle pattern)
+      if (allExternalNodes.size() > 0) {
+        projectsWrapper.add("externalNodes", allExternalNodes)
+      }
+
       resultTuple.add(projectsWrapper)
 
       createNodesResults.add(resultTuple)
     }
 
     return createNodesResults
+  }
+
+  private fun generateExternalNodes(projectAnalyses: List<ProjectAnalysis>): JsonObject {
+    val externalNodes = JsonObject()
+
+    // Deduplicate external deps across all projects by groupId:artifactId
+    val seen = mutableMapOf<String, ExternalMavenDependency>()
+    projectAnalyses.forEach { analysis ->
+      analysis.externalDependencies.forEach { extDep ->
+        val key = "${extDep.groupId}:${extDep.artifactId}"
+        // Keep the first occurrence (or one with a version if the existing one has none)
+        val existing = seen[key]
+        if (existing == null || (existing.version == null && extDep.version != null)) {
+          seen[key] = extDep
+        }
+      }
+    }
+
+    // Create external node JSON for each unique dependency
+    seen.forEach { (coordinates, extDep) ->
+      val nodeName = "maven:${coordinates}"
+      val node = JsonObject()
+      node.addProperty("type", "maven")
+      node.addProperty("name", nodeName)
+
+      val data = JsonObject()
+      data.addProperty("packageName", coordinates)
+      data.addProperty("version", extDep.version ?: "managed")
+      node.add("data", data)
+
+      externalNodes.add(nodeName, node)
+    }
+
+    return externalNodes
   }
 
   private fun generateCoordinatesMap(

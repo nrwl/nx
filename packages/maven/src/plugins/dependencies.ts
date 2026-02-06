@@ -36,7 +36,10 @@ export const createDependencies: CreateDependencies = async (
     (dep) => ({
       ...dep,
       source: rootToProjectMap.get(dep.source),
-      target: rootToProjectMap.get(dep.target),
+      // External deps use maven: prefix — pass through as-is
+      target: dep.target.startsWith('maven:')
+        ? dep.target
+        : rootToProjectMap.get(dep.target),
     })
   );
 
