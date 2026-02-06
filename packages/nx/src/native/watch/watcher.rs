@@ -36,26 +36,18 @@ fn is_ignored_path(path: &Path, ignore_globs: &NxGlobSet) -> bool {
     ignore_globs.is_match(path)
 }
 
-/// Process events for new directory creation and register watches for them.
-/// Returns a list of newly added directory paths.
+/// Extract new, non-ignored directory paths from creation events.
 ///
-/// Note: `ignore_globs` should be the hardcoded ignore patterns (node_modules, .git, etc.).
-/// These are always applied regardless of the `use_ignore` flag, which only controls
-/// whether .gitignore and .nxignore are respected for event filtering.
-fn register_new_directory_watches(
-    events: &[Event],
-    ignore_globs: &NxGlobSet,
-    watched_path_set: &Mutex<HashSet<PathBuf>>,
-) -> Vec<PathBuf> {
+/// Pure function — does not mutate shared state. The caller is responsible
+/// for deduplicating against the existing watched path set.
+fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
     let mut new_directories = Vec::new();
 
     for event in events.iter() {
-        // Check for create events.
-        // - Linux: FileEventKind::Create(CreateKind::Folder)
-        // - Windows: FileEventKind::Create(CreateKind::Any)
-        // - macOS: Check all events (FSEvents doesn't always provide FileEventKind tags)
-
-        // On Linux/Windows: skip events that aren't directory creation
+        // On Linux/Windows: skip events that aren't directory creation.
+        // Linux emits CreateKind::Folder, Windows emits CreateKind::Any.
+        // On macOS: FSEvents doesn't always provide FileEventKind tags,
+        // so we check all events and rely on the is_dir check below.
         #[cfg(not(target_os = "macos"))]
         {
             let is_create = event.tags.iter().any(|tag| {
@@ -71,20 +63,11 @@ fn register_new_directory_watches(
             }
         }
 
-        // On macOS: check all events (no early filtering)
-
         for (path, file_type) in event.paths() {
-            // Check if this is a directory by:
-            // 1. FileType tag (if available)
-            // 2. Checking the filesystem directly (especially important for macOS)
             let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
 
             if is_dir && !is_ignored_path(path, ignore_globs) {
-                let mut path_set = watched_path_set.lock();
-                if path_set.insert(path.to_path_buf()) {
-                    trace!(?path, "dynamically registering new directory watch");
-                    new_directories.push(path.to_path_buf());
-                }
+                new_directories.push(path.to_path_buf());
             }
         }
     }
@@ -238,15 +221,14 @@ impl Watcher {
 
             // Check for new directory creation events and dynamically register watches.
             // Without this, non-recursive watches would miss changes in newly created dirs.
-            let new_directories = register_new_directory_watches(
-                &action.events,
-                &ignore_globs_for_action,
-                &watched_path_set_for_action,
-            );
+            let new_directories = extract_new_directories(&action.events, &ignore_globs_for_action);
 
-            // Update the watchexec pathset if new directories were added
             if !new_directories.is_empty() {
-                let path_set = watched_path_set_for_action.lock();
+                let mut path_set = watched_path_set_for_action.lock();
+                for dir in &new_directories {
+                    trace!(?dir, "dynamically registering new directory watch");
+                    path_set.insert(dir.clone());
+                }
                 let new_pathset: Vec<WatchedPath> = path_set
                     .iter()
                     .map(|p| WatchedPath::non_recursive(p))
@@ -268,14 +250,12 @@ impl Watcher {
                 event_count = action.events.len(),
                 "on_action received events"
             );
-            for ev in action.events.iter() {
-                trace!(?ev, "raw event");
-            }
 
             let events = action
                 .events
                 .par_iter()
                 .filter_map(|ev| {
+                    trace!(?ev, "raw event");
                     let result = transform_event_to_watch_events(ev, &origin_path);
                     trace!(?result, "transform result");
                     result.ok()
