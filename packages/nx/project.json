@@ -77,7 +77,10 @@
       "dependsOn": ["echo"]
     },
     "build-base": {
-      "outputs": ["{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}"]
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}",
+        "{projectRoot}/src/**/*.d.ts"
+      ]
     },
     "build": {
       "dependsOn": [
