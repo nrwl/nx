@@ -392,8 +392,23 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         const args = dec.expression.arguments;
                         if (args.length === 0) continue;
                         const [optionsArg] = args;
-                        if (!t.isObjectExpression(optionsArg)) continue;
-                        for (const prop of optionsArg.properties)
+
+                        let optionsObject: t.ObjectExpression | undefined = t.isObjectExpression(optionsArg) ? optionsArg : undefined;
+                        if (t.isIdentifier(optionsArg))
+                        {
+                            const binding = path.scope.getBinding(optionsArg.name);
+                            if (binding?.path.isVariableDeclarator())
+                            {
+                                const { init } = binding.path.node;
+                                if (t.isObjectExpression(init))
+                                {
+                                    optionsObject = init;
+                                }
+                            }
+                        }
+
+                        if (!optionsObject) continue;
+                        for (const prop of optionsObject.properties)
                         {
                             if (!t.isObjectProperty(prop)) continue;
                             if (prop.computed || !t.isIdentifier(prop.key)) continue;

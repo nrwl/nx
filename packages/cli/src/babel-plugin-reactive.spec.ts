@@ -200,6 +200,31 @@ describe('babel-plugin-reactive', () =>
             expect(result)
                 .toBeDefined();
         });
+
+        it('should handle @Input with commitTrigger from variable reference', () =>
+        {
+            const code = `
+                import { Component, Input, Reactive } from '@fluffjs/fluff';
+                
+                const inputOptions = {
+                    commitTrigger: 'mouseUp'
+                };
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @Reactive() mouseUp = false;
+                    @Input(inputOptions) value = 0;
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('this.__mouseUp');
+            expect(result).toContain('commitTrigger');
+        });
     });
 
     describe('@LinkedProperty decorator', () =>
