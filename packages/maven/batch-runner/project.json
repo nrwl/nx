@@ -1,6 +1,5 @@
 {
   "projectType": "application",
-  "name": "maven-batch-runner",
   "targets": {
     "package": {
       "executor": "nx:run-commands",
@@ -14,5 +13,5 @@
     }
   },
   "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-shared"]
+  "implicitDependencies": ["dev.nx.maven:nx-maven-shared", "!@nx/maven"]
 }
