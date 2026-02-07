@@ -17,6 +17,7 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                 enter(path, state): void
                 {
                     state.needsPropertyImport = false;
+                    state.needsPipeRegistryImport = false;
                     state.reactiveProperties = new Set();
                     state.watchMethods = [];
                 }, exit(path, state): void
@@ -40,6 +41,23 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         if (!hasPropertyImport)
                         {
                             const importDecl = t.importDeclaration([t.importSpecifier(t.identifier('Property'), t.identifier('Property'))], t.stringLiteral('@fluffjs/fluff'));
+                            path.node.body.unshift(importDecl);
+                        }
+                    }
+                    if (state.needsPipeRegistryImport)
+                    {
+                        const hasPipeRegistryImport = path.node.body.some(node =>
+                        {
+                            if (t.isImportDeclaration(node))
+                            {
+                                return node.specifiers.some(spec => t.isImportSpecifier(spec) && t.isIdentifier(spec.imported) && spec.imported.name === 'pipeRegistry');
+                            }
+                            return false;
+                        });
+
+                        if (!hasPipeRegistryImport)
+                        {
+                            const importDecl = t.importDeclaration([t.importSpecifier(t.identifier('pipeRegistry'), t.identifier('pipeRegistry'))], t.stringLiteral('@fluffjs/fluff'));
                             path.node.body.unshift(importDecl);
                         }
                     }
@@ -90,7 +108,6 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                 const privateFields: t.ClassProperty[] = [];
                 const getterHostBindingUpdates: string[] = [];
                 const propertyHostBindingInits: { propName: string; privateName: string }[] = [];
-                const reactivePropDefs: { propName: string; privateName: string }[] = [];
                 const classHostBindingDefs: { propName: string; className: string; privateName: string }[] = [];
 
                 const pipeMethods: { pipeName: string; methodName: string }[] = [];
@@ -422,11 +439,14 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     const propertyArgs = useOptionsObject
                         ? [t.objectExpression(propertyOptions)]
                         : [initialValue];
-                    const privateField = t.classProperty(t.identifier(privateName), t.newExpression(t.identifier('Property'), propertyArgs));
+                    const createPropCall = t.callExpression(
+                        t.memberExpression(t.thisExpression(), t.identifier('__createProp')),
+                        [t.stringLiteral(propName), ...propertyArgs]
+                    );
+                    const privateField = t.classProperty(t.identifier(privateName), createPropCall);
 
                     propsToRemove.push(memberPath);
                     privateFields.push(privateField);
-                    reactivePropDefs.push({ propName, privateName });
                 }
 
                 for (const p of propsToRemove)
@@ -494,16 +514,6 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
 
                 const reactiveProps = state.reactiveProperties ?? new Set<string>();
                 const constructorStatements: t.Statement[] = [];
-
-                for (const { propName, privateName } of reactivePropDefs)
-                {
-                    constructorStatements.push(t.expressionStatement(
-                        t.callExpression(
-                            t.memberExpression(t.thisExpression(), t.identifier('__defineProp')),
-                            [t.stringLiteral(propName), t.memberExpression(t.thisExpression(), t.identifier(privateName))]
-                        )
-                    ));
-                }
 
                 for (const { propName, className, privateName } of classHostBindingDefs)
                 {
@@ -608,6 +618,50 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         path.unshiftContainer('body', t.classMethod('constructor', t.identifier('constructor'), [], t.blockStatement([
                             t.expressionStatement(t.callExpression(t.super(), [])), ...constructorStatements
                         ])));
+                    }
+                }
+            },
+
+            ClassDeclaration(path, state): void
+            {
+                const decorators = path.node.decorators ?? [];
+                const pipeDecoratorIndex = findDecoratorIndex(decorators, 'Pipe');
+
+                if (pipeDecoratorIndex >= 0)
+                {
+                    const pipeDecorator = decorators[pipeDecoratorIndex];
+                    if (t.isCallExpression(pipeDecorator.expression))
+                    {
+                        const args = pipeDecorator.expression.arguments;
+                        if (args.length > 0 && t.isStringLiteral(args[0]) && path.node.id)
+                        {
+                            const pipeName = args[0].value;
+                            const className = path.node.id;
+
+                            state.needsPipeRegistryImport = true;
+
+                            decorators.splice(pipeDecoratorIndex, 1);
+                            if (decorators.length === 0)
+                            {
+                                path.node.decorators = null;
+                            }
+
+                            path.insertAfter([
+                                t.expressionStatement(
+                                    t.assignmentExpression(
+                                        '=',
+                                        t.memberExpression(className, t.identifier('__pipeName')),
+                                        t.stringLiteral(pipeName)
+                                    )
+                                ),
+                                t.expressionStatement(
+                                    t.callExpression(
+                                        t.memberExpression(t.identifier('pipeRegistry'), t.identifier('set')),
+                                        [t.stringLiteral(pipeName), className]
+                                    )
+                                )
+                            ]);
+                        }
                     }
                 }
             }

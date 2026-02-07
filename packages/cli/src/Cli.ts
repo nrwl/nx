@@ -39,11 +39,21 @@ export class Cli
 
     public constructor(options: CliOptions = {})
     {
-        this.cwd = options.cwd ?? process.env.INIT_CWD ?? process.cwd();
+        this.cwd = options.cwd ?? this.resolveCwd();
         this.nxPackage = options.nxPackage;
         this.noGzip = options.noGzip ?? false;
         this.noMinify = options.noMinify ?? false;
         this.gzScriptTag = options.gzScriptTag ?? false;
+    }
+
+    private resolveCwd(): string
+    {
+        const processCwd = process.cwd();
+        if (fs.existsSync(path.join(processCwd, 'fluff.json')))
+        {
+            return processCwd;
+        }
+        return process.env.INIT_CWD ?? processCwd;
     }
 
     public async run(args: string[]): Promise<void>
@@ -204,6 +214,23 @@ Examples:
 
     private tryResolveNxProject(nameOrDir: string, workspaceRoot: string): string | null
     {
+        const projectJsonPaths = this.findProjectJsonFiles(workspaceRoot);
+
+        for (const projectJsonPath of projectJsonPaths)
+        {
+            const projectDir = path.dirname(projectJsonPath);
+            const projectJsonContent: unknown = JSON.parse(fs.readFileSync(projectJsonPath, 'utf-8'));
+
+            if (typeof projectJsonContent === 'object' && projectJsonContent !== null && 'name' in projectJsonContent)
+            {
+                const projectName = projectJsonContent.name;
+                if (projectName === nameOrDir && fs.existsSync(path.join(projectDir, 'fluff.json')))
+                {
+                    return projectDir;
+                }
+            }
+        }
+
         const packagesDir = path.join(workspaceRoot, 'packages');
         const appsDir = path.join(workspaceRoot, 'apps');
         const libsDir = path.join(workspaceRoot, 'libs');
@@ -245,6 +272,33 @@ Examples:
         }
 
         return null;
+    }
+
+    private findProjectJsonFiles(dir: string, depth = 0): string[]
+    {
+        if (depth > 3) return [];
+
+        const results: string[] = [];
+        const projectJsonPath = path.join(dir, 'project.json');
+
+        if (fs.existsSync(projectJsonPath))
+        {
+            results.push(projectJsonPath);
+        }
+
+        if (depth < 3)
+        {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries)
+            {
+                if (!entry.isDirectory()) continue;
+                if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.')) continue;
+
+                results.push(...this.findProjectJsonFiles(path.join(dir, entry.name), depth + 1));
+            }
+        }
+
+        return results;
     }
 
     private init(args: string[]): void

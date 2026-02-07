@@ -5,7 +5,7 @@ interface PipeInstance
 
 type PipeConstructor = (new () => PipeInstance) & { __pipeName?: string };
 
-const pipeRegistry = new Map<string, PipeConstructor>();
+export const pipeRegistry = new Map<string, PipeConstructor>();
 
 export function getPipeTransform(name: string): ((value: unknown, ...args: unknown[]) => unknown) | undefined
 {

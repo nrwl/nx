@@ -52,6 +52,70 @@ function getEntryPointPath(build: Parameters<Plugin['setup']>[0]): string | null
     return null;
 }
 
+interface FileDecorators
+{
+    hasComponent: boolean;
+    hasPipe: boolean;
+}
+
+function detectDecorators(source: string): FileDecorators
+{
+    const result: FileDecorators = { hasComponent: false, hasPipe: false };
+
+    try
+    {
+        const ast = parse(source, {
+            sourceType: 'module',
+            plugins: ['typescript', 'decorators']
+        });
+
+        for (const node of ast.program.body)
+        {
+            if (t.isClassDeclaration(node) && node.decorators)
+            {
+                for (const decorator of node.decorators)
+                {
+                    if (t.isCallExpression(decorator.expression) && t.isIdentifier(decorator.expression.callee))
+                    {
+                        const { name } = decorator.expression.callee;
+                        if (name === 'Component') result.hasComponent = true;
+                        if (name === 'Pipe') result.hasPipe = true;
+                    }
+                }
+            }
+            if (t.isExportNamedDeclaration(node) && t.isClassDeclaration(node.declaration) && node.declaration.decorators)
+            {
+                for (const decorator of node.declaration.decorators)
+                {
+                    if (t.isCallExpression(decorator.expression) && t.isIdentifier(decorator.expression.callee))
+                    {
+                        const { name } = decorator.expression.callee;
+                        if (name === 'Component') result.hasComponent = true;
+                        if (name === 'Pipe') result.hasPipe = true;
+                    }
+                }
+            }
+            if (t.isExportDefaultDeclaration(node) && t.isClassDeclaration(node.declaration) && node.declaration.decorators)
+            {
+                for (const decorator of node.declaration.decorators)
+                {
+                    if (t.isCallExpression(decorator.expression) && t.isIdentifier(decorator.expression.callee))
+                    {
+                        const { name } = decorator.expression.callee;
+                        if (name === 'Component') result.hasComponent = true;
+                        if (name === 'Pipe') result.hasPipe = true;
+                    }
+                }
+            }
+        }
+    }
+    catch
+    {
+    }
+
+    return result;
+}
+
 export function fluffPlugin(options: FluffPluginOptions): Plugin
 {
     const compiler = new ComponentCompiler();
@@ -90,11 +154,47 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
                 }
             });
 
-            build.onLoad({ filter: /\.ts$/ }, (args) =>
+            build.onLoad({ filter: /\.ts$/ }, async(args) =>
             {
-                if (args.path.endsWith('.component.ts'))
+                const source = fs.readFileSync(args.path, 'utf-8');
+                const decorators = detectDecorators(source);
+
+                if (decorators.hasComponent)
                 {
-                    return null;
+                    const cached = compiledCache.get(args.path);
+                    if (cached)
+                    {
+                        return {
+                            contents: cached.code,
+                            loader: 'js',
+                            resolveDir: path.dirname(args.path),
+                            watchFiles: cached.watchFiles
+                        };
+                    }
+
+                    const result = await compiler.compileComponentForBundle(
+                        args.path,
+                        options.minify,
+                        options.sourcemap,
+                        options.skipDefine,
+                        options.production
+                    );
+                    return {
+                        contents: result.code,
+                        loader: 'js',
+                        resolveDir: path.dirname(args.path),
+                        watchFiles: result.watchFiles
+                    };
+                }
+
+                if (decorators.hasPipe)
+                {
+                    const transformed = await compiler.transformPipeDecorators(source, args.path);
+                    return {
+                        contents: transformed,
+                        loader: 'ts',
+                        resolveDir: path.dirname(args.path)
+                    };
                 }
 
                 if (!entryPointPath || args.path !== entryPointPath)
@@ -102,7 +202,6 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
                     return null;
                 }
 
-                const source = fs.readFileSync(args.path, 'utf-8');
                 const ast = parse(source, {
                     sourceType: 'module',
                     plugins: ['typescript', 'decorators']
@@ -137,33 +236,6 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
                 };
             });
 
-            build.onLoad({ filter: /\.component\.ts$/ }, async(args) =>
-            {
-                const cached = compiledCache.get(args.path);
-                if (cached)
-                {
-                    return {
-                        contents: cached.code,
-                        loader: 'js',
-                        resolveDir: path.dirname(args.path),
-                        watchFiles: cached.watchFiles
-                    };
-                }
-
-                const result = await compiler.compileComponentForBundle(
-                    args.path,
-                    options.minify,
-                    options.sourcemap,
-                    options.skipDefine,
-                    options.production
-                );
-                return {
-                    contents: result.code,
-                    loader: 'js',
-                    resolveDir: path.dirname(args.path),
-                    watchFiles: result.watchFiles
-                };
-            });
 
             if (fluffSrcPath)
             {

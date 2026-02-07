@@ -26,7 +26,7 @@ The [fluff demo app](https://fluffjs.github.io/fluff/), vs when ported to other 
 
 | Framework  | Runtime (gzip) | Demo App (gzip) |
 |------------|----------------|-----------------|
-| **Fluff**  | ~6 KB          | 16.4 KB         |
+| **Fluff**  | ~7 KB          | 15.6 KB         |
 | Vue 3.5    | ~24 KB         | 31.8 KB         |
 | Angular 21 | ~55 KB         | 60.5 KB         |
 | React 19   | ~60 KB         | 65.5 KB         |

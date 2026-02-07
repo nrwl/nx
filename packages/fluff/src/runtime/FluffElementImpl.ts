@@ -152,20 +152,22 @@ export abstract class FluffElement extends FluffBase
         return this._shadowRoot;
     }
 
-    protected __defineProp(name: string, prop: Property<unknown>): void
+    protected __createProp<T>(name: string, options: T | { initialValue: T; [key: string]: unknown }): Property<T>
     {
+        const prop = new Property<T>(options);
         Object.defineProperty(this, name, {
-            get(): unknown
+            get(): T | null
             {
                 return prop.getValue();
             },
-            set(v: unknown): void
+            set(v: T): void
             {
                 prop.setValue(v);
             },
             enumerable: true,
             configurable: true
         });
+        return prop;
     }
 
     protected __defineClassHostBinding(name: string, className: string, privateName: string): void

@@ -108,7 +108,7 @@ export class ComponentCompiler
                 const subPaths = await this.discoverComponents(fullPath);
                 componentPaths.push(...subPaths);
             }
-            else if (entry.name.endsWith('.component.ts'))
+            else if (entry.name.endsWith('.ts'))
             {
                 const content = fs.readFileSync(fullPath, 'utf-8');
                 const metadata = await this.extractComponentMetadata(content, fullPath);
@@ -293,6 +293,16 @@ export class ComponentCompiler
             useDecoratorSyntax: true,
             plugins: [[reactivePlugin, { production: production ?? false }]],
             errorContext: 'Babel transform error'
+        });
+    }
+
+    public async transformPipeDecorators(code: string, filePath = 'file.ts'): Promise<string>
+    {
+        return this.runBabelTransform(code, filePath, {
+            useTypeScriptPreset: true,
+            useDecoratorSyntax: true,
+            plugins: [reactivePlugin],
+            errorContext: 'Pipe decorator transform error'
         });
     }
 

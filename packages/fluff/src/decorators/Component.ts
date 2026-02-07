@@ -1,15 +1,3 @@
-interface PipeInstance
-{
-    transform: (value: unknown, ...args: unknown[]) => unknown;
-}
-
-interface PipeClass
-{
-    __pipeName?: string;
-
-    new(): PipeInstance;
-}
-
 type Constructor = new (...args: unknown[]) => object;
 
 export interface ComponentConfig
@@ -19,7 +7,6 @@ export interface ComponentConfig
     template?: string;
     styleUrl?: string;
     styles?: string;
-    pipes?: PipeClass[];
 }
 
 export interface ComponentMetadata extends ComponentConfig
@@ -38,21 +25,6 @@ export function Component(config: ComponentConfig): <T extends Constructor>(targ
             ...config, inputs: new Map(), outputs: new Map()
         };
         componentRegistry.set(target, metadata);
-
-        if (config.pipes && config.pipes.length > 0)
-        {
-            const pipesObj: Record<string, (...args: unknown[]) => unknown> = {};
-            for (const PipeClassItem of config.pipes)
-            {
-                const pipeName = PipeClassItem.__pipeName;
-                if (pipeName)
-                {
-                    const instance = new PipeClassItem();
-                    pipesObj[pipeName] = (value: unknown, ...args: unknown[]): unknown => instance.transform(value, ...args);
-                }
-            }
-            Reflect.set(target.prototype, '__pipes', pipesObj);
-        }
 
         return target;
     };
