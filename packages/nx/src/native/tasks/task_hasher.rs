@@ -5,7 +5,7 @@ use std::sync::Arc;
 use hashbrown::HashSet;
 
 use crate::native::{
-    hasher::hash,
+    hasher::{hash, hash_array},
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
     tasks::types::HashInstruction,
     types::NapiDashMap,
@@ -414,6 +414,11 @@ impl TaskHasher {
                         ..Default::default()
                     },
                 )
+            }
+            HashInstruction::TaskHash(task_id, task_hash) => {
+                let combined = hash_array(vec![task_hash.clone(), task_id.clone()]);
+                trace!(parent: &span, "hash_task_hash: {:?}", now.elapsed());
+                (combined, HashInputsBuilder::default())
             }
             HashInstruction::External(external) => {
                 let hashed_external = hash_external(
