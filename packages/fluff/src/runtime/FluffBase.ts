@@ -185,33 +185,9 @@ export abstract class FluffBase extends HTMLElement
         return fn;
     }
 
-    protected __applyPipes(value: unknown, pipes: {
-        n: string;
-        a: number[]
-    }[], locals: Record<string, unknown>): unknown
+    protected __applyPipes(value: unknown, pipes: { n: string; a: number[] }[], locals: Record<string, unknown>): unknown
     {
-        let result = value;
-        if (result instanceof Property)
-        {
-            result = result.getValue();
-        }
-        for (const pipe of pipes)
-        {
-            result = this.__applyPipe(pipe.n, result, pipe.a, locals);
-        }
-        return result;
-    }
-
-    private __applyPipe(name: string, value: unknown, argExprIds: number[], locals: Record<string, unknown>): unknown
-    {
-        const pipeFn = this.__getPipeFn(name);
-        if (!pipeFn)
-        {
-            console.warn(`Pipe "${name}" not found`);
-            return value;
-        }
-        const args = argExprIds.map(id => this.__getCompiledExprFn(id)(this, locals));
-        return pipeFn(value, ...args);
+        return this.__applyPipesForController(value, pipes.map(p => ({ name: p.n, argExprIds: p.a })), locals);
     }
 
     protected __getPipeFn(_name: string): ((value: unknown, ...args: unknown[]) => unknown) | undefined

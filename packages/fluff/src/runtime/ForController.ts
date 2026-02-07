@@ -59,7 +59,6 @@ export class ForController extends MarkerController
             this.refreshParentBindings();
         };
 
-        this.subscribeTo(deps, update);
-        update();
+        this.subscribeAndRun(deps, update);
     }
 }

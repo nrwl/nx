@@ -90,6 +90,8 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                 const privateFields: t.ClassProperty[] = [];
                 const getterHostBindingUpdates: string[] = [];
                 const propertyHostBindingInits: { propName: string; privateName: string }[] = [];
+                const reactivePropDefs: { propName: string; privateName: string }[] = [];
+                const classHostBindingDefs: { propName: string; className: string; privateName: string }[] = [];
 
                 const pipeMethods: { pipeName: string; methodName: string }[] = [];
                 const hostListeners: { methodName: string; eventName: string }[] = [];
@@ -271,22 +273,32 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
 
                                 const privateField = t.classProperty(t.identifier(privateName), initialValue);
 
-                                const getter = t.classMethod('get', t.identifier(propName), [], t.blockStatement([
-                                    t.returnStatement(t.memberExpression(t.thisExpression(), t.identifier(privateName)))
-                                ]));
+                                if (hostProperty.startsWith('class.'))
+                                {
+                                    const className = hostProperty.slice(6);
+                                    propsToRemove.push(memberPath);
+                                    classHostBindingDefs.push({ propName, className, privateName });
+                                    path.unshiftContainer('body', privateField);
+                                }
+                                else
+                                {
+                                    const getter = t.classMethod('get', t.identifier(propName), [], t.blockStatement([
+                                        t.returnStatement(t.memberExpression(t.thisExpression(), t.identifier(privateName)))
+                                    ]));
 
-                                const updateStatement = buildHostBindingUpdateStatement(hostProperty);
+                                    const updateStatement = buildHostBindingUpdateStatement(hostProperty);
 
-                                const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement([
-                                    t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('__v'))),
-                                    updateStatement
-                                ]));
+                                    const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement([
+                                        t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('__v'))),
+                                        updateStatement
+                                    ]));
 
-                                newMembers.push(getter, setter);
-                                propsToRemove.push(memberPath);
-                                propertyHostBindingInits.push({ propName, privateName });
+                                    newMembers.push(getter, setter);
+                                    propsToRemove.push(memberPath);
+                                    propertyHostBindingInits.push({ propName, privateName });
 
-                                path.unshiftContainer('body', privateField);
+                                    path.unshiftContainer('body', privateField);
+                                }
                             }
                         }
                         continue;
@@ -412,19 +424,9 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         : [initialValue];
                     const privateField = t.classProperty(t.identifier(privateName), t.newExpression(t.identifier('Property'), propertyArgs));
 
-                    const getter = t.classMethod('get', t.identifier(propName), [], t.blockStatement([
-                        t.returnStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('getValue')), []))
-                    ]));
-
-                    const setterStatements: t.Statement[] = [
-                        t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('setValue')), [t.identifier('__v')]))
-                    ];
-
-                    const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement(setterStatements));
-
                     propsToRemove.push(memberPath);
-                    newMembers.push(getter, setter);
                     privateFields.push(privateField);
+                    reactivePropDefs.push({ propName, privateName });
                 }
 
                 for (const p of propsToRemove)
@@ -492,6 +494,26 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
 
                 const reactiveProps = state.reactiveProperties ?? new Set<string>();
                 const constructorStatements: t.Statement[] = [];
+
+                for (const { propName, privateName } of reactivePropDefs)
+                {
+                    constructorStatements.push(t.expressionStatement(
+                        t.callExpression(
+                            t.memberExpression(t.thisExpression(), t.identifier('__defineProp')),
+                            [t.stringLiteral(propName), t.memberExpression(t.thisExpression(), t.identifier(privateName))]
+                        )
+                    ));
+                }
+
+                for (const { propName, className, privateName } of classHostBindingDefs)
+                {
+                    constructorStatements.push(t.expressionStatement(
+                        t.callExpression(
+                            t.memberExpression(t.thisExpression(), t.identifier('__defineClassHostBinding')),
+                            [t.stringLiteral(propName), t.stringLiteral(className), t.stringLiteral(privateName)]
+                        )
+                    ));
+                }
 
                 for (const updateMethodName of getterHostBindingUpdates)
                 {

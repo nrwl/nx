@@ -2,7 +2,6 @@ import type { FluffHostElement } from '../interfaces/FluffHostElement.js';
 import type { PropertyChain } from '../interfaces/PropertyChain.js';
 import type { RenderContext } from '../interfaces/RenderContext.js';
 import type { Subscription } from '../interfaces/Subscription.js';
-import { DomUtils } from '../utils/DomUtils.js';
 import { FluffBase } from './FluffBase.js';
 import { FluffElement } from './FluffElement.js';
 import { registerScope, type Scope } from './ScopeRegistry.js';
@@ -115,7 +114,7 @@ export abstract class MarkerController
         return result;
     }
 
-    protected subscribeTo(deps: PropertyChain[], callback: () => void): void
+    protected subscribeAndRun(deps: PropertyChain[], callback: () => void): void
     {
         const scope = this.getScope();
         const filteredDeps = deps.filter(dep =>
@@ -130,6 +129,7 @@ export abstract class MarkerController
         {
             scope.host.__subscribeToExpression(filteredDeps, scope, callback, this.subscriptions);
         }
+        callback();
     }
 
     protected createChildScope(locals: Record<string, unknown>): Scope
@@ -196,20 +196,6 @@ export abstract class MarkerController
         fluffHost.__processBindingsOnElementPublic(parent, scope);
     }
 
-    protected processBindingsOnElement(el: HTMLElement, scope: Scope): void
-    {
-        const fluffHost = this.__getFluffElementHost();
-        if (!fluffHost) return;
-        fluffHost.__processBindingsOnElementPublic(el, scope);
-    }
-
-    protected processBindingsOnElementWithSubscriptions(el: HTMLElement, scope: Scope, subscriptions: Subscription[]): void
-    {
-        const fluffHost = this.__getFluffElementHost();
-        if (!fluffHost) return;
-        fluffHost.__processBindingsOnElementPublic(el, scope, subscriptions);
-    }
-
     private __getFluffElementHost(): FluffElement | null
     {
         return this.host instanceof FluffElement ? this.host : null;
@@ -263,7 +249,7 @@ export abstract class MarkerController
             node.__parentScope = scope;
             this.processBindingsOnNode(node, scope, bindingsSubscriptions);
         }
-        else if (node instanceof HTMLElement && DomUtils.isCustomElement(node))
+        else if (node instanceof HTMLElement && customElements.get(node.tagName.toLowerCase()) !== undefined)
         {
             const scopeId = registerScope(scope);
             node.setAttribute('data-fluff-scope-id', scopeId);
@@ -280,15 +266,6 @@ export abstract class MarkerController
         }
     }
 
-    protected insertAndScopeTemplateContent(content: Node, nodes: Node[], scope: Scope, renderContext: RenderContext | undefined, markerManager: MarkerManagerLike | undefined, bindingsSubscriptions: Subscription[]): void
-    {
-        this.insertBeforeEndMarker(content);
-        for (const node of nodes)
-        {
-            this.setScopeOnChildren(node, scope, renderContext, markerManager, bindingsSubscriptions);
-        }
-    }
-
     protected cloneAndInsertTemplate(template: HTMLTemplateElement, context: Record<string, unknown>, renderContext: RenderContext | undefined, bindingsSubscriptions: Subscription[]): void
     {
         const content = template.content.cloneNode(true);
@@ -298,18 +275,17 @@ export abstract class MarkerController
         }
         const nodes = Array.from(content.childNodes);
         const scope = this.createChildScope(context);
-        this.insertAndScopeTemplateContent(content, nodes, scope, renderContext, this.markerManager, bindingsSubscriptions);
+        this.insertBeforeEndMarker(content);
+        for (const node of nodes)
+        {
+            this.setScopeOnChildren(node, scope, renderContext, this.markerManager, bindingsSubscriptions);
+        }
     }
 
     protected processBindingsOnNode(node: HTMLElement, scope: Scope, bindingsSubscriptions?: Subscription[]): void
     {
-        if (bindingsSubscriptions)
-        {
-            this.processBindingsOnElementWithSubscriptions(node, scope, bindingsSubscriptions);
-        }
-        else
-        {
-            this.processBindingsOnElement(node, scope);
-        }
+        const fluffHost = this.__getFluffElementHost();
+        if (!fluffHost) return;
+        fluffHost.__processBindingsOnElementPublic(node, scope, bindingsSubscriptions);
     }
 }

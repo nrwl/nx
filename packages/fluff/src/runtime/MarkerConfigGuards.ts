@@ -1,5 +1,4 @@
 import type { BreakMarkerConfig } from '../interfaces/BreakMarkerConfig.js';
-import type { FluffHostElement } from '../interfaces/FluffHostElement.js';
 import type { ForMarkerConfig } from '../interfaces/ForMarkerConfig.js';
 import type { IfMarkerConfig } from '../interfaces/IfMarkerConfig.js';
 import type { MarkerConfig } from '../interfaces/MarkerConfig.js';
@@ -8,11 +7,6 @@ import type { TextMarkerConfig } from '../interfaces/TextMarkerConfig.js';
 
 export class MarkerConfigGuards
 {
-    public static isFluffHostElement(el: Element): el is FluffHostElement
-    {
-        return '__getReactiveProp' in el;
-    }
-
     public static isIfConfig(config: MarkerConfig): config is IfMarkerConfig
     {
         return config.type === 'if';

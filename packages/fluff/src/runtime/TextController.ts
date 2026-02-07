@@ -37,8 +37,7 @@ export class TextController extends MarkerController
             }
         };
 
-        this.subscribeTo(deps, update);
-        update();
+        this.subscribeAndRun(deps, update);
     }
 
     private formatValue(result: unknown): string

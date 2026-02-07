@@ -57,7 +57,6 @@ export class SwitchController extends MarkerController
             this.refreshParentBindings();
         };
 
-        this.subscribeTo(deps, update);
-        update();
+        this.subscribeAndRun(deps, update);
     }
 }

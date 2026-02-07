@@ -65,7 +65,6 @@ export class IfController extends MarkerController
             }
         };
 
-        this.subscribeTo(allDeps, update);
-        update();
+        this.subscribeAndRun(allDeps, update);
     }
 }

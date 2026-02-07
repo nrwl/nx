@@ -131,11 +131,6 @@ export abstract class FluffElement extends FluffBase
         this.__initializeMarkersInternal();
     }
 
-    protected __addSubscription(sub: Subscription): void
-    {
-        this._subscriptions.push(sub);
-    }
-
     protected __pipe(name: string, value: unknown, ...args: unknown[]): unknown
     {
         const pipe = this.__pipes[name];
@@ -155,6 +150,43 @@ export abstract class FluffElement extends FluffBase
     protected __getShadowRoot(): ShadowRoot
     {
         return this._shadowRoot;
+    }
+
+    protected __defineProp(name: string, prop: Property<unknown>): void
+    {
+        Object.defineProperty(this, name, {
+            get(): unknown
+            {
+                return prop.getValue();
+            },
+            set(v: unknown): void
+            {
+                prop.setValue(v);
+            },
+            enumerable: true,
+            configurable: true
+        });
+    }
+
+    protected __defineClassHostBinding(name: string, className: string, privateName: string): void
+    {
+        Object.defineProperty(this, name, {
+            get: (): boolean => Boolean(Reflect.get(this, privateName)),
+            set: (v: boolean): void =>
+            {
+                Reflect.set(this, privateName, v);
+                if (v)
+                {
+                    this.classList.add(className);
+                }
+                else
+                {
+                    this.classList.remove(className);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
     }
 
     protected __setMarkerConfigs(entries: MarkerConfigEntries): void
