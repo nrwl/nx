@@ -29,24 +29,36 @@ export class Property<T>
     private value?: T;
     private committed = true;
     private _isChanging = false;
-    private readonly _propName?: string;
     private _parentProperty?: Property<T>;
     private _parentSubscription?: Subscription;
+    private _commitTriggerSub?: Subscription;
+    private _pendingCommitValue?: { value: T };
+    private _options?: {
+        initialValue?: T;
+        propertyName?: string;
+        direction?: Direction;
+        commitTrigger?: Property<unknown>;
+        linkHandler?: (prop: Property<T>) => void;
+    };
 
     public constructor(options: {
-        initialValue: T,
-        propertyName?: string
+        initialValue?: T;
+        propertyName?: string;
+        direction?: Direction;
+        commitTrigger?: Property<unknown>;
+        linkHandler?: (prop: Property<T>) => void;
     } | T)
     {
         if (this.isOptionsObject(options))
         {
+            this._options = options;
             if (options.initialValue !== undefined)
             {
                 this.value = options.initialValue;
             }
-            if (options.propertyName !== undefined)
+            if (options.commitTrigger !== undefined)
             {
-                this._propName = options.propertyName;
+                this.setCommitTrigger(options.commitTrigger);
             }
         }
         else
@@ -64,18 +76,27 @@ export class Property<T>
     {
         if (val instanceof Property)
         {
+            const linkHandler = this._options?.linkHandler;
+            if (linkHandler)
+            {
+                linkHandler(val);
+            }
             this.linkToParent(val);
             return;
         }
 
         if (this._isChanging)
         {
-            console.error((this._propName ? this._propName + ': ' : '') + 'Binding loop detected: setValue called while change is in progress');
+            const propName = this._options?.propertyName;
+            console.error((propName ? propName + ': ' : '') + 'Binding loop detected: setValue called while change is in progress');
             return;
         }
 
         const changed = val !== this.value && safeStringify(val) !== safeStringify(this.value);
-        if (!changed) return;
+        if (!changed && !(commit && !this.committed))
+        {
+            return;
+        }
 
         this._isChanging = true;
         try
@@ -93,7 +114,7 @@ export class Property<T>
                 this.committed = true;
                 this.onInboundChange.emit(val);
             }
-            else if (commit || !this.committed)
+            else if (commit)
             {
                 this.committed = true;
                 if (this.value !== undefined)
@@ -124,7 +145,8 @@ export class Property<T>
         }
 
         this._parentProperty = root;
-        this._parentSubscription = root.subscribe(Direction.Any, (val) =>
+        const direction = this._options?.direction ?? Direction.Any;
+        this._parentSubscription = root.subscribe(direction, (val) =>
         {
             this.setValueInternal(val, true);
         });
@@ -163,13 +185,27 @@ export class Property<T>
     {
         if (!this._parentProperty) return;
 
+        const commitTrigger = this._options?.commitTrigger;
+        if (commitTrigger)
+        {
+            const shouldCommit = Boolean(commitTrigger.getValue());
+            if (!shouldCommit)
+            {
+                this._pendingCommitValue = { value: val };
+                this._parentProperty.setValue(val, false, false);
+                return;
+            }
+            this._pendingCommitValue = undefined;
+        }
+
         const sub = this._parentSubscription;
         this._parentSubscription = undefined;
         sub?.unsubscribe();
 
         this._parentProperty.setValue(val);
 
-        this._parentSubscription = this._parentProperty.subscribe(Direction.Any, (v) =>
+        const direction = this._options?.direction ?? Direction.Any;
+        this._parentSubscription = this._parentProperty.subscribe(direction, (v) =>
         {
             this.setValueInternal(v, true);
         });
@@ -183,6 +219,28 @@ export class Property<T>
             this._parentSubscription = undefined;
         }
         this._parentProperty = undefined;
+    }
+
+    public setCommitTrigger(trigger: Property<unknown>): void
+    {
+        if (this._commitTriggerSub)
+        {
+            this._commitTriggerSub.unsubscribe();
+            this._commitTriggerSub = undefined;
+        }
+
+        this._options ??= {};
+        this._options.commitTrigger = trigger;
+        this._commitTriggerSub = trigger.onChange.subscribe((val) =>
+        {
+            if (!val) return;
+            if (!this._parentProperty) return;
+            if (!this._pendingCommitValue) return;
+
+            const pending = this._pendingCommitValue.value;
+            this._pendingCommitValue = undefined;
+            this._parentProperty.setValue(pending, false, true);
+        });
     }
 
     public reset(): void
@@ -238,8 +296,8 @@ export class Property<T>
         return this.value;
     }
 
-    private isOptionsObject(options: { initialValue?: T, propertyName?: string } | T):
-        options is { initialValue?: T, propertyName?: string }
+    private isOptionsObject(options: { initialValue?: T } | T):
+        options is { initialValue?: T }
     {
         return typeof options === 'object' && options !== null && ('initialValue' in options);
     }

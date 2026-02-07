@@ -96,15 +96,17 @@ export class ComponentCompiler
         }
     }
 
-    public async discoverComponents(dir: string): Promise<void>
+    public async discoverComponents(dir: string): Promise<string[]>
     {
+        const componentPaths: string[] = [];
         const entries = fs.readdirSync(dir, { withFileTypes: true });
         for (const entry of entries)
         {
             const fullPath = path.join(dir, entry.name);
             if (entry.isDirectory())
             {
-                await this.discoverComponents(fullPath);
+                const subPaths = await this.discoverComponents(fullPath);
+                componentPaths.push(...subPaths);
             }
             else if (entry.name.endsWith('.component.ts'))
             {
@@ -113,9 +115,11 @@ export class ComponentCompiler
                 if (metadata?.selector)
                 {
                     this.componentSelectors.add(metadata.selector);
+                    componentPaths.push(fullPath);
                 }
             }
         }
+        return componentPaths;
     }
 
     public async compileComponentForBundle(filePath: string, minify?: boolean, sourcemap?: boolean, skipDefine?: boolean, production?: boolean): Promise<CompileResult>
@@ -202,23 +206,16 @@ export class ComponentCompiler
         const markerConfigJson = gen.getMarkerConfigJson();
 
         const renderMethod = gen.generateRenderMethodFromHtml(generatedHtml, styles, markerConfigJson);
-        const bindingsSetup = gen.generateBindingsSetup();
 
         let result = await this.transformImportsForBundle(source, filePath);
 
         result = await this.transformClass(result, filePath, {
             className, originalSuperClass: 'HTMLElement', newSuperClass: 'FluffElement', injectMethods: [
-                { name: '__render', body: renderMethod }, { name: '__setupBindings', body: bindingsSetup }
+                { name: '__render', body: renderMethod }
             ]
         });
 
         result = this.addFluffImport(result);
-
-        const exprAssignments = gen.generateExpressionAssignments();
-        if (exprAssignments)
-        {
-            result = this.appendCode(result, exprAssignments);
-        }
 
         const bindingsMap = gen.getBindingsMap();
         if (Object.keys(bindingsMap).length > 0)
@@ -401,22 +398,11 @@ export class ComponentCompiler
 
         const importSpecifiers = [
             t.importSpecifier(t.identifier('FluffBase'), t.identifier('FluffBase')),
-            t.importSpecifier(t.identifier('FluffElement'), t.identifier('FluffElement')),
-            t.importSpecifier(t.identifier('MarkerManager'), t.identifier('MarkerManager'))
+            t.importSpecifier(t.identifier('FluffElement'), t.identifier('FluffElement'))
         ];
         const importDecl = t.importDeclaration(importSpecifiers, t.stringLiteral('@fluffjs/fluff'));
 
         ast.program.body.unshift(importDecl);
-
-        return generate(ast, { compact: false }).code;
-    }
-
-    private appendCode(code: string, additionalCode: string): string
-    {
-        const ast = parse(code, { sourceType: 'module' });
-        const additionalAst = parse(additionalCode, { sourceType: 'module' });
-
-        ast.program.body.push(...additionalAst.program.body);
 
         return generate(ast, { compact: false }).code;
     }

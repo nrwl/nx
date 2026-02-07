@@ -20,6 +20,8 @@ export { Publisher } from './utils/Publisher.js';
 
 export { Direction } from './enums/Direction.js';
 
+export type { ReactiveOptions } from './interfaces/ReactiveOptions.js';
+
 export type { OnInit } from './interfaces/OnInit.js';
 export type { OnDestroy } from './interfaces/OnDestroy.js';
 export type { Subscription } from './interfaces/Subscription.js';

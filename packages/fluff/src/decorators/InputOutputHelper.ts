@@ -1,4 +1,5 @@
 import { getComponentMetadata } from './Component.js';
+import type { ReactiveOptions } from '../interfaces/ReactiveOptions.js';
 
 type Constructor = new (...args: unknown[]) => object;
 
@@ -7,9 +8,9 @@ function isConstructor(val: unknown): val is Constructor
     return typeof val === 'function';
 }
 
-export function createInputOutputDecorator(type: 'inputs' | 'outputs'): (bindingName?: string) => PropertyDecorator
+export function createInputOutputDecorator(type: 'inputs' | 'outputs'): (bindingName?: string | ReactiveOptions) => PropertyDecorator
 {
-    return function(bindingName?: string): PropertyDecorator
+    return function(bindingName?: string | ReactiveOptions): PropertyDecorator
     {
         return function(target: object, propertyKey: string | symbol): void
         {
@@ -18,7 +19,9 @@ export function createInputOutputDecorator(type: 'inputs' | 'outputs'): (binding
             const metadata = getComponentMetadata(constructor);
             if (metadata)
             {
-                const name = bindingName ?? String(propertyKey);
+                const name = typeof bindingName === 'string'
+                    ? bindingName
+                    : bindingName?.alias ?? String(propertyKey);
                 metadata[type].set(String(propertyKey), name);
             }
         };

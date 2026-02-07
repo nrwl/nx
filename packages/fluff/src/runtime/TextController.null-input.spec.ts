@@ -7,7 +7,7 @@ describe('TextController (null input safety)', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): boolean =>
             {
                 if (t instanceof TestNullInputTextComponent)
@@ -24,14 +24,12 @@ describe('TextController (null input safety)', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should not throw if expression reads through a null input during initial render', async() =>

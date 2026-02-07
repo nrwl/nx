@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestIfReinsertBindsInputChildComponent } from './tests/TestIfReinsertBindsInputChildComponent.js';
 import { TestIfReinsertBindsInputParentComponent } from './tests/TestIfReinsertBindsInputParentComponent.js';
 import { TestIfUnsubscribeNestedParentComponent } from './tests/TestIfUnsubscribeNestedParentComponent.js';
 import { TestUnsubscribeNestedChildComponent } from './tests/TestUnsubscribeNestedChildComponent.js';
 import { TestUnsubscribeNestedGrandchildComponent } from './tests/TestUnsubscribeNestedGrandchildComponent.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('if reinsert bindings', () =>
 {
     it('should re-apply input bindings when a component is removed and re-inserted by @if', async() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): boolean =>
             {
                 if (t instanceof TestIfReinsertBindsInputParentComponent)
@@ -35,28 +35,17 @@ describe('if reinsert bindings', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
 
-        if (!customElements.get('test-if-reinsert-binds-input-parent'))
-        {
-            customElements.define('test-if-reinsert-binds-input-parent', TestIfReinsertBindsInputParentComponent);
-        }
-        if (!customElements.get('test-if-reinsert-binds-input-child'))
-        {
-            customElements.define('test-if-reinsert-binds-input-child', TestIfReinsertBindsInputChildComponent);
-        }
+        TestHarness.defineCustomElement('test-if-reinsert-binds-input-parent', TestIfReinsertBindsInputParentComponent);
+        TestHarness.defineCustomElement('test-if-reinsert-binds-input-child', TestIfReinsertBindsInputChildComponent);
 
-        const el = document.createElement('test-if-reinsert-binds-input-parent');
+        const el = TestHarness.mount('test-if-reinsert-binds-input-parent');
         if (!(el instanceof TestIfReinsertBindsInputParentComponent))
         {
             throw new Error('Expected TestIfReinsertBindsInputParentComponent');
         }
-        document.body.appendChild(el);
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const getText = (): string =>
         {
@@ -78,16 +67,10 @@ describe('if reinsert bindings', () =>
             .toBe('8');
 
         el.show = false;
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         el.show = true;
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         expect(getText())
             .toBe('8');
@@ -97,8 +80,8 @@ describe('if reinsert bindings', () =>
 
     it('should unsubscribe bindings on removal for nested components inserted by @if', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__e[0] = (t: unknown): boolean =>
+        const expressions: ((t: unknown, l: Record<string, unknown>) => unknown)[] = [];
+        expressions[0] = (t: unknown): boolean =>
         {
             if (t instanceof TestIfUnsubscribeNestedParentComponent)
             {
@@ -106,7 +89,7 @@ describe('if reinsert bindings', () =>
             }
             throw new Error('Invalid type');
         };
-        FluffBase.__e[1] = (t: unknown): unknown =>
+        expressions[1] = (t: unknown): unknown =>
         {
             if (t instanceof TestIfUnsubscribeNestedParentComponent)
             {
@@ -114,7 +97,7 @@ describe('if reinsert bindings', () =>
             }
             throw new Error('Invalid type');
         };
-        FluffBase.__e[4] = (t: unknown): unknown =>
+        expressions[4] = (t: unknown): unknown =>
         {
             if (t instanceof TestUnsubscribeNestedChildComponent)
             {
@@ -122,7 +105,7 @@ describe('if reinsert bindings', () =>
             }
             throw new Error('Invalid type');
         };
-        FluffBase.__e[5] = (t: unknown): number =>
+        expressions[5] = (t: unknown): number =>
         {
             if (t instanceof TestUnsubscribeNestedGrandchildComponent)
             {
@@ -130,31 +113,18 @@ describe('if reinsert bindings', () =>
             }
             throw new Error('Invalid type');
         };
-        FluffBase.__h = [];
+        TestHarness.setExpressionTable(expressions, []);
 
-        if (!customElements.get('test-if-unsubscribe-nested-parent'))
-        {
-            customElements.define('test-if-unsubscribe-nested-parent', TestIfUnsubscribeNestedParentComponent);
-        }
-        if (!customElements.get('test-unsubscribe-nested-child'))
-        {
-            customElements.define('test-unsubscribe-nested-child', TestUnsubscribeNestedChildComponent);
-        }
-        if (!customElements.get('test-unsubscribe-nested-grandchild'))
-        {
-            customElements.define('test-unsubscribe-nested-grandchild', TestUnsubscribeNestedGrandchildComponent);
-        }
+        TestHarness.defineCustomElement('test-if-unsubscribe-nested-parent', TestIfUnsubscribeNestedParentComponent);
+        TestHarness.defineCustomElement('test-unsubscribe-nested-child', TestUnsubscribeNestedChildComponent);
+        TestHarness.defineCustomElement('test-unsubscribe-nested-grandchild', TestUnsubscribeNestedGrandchildComponent);
 
-        const el = document.createElement('test-if-unsubscribe-nested-parent');
+        const el = TestHarness.mount('test-if-unsubscribe-nested-parent');
         if (!(el instanceof TestIfUnsubscribeNestedParentComponent))
         {
             throw new Error('Expected TestIfUnsubscribeNestedParentComponent');
         }
-        document.body.appendChild(el);
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const child = el.shadowRoot?.querySelector('test-unsubscribe-nested-child');
         if (!(child instanceof TestUnsubscribeNestedChildComponent))
@@ -164,16 +134,10 @@ describe('if reinsert bindings', () =>
         const initialSetCount = child.statsSetCount;
 
         el.show = false;
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         el.setStatsTotal(9);
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         expect(child.statsSetCount)
             .toBe(initialSetCount);

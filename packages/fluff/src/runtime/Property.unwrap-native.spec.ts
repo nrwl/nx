@@ -19,21 +19,19 @@ describe('Property unwrapping for native element bindings', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should unwrap Property value for class binding on native element', async() =>
     {
         const selectedProp = new Property<boolean>({ initialValue: false, propertyName: 'selected' });
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (_t: unknown, l: unknown): Property<boolean> =>
             {
                 if (!hasItemSelected(l))
@@ -42,7 +40,7 @@ describe('Property unwrapping for native element bindings', () =>
                 }
                 return l.item.selected;
             }
-        ];
+        ], []);
 
         const TestClassBindingComponent = createClassBindingTestComponent();
 
@@ -77,7 +75,7 @@ describe('Property unwrapping for native element bindings', () =>
     {
         const colorProp = new Property<string>({ initialValue: 'red', propertyName: 'color' });
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (_t: unknown, l: unknown): Property<string> =>
             {
                 if (!hasItemColor(l))
@@ -86,7 +84,7 @@ describe('Property unwrapping for native element bindings', () =>
                 }
                 return l.item.color;
             }
-        ];
+        ], []);
 
         const TestStyleBindingComponent = createStyleBindingTestComponent();
 
@@ -124,7 +122,7 @@ describe('Property unwrapping for native element bindings', () =>
     {
         const disabledProp = new Property<boolean>({ initialValue: false, propertyName: 'disabled' });
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (_t: unknown, l: unknown): Property<boolean> =>
             {
                 if (!hasItemDisabled(l))
@@ -133,7 +131,7 @@ describe('Property unwrapping for native element bindings', () =>
                 }
                 return l.item.disabled;
             }
-        ];
+        ], []);
 
         const TestPropertyBindingComponent = createPropertyBindingTestComponent();
 
@@ -171,7 +169,7 @@ describe('Property unwrapping for native element bindings', () =>
     {
         const valueProp = new Property<string>({ initialValue: 'test-value', propertyName: 'value' });
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (_t: unknown, l: unknown): Property<string> =>
             {
                 if (!hasItemValue(l))
@@ -180,7 +178,7 @@ describe('Property unwrapping for native element bindings', () =>
                 }
                 return l.item.value;
             }
-        ];
+        ], []);
 
         const TestAttributeBindingComponent = createAttributeBindingTestComponent();
 
@@ -215,7 +213,7 @@ describe('Property unwrapping for native element bindings', () =>
     {
         const selectedProp = new Property<boolean>({ initialValue: true, propertyName: 'selected' });
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (_t: unknown, l: unknown): boolean =>
             {
                 if (!hasItemSelected(l))
@@ -224,7 +222,7 @@ describe('Property unwrapping for native element bindings', () =>
                 }
                 return l.item.selected.getValue() ?? false;
             }
-        ];
+        ], []);
 
         const TestClassReactiveComponent = createClassBindingTestComponent();
 

@@ -13,20 +13,18 @@ describe('Property binding with pipes', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
         resetTestPropertyBindingPipeReceivedValue();
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should apply pipe to property binding value', async() =>
     {
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): number =>
             {
                 if (t instanceof TestPropertyBindingPipeParentComponent)
@@ -35,7 +33,7 @@ describe('Property binding with pipes', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         Reflect.set(TestPropertyBindingPipeParentComponent, '__bindings', {
             l0: [
@@ -80,7 +78,7 @@ describe('Property binding with pipes', () =>
 
     it('should apply pipe with arguments to property binding value', async() =>
     {
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): number =>
             {
                 if (t instanceof TestPropertyBindingPipeParentComponent)
@@ -90,7 +88,7 @@ describe('Property binding with pipes', () =>
                 throw new Error('Invalid type');
             },
             (): string => '!'
-        ];
+        ], []);
 
         const childTag = 'test-prop-binding-pipe-args-child-' + Math.random()
             .toString(36)

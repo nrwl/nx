@@ -29,6 +29,31 @@ export abstract class FluffBase extends HTMLElement
     public static __e: ExpressionFn[] = [];
     public static __h: HandlerFn[] = [];
     public static __bindings: Record<string, BindingInfo[]> = {};
+    private static __expressionsReady = false;
+    private static readonly __pendingInitCallbacks: (() => void)[] = [];
+
+    public static __setExpressionTable(expressions: ExpressionFn[], handlers: HandlerFn[]): void
+    {
+        FluffBase.__e = expressions;
+        FluffBase.__h = handlers;
+        FluffBase.__expressionsReady = true;
+
+        const pending = FluffBase.__pendingInitCallbacks.splice(0, FluffBase.__pendingInitCallbacks.length);
+        for (const callback of pending)
+        {
+            callback();
+        }
+    }
+
+    public static __areExpressionsReady(): boolean
+    {
+        return FluffBase.__expressionsReady;
+    }
+
+    public static __addPendingInit(callback: () => void): void
+    {
+        FluffBase.__pendingInitCallbacks.push(callback);
+    }
 
     public __parentScope?: Scope;
     public __loopContext: Record<string, unknown> = {};

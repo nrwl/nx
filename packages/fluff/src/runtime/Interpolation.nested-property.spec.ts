@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Property } from '../utils/Property.js';
-import { FluffBase } from './FluffBase.js';
 import {
     createTestInterpolationNestedPropertyComponent
 } from './tests/createTestInterpolationNestedPropertyComponent.js';
@@ -8,24 +7,23 @@ import { TestInterpolationNestedPropertyComponentBase } from './tests/TestInterp
 import {
     TestInterpolationNestedPropertyContainerClass
 } from './tests/TestInterpolationNestedPropertyContainerClass.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('Interpolation with nested Property', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should unwrap nested Property value in interpolation and display the value', async() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (t instanceof TestInterpolationNestedPropertyComponentBase)
@@ -34,21 +32,17 @@ describe('Interpolation with nested Property', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         const tag = 'test-interpolation-nested-prop-' + Math.random()
             .toString(36)
             .slice(2);
         const ComponentClass = createTestInterpolationNestedPropertyComponent();
-        customElements.define(tag, ComponentClass);
+        TestHarness.defineCustomElement(tag, ComponentClass);
 
-        const el = document.createElement(tag);
-        document.body.appendChild(el);
+        const el = TestHarness.mount(tag);
 
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
+        await TestHarness.waitForTimeout();
 
         const { shadowRoot } = el;
         expect(shadowRoot)
@@ -69,7 +63,7 @@ describe('Interpolation with nested Property', () =>
 
     it('should update interpolation when nested Property value changes', async() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (t instanceof TestInterpolationNestedPropertyComponentBase)
@@ -78,25 +72,21 @@ describe('Interpolation with nested Property', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         const tag = 'test-interpolation-nested-prop-update-' + Math.random()
             .toString(36)
             .slice(2);
         const ComponentClass = createTestInterpolationNestedPropertyComponent();
-        customElements.define(tag, ComponentClass);
+        TestHarness.defineCustomElement(tag, ComponentClass);
 
-        const el = document.createElement(tag);
+        const el = TestHarness.mount(tag);
         if (!(el instanceof TestInterpolationNestedPropertyComponentBase))
         {
             throw new Error('Expected TestInterpolationNestedPropertyComponentBase');
         }
-        document.body.appendChild(el);
 
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
+        await TestHarness.waitForTimeout();
 
         const { shadowRoot } = el;
         expect(shadowRoot?.textContent?.trim())
@@ -104,10 +94,7 @@ describe('Interpolation with nested Property', () =>
 
         el.hostClass.childProp.setValue(100);
 
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
+        await TestHarness.waitForTimeout();
 
         expect(shadowRoot?.textContent?.trim())
             .toBe('100');
@@ -117,7 +104,7 @@ describe('Interpolation with nested Property', () =>
 
     it('should update interpolation when parent container is replaced', async() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (t instanceof TestInterpolationNestedPropertyComponentBase)
@@ -126,25 +113,21 @@ describe('Interpolation with nested Property', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         const tag = 'test-interpolation-nested-prop-replace-' + Math.random()
             .toString(36)
             .slice(2);
         const ComponentClass = createTestInterpolationNestedPropertyComponent();
-        customElements.define(tag, ComponentClass);
+        TestHarness.defineCustomElement(tag, ComponentClass);
 
-        const el = document.createElement(tag);
+        const el = TestHarness.mount(tag);
         if (!(el instanceof TestInterpolationNestedPropertyComponentBase))
         {
             throw new Error('Expected TestInterpolationNestedPropertyComponentBase');
         }
-        document.body.appendChild(el);
 
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
+        await TestHarness.waitForTimeout();
 
         const { shadowRoot } = el;
         expect(shadowRoot?.textContent?.trim())
@@ -154,10 +137,7 @@ describe('Interpolation with nested Property', () =>
         newContainer.childProp.setValue(999);
         el.hostClass = newContainer;
 
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
+        await TestHarness.waitForTimeout();
 
         expect(shadowRoot?.textContent?.trim())
             .toBe('999');

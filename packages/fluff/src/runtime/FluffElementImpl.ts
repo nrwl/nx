@@ -4,6 +4,7 @@ import { DomUtils } from '../utils/DomUtils.js';
 import { Property } from '../utils/Property.js';
 import { Publisher } from '../utils/Publisher.js';
 import { FluffBase } from './FluffBase.js';
+import { MarkerManager } from './MarkerManager.js';
 import type { MarkerManagerInterface } from './MarkerManagerInterface.js';
 import { getScope, type Scope } from './ScopeRegistry.js';
 
@@ -13,6 +14,7 @@ export abstract class FluffElement extends FluffBase
     protected readonly _shadowRoot: ShadowRoot;
     private _subscriptions: Subscription[] = [];
     private _initialized = false;
+    private _pendingInit = false;
     private _markerManager: MarkerManagerInterface | null = null;
     private _markerConfigJson: string | null = null;
     private _MarkerManagerClass: (new (host: FluffElement, shadowRoot: ShadowRoot) => MarkerManagerInterface) | null = null;
@@ -27,6 +29,20 @@ export abstract class FluffElement extends FluffBase
     {
         if (!this._initialized)
         {
+            if (!FluffBase.__areExpressionsReady())
+            {
+                if (!this._pendingInit)
+                {
+                    this._pendingInit = true;
+                    FluffBase.__addPendingInit((): void =>
+                    {
+                        this._pendingInit = false;
+                        this.connectedCallback();
+                    });
+                }
+                return;
+            }
+
             const scopeId = this.getAttribute('data-fluff-scope-id');
             if (scopeId && !this.__parentScope)
             {
@@ -112,6 +128,7 @@ export abstract class FluffElement extends FluffBase
 
     protected __setupBindings(): void
     {
+        this.__initializeMarkers(MarkerManager);
         this.__processBindings();
         this.__initializeMarkersInternal();
     }

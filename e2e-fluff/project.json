@@ -8,6 +8,12 @@
         "@fluffjs/cli"
     ],
     "targets": {
+        "playwright-install": {
+            "command": "npx playwright install",
+            "options": {
+                "cwd": "e2e-fluff"
+            }
+        },
         "build": {
             "dependsOn": ["@fluffjs/fluff:build-internal"],
             "command": "node ../packages/cli/dist/Cli.js build",
@@ -16,7 +22,7 @@
             }
         },
         "e2e": {
-            "dependsOn": ["build"],
+            "dependsOn": ["playwright-install", "build"],
             "command": "npx playwright test --config=playwright.config.ts",
             "options": {
                 "cwd": "e2e-fluff"

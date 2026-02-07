@@ -35,14 +35,12 @@ describe('Property-to-Property binding propagation', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should propagate child property changes back to source Property', async() =>
@@ -53,7 +51,7 @@ describe('Property-to-Property binding propagation', () =>
         const ChildComponent = createPropBindChildComponent();
         const ParentComponent = createPropBindParentComponent(childTag);
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (hasSourceProperty(t))
@@ -62,7 +60,7 @@ describe('Property-to-Property binding propagation', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         customElements.define(childTag, ChildComponent);
         customElements.define(parentTag, ParentComponent);
@@ -103,7 +101,7 @@ describe('Property-to-Property binding propagation', () =>
         const ChildComponent = createPropBindChildComponent();
         const ParentComponent = createPropBindParentComponent(childTag);
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (hasSourceProperty(t))
@@ -112,7 +110,7 @@ describe('Property-to-Property binding propagation', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         customElements.define(childTag, ChildComponent);
         customElements.define(parentTag, ParentComponent);

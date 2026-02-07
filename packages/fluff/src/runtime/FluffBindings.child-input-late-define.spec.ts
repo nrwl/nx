@@ -1,17 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestChildTasksListComponent } from './tests/TestChildTasksListComponent.js';
 import { TestParentBindsTasksComponent } from './tests/TestParentBindsTasksComponent.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('bindings (child input late define)', () =>
 {
-    const tick = async(): Promise<void> =>
-    {
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
-    };
+    const tick = async(): Promise<void> => TestHarness.waitForTimeout();
 
     const waitUntil = async(predicate: () => boolean, maxTicks: number, onTimeout: () => string): Promise<void> =>
     {
@@ -28,7 +22,7 @@ describe('bindings (child input late define)', () =>
 
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): number[] =>
             {
                 if (t instanceof TestParentBindsTasksComponent)
@@ -53,14 +47,12 @@ describe('bindings (child input late define)', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should render child for-loop items when parent binds tasks after child is defined', async() =>
@@ -69,17 +61,13 @@ describe('bindings (child input late define)', () =>
             l0: [{ n: 'tasks', b: 'property', e: 1 }]
         };
 
-        if (!customElements.get('test-parent-binds-tasks'))
-        {
-            customElements.define('test-parent-binds-tasks', TestParentBindsTasksComponent);
-        }
+        TestHarness.defineCustomElement('test-parent-binds-tasks', TestParentBindsTasksComponent);
 
-        const parent = document.createElement('test-parent-binds-tasks');
+        const parent = TestHarness.mount('test-parent-binds-tasks');
         if (!(parent instanceof TestParentBindsTasksComponent))
         {
             throw new Error('Expected TestParentBindsTasksComponent');
         }
-        document.body.appendChild(parent);
 
         const childBeforeDefine = parent.shadowRoot?.querySelector('test-child-tasks-list');
         if (!(childBeforeDefine instanceof HTMLElement))
@@ -90,16 +78,11 @@ describe('bindings (child input late define)', () =>
         expect(childBeforeDefine.getAttribute('tasks'))
             .toBeNull();
 
-        if (!customElements.get('test-child-tasks-list'))
-        {
-            customElements.define('test-child-tasks-list', TestChildTasksListComponent);
-        }
+        TestHarness.defineCustomElement('test-child-tasks-list', TestChildTasksListComponent);
 
         customElements.upgrade(childBeforeDefine);
 
-        await Promise.resolve();
-
-        await Promise.resolve();
+        await TestHarness.tick(2);
 
         const child = parent.shadowRoot?.querySelector('test-child-tasks-list');
         if (!(child instanceof TestChildTasksListComponent))

@@ -10,7 +10,7 @@ describe('switch reinsert bindings', () =>
 {
     it('should re-apply input bindings when a component is removed and re-inserted by @switch', async() =>
     {
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): string =>
             {
                 if (t instanceof TestSwitchReinsertBindsInputParentComponent)
@@ -37,8 +37,7 @@ describe('switch reinsert bindings', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
 
         if (!customElements.get('test-switch-reinsert-binds-input-parent'))
         {
@@ -102,42 +101,42 @@ describe('switch reinsert bindings', () =>
 
     it('should unsubscribe bindings on removal for nested components inserted by @switch', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__e[0] = (t: unknown): string =>
-        {
-            if (t instanceof TestSwitchUnsubscribeNestedParentComponent)
+        FluffBase.__setExpressionTable([
+            (t: unknown): string =>
             {
-                return t.mode;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[1] = (): string => 'a';
-        FluffBase.__e[2] = (): string => 'b';
-        FluffBase.__e[3] = (t: unknown): unknown =>
-        {
-            if (t instanceof TestSwitchUnsubscribeNestedParentComponent)
+                if (t instanceof TestSwitchUnsubscribeNestedParentComponent)
+                {
+                    return t.mode;
+                }
+                throw new Error('Invalid type');
+            },
+            (): string => 'a',
+            (): string => 'b',
+            (t: unknown): unknown =>
             {
-                return t.stats;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[4] = (t: unknown): unknown =>
-        {
-            if (t instanceof TestUnsubscribeNestedChildComponent)
+                if (t instanceof TestSwitchUnsubscribeNestedParentComponent)
+                {
+                    return t.stats;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): unknown =>
             {
-                return t.stats;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[5] = (t: unknown): number =>
-        {
-            if (t instanceof TestUnsubscribeNestedGrandchildComponent)
+                if (t instanceof TestUnsubscribeNestedChildComponent)
+                {
+                    return t.stats;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): number =>
             {
-                return t.stats.total;
+                if (t instanceof TestUnsubscribeNestedGrandchildComponent)
+                {
+                    return t.stats.total;
+                }
+                throw new Error('Invalid type');
             }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__h = [];
+        ], []);
 
         if (!customElements.get('test-switch-unsubscribe-nested-parent'))
         {

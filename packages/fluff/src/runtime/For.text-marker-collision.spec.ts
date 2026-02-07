@@ -1,44 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import {
     TestForTextMarkerCollisionNoTrackParentComponent
 } from './tests/TestForTextMarkerCollisionNoTrackParentComponent.js';
 import { TestForTextMarkerCollisionParentComponent } from './tests/TestForTextMarkerCollisionParentComponent.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('for text marker collision', () =>
 {
     it('should render a single @for item when only one marker instance exists', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__e[0] = (t: unknown): string[] =>
-        {
-            if (t instanceof TestForTextMarkerCollisionParentComponent)
+        TestHarness.setExpressionTable([
+            (t: unknown): string[] =>
             {
-                return t.tags;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
-        FluffBase.__h = [];
+                if (t instanceof TestForTextMarkerCollisionParentComponent)
+                {
+                    return t.tags;
+                }
+                throw new Error('Invalid type');
+            },
+            (_t: unknown, l: Record<string, unknown>): unknown => l.tag
+        ], []);
 
         const tagName = 'test-for-text-marker-collision-parent';
-        if (!customElements.get(tagName))
-        {
-            customElements.define(tagName, TestForTextMarkerCollisionParentComponent);
-        }
+        TestHarness.defineCustomElement(tagName, TestForTextMarkerCollisionParentComponent);
 
-        const el = document.createElement(tagName);
+        const el = TestHarness.mount(tagName);
         if (!(el instanceof TestForTextMarkerCollisionParentComponent))
         {
             throw new Error('Expected TestForTextMarkerCollisionParentComponent');
         }
         el.tags = ['docs'];
-        document.body.appendChild(el);
 
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const tags = Array.from(el.shadowRoot?.querySelectorAll('span.tag') ?? []);
         expect(tags.length)
@@ -61,35 +54,28 @@ describe('for text marker collision', () =>
 
     it('should render multiple @for iterations when the same text marker id exists multiple times (with pipes)', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__e[0] = (t: unknown): string[] =>
-        {
-            if (t instanceof TestForTextMarkerCollisionParentComponent)
+        TestHarness.setExpressionTable([
+            (t: unknown): string[] =>
             {
-                return t.tags;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
-        FluffBase.__h = [];
+                if (t instanceof TestForTextMarkerCollisionParentComponent)
+                {
+                    return t.tags;
+                }
+                throw new Error('Invalid type');
+            },
+            (_t: unknown, l: Record<string, unknown>): unknown => l.tag
+        ], []);
 
-        if (!customElements.get('test-for-text-marker-collision-parent'))
-        {
-            customElements.define('test-for-text-marker-collision-parent', TestForTextMarkerCollisionParentComponent);
-        }
+        TestHarness.defineCustomElement('test-for-text-marker-collision-parent', TestForTextMarkerCollisionParentComponent);
 
-        const el = document.createElement('test-for-text-marker-collision-parent');
+        const el = TestHarness.mount('test-for-text-marker-collision-parent');
         if (!(el instanceof TestForTextMarkerCollisionParentComponent))
         {
             throw new Error('Expected TestForTextMarkerCollisionParentComponent');
         }
         el.tags = ['docs', 'api', 'backend'];
-        document.body.appendChild(el);
 
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const tags = Array.from(el.shadowRoot?.querySelectorAll('span.tag') ?? []);
         expect(tags.length)
@@ -112,36 +98,29 @@ describe('for text marker collision', () =>
 
     it('should handle empty + reinsert for @for text markers', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__e[0] = (t: unknown): string[] =>
-        {
-            if (t instanceof TestForTextMarkerCollisionParentComponent)
+        TestHarness.setExpressionTable([
+            (t: unknown): string[] =>
             {
-                return t.tags;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
-        FluffBase.__h = [];
+                if (t instanceof TestForTextMarkerCollisionParentComponent)
+                {
+                    return t.tags;
+                }
+                throw new Error('Invalid type');
+            },
+            (_t: unknown, l: Record<string, unknown>): unknown => l.tag
+        ], []);
 
         const tagName = 'test-for-text-marker-collision-parent';
-        if (!customElements.get(tagName))
-        {
-            customElements.define(tagName, TestForTextMarkerCollisionParentComponent);
-        }
+        TestHarness.defineCustomElement(tagName, TestForTextMarkerCollisionParentComponent);
 
-        const el = document.createElement(tagName);
+        const el = TestHarness.mount(tagName);
         if (!(el instanceof TestForTextMarkerCollisionParentComponent))
         {
             throw new Error('Expected TestForTextMarkerCollisionParentComponent');
         }
         el.tags = ['docs', 'api'];
-        document.body.appendChild(el);
 
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         let tags = Array.from(el.shadowRoot?.querySelectorAll('span.tag') ?? []);
         expect(tags.map(t =>
@@ -156,20 +135,14 @@ describe('for text marker collision', () =>
             .toEqual(['Docs', 'Api']);
 
         el.tags = [];
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         tags = Array.from(el.shadowRoot?.querySelectorAll('span.tag') ?? []);
         expect(tags.length)
             .toBe(0);
 
         el.tags = ['backend', 'testing'];
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         tags = Array.from(el.shadowRoot?.querySelectorAll('span.tag') ?? []);
         expect(tags.map(t =>
@@ -188,35 +161,28 @@ describe('for text marker collision', () =>
 
     it('should render duplicate items when no trackBy is used (no pipes)', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__e[0] = (t: unknown): string[] =>
-        {
-            if (t instanceof TestForTextMarkerCollisionNoTrackParentComponent)
+        TestHarness.setExpressionTable([
+            (t: unknown): string[] =>
             {
-                return t.tags;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__e[1] = (t: unknown, l: Record<string, unknown>): unknown => l.tag;
-        FluffBase.__h = [];
+                if (t instanceof TestForTextMarkerCollisionNoTrackParentComponent)
+                {
+                    return t.tags;
+                }
+                throw new Error('Invalid type');
+            },
+            (_t: unknown, l: Record<string, unknown>): unknown => l.tag
+        ], []);
 
-        if (!customElements.get('test-for-text-marker-collision-no-track-parent'))
-        {
-            customElements.define('test-for-text-marker-collision-no-track-parent', TestForTextMarkerCollisionNoTrackParentComponent);
-        }
+        TestHarness.defineCustomElement('test-for-text-marker-collision-no-track-parent', TestForTextMarkerCollisionNoTrackParentComponent);
 
-        const el = document.createElement('test-for-text-marker-collision-no-track-parent');
+        const el = TestHarness.mount('test-for-text-marker-collision-no-track-parent');
         if (!(el instanceof TestForTextMarkerCollisionNoTrackParentComponent))
         {
             throw new Error('Expected TestForTextMarkerCollisionNoTrackParentComponent');
         }
         el.tags = ['a', 'a'];
-        document.body.appendChild(el);
 
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const tags = Array.from(el.shadowRoot?.querySelectorAll('span.tag') ?? []);
         expect(tags.length)

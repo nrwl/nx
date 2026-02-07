@@ -104,14 +104,12 @@ describe('Select value binding with @for options', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should show correct selected value when options are rendered via @for', async() =>
@@ -120,7 +118,7 @@ describe('Select value binding with @for options', () =>
 
         const SelectComponent = createSelectWithForComponent(tag);
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): SelectOption[] =>
             {
                 if (hasProps(t))
@@ -155,7 +153,7 @@ describe('Select value binding with @for options', () =>
                 }
                 throw new Error('Invalid opt');
             }
-        ];
+        ], []);
 
         customElements.define(tag, SelectComponent);
 

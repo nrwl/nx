@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestForChildComponent } from './tests/TestForChildComponent.js';
 import { TestForComponent } from './tests/TestForComponent.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('fluff:for', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): string[] =>
             {
                 if (t instanceof TestForComponent)
@@ -17,38 +17,29 @@ describe('fluff:for', () =>
                 throw new Error('Invalid type');
             },
             (_t: unknown, l: Record<string, unknown>): unknown => l.item
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should bind each loop item to a child component', () =>
     {
-        if (!customElements.get('test-for-child'))
-        {
-            customElements.define('test-for-child', TestForChildComponent);
-        }
+        TestHarness.defineCustomElement('test-for-child', TestForChildComponent);
 
         TestForComponent.__bindings = {
             l0: [{ n: 'value', b: 'property', e: 1 }]
         };
 
-        if (!customElements.get('test-for-component'))
-        {
-            customElements.define('test-for-component', TestForComponent);
-        }
+        TestHarness.defineCustomElement('test-for-component', TestForComponent);
 
-        const component = document.createElement('test-for-component');
+        const component = TestHarness.mount('test-for-component');
         if (!(component instanceof TestForComponent))
         {
             throw new Error('Expected TestForComponent');
         }
-        document.body.appendChild(component);
 
         const children = Array.from(component.shadowRoot?.querySelectorAll('test-for-child') ?? []);
         const values = children.map(child =>

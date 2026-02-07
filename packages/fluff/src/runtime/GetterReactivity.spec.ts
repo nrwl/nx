@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestGetterReactivityComponent } from './tests/TestGetterReactivityComponent.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('getter reactivity', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): number =>
             {
                 if (t instanceof TestGetterReactivityComponent)
@@ -15,31 +15,25 @@ describe('getter reactivity', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should update when underlying reactive properties used by a getter change', async() =>
     {
-        if (!customElements.get('test-getter-reactivity'))
-        {
-            customElements.define('test-getter-reactivity', TestGetterReactivityComponent);
-        }
+        TestHarness.defineCustomElement('test-getter-reactivity', TestGetterReactivityComponent);
 
-        const el = document.createElement('test-getter-reactivity');
+        const el = TestHarness.mount('test-getter-reactivity');
         if (!(el instanceof TestGetterReactivityComponent))
         {
             throw new Error('Expected TestGetterReactivityComponent');
         }
 
-        document.body.appendChild(el);
-        await Promise.resolve();
+        await TestHarness.tick();
 
         expect(el.shadowRoot?.querySelector('.count')
             ?.textContent
@@ -47,8 +41,7 @@ describe('getter reactivity', () =>
             .toBe('0');
 
         el.items = ['a', 'b', 'c'];
-        await Promise.resolve();
-        await Promise.resolve();
+        await TestHarness.tick(2);
 
         expect(el.shadowRoot?.querySelector('.count')
             ?.textContent

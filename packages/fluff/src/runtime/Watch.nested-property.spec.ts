@@ -16,20 +16,18 @@ describe('Watch with nested Property bindings', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
         resetTestWatchNestedPropertyState();
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should trigger @Watch when parent nested Property value changes', async() =>
     {
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (t instanceof TestWatchNestedPropertyParentComponent)
@@ -38,7 +36,7 @@ describe('Watch with nested Property bindings', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         Reflect.set(TestWatchNestedPropertyParentComponent, '__bindings', {
             l0: [{ n: 'property', b: 'property', d: [['hostClass', 'childProp']], e: 0 }]
@@ -90,7 +88,7 @@ describe('Watch with nested Property bindings', () =>
 
     it('should unsubscribe from old nested Property and resubscribe to new one when parent changes', async() =>
     {
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (t instanceof TestWatchNestedPropertyParentComponent2)
@@ -99,7 +97,7 @@ describe('Watch with nested Property bindings', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         Reflect.set(TestWatchNestedPropertyParentComponent2, '__bindings', {
             l0: [{ n: 'property', b: 'property', d: [['hostClass', 'childProp']], e: 0 }]

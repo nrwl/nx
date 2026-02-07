@@ -317,6 +317,7 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     }
 
                     const reactiveDecoratorIndices: number[] = [];
+                    const decoratorsSnapshot = [...decorators];
                     for (const [idx, dec] of decorators.entries())
                     {
                         const name = getDecoratorName(dec);
@@ -337,39 +338,87 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     const propName = propNode.key.name;
                     const privateName = `__${propName}`;
                     const initialValue = propNode.value ?? t.identifier('undefined');
+                    let directionExpr: t.Expression | undefined = undefined;
+                    let commitTriggerName: string | undefined = undefined;
 
                     state.needsPropertyImport = true;
                     state.reactiveProperties?.add(propName);
 
+                    for (const dec of decoratorsSnapshot)
+                    {
+                        const name = getDecoratorName(dec);
+                        if (name !== 'Reactive' && name !== 'Input') continue;
+                        if (!t.isCallExpression(dec.expression)) continue;
+                        const args = dec.expression.arguments;
+                        if (args.length === 0) continue;
+                        const [optionsArg] = args;
+                        if (!t.isObjectExpression(optionsArg)) continue;
+                        for (const prop of optionsArg.properties)
+                        {
+                            if (!t.isObjectProperty(prop)) continue;
+                            if (prop.computed || !t.isIdentifier(prop.key)) continue;
+                            if (prop.key.name === 'direction' && t.isExpression(prop.value))
+                            {
+                                directionExpr = prop.value;
+                            }
+                            if (prop.key.name === 'commitTrigger' && t.isStringLiteral(prop.value))
+                            {
+                                commitTriggerName = prop.value.value;
+                            }
+                        }
+                    }
+
+                    const linkedMethod = linkedPropertyMethods.find(lp => lp.propertyName === propName);
                     const isProduction = state.opts?.production ?? false;
-                    const propertyArgs = isProduction
-                        ? [initialValue]
-                        : [
-                            t.objectExpression([
-                                t.objectProperty(t.identifier('initialValue'), initialValue),
-                                t.objectProperty(t.identifier('propertyName'), t.stringLiteral(propName))
-                            ])
-                        ];
+                    const hasDirection = directionExpr !== undefined;
+                    const hasCommitTrigger = commitTriggerName !== undefined;
+                    const hasLinkedMethod = linkedMethod !== undefined;
+                    const useOptionsObject = !isProduction || hasDirection || hasCommitTrigger || hasLinkedMethod;
+                    const propertyOptions: t.ObjectProperty[] = [];
+
+                    if (useOptionsObject)
+                    {
+                        propertyOptions.push(t.objectProperty(t.identifier('initialValue'), initialValue));
+                        if (!isProduction)
+                        {
+                            propertyOptions.push(t.objectProperty(t.identifier('propertyName'), t.stringLiteral(propName)));
+                        }
+                        if (directionExpr)
+                        {
+                            propertyOptions.push(t.objectProperty(t.identifier('direction'), directionExpr));
+                        }
+                        if (commitTriggerName)
+                        {
+                            propertyOptions.push(t.objectProperty(
+                                t.identifier('commitTrigger'),
+                                t.memberExpression(t.thisExpression(), t.identifier(`__${commitTriggerName}`))
+                            ));
+                        }
+                        if (linkedMethod)
+                        {
+                            propertyOptions.push(t.objectProperty(
+                                t.identifier('linkHandler'),
+                                t.arrowFunctionExpression([
+                                    t.identifier('__p')
+                                ], t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(linkedMethod.methodName)), [
+                                    t.identifier('__p')
+                                ]))
+                            ));
+                        }
+                    }
+
+                    const propertyArgs = useOptionsObject
+                        ? [t.objectExpression(propertyOptions)]
+                        : [initialValue];
                     const privateField = t.classProperty(t.identifier(privateName), t.newExpression(t.identifier('Property'), propertyArgs));
 
                     const getter = t.classMethod('get', t.identifier(propName), [], t.blockStatement([
                         t.returnStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('getValue')), []))
                     ]));
 
-                    const linkedMethod = linkedPropertyMethods.find(lp => lp.propertyName === propName);
                     const setterStatements: t.Statement[] = [
                         t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(privateName)), t.identifier('setValue')), [t.identifier('__v')]))
                     ];
-
-                    if (linkedMethod)
-                    {
-                        setterStatements.push(
-                            t.ifStatement(
-                                t.binaryExpression('instanceof', t.identifier('__v'), t.identifier('Property')),
-                                t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(linkedMethod.methodName)), [t.identifier('__v')]))
-                            )
-                        );
-                    }
 
                     const setter = t.classMethod('set', t.identifier(propName), [t.identifier('__v')], t.blockStatement(setterStatements));
 

@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestLateDefineForChildComponent } from './tests/TestLateDefineForChildComponent.js';
 import { type TestLateDefineForColumn, TestLateDefineForComponent } from './tests/TestLateDefineForComponent.js';
 import { isLateDefineForColumn } from './tests/typeguards.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('fluff:for (late custom element define)', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): TestLateDefineForColumn[] =>
             {
                 if (t instanceof TestLateDefineForComponent)
@@ -25,14 +25,12 @@ describe('fluff:for (late custom element define)', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should apply per-iteration property bindings even if child custom element is defined later', async() =>
@@ -41,23 +39,14 @@ describe('fluff:for (late custom element define)', () =>
             l0: [{ n: 'column', b: 'property', e: 1 }]
         };
 
-        if (!customElements.get('late-define-for-component'))
-        {
-            customElements.define('late-define-for-component', TestLateDefineForComponent);
-        }
+        TestHarness.defineCustomElement('late-define-for-component', TestLateDefineForComponent);
 
-        const component = document.createElement('late-define-for-component');
+        const component = TestHarness.mount('late-define-for-component');
         if (!(component instanceof TestLateDefineForComponent))
         {
             throw new Error('Expected TestLateDefineForComponent');
         }
-
-        document.body.appendChild(component);
-
-        if (!customElements.get('late-define-for-child'))
-        {
-            customElements.define('late-define-for-child', TestLateDefineForChildComponent);
-        }
+        TestHarness.defineCustomElement('late-define-for-child', TestLateDefineForChildComponent);
 
         const nodes = Array.from(component.shadowRoot?.querySelectorAll('late-define-for-child') ?? []);
         for (const node of nodes)
@@ -65,7 +54,7 @@ describe('fluff:for (late custom element define)', () =>
             customElements.upgrade(node);
         }
 
-        await Promise.resolve();
+        await TestHarness.tick();
 
         const children = Array.from(component.shadowRoot?.querySelectorAll('late-define-for-child') ?? []);
         const values = children.map((child) =>

@@ -226,8 +226,8 @@ describe('babel-plugin-reactive', () =>
             const result = transform(code, 'my.component.ts');
 
             expect(result).toBeDefined();
-            expect(result).toContain('instanceof Property');
-            expect(result).toContain('this.onLinkedProperty(__v)');
+            expect(result).toContain('linkHandler');
+            expect(result).toContain('this.onLinkedProperty(__p)');
         });
 
         it('should not add instanceof check when no @LinkedProperty for that prop', () =>

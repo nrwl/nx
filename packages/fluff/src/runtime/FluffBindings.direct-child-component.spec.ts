@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestDirectChildComponent } from './tests/TestDirectChildComponent.js';
 import { TestDirectParentComponent } from './tests/TestDirectParentComponent.js';
 import { hasItemName } from './tests/typeguards.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('bindings on direct custom element children', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): string =>
             {
                 if (hasItemName(t))
@@ -17,14 +17,12 @@ describe('bindings on direct custom element children', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should apply parent bindings to direct custom element children', async() =>
@@ -38,19 +36,12 @@ describe('bindings on direct custom element children', () =>
             .slice(2);
         const childTag = 'test-direct-child';
 
-        if (!customElements.get(childTag))
-        {
-            customElements.define(childTag, TestDirectChildComponent);
-        }
-        customElements.define(parentTag, TestDirectParentComponent);
+        TestHarness.defineCustomElement(childTag, TestDirectChildComponent);
+        TestHarness.defineCustomElement(parentTag, TestDirectParentComponent);
 
-        const parent = document.createElement(parentTag);
-        document.body.appendChild(parent);
+        const parent = TestHarness.mount(parentTag);
 
-        await new Promise<void>((resolve) =>
-        {
-            setTimeout(resolve, 0);
-        });
+        await TestHarness.waitForTimeout();
 
         const child = parent.shadowRoot?.querySelector(childTag);
         expect(child)

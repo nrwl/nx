@@ -20,16 +20,14 @@ describe('Pipe property unwrapping', () =>
 
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
         state.receivedValue = null;
         state.receivedValueType = '';
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        FluffBase.__setExpressionTable([], []);
     });
 
     it('should unwrap Property instance before passing to pipe in interpolation', async() =>
@@ -38,7 +36,7 @@ describe('Pipe property unwrapping', () =>
 
         const TestComponent = createPipeUnwrapTestComponent(state);
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (hasTestProp(t))
@@ -47,7 +45,7 @@ describe('Pipe property unwrapping', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         customElements.define(tag, TestComponent);
 
@@ -73,7 +71,7 @@ describe('Pipe property unwrapping', () =>
         const ChildComponent = createPipeUnwrapChildComponent();
         const ParentComponent = createPipeUnwrapParentComponent(state, childTag);
 
-        FluffBase.__e = [
+        FluffBase.__setExpressionTable([
             (t: unknown): Property<number> =>
             {
                 if (hasTestProp(t))
@@ -82,7 +80,7 @@ describe('Pipe property unwrapping', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
 
         Reflect.set(ParentComponent, '__bindings', {
             l0: [

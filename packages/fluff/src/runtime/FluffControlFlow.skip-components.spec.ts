@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { FluffElement } from './FluffElement.js';
 import { hasValue } from './tests/typeguards.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('__processBindings should not search beneath x-fluff-component elements', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): string =>
             {
                 if (hasValue(t))
@@ -16,8 +16,7 @@ describe('__processBindings should not search beneath x-fluff-component elements
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     it('should not process bindings inside x-fluff-component elements', () =>
@@ -42,22 +41,18 @@ describe('__processBindings should not search beneath x-fluff-component elements
             }
         }
 
-        if (!customElements.get('test-parent-skip2'))
-        {
-            customElements.define('test-parent-skip2', ParentComponent);
-        }
+        TestHarness.defineCustomElement('test-parent-skip2', ParentComponent);
 
         ParentComponent.__bindings = {
             l0: [{ n: 'textContent', b: 'property', e: 0 }],
             l1: [{ n: 'item', b: 'property', e: 0 }]
         };
 
-        const parent = document.createElement('test-parent-skip2');
+        const parent = TestHarness.mount('test-parent-skip2');
         if (!(parent instanceof ParentComponent))
         {
             throw new Error('Expected ParentComponent');
         }
-        document.body.appendChild(parent);
 
         const span = parent.shadowRoot?.querySelector('span');
         expect(span?.textContent)

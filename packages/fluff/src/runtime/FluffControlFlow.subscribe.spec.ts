@@ -1,20 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Property } from '../utils/Property.js';
-import { FluffBase } from './FluffBase.js';
 import { FluffElement } from './FluffElement.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('binding.subscribe should trigger re-evaluation', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should re-evaluate binding when subscribe property changes', () =>
@@ -52,7 +50,7 @@ describe('binding.subscribe should trigger re-evaluation', () =>
             }
         }
 
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): string[] =>
             {
                 if (t instanceof HostComponent)
@@ -61,22 +59,18 @@ describe('binding.subscribe should trigger re-evaluation', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
+        ], []);
         HostComponent.__bindings = {
             l0: [{ n: 'tasks', b: 'property', e: 0, s: 'filteredTasks' }]
         };
 
-        if (!customElements.get('test-subscribe-host'))
-        {
-            customElements.define('test-subscribe-host', HostComponent);
-        }
+        TestHarness.defineCustomElement('test-subscribe-host', HostComponent);
 
-        const host = document.createElement('test-subscribe-host');
+        const host = TestHarness.mount('test-subscribe-host');
         if (!(host instanceof HostComponent))
         {
             throw new Error('Expected HostComponent');
         }
-        document.body.appendChild(host);
 
         expect(updateCallCount)
             .toBeGreaterThan(0);

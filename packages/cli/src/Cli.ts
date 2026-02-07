@@ -871,6 +871,8 @@ Examples:
             return t.importDeclaration([], t.stringLiteral(relativePath));
         });
 
+        importDecls.unshift(t.importDeclaration([], t.stringLiteral('@fluff/expr-table')));
+
         const program = t.program(importDecls);
         const entryContent = generate(program, { compact: false }).code;
         return { contents: entryContent, resolveDir: srcDir };

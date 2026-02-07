@@ -8,8 +8,20 @@
         "skipLibCheck": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "baseUrl": ".",
+        "paths": {
+            "@fluffjs/fluff": [
+                "../packages/fluff/src/index.ts"
+            ],
+            "@fluffjs/fluff/*": [
+                "../packages/fluff/src/*"
+            ]
+        },
         "outDir": "dist",
-        "rootDir": "src"
+        "rootDir": ".."
     },
-    "include": ["src/**/*.ts"]
+    "include": [
+        "src/**/*.ts",
+        "../packages/fluff/src/types/component.d.ts"
+    ]
 }

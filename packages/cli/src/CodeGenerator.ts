@@ -237,24 +237,19 @@ export class CodeGenerator
             return CodeGenerator.buildHandlerArrowFunction(['t', 'l', '__ev'], normalizedHandler);
         });
 
-        const statements: t.Statement[] = [
-            t.expressionStatement(
-                t.assignmentExpression(
-                    '=',
-                    t.memberExpression(t.identifier('FluffBase'), t.identifier('__e')),
-                    t.arrayExpression(exprElements)
-                )
-            ),
-            t.expressionStatement(
-                t.assignmentExpression(
-                    '=',
-                    t.memberExpression(t.identifier('FluffBase'), t.identifier('__h')),
-                    t.arrayExpression(handlerElements)
-                )
-            )
-        ];
+        const fluffBaseImport = t.importDeclaration(
+            [t.importSpecifier(t.identifier('FluffBase'), t.identifier('FluffBase'))],
+            t.stringLiteral('@fluffjs/fluff')
+        );
 
-        const program = t.program(statements);
+        const setExprTableCall = t.expressionStatement(
+            t.callExpression(
+                t.memberExpression(t.identifier('FluffBase'), t.identifier('__setExpressionTable')),
+                [t.arrayExpression(exprElements), t.arrayExpression(handlerElements)]
+            )
+        );
+
+        const program = t.program([fluffBaseImport, setExprTableCall]);
         return generate(program, { compact: false }).code;
     }
 

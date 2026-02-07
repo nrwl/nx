@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestOutputBindingChildComponent } from './tests/TestOutputBindingChildComponent.js';
 import { TestOutputBindingParentComponent } from './tests/TestOutputBindingParentComponent.js';
 import { hasTaskId } from './tests/typeguards.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('output bindings', () =>
 {
     it('should invoke parent handler when child output emits', async() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): boolean =>
             {
                 if (t instanceof TestOutputBindingParentComponent)
@@ -17,46 +17,36 @@ describe('output bindings', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
-        FluffBase.__h[0] = (t: unknown, _l: Record<string, unknown>, e: unknown): void =>
-        {
-            if (t instanceof TestOutputBindingParentComponent && hasTaskId(e))
+        ], [
+            (t: unknown, _l: Record<string, unknown>, e: unknown): void =>
             {
-                t.onChildEdit(e);
-                return;
-            }
-            throw new Error('Invalid type');
-        };
-        FluffBase.__h[1] = (t: unknown): void =>
-        {
-            if (t instanceof TestOutputBindingChildComponent)
+                if (t instanceof TestOutputBindingParentComponent && hasTaskId(e))
+                {
+                    t.onChildEdit(e);
+                    return;
+                }
+                throw new Error('Invalid type');
+            },
+            (t: unknown): void =>
             {
-                t.onEdit();
-                return;
+                if (t instanceof TestOutputBindingChildComponent)
+                {
+                    t.onEdit();
+                    return;
+                }
+                throw new Error('Invalid type');
             }
-            throw new Error('Invalid type');
-        };
+        ]);
 
-        if (!customElements.get('test-output-binding-parent'))
-        {
-            customElements.define('test-output-binding-parent', TestOutputBindingParentComponent);
-        }
-        if (!customElements.get('test-output-binding-child'))
-        {
-            customElements.define('test-output-binding-child', TestOutputBindingChildComponent);
-        }
+        TestHarness.defineCustomElement('test-output-binding-parent', TestOutputBindingParentComponent);
+        TestHarness.defineCustomElement('test-output-binding-child', TestOutputBindingChildComponent);
 
-        const el = document.createElement('test-output-binding-parent');
+        const el = TestHarness.mount('test-output-binding-parent');
         if (!(el instanceof TestOutputBindingParentComponent))
         {
             throw new Error('Expected TestOutputBindingParentComponent');
         }
-        document.body.appendChild(el);
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const child = el.shadowRoot?.querySelector('test-output-binding-child');
         if (!(child instanceof TestOutputBindingChildComponent))
@@ -71,10 +61,7 @@ describe('output bindings', () =>
         }
 
         button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         expect(el.editCount)
             .toBe(1);

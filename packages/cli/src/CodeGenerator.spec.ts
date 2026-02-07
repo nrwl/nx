@@ -195,28 +195,9 @@ describe('CodeGenerator', () =>
             const compiled = CodeGenerator.generateGlobalExprTable();
 
             expect(compiled)
-                .toContain('FluffBase.__e =');
-            expect(compiled)
-                .toContain('FluffBase.__h =');
+                .toContain('FluffBase.__setExpressionTable');
         });
 
-        it('should emit expression assignments for component', async() =>
-        {
-            const parser = new TemplateParser();
-            const generator = new CodeGenerator();
-
-            const template = '<span>{{ name }}</span>';
-
-            const parsed = await parser.parse(template);
-            generator.generateRenderMethod(parsed);
-
-            const assignments = generator.generateExpressionAssignments();
-
-            expect(assignments)
-                .toContain('FluffBase.__e[0] =');
-            expect(assignments)
-                .toContain('t.name');
-        });
 
         it('should emit expressions from multiple components into single global table', async() =>
         {
@@ -249,14 +230,6 @@ describe('CodeGenerator', () =>
             const gen2 = new CodeGenerator();
             const parsed2 = await parser.parse('<span>{{ shared }}</span>');
             gen2.generateRenderMethod(parsed2);
-
-            const assignments1 = gen1.generateExpressionAssignments();
-            const assignments2 = gen2.generateExpressionAssignments();
-
-            expect(assignments1)
-                .toContain('FluffBase.__e[0] =');
-            expect(assignments2)
-                .toContain('FluffBase.__e[0] =');
 
             const compiled = CodeGenerator.generateGlobalExprTable();
             const matches = compiled.match(/t\.shared/g);

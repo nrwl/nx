@@ -1,46 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { DirectOutputChild } from './tests/DirectOutputChild.js';
 import { DirectOutputParent } from './tests/DirectOutputParent.js';
 import { hasValue } from './tests/typeguards.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('output bindings (direct child)', () =>
 {
     it('should invoke parent handler when direct child component output emits', async() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
-        FluffBase.__h[0] = (t: unknown, _l: Record<string, unknown>, e: unknown): void =>
-        {
-            if (t instanceof DirectOutputParent && hasValue(e))
+        TestHarness.setExpressionTable([], [
+            (t: unknown, _l: Record<string, unknown>, e: unknown): void =>
             {
-                t.onSubmit(e);
-                return;
+                if (t instanceof DirectOutputParent && hasValue(e))
+                {
+                    t.onSubmit(e);
+                    return;
+                }
+                throw new Error('Invalid type');
             }
-            throw new Error('Invalid type');
-        };
+        ]);
 
-        if (!customElements.get('direct-output-parent'))
-        {
-            customElements.define('direct-output-parent', DirectOutputParent);
-        }
+        TestHarness.defineCustomElement('direct-output-parent', DirectOutputParent);
 
-        const el = document.createElement('direct-output-parent');
+        const el = TestHarness.mount('direct-output-parent');
         if (!(el instanceof DirectOutputParent))
         {
             throw new Error('Expected DirectOutputParent');
         }
-        document.body.appendChild(el);
 
-        if (!customElements.get('direct-output-child'))
-        {
-            customElements.define('direct-output-child', DirectOutputChild);
-        }
+        TestHarness.defineCustomElement('direct-output-child', DirectOutputChild);
 
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         const child = el.shadowRoot?.querySelector('direct-output-child');
         if (!(child instanceof DirectOutputChild))
@@ -50,10 +40,7 @@ describe('output bindings (direct child)', () =>
 
         child.emitSubmit('test-value');
 
-        for (let i = 0; i < 6; i++)
-        {
-            await Promise.resolve();
-        }
+        await TestHarness.tick(6);
 
         expect(el.receivedValue)
             .toBe('test-value');

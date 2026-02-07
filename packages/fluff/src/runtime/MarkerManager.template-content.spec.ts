@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FluffBase } from './FluffBase.js';
 import { TestTemplateNestedMarkersComponent } from './tests/TestTemplateNestedMarkersComponent.js';
+import { TestHarness } from './tests/TestHarness.js';
 
 describe('MarkerManager (template.content markers)', () =>
 {
     beforeEach(() =>
     {
-        FluffBase.__e = [
+        TestHarness.setExpressionTable([
             (t: unknown): boolean =>
             {
                 if (t instanceof TestTemplateNestedMarkersComponent)
@@ -23,32 +23,25 @@ describe('MarkerManager (template.content markers)', () =>
                 }
                 throw new Error('Invalid type');
             }
-        ];
-        FluffBase.__h = [];
+        ], []);
     });
 
     afterEach(() =>
     {
-        FluffBase.__e = [];
-        FluffBase.__h = [];
+        TestHarness.resetExpressionTable();
     });
 
     it('should initialize text markers that are inside a template branch', async() =>
     {
-        if (!customElements.get('test-template-nested-markers'))
-        {
-            customElements.define('test-template-nested-markers', TestTemplateNestedMarkersComponent);
-        }
+        TestHarness.defineCustomElement('test-template-nested-markers', TestTemplateNestedMarkersComponent);
 
-        const el = document.createElement('test-template-nested-markers');
+        const el = TestHarness.mount('test-template-nested-markers');
         if (!(el instanceof TestTemplateNestedMarkersComponent))
         {
             throw new Error('Expected TestTemplateNestedMarkersComponent');
         }
 
-        document.body.appendChild(el);
-
-        await Promise.resolve();
+        await TestHarness.tick();
 
         const text = el.shadowRoot?.querySelector('.title')?.textContent ?? '';
         expect(text.trim())
