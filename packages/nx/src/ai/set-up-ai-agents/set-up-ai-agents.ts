@@ -383,9 +383,12 @@ export async function setupAiAgentsGeneratorImpl(
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  const expectedRules = getAgentRulesWrapped(writeNxCloudRules);
-
   if (!tree.exists(path)) {
+    // File doesn't exist - create with h1 header (standalone content)
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: true,
+    });
     tree.write(path, expectedRules);
     return;
   }
@@ -396,6 +399,14 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   const existingNxConfiguration = existing.match(regex);
 
   if (existingNxConfiguration) {
+    // Check the rest of the file (outside nx block) for an h1 header
+    // to ensure only one h1 exists in the document
+    const contentWithoutNxBlock = existing.replace(regex, '');
+    const hasExternalH1 = /^# /m.test(contentWithoutNxBlock);
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: !hasExternalH1,
+    });
     const contentOnly = (str: string) =>
       str
         .replace(nxRulesMarkerCommentStart, '')
@@ -413,6 +424,13 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const updatedContent = existing.replace(regex, expectedRules);
     tree.write(path, updatedContent);
   } else {
+    // Appending to existing content - use h2 only if the file already has an h1 header
+    // This prevents unnecessary changes when users add content without their own h1
+    const hasExistingH1 = /^# /m.test(existing);
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: !hasExistingH1,
+    });
     tree.write(path, existing + '\n\n' + expectedRules);
   }
 }

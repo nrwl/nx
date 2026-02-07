@@ -1,6 +1,12 @@
-export function getAgentRules(nxCloud: boolean) {
-  return `
-# General Guidelines for working with Nx
+export interface AgentRulesOptions {
+  nxCloud: boolean;
+  useH1?: boolean;
+}
+
+export function getAgentRules(options: AgentRulesOptions) {
+  const { nxCloud, useH1 = true } = options;
+  const header = useH1 ? '#' : '##';
+  return `${header} General Guidelines for working with Nx
 
 - For navigating/exploring the workspace, invoke the \`nx-workspace\` skill first - it has patterns for querying projects, targets, and dependencies
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through \`nx\` (i.e. \`nx run\`, \`nx run-many\`, \`nx affected\`) instead of using the underlying tooling directly
