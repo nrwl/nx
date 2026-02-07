@@ -131,7 +131,7 @@ export class ComponentCompiler
 
         reactivePropertiesMap.delete(filePath);
 
-        if (source.includes('@Reactive') || source.includes('@Input'))
+        if (source.includes('@Reactive') || source.includes('@Input') || source.includes('@HostListener') || source.includes('@HostBinding') || source.includes('@Watch') || source.includes('@ViewChild') || source.includes('@LinkedProperty'))
         {
             source = await this.transformReactiveProperties(source, filePath, production);
         }

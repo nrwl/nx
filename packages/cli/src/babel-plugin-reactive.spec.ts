@@ -479,6 +479,56 @@ describe('babel-plugin-reactive', () =>
             expect(result)
                 .toBeDefined();
         });
+
+        it('should handle @HostListener with document: prefix', () =>
+        {
+            const code = `
+                import { Component, HostListener } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @HostListener('document:mousemove')
+                    onMouseMove(event: MouseEvent) {
+                        console.log(event.clientX);
+                    }
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('document.addEventListener');
+            expect(result).toContain('__onMouseMoveHandler');
+            expect(result).toContain('disconnectedCallback');
+            expect(result).toContain('document.removeEventListener');
+        });
+
+        it('should handle @HostListener with window: prefix', () =>
+        {
+            const code = `
+                import { Component, HostListener } from '@fluffjs/fluff';
+                
+                @Component({
+                    selector: 'my-component',
+                    template: '<div></div>'
+                })
+                export class MyComponent extends HTMLElement {
+                    @HostListener('window:resize')
+                    onResize(event: Event) {
+                        console.log('resized');
+                    }
+                }
+            `;
+
+            const result = transform(code, 'my.component.ts');
+
+            expect(result).toContain('window.addEventListener');
+            expect(result).toContain('__onResizeHandler');
+            expect(result).toContain('disconnectedCallback');
+            expect(result).toContain('window.removeEventListener');
+        });
     });
 
     describe('@HostBinding decorator', () =>

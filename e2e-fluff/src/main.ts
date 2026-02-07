@@ -6,3 +6,7 @@ import './app/event-listener-test.component.js';
 import './app/reactive-field-init-test.component.js';
 import './app/uppercase.pipe.js';
 import './app/pipe-test.component.js';
+import './app/global-listener-test.component.js';
+import './app/viewchild-test.component.js';
+import './app/hostbinding-test.component.js';
+import './app/watch-test.component.js';

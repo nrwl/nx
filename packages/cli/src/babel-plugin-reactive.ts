@@ -106,7 +106,7 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                 const propsToRemove: NodePath<t.ClassProperty>[] = [];
                 const watchMethods: BabelPluginReactiveWatchInfo[] = [];
                 const privateFields: t.ClassProperty[] = [];
-                const getterHostBindingUpdates: string[] = [];
+                const getterHostBindingUpdates: { updateMethodName: string; watchedProps: string[] }[] = [];
                 const propertyHostBindingInits: { propName: string; privateName: string }[] = [];
                 const classHostBindingDefs: { propName: string; className: string; privateName: string }[] = [];
 
@@ -258,8 +258,19 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                                             updateStatement
                                         ]));
 
+                                        const watchedProps: string[] = [];
+                                        memberPath.traverse({
+                                            MemberExpression(mePath)
+                                            {
+                                                if (t.isThisExpression(mePath.node.object) && t.isIdentifier(mePath.node.property))
+                                                {
+                                                    watchedProps.push(mePath.node.property.name);
+                                                }
+                                            }
+                                        });
+
                                         newMembers.push(updateMethod);
-                                        getterHostBindingUpdates.push(`__updateHostBinding_${getterName}`);
+                                        getterHostBindingUpdates.push({ updateMethodName: `__updateHostBinding_${getterName}`, watchedProps });
                                     }
                                 }
                                 decorators.splice(hostBindingIndex, 1);
@@ -525,9 +536,16 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     ));
                 }
 
-                for (const updateMethodName of getterHostBindingUpdates)
+                for (const { updateMethodName, watchedProps } of getterHostBindingUpdates)
                 {
                     constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(updateMethodName)), [])));
+                    for (const prop of watchedProps)
+                    {
+                        if (reactiveProps.has(prop))
+                        {
+                            constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier('__baseSubscriptions')), t.identifier('push')), [t.callExpression(t.memberExpression(t.memberExpression(t.memberExpression(t.thisExpression(), t.identifier(`__${prop}`)), t.identifier('onChange')), t.identifier('subscribe')), [t.arrowFunctionExpression([], t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(updateMethodName)), []))])])));
+                        }
+                    }
                 }
 
                 for (const { propName, privateName } of propertyHostBindingInits)
@@ -577,9 +595,25 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                     path.pushContainer('body', watchClassProp);
                 }
 
+                const globalListenerCleanups: t.Statement[] = [];
+
                 for (const { methodName, eventName } of hostListeners)
                 {
-                    const [baseEvent, ...modifiers] = eventName.split('.');
+                    let target: 'this' | 'document' | 'window' = 'this';
+                    let eventPart = eventName;
+
+                    if (eventName.startsWith('document:'))
+                    {
+                        target = 'document';
+                        eventPart = eventName.slice('document:'.length);
+                    }
+                    else if (eventName.startsWith('window:'))
+                    {
+                        target = 'window';
+                        eventPart = eventName.slice('window:'.length);
+                    }
+
+                    const [baseEvent, ...modifiers] = eventPart.split('.');
 
                     let handlerBody: t.Statement = t.emptyStatement();
                     if (modifiers.length > 0)
@@ -599,10 +633,37 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         handlerBody = t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier(methodName)), [t.identifier('__ev')]));
                     }
 
-                    constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier('addEventListener')), [
-                        t.stringLiteral(baseEvent),
-                        t.arrowFunctionExpression([t.identifier('__ev')], t.blockStatement([handlerBody]))
-                    ])));
+                    const handlerFn = t.arrowFunctionExpression([t.identifier('__ev')], t.blockStatement([handlerBody]));
+
+                    if (target === 'this')
+                    {
+                        constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(t.thisExpression(), t.identifier('addEventListener')), [
+                            t.stringLiteral(baseEvent),
+                            handlerFn
+                        ])));
+                    }
+                    else
+                    {
+                        const handlerPropName = `__${methodName}Handler`;
+                        const targetExpr = target === 'document' ? t.identifier('document') : t.identifier('window');
+
+                        constructorStatements.push(
+                            t.expressionStatement(t.assignmentExpression('=',
+                                t.memberExpression(t.thisExpression(), t.identifier(handlerPropName)),
+                                handlerFn
+                            ))
+                        );
+
+                        constructorStatements.push(t.expressionStatement(t.callExpression(t.memberExpression(targetExpr, t.identifier('addEventListener')), [
+                            t.stringLiteral(baseEvent),
+                            t.memberExpression(t.thisExpression(), t.identifier(handlerPropName))
+                        ])));
+
+                        globalListenerCleanups.push(t.expressionStatement(t.callExpression(
+                            t.memberExpression(target === 'document' ? t.identifier('document') : t.identifier('window'), t.identifier('removeEventListener')),
+                            [t.stringLiteral(baseEvent), t.memberExpression(t.thisExpression(), t.identifier(handlerPropName))]
+                        )));
+                    }
                 }
 
                 if (constructorStatements.length > 0)
@@ -618,6 +679,21 @@ export default function reactivePlugin(): PluginObj<BabelPluginReactiveState>
                         path.unshiftContainer('body', t.classMethod('constructor', t.identifier('constructor'), [], t.blockStatement([
                             t.expressionStatement(t.callExpression(t.super(), [])), ...constructorStatements
                         ])));
+                    }
+                }
+
+                if (globalListenerCleanups.length > 0)
+                {
+                    const disconnectedCallback = path.node.body.find((m): m is t.ClassMethod =>
+                        t.isClassMethod(m) && t.isIdentifier(m.key) && m.key.name === 'disconnectedCallback'
+                    );
+                    if (disconnectedCallback)
+                    {
+                        disconnectedCallback.body.body.unshift(...globalListenerCleanups);
+                    }
+                    else
+                    {
+                        path.pushContainer('body', t.classMethod('method', t.identifier('disconnectedCallback'), [], t.blockStatement(globalListenerCleanups)));
                     }
                 }
             },
