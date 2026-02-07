@@ -6,9 +6,20 @@
     "types": "./dist/index.d.ts",
     "executors": "./executors.json",
     "generators": "./generators.json",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fluffjs/fluff.git",
+        "directory": "packages/nx"
+    },
     "nx": {
         "targets": {
-            "build": {
+            "lint": {
+                "executor": "@nx/eslint:lint",
+                "options": {
+                    "fix": true
+                }
+            },
+            "build-internal": {
                 "executor": "nx:run-commands",
                 "outputs": [
                     "{projectRoot}/dist"
@@ -21,6 +32,16 @@
                     ],
                     "cwd": "{projectRoot}",
                     "parallel": false
+                }
+            },
+            "build": {
+                "executor": "nx:run-commands",
+                "dependsOn": ["lint", "build-internal", "nx-e2e:e2e"],
+                "outputs": [
+                    "{projectRoot}/dist"
+                ],
+                "options": {
+                    "command": "echo 'Build complete'"
                 }
             }
         }

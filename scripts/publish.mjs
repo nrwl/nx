@@ -10,10 +10,12 @@ console.log('🔨 Building packages...\n');
 
 execSync('npx nx build @fluffjs/fluff --skip-nx-cache', { cwd: root, stdio: 'inherit' });
 execSync('npx nx build @fluffjs/cli --skip-nx-cache', { cwd: root, stdio: 'inherit' });
+execSync('npx nx build @fluffjs/nx --skip-nx-cache', { cwd: root, stdio: 'inherit' });
 
 console.log('\n📦 Publishing packages...\n');
 
 execSync('npm publish', { cwd: path.join(root, 'packages/fluff/dist'), stdio: 'inherit' });
 execSync('npm publish', { cwd: path.join(root, 'packages/cli/dist'), stdio: 'inherit' });
+execSync('npm publish', { cwd: path.join(root, 'packages/nx/dist'), stdio: 'inherit' });
 
 console.log('\n✅ Published successfully!');

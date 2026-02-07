@@ -1,0 +1,26 @@
+{
+    "name": "nx-e2e",
+    "$schema": "../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "e2e-nx/tests",
+    "implicitDependencies": [
+        "@fluffjs/nx",
+        "@fluffjs/cli",
+        "@fluffjs/fluff"
+    ],
+    "targets": {
+        "playwright-install": {
+            "command": "npx playwright install",
+            "options": {
+                "cwd": "e2e-nx"
+            }
+        },
+        "e2e": {
+            "dependsOn": ["playwright-install", "@fluffjs/nx:build-internal", "@fluffjs/cli:build-internal", "@fluffjs/fluff:build-internal"],
+            "command": "npx playwright test --config=playwright.config.ts",
+            "options": {
+                "cwd": "e2e-nx"
+            }
+        }
+    }
+}

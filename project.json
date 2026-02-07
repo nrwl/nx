@@ -1,0 +1,17 @@
+{
+    "name": "@fluffjs/source",
+    "$schema": "node_modules/nx/schemas/project-schema.json",
+    "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "options": {
+                "commands": [
+                    "nx build @fluffjs/cli",
+                    "nx build @fluffjs/fluff",
+                    "nx build @fluffjs/nx"
+                ],
+                "parallel": false
+            }
+        }
+    }
+}
