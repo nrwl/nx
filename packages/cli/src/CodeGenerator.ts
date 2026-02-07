@@ -15,6 +15,7 @@ import type {
     ForNode,
     IfNode,
     InterpolationNode,
+    PropertyChain,
     ParsedTemplate,
     SwitchNode,
     TemplateNode,
@@ -69,9 +70,9 @@ export class CodeGenerator
         this.markerConfigs.clear();
 
         const html = this.generateHtml(template);
-        const configJson = JSON.stringify(Array.from(this.markerConfigs.entries()));
+        const markerConfigExpr = this.getMarkerConfigExpression();
 
-        return this.generateRenderMethodFromHtml(html, styles, configJson);
+        return this.generateRenderMethodFromHtml(html, styles, markerConfigExpr);
     }
 
     public generateHtml(template: ParsedTemplate): string
@@ -90,7 +91,7 @@ export class CodeGenerator
         return parse5.serialize(this.rootFragment);
     }
 
-    public generateRenderMethodFromHtml(html: string, styles?: string, markerConfigJson?: string): string
+    public generateRenderMethodFromHtml(html: string, styles?: string, markerConfigExpr?: t.Expression): string
     {
         let content = html;
         if (styles)
@@ -121,13 +122,13 @@ export class CodeGenerator
             )
         );
 
-        if (markerConfigJson)
+        if (markerConfigExpr)
         {
             statements.push(
                 t.expressionStatement(
                     t.callExpression(
                         t.memberExpression(t.thisExpression(), t.identifier('__setMarkerConfigs')),
-                        [t.stringLiteral(markerConfigJson)]
+                        [markerConfigExpr]
                     )
                 )
             );
@@ -137,9 +138,147 @@ export class CodeGenerator
         return generate(program, { compact: false }).code;
     }
 
-    public getMarkerConfigJson(): string
+    public getMarkerConfigExpression(): t.Expression
     {
-        return JSON.stringify(Array.from(this.markerConfigs.entries()));
+        return this.buildMarkerConfigExpression();
+    }
+
+    private buildMarkerConfigExpression(): t.Expression
+    {
+        const entries = Array.from(this.markerConfigs.entries())
+            .map(([id, config]) => t.arrayExpression([
+                t.numericLiteral(id),
+                this.buildMarkerConfigObject(config)
+            ]));
+
+        return t.arrayExpression(entries);
+    }
+
+    private buildMarkerConfigObject(config: MarkerConfig): t.ObjectExpression
+    {
+        const properties: t.ObjectProperty[] = [
+            t.objectProperty(t.stringLiteral('type'), t.stringLiteral(config.type))
+        ];
+
+        if (config.type === 'text')
+        {
+            properties.push(
+                t.objectProperty(t.stringLiteral('exprId'), t.numericLiteral(config.exprId))
+            );
+            if (config.deps)
+            {
+                properties.push(
+                    t.objectProperty(t.stringLiteral('deps'), this.buildDepsExpression(config.deps))
+                );
+            }
+            if (config.pipes && config.pipes.length > 0)
+            {
+                properties.push(
+                    t.objectProperty(
+                        t.stringLiteral('pipes'),
+                        t.arrayExpression(config.pipes.map(pipe => t.objectExpression([
+                            t.objectProperty(t.stringLiteral('name'), t.stringLiteral(pipe.name)),
+                            t.objectProperty(
+                                t.stringLiteral('argExprIds'),
+                                t.arrayExpression(pipe.argExprIds.map(arg => t.numericLiteral(arg)))
+                            )
+                        ])))
+                    )
+                );
+            }
+        }
+        else if (config.type === 'if')
+        {
+            properties.push(
+                t.objectProperty(
+                    t.stringLiteral('branches'),
+                    t.arrayExpression(config.branches.map(branch =>
+                    {
+                        const branchProps: t.ObjectProperty[] = [];
+                        if (branch.exprId !== undefined)
+                        {
+                            branchProps.push(
+                                t.objectProperty(t.stringLiteral('exprId'), t.numericLiteral(branch.exprId))
+                            );
+                        }
+                        if (branch.deps)
+                        {
+                            branchProps.push(
+                                t.objectProperty(t.stringLiteral('deps'), this.buildDepsExpression(branch.deps))
+                            );
+                        }
+                        return t.objectExpression(branchProps);
+                    }))
+                )
+            );
+        }
+        else if (config.type === 'for')
+        {
+            properties.push(
+                t.objectProperty(t.stringLiteral('iterator'), t.stringLiteral(config.iterator)),
+                t.objectProperty(t.stringLiteral('iterableExprId'), t.numericLiteral(config.iterableExprId)),
+                t.objectProperty(t.stringLiteral('hasEmpty'), t.booleanLiteral(config.hasEmpty))
+            );
+            if (config.deps)
+            {
+                properties.push(
+                    t.objectProperty(t.stringLiteral('deps'), this.buildDepsExpression(config.deps))
+                );
+            }
+            if (config.trackBy !== undefined)
+            {
+                properties.push(
+                    t.objectProperty(t.stringLiteral('trackBy'), t.stringLiteral(config.trackBy))
+                );
+            }
+        }
+        else if (config.type === 'switch')
+        {
+            properties.push(
+                t.objectProperty(t.stringLiteral('expressionExprId'), t.numericLiteral(config.expressionExprId))
+            );
+            if (config.deps)
+            {
+                properties.push(
+                    t.objectProperty(t.stringLiteral('deps'), this.buildDepsExpression(config.deps))
+                );
+            }
+            properties.push(
+                t.objectProperty(
+                    t.stringLiteral('cases'),
+                    t.arrayExpression(config.cases.map(caseConfig =>
+                    {
+                        const caseProps: t.ObjectProperty[] = [
+                            t.objectProperty(t.stringLiteral('isDefault'), t.booleanLiteral(caseConfig.isDefault)),
+                            t.objectProperty(t.stringLiteral('fallthrough'), t.booleanLiteral(caseConfig.fallthrough))
+                        ];
+                        if (caseConfig.valueExprId !== undefined)
+                        {
+                            caseProps.push(
+                                t.objectProperty(t.stringLiteral('valueExprId'), t.numericLiteral(caseConfig.valueExprId))
+                            );
+                        }
+                        return t.objectExpression(caseProps);
+                    }))
+                )
+            );
+        }
+
+        return t.objectExpression(properties);
+    }
+
+    private buildDepsExpression(deps: PropertyChain[]): t.ArrayExpression
+    {
+        return t.arrayExpression(deps.map(dep => this.buildPropertyChainExpression(dep)));
+    }
+
+    private buildPropertyChainExpression(dep: PropertyChain): t.Expression
+    {
+        if (Array.isArray(dep))
+        {
+            return t.arrayExpression(dep.map(part => t.stringLiteral(part)));
+        }
+        return t.stringLiteral(dep);
     }
 
     public generateBindingsSetup(): string

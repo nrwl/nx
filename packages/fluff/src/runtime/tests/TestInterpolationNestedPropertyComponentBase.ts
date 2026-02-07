@@ -29,9 +29,9 @@ export abstract class TestInterpolationNestedPropertyComponentBase extends Fluff
     {
         this.__getShadowRoot().innerHTML = '<!--fluff:text:0--><!--/fluff:text:0-->';
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'text', exprId: 0, deps: [['hostClass', 'childProp']], pipes: [] }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

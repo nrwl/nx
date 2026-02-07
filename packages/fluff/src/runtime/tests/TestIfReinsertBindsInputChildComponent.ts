@@ -38,9 +38,9 @@ export class TestIfReinsertBindsInputChildComponent extends FluffElement
                     <div class="total"><!--fluff:text:0--><!--/fluff:text:0--></div>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'text', exprId: 2, deps: ['stats'], pipes: [] }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

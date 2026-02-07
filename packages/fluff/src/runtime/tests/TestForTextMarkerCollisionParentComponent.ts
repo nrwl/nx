@@ -39,7 +39,7 @@ export class TestForTextMarkerCollisionParentComponent extends FluffElement
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'for', iterator: 'tag', iterableExprId: 0, deps: ['tags'], trackBy: 'tag', hasEmpty: false }],
             [
                 9,
@@ -50,7 +50,7 @@ export class TestForTextMarkerCollisionParentComponent extends FluffElement
                     pipes: [{ name: 'lowercase', argExprIds: [] }, { name: 'capitalize', argExprIds: [] }]
                 }
             ]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

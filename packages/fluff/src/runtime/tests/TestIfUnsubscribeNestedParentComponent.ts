@@ -27,9 +27,9 @@ export class TestIfUnsubscribeNestedParentComponent extends TestUnsubscribeNeste
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'if', branches: [{ exprId: 0, deps: ['show'] }] }]
-        ]));
+        ]);
 
         const bindings: Record<string, BindingInfo[]> = {
             l0: [{ n: 'stats', b: 'property', e: 1, d: ['stats'] }]

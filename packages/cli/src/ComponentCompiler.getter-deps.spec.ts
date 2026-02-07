@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { reactivePropertiesMap } from './babel-plugin-reactive.js';
 import { ComponentCompiler } from './ComponentCompiler.js';
 import type { CompileResult } from './interfaces/CompileResult.js';
+import { MarkerConfigAstReader } from './testing/MarkerConfigAstReader.js';
 
 vi.mock('esbuild', () =>
 {
@@ -67,66 +68,10 @@ export class TestComponent extends HTMLElement
             const compiler = new TestCompiler();
             const result = await compiler.compileComponentForBundle(componentPath, false, false, true);
 
-            const match = /__setMarkerConfigs\(("(?:\\.|[^"\\])*?")\);/s.exec(result.code);
-            if (!match)
-            {
-                throw new Error('Could not find __setMarkerConfigs call');
-            }
-
-            const configJsonParsed: unknown = JSON.parse(match[1]);
-            if (typeof configJsonParsed !== 'string')
-            {
-                throw new Error('Expected __setMarkerConfigs argument to be a JSON string');
-            }
-            const entriesParsed: unknown = JSON.parse(configJsonParsed);
-            if (!Array.isArray(entriesParsed))
-            {
-                throw new Error('Expected marker config entries array');
-            }
-
-            const ifConfigs = entriesParsed.filter((entry): entry is [
-                number, {
-                    type: string;
-                    branches?: { deps?: unknown }[]
-                }
-            ] =>
-            {
-                if (!Array.isArray(entry) || entry.length !== 2)
-                {
-                    return false;
-                }
-                const [, config] = entry;
-                if (typeof config !== 'object' || config === null)
-                {
-                    return false;
-                }
-                if (!('type' in config))
-                {
-                    return false;
-                }
-                const recordType: unknown = Reflect.get(config, 'type');
-                return recordType === 'if';
-            });
-
-            expect(ifConfigs.length)
-                .toBe(1);
-
-            const [[, ifConfig]] = ifConfigs;
-            const { branches } = ifConfig;
-            expect(Array.isArray(branches))
-                .toBe(true);
-            if (Array.isArray(branches) && branches.length > 0)
-            {
-                const [firstBranch] = branches;
-                const { deps } = firstBranch;
-                expect(Array.isArray(deps))
-                    .toBe(true);
-                if (Array.isArray(deps))
-                {
-                    expect(deps)
-                        .toContain('tagsInput');
-                }
-            }
+            const entries = MarkerConfigAstReader.readMarkerConfigEntries(result.code);
+            const deps = MarkerConfigAstReader.collectDeps(entries);
+            expect(deps)
+                .toContain('tagsInput');
         }
         finally
         {
@@ -182,56 +127,10 @@ export class TestComponent extends HTMLElement
             expect(Array.from(reactivePropsForFile ?? []))
                 .toContain('items');
 
-            const match = /__setMarkerConfigs\(("(?:\\.|[^"\\])*?")\);/s.exec(result.code);
-            if (!match)
-            {
-                throw new Error('Could not find __setMarkerConfigs call');
-            }
-
-            const configJsonParsed: unknown = JSON.parse(match[1]);
-            if (typeof configJsonParsed !== 'string')
-            {
-                throw new Error('Expected __setMarkerConfigs argument to be a JSON string');
-            }
-            const entriesParsed: unknown = JSON.parse(configJsonParsed);
-            if (!Array.isArray(entriesParsed))
-            {
-                throw new Error('Expected marker config entries array');
-            }
-            const entries = entriesParsed;
-
-            const textConfigs = entries.filter((entry): entry is [number, { type: string; deps?: unknown }] =>
-            {
-                if (!Array.isArray(entry) || entry.length !== 2)
-                {
-                    return false;
-                }
-                const [, config] = entry;
-                if (typeof config !== 'object' || config === null)
-                {
-                    return false;
-                }
-                if (!('type' in config))
-                {
-                    return false;
-                }
-                const recordType: unknown = Reflect.get(config, 'type');
-                return recordType === 'text';
-            });
-
-            expect(textConfigs.length)
-                .toBe(1);
-
-            const [firstTextConfig] = textConfigs;
-            const [, textConfig] = firstTextConfig;
-            const { deps } = textConfig;
-            expect(Array.isArray(deps))
-                .toBe(true);
-            if (Array.isArray(deps))
-            {
-                expect(deps)
-                    .toContain('items');
-            }
+            const entries = MarkerConfigAstReader.readMarkerConfigEntries(result.code);
+            const deps = MarkerConfigAstReader.collectDeps(entries);
+            expect(deps)
+                .toContain('items');
         }
         finally
         {

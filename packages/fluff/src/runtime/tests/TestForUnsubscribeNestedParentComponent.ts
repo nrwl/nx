@@ -30,9 +30,9 @@ export class TestForUnsubscribeNestedParentComponent extends TestUnsubscribeNest
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'for', iterator: 'item', iterableExprId: 0, deps: ['items'], hasEmpty: true }]
-        ]));
+        ]);
 
         const bindings: Record<string, BindingInfo[]> = {
             l0: [{ n: 'stats', b: 'property', e: 1, d: ['stats'] }]

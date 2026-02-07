@@ -30,7 +30,7 @@ export class TestSwitchUnsubscribeNestedParentComponent extends TestUnsubscribeN
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [
                 0, {
                 type: 'switch', expressionExprId: 0, deps: ['mode'], cases: [
@@ -39,7 +39,7 @@ export class TestSwitchUnsubscribeNestedParentComponent extends TestUnsubscribeN
                 ]
             }
             ]
-        ]));
+        ]);
 
         const bindings: Record<string, BindingInfo[]> = {
             l0: [{ n: 'stats', b: 'property', e: 3, d: ['stats'] }]

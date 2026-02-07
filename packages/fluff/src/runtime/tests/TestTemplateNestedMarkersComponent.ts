@@ -40,10 +40,10 @@ export class TestTemplateNestedMarkersComponent extends FluffElement
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'if', branches: [{ exprId: 0, deps: ['show'] }, { exprId: undefined, deps: [] }] }],
             [1, { type: 'text', exprId: 1, deps: ['text'], pipes: [] }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

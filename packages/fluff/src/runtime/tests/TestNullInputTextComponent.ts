@@ -43,10 +43,10 @@ export class TestNullInputTextComponent extends FluffElement
                     <template data-fluff-branch="test-null-input-text-0-1"></template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'if', branches: [{ exprId: 0, deps: ['isEditing'] }, { exprId: undefined, deps: [] }] }],
             [1, { type: 'text', exprId: 1, deps: ['task'], pipes: [] }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

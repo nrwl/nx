@@ -24,9 +24,9 @@ export class TestLateDefineForComponent extends FluffElement
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'for', iterator: 'column', iterableExprId: 0, deps: ['columns'], hasEmpty: false }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

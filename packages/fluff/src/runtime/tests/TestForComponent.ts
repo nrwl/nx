@@ -15,9 +15,9 @@ export class TestForComponent extends FluffElement
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'for', iterator: 'item', iterableExprId: 0, deps: ['items'], hasEmpty: false }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

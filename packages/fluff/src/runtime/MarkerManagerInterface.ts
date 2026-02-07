@@ -1,6 +1,10 @@
+import type { MarkerConfig } from '../interfaces/MarkerConfig.js';
+
+export type MarkerConfigEntries = [number, MarkerConfig][];
+
 export interface MarkerManagerInterface
 {
-    initializeFromConfig: (configJson: string) => void;
+    initializeFromConfig: (entries: MarkerConfigEntries) => void;
 
     cleanup: () => void;
 }

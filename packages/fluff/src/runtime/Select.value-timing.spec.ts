@@ -77,9 +77,9 @@ function createSelectWithForComponent(tagName: string): SelectTestComponentConst
                 </template>
             `;
 
-            this.__setMarkerConfigs(JSON.stringify([
+            this.__setMarkerConfigs([
                 [0, { type: 'for', iterator: 'opt', iterableExprId: 0, deps: ['options'], hasEmpty: false }]
-            ]));
+            ]);
         }
 
         protected override __setupBindings(): void

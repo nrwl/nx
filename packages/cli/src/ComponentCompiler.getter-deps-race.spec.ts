@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ComponentCompiler } from './ComponentCompiler.js';
 import type { CompileResult } from './interfaces/CompileResult.js';
 import { TemplateParser } from './TemplateParser.js';
+import { MarkerConfigAstReader } from './testing/MarkerConfigAstReader.js';
 
 vi.mock('esbuild', () =>
 {
@@ -124,20 +125,10 @@ export class BComponent extends HTMLElement
 
             const [aResult] = await Promise.all([aPromise, bPromise]);
 
-            const match = /__setMarkerConfigs\(("(?:\\.|[^"\\])*?")\);/s.exec(aResult.code);
-            if (!match)
-            {
-                throw new Error('Could not find __setMarkerConfigs call');
-            }
-
-            const configJsonParsed: unknown = JSON.parse(match[1]);
-            if (typeof configJsonParsed !== 'string')
-            {
-                throw new Error('Expected __setMarkerConfigs argument to be a JSON string');
-            }
-
-            expect(configJsonParsed)
-                .toContain('"deps":["stats"]');
+            const entries = MarkerConfigAstReader.readMarkerConfigEntries(aResult.code);
+            const deps = MarkerConfigAstReader.collectDeps(entries);
+            expect(deps)
+                .toContain('stats');
         }
         finally
         {

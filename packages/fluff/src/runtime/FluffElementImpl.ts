@@ -5,7 +5,7 @@ import { Property } from '../utils/Property.js';
 import { Publisher } from '../utils/Publisher.js';
 import { FluffBase } from './FluffBase.js';
 import { MarkerManager } from './MarkerManager.js';
-import type { MarkerManagerInterface } from './MarkerManagerInterface.js';
+import type { MarkerConfigEntries, MarkerManagerInterface } from './MarkerManagerInterface.js';
 import { getScope, type Scope } from './ScopeRegistry.js';
 
 export abstract class FluffElement extends FluffBase
@@ -16,7 +16,7 @@ export abstract class FluffElement extends FluffBase
     private _initialized = false;
     private _pendingInit = false;
     private _markerManager: MarkerManagerInterface | null = null;
-    private _markerConfigJson: string | null = null;
+    private _markerConfigEntries: MarkerConfigEntries | null = null;
     private _MarkerManagerClass: (new (host: FluffElement, shadowRoot: ShadowRoot) => MarkerManagerInterface) | null = null;
 
     public constructor()
@@ -159,9 +159,9 @@ export abstract class FluffElement extends FluffBase
         return this._shadowRoot;
     }
 
-    protected __setMarkerConfigs(configJson: string): void
+    protected __setMarkerConfigs(entries: MarkerConfigEntries): void
     {
-        this._markerConfigJson = configJson;
+        this._markerConfigEntries = entries;
     }
 
     protected __initializeMarkers(MarkerManagerClass: new (host: FluffElement, shadowRoot: ShadowRoot) => MarkerManagerInterface): void
@@ -171,10 +171,10 @@ export abstract class FluffElement extends FluffBase
 
     private __initializeMarkersInternal(): void
     {
-        if (!this._markerConfigJson || !this._MarkerManagerClass) return;
+        if (!this._markerConfigEntries || !this._MarkerManagerClass) return;
 
         this._markerManager = new this._MarkerManagerClass(this, this._shadowRoot);
-        this._markerManager.initializeFromConfig(this._markerConfigJson);
+        this._markerManager.initializeFromConfig(this._markerConfigEntries);
     }
 
     protected __getElement(id: string): Element | null

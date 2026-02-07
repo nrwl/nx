@@ -26,9 +26,9 @@ export class TestChildTasksListComponent extends FluffElement
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'for', iterator: 'task', iterableExprId: 2, deps: ['tasks'], hasEmpty: false }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

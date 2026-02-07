@@ -203,9 +203,9 @@ export class ComponentCompiler
             });
         }
 
-        const markerConfigJson = gen.getMarkerConfigJson();
+        const markerConfigExpr = gen.getMarkerConfigExpression();
 
-        const renderMethod = gen.generateRenderMethodFromHtml(generatedHtml, styles, markerConfigJson);
+        const renderMethod = gen.generateRenderMethodFromHtml(generatedHtml, styles, markerConfigExpr);
 
         let result = await this.transformImportsForBundle(source, filePath);
 

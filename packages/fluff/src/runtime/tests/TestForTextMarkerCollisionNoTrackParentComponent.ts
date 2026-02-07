@@ -26,10 +26,10 @@ export class TestForTextMarkerCollisionNoTrackParentComponent extends FluffEleme
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'for', iterator: 'tag', iterableExprId: 0, deps: ['tags'], hasEmpty: false }],
             [9, { type: 'text', exprId: 1, deps: ['tag'] }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

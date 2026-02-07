@@ -41,9 +41,9 @@ export function createTestInterpolationPipeComponent(): TestInterpolationPipeCom
         protected override __render(): void
         {
             this.__getShadowRoot().innerHTML = '<span><!--fluff:text:0--><!--/fluff:text:0--></span>';
-            this.__setMarkerConfigs(JSON.stringify([
+            this.__setMarkerConfigs([
                 [0, { type: 'text', exprId: 0, deps: ['message'], pipes: [{ name: 'uppercase', argExprIds: [] }] }]
-            ]));
+            ]);
         }
 
         protected override __setupBindings(): void

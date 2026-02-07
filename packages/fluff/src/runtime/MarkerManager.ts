@@ -1,4 +1,5 @@
 import type { MarkerConfig } from '../interfaces/MarkerConfig.js';
+import type { MarkerConfigEntries } from './MarkerManagerInterface.js';
 import { BreakController } from './BreakController.js';
 import { ForController } from './ForController.js';
 import { IfController } from './IfController.js';
@@ -20,10 +21,8 @@ export class MarkerManager
         this.shadowRoot = shadowRoot;
     }
 
-    public initializeFromConfig(configJson: string): void
+    public initializeFromConfig(entries: MarkerConfigEntries): void
     {
-        const entries: [number, MarkerConfig][] = JSON.parse(configJson);
-
         this.configs.clear();
         for (const [id, config] of entries)
         {

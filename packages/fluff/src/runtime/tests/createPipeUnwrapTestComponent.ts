@@ -44,9 +44,9 @@ export function createPipeUnwrapTestComponent(state: PipeUnwrapTestState): PipeU
         protected override __render(): void
         {
             this.__getShadowRoot().innerHTML = '<span><!--fluff:text:0--><!--/fluff:text:0--></span>';
-            this.__setMarkerConfigs(JSON.stringify([
+            this.__setMarkerConfigs([
                 [0, { type: 'text', exprId: 0, deps: ['testProp'], pipes: [{ name: 'capture', argExprIds: [] }] }]
-            ]));
+            ]);
         }
 
         protected override __setupBindings(): void

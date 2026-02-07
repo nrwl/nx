@@ -27,9 +27,9 @@ export class TestGetterReactivityComponent extends FluffElement
                     <div class="count"><!--fluff:text:0--><!--/fluff:text:0--></div>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'text', exprId: 0, deps: ['items'], pipes: [] }]
-        ]));
+        ]);
     }
 
     protected override __setupBindings(): void

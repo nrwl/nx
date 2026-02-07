@@ -36,9 +36,9 @@ export class TestOutputBindingParentComponent extends FluffElement
                     </template>
                 `;
 
-        this.__setMarkerConfigs(JSON.stringify([
+        this.__setMarkerConfigs([
             [0, { type: 'if', branches: [{ exprId: 0, deps: ['show'] }] }]
-        ]));
+        ]);
 
         const bindings: Record<string, BindingInfo[]> = {
             l0: [{ n: 'edit', b: 'event', h: 0, d: ['onChildEdit'] }]
