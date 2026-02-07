@@ -1,8 +1,6 @@
 import { getPipeTransform } from '../decorators/Pipe.js';
 import type { Subscription } from '../interfaces/Subscription.js';
-import { DomUtils } from '../utils/DomUtils.js';
 import { Property } from '../utils/Property.js';
-import { Publisher } from '../utils/Publisher.js';
 import { FluffBase } from './FluffBase.js';
 import { MarkerManager } from './MarkerManager.js';
 import type { MarkerConfigEntries, MarkerManagerInterface } from './MarkerManagerInterface.js';
@@ -177,124 +175,6 @@ export abstract class FluffElement extends FluffBase
         this._markerManager.initializeFromConfig(this._markerConfigEntries);
     }
 
-    protected __getElement(id: string): Element | null
-    {
-        return this._shadowRoot.querySelector(`[data-lid="${id}"]`);
-    }
-
-    protected __setText(id: string, text: string): void
-    {
-        const el = this.__getElement(id);
-        if (el) el.textContent = text;
-    }
-
-    protected __bindText(id: string, getter: () => string): void
-    {
-        const el = this.__getElement(id);
-        if (!el) return;
-
-        const expr = el.getAttribute('data-text-bind') ?? '';
-        const propMatch = /this\.([a-zA-Z_][a-zA-Z0-9_]*)/.exec(expr);
-
-        const update = (): void =>
-        {
-            try
-            {
-                el.textContent = getter();
-            }
-            catch
-            {
-                el.textContent = '';
-            }
-        };
-
-        if (propMatch)
-        {
-            const [, propName] = propMatch;
-            const reactiveProp = this.__getReactiveProp(propName);
-            if (reactiveProp)
-            {
-                this.__bindPropertyChange(reactiveProp, update);
-            }
-        }
-
-        update();
-    }
-
-    protected __setProperty(id: string, prop: string, value: unknown): void
-    {
-        const el = this.__getElement(id);
-        if (this.isHTMLElement(el))
-        {
-            if (prop in el)
-            {
-                Reflect.set(el, prop, value);
-            }
-            else
-            {
-                el.setAttribute(prop, String(value));
-            }
-        }
-    }
-
-    protected __addClass(id: string, className: string): void
-    {
-        const el = this.__getElement(id);
-        if (this.isHTMLElement(el)) el.classList.add(className);
-    }
-
-    protected __removeClass(id: string, className: string): void
-    {
-        const el = this.__getElement(id);
-        if (this.isHTMLElement(el)) el.classList.remove(className);
-    }
-
-    protected __bindEvent(id: string, event: string, handler: (e: Event) => void): void
-    {
-        const el = this.__getElement(id);
-        if (el)
-        {
-            el.addEventListener(event, handler);
-        }
-    }
-
-    protected __bindPropertyChange<T>(prop: Property<T>, callback: (val: T) => void): void
-    {
-        const sub = prop.onChange.subscribe(callback);
-        this._subscriptions.push(sub);
-        const currentVal = prop.getValue();
-        if (currentVal !== null)
-        {
-            callback(currentVal);
-        }
-    }
-
-    protected __connectProperties<T>(source: Property<T>, target: Property<T>): void
-    {
-        const sub = source.onChange.subscribe((val) =>
-        {
-            target.setValue(val, true);
-        });
-        this._subscriptions.push(sub);
-        const currentVal = source.getValue();
-        if (currentVal !== null)
-        {
-            target.setValue(currentVal, true);
-        }
-    }
-
-    protected __connectOutput<T>(source: Publisher<T>, handler: (val: T) => void): void
-    {
-        const sub = source.subscribe(handler);
-        this._subscriptions.push(sub);
-    }
-
-    protected __bindOutput(id: string, outputName: string, handler: (val: Event) => void): void
-    {
-        const el = this.__getElement(id);
-        if (el) this.__bindOutputOnElement(el, outputName, handler);
-    }
-
     protected override __setChildProperty(el: Element, propName: string, value: unknown): void
     {
         if (el instanceof HTMLElement && el.hasAttribute('x-fluff-component'))
@@ -312,65 +192,6 @@ export abstract class FluffElement extends FluffBase
 
         super.__setChildProperty(el, propName, value);
     }
-
-    protected __bindToChild(id: string, propName: string, value: unknown): void
-    {
-        const el = this.__getElement(id);
-        if (!el) return;
-        this.__setChildPropertyDeferred(el, propName, value);
-    }
-
-    protected __setChildPropertyDeferred(el: Element, propName: string, value: unknown): void
-    {
-        if (Reflect.get(el, propName) !== undefined)
-        {
-            this.__setChildProperty(el, propName, value);
-            return;
-        }
-
-        if (DomUtils.isCustomElement(el))
-        {
-            this.__whenDefined(el.tagName.toLowerCase(), () =>
-            {
-                this.__setChildProperty(el, propName, value);
-            });
-        }
-        else
-        {
-            this.__setChildProperty(el, propName, value);
-        }
-    }
-
-    protected __bindOutputOnElement(el: Element, outputName: string, handler: (val: Event) => void): void
-    {
-        const maybeOutput: unknown = Reflect.get(el, outputName);
-        if (maybeOutput instanceof Publisher)
-        {
-            this.__connectOutput(maybeOutput, handler);
-            return;
-        }
-
-        if (DomUtils.isCustomElement(el))
-        {
-            this.__whenDefined(el.tagName.toLowerCase(), () =>
-            {
-                const innerOutput: unknown = Reflect.get(el, outputName);
-                if (innerOutput instanceof Publisher)
-                {
-                    this.__connectOutput(innerOutput, handler);
-                }
-                else
-                {
-                    el.addEventListener(outputName, handler);
-                }
-            });
-        }
-        else
-        {
-            el.addEventListener(outputName, handler);
-        }
-    }
-
 
     protected override __getReactivePropFromScope(propName: string, scope: Scope): Property<unknown> | undefined
     {
@@ -431,28 +252,10 @@ export abstract class FluffElement extends FluffBase
         Reflect.deleteProperty(this, '__pendingProps');
     }
 
-    private isHTMLElement(el: Element | null): el is HTMLElement
-    {
-        return el !== null;
-    }
-
     private isRecord(value: unknown): value is Record<string, unknown>
     {
         return value !== null && typeof value === 'object' && !Array.isArray(value);
     }
 
 
-    private __getReactiveProp(propName: string): Property<unknown> | undefined
-    {
-        const key = `__${propName}`;
-        if (key in this)
-        {
-            const candidate: unknown = Reflect.get(this, key);
-            if (candidate instanceof Property)
-            {
-                return candidate;
-            }
-        }
-        return undefined;
-    }
 }

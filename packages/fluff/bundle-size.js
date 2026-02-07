@@ -21,4 +21,3 @@ console.log(`Minified:    ${(minifiedSize / 1024).toFixed(2)} KB (${minifiedSize
 console.log(`Gzipped:     ${(gzippedSize / 1024).toFixed(2)} KB (${gzippedSize} bytes)`);
 
 fs.writeFileSync('./dist/bundle.min.js', code);
-console.log('\nBundle written to dist/bundle.min.js');
