@@ -193,6 +193,91 @@ describe('test', () => {
     `);
   });
 
+  it('should preserve complex code patterns that could be corrupted by AST reprinting', async () => {
+    // This test covers patterns that were corrupted by the old implementation which used
+    // tsquery.replace() that reprints the entire AST using TypeScript's Printer.
+    // The patterns include: destructuring, arrow functions, nested callbacks, and object literals.
+    writeFile(
+      tree,
+      'apps/app1/jest.config.js',
+      `module.exports = {};
+      `
+    );
+    const complexCode = `interface Config<T> {
+  buildVariables: (p: { payGroupId: string; value: T }) => unknown;
+  initialValue: number;
+}
+
+const mockAutoSave = jest.fn();
+
+function useAutoSave<T>(config: Config<T>) {
+  return { autoSave: mockAutoSave, lastAttemptedValue: config.initialValue };
+}
+
+describe('useAutoSave', () => {
+  beforeEach(() => {
+    mockAutoSave.mockClear();
+  });
+
+  it('should handle complex callback patterns', async () => {
+    const { result } = useAutoSave({
+      buildVariables: ({ payGroupId, value }) => ({ payGroupId, value }),
+      initialValue: 0,
+    });
+
+    expect(mockAutoSave).not.toBeCalled();
+
+    mockAutoSave.mockImplementation(async (value: number) => {
+      return { autoSave: mockAutoSave, lastAttemptedValue: value };
+    });
+
+    await result.autoSave(42);
+    expect(mockAutoSave).toBeCalledWith(42);
+    expect(mockAutoSave).toBeCalledTimes(1);
+  });
+
+  it('should work with nested arrow functions', () => {
+    const config = {
+      buildVariables: (p: { id: string }) => p,
+      initialValue: 0,
+    };
+
+    const { result } = useAutoSave(config);
+
+    expect(mockAutoSave).not.toBeCalled();
+  });
+});
+`;
+
+    writeFile(tree, 'apps/app1/src/useAutoSave.spec.ts', complexCode);
+
+    await migration(tree);
+
+    const result = tree.read('apps/app1/src/useAutoSave.spec.ts', 'utf-8');
+
+    // Verify the output is valid TypeScript by checking key patterns weren't corrupted
+    // The old buggy implementation would produce patterns like:
+    // - "{buildVariables}: (p:" instead of "{ buildVariables: (p:"
+    // - Missing opening braces after arrow functions
+    // - Collapsed/merged code blocks
+    expect(result).toContain('toHaveBeenCalled');
+    expect(result).toContain('toHaveBeenCalledWith');
+    expect(result).toContain('toHaveBeenCalledTimes');
+    expect(result).not.toContain('toBeCalled');
+    expect(result).not.toContain('toBeCalledWith');
+    expect(result).not.toContain('toBeCalledTimes');
+
+    // Verify destructuring patterns are preserved (not corrupted to "{prop}: value")
+    expect(result).toContain('{ payGroupId, value }');
+    expect(result).toContain('{ result }');
+    expect(result).not.toMatch(/\{payGroupId\}:/);
+    expect(result).not.toMatch(/\{result\}:/);
+
+    // Verify interface syntax is preserved
+    expect(result).toContain('{ payGroupId: string; value: T }');
+    expect(result).not.toMatch(/\{payGroupId\}: string/);
+  });
+
   function writeFile(tree: Tree, path: string, content: string): void {
     tree.write(path, content);
     fs.createFileSync(path, content);
