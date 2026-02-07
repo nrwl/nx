@@ -68,6 +68,45 @@ export abstract class FluffBase extends HTMLElement
         };
     }
 
+    public __subscribeToExpression(deps: PropertyChain[], scope: Scope, callback: () => void, subscriptions: Subscription[]): void
+    {
+        this.__subscribeToExpressionInScope(deps, scope, callback, subscriptions);
+    }
+
+    public __evaluateExpr(exprId: number, locals: Record<string, unknown>): unknown
+    {
+        const fn = this.__getCompiledExprFn(exprId);
+        try
+        {
+            return fn(this, locals);
+        }
+        catch
+        {
+            return undefined;
+        }
+    }
+
+    public __applyPipesForController(value: unknown, pipes: { name: string; argExprIds: number[] }[], locals: Record<string, unknown>): unknown
+    {
+        let result = value;
+        if (result instanceof Property)
+        {
+            result = result.getValue();
+        }
+        for (const pipe of pipes)
+        {
+            const pipeFn = this.__getPipeFn(pipe.name);
+            if (!pipeFn)
+            {
+                console.warn(`Pipe "${pipe.name}" not found`);
+                continue;
+            }
+            const args = pipe.argExprIds.map(id => this.__getCompiledExprFn(id)(this, locals));
+            result = pipeFn(result, ...args);
+        }
+        return result;
+    }
+
     protected __processBindingsOnElement(el: Element, scope: Scope, subscriptions?: Subscription[]): void
     {
         const lid = el.getAttribute('data-lid');

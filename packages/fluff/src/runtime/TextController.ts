@@ -1,6 +1,4 @@
-import { getPipeTransform } from '../decorators/Pipe.js';
 import type { TextMarkerConfig } from '../interfaces/TextMarkerConfig.js';
-import { Property } from '../utils/Property.js';
 import { MarkerController } from './MarkerController.js';
 
 export class TextController extends MarkerController
@@ -26,14 +24,11 @@ export class TextController extends MarkerController
         {
             let result = this.evaluateExpr(this.config.exprId);
 
-            if (result instanceof Property)
+            if (this.host.__applyPipesForController)
             {
-                result = result.getValue();
-            }
-
-            for (const pipe of pipes)
-            {
-                result = this.applyPipe(pipe.name, result, pipe.argExprIds);
+                const scope = this.getScope();
+                const allLocals = this.collectLocalsFromScope(scope);
+                result = this.host.__applyPipesForController(result, pipes, allLocals);
             }
 
             if (this.textNode)
@@ -65,19 +60,5 @@ export class TextController extends MarkerController
             return String(result);
         }
         return '';
-    }
-
-    private applyPipe(name: string, value: unknown, args: number[]): unknown
-    {
-        const pipes = this.host.__pipes;
-        const pipeFn = pipes?.[name] ?? getPipeTransform(name);
-        if (!pipeFn)
-        {
-            console.warn(`Pipe "${name}" not found`);
-            return value;
-        }
-
-        const evaluatedArgs = args.map(arg => this.evaluateExpr(arg));
-        return pipeFn(value, ...evaluatedArgs);
     }
 }

@@ -3,11 +3,11 @@ import type { PropertyChain } from '../interfaces/PropertyChain.js';
 import type { RenderContext } from '../interfaces/RenderContext.js';
 import type { Subscription } from '../interfaces/Subscription.js';
 import { DomUtils } from '../utils/DomUtils.js';
-import { Property } from '../utils/Property.js';
 import { FluffBase } from './FluffBase.js';
 import { FluffElement } from './FluffElement.js';
-import { MarkerConfigGuards } from './MarkerConfigGuards.js';
 import { registerScope, type Scope } from './ScopeRegistry.js';
+
+const MARKER_REGEX = /^fluff:(if|for|switch|text|break):(\d+)$/;
 
 interface MarkerManagerLike
 {
@@ -69,25 +69,23 @@ export abstract class MarkerController
     {
         const scope = this.getScope();
         const allLocals = this.collectLocalsFromScope(scope);
-        const fn = this.getCompiledExprFn(exprId);
+        if (scope.host.__evaluateExpr)
+        {
+            return scope.host.__evaluateExpr(exprId, allLocals);
+        }
+        const fn = FluffBase.__e[exprId];
+        if (typeof fn !== 'function')
+        {
+            return undefined;
+        }
         try
         {
             return fn(scope.host, allLocals);
         }
-        catch(e: unknown)
+        catch
         {
             return undefined;
         }
-    }
-
-    private getCompiledExprFn(exprId: number): (t: FluffHostElement, l: Record<string, unknown>) => unknown
-    {
-        const fn = FluffBase.__e[exprId];
-        if (typeof fn !== 'function')
-        {
-            throw new Error(`Missing compiled expression function for exprId ${exprId}`);
-        }
-        return fn;
     }
 
     protected getScope(): Scope
@@ -120,156 +118,18 @@ export abstract class MarkerController
     protected subscribeTo(deps: PropertyChain[], callback: () => void): void
     {
         const scope = this.getScope();
-        for (const dep of deps)
+        const filteredDeps = deps.filter(dep =>
         {
             if (Array.isArray(dep))
             {
-                this.subscribeToPropertyChain(dep, scope, callback);
+                return dep.length > 0 && !dep[0].startsWith('[');
             }
-            else
-            {
-                if (dep.startsWith('[')) continue;
-                const reactiveProp = this.getReactivePropFromScope(dep, scope);
-                if (reactiveProp)
-                {
-                    const sub = reactiveProp.onChange.subscribe(callback);
-                    this.subscriptions.push(sub);
-                }
-            }
-        }
-    }
-
-    private subscribeToPropertyChain(chain: string[], scope: Scope, callback: () => void): void
-    {
-        if (chain.length === 0) return;
-
-        const [first, ...rest] = chain;
-        if (first.startsWith('[')) return;
-
-        const reactiveProp = this.getReactivePropFromScope(first, scope);
-        if (reactiveProp)
+            return !dep.startsWith('[');
+        });
+        if (scope.host.__subscribeToExpression)
         {
-            if (rest.length === 0)
-            {
-                this.subscriptions.push(reactiveProp.onChange.subscribe(callback));
-            }
-            else
-            {
-                let nestedSubs: Subscription[] = [];
-
-                const resubscribeNested = (): void =>
-                {
-                    for (const sub of nestedSubs)
-                    {
-                        sub.unsubscribe();
-                    }
-                    nestedSubs = [];
-
-                    const currentValue: unknown = reactiveProp.getValue();
-                    if (currentValue !== null && currentValue !== undefined)
-                    {
-                        this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
-                        {
-                            nestedSubs.push(sub);
-                            this.subscriptions.push(sub);
-                        });
-                    }
-
-                    callback();
-                };
-
-                this.subscriptions.push(reactiveProp.onChange.subscribe(resubscribeNested));
-
-                const currentValue: unknown = reactiveProp.getValue();
-                if (currentValue !== null && currentValue !== undefined)
-                {
-                    this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
-                    {
-                        nestedSubs.push(sub);
-                        this.subscriptions.push(sub);
-                    });
-                }
-            }
+            scope.host.__subscribeToExpression(filteredDeps, scope, callback, this.subscriptions);
         }
-    }
-
-    private subscribeToNestedChain(obj: unknown, chain: string[], callback: () => void, addSub: (sub: Subscription) => void): void
-    {
-        if (chain.length === 0 || obj === null || obj === undefined) return;
-
-        const [first, ...rest] = chain;
-
-        const prop: unknown = Reflect.get(obj as object, first);
-
-        if (prop instanceof Property)
-        {
-            if (rest.length === 0)
-            {
-                addSub(prop.onChange.subscribe(callback));
-            }
-            else
-            {
-                let nestedSubs: Subscription[] = [];
-
-                const resubscribeNested = (): void =>
-                {
-                    for (const sub of nestedSubs)
-                    {
-                        sub.unsubscribe();
-                    }
-                    nestedSubs = [];
-
-                    const currentValue: unknown = prop.getValue();
-                    if (currentValue !== null && currentValue !== undefined)
-                    {
-                        this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
-                        {
-                            nestedSubs.push(sub);
-                            addSub(sub);
-                        });
-                    }
-
-                    callback();
-                };
-
-                addSub(prop.onChange.subscribe(resubscribeNested));
-
-                const currentValue: unknown = prop.getValue();
-                if (currentValue !== null && currentValue !== undefined)
-                {
-                    this.subscribeToNestedChain(currentValue, rest, callback, (sub) =>
-                    {
-                        nestedSubs.push(sub);
-                        addSub(sub);
-                    });
-                }
-            }
-        }
-        else if (rest.length > 0 && prop !== null && prop !== undefined)
-        {
-            this.subscribeToNestedChain(prop, rest, callback, addSub);
-        }
-    }
-
-    protected getReactivePropFromScope(propName: string, scope: Scope): Property<unknown> | undefined
-    {
-        if (propName in scope.locals)
-        {
-            return undefined;
-        }
-        if (scope.parent)
-        {
-            return this.getReactivePropFromScope(propName, scope.parent);
-        }
-        if (MarkerConfigGuards.isFluffHostElement(scope.host) && scope.host.__getReactiveProp)
-        {
-            const reactiveProp = scope.host.__getReactiveProp(propName);
-            if (reactiveProp instanceof Property)
-            {
-                return reactiveProp;
-            }
-        }
-        return undefined;
     }
 
     protected createChildScope(locals: Record<string, unknown>): Scope
@@ -299,7 +159,7 @@ export abstract class MarkerController
 
             if (current instanceof Comment)
             {
-                const markerMatch = /^fluff:(if|for|switch|text|break):(\d+)$/.exec(current.data);
+                const markerMatch = MARKER_REGEX.exec(current.data);
                 if (markerMatch && this.markerManager?.cleanupController)
                 {
                     const markerId = parseInt(markerMatch[2], 10);
@@ -359,7 +219,7 @@ export abstract class MarkerController
     {
         if (node instanceof Comment)
         {
-            const markerMatch = /^fluff:(if|for|switch|text|break):(\d+)$/.exec(node.data);
+            const markerMatch = MARKER_REGEX.exec(node.data);
             if (markerMatch && markerManager)
             {
                 const [, markerType, markerIdStr] = markerMatch;
