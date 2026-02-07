@@ -10,7 +10,7 @@
     "targets": {
         "build": {
             "dependsOn": ["@fluffjs/fluff:build-internal"],
-            "command": "npx fluff build",
+            "command": "node ../packages/cli/dist/Cli.js build",
             "options": {
                 "cwd": "e2e-fluff"
             }
