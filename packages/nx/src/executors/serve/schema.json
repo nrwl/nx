@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "Fluff Serve Executor",
+    "description": "Serves a Fluff application with live reload",
+    "type": "object",
+    "properties": {
+        "configFile": {
+            "type": "string",
+            "description": "Path to the fluff.json configuration file",
+            "x-completion-type": "file",
+            "x-completion-glob": "fluff.json"
+        },
+        "target": {
+            "type": "string",
+            "description": "Specific target to serve from fluff.json"
+        },
+        "port": {
+            "type": "number",
+            "description": "Port to serve on (overrides fluff.json)"
+        },
+        "host": {
+            "type": "string",
+            "description": "Host to serve on (overrides fluff.json)"
+        }
+    },
+    "required": ["configFile"]
+}

@@ -1,4 +1,5 @@
 import * as t from '@babel/types';
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as parse5 from 'parse5';
 import * as path from 'path';
@@ -49,13 +50,29 @@ export class Generator
         console.log(`   ✓ Created src/app/${kebabName}.component.ts`);
         console.log(`   ✓ Created src/app/${kebabName}.component.html`);
         console.log(`   ✓ Created src/app/${kebabName}.component.css`);
-        console.log('');
-        console.log('✅ App created successfully!');
-        console.log('');
-        console.log('Next steps:');
-        console.log(`   cd ${kebabName}`);
-        console.log('   npm install');
-        console.log('   npx @fluffjs/cli serve');
+
+        if (options.packageManager)
+        {
+            console.log('');
+            console.log(`   Installing dependencies with ${options.packageManager}...`);
+            execSync(`${options.packageManager} install`, { cwd: appDir, stdio: 'inherit' });
+            console.log('');
+            console.log('✅ App created successfully!');
+            console.log('');
+            console.log('Next steps:');
+            console.log(`   cd ${kebabName}`);
+            console.log('   npx @fluffjs/cli serve');
+        }
+        else
+        {
+            console.log('');
+            console.log('✅ App created successfully!');
+            console.log('');
+            console.log('Next steps:');
+            console.log(`   cd ${kebabName}`);
+            console.log('   npm install');
+            console.log('   npx @fluffjs/cli serve');
+        }
     }
 
     private writeFile(filePath: string, content: string): void

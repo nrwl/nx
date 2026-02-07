@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "id": "FluffInitGenerator",
+    "title": "Fluff Init Generator",
+    "description": "Initializes the @fluffjs/nx plugin in the workspace",
+    "type": "object",
+    "properties": {
+        "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files",
+            "default": false
+        }
+    },
+    "required": []
+}

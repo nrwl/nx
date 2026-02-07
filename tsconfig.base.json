@@ -28,6 +28,9 @@
             ],
             "@fluffjs/fluff/*": [
                 "packages/fluff/src/*"
+            ],
+            "@fluffjs/cli": [
+                "packages/cli/src/index.ts"
             ]
         }
     }

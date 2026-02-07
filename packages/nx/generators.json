@@ -1,0 +1,22 @@
+{
+    "generators": {
+        "preset": {
+            "factory": "./generators/preset/generator",
+            "schema": "./generators/preset/schema.json",
+            "description": "Creates a new Fluff workspace with a starter application",
+            "hidden": true
+        },
+        "init": {
+            "factory": "./generators/init/generator",
+            "schema": "./generators/init/schema.json",
+            "description": "Initializes the @fluffjs/nx plugin in the workspace",
+            "aliases": ["ng-add"],
+            "hidden": true
+        },
+        "app": {
+            "factory": "./generators/app/generator",
+            "schema": "./generators/app/schema.json",
+            "description": "Creates a new Fluff application"
+        }
+    }
+}

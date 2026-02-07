@@ -2,6 +2,8 @@ export { ComponentCompiler } from './ComponentCompiler.js';
 export { TemplateParser } from './TemplateParser.js';
 export { CodeGenerator } from './CodeGenerator.js';
 export { Cli } from './Cli.js';
+export { Generator } from './Generator.js';
+export type { PackageManager } from './interfaces/GeneratorOptions.js';
 export type { ComponentInfo } from './interfaces/ComponentInfo.js';
 export type { CompilerOptions } from './interfaces/CompilerOptions.js';
 export type { ControlFlow, SwitchCaseOld } from './interfaces/ControlFlow.js';

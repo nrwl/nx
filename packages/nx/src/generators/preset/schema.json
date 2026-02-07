@@ -1,0 +1,18 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "id": "FluffPresetGenerator",
+    "title": "Fluff Preset Generator",
+    "description": "Creates a new Fluff workspace with a starter application",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the workspace"
+        },
+        "appName": {
+            "type": "string",
+            "description": "The name of the initial application (defaults to workspace name)"
+        }
+    },
+    "required": ["name"]
+}

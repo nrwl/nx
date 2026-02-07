@@ -3,47 +3,34 @@
     "version": "0.0.1",
     "private": true,
     "main": "./dist/index.js",
-    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "@fluffjs/source": "./src/index.ts",
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.js",
-            "default": "./dist/index.js"
-        }
-    },
+    "executors": "./executors.json",
+    "generators": "./generators.json",
     "nx": {
         "targets": {
             "build": {
-                "executor": "@nx/js:tsc",
+                "executor": "nx:run-commands",
                 "outputs": [
-                    "{options.outputPath}"
+                    "{projectRoot}/dist"
                 ],
                 "options": {
-                    "outputPath": "packages/nx/dist",
-                    "main": "packages/nx/src/index.ts",
-                    "tsConfig": "packages/nx/tsconfig.lib.json",
-                    "rootDir": "packages/nx/src",
-                    "generatePackageJson": false,
-                    "assets": [
-                        {
-                            "input": "./packages/nx/src",
-                            "glob": "**/!(*.ts)",
-                            "output": "."
-                        },
-                        {
-                            "input": "./packages/nx/src",
-                            "glob": "**/*.d.ts",
-                            "output": "."
-                        }
-                    ]
+                    "commands": [
+                        "tsc --build tsconfig.lib.json",
+                        "node scripts/copy-assets.mjs",
+                        "node scripts/copy-package-json.mjs"
+                    ],
+                    "cwd": "{projectRoot}",
+                    "parallel": false
                 }
             }
         }
     },
     "dependencies": {
+        "@fluffjs/cli": "0.0.3",
+        "@nx/devkit": "^21.0.0",
         "tslib": "^2.3.0"
+    },
+    "peerDependencies": {
+        "nx": ">=19.0.0"
     }
 }

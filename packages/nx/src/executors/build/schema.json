@@ -1,0 +1,34 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "Fluff Build Executor",
+    "description": "Builds a Fluff application",
+    "type": "object",
+    "properties": {
+        "configFile": {
+            "type": "string",
+            "description": "Path to the fluff.json configuration file",
+            "x-completion-type": "file",
+            "x-completion-glob": "fluff.json"
+        },
+        "outputPath": {
+            "type": "string",
+            "description": "Output directory for the build artifacts"
+        },
+        "target": {
+            "type": "string",
+            "description": "Specific target to build from fluff.json"
+        },
+        "noGzip": {
+            "type": "boolean",
+            "description": "Disable gzip compression",
+            "default": false
+        },
+        "noMinify": {
+            "type": "boolean",
+            "description": "Disable minification",
+            "default": false
+        }
+    },
+    "required": ["configFile"]
+}

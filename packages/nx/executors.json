@@ -1,0 +1,14 @@
+{
+    "executors": {
+        "build": {
+            "implementation": "./executors/build/executor",
+            "schema": "./executors/build/schema.json",
+            "description": "Builds a Fluff application"
+        },
+        "serve": {
+            "implementation": "./executors/serve/executor",
+            "schema": "./executors/serve/schema.json",
+            "description": "Serves a Fluff application with live reload"
+        }
+    }
+}

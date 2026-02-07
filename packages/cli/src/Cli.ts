@@ -107,9 +107,13 @@ Options:
   --cwd <dir>             Set working directory
   --no-gzip               Disable gzip compression (overrides config)
 
+Generate Options:
+  --packageManager, -p    Package manager to use (npm, yarn, pnpm, bun)
+
 Examples:
   fluff init              Create fluff.json with default configuration
   fluff generate my-app   Create a new Fluff app called 'my-app'
+  fluff generate my-app --packageManager pnpm   Create app and install with pnpm
   fluff build             Build the default target
   fluff build app         Build the 'app' target
   fluff --nx @myorg/app build   Build an nx package
@@ -356,19 +360,39 @@ Examples:
 
     private generate(args: string[]): void
     {
-        const [appName] = args;
+        let appName: string | undefined = undefined;
+        let packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun' | undefined = undefined;
+
+        for (let i = 0; i < args.length; i++)
+        {
+            const arg = args[i];
+            if (arg === '--packageManager' || arg === '-p')
+            {
+                const nextArg = args[i + 1];
+                if (nextArg === 'npm' || nextArg === 'yarn' || nextArg === 'pnpm' || nextArg === 'bun')
+                {
+                    packageManager = nextArg;
+                    i++;
+                }
+            }
+            else if (!arg.startsWith('-'))
+            {
+                appName = arg;
+            }
+        }
 
         if (!appName)
         {
-            console.error('Usage: fluff generate <app-name>');
-            console.error('Example: fluff generate my-app');
+            console.error('Usage: fluff generate <app-name> [--packageManager npm|yarn|pnpm|bun]');
+            console.error('Example: fluff generate my-app --packageManager npm');
             process.exit(1);
         }
 
         const generator = new Generator();
         generator.generate({
             appName,
-            outputDir: this.cwd
+            outputDir: this.cwd,
+            packageManager
         });
     }
 
