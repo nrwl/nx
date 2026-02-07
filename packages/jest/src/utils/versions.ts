@@ -15,6 +15,7 @@ export const latestVersions = {
   tsNodeVersion: '10.9.1',
 };
 
+// TODO(v23): Remove Jest 29 support
 const supportedMajorVersions = [29, 30] as const;
 const minSupportedMajorVersion = Math.min(...supportedMajorVersions);
 const currentMajorVersion = Math.max(...supportedMajorVersions);
