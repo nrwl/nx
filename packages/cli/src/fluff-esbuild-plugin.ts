@@ -7,6 +7,7 @@ import * as t from '@babel/types';
 import { generate } from './BabelHelpers.js';
 import { CodeGenerator } from './CodeGenerator.js';
 import { ComponentCompiler } from './ComponentCompiler.js';
+import { DecoratorValidator } from './DecoratorValidator.js';
 import type { FluffPluginOptions } from './interfaces/FluffPluginOptions.js';
 
 export type { FluffPluginOptions } from './interfaces/FluffPluginOptions.js';
@@ -190,6 +191,7 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
                 if (decorators.hasPipe)
                 {
                     const transformed = await compiler.transformPipeDecorators(source, args.path);
+                    DecoratorValidator.validate(transformed, args.path);
                     return {
                         contents: transformed,
                         loader: 'ts',

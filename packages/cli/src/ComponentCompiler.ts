@@ -17,6 +17,7 @@ import importsPlugin from './babel-plugin-imports.js';
 import reactivePlugin, { reactivePropertiesMap } from './babel-plugin-reactive.js';
 import { generate } from './BabelHelpers.js';
 import { CodeGenerator } from './CodeGenerator.js';
+import { DecoratorValidator } from './DecoratorValidator.js';
 import { ErrorHelpers } from './ErrorHelpers.js';
 import { GetterDependencyExtractor } from './GetterDependencyExtractor.js';
 import type { CompileResult } from './interfaces/CompileResult.js';
@@ -227,6 +228,8 @@ export class ComponentCompiler
         {
             result = this.addCustomElementsDefine(result, selector, className);
         }
+
+        DecoratorValidator.validate(result, filePath);
 
         const tsResult = await this.stripTypeScriptWithSourceMap(result, filePath, sourcemap);
 
