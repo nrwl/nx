@@ -457,6 +457,10 @@ export abstract class FluffBase extends HTMLElement
 
     private __applyEventBindingWithScope(el: Element, binding: BindingInfo, scope: Scope): void
     {
+        const boundKey = `__fluff_event_${binding.n}`;
+        if (Reflect.has(el, boundKey)) return;
+        Reflect.set(el, boundKey, true);
+
         if (typeof binding.h !== 'number')
         {
             throw new Error(`Event binding for ${binding.n} is missing handlerId`);

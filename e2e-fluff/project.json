@@ -16,7 +16,7 @@
         },
         "build": {
             "dependsOn": ["@fluffjs/fluff:build-internal"],
-            "command": "node ../packages/cli/dist/Cli.js build",
+            "command": "rm -rf dist && node ../packages/cli/dist/bin.js build",
             "options": {
                 "cwd": "e2e-fluff"
             }

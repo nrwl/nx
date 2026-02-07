@@ -63,7 +63,7 @@
         }
     },
     "tui": {
-        "autoExit": 1
+        "enabled": false
     },
     "targetDefaults": {
         "build": {
