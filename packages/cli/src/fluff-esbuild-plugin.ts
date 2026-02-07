@@ -232,7 +232,8 @@ export function fluffPlugin(options: FluffPluginOptions): Plugin
                 const exprTable = CodeGenerator.generateGlobalExprTable();
                 return {
                     contents: exprTable || '',
-                    loader: 'js'
+                    loader: 'js',
+                    resolveDir: options.srcDir
                 };
             });
 
