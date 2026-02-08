@@ -10,7 +10,7 @@ export function EnterpriseLayout({
   scrollCTAConfig?: ButtonLinkProps[];
 } & PropsWithChildren): ReactElement {
   return (
-    <div className="w-full dark:bg-slate-950">
+    <div className="w-full dark:bg-zinc-950">
       <Header ctaButtons={headerCTAConfig} scrollCtaButtons={scrollCTAConfig} />
       <main data-document="main">{children}</main>
       <Footer />

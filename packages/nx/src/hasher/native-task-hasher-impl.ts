@@ -6,15 +6,15 @@ import {
   FileData,
   HasherOptions,
   HashPlanner,
-  NxWorkspaceFilesExternals,
   ProjectGraph as NativeProjectGraph,
+  NxWorkspaceFilesExternals,
   TaskHasher,
   transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
-import { PartialHash, TaskHasherImpl } from './task-hasher';
-import { readJsonFile } from '../utils/fileutils';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import { readJsonFile } from '../utils/fileutils';
+import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
@@ -58,6 +58,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       this.allWorkspaceFilesRef,
       Buffer.from(JSON.stringify(tsconfig)),
       paths,
+      rootTsConfigPath,
       options
     );
   }

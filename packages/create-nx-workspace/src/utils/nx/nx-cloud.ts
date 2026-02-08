@@ -5,7 +5,7 @@ import {
   getSkippedCloudMessage,
   CompletionMessageKey,
 } from './messages';
-import { getFlowVariant, messages } from './ab-testing';
+import { getBannerVariant, getFlowVariant } from './ab-testing';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -68,13 +68,18 @@ export function readNxCloudToken(directory: string) {
   ) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
   const { accessToken, nxCloudId } = getCloudOptions(directory);
-  nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+  const variant = getFlowVariant();
+  const spinnerMessage =
+    variant === '0'
+      ? 'Nx Cloud has been set up successfully'
+      : 'Nx Cloud configuration was successfully added';
+  nxCloudSpinner.succeed(spinnerMessage);
   return accessToken || nxCloudId;
 }
 
 export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
-  token: string,
+  token: string | undefined,
   directory: string,
   useGitHub?: boolean
 ): Promise<string> {
@@ -95,7 +100,7 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  const meta = messages.codeOfSelectedPromptMessage('setupNxCloudV2');
+  const meta = `variant-${getFlowVariant()}`;
 
   return createNxCloudOnboardingURL(
     source,
@@ -115,11 +120,15 @@ export async function getNxCloudInfo(
   workspaceName?: string
 ) {
   const out = new CLIOutput(false);
+  // Get the banner variant based on the cloud URL
+  // Enterprise URLs automatically get variant 0 (plain link)
+  const bannerVariant = getBannerVariant(connectCloudUrl);
   const message = getCompletionMessage(
     completionMessageKey,
     connectCloudUrl,
     pushedToVcs,
-    workspaceName
+    workspaceName,
+    bannerVariant
   );
   out.success(message);
   return out.getOutput();

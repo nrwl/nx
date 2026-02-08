@@ -16,13 +16,13 @@ export function HowCanWeHelp(): JSX.Element {
           </SectionHeading>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-4 md:grid-cols-2">
-          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
+          <section className="rounded-xl border border-zinc-200 bg-zinc-50/20 p-8 dark:border-zinc-800/40 dark:bg-zinc-800/60">
             <div className="flex items-center gap-2">
               <ChevronRightIcon
                 aria-hidden="true"
                 className="h-5 w-5 shrink-0"
               />
-              <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
+              <h3 className="text-xl font-medium text-zinc-700 dark:text-zinc-300">
                 Talk to Sales
               </h3>
             </div>
@@ -32,7 +32,7 @@ export function HowCanWeHelp(): JSX.Element {
             </p>
             <ButtonLink
               href="/contact/sales"
-              variant="primary"
+              variant="contrast"
               size="default"
               title="Talk to our sales team"
               className="mt-6"
@@ -40,13 +40,13 @@ export function HowCanWeHelp(): JSX.Element {
               Reach out to sales
             </ButtonLink>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
+          <section className="rounded-xl border border-zinc-200 bg-zinc-50/20 p-8 dark:border-zinc-800/40 dark:bg-zinc-800/60">
             <div className="flex items-center gap-2">
               <ChevronRightIcon
                 aria-hidden="true"
                 className="h-5 w-5 shrink-0"
               />
-              <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
+              <h3 className="text-xl font-medium text-zinc-700 dark:text-zinc-300">
                 Learn more about Nx Cloud
               </h3>
             </div>
@@ -56,7 +56,7 @@ export function HowCanWeHelp(): JSX.Element {
             </p>
             <ButtonLink
               href="/contact/engineering"
-              variant="primary"
+              variant="contrast"
               size="default"
               title="Talk to our engineering team"
               className="mt-6"
@@ -64,13 +64,13 @@ export function HowCanWeHelp(): JSX.Element {
               Reach out to engineers
             </ButtonLink>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
+          <section className="rounded-xl border border-zinc-200 bg-zinc-50/20 p-8 dark:border-zinc-800/40 dark:bg-zinc-800/60">
             <div className="flex items-center gap-2">
               <ChatBubbleLeftRightIcon
                 aria-hidden="true"
                 className="h-5 w-5 shrink-0"
               />
-              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">
+              <h3 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
                 Question about Nx
               </h3>
             </div>
@@ -92,10 +92,10 @@ export function HowCanWeHelp(): JSX.Element {
               <ArrowUpRightIcon aria-hidden="true" className="h-3 w-3" />
             </ButtonLink>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
+          <section className="rounded-xl border border-zinc-200 bg-zinc-50/20 p-8 dark:border-zinc-800/40 dark:bg-zinc-800/60">
             <div className="flex items-center gap-2">
               <NxCloudIcon aria-hidden="true" className="h-5 w-5 shrink-0" />
-              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">
+              <h3 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
                 Nx Cloud support
               </h3>
             </div>

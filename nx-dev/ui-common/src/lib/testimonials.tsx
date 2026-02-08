@@ -17,8 +17,8 @@ export function Testimonials(): JSX.Element {
         </SectionHeading>
       </header>
       <div className="md:px-62 mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-8 px-4 py-12 md:grid-cols-3 lg:px-8 lg:py-16">
-        <div className="rounded-xl bg-slate-50 p-10 dark:bg-slate-800/60">
-          <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-sky-500" />
+        <div className="rounded-xl bg-zinc-50 p-10 dark:bg-zinc-800/60">
+          <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-blue-500" />
           <p className="mt-4">
             "It made it possible to remove our hand-rolled code and to use a
             well-maintained and streamlined solution, increasing performance
@@ -28,8 +28,8 @@ export function Testimonials(): JSX.Element {
           <div className="mt-8 font-semibold">Nitin Vericherla</div>
           <div className="mt-0.5 text-sm">UI Architect at Synapse Wireless</div>
         </div>
-        <div className="rounded-xl bg-slate-50 p-10 dark:bg-slate-800/60">
-          <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-sky-500" />
+        <div className="rounded-xl bg-zinc-50 p-10 dark:bg-zinc-800/60">
+          <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-blue-500" />
           <p className="mt-4">
             "By updating to the latest Lerna version and enabling Nx caching, we
             were able to reduce CI build times by ~35% - a great time saving for
@@ -41,8 +41,8 @@ export function Testimonials(): JSX.Element {
             Senior Software Engineer at Sentry
           </div>
         </div>
-        <div className="rounded-xl bg-slate-50 p-10 dark:bg-slate-800/60">
-          <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-sky-500" />
+        <div className="rounded-xl bg-zinc-50 p-10 dark:bg-zinc-800/60">
+          <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-blue-500" />
           <p className="mt-4">
             "Since we are using NxCloud, we saw our CI times reduced by 83%!
             That means our teams are not waiting hours for their PR to be merged

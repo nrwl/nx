@@ -43,12 +43,15 @@ async function sendToGA4(
     client_id: clientId,
     events: [
       {
-        name: 'page_view',
+        name: 'server_page_view',
         params: {
           page_location: request.url,
           page_title: pathname,
           page_path: pathname,
           // Custom parameters for filtering
+          content_type: pathname.endsWith('.txt')
+            ? 'text/plain'
+            : 'text/markdown',
           file_extension: pathname.substring(pathname.lastIndexOf('.')),
           user_agent: userAgent,
           is_ai_tool: isAITool ? 'true' : 'false',
@@ -86,13 +89,19 @@ export default async function handler(
   // Continue to serve the actual file
   const response = await context.next();
 
-  // Add header to indicate edge function processed this request
-  response.headers.set('x-nx-edge-function', 'track-asset-requests');
+  // Netlify Edge Function responses are immutable, so create a new Response
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set('x-nx-edge-function', 'track-asset-requests');
 
-  return response;
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
 }
 
 export const config = {
-  // Track all .txt and .md requests for AI/LLM usage analytics
-  path: ['/*.txt', '/**/*.txt', '/*.md', '/**/*.md'],
+  path: ['/**/*.txt', '/**/*.md'],
+  // Something is adding .png.md and .svg.md to get image paths, exclude those.
+  excludedPath: ['/docs/og/*', '/docs/*.svg.md', '/docs/*.png.md'],
 };

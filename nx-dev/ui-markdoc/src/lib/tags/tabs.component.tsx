@@ -66,8 +66,8 @@ export function Tabs({ labels, children }: TabsProps) {
             className={cx(
               'whitespace-nowrap border-b-2 p-2 text-sm font-medium',
               label === currentTab
-                ? 'border-blue-500 text-slate-800 dark:border-sky-500 dark:text-slate-300'
-                : 'border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-800 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:text-slate-300'
+                ? 'border-blue-500 text-zinc-800 dark:border-blue-500 dark:text-zinc-300'
+                : 'border-transparent text-zinc-500 hover:border-blue-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:border-blue-500 dark:hover:text-zinc-300'
             )}
           >
             {label}
@@ -76,7 +76,7 @@ export function Tabs({ labels, children }: TabsProps) {
       </nav>
       <div
         className={cx(
-          'border border-slate-200 pb-2 pl-4 pr-4 pt-2 dark:border-slate-700',
+          'border border-zinc-200 pb-2 pl-4 pr-4 pt-2 dark:border-zinc-700',
           currentTab === labels[0]
             ? 'rounded-b-md rounded-tr-md'
             : 'rounded-b-md rounded-t-md'
@@ -108,7 +108,7 @@ export function Tab({ label, children }: TabProps) {
 
   return (
     <div
-      className="prose prose-slate dark:prose-invert mt-2 max-w-none"
+      className="prose prose-zinc dark:prose-invert mt-2 max-w-none"
       hidden={!isActive}
     >
       {isActive && passPropsToChildren(children)}

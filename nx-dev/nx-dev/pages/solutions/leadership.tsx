@@ -22,7 +22,7 @@ export function EnterpriseSolutionsLeadership(): ReactElement {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/contact/sales',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       title: 'Talk to our team',
       children: 'Talk to our team',
@@ -52,7 +52,7 @@ export function EnterpriseSolutionsLeadership(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

@@ -17,7 +17,7 @@ export function VmwareTestimonial(): ReactElement {
           </p>
 
           <p className="mt-4 text-right md:text-lg">
-            <span className="font-semibold text-sky-500">
+            <span className="font-semibold text-blue-500">
               Laurent Delamare,
             </span>{' '}
             <span className="text-neutral-500">Senior Engineer</span>

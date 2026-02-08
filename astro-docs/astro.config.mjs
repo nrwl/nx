@@ -6,6 +6,7 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
+import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 
 const BASE = '/docs';
 
@@ -32,6 +33,9 @@ export default defineConfig({
         limitInputPixels: false, // Disable pixel limit
       },
     },
+  },
+  markdown: {
+    rehypePlugins: [rehypeTableOptionLinks],
   },
   trailingSlash: 'never',
   // This adapter doesn't support local previews, so only load it on Netlify.
@@ -87,17 +91,13 @@ export default defineConfig({
         // since the sidebar doesn't auto generate w/ dynamic routes from src/pages/reference
         // only the src/content/docs/reference files
         './src/plugins/sidebar-reference-updater.middleware.ts',
-        './src/plugins/sidebar-icons.middleware.ts',
         './src/plugins/og.middleware.ts',
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
       ],
       markdown: {
-        // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
-        // as to _why_ it has to normalize a path?
-        // idk just working around the issue for now but we'll want to have linked headers so will need to fix
-        headingLinks: false,
+        headingLinks: true,
       },
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/nrwl/nx' },

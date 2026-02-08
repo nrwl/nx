@@ -86,7 +86,7 @@ export function TeamAndCommunity(): ReactElement {
         </div>
         <div className="mt-8 grid grid-cols-2 gap-12 sm:grid-cols-3 sm:gap-8 lg:grid-cols-6 lg:gap-6">
           <div>
-            <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
+            <div className="group/item relative flex items-center gap-2 rounded-xl border border-zinc-100 p-4 transition hover:text-zinc-950 dark:border-zinc-800/60 dark:hover:text-white">
               <XIcon aria-hidden="true" className="size-6 shrink-0" />
               <a href="https://x.com/NxDevTools" className="grow text-base">
                 <span className="absolute inset-0" />
@@ -99,7 +99,7 @@ export function TeamAndCommunity(): ReactElement {
             </div>
           </div>
           <div>
-            <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
+            <div className="group/item relative flex items-center gap-2 rounded-xl border border-zinc-100 p-4 transition hover:text-zinc-950 dark:border-zinc-800/60 dark:hover:text-white">
               <NewspaperIcon aria-hidden="true" className="size-6 shrink-0" />
               <Link href="/blog" className="grow text-base">
                 <span className="absolute inset-0" />
@@ -112,7 +112,7 @@ export function TeamAndCommunity(): ReactElement {
             </div>
           </div>
           <div>
-            <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
+            <div className="group/item relative flex items-center gap-2 rounded-xl border border-zinc-100 p-4 transition hover:text-zinc-950 dark:border-zinc-800/60 dark:hover:text-white">
               <YoutubeIcon aria-hidden="true" className="size-6 shrink-0" />
               <a
                 href="https://youtube.com/@nxdevtools"
@@ -129,7 +129,7 @@ export function TeamAndCommunity(): ReactElement {
           </div>
 
           <div>
-            <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
+            <div className="group/item relative flex items-center gap-2 rounded-xl border border-zinc-100 p-4 transition hover:text-zinc-950 dark:border-zinc-800/60 dark:hover:text-white">
               <DiscordIcon aria-hidden="true" className="size-6 shrink-0" />
               <a
                 href="https://go.nx.dev/community?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
@@ -146,7 +146,7 @@ export function TeamAndCommunity(): ReactElement {
           </div>
 
           <div>
-            <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition dark:border-slate-800/60 dark:hover:text-white">
+            <div className="group/item relative flex items-center gap-2 rounded-xl border border-zinc-100 p-4 transition dark:border-zinc-800/60 dark:hover:text-white">
               <MicrophoneIcon aria-hidden="true" className="size-6 shrink-0" />
               <Link
                 href="https://podcasters.spotify.com/pod/show/enterprise-software"
@@ -166,7 +166,7 @@ export function TeamAndCommunity(): ReactElement {
           </div>
 
           <div>
-            <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition dark:border-slate-800/60 dark:hover:text-white">
+            <div className="group/item relative flex items-center gap-2 rounded-xl border border-zinc-100 p-4 transition dark:border-zinc-800/60 dark:hover:text-white">
               <ComputerDesktopIcon
                 aria-hidden="true"
                 className="size-6 shrink-0"

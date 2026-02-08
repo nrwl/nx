@@ -10,7 +10,7 @@ export function Pricing(): ReactElement {
   return (
     <section
       id="plans"
-      className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+      className="scroll-mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="mx-auto max-w-4xl text-center">
@@ -39,9 +39,9 @@ export function Pricing(): ReactElement {
           <div className="isolate -mt-16 grid max-w-full grid-cols-1 gap-6 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4 xl:gap-8">
             {/*HOBBY*/}
             <div>
-              <div className="rounded-lg border-2 border-blue-500 bg-white p-6 dark:border-sky-500 dark:bg-slate-950">
+              <div className="rounded-lg border-2 border-blue-500 bg-white p-6 dark:border-blue-500 dark:bg-zinc-950">
                 <div className="flex items-center gap-x-2">
-                  <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
+                  <h4 className="text-xl font-semibold leading-8 text-zinc-950 dark:text-white">
                     Hobby
                   </h4>
                   <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30">
@@ -53,7 +53,7 @@ export function Pricing(): ReactElement {
                   product. No credit card required.
                 </p>
                 <p className="mt-4 pb-5 leading-5">
-                  <span className="text-3xl font-semibold text-slate-950 dark:text-white">
+                  <span className="text-3xl font-semibold text-zinc-950 dark:text-white">
                     $0
                   </span>
                 </p>
@@ -63,7 +63,7 @@ export function Pricing(): ReactElement {
                     aria-describedby="hobby-plan"
                     title="Start now"
                     size="default"
-                    variant="primary"
+                    variant="contrast"
                     onClick={() =>
                       sendCustomEvent(
                         'start-hobby-plan-click',
@@ -76,21 +76,21 @@ export function Pricing(): ReactElement {
                     Start now
                   </ButtonLink>
                 </div>
-                <ul className="mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+                <ul className="mt-4 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
                   <li className="py-2.5">
                     <span className="font-medium">Included for free</span>
                   </li>
                   <li className="flex items-center justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>50,000 monthly credits</span>
                   </li>
                   <li className="flex items-center justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <Link
                       href="/ai"
@@ -111,7 +111,7 @@ export function Pricing(): ReactElement {
                   <li className="flex items-center justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Remote caching with{' '}
@@ -135,7 +135,7 @@ export function Pricing(): ReactElement {
                   <li className="flex items-center justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                     />
                     <span>
                       Distributed task execution with{' '}
@@ -163,9 +163,9 @@ export function Pricing(): ReactElement {
             </div>
 
             {/*TEAM*/}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+            <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
               <div className="flex items-center gap-x-2">
-                <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
+                <h4 className="text-xl font-semibold leading-8 text-zinc-950 dark:text-white">
                   Team
                 </h4>
               </div>
@@ -173,7 +173,7 @@ export function Pricing(): ReactElement {
                 Start free, pay as you grow. Billed on the first of each month.
               </p>
               <p className="mt-4 leading-5">
-                <span className="text-3xl font-semibold text-slate-950 dark:text-white">
+                <span className="text-3xl font-semibold text-zinc-950 dark:text-white">
                   $19
                 </span>
                 <span className="text-lg"> per Active Contributor¹</span>{' '}
@@ -203,35 +203,35 @@ export function Pricing(): ReactElement {
                   Free to start
                 </ButtonLink>
               </div>
-              <ul className="mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+              <ul className="mt-4 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
                 <li className="py-2.5">
                   <span className="font-medium">Included for free</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>5 active contributors¹</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>50,000 monthly credits</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>10 concurrent CI connections</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <Link
                     href="/ai"
@@ -252,7 +252,7 @@ export function Pricing(): ReactElement {
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>Email support</span>
                 </li>
@@ -262,35 +262,35 @@ export function Pricing(): ReactElement {
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>$19 per active contributor¹ / month</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>$5.50 per 10,000 credits</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>$2.25 per concurrent CI connection</span>
                 </li>
               </ul>
-              <p className="mt-4 text-xs text-slate-500">
+              <p className="mt-4 text-xs text-zinc-500">
                 ¹Any person or actor that has triggered a CI Pipeline Execution
                 within the current billing cycle. Up to 50 active contributors.
               </p>
             </div>
 
             {/* ENTERPRISE */}
-            <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-6 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex items-center gap-x-2">
-                <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
+                <h4 className="text-xl font-semibold leading-8 text-zinc-950 dark:text-white">
                   Enterprise
                 </h4>
               </div>
@@ -299,7 +299,7 @@ export function Pricing(): ReactElement {
                 & payment options available.
               </p>
               <p className="mt-4 pb-5 leading-5">
-                <span className="text-3xl font-semibold text-slate-950 dark:text-white">
+                <span className="text-3xl font-semibold text-zinc-950 dark:text-white">
                   Custom
                 </span>
               </p>
@@ -322,28 +322,28 @@ export function Pricing(): ReactElement {
                   Request a trial
                 </ButtonLink>
               </div>
-              <ul className="mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+              <ul className="mt-4 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
                 <li className="py-2.5">
                   <span className="font-medium">Includes</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>Volume discounts on credits available</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>White glove onboarding</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>
                     <Link
@@ -367,7 +367,7 @@ export function Pricing(): ReactElement {
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>
                     Work hand-in-hand with the Nx team for continual improvement
@@ -376,7 +376,7 @@ export function Pricing(): ReactElement {
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>
                     Run on the Nx Cloud servers in any region or run fully
@@ -386,14 +386,14 @@ export function Pricing(): ReactElement {
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>SSO / SAML Login</span>
                 </li>
                 <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
-                    className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    className="h-6 w-5 flex-none text-blue-600 dark:text-blue-500"
                   />
                   <span>Premium Support and SLAs available</span>
                 </li>

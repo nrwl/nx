@@ -48,14 +48,14 @@ export function FailingCompliance(): ReactElement {
             </SectionDescription>
 
             <div className="mt-6 flex justify-center">
-              <div className="max-w-sm rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-800/60">
+              <div className="max-w-sm rounded-lg border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-800 dark:bg-zinc-800/60">
                 <div className="flex items-start">
                   <ShieldExclamationIcon
                     aria-hidden="true"
                     className="size-5 flex-shrink-0 text-red-500 dark:text-white"
                   />
                   <div className="ml-4 flex-1">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-white">
                       <abbr
                         title="Cache Race-condition Exploit Enables Poisoning"
                         className="cursor-help"
@@ -64,7 +64,7 @@ export function FailingCompliance(): ReactElement {
                       </abbr>{' '}
                       (CVE-2025-36852)
                     </p>
-                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                    <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
                       Critical Cache Poisoning Vulnerability Affects Multiple
                       Build Systems.
                     </p>
@@ -120,7 +120,7 @@ export function FailingCompliance(): ReactElement {
 
             <ul className="mt-6 space-y-4 text-base leading-7">
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -132,7 +132,7 @@ export function FailingCompliance(): ReactElement {
                 2 compliance.
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -143,7 +143,7 @@ export function FailingCompliance(): ReactElement {
                 HIPAA mandates for protecting ePHI.
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -154,7 +154,7 @@ export function FailingCompliance(): ReactElement {
                 internal/external audit cycles.
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -165,7 +165,7 @@ export function FailingCompliance(): ReactElement {
                 data classification, monitoring, and secure U.S. hosting.
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -191,7 +191,7 @@ export function FailingCompliance(): ReactElement {
               </SectionDescription>
               <ButtonLink
                 href="/contact/sales"
-                variant="primary"
+                variant="contrast"
                 size="default"
                 title="Talk to an expert"
                 className="mt-4"

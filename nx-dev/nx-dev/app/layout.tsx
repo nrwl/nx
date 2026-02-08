@@ -10,6 +10,21 @@ import { FrontendObservability } from '../lib/components/frontend-observability'
 
 // Metadata for the entire site
 export const metadata: Metadata = {
+  // Resolve relative URLs in metadata (e.g., OG images) to the correct deployment URL
+  // - Vercel: Use VERCEL_URL for preview deployments
+  // - Netlify: Use CONTEXT to determine environment:
+  //   - deploy-preview/branch-deploy: Use DEPLOY_PRIME_URL for PR preview URLs
+  //   - production: Use URL for canonical production URL (nx.dev)
+  metadataBase: new URL(
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.CONTEXT === 'deploy-preview' ||
+          process.env.CONTEXT === 'branch-deploy'
+        ? process.env.DEPLOY_PRIME_URL ||
+          process.env.DEPLOY_URL ||
+          'https://nx.dev'
+        : process.env.URL || 'https://nx.dev'
+  ),
   appleWebApp: { title: 'Nx' },
   applicationName: 'Nx',
   icons: [
@@ -119,7 +134,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+      <body className="h-full bg-white text-zinc-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:selection:bg-blue-500">
         <GlobalSearchHandler />
         {children}
         {bannerCollection.map((bannerConfig) => {

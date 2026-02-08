@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { output } from '../output';
 import { getPackageManagerCommand } from '../package-manager';
@@ -32,7 +32,7 @@ export function listPlugins(
       capabilities.push('project-inference');
     }
     bodyLines.push(
-      `${chalk.bold(p.name)} ${
+      `${pc.bold(p.name)} ${
         capabilities.length >= 1 ? `(${capabilities.join()})` : ''
       }`
     );
@@ -55,7 +55,7 @@ export function listAlsoAvailableCorePlugins(
     output.log({
       title: `Also available:`,
       bodyLines: alsoAvailable.map((p) => {
-        return `${chalk.bold(p.name)} (${p.capabilities})`;
+        return `${pc.bold(p.name)} (${p.capabilities})`;
       }),
     });
   }
@@ -109,11 +109,11 @@ export async function listPluginCapabilities(
   const bodyLines = [];
 
   if (hasGenerators) {
-    bodyLines.push(chalk.bold(chalk.green('GENERATORS')));
+    bodyLines.push(pc.bold(pc.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.generators).map(
-        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
+        (name) => `${pc.bold(name)} : ${plugin.generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -122,14 +122,14 @@ export async function listPluginCapabilities(
   }
 
   if (hasBuilders) {
-    bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
+    bodyLines.push(pc.bold(pc.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.executors).map((name) => {
         const definition = plugin.executors[name];
         return typeof definition === 'string'
-          ? chalk.bold(name)
-          : `${chalk.bold(name)} : ${definition.description}`;
+          ? pc.bold(name)
+          : `${pc.bold(name)} : ${definition.description}`;
       })
     );
   }

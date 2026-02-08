@@ -42,13 +42,13 @@ export function LiveStreamNotifier(): ReactElement | null {
         damping: 30,
         mass: 1,
       }}
-      className="fixed bottom-0 left-0 right-0 z-30 w-full overflow-hidden bg-slate-950 text-white shadow-lg md:bottom-4 md:left-auto md:right-4 md:w-[512px] md:rounded-lg"
+      className="fixed bottom-0 left-0 right-0 z-30 w-full overflow-hidden bg-zinc-950 text-white shadow-lg md:bottom-4 md:left-auto md:right-4 md:w-[512px] md:rounded-lg"
       style={{ originY: 1 }}
     >
       <div className="relative p-4">
         <button
           onClick={closeNotifier}
-          className="absolute right-2 top-2 rounded-full p-1 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-white"
+          className="absolute right-2 top-2 rounded-full p-1 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-white"
         >
           <XMarkIcon className="size-5" aria-hidden="true" />
           <span className="sr-only">Close</span>

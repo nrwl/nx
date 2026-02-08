@@ -183,7 +183,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
       updatePackageScripts = true;
     } else {
       const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
-        await detectPlugins(nxJson, options.interactive);
+        await detectPlugins(nxJson, packageJson, options.interactive);
       plugins = _plugins;
       updatePackageScripts = _updatePackageScripts;
     }
@@ -273,6 +273,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
 
 export async function detectPlugins(
   nxJson: NxJsonConfiguration,
+  packageJson: PackageJson | null,
   interactive: boolean,
   includeAngularCli?: boolean
 ): Promise<{
@@ -289,6 +290,17 @@ export async function detectPlugins(
       return getPackageNameFromImportPath(plugin);
     })
   );
+
+  // Also treat already-installed @nx/* and @nrwl/* packages as current plugins
+  const rootDeps = {
+    ...packageJson?.dependencies,
+    ...packageJson?.devDependencies,
+  };
+  for (const dep of Object.keys(rootDeps)) {
+    if (dep.startsWith('@nx/') || dep.startsWith('@nrwl/')) {
+      currentPlugins.add(getPackageNameFromImportPath(dep));
+    }
+  }
 
   const detectedPlugins = new Set<string>();
   for (const file of files) {

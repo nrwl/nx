@@ -20,7 +20,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-affected.avif"
             alt="Nx Affected: Run tasks only on affected projects"
             tag="Affected"
-            href="/ci/features/affected"
+            href="/docs/features/ci-features/affected"
           />
 
           {/* Remote Caching Section */}
@@ -30,7 +30,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-replay.avif"
             alt="Nx Replay: Remote caching"
             tag="Nx Replay"
-            href="/features/cache-task-results"
+            href="/docs/features/cache-task-results"
           />
 
           {/* Distribution Section */}
@@ -40,7 +40,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-agents.avif"
             alt="Nx Agents: Task distribution"
             tag="Nx Agents"
-            href="/ci/features/distribute-task-execution"
+            href="/docs/features/ci-features/distribute-task-execution"
           />
 
           {/* Atomizer Section */}
@@ -50,7 +50,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-atomizer.avif"
             alt="Nx Atomizer: Split large test tasks"
             tag="Atomizer"
-            href="/ci/features/split-e2e-tasks"
+            href="/docs/features/ci-features/split-e2e-tasks"
           />
 
           {/* Flaky Test Retries Section */}
@@ -60,7 +60,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-flaky-tasks-detection.avif"
             alt="Nx flaky task detection & rerun"
             tag="Flaky test retries"
-            href="/nx-api/gradle/documents/overview"
+            href="/docs/technologies/java/gradle/introduction"
           />
         </div>
       </div>
@@ -88,7 +88,7 @@ function FeatureSection({
 }: FeatureSectionProps): ReactElement {
   return (
     <div
-      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10`}
+      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10`}
     >
       <div className="h-0 w-full md:h-72">
         <img
@@ -99,13 +99,13 @@ function FeatureSection({
       </div>
       <div className="relative flex flex-1 flex-col justify-center p-8 lg:p-10">
         <div>
-          <span className="mb-3 inline-flex items-center rounded-full bg-slate-400/10 px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-inset ring-slate-400/20 dark:text-slate-300">
+          <span className="mb-3 inline-flex items-center rounded-full bg-zinc-400/10 px-3 py-1 text-sm font-medium text-zinc-600 ring-1 ring-inset ring-zinc-400/20 dark:text-zinc-300">
             {tag}
           </span>
-          <h3 className="mt-2 text-xl font-medium tracking-tight text-slate-950 lg:text-2xl dark:text-white">
+          <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-950 lg:text-2xl dark:text-white">
             {title}
           </h3>
-          <p className="mt-4 text-base/relaxed text-slate-600 dark:text-slate-300">
+          <p className="mt-4 text-base/relaxed text-zinc-600 dark:text-zinc-300">
             {description}
           </p>
           <div className="mt-6">

@@ -30,7 +30,7 @@ If you want to check out the final result, here's the corresponding Github repo:
 
 But before we jump right into the topic, what is Nx? And more specifically, what are Nx Plugins?
 
-Nx is an open-source build system that provides tools and techniques to enhance developer productivity. [Check out this 10 min video overview](https://youtu.be/-_4WMl-Fn0w) of Nx if you want to learn more.
+Nx is an open-source monorepo platform that provides tools and techniques to enhance developer productivity. [Check out this 10 min video overview](https://youtu.be/-_4WMl-Fn0w) of Nx if you want to learn more.
 
 Our example, in particular, uses Nx as a dev tool for creating a CLI and plugin. Nx plugins are npm packages that provide integrations between Nx and other technologies. You can use Nx without them, but they can provide great value if applied properly. `my-own-react` is the plugin to integrate React and Nx.
 

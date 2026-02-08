@@ -198,7 +198,7 @@ export function Footer({
   };
   return (
     <footer
-      className={`bg-white dark:bg-slate-950 ${className}`}
+      className={`bg-white dark:bg-zinc-950 ${className}`}
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
@@ -206,7 +206,7 @@ export function Footer({
       </h2>
       <div className="mx-auto max-w-7xl px-4 pt-12 transition-opacity sm:px-6 lg:px-8 lg:pt-16 lg:opacity-50 lg:hover:opacity-100">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
+          <div className="space-y-4 text-zinc-700 xl:col-span-1 dark:text-zinc-300">
             <svg
               className="h-14 subpixel-antialiased"
               role="img"
@@ -217,7 +217,7 @@ export function Footer({
               <title>Nx</title>
               <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
             </svg>
-            <p className="text-sm">Smart Repos · Fast Builds</p>
+            <p className="text-sm">Smart Monorepos · Fast Builds</p>
             <div className="flex flex-wrap space-x-6">
               {navigation.social.map((item) => (
                 <Link
@@ -225,7 +225,7 @@ export function Footer({
                   href={item.href}
                   title={item.label}
                   prefetch={false}
-                  className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                  className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -241,7 +241,7 @@ export function Footer({
                     title={item.name}
                     target="_blank"
                     rel="noreferer"
-                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                   >
                     {item.name}
                   </a>
@@ -251,7 +251,7 @@ export function Footer({
                     href={prefixHref(item.href)}
                     title={item.name}
                     prefetch={false}
-                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                   >
                     {item.name}
                   </Link>
@@ -267,7 +267,7 @@ export function Footer({
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Resources
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -279,7 +279,7 @@ export function Footer({
                           target="_blank"
                           title={item.name}
                           rel="noreferer"
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </a>
@@ -288,7 +288,7 @@ export function Footer({
                           href={prefixHref(item.href)}
                           prefetch={false}
                           title={item.name}
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </Link>
@@ -298,7 +298,7 @@ export function Footer({
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Solutions
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -308,7 +308,7 @@ export function Footer({
                         href={prefixHref(item.href)}
                         prefetch={false}
                         title={item.name}
-                        className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                       >
                         {item.name}
                       </Link>
@@ -319,7 +319,7 @@ export function Footer({
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Nx Cloud
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -331,7 +331,7 @@ export function Footer({
                           title={item.name}
                           target="_blank"
                           rel="noreferer"
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </a>
@@ -340,7 +340,7 @@ export function Footer({
                           href={prefixHref(item.href)}
                           prefetch={false}
                           title={item.name}
-                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                         >
                           {item.name}
                         </Link>
@@ -350,7 +350,7 @@ export function Footer({
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                   Company
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -360,7 +360,7 @@ export function Footer({
                         href={prefixHref(item.href)}
                         prefetch={false}
                         title={item.name}
-                        className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
                       >
                         {item.name}
                       </Link>
@@ -371,8 +371,8 @@ export function Footer({
             </div>
           </div>
         </div>
-        <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
-          <div className="flex items-center gap-1 text-sm text-slate-400 xl:justify-center">
+        <div className="mt-20 border-t border-zinc-200 p-2 dark:border-zinc-800">
+          <div className="flex items-center gap-1 text-sm text-zinc-400 xl:justify-center">
             <span>&copy; {new Date().getFullYear()} made with</span>
             <HeartIcon className="inline h-4 w-4" />
             <span>by</span>
@@ -380,7 +380,7 @@ export function Footer({
               href={prefixHref('/company')}
               prefetch={false}
               title="Company"
-              className="inline-flex items-center text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+              className="inline-flex items-center text-zinc-500 no-underline hover:text-zinc-600 dark:hover:text-zinc-400"
             >
               <svg
                 role="img"
