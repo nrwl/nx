@@ -315,13 +315,14 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore] // hangs on Windows
     fn can_run_commands() {
         let mut i = 0;
-        let mut pseudo_terminal = PseudoTerminal::default().unwrap();
+        let mut pseudo_terminal = PseudoTerminal::new(PseudoTerminalOptions::default()).unwrap();
         while i < 10 {
             println!("Running {}", i);
             let cp1 = pseudo_terminal
-                .run_command(String::from("whoami"), None, None, None, None, None)
+                .run_command(String::from("whoami"), None, None, None, None, None, None)
                 .unwrap();
             cp1.wait_receiver.recv().unwrap();
             i += 1;

@@ -1,11 +1,9 @@
 import {
   type Tree,
   formatFiles,
-  logger,
   applyChangesToString,
   ChangeType,
   type StringChange,
-  addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { ast, query } from '@phenomnomnominal/tsquery';
@@ -36,20 +34,25 @@ function withSvgr(svgrOptions = {}) {
       config.module.rules.splice(svgLoaderIdx, 1);
     }
 
-    // Add SVGR loader
+    // Add SVGR loader with webpack 5 asset modules
     config.module.rules.push({
       test: /\\.svg$/,
-      issuer: /\\.(js|ts|md)x?$/,
-      use: [
+      oneOf: [
         {
-          loader: require.resolve('@svgr/webpack'),
-          options,
+          resourceQuery: /url/,
+          type: 'asset/resource',
+          generator: {
+            filename: '[name].[hash][ext]',
+          },
         },
         {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
-          },
+          issuer: /\\.(js|ts|md)x?$/,
+          use: [
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options,
+            },
+          ],
         },
       ],
     });
@@ -85,20 +88,25 @@ function withSvgr(svgrOptions = {}) {
             )
         );
 
-        // Add SVGR loader with both default and named exports
+        // Add SVGR loader with webpack 5 asset modules
         compiler.options.module.rules.push({
           test: /\.svg$/,
-          issuer: /\.[jt]sx?$/,
-          use: [
+          oneOf: [
             {
-              loader: require.resolve('@svgr/webpack'),
-              options,
+              resourceQuery: /url/,
+              type: 'asset/resource',
+              generator: {
+                filename: '[name].[hash][ext]',
+              },
             },
             {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: '[name].[hash].[ext]',
-              },
+              issuer: /\.[jt]sx?$/,
+              use: [
+                {
+                  loader: require.resolve('@svgr/webpack'),
+                  options,
+                },
+              ],
             },
           ],
         });
@@ -483,13 +491,4 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
   }
 
   await formatFiles(tree);
-
-  // Add file-loader as a dev dependency since it's now required for SVGR
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      'file-loader': '^6.2.0',
-    }
-  );
 }

@@ -1,5 +1,6 @@
-import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
+import { FileHandle, open } from 'fs/promises';
+import { connect } from 'net';
 import {
   existsSync,
   mkdirSync,
@@ -7,46 +8,42 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { FileHandle, open } from 'fs/promises';
-import { connect } from 'net';
+import { deserialize } from 'node:v8';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { output } from '../../utils/output';
-import {
-  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  DAEMON_OUTPUT_LOG_FILE,
-  isDaemonDisabled,
-  removeSocketDir,
-} from '../tmp-dir';
-import { FileData, ProjectGraph } from '../../config/project-graph';
-import { isCI } from '../../utils/is-ci';
-import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
-import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import {
-  DaemonSocketMessenger,
-  Message,
-  VersionMismatchError,
-} from './daemon-socket-messenger';
-import { clientLogger } from '../logger';
-import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
-import { isNxVersionMismatch } from '../is-nx-version-mismatch';
-import { Hash } from '../../hasher/task-hasher';
+import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
+import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { Hash } from '../../hasher/task-hasher';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
-  HandleGlobMessage,
-  HandleMultiGlobMessage,
-} from '../message-types/glob';
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
+import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isCI } from '../../utils/is-ci';
+import { output } from '../../utils/output';
+import { PromisedBasedQueue } from '../../utils/promised-based-queue';
+import type {
+  FlushSyncGeneratorChangesResult,
+  SyncGeneratorRunResult,
+} from '../../utils/sync-generators';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import { clientLogger } from '../logger';
 import {
-  GET_NX_WORKSPACE_FILES,
-  HandleNxWorkspaceFilesMessage,
-} from '../message-types/get-nx-workspace-files';
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  type HandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
 import {
   GET_CONTEXT_FILE_DATA,
   HandleContextFileDataMessage,
@@ -56,11 +53,42 @@ import {
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
 import {
+  GET_NX_WORKSPACE_FILES,
+  HandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  type HandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  type HandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import {
+  HandleGlobMessage,
+  HandleMultiGlobMessage,
+} from '../message-types/glob';
+import {
   HandleHashGlobMessage,
   HandleHashMultiGlobMessage,
   HASH_GLOB,
   HASH_MULTI_GLOB,
 } from '../message-types/hash-glob';
+import {
+  GET_NX_CONSOLE_STATUS,
+  type HandleGetNxConsoleStatusMessage,
+  type HandleSetNxConsolePreferenceAndInstallMessage,
+  type NxConsoleStatusResponse,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+  type SetNxConsolePreferenceAndInstallResponse,
+} from '../message-types/nx-console';
+import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
+import {
+  HandlePostTasksExecutionMessage,
+  HandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -70,52 +98,27 @@ import {
   RECORD_TASK_RUNS,
 } from '../message-types/task-history';
 import {
-  GET_SYNC_GENERATOR_CHANGES,
-  type HandleGetSyncGeneratorChangesMessage,
-} from '../message-types/get-sync-generator-changes';
-import type {
-  FlushSyncGeneratorChangesResult,
-  SyncGeneratorRunResult,
-} from '../../utils/sync-generators';
-import {
-  GET_REGISTERED_SYNC_GENERATORS,
-  type HandleGetRegisteredSyncGeneratorsMessage,
-} from '../message-types/get-registered-sync-generators';
-import {
   type HandleUpdateWorkspaceContextMessage,
   UPDATE_WORKSPACE_CONTEXT,
 } from '../message-types/update-workspace-context';
 import {
-  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
-  type HandleFlushSyncGeneratorChangesToDiskMessage,
-} from '../message-types/flush-sync-generator-changes-to-disk';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
+  DAEMON_OUTPUT_LOG_FILE,
+  isDaemonDisabled,
+  removeSocketDir,
+} from '../tmp-dir';
 import {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
-import {
-  HandlePostTasksExecutionMessage,
-  HandlePreTasksExecutionMessage,
-  POST_TASKS_EXECUTION,
-  PRE_TASKS_EXECUTION,
-} from '../message-types/run-tasks-execution-hooks';
-import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
-import {
-  GET_NX_CONSOLE_STATUS,
-  type HandleGetNxConsoleStatusMessage,
-  type HandleSetNxConsolePreferenceAndInstallMessage,
-  type NxConsoleStatusResponse,
-  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
-  type SetNxConsolePreferenceAndInstallResponse,
-} from '../message-types/nx-console';
-import { deserialize } from 'node:v8';
-import { isJsonMessage } from '../../utils/consume-messages-from-socket';
-import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
+  DaemonSocketMessenger,
+  Message,
+  VersionMismatchError,
+} from './daemon-socket-messenger';
 
-const DAEMON_ENV_SETTINGS = {
+const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
+};
+
+const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
   NX_VERBOSE_LOGGING: 'true',
   NX_PERF_LOGGING: 'true',
   NX_NATIVE_LOGGING: 'nx=debug',
@@ -1113,13 +1116,13 @@ export class DaemonClient {
 
       // Resend the pending message if one exists
       if (this.currentMessage && this.currentResolve && this.currentReject) {
-        // Decrement the queue counter that was incremented when the error occurred
-        this.queue.decrementQueueCounter();
-        // Retry the message through the normal queue
+        // Retry the message directly (not through the queue) to resolve the
+        // pending promise that the original queue entry is waiting on.
+        // This allows the original queue entry to complete naturally.
         const msg = this.currentMessage;
         const res = this.currentResolve;
         const rej = this.currentReject;
-        this.sendToDaemonViaQueue(msg).then(res, rej);
+        this.sendMessageToDaemon(msg).then(res, rej);
       }
     } else {
       // Failed to reconnect after all attempts, reject the pending request
@@ -1289,8 +1292,9 @@ export class DaemonClient {
         windowsHide: false,
         shell: false,
         env: {
+          ...DAEMON_ENV_OVERRIDABLE_SETTINGS,
           ...process.env,
-          ...DAEMON_ENV_SETTINGS,
+          ...DAEMON_ENV_REQUIRED_SETTINGS,
         },
       }
     );

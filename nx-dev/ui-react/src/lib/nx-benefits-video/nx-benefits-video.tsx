@@ -21,7 +21,7 @@ export function NxBenefitsVideo(): ReactElement {
   const thumbnailUrl = computeThumbnailURL(videoUrl);
 
   return (
-    <div className="border-b border-t border-slate-200 bg-slate-50 py-16 sm:py-8 dark:border-slate-800 dark:bg-slate-900">
+    <div className="border-b border-t border-zinc-200 bg-zinc-50 py-16 sm:py-8 dark:border-zinc-800 dark:bg-zinc-900">
       <section
         id="nx-benefits-video"
         className="z-0 mx-auto max-w-7xl scroll-mt-20 px-4 sm:px-6 lg:px-8"
@@ -31,7 +31,7 @@ export function NxBenefitsVideo(): ReactElement {
             <div className="relative">
               <div className="absolute bottom-0 start-0 -translate-x-14 translate-y-10">
                 <svg
-                  className="h-auto max-w-40 text-slate-200 dark:text-slate-800"
+                  className="h-auto max-w-40 text-zinc-200 dark:text-zinc-800"
                   width="696"
                   height="653"
                   viewBox="0 0 696 653"
@@ -124,13 +124,13 @@ export function NxBenefitsVideo(): ReactElement {
               href="https://nx.dev/recipes/adopting-nx/adding-to-monorepo"
               className="group block"
             >
-              <div className="mt-8 flex gap-4 rounded-lg p-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+              <div className="mt-8 flex gap-4 rounded-lg p-3 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <BoltIcon
                   aria-hidden="true"
                   className="size-6 shrink-0 text-blue-500"
                 />
                 <div>
-                  <h4 className="relative text-base font-medium leading-6 text-slate-900 group-hover:text-blue-500 dark:text-slate-100 dark:group-hover:text-blue-400">
+                  <h4 className="relative text-base font-medium leading-6 text-zinc-900 group-hover:text-blue-500 dark:text-zinc-100 dark:group-hover:text-blue-400">
                     Add Nx to any existing monorepo
                     <span className="ml-1 opacity-0 transition-opacity group-hover:opacity-100">
                       →
@@ -149,13 +149,13 @@ export function NxBenefitsVideo(): ReactElement {
               href="https://nx.dev/features/cache-task-results"
               className="group block"
             >
-              <div className="mt-8 flex gap-4 rounded-lg p-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+              <div className="mt-8 flex gap-4 rounded-lg p-3 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <RocketLaunchIcon
                   aria-hidden="true"
                   className="size-6 shrink-0 text-blue-500"
                 />
                 <div>
-                  <h4 className="relative text-base font-medium leading-6 text-slate-900 group-hover:text-blue-500 dark:text-slate-100 dark:group-hover:text-blue-400">
+                  <h4 className="relative text-base font-medium leading-6 text-zinc-900 group-hover:text-blue-500 dark:text-zinc-100 dark:group-hover:text-blue-400">
                     Immediate speed and efficiency gains
                     <span className="ml-1 opacity-0 transition-opacity group-hover:opacity-100">
                       →
@@ -171,13 +171,13 @@ export function NxBenefitsVideo(): ReactElement {
             </a>
 
             <a href="https://nx.dev/plugin-registry" className="group block">
-              <div className="mt-8 flex gap-4 rounded-lg p-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+              <div className="mt-8 flex gap-4 rounded-lg p-3 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <PuzzlePieceIcon
                   aria-hidden="true"
                   className="size-6 shrink-0 text-blue-500"
                 />
                 <div>
-                  <h4 className="relative text-base font-medium leading-6 text-slate-900 group-hover:text-blue-500 dark:text-slate-100 dark:group-hover:text-blue-400">
+                  <h4 className="relative text-base font-medium leading-6 text-zinc-900 group-hover:text-blue-500 dark:text-zinc-100 dark:group-hover:text-blue-400">
                     Enhanced developer experience
                     <span className="ml-1 opacity-0 transition-opacity group-hover:opacity-100">
                       →

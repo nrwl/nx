@@ -36,7 +36,7 @@ export function Enterprise(): ReactElement {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/enterprise/trial',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       title: 'Request a free trial',
       children: 'Request a free trial',
@@ -64,7 +64,7 @@ export function Enterprise(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

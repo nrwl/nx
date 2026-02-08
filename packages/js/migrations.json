@@ -86,6 +86,27 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.5.0": {
+      "version": "22.5.0-beta.1",
+      "packages": {
+        "@swc/core": {
+          "version": "^1.15.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc/cli": {
+          "version": "^0.7.10",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc/helpers": {
+          "version": "^0.5.18",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc-node/register": {
+          "version": "^1.11.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

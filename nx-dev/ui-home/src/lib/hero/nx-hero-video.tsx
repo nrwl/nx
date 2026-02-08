@@ -18,7 +18,7 @@ export function NxHeroVideo(): ReactElement {
             </MovingBorder>
           </div>
           <div
-            className="relative w-full overflow-hidden rounded-xl border border-slate-100 bg-slate-50 antialiased backdrop-blur-xl dark:border-slate-900 dark:bg-slate-900/[0.8]"
+            className="relative w-full overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50 antialiased backdrop-blur-xl dark:border-zinc-900 dark:bg-zinc-900/[0.8]"
             style={{ aspectRatio: '16/9' }}
           >
             {isPlaying ? (

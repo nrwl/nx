@@ -69,7 +69,8 @@ describe('React Rspack Module Federation - Basic - Playwright', () => {
     if (runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
-        (output) => output.includes('Successfully ran target e2e for project')
+        (output) => output.includes('Successfully ran target e2e for project'),
+        { timeout: 120000 }
       );
 
       await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));

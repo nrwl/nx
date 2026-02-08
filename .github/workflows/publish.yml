@@ -22,7 +22,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 22.16.0
-  PNPM_VERSION: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -406,7 +406,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
-            sudo npm install --location=global --ignore-scripts pnpm@10.11.1
+            sudo npm install --location=global --ignore-scripts pnpm@10.28.2
             # Set up Java 17
             export JAVA_HOME=/usr/local/openjdk17
             export PATH="$JAVA_HOME/bin:$PATH"
@@ -472,11 +472,27 @@ jobs:
             rm -rf ~/.rustup/toolchains/*/share || true
             # Remove other development tool caches
             rm -rf ~/.cache/* || true
+
+            # Remove unnecessary workspace directories
+            rm -rf docs astro-docs nx-dev || true
+
             echo "Checking disk space after cleanup"
             df -h
             
             echo "Building FreeBSD bindings"
-            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            BUILD_EXIT=0
+            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
+
+            echo "=== Disk usage after build ==="
+            df -h
+
+            if [ "$BUILD_EXIT" -ne 0 ]; then
+              echo "Build failed with exit code $BUILD_EXIT"
+              exit $BUILD_EXIT
+            fi
+
+            echo "Build succeeded"
+            
             echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules

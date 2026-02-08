@@ -6,7 +6,7 @@ import { rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
-import { ReleaseType, inc, major, parse } from 'semver';
+import { ReleaseType, major, parse } from 'semver';
 import * as yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
@@ -311,37 +311,25 @@ function parseArgs() {
         }
         /**
          * Handle the special case of `canary`
+         *
+         * Use the base version from nx@next so that canary versions
+         * are always aligned with the current next/beta release line.
          */
 
-        const currentLatestVersion = execSync('npm view nx@latest version', {
-          windowsHide: false,
-        })
-          .toString()
-          .trim();
         const currentNextVersion = execSync('npm view nx@next version', {
           windowsHide: false,
         })
           .toString()
           .trim();
 
-        let canaryBaseVersion: string | null = null;
-
-        // If the latest and next are not on the same major version, then we need to publish a canary version of the next major
-        if (major(currentLatestVersion) !== major(currentNextVersion)) {
-          canaryBaseVersion = `${major(currentNextVersion)}.0.0`;
-        } else {
-          // Determine next minor version above the currentLatestVersion
-          const nextMinorRelease = inc(
-            currentLatestVersion,
-            'minor',
-            undefined
+        const parsedNext = parse(currentNextVersion);
+        if (!parsedNext) {
+          throw new Error(
+            `Unable to parse the current next version from the npm registry: "${currentNextVersion}"`
           );
-          canaryBaseVersion = nextMinorRelease;
         }
 
-        if (!canaryBaseVersion) {
-          throw new Error(`Unable to determine a base for the canary version.`);
-        }
+        const canaryBaseVersion = `${parsedNext.major}.${parsedNext.minor}.${parsedNext.patch}`;
 
         // Create YYYYMMDD string
         const date = new Date();
@@ -360,7 +348,6 @@ function parseArgs() {
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
         console.log(`\nDerived canary version dynamically`, {
-          currentLatestVersion,
           currentNextVersion,
           canaryVersion,
         });
@@ -440,8 +427,8 @@ function determineDistTag(
     return 'canary';
   }
 
-  // Special case of PR release
-  if (newVersion.startsWith('0.0.0-pr-')) {
+  // Special case of PR release (e.g. 22.5.0-pr.1234.abc1234)
+  if (/^\d+\.\d+\.\d+-pr\./.test(newVersion)) {
     return 'pull-request';
   }
 

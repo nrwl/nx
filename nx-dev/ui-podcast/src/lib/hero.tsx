@@ -15,7 +15,7 @@ export function Hero(): JSX.Element {
               architects of enterprise software.
             </SectionHeading>
             <div className="flex flex-col gap-3 text-lg">
-              <p className="font-medium text-slate-950 dark:text-white">
+              <p className="font-medium text-zinc-950 dark:text-white">
                 Available On:{' '}
               </p>
               <ListenOn />
@@ -24,7 +24,7 @@ export function Hero(): JSX.Element {
         </div>
         <div className="hidden lg:col-span-3 lg:col-start-10 lg:block">
           <img
-            className="aspect[1/1] rounded-lg border-8 border-slate-800/50 object-cover dark:border-white"
+            className="aspect[1/1] rounded-lg border-8 border-zinc-800/50 object-cover dark:border-white"
             src="/images/podcast/podcast-hero.avif"
             alt="Illustration of a microphone"
           />

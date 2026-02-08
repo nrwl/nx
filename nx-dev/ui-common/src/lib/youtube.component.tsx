@@ -124,7 +124,7 @@ export function YouTube(props: YouTubeProps): JSX.Element {
               {
                 'rounded-lg shadow-lg': !props.disableRoundedCorners,
               },
-              'aspect-video border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700'
+              'aspect-video border-2 border-zinc-200 hover:border-zinc-500 dark:border-zinc-700/40 dark:hover:border-zinc-700'
             )}
           />
         </a>
@@ -141,7 +141,7 @@ export function YouTube(props: YouTubeProps): JSX.Element {
         />
       )}
       {props.caption && (
-        <p className="mx-auto pt-0 text-slate-500 md:w-1/2 dark:text-slate-400">
+        <p className="mx-auto pt-0 text-zinc-500 md:w-1/2 dark:text-zinc-400">
           {props.caption}
         </p>
       )}

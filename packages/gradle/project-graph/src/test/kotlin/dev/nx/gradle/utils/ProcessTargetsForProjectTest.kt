@@ -367,4 +367,65 @@ class ProcessTargetsForProjectTest {
         gradleTargets.targets.containsKey("ci-test-integrationTest--IntegrationTest2"),
         "Expected atomized target ci-test-integrationTest--IntegrationTest2 to exist")
   }
+
+  @Test
+  fun `should use buildTreePath for subproject dependsOn references`(@TempDir workspaceDir: File) {
+    val workspaceRoot = workspaceDir.absolutePath
+    val rootDir = File(workspaceRoot, "root").apply { mkdirs() }
+    val appDir = File(rootDir, "app").apply { mkdirs() }
+
+    val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+    val appProject =
+        ProjectBuilder.builder()
+            .withParent(rootProject)
+            .withProjectDir(appDir)
+            .withName("app")
+            .build()
+
+    File(appDir, "build.gradle").writeText("// test build file")
+    File(appDir, "src/test/kotlin/MyTest.kt").apply {
+      parentFile.mkdirs()
+      writeText("@Test class MyTest")
+    }
+
+    val testTask =
+        appProject.tasks.register("test", GradleTest::class.java).get().apply {
+          group = "verification"
+        }
+    appProject.tasks.register("compileTestKotlin").get()
+    val checkTask =
+        appProject.tasks.register("check").get().apply {
+          group = "verification"
+          dependsOn(testTask)
+        }
+    appProject.tasks.register("build").get().apply {
+      group = "build"
+      dependsOn(checkTask)
+    }
+
+    val targetNameOverrides =
+        mapOf(
+            "ciTestTargetName" to "ci-test",
+            "ciCheckTargetName" to "ci-check",
+            "ciBuildTargetName" to "ci-build")
+    val dependencies = mutableSetOf<Dependency>()
+
+    val gradleTargets =
+        processTargetsForProject(
+            project = appProject,
+            dependencies = dependencies,
+            targetNameOverrides = targetNameOverrides,
+            workspaceRoot = workspaceRoot,
+            atomized = true)
+
+    val checkDependsOn = gradleTargets.targets["check"]?.get("dependsOn") as? List<*>
+    assertTrue(
+        checkDependsOn?.contains(":app:test") == true,
+        "Expected check to depend on ':app:test', got $checkDependsOn")
+
+    val ciCheckDependsOn = gradleTargets.targets["ci-check"]?.get("dependsOn") as? List<*>
+    assertTrue(
+        ciCheckDependsOn?.contains(":app:ci-test") == true,
+        "Expected ci-check to depend on ':app:ci-test', got $ciCheckDependsOn")
+  }
 }

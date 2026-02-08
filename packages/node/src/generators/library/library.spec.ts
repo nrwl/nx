@@ -726,7 +726,7 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@swc/helpers": "~0.5.11",
+            "@swc/helpers": "~0.5.18",
           },
           "exports": {
             ".": {

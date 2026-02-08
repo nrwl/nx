@@ -60,7 +60,7 @@ export function VideoPlayer({
 }: VideoPlayerProps): JSX.Element {
   return (
     <div className="not-content mb-4 overflow-x-auto">
-      <div className="rounded-lg border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 dark:border-zinc-700 dark:bg-zinc-800/60">
         <div
           className={
             showDescription && alt
@@ -89,7 +89,7 @@ export function VideoPlayer({
           )}
         </div>
         {showDescription && alt && (
-          <div className="py-2 text-center text-sm text-slate-600 dark:text-slate-400">
+          <div className="py-2 text-center text-sm text-zinc-600 dark:text-zinc-400">
             {alt}
           </div>
         )}

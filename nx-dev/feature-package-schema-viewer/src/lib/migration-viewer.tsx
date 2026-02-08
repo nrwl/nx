@@ -21,7 +21,7 @@ export function MigrationViewer({
       <summary className="cursor-pointer">
         <Heading3 title={schema.name}></Heading3>
       </summary>
-      <div className="prose prose-slate dark:prose-invert mb-6 ml-5">
+      <div className="prose prose-zinc dark:prose-invert mb-6 ml-5">
         <p>{schema.description}</p>
         <div className="my-1">
           <strong>Version</strong>: {schema.version}

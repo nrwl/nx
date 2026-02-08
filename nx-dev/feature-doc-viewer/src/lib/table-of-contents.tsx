@@ -86,9 +86,9 @@ export function TableOfContents({
                   <Link
                     href={href}
                     className={cx(
-                      'block w-full border-l-4 border-slate-200 py-1 pl-3 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
+                      'block w-full border-l-4 border-zinc-200 py-1 pl-3 transition hover:border-zinc-500 dark:border-zinc-700/40 dark:hover:border-zinc-700',
                       {
-                        'border-slate-500 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60':
+                        'border-zinc-500 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/60':
                           activeId === item.id && !item.highlightColor,
                         // region Highlight Color
                         'border-blue-200 bg-blue-50 hover:border-blue-500 dark:border-blue-700/40 dark:bg-blue-800/40 dark:hover:border-blue-700':

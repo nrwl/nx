@@ -46,14 +46,14 @@ export function WhyJoinNx(): JSX.Element {
             <div key={feature.name}>
               <dt>
                 <feature.icon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
+                  className="h-8 w-8 text-blue-500 dark:text-blue-500"
                   aria-hidden="true"
                 />
-                <p className="mt-4 text-lg font-semibold leading-8 tracking-tight text-slate-800 dark:text-slate-200">
+                <p className="mt-4 text-lg font-semibold leading-8 tracking-tight text-zinc-800 dark:text-zinc-200">
                   {feature.name}
                 </p>
               </dt>
-              <dd className="mt-2 text-slate-500 dark:text-slate-400">
+              <dd className="mt-2 text-zinc-500 dark:text-zinc-400">
                 <p className="text-base leading-7">{feature.description}</p>
               </dd>
             </div>

@@ -47,6 +47,8 @@ expect.addSnapshotSerializer({
           /Integrity:\s*.*/g,
           'Integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         )
+        // Filter out plugin worker verbose logs
+        .replaceAll(/\[(isolated-plugin|plugin-worker)\].*\n/g, '')
 
         .split('\n')
         .map((r) => r.trim())

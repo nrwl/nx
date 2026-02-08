@@ -57,10 +57,10 @@ export function WhatWeOffer(): JSX.Element {
             <div key={feature.name} className="relative">
               <dt>
                 <CheckIcon
-                  className="absolute mt-1 h-6 w-6 text-blue-500 dark:text-sky-500"
+                  className="absolute mt-1 h-6 w-6 text-blue-500 dark:text-blue-500"
                   aria-hidden="true"
                 />
-                <p className="ml-10 text-lg font-semibold leading-8 tracking-tight text-slate-800 dark:text-slate-200">
+                <p className="ml-10 text-lg font-semibold leading-8 tracking-tight text-zinc-800 dark:text-zinc-200">
                   {feature.name}
                 </p>
               </dt>

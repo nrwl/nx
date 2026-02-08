@@ -22,6 +22,48 @@ This documentation site leverages Astro's static site generation capabilities wi
 - Dynamic API documentation generation from Nx packages and CLI commands
 - Community plugin registry
 
+## Information Architecture Principles
+
+When creating or reorganizing documentation, follow these 5 principles to determine where content belongs.
+
+### 1. Progressive Disclosure (The "Journey" Rule)
+
+- **Concept:** Don't overwhelm the user. Reveal complexity only as they advance in their journey.
+- **The Test:** _Is this for the First 30 Minutes (Getting Started), the First 30 Days (Features), or Forever (Reference)?_
+
+### 2. Category Homogeneity (The "Scan" Rule)
+
+- **Concept:** Items in a list must be of the same "type" (noun, verb, or concept) to reduce cognitive load.
+- **The Test:** _Does this list mix Concepts (Mental Model), Tasks (Update Nx), and Products (React)? If yes, split it._
+
+### 3. Type-Based Navigation (The "Intent" Rule)
+
+- **Concept:** Separate **Learning** (Narrative/Guides) from **Looking Up** (Reference/API).
+- **The Test:** _Is the user here to learn a workflow (Guide) or look up a flag syntax (Reference)?_
+
+### 4. The Pen & Paper Test (The "Theory" Rule)
+
+- **Concept:** Distinguish Architecture from Features to keep "Core Concepts" pure.
+- **The Test:** _Can I explain this using only a pen and paper?_
+- **Yes:** It goes in **How Nx Works** (Architecture).
+- **No (I need a terminal):** It goes in **Platform Features** (Feature).
+
+### 5. Universal vs. Specific (The "Placement" Rule)
+
+- **Concept:** Distinguish Platform features from Ecosystem tools to prevent "Features" from becoming a junk drawer.
+- **The Test:** _Does this feature apply to EVERY user (e.g., Caching, Agents)?_
+- **Yes:** **Platform Features**.
+- **No (Only React users):** **Technologies**.
+
+### Sidebar Structure
+
+The sidebar has 4 top-level sections that follow the user journey:
+
+1. **Getting Started** - Essential setup, tutorials, and core concepts (How Nx Works, Platform Features)
+2. **Technologies** - Framework and tool-specific guides (React, Angular, Node, build tools, test tools)
+3. **Knowledge Base** - Recipes, troubleshooting, and topic-specific guides
+4. **Reference** - Exhaustive facts, no narrative (CLI commands, configuration, API docs)
+
 ## Project Structure
 
 ```

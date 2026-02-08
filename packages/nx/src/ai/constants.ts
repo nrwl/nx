@@ -29,8 +29,12 @@ export function claudeMdPath(root: string): string {
   return join(root, 'CLAUDE.md');
 }
 
-export function claudeMcpPath(root: string): string {
+export function claudeMcpJsonPath(root: string): string {
   return join(root, '.mcp.json');
+}
+
+export function opencodeMcpPath(root: string): string {
+  return join(root, 'opencode.json');
 }
 
 export const codexConfigTomlPath = join(homedir(), '.codex', 'config.toml');

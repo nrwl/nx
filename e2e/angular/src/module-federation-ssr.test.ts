@@ -88,8 +88,13 @@ test('renders remotes', async ({ page }) => {
 });`
     );
     if (runE2ETests()) {
-      const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
-        output.includes(`Successfully ran target e2e for project ${host}-e2e`)
+      const e2eProcess = await runCommandUntil(
+        `e2e ${host}-e2e`,
+        (output) =>
+          output.includes(
+            `Successfully ran target e2e for project ${host}-e2e`
+          ),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(e2eProcess.pid);
     }

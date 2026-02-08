@@ -5,7 +5,7 @@ import Link from 'next/link';
 export const Heading1 = ({ title }: { title: string }) => (
   <h1
     id={slugify(title)}
-    className="group mb-5 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100"
+    className="group mb-5 text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100"
   >
     <span>{title}</span>
     <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
@@ -20,7 +20,7 @@ export const Heading1 = ({ title }: { title: string }) => (
 export const Heading2 = ({ title }: { title: string }) => (
   <h2
     id={slugify(title)}
-    className="group mb-5 text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-200"
+    className="group mb-5 text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200"
   >
     <span>{title}</span>
     <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
@@ -35,7 +35,7 @@ export const Heading2 = ({ title }: { title: string }) => (
 export const Heading3 = ({ title }: { title: string }) => (
   <h3
     id={slugify(title)}
-    className="group text-xl font-semibold tracking-tight text-slate-700 dark:text-slate-300"
+    className="group text-xl font-semibold tracking-tight text-zinc-700 dark:text-zinc-300"
   >
     <span>{title}</span>
     <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>

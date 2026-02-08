@@ -53,7 +53,7 @@ export function Carousel({
       </CarouselRoot>
 
       {/* Partner logos section - now linked to carousel items */}
-      <div className="mt-12 flex items-center justify-center divide-x divide-slate-200 dark:divide-slate-700">
+      <div className="mt-12 flex items-center justify-center divide-x divide-zinc-200 dark:divide-zinc-700">
         {iterableItems.map((item, index) => (
           <button
             key={item.id + '-logo'}
@@ -107,8 +107,8 @@ export function TestimonialCarousel(): ReactElement {
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#0F6FDE] via-[#0F6FDE] via-70% to-[#0F6FDE]/40" />
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-slate-950/60">
-                    <div className="flex items-center gap-2 text-lg font-semibold text-slate-950 drop-shadow dark:text-white">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-zinc-950/60">
+                    <div className="flex items-center gap-2 text-lg font-semibold text-zinc-950 drop-shadow dark:text-white">
                       <PlayIcon className="size-8" />
                       Watch the interview
                     </div>
@@ -135,7 +135,7 @@ export function TestimonialCarousel(): ReactElement {
                           <img
                             alt="avatar"
                             src="https://avatars.githubusercontent.com/u/7281023?v=4"
-                            className="size-14 rounded-full bg-slate-50"
+                            className="size-14 rounded-full bg-zinc-50"
                           />
                           <div className="text-base">
                             <div className="font-semibold">
@@ -182,8 +182,8 @@ export function TestimonialCarousel(): ReactElement {
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#005151] via-[#005151] via-55% to-[#005151]/40" />
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-slate-950/60">
-                    <div className="flex items-center gap-2 text-lg font-semibold text-slate-950 drop-shadow dark:text-white">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-zinc-950/60">
+                    <div className="flex items-center gap-2 text-lg font-semibold text-zinc-950 drop-shadow dark:text-white">
                       <PlayIcon className="size-8" />
                       Watch the interview
                     </div>
@@ -203,7 +203,7 @@ export function TestimonialCarousel(): ReactElement {
                           <img
                             alt=""
                             src="https://avatars.githubusercontent.com/u/6657673?v=4"
-                            className="size-14 rounded-full bg-slate-50"
+                            className="size-14 rounded-full bg-zinc-50"
                           />
                           <div className="text-base">
                             <div className="font-semibold">Sid Govindaraju</div>

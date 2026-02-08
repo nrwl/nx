@@ -2,8 +2,6 @@ import {
   type Tree,
   formatFiles,
   readProjectConfiguration,
-  logger,
-  addDependenciesToPackageJson,
   applyChangesToString,
   ChangeType,
   type StringChange,
@@ -197,27 +195,32 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   const originalWebpack = config.webpack;
   // @ts-ignore
   config.webpack = (webpackConfig, ctx) => {
-    // Add SVGR support
+    // Add SVGR support with webpack 5 asset modules
     webpackConfig.module.rules.push({
       test: /\.svg$/,
-      issuer: { not: /\.(css|scss|sass)$/ },
-      resourceQuery: {
-        not: [
-          /__next_metadata__/,
-          /__next_metadata_route__/,
-          /__next_metadata_image_meta__/,
-        ],
-      },
-      use: [
+      oneOf: [
         {
-          loader: require.resolve('@svgr/webpack'),
-          options: ${svgrOptions},
+          resourceQuery: /url/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'static/media/[name].[hash][ext]',
+          },
         },
         {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: 'static/media/[name].[hash].[ext]',
+          issuer: { not: /\.(css|scss|sass)$/ },
+          resourceQuery: {
+            not: [
+              /__next_metadata__/,
+              /__next_metadata_route__/,
+              /__next_metadata_image_meta__/,
+            ],
           },
+          use: [
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options: ${svgrOptions},
+            },
+          ],
         },
       ],
     });
@@ -272,13 +275,4 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   }
 
   await formatFiles(tree);
-
-  // Add file-loader as a dev dependency since it's now required for SVGR
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      'file-loader': '^6.2.0',
-    }
-  );
 }

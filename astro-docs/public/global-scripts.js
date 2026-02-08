@@ -144,6 +144,78 @@
     window.twq('config', 'obtp4');
   };
 
+  // Scroll depth tracking
+  const SCROLL_THRESHOLDS = [10, 25, 50, 75, 90];
+  let firedThresholds = new Set();
+  let scrollTrackingEnabled = false;
+  let scrollRafId = null;
+
+  function getScrollPercentage() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
+    return (scrollTop + clientHeight) / scrollHeight;
+  }
+
+  function handleScrollTracking() {
+    if (!scrollTrackingEnabled) return;
+
+    const scrollPercentage = getScrollPercentage() * 100;
+
+    // Fire events for all thresholds we've passed but haven't fired yet
+    for (const threshold of SCROLL_THRESHOLDS) {
+      if (scrollPercentage >= threshold && !firedThresholds.has(threshold)) {
+        firedThresholds.add(threshold);
+        sendSearchEvent(`scroll_${threshold}`, {
+          event_category: 'scroll',
+          event_label: window.location.pathname,
+        });
+      }
+    }
+  }
+
+  function throttledScrollHandler() {
+    if (scrollRafId !== null) return;
+
+    scrollRafId = requestAnimationFrame(() => {
+      handleScrollTracking();
+      scrollRafId = null;
+    });
+  }
+
+  function attachScrollListener() {
+    window.addEventListener('scroll', throttledScrollHandler, {
+      passive: true,
+    });
+  }
+
+  function setupScrollTracking() {
+    // Reset scroll depth on navigation (for SPA-like behavior via View Transitions)
+    firedThresholds = new Set();
+    scrollTrackingEnabled = false;
+
+    // Delay tracking start to avoid false triggers during navigation
+    setTimeout(() => {
+      scrollTrackingEnabled = true;
+      // Immediately check current scroll position to capture thresholds
+      // that may have been passed during the delay
+      handleScrollTracking();
+    }, 500);
+
+    attachScrollListener();
+
+    // Handle Astro View Transitions - reset on navigation
+    document.addEventListener('astro:after-swap', () => {
+      firedThresholds = new Set();
+      scrollTrackingEnabled = false;
+      setTimeout(() => {
+        scrollTrackingEnabled = true;
+        // Immediately check current scroll position after navigation
+        handleScrollTracking();
+      }, 500);
+    });
+  }
+
   const SEARCH_DEBOUNCE_MS = 1000;
   let searchDebounceTimer;
   let lastSearchQuery = '';
@@ -209,12 +281,14 @@
       loadGTM();
       loadHubSpot();
       setupSearchTracking();
+      setupScrollTracking();
     } else if (window.Cookiebot && window.Cookiebot.consent) {
-      // Statistics cookies (Google Analytics, GTM, Search Tracking)
+      // Statistics cookies (Google Analytics, GTM, Search, Scroll Tracking)
       if (window.Cookiebot.consent.statistics) {
         loadGoogleAnalytics();
         loadGTM();
         setupSearchTracking();
+        setupScrollTracking();
       }
 
       // Marketing cookies (HubSpot, Apollo, Hotjar, Twitter)

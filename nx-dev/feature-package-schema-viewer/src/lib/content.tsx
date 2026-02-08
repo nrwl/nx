@@ -129,7 +129,7 @@ export function Content({
           <div
             aria-hidden="true"
             data-tooltip="Schema type"
-            className="relative inline-flex rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium uppercase dark:border-slate-700 dark:bg-slate-800/60"
+            className="relative inline-flex rounded-md border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-medium uppercase dark:border-zinc-700 dark:bg-zinc-800/60"
           >
             {schemaViewModel.type}
           </div>
@@ -157,7 +157,7 @@ export function Content({
             href={schemaViewModel.packageUrl}
             title="See package information"
             className={cx(
-              'relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800',
+              'relative inline-flex items-center rounded-l-md border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-600 focus-within:ring-blue-500 hover:bg-zinc-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800',
               schemaViewModel.packageName.startsWith('@nx/powerpack')
                 ? 'rounded-md'
                 : 'rounded-l-md'
@@ -173,7 +173,7 @@ export function Content({
               target="_blank"
               rel="noreferrer"
               title="See this schema on GitHub"
-              className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+              className="relative -ml-px inline-flex items-center rounded-r-md border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-600 focus-within:ring-blue-500 hover:bg-zinc-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800"
             >
               <svg
                 className="mr-2 h-4 w-4"
@@ -237,7 +237,7 @@ export function Content({
       {/* We remove the top description on sub property lookup */}
       {!schemaViewModel.subReference && (
         <>
-          <div className="prose prose-slate dark:prose-invert max-w-none">
+          <div className="prose prose-zinc dark:prose-invert max-w-none">
             {vm.markdown.header}
             {vm.markdown.customContent}
             {vm.markdown.usageAndExamples}
@@ -269,7 +269,7 @@ export function Content({
                       setPresets(p.keys);
                     }}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   >
                     {p.name}
                   </button>
@@ -278,7 +278,7 @@ export function Content({
                   <button
                     onClick={() => setPresets([])}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   >
                     Reset <XCircleIcon className="ml-1.5 h-4 w-4" />
                   </button>
@@ -286,7 +286,7 @@ export function Content({
               </div>
             </>
           )}
-          <div className="rounded-md border border-slate-200 p-0.5 dark:border-slate-700">
+          <div className="rounded-md border border-zinc-200 p-0.5 dark:border-zinc-700">
             <SchemaEditor
               packageName={schemaViewModel.packageName}
               schemaName={schemaViewModel.schemaMetadata.name}

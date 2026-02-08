@@ -65,13 +65,13 @@ export function EpisodePlayer({
         </div>
         <div className="flex basis-1/2 flex-wrap justify-end gap-6 sm:gap-4">
           <button
-            className="flex shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+            className="flex shrink-0 items-center gap-2 text-zinc-400 hover:text-zinc-800 dark:text-zinc-600 dark:hover:text-zinc-200"
             onClick={() => setViewType(getOpposite(viewType))}
           >
             Switch to {getOpposite(viewType) === 'audio' ? 'Audio' : 'Video'}
           </button>
           <Link
-            className="flex shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+            className="flex shrink-0 items-center gap-2 text-zinc-400 hover:text-zinc-800 dark:text-zinc-600 dark:hover:text-zinc-200"
             href="/podcast"
           >
             More Podcasts
@@ -124,7 +124,7 @@ export function PlatformLinks({
           return (
             <li
               key={platform.name}
-              className="inline-block cursor-pointer place-items-center rounded-2xl border border-slate-100 bg-white p-4 text-slate-600 transition-all hover:scale-[1.02] hover:text-slate-950 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-400 dark:hover:text-white"
+              className="inline-block cursor-pointer place-items-center rounded-2xl border border-zinc-100 bg-white p-4 text-zinc-600 transition-all hover:scale-[1.02] hover:text-zinc-950 dark:border-zinc-800/60 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-white"
             >
               <a
                 href={platform.url}

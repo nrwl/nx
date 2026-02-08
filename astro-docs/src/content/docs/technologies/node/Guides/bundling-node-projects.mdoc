@@ -1,0 +1,278 @@
+---
+title: Bundling Node.js Applications and Libraries
+description: Learn how to configure bundling for Node.js applications and libraries in an Nx monorepo using Webpack, esbuild, and Vite.
+sidebar:
+  label: Understand Bundling with Node
+filter: 'type:Guides'
+---
+
+When building Node.js projects, you have two main approaches to distribute your projects final artifact from the monorepo, **bundled** or **not bundled**. Depending on your deployment strategy and tooling preferences, one approach may be more suitable than the other.
+
+## Bundled vs Non-Bundled Builds
+
+**Bundled builds** compile your code and all its dependencies into a single file, e.g. `main.js` This approach:
+{% aside type="note" title="Lazy loaded chunks" %}
+If you're using lazy loaded chunks in your node application, bundling will produce more than a single file. Instead, you'll have a file per chunks entrypoint file. You'll want to make sure all the files are handled correctly for your deployment needs.
+{% /aside %}
+
+- Produces a self-contained artifact that doesn't require `node_modules`
+- Simplifies deployment since you only need to copy a single file
+- Works well for serverless functions and containerized applications
+
+**Non-bundled builds** preserve your module structure and require `node_modules` at runtime. This approach:
+
+- Requires installing dependencies before running
+- Maintains separate files for each module
+- Can improve container rebuilds speeds when paired with Docker Layer Caching
+
+## Bundling Node.js Applications
+
+{% tabs syncKey="bundler" %}
+
+{% tabitem label="Webpack" %}
+
+Webpack provides full control over the bundling process. Configure your `webpack.config.js` to bundle all dependencies.
+
+- `generatePackageJson: false` - Skips generating a `package.json` since all dependencies are bundled
+- `externalDependencies: 'none'` - Bundles all dependencies instead of treating them as external
+
+```js {% meta="{16-17}" %}
+// webpack.config.js
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, 'dist'),
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      target: 'node',
+      compiler: 'tsc',
+      main: './src/main.ts',
+      tsConfig: './tsconfig.app.json',
+      outputHashing: 'none',
+      generatePackageJson: false,
+      externalDependencies: 'none',
+    }),
+  ],
+};
+```
+
+{% /tabitem %}
+
+{% tabitem label="esbuild" %}
+
+esbuild offers faster builds than Webpack. Configure bundling in your `project.json`:
+
+The `bundle: true` option tells esbuild to include all dependencies in the output.
+
+```json {% meta="{11}" %}
+// project.json
+{
+  "name": "my-app",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/my-app",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/my-app/src/main.ts",
+        "tsConfig": "apps/my-app/tsconfig.app.json",
+        "generatePackageJson": false,
+        "esbuildOptions": {
+          "outfile": "dist/my-app/main.js"
+        }
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+
+{% tabitem label="Vite" %}
+
+Vite can also bundle Node.js applications with vite by using the `build.rollupOptions.external`.
+Set `external: []` to bundle all dependencies into the output.
+
+```ts {% meta="{15}"%}
+// vite.config.ts
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  build: {
+    target: 'node18',
+    outDir: 'dist',
+    lib: {
+      entry: 'src/main.ts',
+      formats: ['cjs'],
+      fileName: 'main',
+    },
+    rollupOptions: {
+      // Bundle all dependencies
+      external: [],
+    },
+  },
+});
+```
+
+{% /tabitem %}
+
+{% /tabs %}
+
+To build and deploy:
+
+```shell
+nx build my-app
+# Deploy dist/my-app/main.js - no node_modules needed
+```
+
+## When NOT to Bundle
+
+If you're publishing a library package to npm, avoid bundling dependencies. Instead, declare them in `package.json` so package managers can handle versioning and deduplication.
+
+For Docker based deployments, non-bundled builds can improve build times through layer caching. When dependencies don't change, Docker reuses the cached `node_modules` layer, only rebuilding your application code.
+
+Instead of running `build`, use the `prune` target which prepares your application for deployment with its dependencies:
+
+```shell
+nx prune my-app
+```
+
+This creates a deployment-ready structure:
+
+```text
+dist/my-app/
+├── main.js           # Your application code
+├── package.json      # Dependencies manifest
+└── node_modules/     # Production dependencies
+```
+
+In your Dockerfile, copy these files and run with Node.js:
+
+```dockerfile
+COPY dist/my-app /app
+WORKDIR /app
+CMD ["node", "main.js"]
+```
+
+## Bundling Libraries
+
+Nx recommends publishing workspace dependencies as separate packages rather than bundling them into a single library. This approach provides better versioning control and allows consumers to manage their own dependency trees.
+
+However, bundling workspace libraries could make sense when:
+
+- The library contains only types that should be inlined
+- You want to distribute an internal library as part of your package
+
+{% tabs syncKey="bundler" %}
+
+{% tabitem label="esbuild" %}
+
+Configure the `external` option to control which dependencies get bundled:
+
+```json
+// project.json
+{
+  "name": "my-lib",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/libs/my-lib",
+        "format": ["cjs", "esm"],
+        "bundle": true,
+        "main": "libs/my-lib/src/index.ts",
+        "tsConfig": "libs/my-lib/tsconfig.lib.json",
+        "external": ["^[^./].*$", "!@my-org/utils"]
+      }
+    }
+  }
+}
+```
+
+The `external` patterns work as follows:
+
+- `"^[^./].*$"` - Externalizes all npm packages (paths not starting with `.` or `/`)
+- `"!@my-org/utils"` - Exception: bundles `@my-org/utils` despite matching the first pattern
+
+See esbuild [documentation if using an esbuild configuration file directly](https://esbuild.github.io/api/#external)
+
+{% /tabitem %}
+
+{% tabitem label="Vite" %}
+
+For Vite-based builds, configure the `external` function in `rollupOptions`:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  build: {
+    lib: {
+      entry: 'src/index.ts',
+      formats: ['es', 'cjs'],
+    },
+    rollupOptions: {
+      external: (id) => {
+        // Bundle workspace libraries
+        if (id.startsWith('@my-org/')) {
+          return false;
+        }
+        // Externalize npm packages
+        if (!id.startsWith('.') && !id.startsWith('/')) {
+          return true;
+        }
+        return false;
+      },
+    },
+  },
+});
+```
+
+The `external` function receives each import and returns:
+
+- `false` to bundle the dependency
+- `true` to keep it as an external import
+
+See `rollupOptions` from [vite documentation for more information](https://vite.dev/config/build-options#build-rollupoptions)
+{% /tabitem %}
+
+{% /tabs %}
+
+## Managing Workspace Dependencies
+
+When building libraries that consume other workspace libraries, always define the dependency relationship in `package.json`:
+
+```json
+// libs/my-lib/package.json
+{
+  "name": "@my-org/my-lib",
+  "dependencies": {
+    "@my-org/utils": "workspace:*"
+  }
+}
+```
+
+The `workspace:*` syntax:
+
+- During development: resolves to the local workspace package
+- During publish: gets replaced with the actual version number
+
+This ensures your library correctly declares its dependencies regardless of whether they're bundled.
+
+## Quick Reference
+
+| Scenario                                | Tool    | Key Settings                                                 |
+| --------------------------------------- | ------- | ------------------------------------------------------------ |
+| Bundled Node app                        | Webpack | `generatePackageJson: false`, `externalDependencies: 'none'` |
+| Bundled Node app                        | esbuild | `bundle: true`, `generatePackageJson: false`                 |
+| Bundled Node app                        | Vite    | `external: []` in `rollupOptions`                            |
+| Non-bundled Node app                    | Any     | Run `prune` target, deploy with `node_modules`               |
+| Publishable lib (bundle workspace deps) | esbuild | `bundle: true`, `external: ["^[^./].*$", "!@org/lib"]`       |
+| Publishable lib (bundle workspace deps) | Vite    | Custom `external` function in `rollupOptions`                |

@@ -47,7 +47,7 @@ export default function Community(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -60,7 +60,7 @@ export default function Community(): JSX.Element {
         <div className="w-full">
           <div
             id="connect-with-us"
-            className="py-18 bg-slate-50 dark:bg-slate-800/40"
+            className="py-18 bg-zinc-50 dark:bg-zinc-800/40"
           >
             <ConnectWithUs />
           </div>
@@ -81,7 +81,7 @@ export default function Community(): JSX.Element {
                   </SectionHeading>
                 </header>
                 <div className="mt-8 flex gap-16 font-normal">
-                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                  <p className="max-w-xl text-lg text-zinc-700 dark:text-zinc-400">
                     These friendly people promote Nx in the community by
                     publishing content and sharing their expertise. They also
                     gather feedback from the community to help improve Nx.

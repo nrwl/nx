@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
+
+use hashbrown::HashSet;
 
 use crate::native::{
     hasher::hash,
@@ -9,12 +12,13 @@ use crate::native::{
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
-    tasks::hashers::{hash_cwd, hash_env, hash_runtime, hash_workspace_files},
+    tasks::hashers::{hash_cwd, hash_env, hash_runtime},
 };
 use crate::native::{
     tasks::hashers::{
-        hash_all_externals, hash_external, hash_project_config, hash_project_files,
-        hash_task_output, hash_tsconfig_selectively,
+        CachedTaskOutput, hash_all_externals, hash_external, hash_project_config,
+        hash_project_files_with_inputs, hash_task_output, hash_tsconfig_selectively,
+        hash_workspace_files_with_inputs,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -25,11 +29,70 @@ use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
 
+/// NAPI-compatible struct for returning hash inputs to JavaScript
+#[napi(object)]
+#[derive(Debug, Default, Clone)]
+pub struct HashInputs {
+    /// Expanded file paths that were used as inputs
+    pub files: Vec<String>,
+    /// Runtime commands
+    pub runtime: Vec<String>,
+    /// Environment variable names
+    pub environment: Vec<String>,
+    /// Dependent task outputs
+    pub dep_outputs: Vec<String>,
+    /// External dependencies
+    pub external: Vec<String>,
+}
+
+/// Internal builder that uses HashSet for O(1) deduplication during accumulation.
+/// Convert to HashInputs via `into()` when ready to return via NAPI.
+#[derive(Debug, Default, Clone)]
+struct HashInputsBuilder {
+    files: HashSet<String>,
+    runtime: HashSet<String>,
+    environment: HashSet<String>,
+    dep_outputs: HashSet<String>,
+    external: HashSet<String>,
+}
+
+impl HashInputsBuilder {
+    /// Extends this builder with all values from another builder
+    fn extend(&mut self, other: HashInputsBuilder) {
+        self.files.extend(other.files);
+        self.runtime.extend(other.runtime);
+        self.environment.extend(other.environment);
+        self.dep_outputs.extend(other.dep_outputs);
+        self.external.extend(other.external);
+    }
+}
+
+impl From<HashInputsBuilder> for HashInputs {
+    fn from(builder: HashInputsBuilder) -> Self {
+        // Convert HashSets to sorted Vecs for deterministic output
+        fn to_sorted_vec(set: HashSet<String>) -> Vec<String> {
+            let mut vec: Vec<String> = set.into_iter().collect();
+            vec.sort();
+            vec
+        }
+
+        HashInputs {
+            files: to_sorted_vec(builder.files),
+            runtime: to_sorted_vec(builder.runtime),
+            environment: to_sorted_vec(builder.environment),
+            dep_outputs: to_sorted_vec(builder.dep_outputs),
+            external: to_sorted_vec(builder.external),
+        }
+    }
+}
+
 #[napi(object)]
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
     pub details: HashMap<String, String>,
+    /// Structured inputs used for hashing (file patterns, env vars, etc.)
+    pub inputs: HashInputs,
 }
 
 #[napi(object)]
@@ -45,8 +108,8 @@ pub struct TaskHasher {
     all_workspace_files: External<Vec<FileData>>,
     ts_config: Vec<u8>,
     ts_config_paths: HashMap<String, Vec<String>>,
+    root_tsconfig_path: Option<String>,
     options: Option<HasherOptions>,
-    workspace_files_cache: Arc<DashMap<String, String>>,
     external_cache: Arc<DashMap<String, String>>,
     runtime_cache: Arc<DashMap<String, String>>,
 }
@@ -60,6 +123,7 @@ impl TaskHasher {
         all_workspace_files: External<Vec<FileData>>,
         ts_config: Buffer,
         ts_config_paths: HashMap<String, Vec<String>>,
+        root_tsconfig_path: Option<String>,
         options: Option<HasherOptions>,
     ) -> Self {
         Self {
@@ -69,8 +133,8 @@ impl TaskHasher {
             all_workspace_files,
             ts_config: ts_config.to_vec(),
             ts_config_paths,
+            root_tsconfig_path,
             options,
-            workspace_files_cache: Arc::new(DashMap::new()),
             external_cache: Arc::new(DashMap::new()),
             runtime_cache: Arc::new(DashMap::new()),
         }
@@ -112,7 +176,9 @@ impl TaskHasher {
 
         let hash_time = std::time::Instant::now();
 
+        // Use separate maps: one for hash details, one for input accumulation with HashSet
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
+        let inputs_accum: DashMap<String, HashInputsBuilder> = DashMap::new();
         let cwd_path = std::path::Path::new(&cwd);
 
         hash_plans
@@ -124,7 +190,7 @@ impl TaskHasher {
             })
             .par_bridge()
             .try_for_each(|(task_id, instruction)| {
-                let hash_detail = self.hash_instruction(
+                let (instruction_key, hash_value, inputs) = self.hash_instruction(
                     task_id,
                     instruction,
                     HashInstructionArgs {
@@ -138,14 +204,22 @@ impl TaskHasher {
                     },
                 )?;
 
+                // Accumulate hash details
                 let mut entry = hashes
                     .entry(task_id.to_string())
                     .or_insert_with(|| HashDetails {
                         value: String::new(),
                         details: HashMap::new(),
+                        inputs: HashInputs::default(),
                     });
+                entry.details.insert(instruction_key, hash_value);
 
-                entry.details.insert(hash_detail.0, hash_detail.1);
+                // Accumulate inputs using HashSet for O(1) deduplication
+                inputs_accum
+                    .entry(task_id.to_string())
+                    .or_default()
+                    .extend(inputs);
+
                 Ok::<(), anyhow::Error>(())
             })?;
 
@@ -165,6 +239,10 @@ impl TaskHasher {
                 trace!("Hash Value: {}", hash);
                 hash_details.value = hash;
             });
+            // Convert accumulated HashInputsBuilder to HashInputs (sorted Vecs)
+            if let Some((_, builder)) = inputs_accum.remove(hash_id) {
+                hash_details.inputs = builder.into();
+            }
         });
 
         let assemble_duration = assemble_start.elapsed();
@@ -196,18 +274,23 @@ impl TaskHasher {
             task_output_cache,
             cwd,
         }: HashInstructionArgs,
-    ) -> anyhow::Result<(String, String)> {
+    ) -> anyhow::Result<(String, String, HashInputsBuilder)> {
         let now = std::time::Instant::now();
         let span = trace_span!("hashing", task_id).entered();
-        let hash = match instruction {
+        let (hash, inputs) = match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
-                let hashed_workspace_files = hash_workspace_files(
+                let result = hash_workspace_files_with_inputs(
                     workspace_file_set,
                     &self.all_workspace_files,
-                    Arc::clone(&self.workspace_files_cache),
-                );
+                )?;
                 trace!(parent: &span, "hash_workspace_files: {:?}", now.elapsed());
-                hashed_workspace_files?
+                (
+                    result.hash,
+                    HashInputsBuilder {
+                        files: result.files.into_iter().collect(),
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::Runtime(runtime) => {
                 let hashed_runtime = hash_runtime(
@@ -217,18 +300,30 @@ impl TaskHasher {
                     Arc::clone(&self.runtime_cache),
                 )?;
                 trace!(parent: &span, "hash_runtime: {:?}", now.elapsed());
-                hashed_runtime
+                (
+                    hashed_runtime,
+                    HashInputsBuilder {
+                        runtime: HashSet::from([runtime.clone()]),
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::Environment(env) => {
                 let hashed_env = hash_env(env, js_env);
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
-                hashed_env
+                (
+                    hashed_env,
+                    HashInputsBuilder {
+                        environment: HashSet::from([env.clone()]),
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::Cwd(mode) => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
                 let hashed_cwd = hash_cwd(workspace_root, cwd, mode.clone());
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
-                hashed_cwd
+                (hashed_cwd, HashInputsBuilder::default())
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let project = self
@@ -236,20 +331,26 @@ impl TaskHasher {
                     .nodes
                     .get(project_name)
                     .ok_or_else(|| anyhow!("project {} not found", project_name))?;
-                let hashed_project_files = hash_project_files(
+                let result = hash_project_files_with_inputs(
                     project_name,
                     &project.root,
                     file_sets,
                     &self.project_file_map,
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
-                hashed_project_files
+                (
+                    result.hash,
+                    HashInputsBuilder {
+                        files: result.files.into_iter().collect(),
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::ProjectConfiguration(project_name) => {
                 let hashed_project_config =
                     hash_project_config(project_name, &self.project_graph.nodes)?;
                 trace!(parent: &span, "hash_project_config: {:?}", now.elapsed());
-                hashed_project_config
+                (hashed_project_config, HashInputsBuilder::default())
             }
             HashInstruction::TsConfiguration(project_name) => {
                 let ts_config_hash = if !selectively_hash_tsconfig {
@@ -274,14 +375,45 @@ impl TaskHasher {
                     // the unwrap_or is for the case where typescript is not installed
                     .unwrap_or(ts_config_hash);
 
+                let relative_ts_path = if let Some(root_path) = &self.root_tsconfig_path {
+                    Some(
+                        Path::new(root_path)
+                            .strip_prefix(&self.workspace_root)
+                            .unwrap_or(Path::new(root_path))
+                            .to_string_lossy()
+                            .to_string(),
+                    )
+                } else {
+                    None
+                };
+
+                // Convert absolute tsconfig path to relative path
+                let files = if let Some(rel_path) = relative_ts_path {
+                    HashSet::from([rel_path])
+                } else {
+                    HashSet::new()
+                };
+
                 trace!(parent: &span, "hash_tsconfig: {:?}", now.elapsed());
-                ts_hash
+                (
+                    ts_hash,
+                    HashInputsBuilder {
+                        files,
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let hashed_task_output =
+                let result =
                     hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
-                hashed_task_output
+                (
+                    result.hash,
+                    HashInputsBuilder {
+                        dep_outputs: result.files.into_iter().collect(),
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::External(external) => {
                 let hashed_external = hash_external(
@@ -290,7 +422,13 @@ impl TaskHasher {
                     Arc::clone(&self.external_cache),
                 )?;
                 trace!(parent: &span, "hash_external: {:?}", now.elapsed());
-                hashed_external
+                (
+                    hashed_external,
+                    HashInputsBuilder {
+                        external: HashSet::from([external.clone()]),
+                        ..Default::default()
+                    },
+                )
             }
             HashInstruction::AllExternalDependencies => {
                 let hashed_all_externals = hash_all_externals(
@@ -299,10 +437,16 @@ impl TaskHasher {
                     Arc::clone(&self.external_cache),
                 )?;
                 trace!(parent: &span, "hash_all_externals: {:?}", now.elapsed());
-                hashed_all_externals
+                (
+                    hashed_all_externals,
+                    HashInputsBuilder {
+                        external: HashSet::from(["AllExternalDependencies".to_string()]),
+                        ..Default::default()
+                    },
+                )
             }
         };
-        Ok((instruction.to_string(), hash))
+        Ok((instruction.to_string(), hash, inputs))
     }
 }
 
@@ -312,6 +456,6 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    task_output_cache: &'a DashMap<String, String>,
+    task_output_cache: &'a DashMap<String, CachedTaskOutput>,
     cwd: &'a std::path::Path,
 }

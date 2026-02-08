@@ -54,9 +54,13 @@ export function readPluginPackageJson(
   }
 }
 
-export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
+export function loadNxPlugin(
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+) {
   return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
+    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
     () => {},
   ] as const;
 }
@@ -64,7 +68,8 @@ export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
 export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   paths: string[],
-  root: string
+  root: string,
+  index?: number
 ): Promise<LoadedNxPlugin> {
   const moduleName =
     typeof pluginConfiguration === 'string'
@@ -80,7 +85,12 @@ export async function loadNxPluginAsync(
     const { loadResolvedNxPluginAsync } = await import(
       './load-resolved-plugin'
     );
-    return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name);
+    return loadResolvedNxPluginAsync(
+      pluginConfiguration,
+      pluginPath,
+      name,
+      index
+    );
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
   }

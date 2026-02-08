@@ -18,6 +18,10 @@ export interface ParsedCliCommand {
     choices?: string[];
   }>;
   subcommands?: ParsedCliCommand[];
+  examples?: Array<{
+    command: string;
+    description: string;
+  }>;
 }
 
 export async function loadNxCliPackage(
@@ -85,7 +89,6 @@ export async function loadNxCliPackage(
       description: 'Complete reference for Nx CLI commands',
       filter: 'type:References',
     },
-    // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
     rendered: await renderMarkdown(markdown),
     collection: 'nx-reference-packages',
   };
@@ -183,6 +186,23 @@ function generateOptionsTable(
   return section;
 }
 
+function generateExamplesSection(
+  examples: ParsedCliCommand['examples']
+): string {
+  if (!examples || examples.length === 0) {
+    return '';
+  }
+
+  let section = `\n#### Examples\n\n`;
+
+  for (const example of examples) {
+    section += `${example.description}:\n\n`;
+    section += `\`\`\`bash\nnx ${example.command}\n\`\`\`\n\n`;
+  }
+
+  return section;
+}
+
 function generateCLIMarkdown(
   commands: Record<string, ParsedCliCommand>
 ): string {
@@ -217,6 +237,9 @@ ${flattenedCommands
 nx ${usageCmd}
 \`\`\`
 `;
+
+    // Add examples section if available
+    section += generateExamplesSection(cmd.examples);
 
     // If this is a parent command with subcommands, label options as "Shared Options"
     const hasSubcommands = cmd.subcommands && cmd.subcommands.length > 0;

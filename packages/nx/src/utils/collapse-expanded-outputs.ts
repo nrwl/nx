@@ -5,7 +5,21 @@ import { dirname } from 'path';
  */
 const MAX_OUTPUTS_TO_CHECK_HASHES = 3;
 
+/**
+ * Collapses a list of file paths into a smaller set of parent directories
+ * when there are too many outputs to efficiently track individually.
+ *
+ * This prevents creating too many hash files by:
+ * 1. Building a tree structure of all path components
+ * 2. Finding the "collapse level" - the deepest level before exceeding MAX_OUTPUTS_TO_CHECK_HASHES
+ * 3. Returning parent paths at/above collapse level, while preserving leaf paths that terminate early
+ */
 export function collapseExpandedOutputs(expandedOutputs: string[]) {
+  // Small output sets don't need collapsing
+  if (expandedOutputs.length <= MAX_OUTPUTS_TO_CHECK_HASHES) {
+    return [...expandedOutputs];
+  }
+
   const tree: Set<string>[] = [];
 
   // Create a Tree of directories/files
@@ -25,21 +39,42 @@ export function collapseExpandedOutputs(expandedOutputs: string[]) {
     }
   }
 
-  // Find a level in the tree that has too many outputs
-  if (tree.length === 0) {
-    return [];
-  }
-
-  let j = 0;
-  let level = tree[j];
-  for (j = 0; j < tree.length; j++) {
-    level = tree[j];
-    if (level.size > MAX_OUTPUTS_TO_CHECK_HASHES) {
+  // Find collapse level: the level before the first level with too many outputs
+  let collapseLevel = tree.length - 1;
+  for (let j = 0; j < tree.length; j++) {
+    if (tree[j].size > MAX_OUTPUTS_TO_CHECK_HASHES) {
+      collapseLevel = Math.max(0, j - 1);
       break;
     }
   }
 
-  // Return the level before the level with too many outputs
-  // If the first level has too many outputs, return that one.
-  return Array.from(tree[Math.max(0, j - 1)]);
+  // Collect paths, preserving leaf paths that terminate before collapse level
+  const result = new Set<string>();
+
+  // Convert sets to arrays once for faster iteration
+  const levelArrays: string[][] = [];
+  for (let i = 0; i <= collapseLevel + 1 && i < tree.length; i++) {
+    levelArrays[i] = Array.from(tree[i]);
+  }
+
+  for (let level = 0; level <= collapseLevel; level++) {
+    const nextLevelArray = levelArrays[level + 1];
+    for (const path of levelArrays[level]) {
+      let hasChildren = false;
+      if (nextLevelArray) {
+        for (const child of nextLevelArray) {
+          if (child.startsWith(path + '/')) {
+            hasChildren = true;
+            break;
+          }
+        }
+      }
+      // Include path if it's at collapse level or doesn't have children (leaf)
+      if (level === collapseLevel || !hasChildren) {
+        result.add(path);
+      }
+    }
+  }
+
+  return Array.from(result);
 }

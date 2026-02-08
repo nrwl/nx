@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import {
@@ -12,7 +12,7 @@ import { FsTree, Tree, flushChanges } from '../../generators/tree';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { handleErrors } from '../../utils/handle-errors';
-import { output } from '../../utils/output';
+import { orange, output } from '../../utils/output';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { VersionOptions } from './command-object';
@@ -448,15 +448,15 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
     changes.forEach((f) => {
       if (f.type === 'CREATE') {
         console.error(
-          `${chalk.green('CREATE')} ${f.path}${
-            isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+          `${pc.green('CREATE')} ${f.path}${
+            isDryRun ? orange(' [dry-run]') : ''
           }`
         );
         printDiff('', f.content?.toString() || '');
       } else if (f.type === 'UPDATE') {
         console.error(
-          `${chalk.white('UPDATE')} ${f.path}${
-            isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+          `${pc.white('UPDATE')} ${f.path}${
+            isDryRun ? orange(' [dry-run]') : ''
           }`
         );
         const currentContentsOnDisk = readFileSync(

@@ -61,7 +61,7 @@ export function BuiltForEnterprise(): ReactElement {
               secure.
             </SectionHeading>
 
-            <figure className="mt-16 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+            <figure className="mt-16 rounded-lg bg-zinc-100 p-4 pl-8 dark:bg-zinc-800">
               <blockquote className="text-base/7">
                 <p>
                   “Nx is the tool that helps gain speed and trust on the overall
@@ -77,7 +77,7 @@ export function BuiltForEnterprise(): ReactElement {
                 />
                 <div>
                   <div className="font-semibold">Nicolas Beaussart</div>
-                  <div className="text-slate-500">
+                  <div className="text-zinc-500">
                     Staff Platform Engineer, Payfit
                   </div>
                 </div>

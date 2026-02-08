@@ -4,9 +4,15 @@ import {
   Markdoc,
 } from '@astrojs/markdoc/config';
 import starlightMarkdoc from '@astrojs/starlight-markdoc';
+import { transformOptionsTable } from './src/utils/markdoc-table-option-links';
 
 export default defineMarkdocConfig({
   extends: [starlightMarkdoc()],
+  nodes: {
+    table: {
+      transform: transformOptionsTable,
+    },
+  },
   tags: {
     call_to_action: {
       render: component('./src/components/markdoc/CallToAction.astro'),

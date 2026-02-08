@@ -9,6 +9,7 @@ import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
+import * as pc from 'picocolors';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -215,8 +216,8 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push('');
       for (const runningTask of runningTasks) {
         additionalFooterRows.push(
-          `${LEFT_PAD}${output.dim.cyan(
-            dots.frames[currentFrame]
+          `${LEFT_PAD}${pc.dim(
+            pc.cyan(dots.frames[currentFrame])
           )}${SPACER}${output.formatCommand(runningTask.task.id)}`
         );
       }
@@ -279,11 +280,11 @@ export async function createRunManyDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.cyan('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.cyan('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -348,11 +349,11 @@ export async function createRunManyDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -360,7 +361,7 @@ export async function createRunManyDynamicOutputRenderer({
       const pinnedFooterLines = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.green(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
         ...taskOverridesRows,
       ];
@@ -386,11 +387,11 @@ export async function createRunManyDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -403,7 +404,7 @@ export async function createRunManyDynamicOutputRenderer({
       const failureSummaryRows = [
         output.applyNxPrefix(
           'red',
-          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.red(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
         ...taskOverridesRows,
         '',

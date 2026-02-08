@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
@@ -14,7 +14,7 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service';
+import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
   LARGE_BUFFER,
@@ -354,7 +354,7 @@ export class SeriallyRunningTasks implements RunningTask {
       // Skip registration if we're in a forked executor - the fork wrapper already registered
       const pid = pseudoTtyProcess.getPid();
       if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-        getProcessMetricsService().registerTaskProcess(taskId, pid);
+        registerTaskProcessStart(taskId, pid);
       }
 
       return pseudoTtyProcess;
@@ -393,7 +393,7 @@ class RunningNodeProcess implements RunningTask {
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
-    this.terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+    this.terminalOutput = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     if (streamOutput) {
       process.stdout.write(this.terminalOutput);
     }
@@ -407,10 +407,7 @@ class RunningNodeProcess implements RunningTask {
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
     if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-      getProcessMetricsService().registerTaskProcess(
-        this.taskId,
-        this.childProcess.pid
-      );
+      registerTaskProcessStart(taskId, this.childProcess.pid);
     }
 
     this.addListeners(commandConfig, streamOutput);
@@ -556,7 +553,7 @@ export async function runSingleCommandWithPseudoTerminal(
   // Skip registration if we're in a forked executor - the fork wrapper already registered
   const pid = pseudoTtyProcess.getPid();
   if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-    getProcessMetricsService().registerTaskProcess(taskId, pid);
+    registerTaskProcessStart(taskId, pid);
   }
 
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
@@ -587,19 +584,19 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
       .split('\n')
       .map((l) => {
         let prefixText = config.prefix;
-        if (config.prefixColor && chalk[config.prefixColor]) {
-          prefixText = chalk[config.prefixColor](prefixText);
+        if (config.prefixColor && pc[config.prefixColor]) {
+          prefixText = pc[config.prefixColor](prefixText);
         }
-        prefixText = chalk.bold(prefixText);
+        prefixText = pc.bold(prefixText);
         return l.trim().length > 0 ? `${prefixText} ${l}` : l;
       })
       .join('\n');
   }
-  if (config.color && chalk[config.color]) {
-    out = chalk[config.color](out);
+  if (config.color && pc[config.color]) {
+    out = pc[config.color](out);
   }
-  if (config.bgColor && chalk[config.bgColor]) {
-    out = chalk[config.bgColor](out);
+  if (config.bgColor && pc[config.bgColor]) {
+    out = pc[config.bgColor](out);
   }
   return out;
 }

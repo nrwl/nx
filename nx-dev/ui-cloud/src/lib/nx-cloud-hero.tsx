@@ -132,14 +132,14 @@ export function NxCloudHero(): ReactElement {
               , automatically.
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-8">
-              Nx Cloud is the only platform that is smart, scalable, and
-              self-healing so your CI isn’t your bottleneck.
+              Nx Cloud is the only monorepo platform that is smart, scalable,
+              and self-healing so your CI isn’t your bottleneck.
             </SectionHeading>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <ButtonLink
                 href="https://cloud.nx.app/get-started"
                 title="Nx AI Integration"
-                variant="primary"
+                variant="contrast"
                 size="default"
                 onClick={() =>
                   sendCustomEvent(

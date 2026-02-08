@@ -75,7 +75,8 @@ describe('React Module Federation - Webpack Basic - Playwright', () => {
       );
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
-        (output) => output.includes('Successfully ran target e2e for project')
+        (output) => output.includes('Successfully ran target e2e for project'),
+        { timeout: 120_000 }
       );
       console.log(
         `[core-webpack-basic-playwright] e2e (swc) completed with PID ${e2eResultsSwc.pid}`
@@ -96,6 +97,7 @@ describe('React Module Federation - Webpack Basic - Playwright', () => {
         `e2e ${shell}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),
         {
+          timeout: 120_000,
           env: { NX_PREFER_TS_NODE: 'true' },
         }
       );

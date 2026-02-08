@@ -38,7 +38,7 @@ export function TalkToOurEngineeringTeam(): ReactElement {
               start the discussion on a shared Slack.
             </p>
 
-            <figure className="mt-12 border-l border-slate-200 pl-8 dark:border-slate-800">
+            <figure className="mt-12 border-l border-zinc-200 pl-8 dark:border-zinc-800">
               <blockquote className="text-base/7">
                 <p>
                   “The decision to jump to Nx Cloud was really something we
@@ -56,7 +56,7 @@ export function TalkToOurEngineeringTeam(): ReactElement {
                 />
                 <div>
                   <div className="font-semibold">Justin Schwartzenberger</div>
-                  <div className="text-slate-500">
+                  <div className="text-zinc-500">
                     Principal Software Engineer, SiriusXM
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export function TalkToOurEngineeringTeam(): ReactElement {
               </div>
             </div>
           </section>
-          <section className="flex-1 self-start rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+          <section className="flex-1 self-start rounded-xl border border-zinc-200 bg-white p-8 dark:border-zinc-800/40">
             <HubspotForm
               region="na1"
               portalId="2757427"

@@ -22,7 +22,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
       <div className="mb-4">
         <Link
           href="/courses"
-          className="group inline-flex items-center text-sm leading-6 text-slate-950 dark:text-white"
+          className="group inline-flex items-center text-sm leading-6 text-zinc-950 dark:text-white"
           prefetch={false}
         >
           <span
@@ -37,7 +37,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
 
       <div className="mb-8 flex items-center justify-between">
         <div className="course-title-section">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-5xl dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
             {course.title}
           </h1>
           <div className="mt-4 flex items-center gap-x-2">
@@ -52,7 +52,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
           <ButtonLink
             href={`/courses/${course.id}/${course.lessons[0].id}`}
             title="Start the course"
-            variant="primary"
+            variant="contrast"
             size="default"
           >
             Start Learning
@@ -62,7 +62,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
           <ButtonLink
             href={course.repository}
             title="Code"
-            variant="contrast"
+            variant="secondary"
             size="default"
           >
             <GitHubIcon className="mr-2 inline-block h-5 w-5" />
@@ -73,7 +73,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
 
       <div className="mt-8 flex flex-col gap-8 md:flex-row">
         <div className="course-description md:w-2/3">
-          <div className="prose prose-lg prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl">
+          <div className="prose prose-lg prose-zinc dark:prose-invert w-full max-w-none 2xl:max-w-4xl">
             {node}
           </div>
         </div>

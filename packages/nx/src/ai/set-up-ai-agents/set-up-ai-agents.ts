@@ -10,6 +10,7 @@ import { join } from 'path';
 import { major } from 'semver';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
+import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import {
   canInstallNxConsoleForEditor,
@@ -27,7 +28,14 @@ import {
 } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
+import {
+  agentsMdPath,
+  claudeMcpJsonPath,
+  codexConfigTomlPath,
+  geminiMdPath,
+  opencodeMcpPath,
+} from '../constants';
+import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, supportedAgents } from '../utils';
 import {
   getAgentRulesWrapped,
@@ -143,7 +151,12 @@ export async function setupAiAgentsGeneratorImpl(
   const agentsMd = agentsMdPath(options.directory);
 
   // write AGENTS.md for most agents
-  if (hasAgent('cursor') || hasAgent('copilot') || hasAgent('codex')) {
+  if (
+    hasAgent('cursor') ||
+    hasAgent('copilot') ||
+    hasAgent('codex') ||
+    hasAgent('opencode')
+  ) {
     writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
   }
 
@@ -151,11 +164,62 @@ export async function setupAiAgentsGeneratorImpl(
     const claudePath = join(options.directory, 'CLAUDE.md');
     writeAgentRules(tree, claudePath, options.writeNxCloudRules);
 
-    const mcpJsonPath = join(options.directory, '.mcp.json');
-    if (!tree.exists(mcpJsonPath)) {
-      writeJson(tree, mcpJsonPath, {});
+    // Configure Claude plugin via marketplace (plugin includes MCP server)
+    const claudeSettingsPath = join(
+      options.directory,
+      '.claude',
+      'settings.json'
+    );
+    if (!tree.exists(claudeSettingsPath)) {
+      writeJson(tree, claudeSettingsPath, {});
     }
-    updateJson(tree, mcpJsonPath, (json) => mcpConfigUpdater(json, nxVersion));
+    updateJson(tree, claudeSettingsPath, (json) => ({
+      ...json,
+      extraKnownMarketplaces: {
+        ...json.extraKnownMarketplaces,
+        'nx-claude-plugins': {
+          source: {
+            source: 'github',
+            repo: 'nrwl/nx-ai-agents-config',
+          },
+        },
+      },
+      enabledPlugins: {
+        ...json.enabledPlugins,
+        'nx@nx-claude-plugins': true,
+      },
+    }));
+
+    // Clean up .mcp.json (nx-mcp now handled by plugin)
+    const mcpJsonPath = claudeMcpJsonPath(options.directory);
+    if (tree.exists(mcpJsonPath)) {
+      try {
+        const mcpJsonContents = readJson(tree, mcpJsonPath);
+        if (mcpJsonContents?.mcpServers?.['nx-mcp']) {
+          const serverKeys = Object.keys(mcpJsonContents.mcpServers || {});
+          if (serverKeys.length === 1 && serverKeys[0] === 'nx-mcp') {
+            // nx-mcp is the only server, delete the file
+            tree.delete(mcpJsonPath);
+          } else {
+            // Other servers exist, just remove nx-mcp entry
+            delete mcpJsonContents.mcpServers['nx-mcp'];
+            writeJson(tree, mcpJsonPath, mcpJsonContents);
+          }
+        }
+      } catch {
+        // Ignore errors reading .mcp.json
+      }
+    }
+  }
+
+  if (hasAgent('opencode')) {
+    const opencodeMcpJsonPath = opencodeMcpPath(options.directory);
+    if (!tree.exists(opencodeMcpJsonPath)) {
+      writeJson(tree, opencodeMcpJsonPath, {});
+    }
+    updateJson(tree, opencodeMcpJsonPath, (json) =>
+      opencodeMcpConfigUpdater(json, nxVersion)
+    );
   }
 
   if (hasAgent('gemini')) {
@@ -191,6 +255,34 @@ export async function setupAiAgentsGeneratorImpl(
         contextFileName ?? geminiMd,
         options.writeNxCloudRules
       );
+    }
+  }
+
+  // Copy extensibility artifacts (commands, skills, subagents) for non-Claude agents
+  if (
+    hasAgent('opencode') ||
+    hasAgent('copilot') ||
+    hasAgent('cursor') ||
+    hasAgent('codex') ||
+    hasAgent('gemini')
+  ) {
+    const repoPath = getAiConfigRepoPath();
+
+    const agentDirs: { agent: Agent; src: string; dest: string }[] = [
+      { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
+      { agent: 'copilot', src: 'generated/.github', dest: '.github' },
+      { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
+      { agent: 'codex', src: 'generated/.codex', dest: '.codex' },
+      { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
+    ];
+
+    for (const { agent, src, dest } of agentDirs) {
+      if (hasAgent(agent)) {
+        const srcPath = join(repoPath, src);
+        if (existsSync(srcPath)) {
+          generateFiles(tree, srcPath, join(options.directory, dest), {});
+        }
+      }
     }
   }
 
@@ -341,6 +433,29 @@ function mcpConfigUpdater(existing: any, nxVersion: string): any {
         type: 'stdio',
         command: 'npx',
         args: mcpArgs,
+      },
+    };
+  }
+  return existing;
+}
+
+function opencodeMcpConfigUpdater(existing: any, nxVersion: string): any {
+  const majorVersion = major(nxVersion);
+  const mcpCommand =
+    majorVersion >= 22 ? ['npx', 'nx', 'mcp'] : ['npx', 'nx-mcp'];
+
+  if (existing.mcp) {
+    existing.mcp['nx-mcp'] = {
+      type: 'local',
+      command: mcpCommand,
+      enabled: true,
+    };
+  } else {
+    existing.mcp = {
+      'nx-mcp': {
+        type: 'local',
+        command: mcpCommand,
+        enabled: true,
       },
     };
   }

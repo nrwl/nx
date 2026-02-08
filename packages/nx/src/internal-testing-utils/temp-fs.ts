@@ -67,6 +67,11 @@ export class TempFs {
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
   }
 
+  createDirSync(dirPath: string) {
+    const dir = joinPathFragments(this.tempDir, dirPath);
+    mkdirSync(dir, { recursive: true });
+  }
+
   createSymlinkSync(
     fileOrDirPath: string,
     symlinkPath: string,

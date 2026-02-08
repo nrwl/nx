@@ -200,8 +200,9 @@ const server = createServer(async (socket) => {
   );
 
   socket.on('error', (e) => {
-    serverLogger.log('Socket error');
-    console.error(e);
+    serverLogger.log(`Socket error: ${e.message}`);
+    removeRegisteredFileWatcherSocket(socket);
+    removeRegisteredProjectGraphListenerSocket(socket);
   });
 
   socket.on('close', () => {

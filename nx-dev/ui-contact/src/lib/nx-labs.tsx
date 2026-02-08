@@ -120,7 +120,7 @@ export function NxLabsContact(): ReactElement {
               </div>
             </div>
           </section>
-          <section className="flex-1 self-start rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+          <section className="flex-1 self-start rounded-xl border border-zinc-200 bg-white p-8 dark:border-zinc-800/40">
             <HubspotForm
               calendlyFormId="e0d476c6-2a39-4cd3-91bc-e9bff0d0f75d"
               formId="d5710d48-85de-4b17-ab97-4c22c25a8f02"
@@ -131,7 +131,7 @@ export function NxLabsContact(): ReactElement {
             />
           </section>
         </div>
-        <figure className="mx-auto mt-12 max-w-4xl border-l border-slate-200 pl-8 dark:border-slate-800">
+        <figure className="mx-auto mt-12 max-w-4xl border-l border-zinc-200 pl-8 dark:border-zinc-800">
           <blockquote className="text-base/7">
             <p>
               “Nx’s professional services team was instrumental in helping us
@@ -148,7 +148,7 @@ export function NxLabsContact(): ReactElement {
             />
             <div>
               <div className="font-semibold">Wayne Kaskie</div>
-              <div className="text-slate-500">Front End Architect, Zipari</div>
+              <div className="text-zinc-500">Front End Architect, Zipari</div>
             </div>
             <ZipariIcon
               aria-hidden="true"

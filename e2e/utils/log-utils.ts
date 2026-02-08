@@ -33,15 +33,3 @@ export function logSuccess(title: string, body?: string) {
   )} ${chalk.bold.green(title)}`;
   return e2eConsoleLogger(message, body);
 }
-
-/**
- * Remove log colors for fail proof string search
- * @param log
- * @returns
- */
-export function stripConsoleColors(log: string): string {
-  return log?.replace(
-    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-    ''
-  );
-}

@@ -12,12 +12,12 @@ export function LessonsList({
   return (
     <nav className="toc">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
           Contents
         </h3>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
           <span>{course.lessons.length} Lessons</span>
-          <span className="text-slate-300 dark:text-slate-600">•</span>
+          <span className="text-zinc-300 dark:text-zinc-600">•</span>
           <span className="flex items-center gap-1">
             <svg
               className="h-3 w-3"
@@ -36,21 +36,21 @@ export function LessonsList({
           </span>
         </div>
       </div>
-      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700/50 dark:bg-slate-900">
+      <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700/50 dark:bg-zinc-900">
         <ul className="flex flex-col space-y-3">
           {course.lessons.map((courseLesson, index) => (
             <li key={courseLesson.id}>
               <Link
                 href={`/courses/${course.id}/${courseLesson.id}`}
                 className={cx('group flex transition', {
-                  'text-slate-900 dark:text-slate-100':
+                  'text-zinc-900 dark:text-zinc-100':
                     lesson && courseLesson.id === lesson.id,
-                  'text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200':
+                  'text-zinc-700 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200':
                     !(lesson && courseLesson.id === lesson.id),
                 })}
                 prefetch={false}
               >
-                <span className="inline-block min-w-[2rem] flex-shrink-0 text-sm font-medium text-slate-400 dark:text-slate-600">
+                <span className="inline-block min-w-[2rem] flex-shrink-0 text-sm font-medium text-zinc-400 dark:text-zinc-600">
                   {(index + 1).toString().padStart(1, '0')}
                 </span>
                 <span className="text-[15px] font-medium leading-normal">

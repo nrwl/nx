@@ -22,6 +22,9 @@ describe('version-plan-filtering', () => {
   const mockGetLatestGitTagForPattern =
     gitUtils.getLatestGitTagForPattern as jest.Mock;
 
+  // Mock resolveRepositoryTags function for testing
+  const mockResolveRepositoryTags = jest.fn().mockResolvedValue([]);
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -145,6 +148,7 @@ describe('version-plan-filtering', () => {
           },
         } as any,
         useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
       });
 
       expect(mockGetCommitHash).toHaveBeenCalledWith('v1.0.0');
@@ -166,6 +170,7 @@ describe('version-plan-filtering', () => {
           },
         } as any,
         useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
       });
 
       expect(mockGetLatestGitTagForPattern).toHaveBeenCalled();
@@ -188,6 +193,7 @@ describe('version-plan-filtering', () => {
           },
         } as any,
         useAutomaticFromRef: true,
+        resolveRepositoryTags: mockResolveRepositoryTags,
       });
 
       expect(mockGetFirstGitCommit).toHaveBeenCalled();
@@ -208,6 +214,7 @@ describe('version-plan-filtering', () => {
           },
         } as any,
         useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
       });
 
       expect(result).toBeNull();
@@ -231,11 +238,13 @@ describe('version-plan-filtering', () => {
           },
         } as any,
         useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
       });
 
       expect(mockGetLatestGitTagForPattern).toHaveBeenCalledWith(
         '{version}',
         {},
+        mockResolveRepositoryTags,
         expect.objectContaining({
           preid: 'beta',
         })
@@ -274,11 +283,13 @@ describe('version-plan-filtering', () => {
           },
         } as any,
         useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
       });
 
       expect(mockGetLatestGitTagForPattern).toHaveBeenCalledWith(
         '{projectName}-v{version}',
         {},
+        mockResolveRepositoryTags,
         expect.objectContaining({
           preid: 'alpha',
         })

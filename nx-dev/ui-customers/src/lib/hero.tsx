@@ -8,7 +8,7 @@ export function Hero(): ReactElement {
     <section>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mx-auto max-w-3xl text-3xl font-normal tracking-tight text-slate-700 sm:text-4xl dark:text-slate-400">
+          <p className="mx-auto max-w-3xl text-3xl font-normal tracking-tight text-zinc-700 sm:text-4xl dark:text-zinc-400">
             We empower our clients to
           </p>
           <SectionHeading
@@ -22,7 +22,7 @@ export function Hero(): ReactElement {
             <ButtonLink
               href="https://cloud.nx.app/get-started"
               title="Get started now"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
                 sendCustomEvent('get-started-click', 'hero', 'customers')

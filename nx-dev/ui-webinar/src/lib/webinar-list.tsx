@@ -11,7 +11,7 @@ export interface WebinarListProps {
 export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
   return webinars.length < 1 ? (
     <div>
-      <h2 className="mt-32 text-center text-xl font-semibold text-slate-500 sm:text-2xl xl:mb-24 dark:text-white">
+      <h2 className="mt-32 text-center text-xl font-semibold text-zinc-500 sm:text-2xl xl:mb-24 dark:text-white">
         No webinars as yet but stay tuned!
       </h2>
     </div>
@@ -42,7 +42,7 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
                 <Link
                   href={webinar.registrationUrl || `/blog/${webinar.slug}`}
                   title={webinar.title}
-                  className="text-balance text-2xl font-semibold text-slate-900 dark:text-white"
+                  className="text-balance text-2xl font-semibold text-zinc-900 dark:text-white"
                   prefetch={false}
                 >
                   {webinar.title}
@@ -60,7 +60,7 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
                   </div>
                 )}
               </div>
-              <div className="relative hidden h-full flex-1 transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg lg:flex dark:border-slate-800">
+              <div className="relative hidden h-full flex-1 transform-gpu flex-col overflow-hidden rounded-2xl border border-zinc-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg lg:flex dark:border-zinc-800">
                 {webinar.cover_image && (
                   <div className="aspect-[1.7] w-full">
                     <Image
@@ -77,7 +77,7 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
             </div>
           );
         })}
-      <div className="mt-20 border-b-2 border-slate-300 pb-3 text-lg dark:border-slate-700">
+      <div className="mt-20 border-b-2 border-zinc-300 pb-3 text-lg dark:border-zinc-700">
         <h2 className="font-semibold">Past Webinars</h2>
       </div>
       <div>

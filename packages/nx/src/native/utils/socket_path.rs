@@ -77,7 +77,13 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("nx_test_socket_dir");
         unsafe { env::set_var("NX_SOCKET_DIR", &temp_dir) };
         let dir = get_socket_dir(root, None);
-        assert_eq!(dir.to_string_lossy(), temp_dir.to_string_lossy());
+        // On Windows, get_socket_dir wraps the path with a named pipe prefix
+        let expected = if cfg!(target_os = "windows") {
+            PathBuf::from(format!(r"\\.\pipe\nx\{}", temp_dir.to_string_lossy()))
+        } else {
+            temp_dir
+        };
+        assert_eq!(dir.to_string_lossy(), expected.to_string_lossy());
         unsafe { env::remove_var("NX_SOCKET_DIR") };
     }
 

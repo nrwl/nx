@@ -6,26 +6,21 @@ export function TimeToGreen(): ReactElement {
     <section id="time-to-green" className="scroll-mt-24">
       <div className="mx-auto max-w-4xl px-6 text-center lg:px-8">
         <SectionHeading as="h2" variant="title" id="time-to-green-title">
-          Nx Cloud Cuts{' '}
+          Nx Cloud <br />
           <span className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-            Time To Green
+            Eliminates the CI Bottleneck
           </span>
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-8">
-          Nx Cloud compresses the entire validation process. Its remote cache
-          and automatic task distribution speed up CI, while its self-healing
-          system automatically reruns flaky tests and fixes code issues. <br />
-          <Strong>
-            The result is a short, predictable, and fully automated path to a
-            green PR.
-          </Strong>
+          Time to Green is the window from commit to merge-ready PR. Every
+          minute wasted is a minute not shipping value.
         </SectionHeading>
       </div>
       <div className="mx-auto mt-12 max-w-5xl px-6 lg:px-8">
         <h3 className="text-xl font-semibold">Average Time To Green</h3>
 
         <div className="mt-2">
-          <div className="relative grid grid-cols-1 rounded-lg bg-slate-50 text-xs font-medium text-slate-900 ring-1 ring-slate-200 sm:h-12 sm:grid-cols-12 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10">
+          <div className="relative grid grid-cols-1 rounded-lg bg-zinc-50 text-xs font-medium text-zinc-900 ring-1 ring-zinc-200 sm:h-12 sm:grid-cols-12 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-white/10">
             <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-400/40 sm:col-span-2 sm:h-auto sm:rounded-l-lg sm:rounded-r-none dark:bg-blue-600/40">
               <span className="px-2">Write Code</span>
             </div>
@@ -50,7 +45,7 @@ export function TimeToGreen(): ReactElement {
           <h3 className="text-xl font-semibold">Time To Green with Nx Cloud</h3>
           <div className="mt-2 grid grid-cols-1 sm:h-12 sm:grid-cols-12">
             <div className="col-span-4 grid grid-cols-1 sm:grid-cols-6">
-              <div className="grid grid-cols-1 rounded-lg bg-slate-50 text-xs font-medium text-slate-900 ring-1 ring-slate-200 sm:col-span-5 sm:grid-cols-10 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10">
+              <div className="grid grid-cols-1 rounded-lg bg-zinc-50 text-xs font-medium text-zinc-900 ring-1 ring-zinc-200 sm:col-span-5 sm:grid-cols-10 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-white/10">
                 <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-400/40 sm:col-span-6 sm:h-auto sm:rounded-l-lg sm:rounded-r-none dark:bg-blue-600/40">
                   <span className="px-2">Write Code</span>
                 </div>
@@ -62,6 +57,11 @@ export function TimeToGreen(): ReactElement {
             </div>
           </div>
         </div>
+      </div>
+      <div className="mx-auto max-w-4xl px-6 text-center lg:px-8">
+        <SectionHeading as="p" variant="subtitle" className="mt-8">
+          <Strong>Nx Cloud compresses it to near-zero.</Strong>
+        </SectionHeading>
       </div>
     </section>
   );

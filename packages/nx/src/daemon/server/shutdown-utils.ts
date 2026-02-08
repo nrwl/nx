@@ -174,7 +174,9 @@ export function respondToClient(
     }
     socket.write(response + MESSAGE_END_SEQ, (err) => {
       if (err) {
-        console.error(err);
+        serverLogger.log(
+          `Socket write error (client likely disconnected): ${err.message}`
+        );
       }
       serverLogger.log(`Done responding to the client`, description);
       res(null);

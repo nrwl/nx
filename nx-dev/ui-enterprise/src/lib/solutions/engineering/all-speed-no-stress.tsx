@@ -44,7 +44,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/flaky-tasks"
+            href="/docs/features/ci-features/flaky-tasks"
             title="Learn more about Flaky Task Retries"
             className="text-sm/6 font-semibold"
           >
@@ -66,7 +66,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/split-e2e-tasks"
+            href="/docs/features/ci-features/split-e2e-tasks"
             title="Learn about Atomizer"
             className="text-sm/6 font-semibold"
           >
@@ -87,7 +87,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/dynamic-agents"
+            href="/docs/features/ci-features/dynamic-agents"
             title="Learn about Nx Agents"
             className="text-sm/6 font-semibold"
           >
@@ -107,7 +107,7 @@ export function AllSpeedNoStress(): ReactElement {
       className="mx-auto max-w-7xl scroll-mt-32 px-6 lg:px-8"
     >
       <div className="mx-auto max-w-2xl lg:mx-0">
-        <div className="h-8 w-36 border-t-2 border-blue-500 dark:border-sky-500" />
+        <div className="h-8 w-36 border-t-2 border-blue-500 dark:border-blue-500" />
         <SectionHeading as="h2" variant="title" id="all-speed-no-stress-title">
           All speed no stress
         </SectionHeading>
@@ -120,7 +120,7 @@ export function AllSpeedNoStress(): ReactElement {
           {features.map((feature) => (
             <div key={feature.name} className="flex flex-col">
               <dt className="text-base/7 font-semibold">
-                <div className="mb-6 flex size-10 items-center justify-center rounded-lg bg-blue-500 dark:bg-sky-500">
+                <div className="mb-6 flex size-10 items-center justify-center rounded-lg bg-blue-500 dark:bg-blue-500">
                   <feature.icon
                     aria-hidden="true"
                     className="size-6 text-white"

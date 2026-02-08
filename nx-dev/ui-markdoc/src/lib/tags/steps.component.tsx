@@ -15,13 +15,13 @@ export function Steps({ children }: StepsProps) {
           {/* Vertical line connecting steps */}
           {index < stepsCount - 1 && (
             <div
-              className="absolute left-5 top-10 h-full w-0.5 bg-slate-200 dark:bg-slate-700"
+              className="absolute left-5 top-10 h-full w-0.5 bg-zinc-200 dark:bg-zinc-700"
               aria-hidden="true"
             />
           )}
 
           {/* Step number circle */}
-          <div className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-white dark:bg-sky-500">
+          <div className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-white dark:bg-blue-500">
             <span className="text-sm font-semibold">{index + 1}</span>
           </div>
 
@@ -49,9 +49,9 @@ export function Step({ title, children }: StepProps) {
   };
 
   return (
-    <div className="prose prose-slate dark:prose-invert max-w-none">
+    <div className="prose prose-zinc dark:prose-invert max-w-none">
       {title && (
-        <h3 className="mt-0 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="mt-0 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
           {title}
         </h3>
       )}

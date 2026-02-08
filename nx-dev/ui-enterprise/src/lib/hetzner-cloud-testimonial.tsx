@@ -17,7 +17,7 @@ import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function HetznerCloudTestimonial(): ReactElement {
   return (
-    <div className="border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
+    <div className="border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900">
       <section
         id="hetzner-cloud-testimonial"
         className="z-0 mx-auto max-w-7xl scroll-mt-20 px-4 sm:px-6 lg:px-8"
@@ -39,7 +39,7 @@ export function HetznerCloudTestimonial(): ReactElement {
             <div className="relative">
               <div className="absolute bottom-0 start-0 -translate-x-14 translate-y-10">
                 <svg
-                  className="h-auto max-w-40 text-slate-200 dark:text-slate-800"
+                  className="h-auto max-w-40 text-zinc-200 dark:text-zinc-800"
                   width="696"
                   height="653"
                   viewBox="0 0 696 653"
@@ -132,7 +132,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           <figure>
             <blockquote className="relative">
               <svg
-                className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"
+                className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-zinc-200 dark:text-zinc-800"
                 width="16"
                 height="16"
                 viewBox="0 0 16 16"
@@ -147,11 +147,11 @@ export function HetznerCloudTestimonial(): ReactElement {
               </svg>
 
               <div className="relative z-10">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-200">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-neutral-200">
                   Featured client
                 </p>
 
-                <p className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
+                <p className="text-xl font-medium italic text-zinc-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
                   Nx is speed and scalability. Before we only had a few features
                   and CI was slow and now it’s fast with way more features.
                   That’s a huge win for us.
@@ -166,7 +166,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                 />
                 <div className="flex-auto">
                   <div className="text-base font-semibold">Pavlo Grosse</div>
-                  <div className="text-xs text-slate-600 dark:text-slate-500">
+                  <div className="text-xs text-zinc-600 dark:text-zinc-500">
                     Senior Software Engineer, Hetzner Cloud
                   </div>
                 </div>

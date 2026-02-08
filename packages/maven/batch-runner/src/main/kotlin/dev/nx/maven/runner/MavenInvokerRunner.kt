@@ -155,14 +155,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
    */
   private fun recordBuildStatesForExecutedTasks() {
     try {
-      // Get NxMaven instance if available (only available with ResidentMavenExecutor)
-      val nxMaven = (mavenExecutor as? ResidentMavenExecutor)?.getNxMaven()
-
-      if (nxMaven == null) {
-        log.debug("NxMaven not available, skipping build state recording")
-        return
-      }
-
       // Extract unique project selectors from executed tasks
       val uniqueProjectSelectors = options.taskGraph?.tasks?.values
         ?.map { it.target.project }
@@ -173,11 +165,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         return
       }
 
-      log.debug("📝 Preparing to record build states for ${uniqueProjectSelectors.size} unique projects")
+      log.debug("Preparing to record build states for ${uniqueProjectSelectors.size} unique projects")
       log.debug("Projects: ${uniqueProjectSelectors.joinToString(", ")}")
-      nxMaven.recordBuildStates(uniqueProjectSelectors)
+
+      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(uniqueProjectSelectors)
     } catch (e: Exception) {
-      log.error("❌ Error recording build states: ${e.message}", e)
+      log.error("Error recording build states: ${e.message}", e)
     }
   }
 

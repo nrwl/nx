@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
@@ -24,8 +24,10 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
         const prefixText = `${prefix}:`;
 
         this.childProcess.stdout
-          .pipe(logClearLineToPrefixTransformer(color.bold(prefixText) + ' '))
-          .pipe(addPrefixTransformer(color.bold(prefixText)))
+          .pipe(
+            logClearLineToPrefixTransformer(pc.bold(color(prefixText)) + ' ')
+          )
+          .pipe(addPrefixTransformer(pc.bold(color(prefixText))))
           .pipe(process.stdout);
         this.childProcess.stderr
           .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
@@ -127,16 +129,16 @@ function addPrefixTransformer(prefix?: string) {
 }
 
 const colors = [
-  chalk.green,
-  chalk.greenBright,
-  chalk.blue,
-  chalk.blueBright,
-  chalk.cyan,
-  chalk.cyanBright,
-  chalk.yellow,
-  chalk.yellowBright,
-  chalk.magenta,
-  chalk.magentaBright,
+  pc.green,
+  pc.greenBright,
+  pc.blue,
+  pc.blueBright,
+  pc.cyan,
+  pc.cyanBright,
+  pc.yellow,
+  pc.yellowBright,
+  pc.magenta,
+  pc.magentaBright,
 ];
 
 function getColor(projectName: string) {

@@ -14,11 +14,11 @@ export default function Index(): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx: Smart Repos · Fast Builds"
-        description="Build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
+        title="Nx: Smart Monorepos · Fast Builds"
+        description="Monorepo platform with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
         openGraph={{
           url: 'https://nx.dev',
-          title: 'Nx: Smart Repos · Fast Builds',
+          title: 'Nx: Smart Monorepos · Fast Builds',
           description:
             'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
@@ -26,7 +26,7 @@ export default function Index(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 1200,
               height: 600,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/png',
             },
           ],
@@ -34,7 +34,9 @@ export default function Index(): JSX.Element {
           type: 'website',
         }}
       />
-      <h1 className="sr-only">Build system with advanced CI capabilities.</h1>
+      <h1 className="sr-only">
+        Monorepo platform with advanced CI capabilities.
+      </h1>
       <DefaultLayout isHome>
         <Hero />
         <div className="mt-16 lg:mt-40">
@@ -43,7 +45,7 @@ export default function Index(): JSX.Element {
         <div className="mt-32 lg:mt-56">
           <Problem />
         </div>
-        <div className="bg-white/50 bg-[url(/images/home/wave.svg)] bg-cover bg-center py-32 bg-blend-soft-light lg:py-56 dark:bg-slate-900/50 dark:bg-[url(/images/home/wave-dark.svg)] dark:bg-blend-darken">
+        <div className="bg-white/50 bg-[url(/images/home/wave.svg)] bg-cover bg-center py-32 bg-blend-soft-light lg:py-56 dark:bg-zinc-900/50 dark:bg-[url(/images/home/wave-dark.svg)] dark:bg-blend-darken">
           <Solution />
         </div>
 

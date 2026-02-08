@@ -5,7 +5,7 @@ export function Features(): ReactElement {
   return (
     <section
       id="features"
-      className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+      className="scroll-mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
@@ -19,7 +19,7 @@ export function Features(): ReactElement {
         </div>
         <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-4 sm:mt-16 md:grid-cols-2">
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tl-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tl-[calc(2rem+1px)] dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx Replay: remote caching"
                 src="/images/enterprise/nx-replay.avif"
@@ -27,18 +27,18 @@ export function Features(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
-                  Secure Remote Cache
+                  Nx Remote Cache Replay
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It ensures that tasks are never rebuilt twice, significantly
-                  reducing build times and resource usage. Share cached results
-                  across your team and CI pipelines.
+                  Never rebuild the same code twice. Tasks are cached and shared
+                  across your team and CI pipelines, dramatically reducing build
+                  times and resource usage.
                 </p>
               </div>
             </div>
           </div>
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tr-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tr-[calc(2rem+1px)] dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx flaky task detection & rerun"
                 src="/images/enterprise/nx-flaky-tasks-detection.avif"
@@ -46,56 +46,55 @@ export function Features(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
-                  Self-Healing CI
+                  Agentic Self-Healing CI
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It automatically detects and fixes flaky tests and issues
-                  without developer intervention enhancing the reliability of
-                  your CI processes and minimizing time spent debugging.
+                  Automatically detects, validates, and fixes PR failures—so you
+                  stay in flow.
                 </p>
               </div>
             </div>
           </div>
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx Atomizer: split large tasks & E2E in chunks"
                 src="/images/enterprise/nx-atomizer.avif"
                 className="h-80 object-cover object-center"
               />
               <div className="relative p-10 pt-4">
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   E2E Test Splitting
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It automatically splits large e2e tests into smaller, atomized
-                  tasks, enabling lightning fast testing. Parallelize your tests
-                  to reduce bottlenecks and keep your pipelines fast.
+                  Automatically splits large e2e tests into smaller, atomized
+                  tasks for lightning-fast parallel execution.
                 </p>
               </div>
             </div>
           </div>
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx Agents: simple & fast task distribution"
                 src="/images/enterprise/nx-agents.avif"
                 className="h-80 object-cover object-center"
               />
               <div className="relative p-10 pt-4">
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   Distributed Task Execution
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
-                  It intelligently distributes tasks across multiple machines,
-                  significantly reducing build times. Dynamically allocate
-                  agents based on PR size to balance speed and cost.
+                  Intelligently distributes tasks across multiple machines,
+                  adapting to PR size automatically. Large refactors or
+                  migrations get maximum parallelization. Small fixes stay
+                  lightweight.
                 </p>
               </div>
             </div>
           </div>
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-slate-800 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-zinc-800 dark:ring-white/10">
               <img
                 alt="Nx Agents: simple & fast task distribution"
                 src="/images/enterprise/visibility.avif"
@@ -103,11 +102,11 @@ export function Features(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Enterprise
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   See Dependencies Across Teams & Repositories
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
@@ -121,7 +120,7 @@ export function Features(): ReactElement {
             </div>
           </div>
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-br-[calc(2rem+1px)] dark:bg-slate-800 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-br-[calc(2rem+1px)] dark:bg-zinc-800 dark:ring-white/10">
               <img
                 alt="Nx Atomizer: split large tasks & E2E in chunks"
                 src="/images/enterprise/conformance.avif"
@@ -129,11 +128,11 @@ export function Features(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Enterprise
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   Streamline Onboarding & Governance
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">

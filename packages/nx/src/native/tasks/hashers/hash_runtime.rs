@@ -76,8 +76,8 @@ mod tests {
 
     #[test]
     fn test_hash_runtime() {
-        let workspace_root = "/tmp";
-        let command = "echo 'runtime'";
+        let workspace_root = if cfg!(windows) { "C:\\" } else { "/tmp" };
+        let command = "echo runtime";
         let env: HashMap<String, String> = HashMap::new();
         let cache = Arc::new(DashMap::new());
 

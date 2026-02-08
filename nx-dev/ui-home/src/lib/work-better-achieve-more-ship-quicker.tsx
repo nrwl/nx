@@ -23,7 +23,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           <Strong>crush the velocity</Strong> of teams and the quality of
           products. Nx is the solution. By defining{' '}
           <TextLink
-            href="/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Enforce module boundaries"
           >
             project boundaries
@@ -31,14 +31,14 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           , developers ensure code stays <Strong>modular</Strong> and easy to
           maintain. By using{' '}
           <TextLink
-            href="/concepts/nx-plugins?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/concepts/nx-plugins?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="What are plugins?"
           >
             Nx plugins
           </TextLink>{' '}
           and{' '}
           <TextLink
-            href="/features/generate-code?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/features/generate-code?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Generate code"
           >
             code generation
@@ -47,7 +47,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           duplication. Plus, they <Strong>keep everything up-to-date</Strong> by
           using Nx's{' '}
           <TextLink
-            href="/features/automate-updating-dependencies?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
+            href="/docs/features/automate-updating-dependencies?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Automate updating dependencies"
           >
             automated updating mechanism
@@ -58,7 +58,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           <ButtonLink
             href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
             title="Get started"
-            variant="primary"
+            variant="contrast"
             size="large"
           >
             Try Nx for yourself
@@ -67,7 +67,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
       </div>
 
       <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:gap-32">
-        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/30 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
+        <div className="group/card rounded-2xl border border-zinc-100 bg-zinc-50/30 p-6 transition-all duration-500 dark:border-zinc-800/60 dark:bg-black">
           <SectionHeading
             as="h3"
             variant="title"
@@ -90,7 +90,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             className="translation-all hidden max-w-full duration-500 group-hover/card:brightness-200 dark:block"
           />
         </div>
-        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/30 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
+        <div className="group/card rounded-2xl border border-zinc-100 bg-zinc-50/30 p-6 transition-all duration-500 dark:border-zinc-800/60 dark:bg-black">
           <SectionHeading
             as="h3"
             variant="title"

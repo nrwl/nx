@@ -42,7 +42,7 @@ export function WhyCiSecurityMatters(): ReactElement {
             <div className="mt-10 text-center">
               <ButtonLink
                 href="/enterprise"
-                variant="primary"
+                variant="contrast"
                 size="default"
                 title="Learn about Nx Cloud for Enterprises"
               >
@@ -53,7 +53,7 @@ export function WhyCiSecurityMatters(): ReactElement {
           <div>
             <ul className="mt-12 space-y-4 text-base leading-7">
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <BugAntIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -63,7 +63,7 @@ export function WhyCiSecurityMatters(): ReactElement {
                 — if left unprotected
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <EyeSlashIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -72,7 +72,7 @@ export function WhyCiSecurityMatters(): ReactElement {
                 </span>
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <DocumentCheckIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"

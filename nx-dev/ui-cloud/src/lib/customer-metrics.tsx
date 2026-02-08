@@ -32,13 +32,13 @@ export function CustomerMetrics(): ReactElement {
                 }}
                 className="group relative block rounded-2xl"
               >
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-slate-950/60">
-                  <div className="flex items-center gap-2 text-lg font-semibold text-slate-950 drop-shadow dark:text-white">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-zinc-950/60">
+                  <div className="flex items-center gap-2 text-lg font-semibold text-zinc-950 drop-shadow dark:text-white">
                     <PlayIcon className="size-8" />
                     Watch the interview
                   </div>
                 </div>
-                <figure className="relative rounded-2xl bg-white shadow-lg ring-1 ring-slate-900/5 dark:bg-slate-800">
+                <figure className="relative rounded-2xl bg-white shadow-lg ring-1 ring-zinc-900/5 dark:bg-zinc-800">
                   <blockquote className="p-6 text-lg font-semibold tracking-tight text-black dark:text-white">
                     <p>
                       The number of hours we spent trying to manage CI before,
@@ -50,15 +50,15 @@ export function CustomerMetrics(): ReactElement {
                       it fast."
                     </p>
                   </blockquote>
-                  <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-slate-900/10 px-6 py-4 sm:flex-nowrap dark:border-slate-100/10">
+                  <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-zinc-900/10 px-6 py-4 sm:flex-nowrap dark:border-zinc-100/10">
                     <img
                       alt="Nicolas Beaussart image"
                       src="https://avatars.githubusercontent.com/u/7281023?v=4"
-                      className="size-10 rounded-full bg-slate-50"
+                      className="size-10 rounded-full bg-zinc-50"
                     />
                     <div className="flex-auto">
                       <div className="font-semibold">Nicolas Beaussart</div>
-                      <div className="text-slate-600 dark:text-slate-500">
+                      <div className="text-zinc-600 dark:text-zinc-500">
                         Staff Platform Engineer, Payfit
                       </div>
                     </div>
@@ -86,19 +86,19 @@ export function CustomerMetrics(): ReactElement {
             </div>
             <div className="lg:flex lg:flex-auto lg:justify-center">
               <dl className="flex flex-col justify-center gap-8 sm:flex-row lg:flex-col xl:w-80">
-                <div className="flex flex-col-reverse gap-y-1 border-slate-200 pl-4 text-center sm:border-l sm:text-left dark:border-slate-800">
+                <div className="flex flex-col-reverse gap-y-1 border-zinc-200 pl-4 text-center sm:border-l sm:text-left dark:border-zinc-800">
                   <dt className="text-base/7">faster CI</dt>
                   <dd className="[text-shadow:1px 1px 0 white;] te text-5xl font-semibold tracking-tight text-black dark:text-white">
                     70%
                   </dd>
                 </div>
-                <div className="flex flex-col-reverse gap-y-1 border-slate-200 pl-4 text-center sm:border-l sm:text-left dark:border-slate-800">
+                <div className="flex flex-col-reverse gap-y-1 border-zinc-200 pl-4 text-center sm:border-l sm:text-left dark:border-zinc-800">
                   <dt className="text-base/7">less compute used</dt>
                   <dd className="text-5xl font-semibold tracking-tight text-black dark:text-white">
                     60%
                   </dd>
                 </div>
-                <div className="flex flex-col-reverse gap-y-1 border-slate-200 pl-4 text-center sm:border-l sm:text-left dark:border-slate-800">
+                <div className="flex flex-col-reverse gap-y-1 border-zinc-200 pl-4 text-center sm:border-l sm:text-left dark:border-zinc-800">
                   <dt className="text-base/7">reduction in infra costs</dt>
                   <dd className="text-5xl font-semibold tracking-tight text-black dark:text-white">
                     75%

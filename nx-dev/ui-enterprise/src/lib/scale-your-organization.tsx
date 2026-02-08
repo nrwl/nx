@@ -23,7 +23,7 @@ export function ScaleYourOrganization(): ReactElement {
               src="/images/enterprise/neurons-dark.avif"
               width={2111}
               height={921}
-              className="hidden w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-slate-400/10 sm:w-[57rem] md:-mr-4 lg:mr-0 dark:block"
+              className="hidden w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-zinc-400/10 sm:w-[57rem] md:-mr-4 lg:mr-0 dark:block"
             />
           </div>
           <div className="lg:ml-auto lg:pl-4 lg:pt-4">
@@ -42,7 +42,7 @@ export function ScaleYourOrganization(): ReactElement {
                 </Strong>
                 .
               </SectionHeading>
-              <figure className="mt-12 border-l border-slate-200 pl-8 dark:border-slate-800">
+              <figure className="mt-12 border-l border-zinc-200 pl-8 dark:border-zinc-800">
                 <blockquote className="text-base/7">
                   <p>
                     “Nx means tooling and efficiency around our software
@@ -58,7 +58,7 @@ export function ScaleYourOrganization(): ReactElement {
                   />
                   <div>
                     <div className="font-semibold">Justin Schwartzenberger</div>
-                    <div className="text-slate-500">
+                    <div className="text-zinc-500">
                       Principal Software Engineer, SiriusXM
                     </div>
                   </div>
@@ -80,10 +80,10 @@ export function ScaleYourOrganization(): ReactElement {
               </div>
               <div className="relative flex gap-x-4">
                 <div className="absolute -bottom-6 left-0 top-0 flex w-6 justify-center">
-                  <div className="w-px bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-px bg-zinc-200 dark:bg-zinc-800" />
                 </div>
-                <div className="relative mt-1 flex size-6 flex-none items-center justify-center bg-white dark:bg-slate-950">
-                  <div className="size-1.5 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:bg-slate-800 dark:ring-slate-600" />
+                <div className="relative mt-1 flex size-6 flex-none items-center justify-center bg-white dark:bg-zinc-950">
+                  <div className="size-1.5 rounded-full bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-600" />
                 </div>
                 <div className="flex flex-col pb-10">
                   <dt className="text-base font-semibold leading-7 text-black dark:text-white">
@@ -117,10 +117,10 @@ export function ScaleYourOrganization(): ReactElement {
               </div>
               <div className="group/section relative flex gap-x-4">
                 <div className="absolute -bottom-6 left-0 top-0 flex w-6 justify-center">
-                  <div className="w-px bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-px bg-zinc-200 dark:bg-zinc-800" />
                 </div>
-                <div className="relative mt-1 flex size-6 flex-none items-center justify-center bg-white dark:bg-slate-950">
-                  <div className="size-1.5 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:bg-slate-800 dark:ring-slate-600" />
+                <div className="relative mt-1 flex size-6 flex-none items-center justify-center bg-white dark:bg-zinc-950">
+                  <div className="size-1.5 rounded-full bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-600" />
                 </div>
                 <div className="flex flex-col pb-10">
                   <dt className="text-base font-semibold leading-7 text-black dark:text-white">
@@ -179,10 +179,10 @@ export function ScaleYourOrganization(): ReactElement {
               </div>
               <div className="relative flex gap-x-4">
                 <div className="absolute -bottom-6 left-0 top-0 flex w-6 justify-center">
-                  <div className="w-px bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-px bg-zinc-200 dark:bg-zinc-800" />
                 </div>
-                <div className="relative mt-1 flex size-6 flex-none items-center justify-center bg-white dark:bg-slate-950">
-                  <div className="size-1.5 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:bg-slate-800 dark:ring-slate-600" />
+                <div className="relative mt-1 flex size-6 flex-none items-center justify-center bg-white dark:bg-zinc-950">
+                  <div className="size-1.5 rounded-full bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-600" />
                 </div>
                 <div className="flex flex-col pb-10">
                   <dt className="text-base font-semibold leading-7 text-black dark:text-white">
@@ -249,7 +249,7 @@ export function ScaleOrganizationIntro(): ReactElement {
         <svg
           x="50%"
           y={0}
-          className="overflow-visible fill-slate-200/20 dark:fill-slate-800/60"
+          className="overflow-visible fill-zinc-200/20 dark:fill-zinc-800/60"
         >
           <path
             d="M-200 0h201v201h-201Z M600 0h201v201h-201Z M-400 600h201v201h-201Z M200 800h201v201h-201Z"

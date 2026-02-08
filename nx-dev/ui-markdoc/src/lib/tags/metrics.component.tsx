@@ -21,10 +21,10 @@ export function Metrics({
               key={index}
               className="flex flex-col items-center space-y-1 text-center"
             >
-              <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
+              <div className="text-2xl font-bold text-zinc-700 dark:text-zinc-200">
                 {metric.value}
               </div>
-              <div className="text-sm leading-snug text-slate-500 dark:text-slate-400">
+              <div className="text-sm leading-snug text-zinc-500 dark:text-zinc-400">
                 {metric.label}
               </div>
             </div>
@@ -38,10 +38,10 @@ export function Metrics({
     <div className="not-content space-y-8">
       {metrics.map((metric, index) => (
         <div key={index} className="flex flex-col space-y-2">
-          <div className="text-4xl font-bold text-slate-700 dark:text-slate-200">
+          <div className="text-4xl font-bold text-zinc-700 dark:text-zinc-200">
             {metric.value}
           </div>
-          <div className="text-sm leading-snug text-slate-500 dark:text-slate-400">
+          <div className="text-sm leading-snug text-zinc-500 dark:text-zinc-400">
             {metric.label}
           </div>
         </div>
