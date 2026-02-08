@@ -5,4 +5,5 @@ export interface GeneratorOptions
     appName: string;
     outputDir: string;
     packageManager?: PackageManager;
+    skipInstall?: boolean;
 }

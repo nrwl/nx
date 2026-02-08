@@ -8,6 +8,7 @@ export interface AppGeneratorSchema
     name: string;
     directory?: string;
     packageManager?: PackageManager;
+    skipInstall?: boolean;
 }
 
 function toKebabCase(str: string): string
@@ -61,6 +62,7 @@ export default function appGenerator(
     generator.generate({
         appName: options.name,
         outputDir,
-        packageManager
+        packageManager,
+        skipInstall: options.skipInstall
     });
 }

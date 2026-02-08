@@ -51,7 +51,17 @@ export class Generator
         console.log(`   ✓ Created src/app/${kebabName}.component.html`);
         console.log(`   ✓ Created src/app/${kebabName}.component.css`);
 
-        if (options.packageManager)
+        if (options.skipInstall)
+        {
+            console.log('');
+            console.log('✅ App created successfully!');
+            console.log('');
+            console.log('Next steps:');
+            console.log(`   cd ${kebabName}`);
+            console.log('   npm install');
+            console.log('   npx @fluffjs/cli serve');
+        }
+        else if (options.packageManager)
         {
             console.log('');
             console.log(`   Installing dependencies with ${options.packageManager}...`);

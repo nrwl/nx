@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { execSync, spawn, type ChildProcess } from 'child_process';
+import { execSync, exec, type ChildProcess } from 'child_process';
 import { existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -49,7 +49,7 @@ test.describe('@fluffjs/nx plugin e2e', () =>
             { cwd: workspaceDir, stdio: 'inherit' }
         );
 
-        execSync('npx nx g @fluffjs/nx:app test-app', { cwd: workspaceDir, stdio: 'inherit' });
+        execSync('npx nx g @fluffjs/nx:app test-app --skipInstall', { cwd: workspaceDir, stdio: 'inherit' });
 
         const projectJsonPath = join(workspaceDir, 'apps/test-app/project.json');
         expect(existsSync(projectJsonPath)).toBe(true);
@@ -76,10 +76,9 @@ test.describe('@fluffjs/nx plugin e2e', () =>
     {
         const workspaceDir = join(TEST_WORKSPACE_DIR, 'test-workspace');
 
-        serveProcess = spawn(
-            'npx',
-            ['nx', 'serve', 'test-app'],
-            { cwd: workspaceDir, stdio: 'pipe', shell: true }
+        serveProcess = exec(
+            'npx nx serve test-app',
+            { cwd: workspaceDir }
         );
 
         await new Promise(resolve => setTimeout(resolve, 5000));

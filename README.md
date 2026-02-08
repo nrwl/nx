@@ -26,7 +26,7 @@ The [fluff demo app](https://fluffjs.github.io/fluff/), vs when ported to other 
 
 | Framework  | Runtime (gzip) | Demo App (gzip) |
 |------------|----------------|-----------------|
-| **Fluff**  | ~7 KB          | 15.6 KB         |
+| **Fluff**  | ~6 KB          | 15.6 KB         |
 | Vue 3.5    | ~24 KB         | 31.8 KB         |
 | Angular 21 | ~55 KB         | 60.5 KB         |
 | React 19   | ~60 KB         | 65.5 KB         |
@@ -49,7 +49,7 @@ Fluff is intentionally minimal. If you need these features, you can add librarie
 just use Angular :)
 
 - **No JIT compiler** - Templates must be compiled at build time, no dynamic template compilation
-- **No dependency injection** - No providers, services, or DI container
+- **No dependency injection** - You need to manage this yourself
 - **No legacy browser support** - ES2022 or go home
 - **No routing** - No built-in router
 - **No forms module** - No FormControl, FormGroup, or validation framework
@@ -58,7 +58,7 @@ just use Angular :)
 - **No animations** - Use CSS animations or a library like GSAP
 - **No SSR** - Client-side only, no server-side rendering
 - **No modules/NgModule** - Components register themselves, no module system
-- **No lazy loading provide** (but pretty easy to implement)
+- **No lazy loading provided** (but pretty easy to implement)
 - **Limited tooling** - Basic build + dev server only
 
 ## Example Component
@@ -112,6 +112,10 @@ export class CounterComponent extends HTMLElement
 
 <!-- Class binding -->
 <div [class.active]="isActive">...</div>
+
+<!-- Style binding -->
+<div [style.background-color]="bgColor">...</div>
+<div [style.width]="width + 'px'">...</div>
 
 <!-- Conditional rendering -->
 @if (isLoading) {
@@ -171,9 +175,10 @@ export class MyComponent extends HTMLElement implements OnInit, OnDestroy
 | `@Output`       | Declare an output event using `Publisher<T>`                         |
 | `@Reactive`     | Make a property reactive - changes automatically update the template |
 | `@Watch`        | React to changes in one or more properties                           |
-| `@HostBinding`  | Bind a property to a host element attribute or class                 |
-| `@HostListener` | Listen to events on the host element                                 |
+| `@HostBinding`  | Bind a property to a host element attribute, class, or style         |
+| `@HostListener` | Listen to events on the host element, document, or window            |
 | `@ViewChild`    | Get a reference to a child element in the template                   |
+| `@LinkedProperty` | Intercept when a Property is linked to a parent                    |
 | `@Pipe`         | Define a reusable transform for template expressions                 |
 
 ## @Pipe Example
@@ -286,6 +291,120 @@ const subscription = this.$watch(['firstName', 'lastName'], (changed) => {
 
 Make sure you unsubscribe from the watch in OnDestroy.
 
+## @HostBinding Example
+
+The `@HostBinding` decorator binds a property or getter to the host element. It supports classes, attributes, and styles:
+
+```typescript
+@Component({
+    selector: 'my-button',
+    template: `<span><slot></slot></span>`
+})
+export class MyButtonComponent extends HTMLElement
+{
+    @Reactive() public isDisabled = false;
+    @Reactive() public theme = 'primary';
+
+    @HostBinding('class.disabled')
+    public get disabledClass(): boolean
+    {
+        return this.isDisabled;
+    }
+
+    @HostBinding('attr.data-theme')
+    public get dataTheme(): string
+    {
+        return this.theme;
+    }
+}
+```
+
+## @HostListener Example
+
+The `@HostListener` decorator listens to events on the host element, document, or window:
+
+```typescript
+@Component({
+    selector: 'keyboard-handler',
+    template: `<div>Press Escape to close</div>`
+})
+export class KeyboardHandlerComponent extends HTMLElement
+{
+    @HostListener('click')
+    public onClick(event: MouseEvent): void
+    {
+        console.log('Host clicked');
+    }
+
+    @HostListener('document:keydown.escape')
+    public onEscapeKey(): void
+    {
+        this.close();
+    }
+
+    @HostListener('window:resize')
+    public onWindowResize(): void
+    {
+        this.recalculateLayout();
+    }
+}
+```
+
+Supported event modifiers: `.enter`, `.escape`, `.space`
+
+## @ViewChild Example
+
+The `@ViewChild` decorator gets a reference to a child element using a template ref or CSS selector:
+
+```typescript
+@Component({
+    selector: 'form-component',
+    template: `
+        <input #nameInput [value]="name"/>
+        <button (click)="focusInput()">Focus</button>
+    `
+})
+export class FormComponent extends HTMLElement
+{
+    @ViewChild('nameInput') public inputEl!: HTMLInputElement;
+    @Reactive() public name = '';
+
+    public focusInput(): void
+    {
+        this.inputEl.focus();
+    }
+}
+```
+
+## @Input Options
+
+The `@Input` decorator accepts options to control data flow direction and commit timing:
+
+```typescript
+@Component({
+    selector: 'child-component',
+    template: `<span>{{ value }}</span>`
+})
+export class ChildComponent extends HTMLElement
+{
+    @Input({ direction: Direction.Inbound })
+    public readOnlyValue: string | null = null;
+
+    @Input({ direction: Direction.Outbound })
+    public writeOnlyValue: string | null = null;
+
+    @Reactive() public isConfirmed = false;
+
+    @Input({ commitTrigger: 'isConfirmed' })
+    public deferredValue: string | null = null;
+}
+```
+
+| Option | Description |
+|--------|-------------|
+| `direction` | `Direction.Inbound` (parent→child only) or `Direction.Outbound` (child→parent only) |
+| `commitTrigger` | Name of a reactive property - changes only push to parent when trigger becomes truthy |
+
 
 ## Services and Data Models
 
@@ -357,6 +476,31 @@ export class TaskFormComponent extends HTMLElement
 
 When `TaskFormComponent` updates `this.task`, the change propagates back to `TaskModel.selectedTask` automatically.
 
+### Intercepting Property Links with @LinkedProperty
+
+The `@LinkedProperty` decorator lets you intercept when a `Property` is linked to a parent, useful for setting up additional subscriptions or transformations:
+
+```typescript
+@Component({
+    selector: 'device-panel',
+    template: `<span>{{ status }}</span>`
+})
+export class DevicePanelComponent extends HTMLElement
+{
+    @Input() public device: Device | null = null;
+    @Reactive() public status = 'unknown';
+
+    @LinkedProperty('device')
+    public onDeviceLinked(deviceProp: Property<Device | null>): void
+    {
+        deviceProp.onOutboundChange.subscribe((device) =>
+        {
+            this.status = device?.isOnline ? 'online' : 'offline';
+        });
+    }
+}
+```
+
 ### Subscribing to Changes
 
 ```typescript
@@ -372,31 +516,27 @@ subscription.unsubscribe();
 
 ### Important Caveats
 
-**Expressions don't auto-unwrap:** Unlike `@Reactive` properties which use getters, raw `Property` instances in expressions are not automatically unwrapped. Use `getValue()` when you need the raw value:
+**Property values don't unwrap during evaluation:** When using raw `Property` objects in expressions, the result is unwrapped but the Property itself is not unwrapped before the expression is evaluated. This means you cannot access nested properties:
 
 ```html
-<!-- This displays the Property object, not the value -->
-<span>{{ myProperty }}</span>
+<!-- Won't work - userProperty is a Property object during evaluation -->
+<span>{{ userProperty.name }}</span>
 
-<!-- Use getValue() to get the actual value -->
-<span>{{ myProperty.getValue() }}</span>
+<!-- Use getValue() to access the underlying value -->
+<span>{{ userProperty.getValue()?.name }}</span>
 
-<!-- Or bind directly - binding handles unwrapping -->
-<child-component [value]="myProperty"></child-component>
-```
+<!-- Simple interpolation works - result is unwrapped -->
+<span>{{ userProperty }}</span>
 
-**Pipes auto-unwrap:** Pipes automatically unwrap `Property` values before transforming them:
-
-```html
-<!-- Works correctly - pipe receives the unwrapped value -->
-<span>{{ myProperty | uppercase }}</span>
+<!-- Pipes also work - they receive the unwrapped value -->
+<span>{{ userProperty | formatUser }}</span>
 ```
 
 **Data binding works naturally:** When binding a `Property` to an `@Input`, the framework handles the connection:
 
 ```html
 <!-- The child's @Input receives and links to the Property -->
-<child-component [count]="counterProperty"></child-component>
+<child-component [user]="userProperty"></child-component>
 ```
 
 **Resetting the link:** If you need to disconnect a child `Property` from its parent, call `reset()`:

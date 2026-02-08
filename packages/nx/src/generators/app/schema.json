@@ -23,6 +23,11 @@
             "type": "string",
             "description": "Package manager to use for installing dependencies",
             "enum": ["npm", "yarn", "pnpm", "bun"]
+        },
+        "skipInstall": {
+            "type": "boolean",
+            "description": "Skip installing dependencies",
+            "default": false
         }
     },
     "required": ["name"]

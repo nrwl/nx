@@ -13,7 +13,11 @@ test.describe('Global HostListener', () =>
         await page.mouse.move(200, 200);
         await page.mouse.move(300, 300);
 
-        await expect(moveResult).not.toHaveText('0');
+        await expect(async () =>
+        {
+            const text = await moveResult.textContent();
+            expect(Number(text)).toBeGreaterThan(0);
+        }).toPass({ timeout: 5000 });
     });
 
     test('should handle document:click events', async({ page }) =>
