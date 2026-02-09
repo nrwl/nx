@@ -104,5 +104,5 @@ catalogs:
   swc:
     '@swc/core': '1.15.8'
     '@swc/helpers': '0.5.18'
-    '@swc/cli': '0.7.10'
+    '@swc/cli': '0.8.0'
     '@swc-node/register': '1.11.1'

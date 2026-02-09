@@ -1,13 +1,12 @@
 import { VcsPushStatus } from '../git/git';
 
 /**
- * Banner variants for the completion message experiment (CLOUD-4147).
+ * Banner variants for the completion message experiment (CLOUD-4235).
  * - '0': Plain link (control) - always used for enterprise URLs
- * - '1': "Try the full Nx platform" decorative banner
- * - '2': "Unlock 70% faster CI" decorative banner
- * - '3': "Reclaim your team's focus" decorative banner
+ * - '1': "Finish your set up in 5 minutes" decorative banner
+ * - '2': "Enable remote caching and automatic fixes when CI fails" decorative banner
  */
-export type BannerVariant = '0' | '1' | '2' | '3';
+export type BannerVariant = '0' | '1' | '2';
 
 /**
  * Generates the decorative ASCII art banner for Nx Cloud.
@@ -52,21 +51,15 @@ function getBannerLines(variant: BannerVariant, url: string): string[] {
   switch (variant) {
     case '1':
       return generateDecorativeBanner(
-        'Try the full Nx platform',
+        'Finish your set up in 5 minutes ->',
         url,
-        'Remote caching * Distribution * Self-healing CI'
+        'Remote caching * Automatically fix CI failures'
       );
     case '2':
       return generateDecorativeBanner(
-        'Unlock 70% faster CI',
+        'Enable remote caching and automatic fixes when CI fails',
         url,
-        'Remote caching & Distribution'
-      );
-    case '3':
-      return generateDecorativeBanner(
-        "Reclaim your team's focus",
-        url,
-        'Self-healing CI + Remote caching'
+        'Set it up in less than 5 minutes'
       );
     default:
       return [];
@@ -123,12 +116,18 @@ export function getCompletionMessage(
   const messageConfig = completionMessages[key];
   const variant = bannerVariant ?? '0';
 
-  // For decorative banner variants (1, 2, 3), show the banner instead of plain text
+  // Variants 1 and 2 use an updated title (CLOUD-4235)
+  const title =
+    variant === '1' || variant === '2'
+      ? 'Nx Cloud configuration was successfully added.'
+      : messageConfig.title;
+
+  // For decorative banner variants (1, 2), show the banner instead of plain text
   if (variant !== '0' && url) {
     const bannerLines = getBannerLines(variant, url);
     if (bannerLines.length > 0) {
       return {
-        title: messageConfig.title,
+        title,
         bodyLines: [...bannerLines, ''],
       };
     }
@@ -138,7 +137,7 @@ export function getCompletionMessage(
   const bodyLines = [getSetupMessage(url, pushedToVcs, workspaceName)];
 
   return {
-    title: messageConfig.title,
+    title,
     bodyLines,
   };
 }

@@ -1,4 +1,4 @@
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
@@ -385,7 +385,7 @@ async function handleNoAvailableDiskFallback({
     const reply = await prompt<{ useZero: boolean }>([
       {
         name: 'useZero',
-        message: `\n${chalk.yellow(
+        message: `\n${pc.yellow(
           `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate version in a supported manifest file such as ${validManifestFilenames}`
         )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
         type: 'confirm',

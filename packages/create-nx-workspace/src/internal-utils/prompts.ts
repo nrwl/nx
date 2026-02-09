@@ -2,7 +2,12 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import { MessageKey, messages } from '../utils/nx/ab-testing';
+import {
+  MessageKey,
+  messages,
+  shouldShowCloudPrompt,
+  getFlowVariant,
+} from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import { isGitAvailable } from '../utils/git/git';
 import {
@@ -45,21 +50,32 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Locked to "full platform" messaging (CLOUD-4147)
-  // Flow variant only affects completion banners, not this prompt
+  // Variant 2: skip prompt entirely, auto-connect (CLOUD-4235)
+  if (!shouldShowCloudPrompt()) {
+    return 'github';
+  }
+
+  // Variant 1: updated messaging; Variant 0: control (CLOUD-4235)
+  const variant = getFlowVariant();
+  const message =
+    variant === '1'
+      ? 'Try the full Nx experience?'
+      : 'Try the full Nx platform?';
+  const footer =
+    variant === '1'
+      ? '\nSet up remote caching and CI that fixes itself in less than 5 minutes.'
+      : '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud';
+
   const promptConfig = {
     name: 'nxCloud',
-    message: 'Try the full Nx platform?',
+    message,
     type: 'autocomplete',
     choices: [
       { value: 'yes', name: 'Yes' },
       { value: 'skip', name: 'Skip' },
     ],
     initial: 0,
-    footer: () =>
-      chalk.dim(
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud'
-      ),
+    footer: () => chalk.dim(footer),
   };
 
   const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([

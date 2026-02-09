@@ -79,14 +79,19 @@ impl Filterer for WatchFilterer {
                     FileEventKind::Remove(RemoveKind::File) => continue,
 
                     #[cfg(target_os = "linux")]
-                    FileEventKind::Create(CreateKind::Folder) => continue,
+                    FileEventKind::Create(CreateKind::Folder)
+                    | FileEventKind::Create(CreateKind::Any)
+                    | FileEventKind::Remove(RemoveKind::Any)
+                    | FileEventKind::Modify(ModifyKind::Any) => continue,
+
+                    #[cfg(target_os = "macos")]
+                    FileEventKind::Create(CreateKind::Folder)
+                    | FileEventKind::Modify(ModifyKind::Metadata(_)) => continue,
 
                     #[cfg(windows)]
-                    FileEventKind::Modify(ModifyKind::Any) => continue,
-                    #[cfg(windows)]
-                    FileEventKind::Create(CreateKind::Any) => continue,
-                    #[cfg(windows)]
-                    FileEventKind::Remove(RemoveKind::Any) => continue,
+                    FileEventKind::Modify(ModifyKind::Any)
+                    | FileEventKind::Create(CreateKind::Any)
+                    | FileEventKind::Remove(RemoveKind::Any) => continue,
 
                     _ => return Ok(false),
                 },
@@ -96,14 +101,19 @@ impl Filterer for WatchFilterer {
                     file_type: Some(FileType::File) | None,
                 } if !path.display().to_string().ends_with('~') => continue,
 
-                #[cfg(target_os = "linux")]
+                // Allow directory events through on Linux, Windows, and macOS so that the
+                // action handler can dynamically register watches for new directories.
+                #[cfg(any(target_os = "linux", target_os = "macos", windows))]
                 Tag::Path {
                     path: _,
                     file_type: Some(FileType::Dir),
                 } => continue,
 
                 Tag::Source(Source::Filesystem) => continue,
-                _ => return Ok(false),
+                _ => {
+                    trace!(?tag, "tag rejected event");
+                    return Ok(false);
+                }
             }
         }
 
