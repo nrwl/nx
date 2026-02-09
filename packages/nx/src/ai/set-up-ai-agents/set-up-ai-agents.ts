@@ -417,9 +417,51 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   }
 }
 
+/**
+ * Extract user-added extra args/flags from an existing MCP config args array
+ * by stripping the known base command prefix.
+ *
+ * Known base patterns (matched in order, first wins):
+ *   ['nx', 'mcp']  or  ['nx-mcp'] (possibly with @version suffix like nx-mcp@latest)
+ *   For opencode the caller prepends 'npx' to these patterns.
+ */
+function getExtraMcpArgs(
+  existingArgs: string[] | undefined,
+  knownBasePatterns: string[][]
+): string[] {
+  if (!Array.isArray(existingArgs) || existingArgs.length === 0) return [];
+
+  for (const pattern of knownBasePatterns) {
+    if (existingArgs.length < pattern.length) continue;
+
+    const matches = pattern.every((baseArg, i) => {
+      if (baseArg === 'nx-mcp') {
+        // Also match versioned variants like nx-mcp@latest
+        return (
+          existingArgs[i] === 'nx-mcp' || existingArgs[i].startsWith('nx-mcp@')
+        );
+      }
+      return existingArgs[i] === baseArg;
+    });
+
+    if (matches) {
+      return existingArgs.slice(pattern.length);
+    }
+  }
+
+  return [];
+}
+
 function mcpConfigUpdater(existing: any, nxVersion: string): any {
   const majorVersion = major(nxVersion);
   const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+
+  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+  const extraArgs = getExtraMcpArgs(existing.mcpServers?.['nx-mcp']?.args, [
+    ['nx', 'mcp'],
+    ['nx-mcp'],
+  ]);
+  mcpArgs.push(...extraArgs);
 
   if (existing.mcpServers) {
     existing.mcpServers['nx-mcp'] = {
@@ -443,6 +485,13 @@ function opencodeMcpConfigUpdater(existing: any, nxVersion: string): any {
   const majorVersion = major(nxVersion);
   const mcpCommand =
     majorVersion >= 22 ? ['npx', 'nx', 'mcp'] : ['npx', 'nx-mcp'];
+
+  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+  const extraArgs = getExtraMcpArgs(existing.mcp?.['nx-mcp']?.command, [
+    ['npx', 'nx', 'mcp'],
+    ['npx', 'nx-mcp'],
+  ]);
+  mcpCommand.push(...extraArgs);
 
   if (existing.mcp) {
     existing.mcp['nx-mcp'] = {

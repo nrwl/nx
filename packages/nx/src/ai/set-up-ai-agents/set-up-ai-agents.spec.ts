@@ -467,6 +467,218 @@ describe('setup-ai-agents generator', () => {
       });
     });
 
+    describe('MCP config extra args preservation', () => {
+      it('should preserve extra args in gemini MCP config', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            mcpServers: {
+              'nx-mcp': {
+                type: 'stdio',
+                command: 'npx',
+                args: ['nx', 'mcp', '--transport', 'http'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.mcpServers['nx-mcp'].args).toEqual([
+          'nx',
+          'mcp',
+          '--transport',
+          'http',
+        ]);
+      });
+
+      it('should preserve multiple extra args in gemini MCP config', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            mcpServers: {
+              'nx-mcp': {
+                type: 'stdio',
+                command: 'npx',
+                args: [
+                  'nx',
+                  'mcp',
+                  '--experimental-polygraph',
+                  '--transport',
+                  'http',
+                ],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.mcpServers['nx-mcp'].args).toEqual([
+          'nx',
+          'mcp',
+          '--experimental-polygraph',
+          '--transport',
+          'http',
+        ]);
+      });
+
+      it('should preserve extra args when upgrading from Nx 21 to 22 (gemini)', async () => {
+        readModulePackageJsonSpy.mockReturnValue({
+          packageJson: { name: 'nx', version: '22.0.0' },
+          path: '/fake/path/package.json',
+        });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        // Simulate old Nx 21 config with extra args
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            mcpServers: {
+              'nx-mcp': {
+                type: 'stdio',
+                command: 'npx',
+                args: ['nx-mcp', '--minimal', '--transport', 'http'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        // Should update base args to v22 format but preserve extras
+        expect(config.mcpServers['nx-mcp'].args).toEqual([
+          'nx',
+          'mcp',
+          '--minimal',
+          '--transport',
+          'http',
+        ]);
+      });
+
+      it('should preserve extra args from versioned nx-mcp base command (gemini)', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            mcpServers: {
+              'nx-mcp': {
+                type: 'stdio',
+                command: 'npx',
+                args: ['nx-mcp@latest', '--experimental-polygraph'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.mcpServers['nx-mcp'].args).toEqual([
+          'nx',
+          'mcp',
+          '--experimental-polygraph',
+        ]);
+      });
+
+      it('should preserve extra args in opencode MCP command', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['opencode'],
+        };
+
+        tree.write(
+          'opencode.json',
+          JSON.stringify({
+            mcp: {
+              'nx-mcp': {
+                type: 'local',
+                command: [
+                  'npx',
+                  'nx',
+                  'mcp',
+                  '--experimental-polygraph',
+                  '--transport',
+                  'http',
+                ],
+                enabled: true,
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('opencode.json')?.toString() ?? '{}'
+        );
+        expect(config.mcp['nx-mcp'].command).toEqual([
+          'npx',
+          'nx',
+          'mcp',
+          '--experimental-polygraph',
+          '--transport',
+          'http',
+        ]);
+      });
+
+      it('should not add extra args when none exist in existing config', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            mcpServers: {
+              'nx-mcp': {
+                type: 'stdio',
+                command: 'npx',
+                args: ['nx', 'mcp'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.mcpServers['nx-mcp'].args).toEqual(['nx', 'mcp']);
+      });
+    });
+
     describe('Nx version-specific MCP configuration', () => {
       it('should use "nx mcp" for Nx 22+ (gemini)', async () => {
         readModulePackageJsonSpy.mockReturnValue({
