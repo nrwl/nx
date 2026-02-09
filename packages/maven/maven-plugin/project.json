@@ -1,4 +1,5 @@
 {
+  "name": "dev.nx.maven:nx-maven-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/maven-plugin",
   "projectType": "library",

@@ -1,4 +1,5 @@
 {
+  "name": "dev.nx.maven:nx-maven-shared",
   "projectType": "library",
   "targets": {
     "maven:test": {
