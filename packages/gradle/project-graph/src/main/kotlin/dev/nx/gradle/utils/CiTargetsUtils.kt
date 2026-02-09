@@ -119,7 +119,7 @@ private fun buildTestCiTarget(
                   "testClassName" to testClassPackagePath),
           "metadata" to
               getMetadata(
-                  "Runs Gradle test $testClassPackagePath in CI. Note: This task should _only_ be run in a CI environment.",
+                  "Runs Gradle test $testClassPackagePath in CI.",
                   projectBuildPath,
                   "test"),
           "cache" to true,
