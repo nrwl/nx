@@ -98,6 +98,6 @@ assignment-rules:
       - "*"
     run-on:
       - agent: linux-large
-        parallelism: 6
+        parallelism: 4
       - agent: linux-extra-large
         parallelism: 6
