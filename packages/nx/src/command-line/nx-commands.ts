@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import * as yargs from 'yargs';
 
 import { yargsRegisterCommand } from './register/command-object';
@@ -71,7 +71,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart Monorepos · Fast Builds'))
+  .usage(pc.bold('Smart Monorepos · Fast Builds'))
   .demandCommand(1, '')
   .command(yargsRegisterCommand)
   .command(yargsAddCommand)

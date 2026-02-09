@@ -1,4 +1,8 @@
-import { isEnterpriseCloudUrl, getBannerVariant } from './ab-testing';
+import {
+  isEnterpriseCloudUrl,
+  getBannerVariant,
+  shouldShowCloudPrompt,
+} from './ab-testing';
 
 describe('ab-testing', () => {
   describe('isEnterpriseCloudUrl', () => {
@@ -84,9 +88,43 @@ describe('ab-testing', () => {
       );
     });
 
-    it('should return a valid variant (0, 1, 2, or 3) for standard URLs', () => {
+    it('should return a valid variant (0, 1, or 2) for standard URLs', () => {
       const variant = getBannerVariant('https://cloud.nx.app/connect/abc');
-      expect(['0', '1', '2', '3']).toContain(variant);
+      expect(['0', '1', '2']).toContain(variant);
+    });
+  });
+
+  describe('shouldShowCloudPrompt', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it('should return true for variant 0', () => {
+      process.env.NX_CNW_FLOW_VARIANT = '0';
+      const { shouldShowCloudPrompt: freshShouldShowCloudPrompt } =
+        jest.requireActual('./ab-testing') as typeof import('./ab-testing');
+      expect(freshShouldShowCloudPrompt()).toBe(true);
+    });
+
+    it('should return true for variant 1', () => {
+      process.env.NX_CNW_FLOW_VARIANT = '1';
+      const { shouldShowCloudPrompt: freshShouldShowCloudPrompt } =
+        jest.requireActual('./ab-testing') as typeof import('./ab-testing');
+      expect(freshShouldShowCloudPrompt()).toBe(true);
+    });
+
+    it('should return false for variant 2', () => {
+      process.env.NX_CNW_FLOW_VARIANT = '2';
+      const { shouldShowCloudPrompt: freshShouldShowCloudPrompt } =
+        jest.requireActual('./ab-testing') as typeof import('./ab-testing');
+      expect(freshShouldShowCloudPrompt()).toBe(false);
     });
   });
 });

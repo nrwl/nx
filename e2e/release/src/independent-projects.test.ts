@@ -238,7 +238,7 @@ describe('nx release - independent projects', () => {
         `release version 999.9.9-version-git-operations-test.2 -p ${pkg1} --git-commit --git-tag --verbose` // add verbose so we get richer output
       );
       const filteredOutput = versionWithGitActionsCLIOutput.replace(
-        /\[plugin-(pool|worker)\].*\n/g,
+        /\[(isolated-plugin|plugin-worker)\].*\n/g,
         ''
       );
       expect(filteredOutput).toMatchInlineSnapshot(`
@@ -325,7 +325,7 @@ describe('nx release - independent projects', () => {
         `release version 999.9.9-version-git-operations-test.3 --verbose --gitTag` // add verbose so we get richer output
       );
       const filteredConfigOutput = versionWithGitActionsConfigOutput.replace(
-        /\[plugin-(pool|worker)\].*\n/g,
+        /\[(isolated-plugin|plugin-worker)\].*\n/g,
         ''
       );
       expect(filteredConfigOutput).toMatchInlineSnapshot(`
@@ -525,7 +525,7 @@ describe('nx release - independent projects', () => {
         `release changelog 999.9.9-changelog-git-operations-test.1 -p ${pkg1} --verbose`
       );
       const filteredChangelogOutput = versionWithGitActionsCLIOutput.replace(
-        /\[plugin-(pool|worker)\].*\n/g,
+        /\[(isolated-plugin|plugin-worker)\].*\n/g,
         ''
       );
       expect(filteredChangelogOutput).toMatchInlineSnapshot(`

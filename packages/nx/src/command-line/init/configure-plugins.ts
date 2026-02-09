@@ -1,4 +1,4 @@
-import { bold } from 'chalk';
+import { bold } from 'picocolors';
 
 import {
   getPackageManagerCommand,
