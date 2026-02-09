@@ -85,7 +85,12 @@ export async function loadNxPluginAsync(
     const { loadResolvedNxPluginAsync } = await import(
       require.resolve('./load-resolved-plugin')
     );
-    return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name, index);
+    return loadResolvedNxPluginAsync(
+      pluginConfiguration,
+      pluginPath,
+      name,
+      index
+    );
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
   }
