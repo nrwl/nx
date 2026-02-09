@@ -2,19 +2,9 @@
 
 After making changes to a project, run the relevant test class to verify your changes work correctly.
 
-## Mode Detection
-
-Check in order (first match wins):
-
-| Mode      | Detection                                                 |
-| --------- | --------------------------------------------------------- |
-| Atomized  | `ciTestTargetName` in nx.json `@nx/gradle` plugin options |
-| Inference | `@nx/gradle` in nx.json plugins array                     |
-| Executor  | `@nx/gradle:gradle` executor in project.json targets      |
-
 ## Run Specific Test Class
 
-For all modes, use the `test` target with the `--testClassName` flag to filter by class name:
+Use the `test` target with the `--testClassName` flag to filter by class name:
 
 ```bash
 nx test <project> --testClassName=<ClassName>
