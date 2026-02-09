@@ -11,7 +11,10 @@ import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxWorkspaceFilesExternals } from '../native';
+import { HashInputs, NxWorkspaceFilesExternals } from '../native';
+
+// Re-export HashInputs from native module for public API
+export { HashInputs };
 
 /**
  * A data structure returned by the default hasher.
@@ -21,6 +24,7 @@ export interface PartialHash {
   details: {
     [name: string]: string;
   };
+  inputs: HashInputs;
 }
 
 /**
@@ -34,6 +38,7 @@ export interface Hash {
     implicitDeps?: { [fileName: string]: string };
     runtime?: { [input: string]: string };
   };
+  inputs?: HashInputs;
 }
 
 export interface TaskHasher {
@@ -181,7 +186,7 @@ export class InProcessTaskHasher implements TaskHasher {
     return this.createHashDetails(task, res);
   }
 
-  private createHashDetails(task: Task, res: PartialHash) {
+  private createHashDetails(task: Task, res: PartialHash): Hash {
     const command = this.hashCommand(task);
     return {
       value: hashArray([res.value, command]),
@@ -191,6 +196,7 @@ export class InProcessTaskHasher implements TaskHasher {
         implicitDeps: {},
         runtime: {},
       },
+      inputs: res.inputs,
     };
   }
 

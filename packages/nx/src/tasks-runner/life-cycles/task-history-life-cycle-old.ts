@@ -16,6 +16,11 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   private taskRuns: TaskRun[] = [];
   private flakyTasks: string[];
 
+  // hashes which could trigger flaky task detection.
+  // set here rather than on the TaskRun to avoid storing data on
+  // the fs
+  private cacheableHashes: Set<string> = new Set();
+
   startTasks(tasks: Task[]): void {
     for (let task of tasks) {
       this.startTimings[task.id] = new Date().getTime();
@@ -23,24 +28,35 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   }
 
   async endTasks(taskResults: TaskResult[]) {
-    const taskRuns: TaskRun[] = taskResults.map((taskResult) => ({
-      project: taskResult.task.target.project,
-      target: taskResult.task.target.target,
-      configuration: taskResult.task.target.configuration,
-      hash: taskResult.task.hash,
-      code: taskResult.code.toString(),
-      status: taskResult.status,
-      start: (
-        taskResult.task.startTime ?? this.startTimings[taskResult.task.id]
-      ).toString(),
-      end: (taskResult.task.endTime ?? new Date().getTime()).toString(),
-    }));
-    this.taskRuns.push(...taskRuns);
+    for (const taskResult of taskResults) {
+      // Track cacheable tasks for flaky detection
+      if (taskResult.task.cache === true) {
+        this.cacheableHashes.add(taskResult.task.hash);
+      }
+      this.taskRuns.push({
+        project: taskResult.task.target.project,
+        target: taskResult.task.target.target,
+        configuration: taskResult.task.target.configuration,
+        hash: taskResult.task.hash,
+        code: taskResult.code.toString(),
+        status: taskResult.status,
+        start: (
+          taskResult.task.startTime ?? this.startTimings[taskResult.task.id]
+        ).toString(),
+        end: (taskResult.task.endTime ?? new Date().getTime()).toString(),
+      });
+    }
   }
 
   async endCommand() {
     await writeTaskRunsToHistory(this.taskRuns);
-    const history = await getHistoryForHashes(this.taskRuns.map((t) => t.hash));
+    // Only check for flaky tasks among cacheable tasks
+    const cacheableTaskRuns = this.taskRuns.filter((t) =>
+      this.cacheableHashes.has(t.hash)
+    );
+    const history = await getHistoryForHashes(
+      cacheableTaskRuns.map((t) => t.hash)
+    );
     this.flakyTasks = [];
 
     // check if any hash has different exit codes => flaky

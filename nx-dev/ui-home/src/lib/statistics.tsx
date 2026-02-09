@@ -17,7 +17,7 @@ const statistics = [
   {
     id: 3,
     name: 'on NPM every month',
-    value: 24,
+    value: 34,
     suffix: ' million',
     associative: 'downloads',
   },

@@ -18,6 +18,13 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
         <div className="flex flex-col items-start gap-8 md:flex-row">
           <div className="prose-lg mt-6 w-full md:w-1/2">
             <p>
+              Scattered repositories force AI agents to rebuild their
+              understanding every session—turning 30-minute tasks into 2-hour
+              frustrations. Nx monorepos limit unnecessary manual coordination
+              by giving AI agents full codebase awareness to be accurate,
+              efficient, and autonomous— at scale.
+            </p>
+            <p>
               <strong>
                 Tangled codebases end up crushing team velocity and product
                 quality.

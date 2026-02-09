@@ -29,7 +29,6 @@ data class CacheConfig(
             defaultInputs = listOf(
                 PathPattern("src/main/**/*", recursive = true),
                 PathPattern("src/test/**/*", recursive = true),
-                PathPattern("pom.xml"),
                 PathPattern("*.properties")
             ),
             defaultOutputs = listOf(

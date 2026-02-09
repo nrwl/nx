@@ -26,6 +26,39 @@ module.exports = withNx({
   // Limit static generation workers to reduce memory usage on CI (Netlify 8GB limit)
   experimental: {
     cpus: 1,
+    // Exclude large, unnecessary packages from the server function trace.
+    // We have to say under 250MB for Neltify
+    outputFileTracingExcludes: {
+      '*': [
+        // Native binaries - not needed at runtime for the website
+        'node_modules/@swc/core-linux-x64-musl/**',
+        'node_modules/@swc/core-linux-x64-gnu/**',
+        'node_modules/@swc/core-linux-arm64-musl/**',
+        'node_modules/@swc/core-linux-arm64-gnu/**',
+        'node_modules/@swc/core-linux-arm-gnueabihf/**',
+        'node_modules/@swc/core-win32-x64-msvc/**',
+        'node_modules/@swc/core-win32-arm64-msvc/**',
+        'node_modules/@swc/core-win32-ia32-msvc/**',
+        'node_modules/@swc/core-darwin-x64/**',
+        'node_modules/@swc/core-darwin-arm64/**',
+        'node_modules/@esbuild/**',
+        'node_modules/esbuild/**',
+        'node_modules/@nx/nx-darwin-arm64/**',
+        'node_modules/@nx/nx-darwin-x64/**',
+        'node_modules/@nx/nx-freebsd-x64/**',
+        'node_modules/@nx/nx-linux-arm-gnueabihf/**',
+        'node_modules/@nx/nx-linux-arm64-gnu/**',
+        'node_modules/@nx/nx-linux-arm64-musl/**',
+        'node_modules/@nx/nx-linux-x64-gnu/**',
+        'node_modules/@nx/nx-linux-x64-musl/**',
+        'node_modules/@nx/nx-win32-arm64-msvc/**',
+        'node_modules/@nx/nx-win32-x64-msvc/**',
+        // Build tools not needed at runtime
+        'node_modules/typescript/**',
+        'node_modules/webpack/**',
+        'node_modules/sass/**',
+      ],
+    },
   },
   async rewrites() {
     // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set

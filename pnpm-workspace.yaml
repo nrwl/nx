@@ -9,6 +9,14 @@ packages:
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
+overrides:
+  minimist: '^1.2.6'
+  underscore: '^1.12.1'
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - 'nx'
+patchedDependencies:
+  '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
   '@zkochan/js-yaml': '0.0.7'
   chalk: '^4.1.0'
@@ -96,5 +104,5 @@ catalogs:
   swc:
     '@swc/core': '1.15.8'
     '@swc/helpers': '0.5.18'
-    '@swc/cli': '0.7.10'
+    '@swc/cli': '0.8.0'
     '@swc-node/register': '1.11.1'

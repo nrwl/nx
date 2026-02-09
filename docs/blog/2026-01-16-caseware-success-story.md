@@ -15,6 +15,7 @@ metrics:
     label: 'of compute saved weekly'
   - value: '10+ years'
     label: 'of legacy code migrated'
+pinned: true
 ---
 
 Caseware is a global leader in audit and analytics software, trusted by financial professionals in over 130 countries. Their platform engineering team maintains and modernizes the development infrastructure behind dozens of products, each with different technical stacks and histories.

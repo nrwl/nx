@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.nx.maven</groupId>
         <artifactId>batch-runner-adapters</artifactId>
-        <version>0.0.12</version>
+        <version>0.0.13</version>
     </parent>
 
     <artifactId>maven3-adapter</artifactId>
