@@ -14,9 +14,11 @@ import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileReader
 
 /**
  * Maven plugin to analyze project structure and generate JSON for Nx integration
@@ -24,7 +26,7 @@ import java.io.File
 @Mojo(
   name = "analyze",
   aggregator = true,
-  requiresDependencyResolution = ResolutionScope.NONE
+  requiresDependencyResolution = ResolutionScope.COMPILE
 )
 class NxProjectAnalyzerMojo : AbstractMojo() {
 
@@ -215,6 +217,12 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         result.add(dependency)
       }
     }
+
+    // Add external-to-external edges
+    val allExternalDeps = projectAnalyses.flatMap { it.externalDependencies }
+    val externalEdges = generateExternalEdges(allExternalDeps)
+    externalEdges.forEach { result.add(it) }
+
     return result
   }
 
@@ -275,6 +283,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
       val data = JsonObject()
       data.addProperty("packageName", coordinates)
+      data.addProperty("groupId", extDep.groupId)
+      data.addProperty("artifactId", extDep.artifactId)
       data.addProperty("version", extDep.version ?: "managed")
       node.add("data", data)
 
@@ -282,6 +292,50 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     }
 
     return externalNodes
+  }
+
+  private fun generateExternalEdges(allExternalDeps: List<ExternalMavenDependency>): List<JsonObject> {
+    val edges = mutableListOf<JsonObject>()
+    val localRepo = session.repositorySession.localRepository.basedir
+    val reader = MavenXpp3Reader()
+
+    // Build set of known external node keys for quick lookup
+    val externalNodeKeys = allExternalDeps
+      .map { "${it.groupId}:${it.artifactId}" }
+      .toSet()
+
+    // Deduplicate: only process each groupId:artifactId once
+    val seen = mutableSetOf<String>()
+    val uniqueDeps = allExternalDeps.filter { seen.add("${it.groupId}:${it.artifactId}") }
+
+    for (dep in uniqueDeps) {
+      val version = dep.version ?: continue
+      val pomPath = File(
+        localRepo,
+        "${dep.groupId.replace('.', '/')}/${dep.artifactId}/${version}/${dep.artifactId}-${version}.pom"
+      )
+
+      if (!pomPath.exists()) continue
+
+      try {
+        val model = FileReader(pomPath).use { reader.read(it) }
+        model.dependencies?.forEach { pomDep ->
+          val targetKey = "${pomDep.groupId}:${pomDep.artifactId}"
+          if (externalNodeKeys.contains(targetKey)) {
+            val edge = JsonObject()
+            edge.addProperty("type", "static")
+            edge.addProperty("source", "maven:${dep.groupId}:${dep.artifactId}")
+            edge.addProperty("target", "maven:${targetKey}")
+            edges.add(edge)
+          }
+        }
+      } catch (e: Exception) {
+        log.debug("Could not parse POM for ${dep.groupId}:${dep.artifactId}:${version}: ${e.message}")
+      }
+    }
+
+    log.info("Generated ${edges.size} external-to-external dependency edges")
+    return edges
   }
 
   private fun generateCoordinatesMap(

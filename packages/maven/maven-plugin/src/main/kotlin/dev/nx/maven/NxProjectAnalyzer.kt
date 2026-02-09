@@ -103,16 +103,17 @@ class NxProjectAnalyzer(
     }
 
     // Collect external dependencies (not in coordinatesMap)
-    val externalDependencies = project.dependencies
-      .filter { dependency ->
-        !coordinatesMap.containsKey("${dependency.groupId}:${dependency.artifactId}")
+    // Use project.artifacts (includes transitive deps) instead of project.dependencies (direct only)
+    val externalDependencies = project.artifacts
+      .filter { artifact ->
+        !coordinatesMap.containsKey("${artifact.groupId}:${artifact.artifactId}")
       }
-      .map { dependency ->
+      .map { artifact ->
         ExternalMavenDependency(
-          groupId = dependency.groupId,
-          artifactId = dependency.artifactId,
-          version = dependency.version,
-          scope = dependency.scope
+          groupId = artifact.groupId,
+          artifactId = artifact.artifactId,
+          version = artifact.version,
+          scope = artifact.scope
         )
       }
 
