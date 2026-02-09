@@ -464,10 +464,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     if (!this.worker?.pid) return;
     (async () => {
       try {
-        const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+        const { isOnDaemon } = await import('../../../daemon/is-on-daemon.js');
         if (!isOnDaemon()) {
           const { getProcessMetricsService } = await import(
-            '../../../tasks-runner/process-metrics-service'
+            '../../../tasks-runner/process-metrics-service.js'
           );
           getProcessMetricsService().registerMainCliSubprocess(
             this.worker.pid,
