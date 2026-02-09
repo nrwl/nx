@@ -13,7 +13,7 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 2
+        parallelism: 4
   - projects:
       - e2e-angular
       - e2e-node
@@ -22,7 +22,7 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 2
 
   - projects:
       - nx
@@ -34,9 +34,9 @@ assignment-rules:
       - test
     run-on:
       - agent: linux-large
-        parallelism: 1
+        parallelism: 2
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 2
 
   - projects:
       - e2e-release
@@ -56,18 +56,18 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-large
-        parallelism: 1
-      - agent: linux-extra-large
         parallelism: 2
+      - agent: linux-extra-large
+        parallelism: 4
 
   # All other e2e tests can run in parallel
   - targets:
       - e2e-ci**
     run-on:
       - agent: linux-large
-        parallelism: 2
-      - agent: linux-extra-large
         parallelism: 3
+      - agent: linux-extra-large
+        parallelism: 4
 
   # These projects should not need to be isolated.
   - projects:
@@ -84,20 +84,20 @@ assignment-rules:
       - test
     run-on:
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 2
 
   - targets:
       - lint
     run-on:
       - agent: linux-large
-        parallelism: 6
+        parallelism: 12
       - agent: linux-extra-large
-        parallelism: 6
+        parallelism: 24
 
   - targets:
       - "*"
     run-on:
       - agent: linux-large
-        parallelism: 3
+        parallelism: 6
       - agent: linux-extra-large
-        parallelism: 3
+        parallelism: 6
