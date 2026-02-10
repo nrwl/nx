@@ -44,7 +44,7 @@ export class ForkedProcessTaskRunner {
 
   // TODO: vsavkin delegate terminal output printing
   public async forkProcessForBatch(
-    { executorName, taskGraph: batchTaskGraph }: Batch,
+    { id: batchId, executorName, taskGraph: batchTaskGraph }: Batch,
     projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
@@ -73,7 +73,6 @@ export class ForkedProcessTaskRunner {
 
     // Register batch worker process with all tasks
     if (p.pid) {
-      const batchId = `${executorName}-${p.pid}`;
       const taskIds = Object.keys(batchTaskGraph.tasks);
       getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
     }
