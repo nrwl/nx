@@ -1,3 +1,5 @@
+import { exitAndFlushAnalytics } from '../analytics/analytics';
+
 /**
  * This is meant to be used with `git filter-branch --tree-filter` to rewrite
  * history to only include commits related to the source project folder. If the
@@ -37,5 +39,5 @@ try {
   }
 } catch (error) {
   console.error(`Error executing Git commands: ${error}`);
-  process.exit(1);
+  exitAndFlushAnalytics(1);
 }
