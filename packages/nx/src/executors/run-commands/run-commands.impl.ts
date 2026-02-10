@@ -54,6 +54,7 @@ const propKeys = [
   'parallel',
   'no-parallel',
   'readyWhen',
+  'readyWhenStatus',
   'cwd',
   'args',
   'envFile',
@@ -238,7 +239,10 @@ function normalizeOptions(
 }
 
 function isArrayOfStrings(arg: unknown): arg is Array<string> {
-  return Array.isArray(arg) && arg.every((item) => typeof item === 'string');
+  if (Array.isArray(arg)) {
+    return arg.every((item) => typeof item === 'string');
+  }
+  return false;
 }
 
 export function interpolateArgsIntoCommand(
