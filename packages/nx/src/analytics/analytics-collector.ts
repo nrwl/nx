@@ -116,6 +116,32 @@ export class AnalyticsCollector {
     }
   }
 
+  serialize(): string {
+    return JSON.stringify({
+      events: this.eventsQueue ?? [],
+      pageViews: this.pageViewQueue ?? [],
+      commonRequestParameters: this.commonRequestParameters,
+      userParameters: this.userParameters,
+    });
+  }
+
+  deserialize(serialized: string): void {
+    const { events, pageViews, commonRequestParameters, userParameters } =
+      JSON.parse(serialized);
+    this.eventsQueue = events;
+    this.pageViewQueue = pageViews;
+    this.commonRequestParameters = commonRequestParameters;
+    this.userParameters = userParameters;
+  }
+
+  static fromSerialized(serialized: string): AnalyticsCollector {
+    const collector = new AnalyticsCollector('_', '', '0.0.0', {
+      name: 'npm',
+    });
+    collector.deserialize(serialized);
+    return collector;
+  }
+
   private async send() {
     const eventsPromise = this.createRequest(
       this.commonRequestParameters,
