@@ -6,7 +6,11 @@ import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped } from '../constants';
 import * as packageJsonUtils from '../../utils/package-json';
+import * as cloneAiConfigRepo from '../clone-ai-config-repo';
 import * as fs from 'fs';
+import { join } from 'path';
+import { mkdirSync, writeFileSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
@@ -464,6 +468,183 @@ describe('setup-ai-agents generator', () => {
         expect(tree.exists('CLAUDE.md')).toBe(false);
         expect(tree.exists('.mcp.json')).toBe(false);
         expect(tree.exists('.gemini/settings.json')).toBe(false);
+      });
+    });
+
+    describe('extensibility artifacts', () => {
+      let tmpRepoPath: string;
+      let getAiConfigRepoPathSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        tmpRepoPath = mkdtempSync(join(tmpdir(), 'nx-ai-config-test-'));
+
+        // Create per-agent generated directories with test files
+        for (const dir of [
+          '.cursor/agents',
+          '.cursor/commands',
+          '.opencode/agents',
+          '.opencode/commands',
+          '.github/skills/nx-workspace',
+          '.codex/skills/nx-workspace',
+          '.gemini/skills/nx-workspace',
+          '.agents/skills/nx-workspace',
+        ]) {
+          mkdirSync(join(tmpRepoPath, 'generated', dir), { recursive: true });
+        }
+
+        // Write test skill files into per-agent dirs
+        for (const agentDir of ['.github', '.codex', '.gemini']) {
+          writeFileSync(
+            join(
+              tmpRepoPath,
+              'generated',
+              agentDir,
+              'skills/nx-workspace/SKILL.md'
+            ),
+            `# ${agentDir} skill`
+          );
+        }
+
+        // Write test files into per-agent agent/command dirs
+        writeFileSync(
+          join(tmpRepoPath, 'generated', '.cursor/agents/test-agent.md'),
+          '# Cursor agent'
+        );
+        writeFileSync(
+          join(tmpRepoPath, 'generated', '.cursor/commands/test-command.md'),
+          '# Cursor command'
+        );
+        writeFileSync(
+          join(tmpRepoPath, 'generated', '.opencode/agents/test-agent.md'),
+          '# OpenCode agent'
+        );
+        writeFileSync(
+          join(tmpRepoPath, 'generated', '.opencode/commands/test-command.md'),
+          '# OpenCode command'
+        );
+
+        // Write shared .agents/skills/ content
+        writeFileSync(
+          join(
+            tmpRepoPath,
+            'generated',
+            '.agents/skills/nx-workspace/SKILL.md'
+          ),
+          '# Shared skill'
+        );
+
+        getAiConfigRepoPathSpy = jest
+          .spyOn(cloneAiConfigRepo, 'getAiConfigRepoPath')
+          .mockReturnValue(tmpRepoPath);
+      });
+
+      afterEach(() => {
+        getAiConfigRepoPathSpy.mockRestore();
+        rmSync(tmpRepoPath, { recursive: true, force: true });
+      });
+
+      it('should copy .agents/skills/ when cursor is selected', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['cursor'],
+        });
+
+        // Per-agent artifacts copied (agents + commands only, no skills)
+        expect(tree.exists('.cursor/agents/test-agent.md')).toBe(true);
+        expect(tree.exists('.cursor/commands/test-command.md')).toBe(true);
+        expect(tree.exists('.cursor/skills')).toBe(false);
+
+        // Shared .agents/skills/ copied instead
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(true);
+        expect(
+          tree.read('.agents/skills/nx-workspace/SKILL.md')?.toString()
+        ).toContain('Shared skill');
+      });
+
+      it('should copy .agents/skills/ when opencode is selected', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['opencode'],
+        });
+
+        // Per-agent artifacts copied (agents + commands only, no skills)
+        expect(tree.exists('.opencode/agents/test-agent.md')).toBe(true);
+        expect(tree.exists('.opencode/commands/test-command.md')).toBe(true);
+        expect(tree.exists('.opencode/skills')).toBe(false);
+
+        // Shared .agents/skills/ copied instead
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(true);
+      });
+
+      it('should NOT copy .agents/skills/ when only claude is selected', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['claude'],
+        });
+
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(false);
+      });
+
+      it('should NOT copy .agents/skills/ when only copilot is selected', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['copilot'],
+        });
+
+        // copilot gets its own per-agent skills
+        expect(tree.exists('.github/skills/nx-workspace/SKILL.md')).toBe(true);
+
+        // but NOT shared .agents/skills/
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(false);
+      });
+
+      it('should NOT copy .agents/skills/ when only gemini is selected', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['gemini'],
+        });
+
+        expect(tree.exists('.gemini/skills/nx-workspace/SKILL.md')).toBe(true);
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(false);
+      });
+
+      it('should NOT copy .agents/skills/ when only codex is selected', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['codex'],
+        });
+
+        expect(tree.exists('.codex/skills/nx-workspace/SKILL.md')).toBe(true);
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(false);
+      });
+
+      it('should copy .agents/skills/ when cursor is among multiple agents', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['copilot', 'cursor', 'codex'],
+        });
+
+        // Each agent gets its own per-agent artifacts
+        expect(tree.exists('.github/skills/nx-workspace/SKILL.md')).toBe(true);
+        expect(tree.exists('.cursor/agents/test-agent.md')).toBe(true);
+        expect(tree.exists('.codex/skills/nx-workspace/SKILL.md')).toBe(true);
+
+        // Shared .agents/skills/ also copied because cursor is selected
+        expect(tree.exists('.agents/skills/nx-workspace/SKILL.md')).toBe(true);
+      });
+
+      it('should respect custom directory for .agents/skills/', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: 'custom-dir',
+          agents: ['cursor'],
+        });
+
+        expect(
+          tree.exists('custom-dir/.agents/skills/nx-workspace/SKILL.md')
+        ).toBe(true);
+        expect(tree.exists('custom-dir/.cursor/agents/test-agent.md')).toBe(
+          true
+        );
       });
     });
 

@@ -284,6 +284,15 @@ export async function setupAiAgentsGeneratorImpl(
         }
       }
     }
+
+    // Write shared .agents/skills/ when a supporting agent is selected
+    const agentsSupportingSharedSkills: Agent[] = ['cursor', 'opencode'];
+    if (agentsSupportingSharedSkills.some((a) => hasAgent(a))) {
+      const srcPath = join(repoPath, 'generated', '.agents');
+      if (existsSync(srcPath)) {
+        generateFiles(tree, srcPath, join(options.directory, '.agents'), {});
+      }
+    }
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
