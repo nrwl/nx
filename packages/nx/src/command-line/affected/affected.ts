@@ -60,7 +60,6 @@ export async function affected(
     exitOnError: true,
   });
   const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
-
   try {
     switch (command) {
       case 'affected': {
