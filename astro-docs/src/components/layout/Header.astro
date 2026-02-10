@@ -509,7 +509,7 @@ const currentVersion = versions.find((v) => v.current);
 </div>
 
 <script>
-  import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+  import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
   function setupAnalyticsTracking() {
     const docsHomeLink = document.getElementById('header-docs-home-link');
@@ -521,7 +521,7 @@ const currentVersion = versions.find((v) => v.current);
     const tryNxCloudBtn = document.getElementById('header-try-nx-cloud-btn');
 
     docsHomeLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'documentation-click',
         'header-navigation',
         'documentation-header'
@@ -529,7 +529,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     aiLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'ai-click',
         'header-navigation',
         'documentation-header'
@@ -537,7 +537,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     nxCloudLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'nx-cloud-click',
         'header-navigation',
         'documentation-header'
@@ -545,7 +545,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     pricingLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'pricing-click',
         'header-navigation',
         'documentation-header'
@@ -553,7 +553,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     enterpriseLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'enterprise-click',
         'header-navigation',
         'documentation-header'
@@ -561,11 +561,19 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     contactBtn?.addEventListener('click', () => {
-      sendCustomEvent('contact-click', 'header-cta', 'documentation-header');
+      sendCustomEventViaGtm(
+        'contact-click',
+        'header-cta',
+        'documentation-header'
+      );
     });
 
     tryNxCloudBtn?.addEventListener('click', () => {
-      sendCustomEvent('login-click', 'header-cta', 'documentation-header');
+      sendCustomEventViaGtm(
+        'login-click',
+        'header-cta',
+        'documentation-header'
+      );
     });
   }
 

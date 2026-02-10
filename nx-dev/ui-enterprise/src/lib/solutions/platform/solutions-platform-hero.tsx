@@ -9,7 +9,7 @@ import {
   VideoPlayerButton,
   VideoPlayerModal,
 } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { PayfitIcon } from '@nx/nx-dev-ui-icons';
 import { WebinarSection } from '../../webinar-section';
@@ -47,7 +47,7 @@ export function SolutionsPlatformHero(): ReactElement {
               variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'solutions-platform-hero',
                   'solutions-platform'
@@ -63,7 +63,7 @@ export function SolutionsPlatformHero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'subscribe-newsletter-click',
                   'solutions-platform-hero',
                   'solutions-platform'

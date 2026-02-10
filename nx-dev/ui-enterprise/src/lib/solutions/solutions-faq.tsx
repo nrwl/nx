@@ -10,7 +10,7 @@ import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { ReactElement } from 'react';
 
 export function SolutionsFaq(): ReactElement {
@@ -89,7 +89,7 @@ export function SolutionsFaq(): ReactElement {
                 title="Reach out to the team"
                 className="font-semibold"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'contact-click',
                     'solutions-faq-more-questions',
                     'solutions'

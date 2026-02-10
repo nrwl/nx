@@ -9,7 +9,6 @@ let globalId = 0;
 
 declare const window: {
   hbspt: any;
-  Cookiebot?: any;
 };
 
 declare const Calendly: any;
@@ -50,12 +49,6 @@ export class HubspotForm extends Component<
   createForm(): void {
     if (typeof window === 'undefined') return;
 
-    // Check if user has consented to marketing cookies
-    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
-      // Don't create form if marketing consent is not given
-      return;
-    }
-
     if (window.hbspt) {
       // protect against component unmounting before window.hbspt is available
       if (this.el === null) {
@@ -85,23 +78,6 @@ export class HubspotForm extends Component<
     } else {
       setTimeout(this.createForm, 1);
     }
-  }
-
-  loadScript() {
-    // Check if user has consented to marketing cookies
-    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
-      // Don't load script if marketing consent is not given
-      return;
-    }
-
-    const script = document.createElement(`script`);
-    script.defer = true;
-    script.onload = () => {
-      this.createForm();
-      this.findFormElement();
-    };
-    script.src = `//js.hsforms.net/forms/v2.js`;
-    document.head.appendChild(script);
   }
 
   findFormElement() {
@@ -144,30 +120,9 @@ export class HubspotForm extends Component<
   }
 
   override componentDidMount() {
-    // Function to initialize when consent is available
-    const initialize = () => {
-      if (!window.hbspt && !this.props.noScript) {
-        this.loadScript();
-      } else {
-        this.createForm();
-        this.findFormElement();
-      }
-    };
-
-    // Check if Cookiebot is loaded and consent is given
-    if (
-      process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE === 'true' ||
-      (window.Cookiebot && window.Cookiebot.consent?.marketing)
-    ) {
-      initialize();
-    } else {
-      // Listen for consent acceptance
-      window.addEventListener('CookiebotOnAccept', () => {
-        if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
-          initialize();
-        }
-      });
-    }
+    // HubSpot scripts are loaded via GTM; createForm will retry until available.
+    this.createForm();
+    this.findFormElement();
   }
 
   override render() {

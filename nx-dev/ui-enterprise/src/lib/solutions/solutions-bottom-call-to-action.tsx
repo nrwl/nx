@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function SolutionsBottomCallToAction(): ReactElement {
@@ -71,7 +71,7 @@ export function SolutionsBottomCallToAction(): ReactElement {
               title="Talk to our team"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-team',
                   'enterprise-security-bottom-cta',
                   'enterprise-security'

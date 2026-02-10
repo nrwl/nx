@@ -1,4 +1,4 @@
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import type { ReactElement } from 'react';
 
 export const GithubIcon = (props: any) => {
@@ -30,7 +30,7 @@ export function GitHubStarWidget({
   };
 
   const handleClick = (eventAction: string) => {
-    sendCustomEvent(
+    sendCustomEventViaGtm(
       eventAction,
       'githubstars-toc-sidebar',
       'githubstarswidget'
