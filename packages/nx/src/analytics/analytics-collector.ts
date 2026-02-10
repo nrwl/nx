@@ -80,15 +80,15 @@ export class AnalyticsCollector {
       return;
     }
 
-    // Prevents reporting the same event multiple times.
-    this.eventsQueue = undefined;
-    this.pageViewQueue = undefined;
-
     try {
       await this.send();
     } catch (error) {
       // Failure to report analytics shouldn't crash the CLI.
       logger.verbose(`Analytics Send Error: ${error.message}.`);
+    } finally {
+      // Prevents reporting the same event multiple times.
+      this.eventsQueue = undefined;
+      this.pageViewQueue = undefined;
     }
   }
 
