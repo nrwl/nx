@@ -12,6 +12,9 @@ import {
   EventCustomMetric,
   ParameterValue,
 } from './parameter';
+import { extname, join } from 'path';
+import { writeFileSync } from 'fs';
+import { spawn } from 'child_process';
 
 let _analyticsCollector: AnalyticsCollector = null;
 let _currentMachineId: string = null;
@@ -78,6 +81,36 @@ export async function flushAnalytics() {
   if (_analyticsCollector) {
     await _analyticsCollector.flush();
   }
+}
+
+let processorSpawned = false;
+export function exitAndFlushAnalytics(code: string | number): never {
+  if (_analyticsCollector && !processorSpawned) {
+    processorSpawned = true;
+
+    const analyticsBufferFile = join(workspaceRoot, '.nx', 'analytics.json');
+    writeFileSync(analyticsBufferFile, _analyticsCollector.serialize());
+
+    const pathToProcessor = require.resolve('./analytics-processor');
+    const isUsingTS = extname(pathToProcessor) === '.ts';
+    spawn(
+      `node ${pathToProcessor}`,
+      isUsingTS ? ['--require', 'ts-node/register'] : [],
+      {
+        env: isUsingTS
+          ? {
+              TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+                module: 'commonjs',
+                moduleResolution: 'node',
+              }),
+            }
+          : {},
+        detached: true,
+        stdio: 'ignore',
+      }
+    ).unref();
+  }
+  process.exit(code);
 }
 
 function getPackageManagerInfo() {
