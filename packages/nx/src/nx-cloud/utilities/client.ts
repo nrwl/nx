@@ -1,6 +1,7 @@
 import { findAncestorNodeModules } from '../resolution-helpers';
 import { verifyOrUpdateNxCloudClient } from '../update-manager';
 import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export class UnknownCommandError extends Error {
   constructor(
@@ -23,13 +24,13 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
         nxCloudClient.commands[command]()
           .then(() => {
             if (exit) {
-              process.exit(0);
+              exitAndFlushAnalytics(0);
             }
           })
           .catch((e) => {
             console.error(e);
             if (exit) {
-              process.exit(1);
+              exitAndFlushAnalytics(1);
             }
             throw e;
           });

@@ -13,6 +13,7 @@ import {
   RemoteRepoData,
   RemoteRepoSlug,
 } from './remote-release-client';
+import { exitAndFlushAnalytics } from '../../../../analytics/analytics';
 
 export interface GitLabRepoData extends RemoteRepoData {
   projectId: string;
@@ -303,7 +304,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       // Ensure the cursor is always restored before exiting
       process.stdout.write('\u001b[?25h');
       // Handle the case where the user exits the prompt with ctrl+c
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
 

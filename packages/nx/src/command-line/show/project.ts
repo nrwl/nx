@@ -10,6 +10,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { readNxJson } from '../../config/configuration';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function showProjectHandler(
   args: ShowProjectOptions
@@ -41,7 +42,7 @@ export async function showProjectHandler(
           `Or run this command from within a project directory.`,
         ],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
 
@@ -63,10 +64,10 @@ export async function showProjectHandler(
           : projects
         ).join('  \n')}`
       );
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     } else {
       console.log(`Could not find project ${projectName}`);
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
   if (args.json) {

@@ -22,6 +22,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { flushAnalytics, reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function runOne(
   cwd: string,
@@ -70,7 +71,7 @@ export async function runOne(
       },
       workspaceRoot
     );
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
@@ -104,7 +105,7 @@ export async function runOne(
       extraOptions
     );
     await flushAnalytics();
-    process.exit(status);
+    exitAndFlushAnalytics(status);
   }
 }
 
@@ -142,14 +143,14 @@ function getProjects(
         bodyLines:
           projects.length > 100 ? [...projects.slice(0, 100), '...'] : projects,
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
 
   output.error({
     title: `Cannot find project '${projectName}'`,
   });
-  process.exit(1);
+  exitAndFlushAnalytics(1);
 }
 
 const targetAliases = {

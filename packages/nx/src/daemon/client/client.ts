@@ -120,6 +120,7 @@ import {
   Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -442,7 +443,7 @@ export class DaemonClient {
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb('closed', null);
             }
-            process.exit(1);
+            exitAndFlushAnalytics(1);
           }
           for (const cb of this.fileWatcherCallbacks.values()) {
             cb(err, null);
@@ -546,7 +547,7 @@ export class DaemonClient {
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb('closed', null);
             }
-            process.exit(1);
+            exitAndFlushAnalytics(1);
           }
           // Other errors during reconnection - let retry loop handle
         }
@@ -637,7 +638,7 @@ export class DaemonClient {
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb('closed', null);
             }
-            process.exit(1);
+            exitAndFlushAnalytics(1);
           }
           for (const cb of this.projectGraphListenerCallbacks.values()) {
             cb(err, null);
@@ -740,7 +741,7 @@ export class DaemonClient {
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb('closed', null);
             }
-            process.exit(1);
+            exitAndFlushAnalytics(1);
           }
           // Other errors during reconnection - let retry loop handle
         }

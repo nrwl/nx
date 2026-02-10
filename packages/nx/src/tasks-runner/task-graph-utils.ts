@@ -1,6 +1,7 @@
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { output } from '../utils/output';
+import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 function _findCycle(
   graph: {
@@ -159,7 +160,7 @@ export function validateNoAtomizedTasks(
       ],
     });
   }
-  process.exit(1);
+  exitAndFlushAnalytics(1);
 }
 
 export function assertTaskGraphDoesNotContainInvalidTargets(
