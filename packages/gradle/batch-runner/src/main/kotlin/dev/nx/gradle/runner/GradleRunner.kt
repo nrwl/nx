@@ -91,6 +91,7 @@ fun runBuildLauncher(
 
   val taskStartTimes = ConcurrentHashMap<String, Long>()
   val taskResults = ConcurrentHashMap<String, TaskResult>()
+  val pendingResults = ConcurrentHashMap<String, TaskResult>()
   val taskOutputBuffers = ConcurrentHashMap<String, StringBuilder>()
 
   // Track current task for output attribution
@@ -117,6 +118,9 @@ fun runBuildLauncher(
                     normalizeTaskPath(it.value.taskName) == normalizeTaskPath(gradleTaskName)
                   }
                   ?.key
+          // Flush pending results before switching task context —
+          // the previous task's output is now complete
+          flushPendingResults(pendingResults, taskOutputBuffers, taskResults)
           currentTaskRef.set(nxTaskId)
           nxTaskId?.let { taskOutputBuffers.getOrPut(it) { StringBuilder() } }
         }
@@ -137,16 +141,25 @@ fun runBuildLauncher(
           setStandardError(errorStream)
           withDetailedFailure()
           addProgressListener(
-              streamingBuildListener(tasks, taskStartTimes, taskResults, taskOutputBuffers),
-              OperationType.TASK)
+              streamingBuildListener(tasks, taskStartTimes, pendingResults), OperationType.TASK)
         }
         .run()
   } catch (e: Exception) {
     logger.warning("\uD83D\uDCA5 Gradle run failed: ${e.message}")
+    // Flush any pending results that have output ready
+    flushPendingResults(pendingResults, taskOutputBuffers, taskResults)
+    val errorOutput = errorStream.toString()
     // Emit failures for any tasks that didn't complete
     emitFailuresForIncompleteTasks(
-        tasks, taskResults, taskStartTimes, taskOutputBuffers, e.message ?: "Unknown error")
+        tasks,
+        taskResults,
+        taskStartTimes,
+        taskOutputBuffers,
+        e.message ?: "Unknown error",
+        errorOutput)
   } finally {
+    // Flush any remaining pending results (covers the last task in a successful build)
+    flushPendingResults(pendingResults, taskOutputBuffers, taskResults)
     teeOutputStream.close()
     errorStream.close()
   }
@@ -173,6 +186,7 @@ fun runTestLauncher(
   val testStartTimes = ConcurrentHashMap<String, Long>()
   val testEndTimes = ConcurrentHashMap<String, Long>()
   val taskOutputBuffers = ConcurrentHashMap<String, StringBuilder>()
+  val pendingResults = ConcurrentHashMap<String, TaskResult>()
   val taskResults = ConcurrentHashMap<String, TaskResult>()
 
   // Track current task for output attribution
@@ -205,6 +219,9 @@ fun runTestLauncher(
                 normalizeTaskPath(it.value.taskName) == normalizeTaskPath(gradleTaskName)
               }
           if (matchingTasks.isNotEmpty()) {
+            // Flush pending results before switching task context —
+            // the previous task's output is now complete
+            flushPendingResults(pendingResults, taskOutputBuffers, taskResults)
             // Use the first matching task as current (output will be duplicated to all matching
             // tasks)
             currentTaskRef.set(matchingTasks.first().key)
@@ -240,12 +257,7 @@ fun runTestLauncher(
           setStandardError(errorStream)
           addProgressListener(
               streamingTestListener(
-                  tasks,
-                  testTaskStatus,
-                  testStartTimes,
-                  testEndTimes,
-                  taskOutputBuffers,
-                  taskResults),
+                  tasks, testTaskStatus, testStartTimes, testEndTimes, pendingResults),
               eventTypes)
           withDetailedFailure()
         }
@@ -254,10 +266,20 @@ fun runTestLauncher(
     logger.info("✅ Build cancelled gracefully by token.")
   } catch (e: Exception) {
     logger.warning("\uD83D\uDCA5 Gradle test run failed: ${e.message}")
+    // Flush any pending results that have output ready
+    flushPendingResults(pendingResults, taskOutputBuffers, taskResults)
+    val errorOutput = errorStream.toString()
     // Emit failures for any tasks that didn't complete
     emitFailuresForIncompleteTestTasks(
-        tasks, taskResults, testStartTimes, taskOutputBuffers, e.message ?: "Unknown error")
+        tasks,
+        taskResults,
+        testStartTimes,
+        taskOutputBuffers,
+        e.message ?: "Unknown error",
+        errorOutput)
   } finally {
+    // Flush any remaining pending results (covers the last task in a successful build)
+    flushPendingResults(pendingResults, taskOutputBuffers, taskResults)
     teeOutputStream.close()
     errorStream.close()
   }
@@ -274,12 +296,11 @@ fun runTestLauncher(
   return taskResults.toMap()
 }
 
-/** Progress listener that emits NX_RESULT to stderr when build tasks complete. */
+/** Progress listener that stashes build task results as pending for deferred emission. */
 private fun streamingBuildListener(
     tasks: Map<String, GradleTask>,
     taskStartTimes: ConcurrentHashMap<String, Long>,
-    taskResults: ConcurrentHashMap<String, TaskResult>,
-    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>
+    pendingResults: ConcurrentHashMap<String, TaskResult>,
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
@@ -314,26 +335,22 @@ private fun streamingBuildListener(
           ?.let { nxTaskId ->
             val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
-            val output = taskOutputBuffers[nxTaskId]?.toString() ?: ""
-
-            val result = TaskResult(success, startTime, endTime, output)
-            taskResults[nxTaskId] = result
-
-            // Emit result to stderr immediately
-            emitResult(nxTaskId, result)
+            // Stash result as pending — output may not have flushed yet.
+            // It will be emitted when the next "> Task" header is detected or in finally.
+            val result = TaskResult(success, startTime, endTime, "")
+            pendingResults[nxTaskId] = result
           }
     }
   }
 }
 
-/** Progress listener that emits NX_RESULT to stderr when test tasks complete. */
+/** Progress listener that stashes test task results as pending for deferred emission. */
 private fun streamingTestListener(
     tasks: Map<String, GradleTask>,
     testTaskStatus: ConcurrentHashMap<String, Boolean>,
     testStartTimes: ConcurrentHashMap<String, Long>,
     testEndTimes: ConcurrentHashMap<String, Long>,
-    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
-    taskResults: ConcurrentHashMap<String, TaskResult>
+    pendingResults: ConcurrentHashMap<String, TaskResult>,
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskFinishEvent -> {
@@ -407,17 +424,35 @@ private fun streamingTestListener(
               }
             }
 
-        val startTime = testStartTimes[taskId] ?: event.result.startTime
+        val startTime2 = testStartTimes[taskId] ?: event.result.startTime
         val endTime = event.result.endTime
-        val output = taskOutputBuffers[taskId]?.toString() ?: ""
-
-        val result = TaskResult(success, startTime, endTime, output)
-        taskResults[taskId] = result
-
-        // Emit result to stderr immediately
-        emitResult(taskId, result)
+        // Stash result as pending — output may not have flushed yet.
+        // It will be emitted when the next "> Task" header is detected or in finally.
+        val result = TaskResult(success, startTime2, endTime, "")
+        pendingResults[taskId] = result
       }
     }
+  }
+}
+
+/**
+ * Flush pending results that were deferred from TaskFinishEvent/TestFinishEvent. Reads the
+ * now-complete output from taskOutputBuffers, updates the result, stores in taskResults, emits via
+ * emitResult(), and removes from pendingResults.
+ */
+private fun flushPendingResults(
+    pendingResults: ConcurrentHashMap<String, TaskResult>,
+    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
+    taskResults: ConcurrentHashMap<String, TaskResult>
+) {
+  val iterator = pendingResults.entries.iterator()
+  while (iterator.hasNext()) {
+    val (taskId, pending) = iterator.next()
+    val output = taskOutputBuffers[taskId]?.toString() ?: ""
+    val result = TaskResult(pending.success, pending.startTime, pending.endTime, output)
+    taskResults[taskId] = result
+    emitResult(taskId, result)
+    iterator.remove()
   }
 }
 
@@ -446,19 +481,25 @@ private fun emitFailuresForIncompleteTasks(
     taskResults: ConcurrentHashMap<String, TaskResult>,
     taskStartTimes: ConcurrentHashMap<String, Long>,
     taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
-    errorMessage: String
+    errorMessage: String,
+    errorOutput: String = ""
 ) {
   val currentTime = System.currentTimeMillis()
   tasks.forEach { (taskId, _) ->
     if (!taskResults.containsKey(taskId)) {
       val startTime = taskStartTimes[taskId] ?: currentTime
       val output = taskOutputBuffers[taskId]?.toString() ?: ""
+      val combinedOutput = buildString {
+        if (output.isNotBlank()) appendLine(output)
+        if (errorOutput.isNotBlank()) appendLine(errorOutput)
+        appendLine("Exception occurred: $errorMessage")
+      }
       val result =
           TaskResult(
               success = false,
               startTime = startTime,
               endTime = currentTime,
-              terminalOutput = "$output\nException occurred: $errorMessage")
+              terminalOutput = combinedOutput)
       taskResults[taskId] = result
       emitResult(taskId, result)
     }
@@ -471,19 +512,25 @@ private fun emitFailuresForIncompleteTestTasks(
     taskResults: ConcurrentHashMap<String, TaskResult>,
     testStartTimes: ConcurrentHashMap<String, Long>,
     taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
-    errorMessage: String
+    errorMessage: String,
+    errorOutput: String = ""
 ) {
   val currentTime = System.currentTimeMillis()
   tasks.forEach { (taskId, _) ->
     if (!taskResults.containsKey(taskId)) {
       val startTime = testStartTimes[taskId] ?: currentTime
       val output = taskOutputBuffers[taskId]?.toString() ?: ""
+      val combinedOutput = buildString {
+        if (output.isNotBlank()) appendLine(output)
+        if (errorOutput.isNotBlank()) appendLine(errorOutput)
+        appendLine("Exception occurred: $errorMessage")
+      }
       val result =
           TaskResult(
               success = false,
               startTime = startTime,
               endTime = currentTime,
-              terminalOutput = "$output\nException occurred: $errorMessage")
+              terminalOutput = combinedOutput)
       taskResults[taskId] = result
       emitResult(taskId, result)
     }
