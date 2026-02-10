@@ -24,6 +24,7 @@ import { RunningTask } from './running-tasks/running-task';
 import { registerTaskProcessStart } from './task-io-service';
 import { Batch } from './tasks-schedule';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
+import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -251,7 +252,7 @@ export class ForkedProcessTaskRunner {
 
     p.onExit((code) => {
       if (!this.tuiEnabled && code > 128) {
-        process.exit(code);
+        exitAndFlushAnalytics(code);
       }
       this.pseudoTerminals.delete(pseudoTerminal);
       this.processes.delete(p);
@@ -446,7 +447,7 @@ export class ForkedProcessTaskRunner {
       this.cleanup('SIGTERM');
       process.off('message', messageHandler);
       // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
+      exitAndFlushAnalytics(signalToCode('SIGINT'));
     });
     process.once('SIGTERM', () => {
       this.cleanup('SIGTERM');

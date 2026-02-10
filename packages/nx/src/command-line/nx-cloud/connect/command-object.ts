@@ -2,6 +2,7 @@ import { Argv, CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../../yargs-utils/documentation';
 import { nxVersion } from '../../../utils/versions';
 import { withVerbose } from '../../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsConnectCommand: CommandModule = {
   command: 'connect',
@@ -21,7 +22,7 @@ export const yargsConnectCommand: CommandModule = {
       nxVersion,
       useCloud: true,
     });
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   },
 };
 
@@ -38,5 +39,5 @@ export const yargsViewLogsCommand: CommandModule = {
   describe:
     'Enables you to view and interact with the logs via the advanced analytic UI from Nx Cloud to help you debug your issue. To do this, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details. Only the metrics are uploaded, not the artefacts.',
   handler: async () =>
-    process.exit(await (await import('./view-logs')).viewLogs()),
+    exitAndFlushAnalytics(await (await import('./view-logs')).viewLogs()),
 };

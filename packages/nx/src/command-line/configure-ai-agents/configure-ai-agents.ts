@@ -17,6 +17,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
 import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -116,7 +117,7 @@ export async function configureAiAgentsHandlerImpl(
     output.error({
       title: 'Please select at least one AI agent to configure.',
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   // important for wording
@@ -135,7 +136,7 @@ export async function configureAiAgentsHandlerImpl(
             'You can configure AI agents by running `nx configure-ai-agents`.',
           ],
         });
-        process.exit(0);
+        exitAndFlushAnalytics(0);
       }
 
       if (outOfDateAgents.length === 0) {
@@ -143,7 +144,7 @@ export async function configureAiAgentsHandlerImpl(
           title: 'All configured AI agents are up to date',
           bodyLines: fullyConfiguredAgents.map((a) => `- ${a.displayName}`),
         });
-        process.exit(0);
+        exitAndFlushAnalytics(0);
       } else {
         output.log({
           title: 'The following AI agents are out of date:',
@@ -159,7 +160,7 @@ export async function configureAiAgentsHandlerImpl(
             'You can update them by running `nx configure-ai-agents`.',
           ],
         });
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       }
       // error on any partial, outdated or non-configured agent
     } else if (normalizedOptions.check === 'all') {
@@ -174,7 +175,7 @@ export async function configureAiAgentsHandlerImpl(
           } AI agents are fully configured and up to date`,
           bodyLines: fullyConfiguredAgents.map((a) => `- ${a.displayName}`),
         });
-        process.exit(0);
+        exitAndFlushAnalytics(0);
       }
 
       output.error({
@@ -185,7 +186,7 @@ export async function configureAiAgentsHandlerImpl(
           ...nonConfiguredAgents,
         ].map((a) => getAgentChoiceForPrompt(a).message),
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
   const allAgentChoices: AgentPromptChoice[] = [];
@@ -221,7 +222,7 @@ export async function configureAiAgentsHandlerImpl(
       } AI agents are already configured:`,
       bodyLines: fullyConfiguredAgents.map((agent) => `- ${agent.displayName}`),
     });
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 
   let selectedAgents: Agent[];
@@ -245,7 +246,7 @@ export async function configureAiAgentsHandlerImpl(
         } as any)
       ).agents;
     } catch {
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   } else {
     // in non-interactive mode, configure all
@@ -256,7 +257,7 @@ export async function configureAiAgentsHandlerImpl(
     output.log({
       title: 'No agents selected',
     });
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 
   const configSpinner = ora(`Configuring agent(s)...`).start();
@@ -292,7 +293,7 @@ export async function configureAiAgentsHandlerImpl(
       title: 'Error details:',
       bodyLines: [e.message],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 }
 

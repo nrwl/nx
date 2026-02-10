@@ -1,5 +1,6 @@
 import { Argv, CommandModule } from 'yargs';
 import { parseCSV } from '../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -27,11 +28,11 @@ export const yargsInitCommand: CommandModule = {
       } else {
         await require('./init-v1').initHandler(args);
       }
-      process.exit(0);
+      exitAndFlushAnalytics(0);
     } catch {
       // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
       process.stdout.write('\x1b[?25h');
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   },
 };

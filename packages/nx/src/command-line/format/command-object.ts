@@ -1,6 +1,7 @@
 import { CommandModule, Argv } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsFormatCheckCommand: CommandModule = {
   command: 'format:check',
@@ -9,7 +10,7 @@ export const yargsFormatCheckCommand: CommandModule = {
     linkToNxDevAndExamples(withFormatOptions(yargs), 'format:check'),
   handler: async (args) => {
     await (await import('./format')).format('check', args);
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   },
 };
 
@@ -21,7 +22,7 @@ export const yargsFormatWriteCommand: CommandModule = {
     linkToNxDevAndExamples(withFormatOptions(yargs), 'format:write'),
   handler: async (args) => {
     await (await import('./format')).format('write', args);
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   },
 };
 
