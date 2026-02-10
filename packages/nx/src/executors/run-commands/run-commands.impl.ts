@@ -235,10 +235,11 @@ function normalizeOptions(
     );
   });
   return options as NormalizedRunCommandsOptions;
-}
-
 function isArrayOfStrings(arg: unknown): arg is Array<string> {
-  return Array.isArray(arg) && arg.every((item) => typeof item === 'string');
+  if (Array.isArray(arg)) {
+    return arg.every((item) => typeof item === 'string');
+  }
+  return false;
 }
 
 export function interpolateArgsIntoCommand(
