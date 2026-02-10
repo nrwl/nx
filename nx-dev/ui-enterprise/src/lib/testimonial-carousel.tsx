@@ -7,7 +7,7 @@ import {
 } from './carousel';
 import { PayfitIcon, UkgIcon } from '@nx/nx-dev-ui-icons';
 import { PlayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { VideoModal } from '@nx/nx-dev-ui-common';
 
 export function Carousel({
@@ -91,7 +91,7 @@ export function TestimonialCarousel(): ReactElement {
                 <div
                   onClick={() => {
                     openVideo('https://youtu.be/Vdk-tza4PCs');
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'payfit-testimonial-video-click',
                       'testimonial-carousel',
                       'enterprise'
@@ -166,7 +166,7 @@ export function TestimonialCarousel(): ReactElement {
                 <div
                   onClick={() => {
                     openVideo('https://youtu.be/rSC8wihnfP4');
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'ukg-testimonial-video-click',
                       'testimonial-carousel',
                       'enterprise'

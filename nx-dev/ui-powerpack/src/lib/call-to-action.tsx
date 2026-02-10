@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { ReactElement } from 'react';
 
 export function CallToAction(): ReactElement {
@@ -65,7 +65,7 @@ export function CallToAction(): ReactElement {
             prefetch={false}
             className="group text-sm font-semibold leading-6 text-zinc-950 dark:text-white"
             onClick={() =>
-              sendCustomEvent(
+              sendCustomEventViaGtm(
                 'contact-sales-click',
                 'powerpack-footer-cta',
                 'powerpack'
