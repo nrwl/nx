@@ -418,6 +418,9 @@
   },
   "packageManager": "pnpm@10.11.1",
   "pnpm": {
+    "overrides": {
+      "ignore": "^5.0.4"
+    },
     "patchedDependencies": {
       "@tutorialkit/react": "patches/@tutorialkit__react.patch"
     },
