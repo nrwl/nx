@@ -3,7 +3,7 @@ distribute-on:
   small-changeset: 3 linux-large, 2 linux-extra-large
   medium-changeset: 3 linux-large, 2 linux-extra-large
   large-changeset: 3 linux-large, 3 linux-extra-large
-  extra-large-changeset: 4 linux-large, 4 linux-extra-large
+  extra-large-changeset: 4 linux-large, 3 linux-extra-large
 assignment-rules:
   - projects:
       - e2e-gradle
@@ -13,7 +13,7 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 4
+        parallelism: 6
   - projects:
       - e2e-angular
       - e2e-node
@@ -22,7 +22,16 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 2
+        parallelism: 4
+
+  # All other e2e tests can run in parallel
+  - targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-large
+        parallelism: 3
+      - agent: linux-extra-large
+        parallelism: 6
 
   - projects:
       - nx
@@ -37,37 +46,6 @@ assignment-rules:
         parallelism: 2
       - agent: linux-extra-large
         parallelism: 2
-
-  - projects:
-      - e2e-release
-      - e2e-nuxt
-      - e2e-web
-      - e2e-eslint
-      - e2e-remix
-      - e2e-cypress
-      - e2e-docker
-      - e2e-js
-      - e2e-nx
-      - e2e-nx-init
-      - e2e-dotnet
-      - e2e-workspace-create
-      - e2e-rollup
-    targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
-        parallelism: 2
-      - agent: linux-extra-large
-        parallelism: 4
-
-  # All other e2e tests can run in parallel
-  - targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
-        parallelism: 3
-      - agent: linux-extra-large
-        parallelism: 4
 
   # These projects should not need to be isolated.
   - projects:
