@@ -5,16 +5,6 @@ distribute-on:
   large-changeset: 4 linux-large, 3 linux-extra-large
   extra-large-changeset: 6 linux-large, 4 linux-extra-large
 assignment-rules:
-  # Heavy E2e tests
-  - projects:
-      - e2e-angular
-      - e2e-node
-      - e2e-react
-    targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-extra-large
-        parallelism: 4
 
   # All other e2e tests can run in parallel
   - targets:
