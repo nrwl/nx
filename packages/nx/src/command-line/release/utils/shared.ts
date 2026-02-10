@@ -15,6 +15,7 @@ import {
   sanitizeProjectNameForGitTag,
 } from './git';
 import { ReleaseGraph } from './release-graph';
+import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const noDiffInChangelogMessage = pc.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -405,7 +406,7 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
         `Please ensure that for "independent" release groups the {projectName} placeholder is used so that all dynamically created project tags are unique.`,
       ],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 }
 

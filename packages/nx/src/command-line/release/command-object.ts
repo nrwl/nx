@@ -13,6 +13,7 @@ import {
 } from '../yargs-utils/shared-options';
 import type { ReleaseGraph } from './utils/release-graph';
 import type { VersionData } from './utils/shared';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 // Implemented by every command and subcommand
 export interface BaseNxReleaseArgs {
@@ -192,7 +193,7 @@ export const yargsReleaseCommand: CommandModule<
       }) as any, // the type: 'string' and coerce: parseCSV combo isn't enough to produce the string[] type for projects and groups
   handler: async () => {
     showHelp();
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   },
 };
 
@@ -248,7 +249,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    process.exit(result);
+    exitAndFlushAnalytics(result);
   },
 };
 
@@ -288,7 +289,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    process.exit(result);
+    exitAndFlushAnalytics(result);
   },
 };
 
@@ -356,7 +357,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    process.exit(result);
+    exitAndFlushAnalytics(result);
   },
 };
 
@@ -396,7 +397,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    process.exit(status);
+    exitAndFlushAnalytics(status);
   },
 };
 
@@ -438,7 +439,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    process.exit(result);
+    exitAndFlushAnalytics(result);
   },
 };
 
@@ -450,7 +451,7 @@ const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
   handler: async (args) => {
     const release = await import('./plan-check');
     const result = await release.releasePlanCheckCLIHandler(args);
-    process.exit(result);
+    exitAndFlushAnalytics(result);
   },
 };
 

@@ -1,4 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsMcpCommand: CommandModule = {
   command: 'mcp',
@@ -7,7 +8,7 @@ export const yargsMcpCommand: CommandModule = {
   builder: async (y: Argv, helpOrVersionSet: boolean) => {
     if (helpOrVersionSet) {
       (await Promise.resolve().then(() => require('./mcp'))).showHelp();
-      process.exit(0);
+      exitAndFlushAnalytics(0);
     }
     return y
       .version(false)
@@ -22,6 +23,6 @@ export const yargsMcpCommand: CommandModule = {
   },
   handler: async (args: any) => {
     await (await import('./mcp')).mcpHandler(args);
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   },
 };
