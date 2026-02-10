@@ -6,6 +6,8 @@ import {
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/handle-errors';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface NxShowArgs {
   json?: boolean;
@@ -92,7 +94,7 @@ export const yargsShowCommand: CommandModule<
       ),
   handler: async (args) => {
     showHelp();
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   },
 };
 
@@ -158,7 +160,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       const { showProjectsHandler } = await import('./projects');
       await showProjectsHandler(args);
     });
-    process.exit(exitCode);
+    exitAndFlushAnalytics(exitCode);
   },
 };
 
@@ -215,7 +217,7 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       const { showProjectHandler } = await import('./project');
       await showProjectHandler(args);
     });
-    process.exit(exitCode);
+    exitAndFlushAnalytics(exitCode);
   },
 };
 

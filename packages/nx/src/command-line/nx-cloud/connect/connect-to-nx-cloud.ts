@@ -20,6 +20,7 @@ import { nxVersion } from '../../../utils/versions';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import * as pc from 'picocolors';
+import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 const ora = require('ora');
 const open = require('open');
 
@@ -58,7 +59,7 @@ export async function connectToNxCloudIfExplicitlyAsked(
     output.success({
       title: 'Your workspace has been successfully connected to Nx Cloud.',
     });
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 }
 

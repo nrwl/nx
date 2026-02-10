@@ -7,6 +7,7 @@ import {
   writeErrorLog,
   determineErrorCode,
 } from './utils/ai-output';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -44,6 +45,7 @@ export const yargsInitCommand: CommandModule = {
       } else {
         await require('./init-v1').initHandler(args);
       }
+<<<<<<< HEAD
       process.exit(0);
     } catch (error) {
       // Output structured error for AI agents
@@ -59,6 +61,13 @@ export const yargsInitCommand: CommandModule = {
         process.stdout.write('\x1b[?25h');
       }
       process.exit(1);
+=======
+      exitAndFlushAnalytics(0);
+    } catch {
+      // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
+      process.stdout.write('\x1b[?25h');
+      exitAndFlushAnalytics(1);
+>>>>>>> a97171e806 (feat(core): replace process.exit with exitAndFlushAnalytics across CLI)
     }
   },
 };

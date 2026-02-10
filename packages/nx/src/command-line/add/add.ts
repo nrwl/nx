@@ -22,6 +22,7 @@ import {
 } from '../init/configure-plugins';
 import { globalSpinner } from '../../utils/spinner';
 import { reportNxAddCommand } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -74,7 +75,7 @@ async function installPackage(
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
-            process.exit(1);
+            exitAndFlushAnalytics(1);
           }
 
           return resolve();
@@ -102,7 +103,7 @@ async function installPackage(
       output.error({
         title: `Failed to install ${pkgName}. Please check the error above for more details.`,
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
 
@@ -141,7 +142,7 @@ async function initializePlugin(
       title: `Failed to initialize ${pkgName}`,
       bodyLines: getFailedToInstallPluginErrorMessages(e),
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   spinner.succeed();

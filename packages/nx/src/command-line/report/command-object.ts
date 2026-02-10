@@ -1,4 +1,5 @@
 import { CommandModule } from 'yargs';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsReportCommand: CommandModule = {
   command: 'report',
@@ -6,6 +7,6 @@ export const yargsReportCommand: CommandModule = {
     'Reports useful version numbers to copy into the Nx issue template.',
   handler: async () => {
     await (await import('./report')).reportHandler();
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   },
 };
