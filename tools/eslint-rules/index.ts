@@ -7,6 +7,10 @@ import {
   rule as validCommandObject,
 } from './rules/valid-command-object';
 import {
+  RULE_NAME as useExitAndFlushAnalyticsName,
+  rule as useExitAndFlushAnalytics,
+} from './rules/use-exit-and-flush-analytics';
+import {
   RULE_NAME as validSchemaDescriptionName,
   rule as validSchemaDescription,
 } from './rules/valid-schema-description';
@@ -39,5 +43,6 @@ module.exports = {
     [validSchemaDescriptionName]: validSchemaDescription,
     [validCommandObjectName]: validCommandObject,
     [ensurePnpmLockVersionName]: ensurePnpmLockVersion,
+    [useExitAndFlushAnalyticsName]: useExitAndFlushAnalytics,
   },
 };
