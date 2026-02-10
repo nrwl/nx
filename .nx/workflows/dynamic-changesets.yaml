@@ -72,6 +72,7 @@ assignment-rules:
   # These projects should not need to be isolated.
   - projects:
       - nx-dev
+      - astro-docs
     targets:
       - build*
     run-on:
@@ -98,6 +99,6 @@ assignment-rules:
       - "*"
     run-on:
       - agent: linux-large
-        parallelism: 4
+        parallelism: 3
       - agent: linux-extra-large
-        parallelism: 6
+        parallelism: 4
