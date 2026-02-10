@@ -3,7 +3,7 @@ import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 import { NxHeroVideo } from './nx-hero-video';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function Hero(): ReactElement {
   return (
@@ -48,7 +48,7 @@ export function Hero(): ReactElement {
               variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent('get-started-click', 'hero', 'homepage')
+                sendCustomEventViaGtm('get-started-click', 'hero', 'homepage')
               }
             >
               Get started
@@ -59,7 +59,7 @@ export function Hero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent('documentation-click', 'hero', 'homepage')
+                sendCustomEventViaGtm('documentation-click', 'hero', 'homepage')
               }
             >
               Documentation

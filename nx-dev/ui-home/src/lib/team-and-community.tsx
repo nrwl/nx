@@ -16,13 +16,13 @@ import {
 import { XIcon, YoutubeIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 const yearsAgo = new Date().getFullYear() - 2017;
 
 export function TeamAndCommunity(): ReactElement {
   const handleClick = (eventAction: string) => {
-    sendCustomEvent(
+    sendCustomEventViaGtm(
       eventAction,
       'githubstars-community-section',
       'githubstarswidget'

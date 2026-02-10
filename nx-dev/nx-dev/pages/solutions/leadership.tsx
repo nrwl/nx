@@ -14,7 +14,7 @@ import {
   SolutionsTopCallToAction,
 } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function EnterpriseSolutionsLeadership(): ReactElement {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function EnterpriseSolutionsLeadership(): ReactElement {
       title: 'Talk to our team',
       children: 'Talk to our team',
       onClick: () =>
-        sendCustomEvent(
+        sendCustomEventViaGtm(
           'contact-sales-click',
           'scrolling-header-cta',
           'solutions-leadership'
