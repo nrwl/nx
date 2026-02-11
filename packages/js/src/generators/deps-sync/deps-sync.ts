@@ -96,23 +96,23 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
             `Updating devDependency "${depName}" version to "${versionString}" in ${packageJsonPath}.`
           );
         }
-
-        const edits = modify(
-          updatedContents,
-          ['devDependencies', depName],
-          versionString,
-          {
-            formattingOptions: {
-              keepLines: true,
-              insertSpaces: true,
-              tabSize: 2,
-            },
-          }
-        );
-        updatedContents = applyEdits(updatedContents, edits);
-        hasChanges = true;
-        addChange(changedFiles, packageJsonPath, depName, 'added');
       }
+
+      const edits = modify(
+        updatedContents,
+        ['devDependencies', depName],
+        versionString,
+        {
+          formattingOptions: {
+            keepLines: true,
+            insertSpaces: true,
+            tabSize: 2,
+          },
+        }
+      );
+      updatedContents = applyEdits(updatedContents, edits);
+      hasChanges = true;
+      addChange(changedFiles, packageJsonPath, depName, 'added');
     }
 
     // Remove stale internal devDependencies (internal packages no longer

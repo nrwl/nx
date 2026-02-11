@@ -86,7 +86,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
               },
               "syncGenerators": [
                 "@nx/js:typescript-sync",
-                "@nx/js:deps-sync"
+                "@nx/js:deps-sync",
               ],
             },
             "watch-deps": {

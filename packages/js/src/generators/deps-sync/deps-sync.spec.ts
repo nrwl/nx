@@ -274,9 +274,10 @@ describe('deps-sync syncGenerator()', () => {
     expect(result).toBeDefined();
     expect((result as any).outOfSyncDetails).toBeDefined();
     const details = (result as any).outOfSyncDetails.join('\n');
-    expect(details).toContain('Missing devDependencies');
-    expect(details).toContain('a');
-    expect(details).toContain('Stale devDependencies');
-    expect(details).toContain('c');
+    expect(details).toMatchInlineSnapshot(`
+      "packages/b/package.json:
+        - Missing devDependencies: a
+        - Stale devDependencies: c"
+    `);
   });
 });
