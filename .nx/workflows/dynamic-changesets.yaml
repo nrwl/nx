@@ -16,7 +16,7 @@ assignment-rules:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 4
+        parallelism: 5
 
   # All other e2e tests can run in parallel
   - targets:
