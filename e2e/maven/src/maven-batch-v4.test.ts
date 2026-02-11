@@ -3,9 +3,11 @@ import {
   cleanupProject,
   newProject,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
+import { rmSync } from 'fs';
 import { createMavenProject } from './utils/create-maven-project';
 
 describe('Maven 4 Batch Mode', () => {
@@ -80,5 +82,49 @@ class AppApplicationTests {
     }
     expect(error).toBeDefined();
     expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
+  });
+
+  it('should install successfully after restoring cached package outputs', () => {
+    // Clean up from previous test: reset Nx cache to avoid stale cached state,
+    // delete target directories to remove stale compiled classes,
+    // and restore the original passing test file (previous test added a failing test)
+    runCLI('reset');
+    for (const mod of ['app', 'lib', 'utils']) {
+      rmSync(tmpProjPath(`${mod}/target`), { recursive: true, force: true });
+    }
+    updateFile(
+      'app/src/test/java/com/example/app/AppApplicationTests.java',
+      `package com.example.app;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class AppApplicationTests {
+    @Test
+    void contextLoads() {
+    }
+}`
+    );
+
+    // Step 1: Run package in batch mode to populate Nx cache
+    runBatchCLI('run-many -t package');
+    checkFilesExist(
+      'app/target/app-1.0.0-SNAPSHOT.jar',
+      'lib/target/lib-1.0.0-SNAPSHOT.jar',
+      'utils/target/utils-1.0.0-SNAPSHOT.jar'
+    );
+
+    // Step 2: Delete target directories to simulate a clean CI checkout
+    for (const mod of ['app', 'lib', 'utils']) {
+      rmSync(tmpProjPath(`${mod}/target`), { recursive: true, force: true });
+    }
+
+    // Step 3: Run package again — cache hit restores outputs (including nx-build-state.json)
+    runBatchCLI('run-many -t package');
+
+    // Step 4: Run install in batch mode — this requires build state from the package phase
+    // to know about the main artifact.
+    runBatchCLI('run-many -t install');
   });
 });

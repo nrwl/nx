@@ -85,6 +85,11 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
             val result = executeSingleTask(taskId, results)
 
+            // Record build state BEFORE emitting result.
+            // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
+            // must be written first to ensure the cached outputs include fresh build state.
+            recordBuildStateForTask(taskId)
+
             // Emit result to stderr for streaming to Nx
             emitResult(taskId, result)
 
@@ -132,9 +137,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       // Wait for all tasks to complete
       completionLatch.await()
-
-      // Record build states for all projects that had tasks executed
-      recordBuildStatesForExecutedTasks()
     } finally {
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
@@ -150,27 +152,16 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   }
 
   /**
-   * Record build states for all unique projects that had tasks executed.
-   * This is called after all tasks complete to save the build state for future batches.
+   * Record build state for a single task's project.
+   * Called after task execution but before emitting the result to Nx,
+   * ensuring nx-build-state.json is up-to-date when Nx caches the task's outputs.
    */
-  private fun recordBuildStatesForExecutedTasks() {
+  private fun recordBuildStateForTask(taskId: String) {
     try {
-      // Extract unique project selectors from executed tasks
-      val uniqueProjectSelectors = options.taskGraph?.tasks?.values
-        ?.map { it.target.project }
-        ?.toSet() ?: emptySet()
-
-      if (uniqueProjectSelectors.isEmpty()) {
-        log.debug("No projects to record build states for")
-        return
-      }
-
-      log.debug("Preparing to record build states for ${uniqueProjectSelectors.size} unique projects")
-      log.debug("Projects: ${uniqueProjectSelectors.joinToString(", ")}")
-
-      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(uniqueProjectSelectors)
+      val projectSelector = options.taskGraph?.tasks?.get(taskId)?.target?.project ?: return
+      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(setOf(projectSelector))
     } catch (e: Exception) {
-      log.error("Error recording build states: ${e.message}", e)
+      log.error("Error recording build state for task $taskId: ${e.message}", e)
     }
   }
 
