@@ -3,7 +3,7 @@ distribute-on:
   small-changeset: 3 linux-large, 2 linux-extra-large
   medium-changeset: 3 linux-large, 2 linux-extra-large
   large-changeset: 4 linux-large, 3 linux-extra-large
-  extra-large-changeset: 6 linux-large, 4 linux-extra-large
+  extra-large-changeset: 5 linux-large, 4 linux-extra-large
 assignment-rules:
   # E2E tests that are heavy
   - projects:
@@ -11,6 +11,7 @@ assignment-rules:
       - e2e-node
       - e2e-react
       - e2e-next
+      - e2e-gradle
     targets:
       - e2e-ci**
     run-on:
