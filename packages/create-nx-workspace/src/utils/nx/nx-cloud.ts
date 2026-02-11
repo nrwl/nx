@@ -6,6 +6,7 @@ import {
   CompletionMessageKey,
 } from './messages';
 import { getBannerVariant, getFlowVariant } from './ab-testing';
+import { nxVersion } from './nx-version';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -100,7 +101,10 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  const meta = `variant-${getFlowVariant()}`;
+  const meta = JSON.stringify({
+    variant: getFlowVariant(),
+    nxVersion,
+  });
 
   return createNxCloudOnboardingURL(
     source,
