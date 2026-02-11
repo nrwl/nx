@@ -43,6 +43,12 @@
       "alias": ["sync"],
       "hidden": true
     },
+    "deps-sync": {
+      "factory": "./src/generators/deps-sync/deps-sync",
+      "schema": "./src/generators/deps-sync/schema.json",
+      "description": "Synchronize package.json dependencies for internal packages based on the project graph.",
+      "hidden": true
+    },
     "setup-prettier": {
       "factory": "./src/generators/setup-prettier/generator",
       "schema": "./src/generators/setup-prettier/schema.json",
