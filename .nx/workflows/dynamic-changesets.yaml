@@ -10,6 +10,7 @@ assignment-rules:
       - e2e-angular
       - e2e-node
       - e2e-react
+      - e2e-next
     targets:
       - e2e-ci**
     run-on:
