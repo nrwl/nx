@@ -21,23 +21,8 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { isAiAgent } from '../src/native';
-
-function handleAgenticSandbox() {
-  const sandboxEnvVars = [
-    'SANDBOX_RUNTIME',
-    'CODEX_SANDBOX',
-    'GEMINI_SANDBOX',
-    'CURSOR_SANDBOX',
-  ];
-  if (isAiAgent() && sandboxEnvVars.some((e) => process.env[e] !== undefined)) {
-    process.env['NX_DAEMON'] = 'false';
-    process.env['NX_ISOLATE_PLUGINS'] = 'false';
-  }
-}
 
 async function main() {
-  handleAgenticSandbox();
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
