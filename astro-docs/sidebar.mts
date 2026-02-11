@@ -35,6 +35,10 @@ const learnGroups: SidebarItems = [
         link: 'getting-started/start-with-existing-project',
       },
       {
+        label: 'Nx Cloud',
+        link: 'getting-started/nx-cloud',
+      },
+      {
         label: 'Tutorials',
         collapsed: true,
         items: [
