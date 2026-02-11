@@ -5,8 +5,6 @@ import {
   joinPathFragments,
   logger,
   parseJson,
-  type ProjectGraph,
-  type ProjectGraphProjectNode,
   type Tree,
 } from '@nx/devkit';
 import { applyEdits, modify } from 'jsonc-parser';
@@ -28,8 +26,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   const pm = detectPackageManager(tree.root);
   const versionString = pm === 'npm' ? '*' : 'workspace:*';
 
-  // Build a set of all internal package names (from graph metadata) and
-  // a map from package name to project node for reverse lookups.
+  // Build a set of all internal package names
   const internalPackageNames = new Set<string>();
   const projectToPackageName = new Map<string, string>();
   for (const node of Object.values(projectGraph.nodes)) {
@@ -42,9 +39,9 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
   const changedFiles = new Map<string, ChangeDetails>();
 
-  for (const projectName of Object.keys(projectGraph.dependencies)) {
+  for (const projectName of Object.keys(projectGraph.nodes)) {
     const sourceNode = projectGraph.nodes[projectName];
-    if (!sourceNode || sourceNode.data.root === '.') {
+    if (sourceNode.data.root === '.') {
       continue;
     }
 
@@ -87,10 +84,8 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     for (const depName of expectedInternalDeps) {
       if (
         currentDevDeps[depName] === versionString ||
-        packageJson.dependencies?.[depName]
+        packageJson.dependencies?.[depName] === versionString
       ) {
-        // Already present with correct version in devDeps, or listed in
-        // regular dependencies — skip.
         continue;
       }
 
@@ -101,23 +96,23 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
             `Updating devDependency "${depName}" version to "${versionString}" in ${packageJsonPath}.`
           );
         }
-      }
 
-      const edits = modify(
-        updatedContents,
-        ['devDependencies', depName],
-        versionString,
-        {
-          formattingOptions: {
-            keepLines: true,
-            insertSpaces: true,
-            tabSize: 2,
-          },
-        }
-      );
-      updatedContents = applyEdits(updatedContents, edits);
-      hasChanges = true;
-      addChange(changedFiles, packageJsonPath, depName, 'added');
+        const edits = modify(
+          updatedContents,
+          ['devDependencies', depName],
+          versionString,
+          {
+            formattingOptions: {
+              keepLines: true,
+              insertSpaces: true,
+              tabSize: 2,
+            },
+          }
+        );
+        updatedContents = applyEdits(updatedContents, edits);
+        hasChanges = true;
+        addChange(changedFiles, packageJsonPath, depName, 'added');
+      }
     }
 
     // Remove stale internal devDependencies (internal packages no longer
