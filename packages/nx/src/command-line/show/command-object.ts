@@ -33,6 +33,16 @@ export type ShowProjectOptions = NxShowArgs & {
   verbose?: boolean;
 };
 
+export type ShowTargetOptions = NxShowArgs & {
+  target?: string;
+  configuration?: string;
+  inputs?: boolean;
+  checkInput?: string;
+  outputs?: boolean;
+  checkOutput?: string;
+  verbose?: boolean;
+};
+
 export const yargsShowCommand: CommandModule<
   Record<string, unknown>,
   NxShowArgs
@@ -43,6 +53,7 @@ export const yargsShowCommand: CommandModule<
     yargs
       .command(showProjectsCommand)
       .command(showProjectCommand)
+      .command(showTargetCommand)
       .demandCommand()
       .option('json', {
         type: 'boolean',
@@ -59,6 +70,14 @@ export const yargsShowCommand: CommandModule<
       .example(
         '$0 show project [projectName]',
         'Shows the resolved configuration for [projectName]'
+      )
+      .example(
+        '$0 show target my-app:build',
+        'Shows resolved configuration for the build target of my-app'
+      )
+      .example(
+        '$0 show target build',
+        'Shows resolved target configuration, inferring project from cwd'
       ),
   handler: async (args) => {
     showHelp();
@@ -186,5 +205,68 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       await showProjectHandler(args);
     });
     process.exit(exitCode);
+  },
+};
+
+const showTargetCommand: CommandModule<NxShowArgs, ShowTargetOptions> = {
+  command: 'target [target]',
+  describe:
+    'Shows resolved target configuration for a given project target. Target can be specified as project:target or just target (infers project from cwd).',
+  builder: (yargs) =>
+    withVerbose(yargs)
+      .positional('target', {
+        type: 'string',
+        description:
+          'The target to show, in the format project:target or just target. If only a target name is provided, the project is inferred from the current working directory.',
+      })
+      .option('configuration', {
+        type: 'string',
+        alias: 'c',
+        description: 'The configuration to inspect.',
+      })
+      .option('inputs', {
+        type: 'boolean',
+        description: 'List resolved input files for the target.',
+      })
+      .option('checkInput', {
+        type: 'string',
+        description:
+          'Check whether a specific file is an input for the target. Accepts a workspace-relative path.',
+      })
+      .option('outputs', {
+        type: 'boolean',
+        description: 'List resolved output paths for the target.',
+      })
+      .option('checkOutput', {
+        type: 'string',
+        description:
+          'Check whether a specific file is an output for the target. Accepts a workspace-relative path.',
+      })
+      .example(
+        '$0 show target my-app:build',
+        'Show target configuration for my-app:build'
+      )
+      .example(
+        '$0 show target my-app:build -c production',
+        'Show target configuration with production configuration applied'
+      )
+      .example(
+        '$0 show target my-app:build --inputs',
+        'List resolved input files for the build target'
+      )
+      .example(
+        '$0 show target my-app:build --outputs',
+        'List resolved output paths for the build target'
+      )
+      .example(
+        '$0 show target my-app:build --check-input src/main.ts',
+        'Check if src/main.ts is an input for the build target'
+      ) as any,
+  handler: async (args) => {
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showTargetHandler } = await import('./target');
+      await showTargetHandler(args);
+    });
+    process.exit(process.exitCode || exitCode);
   },
 };
