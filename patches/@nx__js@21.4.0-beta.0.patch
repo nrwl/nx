@@ -1,0 +1,18 @@
+diff --git a/src/release/version-actions.js b/src/release/version-actions.js
+index 88055251ec2fa8c372acf1e04ed5948e7f39b30c..4ee01f3390824bc674379048a0c6116716be9567 100644
+--- a/src/release/version-actions.js
++++ b/src/release/version-actions.js
+@@ -66,9 +66,10 @@ class JsVersionActions extends release_1.VersionActions {
+                     if (error) {
+                         return reject(error);
+                     }
+-                    if (stderr) {
+-                        return reject(stderr);
+-                    }
++                    console.error(stderr);
++                    // if (stderr) {
++                    //     return reject(stderr);
++                    // }
+                     return resolve(stdout.trim());
+                 });
+             });
