@@ -30,6 +30,7 @@ import { ConfigurationSourceMaps } from '../../project-graph/utils/project-confi
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { isCI } from '../../utils/is-ci';
+import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import type {
@@ -230,7 +231,7 @@ export class DaemonClient {
       // version mismatch => no daemon because the installed nx version differs from the running one
       if (
         isNxVersionMismatch() ||
-        ((isCI() || isDocker()) && env !== 'true') ||
+        ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
