@@ -85,13 +85,7 @@ class AppApplicationTests {
   });
 
   it('should install successfully after restoring cached package outputs', () => {
-    // Clean up from previous test: reset Nx cache to avoid stale cached state,
-    // delete target directories to remove stale compiled classes,
-    // and restore the original passing test file (previous test added a failing test)
-    runCLI('reset');
-    for (const mod of ['app', 'lib', 'utils']) {
-      rmSync(tmpProjPath(`${mod}/target`), { recursive: true, force: true });
-    }
+    // Restore the original passing test file (previous test added a failing test)
     updateFile(
       'app/src/test/java/com/example/app/AppApplicationTests.java',
       `package com.example.app;
