@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function SecurityCallToAction(): ReactElement {
   return (
@@ -68,7 +68,7 @@ export function SecurityCallToAction(): ReactElement {
               title="Talk to an expert"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'enterprise-security-bottom-cta',
                   'enterprise-security'

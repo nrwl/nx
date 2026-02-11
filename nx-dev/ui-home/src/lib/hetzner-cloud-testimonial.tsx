@@ -13,7 +13,7 @@ import {
 } from '@nx/nx-dev-ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function HetznerCloudTestimonial(): ReactElement {
   return (
@@ -120,7 +120,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                   variant="secondary"
                   size="small"
                   onClick={() =>
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'enterprise-click',
                       'hetzner-cloud-testimonial',
                       'homepage'
@@ -134,7 +134,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                   prefetch={false}
                   className="text-sm/6 font-semibold"
                   onClick={() =>
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'customers-click',
                       'hetzner-cloud-testimonial',
                       'homepage'

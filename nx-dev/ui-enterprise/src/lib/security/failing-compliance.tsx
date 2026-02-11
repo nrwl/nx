@@ -11,7 +11,7 @@ import {
 } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function FailingCompliance(): ReactElement {
   return (
@@ -196,7 +196,7 @@ export function FailingCompliance(): ReactElement {
                 title="Talk to an expert"
                 className="mt-4"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'contact-sales-click',
                     'enterprise-security-personalized-assessment',
                     'enterprise-security'

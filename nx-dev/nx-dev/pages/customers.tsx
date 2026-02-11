@@ -10,7 +10,7 @@ import {
   Hero,
   OssProjects,
 } from '@nx/nx-dev-ui-customers';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function Customers(): JSX.Element {
   const router = useRouter();
@@ -24,7 +24,7 @@ export function Customers(): JSX.Element {
       title: 'Book a demo',
       children: 'Book a demo',
       onClick: () =>
-        sendCustomEvent(
+        sendCustomEventViaGtm(
           'contact-sales-click',
           'scrolling-header-cta-book-demo',
           'customers'

@@ -1,7 +1,7 @@
 import { ReactElement, useState } from 'react';
 import { PayfitIcon } from '@nx/nx-dev-ui-icons';
 import { SectionHeading } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { VideoModal } from '@nx/nx-dev-ui-common';
 
@@ -24,7 +24,7 @@ export function CustomerMetrics(): ReactElement {
                 href="#payfit-testimonial"
                 onClick={() => {
                   openVideo('https://youtu.be/Vdk-tza4PCs');
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'payfit-quote-click',
                     'cloud-customer-metrics',
                     'cloud'

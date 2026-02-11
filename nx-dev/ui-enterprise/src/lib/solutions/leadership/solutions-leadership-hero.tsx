@@ -1,6 +1,6 @@
 import { ComponentProps, ReactElement, useState } from 'react';
 import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { EnvelopeIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { MovingBorder } from '@nx/nx-dev-ui-animations';
@@ -110,7 +110,7 @@ export function SolutionsLeadershipHero(): ReactElement {
               variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'solutions-leadership-hero',
                   'solutions-leadership'
@@ -126,7 +126,7 @@ export function SolutionsLeadershipHero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'subscribe-newsletter-click',
                   'solutions-leadership-hero',
                   'solutions-leadership'
@@ -155,7 +155,7 @@ export function SolutionsLeadershipHero(): ReactElement {
                 <PlayButton
                   onClick={() => {
                     setIsOpen(true);
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'caseware-testimonial-video-click',
                       'caseware-testimonial-solutions',
                       'solutions'

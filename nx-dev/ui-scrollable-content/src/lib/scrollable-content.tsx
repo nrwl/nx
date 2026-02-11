@@ -1,7 +1,7 @@
 import type { JSX, ReactNode, UIEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 interface ScrollViewProps {
   children?: ReactNode;
@@ -73,7 +73,7 @@ export function ScrollableContent(props: ScrollViewProps): JSX.Element {
     // If a user already viewed 90% of the page we don't need to know they went back to 50%.
     if (depth > scrollDepth.current) {
       scrollDepth.current = depth;
-      sendCustomEvent(`scroll_${depth}`, 'scroll', currentPath);
+      sendCustomEventViaGtm(`scroll_${depth}`, 'scroll', currentPath);
     }
   };
 

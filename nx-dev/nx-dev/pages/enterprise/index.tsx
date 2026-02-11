@@ -16,7 +16,7 @@ import {
 } from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
 import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function Enterprise(): ReactElement {
   const router = useRouter();
@@ -29,7 +29,7 @@ export function Enterprise(): ReactElement {
       title: 'Contact Us',
       children: <span>Contact</span>,
       onClick: () =>
-        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
+        sendCustomEventViaGtm('contact-click', 'header-cta', 'page-header'),
     },
   ];
 
@@ -41,7 +41,7 @@ export function Enterprise(): ReactElement {
       title: 'Request a free trial',
       children: 'Request a free trial',
       onClick: () =>
-        sendCustomEvent(
+        sendCustomEventViaGtm(
           'request-trial-click',
           'scrolling-header-cta',
           'enterprise'

@@ -5,6 +5,7 @@ import { runMavenAnalysis } from './maven-analyzer';
 import {
   getCachePath,
   readMavenCache,
+  setCurrentMavenData,
   writeMavenCache,
 } from './maven-data-cache';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -64,6 +65,9 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
         // Cache the results with the hash
         mavenCache[hash] = mavenData;
       }
+
+      // Store in module-level variable for createDependencies to use
+      setCurrentMavenData(mavenData);
 
       // Return createNodesResults (atomization now handled in Kotlin)
       return mavenData.createNodesResults.map(

@@ -18,7 +18,7 @@ import {
   ShopifyIcon,
 } from '@nx/nx-dev-ui-icons';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function TrialNxEnterprise(): ReactElement {
   return (
@@ -53,7 +53,7 @@ export function TrialNxEnterprise(): ReactElement {
                 variant="secondary"
                 size="small"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'download-ebook-click',
                     'enterprise-trial-hero',
                     'enterprise-trial'

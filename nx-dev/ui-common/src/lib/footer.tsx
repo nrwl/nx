@@ -52,6 +52,10 @@ const navigation = {
       name: 'Customers',
       href: `${nxDevUrl}/customers`,
     },
+    {
+      name: 'Plugin Registry',
+      href: `/docs/plugin-registry`,
+    },
   ],
   company: [
     {

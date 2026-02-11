@@ -1,6 +1,6 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { WebinarSection } from './webinar-section';
 
 export function Hero(): ReactElement {
@@ -52,7 +52,7 @@ export function Hero(): ReactElement {
                 variant="contrast"
                 size="default"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'request-trial-click',
                     'enterprise-hero',
                     'enterprise'
@@ -68,7 +68,7 @@ export function Hero(): ReactElement {
                 variant="secondary"
                 size="default"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'contact-sales-click',
                     'enterprise-hero',
                     'enterprise'

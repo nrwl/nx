@@ -16,7 +16,7 @@ import {
 } from '@nx/nx-dev-ui-icons';
 import { type ReactElement } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
@@ -88,7 +88,7 @@ export function WhitePaperFastCI(): ReactElement {
                       variant="secondary"
                       size="small"
                       onClick={() =>
-                        sendCustomEvent(
+                        sendCustomEventViaGtm(
                           'download-ebook-click',
                           'whitepaper-fast-ci-hero',
                           'whitepaper-fast-ci'
