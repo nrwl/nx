@@ -154,6 +154,10 @@
         "type": "boolean",
         "description": "Skip running playwright install before running playwright tests. This is to ensure that playwright browsers are installed before running tests.",
         "default": false
+      },
+      "cacheDir": {
+        "type": "string",
+        "description": "Directory for Playwright internal cache (browser binaries, etc.). Sets the PWTEST_CACHE_DIR environment variable."
       }
     },
     "required": [],
