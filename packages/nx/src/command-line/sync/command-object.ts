@@ -14,7 +14,9 @@ export const yargsSyncCommand: CommandModule<
   describe: 'Sync the workspace files by running all the sync generators.',
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
-    exitAndFlushAnalytics(await import('./sync').then((m) => m.syncHandler(args)));
+    exitAndFlushAnalytics(
+      await import('./sync').then((m) => m.syncHandler(args))
+    );
   },
 };
 

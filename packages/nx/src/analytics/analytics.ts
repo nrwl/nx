@@ -44,7 +44,11 @@ export function reportNxAddCommand(packageName: string, version: string) {
 }
 
 export function reportNxGenerateCommand(generator: string) {
-  reportCommandRunEvent(generator);
+  trackEvent(
+    'generator_used',
+    { [EventCustomDimension.GeneratorName]: generator },
+    false
+  );
 }
 
 export function reportCommandRunWithArgs(command, args: Record<string, any>) {
@@ -88,24 +92,38 @@ export function exitAndFlushAnalytics(code: string | number): never {
   if (_analyticsCollector && !processorSpawned) {
     processorSpawned = true;
 
-    const analyticsBufferFile = join(workspaceRoot, '.nx', 'analytics.json');
+    // Multiple processes running at the same time can cause issues with the file system.
+    // Write to unique file path and pass to the spawned process
+    const analyticsBufferFile = join(
+      workspaceRoot,
+      '.nx',
+      'workspace-data',
+      'analytics.json'
+    );
     writeFileSync(analyticsBufferFile, _analyticsCollector.serialize());
 
     const pathToProcessor = require.resolve('./analytics-processor');
     const isUsingTS = extname(pathToProcessor) === '.ts';
     spawn(
-      `node ${pathToProcessor}`,
-      isUsingTS ? ['--require', 'ts-node/register'] : [],
+      'node',
+      [
+        ...(isUsingTS ? ['--require', 'ts-node/register'] : []),
+        pathToProcessor,
+      ],
       {
-        env: isUsingTS
-          ? {
-              TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-                module: 'commonjs',
-                moduleResolution: 'node',
-              }),
-            }
-          : {},
+        env: {
+          ...process.env,
+          ...(isUsingTS
+            ? {
+                TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+                  module: 'commonjs',
+                  moduleResolution: 'node',
+                }),
+              }
+            : {}),
+        },
         detached: true,
+        windowsHide: true,
         stdio: 'ignore',
       }
     ).unref();
