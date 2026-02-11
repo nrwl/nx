@@ -10,6 +10,15 @@ import type * as Prettier from 'prettier';
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
+ *
+ * @remarks
+ * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip Prettier
+ * formatting. This is useful for repositories that use alternative formatters
+ * like Biome, dprint, or have custom formatting requirements.
+ *
+ * Note: `NX_SKIP_FORMAT` only skips Prettier formatting. TSConfig path sorting
+ * (controlled by `sortRootTsconfigPaths` option or `NX_FORMAT_SORT_TSCONFIG_PATHS`)
+ * will still occur.
  */
 export async function formatFiles(
   tree: Tree,
@@ -17,6 +26,19 @@ export async function formatFiles(
     sortRootTsconfigPaths?: boolean;
   } = {}
 ): Promise<void> {
+  options.sortRootTsconfigPaths ??=
+    process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
+
+  if (options.sortRootTsconfigPaths) {
+    sortTsConfig(tree);
+  }
+
+  // Skip Prettier formatting if NX_SKIP_FORMAT is set
+  // This is checked after tsconfig sorting since sorting is a separate concern
+  if (process.env.NX_SKIP_FORMAT === 'true') {
+    return;
+  }
+
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
@@ -28,13 +50,6 @@ export async function formatFiles(
       return;
     }
   } catch {}
-
-  options.sortRootTsconfigPaths ??=
-    process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
-
-  if (options.sortRootTsconfigPaths) {
-    sortTsConfig(tree);
-  }
 
   if (!prettier) return;
 
