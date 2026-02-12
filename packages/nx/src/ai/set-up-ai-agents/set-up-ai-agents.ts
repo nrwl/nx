@@ -173,22 +173,42 @@ export async function setupAiAgentsGeneratorImpl(
     if (!tree.exists(claudeSettingsPath)) {
       writeJson(tree, claudeSettingsPath, {});
     }
-    updateJson(tree, claudeSettingsPath, (json) => ({
-      ...json,
-      extraKnownMarketplaces: {
-        ...json.extraKnownMarketplaces,
-        'nx-claude-plugins': {
-          source: {
-            source: 'github',
-            repo: 'nrwl/nx-ai-agents-config',
+    updateJson(tree, claudeSettingsPath, (json) => {
+      const updated = {
+        ...json,
+        extraKnownMarketplaces: {
+          ...json.extraKnownMarketplaces,
+          'nx-claude-plugins': {
+            source: {
+              source: 'github',
+              repo: 'nrwl/nx-ai-agents-config',
+            },
           },
         },
-      },
-      enabledPlugins: {
-        ...json.enabledPlugins,
-        'nx@nx-claude-plugins': true,
-      },
-    }));
+        enabledPlugins: {
+          ...json.enabledPlugins,
+          'nx@nx-claude-plugins': true,
+        },
+      };
+
+      if (options.writeNxCloudRules) {
+        const polygraphTools = [
+          'mcp__plugin_nx_nx-mcp__cloud_polygraph_delegate',
+          'mcp__plugin_nx_nx-mcp__cloud_child_status',
+        ];
+        const existingAllow: string[] = json.permissions?.allow ?? [];
+        const mergedAllow = [
+          ...existingAllow.filter((t) => !polygraphTools.includes(t)),
+          ...polygraphTools,
+        ];
+        updated.permissions = {
+          ...json.permissions,
+          allow: mergedAllow,
+        };
+      }
+
+      return updated;
+    });
 
     // Clean up .mcp.json (nx-mcp now handled by plugin)
     const mcpJsonPath = claudeMcpJsonPath(options.directory);
