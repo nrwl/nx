@@ -59,7 +59,7 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { reportCommandRunWithArgs } from '../../analytics';
+import { reportCommandRunEvent } from '../../analytics';
 import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface GraphError {
@@ -260,7 +260,7 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  reportCommandRunWithArgs('graph', args);
+  reportCommandRunEvent('graph', undefined, args);
   if (args.view === 'project-details' && !args.focus) {
     output.error({
       title: `The project details view requires the --focus option.`,

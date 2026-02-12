@@ -3,7 +3,6 @@ import * as https from 'https';
 import * as os from 'os';
 import { parse } from 'semver';
 import { randomUUID } from 'crypto';
-
 import {
   RequestParameter,
   ParameterValue,
@@ -25,7 +24,6 @@ export class AnalyticsCollector {
     UserCustomDimension,
     ParameterValue | undefined
   >;
-  private currentMachineId: string | null = null;
 
   constructor(
     workspaceId: string,
@@ -95,7 +93,8 @@ export class AnalyticsCollector {
   event(
     eventName: string,
     parameters?: Record<string, ParameterValue>,
-    isPageView?: boolean
+    isPageView?: boolean,
+    pageLocation?: string
   ): void {
     this.eventsQueue ??= [];
     this.pageViewQueue ??= [];
@@ -108,7 +107,7 @@ export class AnalyticsCollector {
 
     // For page views, capture the command name as page location/title
     if (isPageView) {
-      eventData[RequestParameter.PageLocation] = eventName;
+      eventData[RequestParameter.PageLocation] = pageLocation ?? eventName;
       eventData[RequestParameter.PageTitle] = eventName;
       this.pageViewQueue.push(eventData);
     } else {
@@ -155,7 +154,7 @@ export class AnalyticsCollector {
             ...this.commonRequestParameters,
             [RequestParameter.PageTitle]: pageView[RequestParameter.PageTitle],
             [RequestParameter.PageLocation]:
-              pageView[RequestParameter.PageTitle],
+              pageView[RequestParameter.PageLocation],
           },
           [pageView]
         )
