@@ -166,6 +166,7 @@ impl std::str::FromStr for TaskStatus {
             "success" => Ok(Self::Success),
             "failure" => Ok(Self::Failure),
             "skipped" => Ok(Self::Skipped),
+            "stopped" => Ok(Self::Stopped),
             "local-cache-kept-existing" => Ok(Self::LocalCacheKeptExisting),
             "local-cache" => Ok(Self::LocalCache),
             "remote-cache" => Ok(Self::RemoteCache),
