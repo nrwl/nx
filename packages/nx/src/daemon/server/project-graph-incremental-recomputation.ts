@@ -56,7 +56,6 @@ let cachedSerializedProjectGraphPromise: Promise<SerializedProjectGraph>;
 export let fileMapWithFiles:
   | {
       fileMap: FileMap;
-      allWorkspaceFiles: FileData[];
       rustReferences: NxWorkspaceFilesExternals;
     }
   | undefined;
@@ -453,14 +452,12 @@ async function createAndSerializeProjectGraph({
   try {
     performance.mark('create-project-graph-start');
     const fileMap = copyFileMap(fileMapWithFiles.fileMap);
-    const allWorkspaceFiles = copyFileData(fileMapWithFiles.allWorkspaceFiles);
     const rustReferences = fileMapWithFiles.rustReferences;
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingFileMap(
         projects,
         knownExternalNodes,
         fileMap,
-        allWorkspaceFiles,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
         await getPlugins(),
