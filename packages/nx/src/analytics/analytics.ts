@@ -254,7 +254,7 @@ export function exitAndFlushAnalytics(code: string | number): never {
       workspaceRoot,
       '.nx',
       'workspace-data',
-      'analytics.json'
+      `analytics-${process.pid}-${Date.now()}.json`
     );
     writeFileSync(analyticsBufferFile, _analyticsCollector.serialize());
 
@@ -269,6 +269,7 @@ export function exitAndFlushAnalytics(code: string | number): never {
       {
         env: {
           ...process.env,
+          NX_ANALYTICS_BUFFER_FILE: analyticsBufferFile,
           ...(isUsingTS
             ? {
                 TS_NODE_COMPILER_OPTIONS: JSON.stringify({
