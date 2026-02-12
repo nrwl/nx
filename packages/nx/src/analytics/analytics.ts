@@ -51,18 +51,20 @@ export function reportNxGenerateCommand(generator: string) {
   );
 }
 
-export function reportCommandRunWithArgs(command, args: Record<string, any>) {
-  reportCommandRunEvent(command, {
-    [EventCustomDimension.AdditionalArguments]: JSON.stringify(args),
-  });
-}
-
 export function reportCommandRunEvent(
   command: string,
-  parameters?: Record<string, ParameterValue | any>
+  parameters?: Record<string, ParameterValue | any>,
+  args?: Record<string, any>
 ) {
   command = command === 'g' ? 'generate' : command;
-  trackEvent(command, parameters, true);
+  let pageLocation = command;
+  if (args) {
+    const qs = argsToQueryString(args);
+    if (qs) {
+      pageLocation = `${command}?${qs}`;
+    }
+  }
+  trackEvent(command, parameters, true, pageLocation);
 }
 
 export function reportProjectGraphCreationEvent(time: number) {
@@ -71,13 +73,38 @@ export function reportProjectGraphCreationEvent(time: number) {
   });
 }
 
+const INTERNAL_ARGS_KEYS = new Set([
+  '$0',
+  '_',
+  '__overrides_unparsed__',
+  '__overrides__',
+]);
+
+export function argsToQueryString(args: Record<string, any>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(args)) {
+    if (INTERNAL_ARGS_KEYS.has(key)) continue;
+    if (value === undefined || value === null) continue;
+    if (typeof value === 'object' && !Array.isArray(value)) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        params.append(key, String(item));
+      }
+    } else {
+      params.append(key, String(value));
+    }
+  }
+  return params.toString();
+}
+
 function trackEvent(
   eventName: string,
   parameters?: Record<string, ParameterValue>,
-  isPageView?: boolean
+  isPageView?: boolean,
+  pageLocation?: string
 ) {
   if (_analyticsCollector) {
-    _analyticsCollector.event(eventName, parameters, isPageView);
+    _analyticsCollector.event(eventName, parameters, isPageView, pageLocation);
   }
 }
 
