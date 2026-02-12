@@ -5,8 +5,6 @@ import { Component } from 'react';
  * From https://www.npmjs.com/package/react-hubspot-form
  */
 
-let globalId = 0;
-
 declare const window: {
   hbspt: any;
 };
@@ -18,6 +16,7 @@ interface HubspotFormProps {
   portalId?: string;
   formId?: string;
   calendlyFormId?: string | null;
+  targetId?: string;
   noScript?: boolean;
   loading?: any;
   onSubmit?: (formData) => void;
@@ -32,7 +31,7 @@ export class HubspotForm extends Component<
     calendlyFormId: null,
   };
 
-  id: number;
+  id: string;
   el?: HTMLDivElement | null = null;
   calendlyInitAttempts: number = 0;
 
@@ -41,9 +40,26 @@ export class HubspotForm extends Component<
     this.state = {
       loaded: false,
     };
-    this.id = globalId++;
+    this.id = HubspotForm.buildTargetId(props);
     this.createForm = this.createForm.bind(this);
     this.findFormElement = this.findFormElement.bind(this);
+  }
+
+  private static buildTargetId(props: HubspotFormProps): string {
+    if (props.targetId) {
+      return props.targetId;
+    }
+    const parts = ['reactHubspotForm'];
+    if (props.portalId) {
+      parts.push(props.portalId);
+    }
+    if (props.formId) {
+      parts.push(props.formId);
+    }
+    if (props.calendlyFormId) {
+      parts.push(props.calendlyFormId);
+    }
+    return parts.join('-');
   }
 
   createForm(): void {
@@ -132,7 +148,7 @@ export class HubspotForm extends Component<
           ref={(el) => {
             this.el = el;
           }}
-          id={`reactHubspotForm${this.id}`}
+          id={this.id}
           style={{ display: this.state.loaded ? 'block' : 'none' }}
         />
         {!this.state.loaded && this.props.loading}
