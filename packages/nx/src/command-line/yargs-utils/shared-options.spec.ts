@@ -7,7 +7,6 @@ import {
   withOutputStyleOption,
   withRunManyOptions,
   withTuiOptions,
-  parseCSV,
 } from './shared-options';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
@@ -41,12 +40,31 @@ describe('shared-options', () => {
       );
     });
 
-    it('should parse files from stdin', async () => {
+    it('should parse newline-delimited files from stdin', async () => {
       const stdinMock = new stream.PassThrough();
       jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
-      stdinMock.push('file1,file');
-      stdinMock.push('2,file3');
+      stdinMock.push('file1\nfile2\nfile3\n');
+      stdinMock.push(null);
+
+      const result = await command.parseAsync(['affected', '--stdin']);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _: ['affected'],
+          files: ['file1', 'file2', 'file3'],
+        })
+      );
+
+      stdinMock.end();
+    });
+
+    it('should parse files from stdin split across chunks', async () => {
+      const stdinMock = new stream.PassThrough();
+      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+
+      stdinMock.push('file1\nfil');
+      stdinMock.push('e2\nfile3');
       stdinMock.push(null);
 
       const result = await command.parseAsync(['affected', '--stdin']);
@@ -65,8 +83,7 @@ describe('shared-options', () => {
       const stdinMock = new stream.PassThrough();
       jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
-      stdinMock.push('file1,file');
-      stdinMock.push('2,file3');
+      stdinMock.push('file1\nfile2\nfile3\n');
       stdinMock.push(null);
 
       const result = await command.parseAsync([
@@ -90,8 +107,7 @@ describe('shared-options', () => {
       const stdinMock = new stream.PassThrough();
       jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
-      stdinMock.push('file1,file');
-      stdinMock.push('2');
+      stdinMock.push('file1\nfile2\n');
       stdinMock.push(null);
 
       const result = await command.parseAsync([
@@ -108,6 +124,18 @@ describe('shared-options', () => {
           _: ['affected'],
           files: ['file1', 'file2', 'file3', 'file4'],
         })
+      );
+
+      stdinMock.end();
+    });
+
+    it('should throw when --stdin is used with a TTY', async () => {
+      const stdinMock = new stream.PassThrough();
+      Object.defineProperty(stdinMock, 'isTTY', { value: true });
+      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+
+      await expect(command.parseAsync(['affected', '--stdin'])).rejects.toThrow(
+        /--stdin option requires piped input/
       );
 
       stdinMock.end();
