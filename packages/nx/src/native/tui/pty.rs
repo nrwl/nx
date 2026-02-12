@@ -749,13 +749,25 @@ impl PtyInstance {
     /// Resize after a clear loses historical content but keeps the live viewport.
     const MAX_RAW_OUTPUT_BYTES: usize = 5 * 1024 * 1024; // 5 MB
 
-    /// Process output with an existing parser
+    /// Process output with an existing parser.
+    ///
+    /// When the raw output buffer exceeds `MAX_RAW_OUTPUT_BYTES`, we compact
+    /// the parser: create a fresh one at the same dimensions, replay just the
+    /// formatted screen state (scrollback + visible), and swap. This keeps
+    /// raw_output small enough for resize to work without unbounded growth.
     pub fn process_output(&self, output: &[u8]) {
         let normalized = normalize_newlines(output);
         let mut parser = self.parser.write();
         parser.process(&normalized);
         if parser.get_raw_output().len() > Self::MAX_RAW_OUTPUT_BYTES {
-            parser.clear_raw_output();
+            let screen = parser.screen();
+            let (rows, cols) = screen.size();
+            let formatted = screen.all_contents_formatted();
+            let scrollback = screen.scrollback();
+            let mut compacted = Parser::new(rows, cols, Self::SCROLLBACK_SIZE);
+            compacted.process(&formatted);
+            compacted.screen_mut().set_scrollback(scrollback);
+            *parser = compacted;
         }
     }
 }
