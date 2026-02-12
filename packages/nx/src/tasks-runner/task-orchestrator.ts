@@ -90,6 +90,8 @@ export class TaskOrchestrator {
   private groups = [];
 
   private bailed = false;
+  private resolveStopPromise: (() => void) | null = null;
+  private stopRequested = false;
 
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
@@ -164,7 +166,11 @@ export class TaskOrchestrator {
               });
             }),
           ]
-        : []),
+        : [
+            new Promise<void>((resolve) => {
+              this.resolveStopPromise = resolve;
+            }),
+          ]),
     ]);
 
     performance.mark('task-execution:end');
@@ -173,9 +179,10 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
-    this.cache.removeOldCacheRecords();
-
-    await this.cleanup();
+    if (!this.stopRequested) {
+      this.cache.removeOldCacheRecords();
+      await this.cleanup();
+    }
 
     return this.completedTasks;
   }
@@ -513,12 +520,20 @@ export class TaskOrchestrator {
         terminalOutput: result.terminalOutput,
       }));
     } catch (e) {
-      return batch.taskGraph.roots.map((rootTaskId) => ({
-        task: this.taskGraph.tasks[rootTaskId],
-        code: 1,
-        status: 'failure' as TaskStatus,
-        terminalOutput: e.stack ?? e.message ?? '',
-      }));
+      const isBatchStopping = this.stopRequested;
+
+      return Object.keys(batch.taskGraph.tasks).map((taskId) => {
+        const task = this.taskGraph.tasks[taskId];
+        if (isBatchStopping) {
+          task.endTime = Date.now();
+        }
+        return {
+          task,
+          code: 1,
+          status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
+          terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
+        };
+      });
     } finally {
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
       performance.measure(
@@ -976,10 +991,12 @@ export class TaskOrchestrator {
     for (const { task } of results) {
       // Only set endTime as fallback (batch provides timing via result.task)
       task.endTime ??= now;
-      await this.recordOutputsHash(task);
+      if (!this.stopRequested) {
+        await this.recordOutputsHash(task);
+      }
     }
 
-    if (doNotSkipCache) {
+    if (doNotSkipCache && !this.stopRequested) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
@@ -1232,7 +1249,14 @@ export class TaskOrchestrator {
 
   private setupSignalHandlers() {
     process.once('SIGINT', () => {
-      this.cleanup().finally(() => process.exit(signalToCode('SIGINT')));
+      this.stopRequested = true;
+      this.cleanup().finally(() => {
+        if (this.resolveStopPromise) {
+          this.resolveStopPromise();
+        } else {
+          process.exit(signalToCode('SIGINT'));
+        }
+      });
     });
     process.once('SIGTERM', () => {
       this.cleanup();
