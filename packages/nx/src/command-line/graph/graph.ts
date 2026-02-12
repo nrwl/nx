@@ -55,6 +55,7 @@ import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { handleQToQuit } from '../../utils/handle-q-to-quit';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
@@ -780,6 +781,8 @@ async function startServer(
   };
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
+
+  handleQToQuit(() => handleTermination(0));
 
   // Find an available port starting from the requested port
   const availablePort = await findAvailablePort(port, host);
