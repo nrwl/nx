@@ -93,7 +93,9 @@ export class TaskOrchestrator {
 
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
+  private runningDiscreteTasks = new Map<string, RunningTask>();
   private stoppingContinuousTasks = new Map<string, 'interrupted' | 'fulfilled'>();
+  private stoppingDiscreteTasks = new Set<string>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
 
   private batchTaskResultsStreamed = new Set<string>();
@@ -586,13 +588,16 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         pipeOutput
       );
+      this.runningDiscreteTasks.set(task.id, childProcess);
 
       const { code, terminalOutput } = await childProcess.getResults();
+      this.runningDiscreteTasks.delete(task.id);
 
+      const isStopping = this.stoppingDiscreteTasks.delete(task.id);
       results.push({
         task,
         code,
-        status: code === 0 ? 'success' : 'failure',
+        status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
         terminalOutput,
       });
     }
@@ -1194,6 +1199,11 @@ export class TaskOrchestrator {
       this.stoppingContinuousTasks.set(taskId, 'interrupted');
     }
 
+    // Mark all running discrete tasks for intentional stop
+    for (const taskId of this.runningDiscreteTasks.keys()) {
+      this.stoppingDiscreteTasks.add(taskId);
+    }
+
     // Capture exit promises BEFORE killing (map may be modified during kills)
     const exitPromises = Array.from(this.continuousTaskExitHandled.values());
 
@@ -1213,6 +1223,7 @@ export class TaskOrchestrator {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         }
       }),
+      // Discrete tasks are killed via forkedProcessTaskRunner.cleanup() above
     ]);
 
     // Wait for all exit handlers to complete their work
