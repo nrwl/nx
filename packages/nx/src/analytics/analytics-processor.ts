@@ -4,12 +4,9 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { AnalyticsCollector } from './analytics-collector';
 
 async function main() {
-  const analyticsBufferFile = join(
-    workspaceRoot,
-    '.nx',
-    'workspace-data',
-    'analytics.json'
-  );
+  const analyticsBufferFile =
+    process.env.NX_ANALYTICS_BUFFER_FILE ??
+    join(workspaceRoot, '.nx', 'workspace-data', 'analytics.json');
 
   if (!existsSync(analyticsBufferFile)) {
     return;
