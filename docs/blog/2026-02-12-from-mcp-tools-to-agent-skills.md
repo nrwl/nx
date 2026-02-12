@@ -3,7 +3,7 @@ title: 'Why we deleted (most of) our MCP tools'
 slug: 'from-mcp-tools-to-agent-skills'
 authors: ['Max Kless']
 tags: [nx, ai, mcp]
-cover_image: /blog/images/2026-02-12/cover-image.avif
+cover_image: /blog/images/articles/bg-autonomous-agents-at-scale.avif
 description: 'How the shift from MCP tools to agent skills changed the way AI assistants work with Nx monorepos — and why MCP still matters.'
 ---
 
