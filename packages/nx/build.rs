@@ -8,12 +8,12 @@ fn main() {
     #[cfg(windows)]
     {
         let mut res = winres::WindowsResource::new();
-        res.set("ProductName", "Nx Build System")
+        res.set("ProductName", "Nx")
             .set(
                 "FileDescription",
                 "Nx Native Module - High-performance build system operations",
             )
-            .set("CompanyName", "Nrwl")
+            .set("CompanyName", "Nx")
             .set("LegalCopyright", "Copyright (c) Nrwl. MIT License.")
             .set("OriginalFilename", "nx.node")
             .set("InternalName", "nx");
