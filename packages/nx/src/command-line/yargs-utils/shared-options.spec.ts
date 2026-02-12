@@ -188,21 +188,21 @@ describe('shared-options', () => {
   });
 
   describe('withOutputStyle', () => {
-    it('should coerce outputStyle based on NX_TUI', () =>
+    it('should coerce outputStyle based on NX_TUI', async () =>
       withEnvironmentVariables(
         {
           NX_TUI: 'true',
           CI: 'false',
           NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
         },
-        () => {
+        async () => {
           const command = withOutputStyleOption(argv);
-          const result = command.parseSync([]);
+          const result = await command.parseAsync([]);
           expect(result['output-style']).toEqual('tui');
         }
       ));
 
-    it('should use NX_DEFAULT_OUTPUT_STYLE if not set', () =>
+    it('should use NX_DEFAULT_OUTPUT_STYLE if not set', async () =>
       withEnvironmentVariables(
         {
           NX_TUI: false,
@@ -210,89 +210,92 @@ describe('shared-options', () => {
           NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
           NX_DEFAULT_OUTPUT_STYLE: 'stream-without-prefixes',
         },
-        () => {
+        async () => {
           const command = withOutputStyleOption(argv);
-          const result = command.parseSync([]);
+          const result = await command.parseAsync([]);
           expect(result.outputStyle).toEqual('stream-without-prefixes');
         }
       ));
 
-    it('should set NX_TUI if using not set', () =>
+    it('should set NX_TUI if using not set', async () =>
       withEnvironmentVariables(
         {
           NX_TUI: false,
           CI: 'false',
           NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
         },
-        () => {
+        async () => {
           const command = withOutputStyleOption(argv);
-          const result = command.parseSync([]);
+          const result = await command.parseAsync([]);
           expect(process.env.NX_TUI).toEqual('true');
         }
       ));
 
     it.each(['dynamic', 'tui'])(
       'should set NX_TUI if using output-style=%s',
-      () =>
+      async () =>
         withEnvironmentVariables(
           {
             NX_TUI: false,
             CI: 'false',
             NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
           },
-          () => {
+          async () => {
             const command = withOutputStyleOption(argv);
-            const result = command.parseSync(['--output-style', 'dynamic']);
+            const result = await command.parseAsync([
+              '--output-style',
+              'dynamic',
+            ]);
             expect(process.env.NX_TUI).toEqual('true');
           }
         )
     );
 
-    it('should enable the tui when flag set', () =>
+    it('should enable the tui when flag set', async () =>
       withEnvironmentVariables(
         {
           NX_TUI: 'false',
           CI: 'false',
           NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
         },
-        () => {
+        async () => {
           const command = withOutputStyleOption(withTuiOptions(argv));
-          command.parseSync(['--tui']);
+          await command.parseAsync(['--tui']);
           expect(process.env.NX_TUI).toEqual('true');
         }
       ));
 
-    it('should disable the tui when flag set to false', () =>
+    it('should disable the tui when flag set to false', async () =>
       withEnvironmentVariables(
         {
           NX_TUI: 'true',
           CI: 'false',
           NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
         },
-        () => {
+        async () => {
           const command = withOutputStyleOption(withTuiOptions(argv));
-          command.parseSync(['--tui=false']);
+          await command.parseAsync(['--tui=false']);
           expect(process.env.NX_TUI).toEqual('false');
         }
       ));
   });
 
   describe('withTuiOptions', () => {
-    it('should parse tui flag', () => {
+    it('should parse tui flag', async () => {
       const command = withTuiOptions(argv);
-      const result = command.parseSync(['--tui']);
+      const result = await command.parseAsync(['--tui']);
       expect(result.tui).toEqual(true);
     });
 
-    it('should parse tui flag set to false', () => {
+    it('should parse tui flag set to false', async () => {
       const command = withTuiOptions(argv);
-      const result = command.parseSync(['--tui=false']);
+      const result = await command.parseAsync(['--tui=false']);
       expect(result.tui).toEqual(false);
     });
 
-    it('should parse tuiAutoExit flag', () => {
+    it('should parse tuiAutoExit flag', async () => {
       const command = withTuiOptions(argv);
-      const result = command.parseSync(['--tuiAutoExit=5']);
+      const result = await command.parseAsync(['--tuiAutoExit=5']);
       expect(result.tuiAutoExit).toEqual(5);
     });
   });
