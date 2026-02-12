@@ -861,8 +861,8 @@ function targetDefaultShouldBeApplied(
   return !plugin?.startsWith('nx/');
 }
 
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
+function deepClone<T>(obj: T): T {
+  return structuredClone(obj);
 }
 
 export function mergeTargetDefaultWithTargetDefinition(
