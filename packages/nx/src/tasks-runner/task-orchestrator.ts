@@ -985,7 +985,8 @@ export class TaskOrchestrator {
               status !== 'local-cache' &&
               status !== 'local-cache-kept-existing' &&
               status !== 'remote-cache' &&
-              status !== 'skipped'
+              status !== 'skipped' &&
+              status !== 'stopped'
           )
           .map((result) => ({
             ...result,

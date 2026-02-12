@@ -108,6 +108,8 @@ export function getTuiTerminalSummaryLifeCycle({
           totalFailedTasks++;
           failedTasks.add(task.id);
           break;
+        case 'stopped':
+          break;
       }
     }
   };

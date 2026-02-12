@@ -60,7 +60,6 @@ import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-c
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
-  getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
@@ -558,7 +557,7 @@ export async function runCommandForTasks(
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskGraph, taskResults),
+      completed: didCommandComplete(tasks, taskResults),
     };
   } catch (e) {
     restoreTerminal?.();
@@ -586,32 +585,19 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
 
 function didCommandComplete(
   tasks: Task[],
-  taskGraph: TaskGraph,
   taskResults: TaskResults
 ): boolean {
-  // If no tasks, then we can consider it complete
-  if (tasks.length === 0) {
-    return true;
-  }
+  if (tasks.length === 0) return true;
 
-  let continousLeafTasks = false;
-  const leafTasks = getLeafTasks(taskGraph);
   for (const task of tasks) {
     if (!task.continuous) {
-      // If any discrete task does not have a result then it did not run
-      if (!taskResults[task.id]) {
-        return false;
-      }
-    } else {
-      if (leafTasks.has(task.id)) {
-        continousLeafTasks = true;
-      }
+      // Discrete task must have a result (was started and finished)
+      if (!taskResults[task.id]) return false;
     }
   }
 
-  // If a leaf task is continous, we must have cancelled it.
-  // Otherwise, we've looped through all the discrete tasks and they have results
-  return !continousLeafTasks;
+  // Any stopped task means the run was interrupted
+  return !Object.values(taskResults).some((r) => r.status === 'stopped');
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
