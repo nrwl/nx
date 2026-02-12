@@ -583,10 +583,7 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   }
 }
 
-function didCommandComplete(
-  tasks: Task[],
-  taskResults: TaskResults
-): boolean {
+function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
   if (tasks.length === 0) return true;
 
   for (const task of tasks) {

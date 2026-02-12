@@ -96,7 +96,10 @@ export class TaskOrchestrator {
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
   private runningDiscreteTasks = new Map<string, RunningTask>();
-  private stoppingContinuousTasks = new Map<string, 'interrupted' | 'fulfilled'>();
+  private stoppingContinuousTasks = new Map<
+    string,
+    'interrupted' | 'fulfilled'
+  >();
   private stoppingDiscreteTasks = new Set<string>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
 
