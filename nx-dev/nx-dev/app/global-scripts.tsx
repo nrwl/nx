@@ -12,6 +12,42 @@ export default function GlobalScripts({
   useEffect(() => {
     if (!isProduction || !gtmMeasurementId) return;
 
+    const w = window as typeof window & { __hsbtLoaded?: boolean };
+    if (w.__hsbtLoaded) return;
+    w.__hsbtLoaded = true;
+
+    const ensureScript = (id: string, src: string) => {
+      if (document.getElementById(id)) return;
+      const script = document.createElement('script');
+      script.id = id;
+      script.src = src;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    };
+
+    const ensureStylesheet = (id: string, href: string) => {
+      if (document.getElementById(id)) return;
+      const link = document.createElement('link');
+      link.id = id;
+      link.href = href;
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      document.head.appendChild(link);
+    };
+
+    // Load HubSpot + forms and Calendly assets once.
+    ensureScript('hs-script', 'https://js.hs-scripts.com/2757427.js');
+    ensureScript('hs-forms-script', 'https://js.hsforms.net/forms/v2.js');
+    ensureScript(
+      'calendly-forms-script',
+      'https://assets.calendly.com/assets/external/forms.js'
+    );
+    ensureStylesheet(
+      'calendly-widget-style',
+      'https://assets.calendly.com/assets/external/widget.css'
+    );
+
     // Load GTM only; all analytics/marketing tags are managed in the container.
     (function (w, d, s, l, i) {
       w[l] = w[l] || [];
