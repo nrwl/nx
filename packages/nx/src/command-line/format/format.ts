@@ -25,14 +25,14 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { reportCommandRunWithArgs } from '../../analytics';
+import { reportCommandRunEvent } from '../../analytics';
 import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
-  reportCommandRunWithArgs('format', { command, ...args });
+  reportCommandRunEvent('format', undefined, { command, ...args });
   let prettier: typeof import('prettier');
   try {
     prettier = await import('prettier');
