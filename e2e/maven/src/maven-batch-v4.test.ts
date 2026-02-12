@@ -70,6 +70,8 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
   });
 
   it('should fail when unit test fails', () => {
+    // TODO: remove once batch mode dependentTaskOutputs is fixed
+    runCLI('reset');
     // Add a failing unit test
     updateFile(
       'app/src/test/java/com/example/app/AppApplicationTests.java',
