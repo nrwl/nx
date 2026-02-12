@@ -1,6 +1,6 @@
 import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
