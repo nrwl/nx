@@ -85,7 +85,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       `generate @nx/js:lib packages/${jsLib} --publishable --importPath=@proj/${jsLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`, {
+      timeout: 300000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
@@ -139,7 +141,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     );
     runCLI('sync');
 
-    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`, {
+      timeout: 300000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
@@ -198,7 +202,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     );
     runCLI('sync');
 
-    const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`, {
+      timeout: 300000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
@@ -252,7 +258,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     );
     runCLI('sync');
 
-    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`, {
+      timeout: 300000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}

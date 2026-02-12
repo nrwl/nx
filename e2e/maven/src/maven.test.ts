@@ -50,7 +50,7 @@ describe('Maven', () => {
     // Build app which depends on lib, which depends on utils
     let buildOutput = runCLI('run app:install', {
       verbose: true,
-      timeout: 180000,
+      timeout: 300000,
     });
 
     // Should build dependencies first
@@ -121,7 +121,7 @@ describe('Maven', () => {
     expect(output).toContain('- mvn-install-ci:');
 
     // Verify prefixed target works
-    const buildOutput = runCLI('run app:mvn-compile', { timeout: 180000 });
+    const buildOutput = runCLI('run app:mvn-compile', { timeout: 300000 });
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });

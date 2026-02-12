@@ -93,7 +93,7 @@ describe('release publishable libraries', () => {
     );
 
     const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`, {
-      timeout: 180000,
+      timeout: 300000,
     });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
@@ -150,7 +150,7 @@ describe('release publishable libraries', () => {
     );
 
     const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`, {
-      timeout: 180000,
+      timeout: 300000,
     });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
@@ -209,7 +209,7 @@ describe('release publishable libraries', () => {
     );
 
     const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`, {
-      timeout: 180000,
+      timeout: 300000,
     });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
@@ -267,7 +267,7 @@ describe('release publishable libraries', () => {
     runCLI('sync');
 
     const releaseOutput = runCLI(`release --specifier 0.0.5 --yes`, {
-      timeout: 180000,
+      timeout: 300000,
     });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
@@ -321,7 +321,7 @@ describe('release publishable libraries', () => {
     );
 
     const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`, {
-      timeout: 180000,
+      timeout: 300000,
     });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command

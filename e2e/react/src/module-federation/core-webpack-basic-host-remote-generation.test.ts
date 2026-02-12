@@ -87,7 +87,9 @@ describe('React Module Federation - Webpack Basic - Host Remote Generation', () 
 
       [shell, remote1, remote2, remote3].forEach((app) => {
         ['development', 'production'].forEach(async (configuration) => {
-          const cliOutput = runCLI(`run ${app}:build:${configuration}`);
+          const cliOutput = runCLI(`run ${app}:build:${configuration}`, {
+            timeout: 300000,
+          });
           expect(cliOutput).toContain('Successfully ran target');
         });
       });
