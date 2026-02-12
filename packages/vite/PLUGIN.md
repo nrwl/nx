@@ -1,4 +1,4 @@
-# Vitest
+# Vite with Vitest
 
 After making changes to a project, run the relevant test file to verify your changes work correctly.
 
