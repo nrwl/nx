@@ -114,6 +114,8 @@ export function getTuiTerminalSummaryLifeCycle({
           totalFailedTasks++;
           failedTasks.add(task.id);
           break;
+        case 'stopped':
+          break;
       }
 
       // Store the final string directly — shares the same reference as
