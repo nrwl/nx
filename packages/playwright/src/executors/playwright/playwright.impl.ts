@@ -57,6 +57,7 @@ export interface PlaywrightExecutorSchema {
   uiHost?: string;
   uiPort?: number;
   skipInstall?: boolean;
+  cacheDir?: string;
 }
 
 export async function playwrightExecutor(
@@ -86,7 +87,10 @@ export async function playwrightExecutor(
   }
 
   const args = createArgs(options);
-  const p = runPlaywright(args, context.root);
+  const env = options.cacheDir
+    ? { ...process.env, PWTEST_CACHE_DIR: options.cacheDir }
+    : undefined;
+  const p = runPlaywright(args, context.root, env);
   p.stdout.on('data', (message) => {
     process.stdout.write(message);
   });
@@ -103,7 +107,7 @@ export async function playwrightExecutor(
 
 function createArgs(
   opts: PlaywrightExecutorSchema,
-  exclude: string[] = ['skipInstall']
+  exclude: string[] = ['skipInstall', 'cacheDir']
 ): string[] {
   const args: string[] = [];
 
@@ -134,13 +138,14 @@ function createArgs(
   return args;
 }
 
-function runPlaywright(args: string[], cwd: string) {
+function runPlaywright(args: string[], cwd: string, env?: NodeJS.ProcessEnv) {
   try {
     const cli = require.resolve('@playwright/test/cli');
 
     return fork(cli, ['test', ...args], {
       stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
       cwd,
+      ...(env ? { env } : {}),
     });
   } catch (e) {
     console.error(e);
