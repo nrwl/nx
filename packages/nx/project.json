@@ -79,7 +79,11 @@
     "build-base": {
       "outputs": [
         "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}",
-        "{projectRoot}/src/**/*.d.ts"
+        "{projectRoot}/src/**/*.d.ts",
+        "{projectRoot}/release/**/*.d.ts",
+        "{projectRoot}/plugins/**/*.d.ts",
+        "{projectRoot}/presets/**/*.d.ts",
+        "{projectRoot}/tasks-runner/**/*.d.ts"
       ]
     },
     "build": {
