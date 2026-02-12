@@ -175,11 +175,11 @@ export function buildMissingVcsResult(): NeedsInputResult {
       {
         command: 'gh repo create --source=. --push',
         description:
-          'Create a GitHub repo and push (requires GitHub CLI: brew install gh)',
+          'Create a GitHub repo and push (requires GitHub CLI: brew install gh).',
       },
       {
         command: 'git remote add origin <url> && git push -u origin main',
-        description: 'Manual: Add remote and push to existing repo',
+        description: 'Manual: Add remote and push to existing repo.',
       },
     ],
     recommendedOption: 'gh repo create --source=. --push',
