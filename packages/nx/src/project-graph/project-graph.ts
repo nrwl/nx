@@ -135,8 +135,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  const { fileMap, rustReferences } = await retrieveWorkspaceFiles(
+    workspaceRoot,
+    projectRootMap
+  );
   performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
@@ -150,7 +152,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       projects,
       externalNodes,
       fileMap,
-      allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
       plugins,
@@ -229,9 +230,11 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
       project,
     ])
   );
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-  hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
+  const { fileMap, rustReferences } = await retrieveWorkspaceFiles(
+    workspaceRoot,
+    projectRootMap
+  );
+  hydrateFileMap(fileMap, rustReferences);
   return graph;
 }
 
