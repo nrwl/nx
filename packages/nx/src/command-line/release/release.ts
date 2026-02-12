@@ -37,12 +37,12 @@ import {
   NxReleaseVersionResult,
   createAPI as createReleaseVersionAPI,
 } from './version';
-import { reportCommandRunWithArgs } from '../../analytics';
+import { reportCommandRunEvent } from '../../analytics';
 import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunWithArgs('release', { fullRelease: true });
+    reportCommandRunEvent('release', undefined, { fullRelease: true });
     return createAPI({}, false)(args);
   });
 

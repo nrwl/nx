@@ -2,10 +2,10 @@ import type { Arguments } from 'yargs';
 import { DAEMON_OUTPUT_LOG_FILE } from '../../daemon/tmp-dir';
 import { output } from '../../utils/output';
 import { generateDaemonHelpOutput } from '../../daemon/client/generate-help-output';
-import { reportCommandRunWithArgs } from '../../analytics';
+import { reportCommandRunEvent } from '../../analytics';
 
 export async function daemonHandler(args: Arguments) {
-  reportCommandRunWithArgs('daemon', args);
+  reportCommandRunEvent('daemon', undefined, args);
   if (args.start) {
     const { daemonClient } = await import('../../daemon/client/client');
     const pid = await daemonClient.startInBackground();
