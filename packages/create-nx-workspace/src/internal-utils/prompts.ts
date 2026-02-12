@@ -1,5 +1,5 @@
-import * as yargs from 'yargs';
-import * as enquirer from 'enquirer';
+import yargs from 'yargs';
+import enquirer from 'enquirer';
 import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
