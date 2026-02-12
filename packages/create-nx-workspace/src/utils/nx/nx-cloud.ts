@@ -69,12 +69,7 @@ export function readNxCloudToken(directory: string) {
   ) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
   const { accessToken, nxCloudId } = getCloudOptions(directory);
-  const variant = getFlowVariant();
-  const spinnerMessage =
-    variant === '0'
-      ? 'Nx Cloud has been set up successfully'
-      : 'Nx Cloud configuration was successfully added';
-  nxCloudSpinner.succeed(spinnerMessage);
+  nxCloudSpinner.succeed('Nx Cloud configuration was successfully added');
   return accessToken || nxCloudId;
 }
 
@@ -134,7 +129,15 @@ export async function getNxCloudInfo(
     workspaceName,
     bannerVariant
   );
-  out.success(message);
+
+  // Variant 2 (deferred connection): No title, just output the banner directly
+  // without the NX badge since nothing was actually configured
+  if (!message.title) {
+    out.addNewline();
+    out.writeLines(message.bodyLines ?? []);
+  } else {
+    out.success(message);
+  }
   return out.getOutput();
 }
 
