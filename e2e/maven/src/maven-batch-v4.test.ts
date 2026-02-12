@@ -50,6 +50,25 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
     );
   });
 
+  it('should install successfully after restoring cached package outputs', () => {
+    // Step 1: Delete target directories to simulate a clean CI checkout
+    for (const mod of ['app', 'lib', 'utils']) {
+      rmSync(tmpProjPath(`${mod}/target`), { recursive: true, force: true });
+    }
+
+    // Step 2: Run package in batch mode — cache hit restores outputs (including nx-build-state.json)
+    runBatchCLI('run-many -t package');
+    checkFilesExist(
+      'app/target/app-1.0.0-SNAPSHOT.jar',
+      'lib/target/lib-1.0.0-SNAPSHOT.jar',
+      'utils/target/utils-1.0.0-SNAPSHOT.jar'
+    );
+
+    // Step 3: Run install in batch mode — this requires build state from the package phase
+    // to know about the main artifact.
+    runBatchCLI('run-many -t install');
+  });
+
   it('should fail when unit test fails', () => {
     // Add a failing unit test
     updateFile(
@@ -82,43 +101,5 @@ class AppApplicationTests {
     }
     expect(error).toBeDefined();
     expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
-  });
-
-  it('should install successfully after restoring cached package outputs', () => {
-    // Restore the original passing test file (previous test added a failing test)
-    updateFile(
-      'app/src/test/java/com/example/app/AppApplicationTests.java',
-      `package com.example.app;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class AppApplicationTests {
-    @Test
-    void contextLoads() {
-    }
-}`
-    );
-
-    // Step 1: Run package in batch mode to populate Nx cache
-    runBatchCLI('run-many -t package');
-    checkFilesExist(
-      'app/target/app-1.0.0-SNAPSHOT.jar',
-      'lib/target/lib-1.0.0-SNAPSHOT.jar',
-      'utils/target/utils-1.0.0-SNAPSHOT.jar'
-    );
-
-    // Step 2: Delete target directories to simulate a clean CI checkout
-    for (const mod of ['app', 'lib', 'utils']) {
-      rmSync(tmpProjPath(`${mod}/target`), { recursive: true, force: true });
-    }
-
-    // Step 3: Run package again — cache hit restores outputs (including nx-build-state.json)
-    runBatchCLI('run-many -t package');
-
-    // Step 4: Run install in batch mode — this requires build state from the package phase
-    // to know about the main artifact.
-    runBatchCLI('run-many -t install');
   });
 });
