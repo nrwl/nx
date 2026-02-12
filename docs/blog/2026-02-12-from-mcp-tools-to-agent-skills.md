@@ -20,7 +20,7 @@ Instead of asking questions and getting answers, developers were running fully a
 
 This had a subtle but important consequence for MCP: the "just give LLMs extra context" approach was becoming outdated. When an agent can run `nx show project myapp` in the terminal and read the output itself, why would it need an MCP tool to do the same thing?
 
-By late 2025, the sentiment on MCP started to turn. Developers were recognizing the token cost of "dumb" MCP tools - tools that dump large JSON payloads into context whether or not the agent needs all of it. Approaches like "code mode" with structured MCP outputs and programmatic MCP tooling started gaining traction, where agents write little scripts to process MCP tool results before loading them into context.
+By late 2025, the sentiment on MCP started to turn. Developers were recognizing the token cost of "dumb" MCP tools - tools that dump large JSON payloads into context whether or not the agent needs all of it. Approaches like ["code mode"](https://blog.cloudflare.com/code-mode/) with structured MCP outputs and programmatic MCP tooling started gaining traction, where agents write little scripts to process MCP tool results before loading them into context. Even Anthropic - the original creators of MCP - published about [code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp), showing a 98.7% token reduction by having agents process MCP results programmatically instead of dumping raw payloads into context.
 
 But for many cases, even this is overengineered. Modern agents can use the Nx CLI just as humans do and are wizards at piping together chains of tools like `jq` to extract exactly the information they need. This saves tokens because not every aspect of the project graph or a generator schema has to be loaded into context.
 
@@ -30,7 +30,7 @@ The key insight: **agents build their own context**.
 
 So if agents can already use the CLI, what's left to improve? The answer is **domain-specific knowledge**. An agent might be able to run `nx generate` just fine, but does it know _when_ to use a generator? Does it know your workspace conventions? Does it know to verify its work before returning to you?
 
-This is where **skills and subagents** come in. Instead of giving agents tools that return data, we give them clear instructions for _how to work with Nx_. Think of it as the difference between handing someone a wrench and teaching them how to be a mechanic.
+This is where **skills and subagents** come in. Instead of giving agents tools that return data, we give them clear instructions for _how to work with Nx_. Think of it as the difference between handing someone a wrench and teaching them how to be a mechanic. If you want a good introduction to skills as a concept, check out ["Don't Build Agents, Build Skills Instead"](https://www.youtube.com/watch?v=CEvIs9y1uog) by Barry Zhang & Mahesh Murag from Anthropic.
 
 We've been building and shipping skills as part of the **Nx Claude Plugin**, and the results have been really encouraging. Let's break down a few of the key ones:
 
@@ -62,7 +62,7 @@ Right now, agents tend to use more tokens with skills than with MCP tools. We be
 
 ## MCP Isn't Dead
 
-Even though we deleted most of our MCP tools, this doesn't mean MCP itself isn't useful. There are things that are harder or impossible for agents to do on their own or to teach in a skill:
+Even though we deleted most of our MCP tools, this doesn't mean MCP itself isn't useful. [Dynamic tool search](https://www.anthropic.com/engineering/advanced-tool-use) has reduced the impact on tokens, and there are things that are harder for agents to do on their own or to teach in a skill:
 
 - **Authenticated APIs** - Talking to Nx Cloud, retrieving CI run data, interacting with services that require auth tokens. An agent can't just `curl` an authenticated endpoint without the right setup.
 - **Communicating with running processes** -- Interacting with the IDE extension, streaming data from long-running processes, or coordinating between different tools that are already running.
