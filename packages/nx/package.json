@@ -177,6 +177,11 @@
   },
   "exports": {
     "./package.json": "./package.json",
+    "./bin/nx": {
+      "@nx/nx-source": "./bin/nx.ts",
+      "types": "./bin/nx.d.ts",
+      "default": "./dist/bin/nx.js"
+    },
     "./bin/nx.js": {
       "@nx/nx-source": "./bin/nx.ts",
       "types": "./bin/nx.d.ts",
