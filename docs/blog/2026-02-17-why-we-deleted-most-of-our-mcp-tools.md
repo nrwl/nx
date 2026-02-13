@@ -37,16 +37,17 @@ We've been building and shipping skills as part of the [Nx AI Agent Skills](/blo
 
 ### The Numbers
 
-We ran benchmarks comparing agent performance with skills versus our previous MCP-only approach, and the results speak for themselves:
+We ran benchmarks comparing agent performance with these new nx skills versus our previous approach with only the Nx MCP configured.
+The results clearly show our new skill-based setup performing better:
 
 **Nx analysis tasks**
 
 Here, the agent has to answer various questions about a complex monorepo with clear right/wrong answers that are scored by an LLM
 
-|        | Baseline | MCP only | Skills   |
-| ------ | -------- | -------- | -------- |
-| Sonnet | 78%      | 85%      | **100%** |
-| Haiku  | 60%      | 84%      | **94%**  |
+|                       | Baseline | MCP only | Skills   |
+| --------------------- | -------- | -------- | -------- |
+| Answer Score (Sonnet) | 78%      | 85%      | **100%** |
+| Answer Score (Haiku)  | 60%      | 84%      | **94%**  |
 
 **Generation tasks**
 
