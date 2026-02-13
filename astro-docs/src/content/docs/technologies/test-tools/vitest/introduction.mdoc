@@ -18,6 +18,7 @@ You can use Vitest with Nx without the plugin and still get [task caching](/docs
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Install the `@nx/vitest` version that matches the version of `nx` in your workspace. If the version numbers get out of sync, you can encounter difficult to debug errors. Use the [version sync recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync) to fix mismatches.
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
 ```shell
@@ -123,7 +124,6 @@ Configure the plugin in `nx.json`:
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
 
-For all generator and executor options, see the [Vitest generators reference](/docs/technologies/test-tools/vitest/generators).
 
 ### Configure unit and e2e separately
 
@@ -173,12 +173,9 @@ If Vitest is running E2E tests, set `ciTargetName` to split tests by file for di
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-{% aside type="tip" title="AI Prompt" %}
-Copy this prompt to your AI assistant:
+### CI Considerations
 
-> Add Vitest to my Nx workspace, configure a project named `my-app`, and show the Nx commands to run tests in watch mode, UI mode, and CI.
-
-{% /aside %}
+If you use `testMode: "watch"` locally, set `ciTargetName` and use `testMode: "run"` for CI to keep runs deterministic.
 
 ## What's Next
 
@@ -186,5 +183,6 @@ Copy this prompt to your AI assistant:
 {% linkcard title="Vitest Config Reference" description="Learn about Vitest configuration options and defaults." href="https://vitest.dev/config/" /%}
 {% linkcard title="Migrate from @nx/vite" description="Move Vitest tasks from the Vite plugin to @nx/vitest." href="/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite" /%}
 {% linkcard title="Split E2E Tasks" description="Distribute E2E tests by file with atomized tasks." href="/docs/features/ci-features/split-e2e-tasks" /%}
-{% linkcard title="Executors & Generators" description="Reference for @nx/vitest executors and generators." href="/docs/technologies/test-tools/vitest/generators" /%}
+{% linkcard title="Vitest Generators Reference" description="Reference for @nx/vitest generators." href="/docs/technologies/test-tools/vitest/generators" /%}
+{% linkcard title="Vitest Executors Reference" description="Reference for @nx/vitest executors." href="/docs/technologies/test-tools/vitest/executors" /%}
 {% /cardgrid %}
