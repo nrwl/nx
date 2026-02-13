@@ -28,7 +28,7 @@ export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
-  reportCommandRunEvent('configure-ai-agents');
+  reportCommandRunEvent('configure-ai-agents', undefined, args);
   // When called as inner from the tmp install, just run the impl directly
   if (inner) {
     return await configureAiAgentsHandlerImpl(args);

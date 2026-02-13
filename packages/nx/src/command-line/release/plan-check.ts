@@ -27,7 +27,7 @@ import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunEvent('release plan:check');
+    reportCommandRunEvent('release plan:check', undefined, args);
     return createAPI({})(args);
   });
 

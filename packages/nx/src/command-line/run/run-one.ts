@@ -93,7 +93,7 @@ export async function runOne(
       projectNames
     );
   } else {
-    reportCommandRunEvent('run');
+    reportCommandRunEvent('run', undefined, args);
     const status = await runCommand(
       projects,
       projectGraph,

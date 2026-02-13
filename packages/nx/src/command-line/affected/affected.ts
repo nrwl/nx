@@ -40,7 +40,7 @@ export async function affected(
   }
 ): Promise<void> {
   performance.mark('code-loading:end');
-  reportCommandRunEvent('affected');
+  reportCommandRunEvent('affected', undefined, args);
   performance.measure('code-loading', 'init-local', 'code-loading:end');
 
   const nxJson = readNxJson();
