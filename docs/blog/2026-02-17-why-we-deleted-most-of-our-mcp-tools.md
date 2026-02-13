@@ -19,11 +19,9 @@ When Claude Code launched, it changed the default interaction model. Of course, 
 
 This had a subtle but important consequence for MCP: the "just give LLMs extra context" approach was becoming outdated. When an agent can run `nx show project myapp` in the terminal and read the output itself, why would it need an MCP tool to do the same thing?
 
-By late 2025, the sentiment on MCP started to turn. Developers were recognizing the token cost of "dumb" MCP tools — tools that dump large JSON payloads into context whether or not the agent needs all of it. Even Anthropic, the original creators of MCP, published about [code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp), showing a 98.7% token reduction by having agents process MCP results programmatically instead of dumping raw payloads into context.
+By late 2025, the sentiment on MCP started to turn. Developers were recognizing the token cost of "dumb" MCP tools — tools that dump large JSON payloads into context whether or not the agent needs all of it. Even Anthropic, the original creators of MCP, wrote about [code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp), showing a massive token reduction by having agents process MCP results programmatically instead of dumping raw payloads into context.
 
 But for many cases, even this is overengineered. Modern agents can use the Nx CLI just as humans do and are perfectly capable of piping together tools like `jq` to extract exactly the information they need. This saves tokens because not every aspect of the project graph or a generator schema has to be loaded into context.
-
-The key insight: **agents build their own context**.
 
 ## Enter Skills
 
@@ -41,14 +39,18 @@ We've been building and shipping skills as part of the [Nx AI Agent Skills](/blo
 
 We ran benchmarks comparing agent performance with skills versus our previous MCP-only approach, and the results speak for themselves:
 
-**Nx question accuracy** (various questions with clear right/wrong answers, scored by LLM):
+**Nx analysis tasks**
+
+Here, the agent has to answer various questions about a complex monorepo with clear right/wrong answers that are scored by an LLM
 
 |        | Baseline | MCP only | Skills   |
 | ------ | -------- | -------- | -------- |
 | Sonnet | 78%      | 85%      | **100%** |
 | Haiku  | 60%      | 84%      | **94%**  |
 
-**Generation tasks** (mixed complexity scaffolding tasks):
+**Generation tasks**
+
+Here, the agent has to complete various generation tasks in different repos with varying complexity.
 
 |                               | MCP only | Skills  |
 | ----------------------------- | -------- | ------- |
@@ -59,7 +61,7 @@ We ran benchmarks comparing agent performance with skills versus our previous MC
 
 One interesting pattern: for smaller models like Haiku, the improvements are even more pronounced. With skills, Haiku nearly matches Sonnet on question accuracy -- up from just 60% at baseline. The structured guidance in skills helps compensate where smarter models would just persevere through exploration.
 
-For simple question-answering tasks, skills reduced token consumption compared to MCP tools. For generation tasks, tokens went up -- the skills include more thorough steps to verify output and match workspace conventions. We think that's the right tradeoff, and we're actively iterating to bring the cost down further.
+For simple question-answering tasks, skills reduced token consumption compared to MCP tools. For generation tasks, tokens went up - the skills include more thorough steps to verify output and match workspace conventions. We think that's the right tradeoff, and we're actively iterating to bring the cost down further.
 
 ## Where MCP Still Shines
 
