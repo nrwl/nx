@@ -9,6 +9,7 @@ import {
   withTargetAndConfigurationOption,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
@@ -28,7 +29,7 @@ export const yargsRunManyCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        await import('./run-many.js').then((m) =>
+        await handleImport('./run-many.js').then((m) =>
           m.runMany(withOverrides(args))
         );
       }

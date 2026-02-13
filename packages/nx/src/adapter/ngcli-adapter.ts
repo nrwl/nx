@@ -77,6 +77,7 @@ import {
   resolveSchema,
 } from '../config/schema-utils';
 import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils';
+import { handleImport } from '../utils/handle-import';
 
 function getProjectGraph(): Promise<ProjectGraph> {
   try {
@@ -1293,7 +1294,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 ) {
   const {
     WorkspaceNodeModulesArchitectHost: AngularWorkspaceNodeModulesArchitectHost,
-  } = await import('@angular-devkit/architect/node/index.js');
+  } = await handleImport('@angular-devkit/architect/node/index.js');
 
   class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
     constructor(

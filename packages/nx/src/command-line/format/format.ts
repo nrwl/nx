@@ -1,6 +1,7 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import { major } from 'semver';
+import { handleImport } from '../../utils/handle-import';
 import * as yargs from 'yargs';
 import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import {
@@ -32,7 +33,7 @@ export async function format(
 ): Promise<void> {
   let prettier: typeof import('prettier');
   try {
-    prettier = await import('prettier');
+    prettier = await handleImport('prettier');
   } catch {
     output.error({
       title: 'Prettier is not installed.',
