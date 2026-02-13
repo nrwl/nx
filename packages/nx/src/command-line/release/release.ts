@@ -37,9 +37,14 @@ import {
   NxReleaseVersionResult,
   createAPI as createReleaseVersionAPI,
 } from './version';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose, () => {
+    reportCommandRunEvent('release', undefined, { fullRelease: true });
+    return createAPI({}, false)(args);
+  });
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
@@ -81,7 +86,7 @@ export function createAPI(
         title: `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
         bodyLines: [nxJsonMessage],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
 
     // Apply default configuration to any optional user configuration
@@ -111,7 +116,7 @@ export function createAPI(
           `To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).`,
         ],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
 
     // These properties must never be undefined as this command should
@@ -169,7 +174,7 @@ export function createAPI(
       );
     if (versionPlanValidationError) {
       output.error(versionPlanValidationError);
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
 
     const planFiles = new Set<string>();
@@ -410,7 +415,7 @@ export function createAPI(
       );
       if (!allExitOk) {
         // When a publish target fails, we want to fail the nx release CLI
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       }
     } else {
       output.logSingleLine('Skipped publishing packages.');

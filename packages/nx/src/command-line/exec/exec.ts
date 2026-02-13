@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
-import { exit } from 'process';
 import * as yargs from 'yargs-parser';
 import { Arguments } from 'yargs';
 import { existsSync } from 'fs';
@@ -27,6 +26,8 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { joinPathFragments } from '../../utils/path';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { getCommandProjects } from '../../commands-runner/get-command-projects';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function nxExecCommand(
   args: Record<string, string | string[] | boolean>
@@ -40,7 +41,7 @@ export async function nxExecCommand(
   );
   const scriptArgV: string[] = readScriptArgV(overrides);
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-
+  reportCommandRunEvent('exec', undefined, args);
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
     const command = scriptArgV
@@ -144,7 +145,7 @@ function readScriptArgV(
     output.error({
       title: '`nx exec` requires passing in a command after `--`',
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   return overrides.__overrides_unparsed__;
@@ -177,7 +178,7 @@ function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
         `Is ${targetName} missing from ${project.data.root}/package.json's nx.includedScripts field?`,
       ],
     });
-    exit(1);
+    exitAndFlushAnalytics(1);
   }
 }
 

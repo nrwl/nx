@@ -14,6 +14,7 @@ import {
 import type { SyncArgs } from './command-object';
 import * as pc from 'picocolors';
 import { globalSpinner } from '../../utils/spinner';
+import { reportCommandRunEvent } from '../../analytics';
 
 interface SyncOptions extends SyncArgs {
   check?: boolean;
@@ -21,6 +22,11 @@ interface SyncOptions extends SyncArgs {
 
 export function syncHandler(options: SyncOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
+    reportCommandRunEvent(
+      `sync${options.check ? ' :check' : ''}`,
+      undefined,
+      options
+    );
     const projectGraph = await createProjectGraphAsync();
     const nxJson = readNxJson();
     const { globalGenerators, taskGenerators } =
