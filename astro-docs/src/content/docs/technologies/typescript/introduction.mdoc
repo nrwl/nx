@@ -26,23 +26,27 @@ nx add @nx/js
 
 Verify the plugin is setup:
 
-1. Check for the `@nx/js` listed as a plugin
+{% steps %}
 
-```shell
-nx report
-```
+1. Check for the `@nx/js` listed as a plugin:
 
-2. Ensure inferred project targets are working
+   ```shell
+   nx report
+   ```
 
-```shell
-nx show projects --with-target=typecheck
-```
+2. Ensure inferred project targets are working:
 
-3. Inspect a specific project configuration for the typecheck and/or build target depending on your project configuration.
+   ```shell
+   nx show projects --with-target=typecheck
+   ```
 
-```shell
-nx show project <ts-project-name>
-```
+3. Inspect a specific project configuration for the `typecheck`/`build` target, depending on your project configuration:
+
+   ```shell
+   nx show project <ts-project-name>
+   ```
+
+{% /steps %}
 
 If your TypeScript projects aren't showing up with the right targets, then [view read how `@nx/js` infers projects](#how-nxjstypescript-infers-tasks)
 
@@ -105,7 +109,7 @@ nx g @nx/js:lib libs/my-lib --bundler=tsc
 # Using SWC (faster compilation)
 nx g @nx/js:lib libs/my-lib --bundler=swc
 
-# Using Rollup (multiple output formats)
+# Using Rollup (to output in multiple formats)
 nx g @nx/js:lib libs/my-lib --bundler=rollup
 ```
 
@@ -125,7 +129,7 @@ SWC dependencies are installed automatically the first time the generator is ran
 
 ### Build TypeScript Libraries
 
-> If you did not setup a build target for your project initially, you can use the [`nx g @nx/js:setup-build` generator](/docs/technologies/typescript/generators#setup-build) to add a build target!
+> If you did not select a bundler for your project initially, you can use the [`nx g @nx/js:setup-build` generator](/docs/technologies/typescript/generators#setup-build) to add a build target!
 
 ```shell
 nx build my-lib
@@ -173,13 +177,13 @@ Linting is configured with [ESLint](/docs/technologies/eslint/introduction) by d
 nx lint <project-name>
 ```
 
-## Configure @nx/js TypeScript Inference
+## Configure `@nx/js` TypeScript Inference
 
 By default, when you add the `@nx/js` the plugin will be configured to use project and target inference.
 
 Otherwise you can manually add the [plugin to your `nx.json#plugins` to enable it](#plugin-options)
 
-### How @nx/js/typescript Infers Tasks
+### How the TypeScript Plugin Infers Tasks
 
 The `@nx/js/typescript` plugin adds tasks based on the files it finds in your project:
 
@@ -279,12 +283,14 @@ To opt a specific project out of the `typecheck` task, set `nx.addTypecheckTarge
 To see what tasks Nx inferred for a project:
 
 ```shell
-nx show project my-lib --web
+nx show project <my-project>
 ```
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
 ## CI Considerations for TypeScript Projects
+
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
 ### Build and Test Only What Changed
 
@@ -306,15 +312,13 @@ nx connect
 
 For large monorepos with many TypeScript projects, [TSC batch mode](/docs/technologies/typescript/guides/enable-tsc-batch-mode) can improve build performance by batching compilation across projects.
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
-
 ## What's Next
 
 {% cardgrid %}
 {% linkcard title="TypeScript Packages Tutorial" description="Build a TypeScript monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/typescript-packages-tutorial" /%}
-{% linkcard title="Maintain TypeScript Monorepos" description="How Nx automatically maintains project references and keeps your monorepo in sync." href="/docs/features/maintain-typescript-monorepos" /%}
 {% linkcard title="Switch to Workspaces & Project References" description="Migrate from path aliases to the modern monorepo setup." href="/docs/technologies/typescript/guides/switch-to-workspaces-project-references" /%}
 {% linkcard title="Compile to Multiple Formats" description="Build libraries to both ESM and CommonJS with Rollup." href="/docs/technologies/typescript/guides/compile-multiple-formats" /%}
-{% linkcard title="Define Secondary Entrypoints" description="Configure multiple entry points for your TypeScript packages." href="/docs/technologies/typescript/guides/define-secondary-entrypoints" /%}
-{% linkcard title="Generators & Executors Reference" description="Full API reference for @nx/js generators and executors." href="/docs/technologies/typescript/generators" /%}
+{% linkcard title="Generators Reference" description="Full API reference for @nx/js generators." href="/docs/technologies/typescript/generators" /%}
+{% linkcard title="Executors Reference" description="Full API reference for @nx/js executors." href="/docs/technologies/typescript/executors" /%}
+{% linkcard title="Migrations Reference" description="Full reference for @nx/js migrations." href="/docs/technologies/typescript/migrations" /%}
 {% /cardgrid %}
