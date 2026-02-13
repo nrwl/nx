@@ -855,6 +855,183 @@ describe('project-configuration-utils', () => {
           ]);
         });
       });
+
+      describe('source map tracking with spread', () => {
+        it('should track per-element source for array spread in top-level properties', () => {
+          const sourceMap: Record<string, SourceInformation> = {};
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input', '...'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          expect(result.inputs).toEqual([
+            'new-input',
+            'base-input-1',
+            'base-input-2',
+          ]);
+          // new-input came from the overriding target
+          expect(sourceMap['targets.build.inputs.0']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          // base elements retain the base source (looked up from parent key)
+          // Since there was no prior source map entry, base elements won't have entries
+          // The parent key should be attributed to the new source
+          expect(sourceMap['targets.build.inputs']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+        });
+
+        it('should track per-element source for array spread with existing source map', () => {
+          const sourceMap: Record<string, SourceInformation> = {
+            'targets.build.inputs': ['base-file', 'base-plugin'],
+          };
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          expect(result.inputs).toEqual([
+            'new-input',
+            'base-input-1',
+            'base-input-2',
+            'new-input-2',
+          ]);
+          expect(sourceMap['targets.build.inputs']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.0']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.1']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.2']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.3']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+        });
+
+        it('should track per-property source for object spread in options', () => {
+          const sourceMap: Record<string, SourceInformation> = {
+            'targets.build.options.env': ['base-file', 'base-plugin'],
+          };
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                  '...': true,
+                  OVERRIDE: 'new-value',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  BASE_VAR: 'base',
+                  OVERRIDE: 'base-value',
+                },
+              },
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          expect(result.options.env).toEqual({
+            NEW_VAR: 'new',
+            BASE_VAR: 'base',
+            OVERRIDE: 'new-value',
+          });
+          expect(sourceMap['targets.build.options.env']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.options.env.NEW_VAR']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.options.env.BASE_VAR']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          // OVERRIDE appears before '...' AND after '...' — new value wins because
+          // it's defined after the spread token in the new object
+          expect(sourceMap['targets.build.options.env.OVERRIDE']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+        });
+
+        it('should track base source for object properties overwritten by spread', () => {
+          const sourceMap: Record<string, SourceInformation> = {
+            'targets.build.options.config': ['base-file', 'base-plugin'],
+          };
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'new-value',
+                  '...': true,
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'base-value',
+                  baseOnly: 'base',
+                },
+              },
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          // sharedKey defined before '...', base spread overwrites it
+          expect(result.options.config).toEqual({
+            sharedKey: 'base-value',
+            baseOnly: 'base',
+          });
+          // Both properties came from base (spread overwrote the new value)
+          expect(sourceMap['targets.build.options.config.sharedKey']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          expect(sourceMap['targets.build.options.config.baseOnly']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+        });
+      });
     });
 
     describe('metadata', () => {
@@ -3226,6 +3403,120 @@ describe('project-configuration-utils', () => {
           DEFAULT_VAR: 'default',
         });
       });
+
+      it('should track per-element source for array spread in target default options', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'my-plugin'],
+          'targets.build': ['project.json', 'my-plugin'],
+          'targets.build.options': ['project.json', 'my-plugin'],
+          'targets.build.options.assets': ['project.json', 'my-plugin'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  assets: ['project-asset'],
+                },
+              },
+            },
+          },
+          {
+            options: {
+              assets: ['default-asset-1', '...', 'default-asset-2'],
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.options.assets).toEqual([
+          'default-asset-1',
+          'project-asset',
+          'default-asset-2',
+        ]);
+        // Parent key is attributed to target defaults (new source)
+        expect(sourceMap['targets.build.options.assets']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        // Per-element tracking
+        expect(sourceMap['targets.build.options.assets.0']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        expect(sourceMap['targets.build.options.assets.1']).toEqual([
+          'project.json',
+          'my-plugin',
+        ]);
+        expect(sourceMap['targets.build.options.assets.2']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('should track per-property source for object spread in target default options', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'my-plugin'],
+          'targets.build': ['project.json', 'my-plugin'],
+          'targets.build.options': ['project.json', 'my-plugin'],
+          'targets.build.options.env': ['project.json', 'my-plugin'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    PROJECT_VAR: 'project-value',
+                    SHARED: 'project-shared',
+                  },
+                },
+              },
+            },
+          },
+          {
+            options: {
+              env: {
+                DEFAULT_VAR: 'default-value',
+                '...': true,
+                SHARED: 'default-shared',
+              },
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.options.env).toEqual({
+          DEFAULT_VAR: 'default-value',
+          PROJECT_VAR: 'project-value',
+          SHARED: 'default-shared',
+        });
+        expect(sourceMap['targets.build.options.env']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        expect(sourceMap['targets.build.options.env.DEFAULT_VAR']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        expect(sourceMap['targets.build.options.env.PROJECT_VAR']).toEqual([
+          'project.json',
+          'my-plugin',
+        ]);
+        // SHARED is defined after '...', so target defaults win
+        expect(sourceMap['targets.build.options.env.SHARED']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+      });
     });
   });
 
@@ -3444,6 +3735,13 @@ describe('project-configuration-utils', () => {
         'new',
         'new-plugin',
       ]);
+      // Per-element source tracking
+      expect(
+        sourceMap['libs/lib-a']['targets.build.options.scripts.0']
+      ).toEqual(['new', 'new-plugin']);
+      expect(
+        sourceMap['libs/lib-a']['targets.build.options.scripts.1']
+      ).toEqual(['base', 'base-plugin']);
     });
   });
 });

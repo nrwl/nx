@@ -947,9 +947,9 @@ const NX_SPREAD_TOKEN = '...';
  *
  * If no spread token is found, newValue fully replaces baseValue.
  *
- * When `sourceMapContext` is provided, the source map is updated to reflect
- * which source contributed to the result. The source map is only updated when
- * newValue contributes (including spread), not when baseValue is returned as-is.
+ * When `sourceMapContext` is provided, the source map is updated per property
+ * to track which source each element/key came from. The existing source map
+ * entry for `key` is used as the base source information.
  */
 function getMergeValueResult(
   baseValue: any,
@@ -970,17 +970,44 @@ function getMergeValueResult(
   if (Array.isArray(newValue)) {
     const spreadIndex = newValue.findIndex((v) => v === NX_SPREAD_TOKEN);
     if (spreadIndex !== -1) {
-      // typeof [] === 'object', if baseValue isn't an array we can return new value.
-      // It's a type mismatch. On type mismatches, return new value without the `...`.
-      // To return without the ..., we substitute an empty array.
       const baseArray = Array.isArray(baseValue) ? baseValue : [];
-      const clone = [...newValue];
-      clone.splice(spreadIndex, 1, ...baseArray);
-      updateSourceMap(sourceMapContext);
-      return clone;
+      const baseSourceInfo = sourceMapContext?.sourceMap[sourceMapContext.key];
+
+      // Build the result array element by element so we can track each
+      // element's source in the source map.
+      const result: any[] = [];
+      let resultIdx = 0;
+      for (let i = 0; i < newValue.length; i++) {
+        if (newValue[i] === NX_SPREAD_TOKEN) {
+          for (let j = 0; j < baseArray.length; j++) {
+            result.push(baseArray[j]);
+            if (sourceMapContext && baseSourceInfo) {
+              sourceMapContext.sourceMap[
+                `${sourceMapContext.key}.${resultIdx}`
+              ] = baseSourceInfo;
+            }
+            resultIdx++;
+          }
+        } else {
+          result.push(newValue[i]);
+          if (sourceMapContext) {
+            sourceMapContext.sourceMap[`${sourceMapContext.key}.${resultIdx}`] =
+              sourceMapContext.sourceInformation;
+          }
+          resultIdx++;
+        }
+      }
+      if (sourceMapContext) {
+        sourceMapContext.sourceMap[sourceMapContext.key] =
+          sourceMapContext.sourceInformation;
+      }
+      return result;
     }
     // no spread token, and looking at an array, so return new array.
-    updateSourceMap(sourceMapContext);
+    if (sourceMapContext) {
+      sourceMapContext.sourceMap[sourceMapContext.key] =
+        sourceMapContext.sourceInformation;
+    }
     return newValue;
   } else if (
     // new value is a non-null object, that we know is not an array
@@ -991,34 +1018,41 @@ function getMergeValueResult(
   ) {
     const baseObj =
       typeof baseValue === 'object' && baseValue != null ? baseValue : {};
+    const baseSourceInfo = sourceMapContext?.sourceMap[sourceMapContext.key];
 
+    // Build the result object key by key so we can track each property's
+    // source in the source map. The last write wins — if a key appears in
+    // both new and base, the one that comes later in iteration order wins.
     const res: any = {};
-    // Iterate over the keys until you find the spread token.
-    // When its found, assign all keys from baseObj to res.
-    // Then continue until out of keys filling values from newValue.
     for (const newKey in newValue) {
       if (newKey !== NX_SPREAD_TOKEN) {
         res[newKey] = newValue[newKey];
+        if (sourceMapContext) {
+          sourceMapContext.sourceMap[`${sourceMapContext.key}.${newKey}`] =
+            sourceMapContext.sourceInformation;
+        }
       } else {
-        Object.assign(res, baseObj);
+        for (const baseKey in baseObj) {
+          res[baseKey] = baseObj[baseKey];
+          if (sourceMapContext && baseSourceInfo) {
+            sourceMapContext.sourceMap[`${sourceMapContext.key}.${baseKey}`] =
+              baseSourceInfo;
+          }
+        }
       }
     }
-    updateSourceMap(sourceMapContext);
+    if (sourceMapContext) {
+      sourceMapContext.sourceMap[sourceMapContext.key] =
+        sourceMapContext.sourceInformation;
+    }
     return res;
   }
 
-  updateSourceMap(sourceMapContext);
-  return newValue;
-}
-
-function updateSourceMap(context?: {
-  sourceMap: Record<string, SourceInformation>;
-  key: string;
-  sourceInformation: SourceInformation;
-}) {
-  if (context) {
-    context.sourceMap[context.key] = context.sourceInformation;
+  if (sourceMapContext) {
+    sourceMapContext.sourceMap[sourceMapContext.key] =
+      sourceMapContext.sourceInformation;
   }
+  return newValue;
 }
 
 function mergeOptionsBasedOnSource(
