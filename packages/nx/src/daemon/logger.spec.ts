@@ -15,7 +15,9 @@ describe('daemonStreamTransformer', () => {
       .spyOn(Date, 'now')
       .mockReturnValue(new Date('2021-10-11T17:18:45.980Z').valueOf());
     mockStream = new Writable({
-      write: () => {},
+      write: (_chunk, _encoding, callback) => {
+        callback();
+      },
     });
     writeSpy = jest.spyOn(mockStream, 'write');
   });
@@ -24,13 +26,19 @@ describe('daemonStreamTransformer', () => {
     jest.resetAllMocks();
   });
 
+  // Note: daemonStreamTransformer uses line-based buffering.
+  // Data without a trailing \n stays in the internal lineBuffer
+  // and is only flushed when `final()` is called (i.e., stream ends).
+  // Therefore, all write() tests use \n-terminated input.
+
   describe('write()', () => {
     it('should format a single line and write to output stream', (done) => {
       const transformer = daemonStreamTransformer(mockStream);
 
-      transformer.write('test message', 'utf-8', () => {
+      transformer.write('test message\n', 'utf-8', () => {
         expect(writeSpy).toHaveBeenCalledWith(
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - test message\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - test message\n',
+          expect.any(Function)
         );
         done();
       });
@@ -39,19 +47,22 @@ describe('daemonStreamTransformer', () => {
     it('should handle multiple lines in a single chunk', (done) => {
       const transformer = daemonStreamTransformer(mockStream);
 
-      transformer.write('line1\nline2\nline3', 'utf-8', () => {
+      transformer.write('line1\nline2\nline3\n', 'utf-8', () => {
         expect(writeSpy).toHaveBeenCalledTimes(3);
         expect(writeSpy).toHaveBeenNthCalledWith(
           1,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           2,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           3,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3\n',
+          expect.any(Function)
         );
         done();
       });
@@ -60,19 +71,22 @@ describe('daemonStreamTransformer', () => {
     it('should filter out empty lines', (done) => {
       const transformer = daemonStreamTransformer(mockStream);
 
-      transformer.write('line1\n\nline2\n\n\nline3', 'utf-8', () => {
+      transformer.write('line1\n\nline2\n\n\nline3\n', 'utf-8', () => {
         expect(writeSpy).toHaveBeenCalledTimes(3);
         expect(writeSpy).toHaveBeenNthCalledWith(
           1,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           2,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           3,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3\n',
+          expect.any(Function)
         );
         done();
       });
@@ -81,15 +95,17 @@ describe('daemonStreamTransformer', () => {
     it('should filter out whitespace-only lines', (done) => {
       const transformer = daemonStreamTransformer(mockStream);
 
-      transformer.write('line1\n   \n\t\nline2', 'utf-8', () => {
+      transformer.write('line1\n   \n\t\nline2\n', 'utf-8', () => {
         expect(writeSpy).toHaveBeenCalledTimes(2);
         expect(writeSpy).toHaveBeenNthCalledWith(
           1,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           2,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n',
+          expect.any(Function)
         );
         done();
       });
@@ -97,11 +113,12 @@ describe('daemonStreamTransformer', () => {
 
     it('should handle Buffer chunks', (done) => {
       const transformer = daemonStreamTransformer(mockStream);
-      const buffer = Buffer.from('buffered message');
+      const buffer = Buffer.from('buffered message\n');
 
       transformer.write(buffer, 'utf-8', () => {
         expect(writeSpy).toHaveBeenCalledWith(
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - buffered message\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - buffered message\n',
+          expect.any(Function)
         );
         done();
       });
@@ -137,15 +154,18 @@ describe('daemonStreamTransformer', () => {
         expect(writeSpy).toHaveBeenCalledTimes(3);
         expect(writeSpy).toHaveBeenNthCalledWith(
           1,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           2,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           3,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3\n',
+          expect.any(Function)
         );
         done();
       }, 100);
@@ -165,15 +185,18 @@ describe('daemonStreamTransformer', () => {
         expect(writeSpy).toHaveBeenCalledTimes(3);
         expect(writeSpy).toHaveBeenNthCalledWith(
           1,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1 part1\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1 part1\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           2,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n',
+          expect.any(Function)
         );
         expect(writeSpy).toHaveBeenNthCalledWith(
           3,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3 part2\n'
+          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3 part2\n',
+          expect.any(Function)
         );
         done();
       }, 100);
@@ -182,7 +205,7 @@ describe('daemonStreamTransformer', () => {
     it('should handle backpressure properly', (done) => {
       let writeCount = 0;
       const slowStream = new Writable({
-        write: (chunk, encoding, callback) => {
+        write: (_chunk, _encoding, callback) => {
           setTimeout(() => {
             writeCount++;
             callback();
@@ -199,71 +222,6 @@ describe('daemonStreamTransformer', () => {
         expect(writeCount).toBe(3);
         done();
       }, 200);
-    });
-
-    it('should handle split lines across multiple chunks when piped', (done) => {
-      const transformer = daemonStreamTransformer(mockStream);
-      const readable = Readable.from([
-        'line1',
-        ' part1\nline2\nline',
-        '3 part2\n',
-      ]);
-
-      readable.pipe(transformer);
-
-      setTimeout(() => {
-        expect(writeSpy).toHaveBeenCalledTimes(3);
-        expect(writeSpy).toHaveBeenNthCalledWith(
-          1,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line1 part1\n'
-        );
-        expect(writeSpy).toHaveBeenNthCalledWith(
-          2,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line2\n'
-        );
-        expect(writeSpy).toHaveBeenNthCalledWith(
-          3,
-          '[NX vNX_VERSION Daemon] - 2021-10-11T17:18:45.980Z - line3 part2\n'
-        );
-        done();
-      }, 100);
-    });
-
-    it('should handle backpressure properly', (done) => {
-      let writeCount = 0;
-      const slowStream = new Writable({
-        write: (chunk, encoding, callback) => {
-          setTimeout(() => {
-            writeCount++;
-            callback();
-          }, 10);
-        },
-      });
-
-      const transformer = daemonStreamTransformer(slowStream);
-      const readable = Readable.from(['line1\n', 'line2\n', 'line3\n']);
-
-      readable.pipe(transformer);
-
-      setTimeout(() => {
-        expect(writeCount).toBe(3);
-        done();
-      }, 200);
-    });
-
-    it('should handle pipe errors gracefully', (done) => {
-      const errorStream = new Writable({
-        write: (chunk, encoding, callback) => {
-          callback(new Error('Write failed'));
-        },
-      });
-
-      const transformer = daemonStreamTransformer(errorStream);
-      const readable = Readable.from(['line1\n']);
-
-      readable.on('end', () => {
-        done();
-      });
     });
   });
 });
@@ -307,7 +265,7 @@ describe('serverLogger', () => {
     ];
 
     testCases.forEach((tc, i) => {
-      it('should pretty print the given message(s) to stdout, wrapping them with useful metadata, CASE: ${i + 1}', () => {
+      it(`should pretty print the given message(s) to stdout, wrapping them with useful metadata, CASE: ${i + 1}`, () => {
         serverLogger.log(...tc.inputs);
         expect(consoleLogSpy).toHaveBeenCalledWith(tc.expectedLog);
       });
