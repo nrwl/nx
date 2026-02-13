@@ -18,6 +18,7 @@ Monorepos have many advantages and are especially powerful for AI-assisted devel
 - **Slow builds and tests** - Hundreds or thousands of tasks compete for CI resources.
 - **Complex task pipelines** - Projects depend on each other, so tasks need to run in the right order — and that's hard to manage by hand.
 - **Flaky CI** - Longer pipelines lead to random failures and inconsistent results between local and CI environments.
+- **Architectural erosion** - Without clear boundaries, unwanted dependencies creep in and projects become tightly coupled.
 
 ## What Nx Does
 
@@ -28,6 +29,8 @@ At its core, Nx:
 1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice
 2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects
 3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/concepts/task-pipeline-configuration), parallelizing when possible
+4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects
+5. **Handles flakiness** - [Automatically re-runs flaky tasks](/docs/features/ci-features/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci)
 
 ```shell
 nx build myapp            # Run a task
