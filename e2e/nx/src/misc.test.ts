@@ -106,6 +106,231 @@ describe('Nx Commands', () => {
       await killProcessAndPorts(childProcess.pid, port);
     }, 700000);
 
+    describe('show target', () => {
+      let app: string;
+
+      beforeAll(() => {
+        app = uniq('targetapp');
+        runCLI(
+          `generate @nx/web:app apps/${app} --bundler=webpack --unitTestRunner=vitest --linter=eslint`
+        );
+      });
+
+      /**
+       * Replace the random app name with a stable placeholder so
+       * snapshot output is deterministic across runs.
+       */
+      function normalizeOutput(output: string): string {
+        return output.replaceAll(app, '<APP>');
+      }
+
+      it('should show resolved target configuration', () => {
+        const result = JSON.parse(runCLI(`show target ${app}:build --json`));
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.executor).toBeDefined();
+        expect(result.options).toBeDefined();
+        expect(result.cache).toBeDefined();
+        expect(result.parallelism).toBeDefined();
+      });
+
+      it('should show target configuration with a specific config', () => {
+        const result = JSON.parse(
+          runCLI(`show target ${app}:build -c production --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.configuration).toBe('production');
+      });
+
+      it('should list resolved input files', () => {
+        const result = JSON.parse(
+          runCLI(`show target inputs ${app}:build --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.files).toBeDefined();
+        expect(Array.isArray(result.files)).toBe(true);
+        expect(result.files.length).toBeGreaterThan(0);
+      });
+
+      it('should list resolved output paths', () => {
+        const result = JSON.parse(
+          runCLI(`show target outputs ${app}:build --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.outputPaths).toBeDefined();
+        expect(Array.isArray(result.outputPaths)).toBe(true);
+        expect(result.outputPaths.length).toBeGreaterThan(0);
+      });
+
+      it('should check a matching input file and exit 0', () => {
+        // Get the list of inputs first
+        const inputs = JSON.parse(
+          runCLI(`show target inputs ${app}:build --json`)
+        );
+        const firstFile = inputs.files[0];
+        expect(firstFile).toBeDefined();
+
+        // runCLI throws on non-zero exit, so success here means exit 0
+        const result = JSON.parse(
+          runCLI(`show target inputs ${app}:build --check ${firstFile} --json`)
+        );
+        expect(result.isInput).toBe(true);
+      });
+
+      it('should report non-matching input file and exit 1', () => {
+        expect(() =>
+          runCLI(
+            `show target inputs ${app}:build --check definitely/not/an/input.xyz --json`
+          )
+        ).toThrow();
+
+        // Also verify the JSON structure via silenceError
+        const output = runCLI(
+          `show target inputs ${app}:build --check definitely/not/an/input.xyz --json`,
+          { silenceError: true }
+        );
+        const result = JSON.parse(output);
+        expect(result.isInput).toBe(false);
+      });
+
+      it('should check a matching output path and exit 0', () => {
+        const outputs = JSON.parse(
+          runCLI(`show target outputs ${app}:build --json`)
+        );
+        const firstOutput = outputs.outputPaths[0];
+        expect(firstOutput).toBeDefined();
+
+        // runCLI throws on non-zero exit, so success here means exit 0
+        const result = JSON.parse(
+          runCLI(
+            `show target outputs ${app}:build --check ${firstOutput} --json`
+          )
+        );
+        expect(result.isOutput).toBe(true);
+      });
+
+      it('should report non-matching output path and exit 1', () => {
+        expect(() =>
+          runCLI(
+            `show target outputs ${app}:build --check definitely/not/an/output --json`
+          )
+        ).toThrow();
+
+        const output = runCLI(
+          `show target outputs ${app}:build --check definitely/not/an/output --json`,
+          { silenceError: true }
+        );
+        const result = JSON.parse(output);
+        expect(result.isOutput).toBe(false);
+        expect(result.matchedOutput).toBeNull();
+      });
+
+      it('should check a directory containing input files and exit 0', () => {
+        // Directory containing inputs is a successful check (exit 0)
+        const result = JSON.parse(
+          runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src --json`
+          )
+        );
+        expect(result.isInput).toBe(false);
+        expect(result.isDirectoryContainingInputs).toBe(true);
+        expect(result.containedInputFiles.length).toBeGreaterThan(0);
+      });
+
+      it('should error when target not found', () => {
+        const output = runCLI(`show target ${app}:nonexistent`, {
+          silenceError: true,
+        });
+        expect(output).toContain('nonexistent');
+        expect(output).toContain('not found');
+      });
+
+      it('should support reversed order syntax', () => {
+        // nx show target app:build inputs (instead of nx show target inputs app:build)
+        const result = JSON.parse(
+          runCLI(`show target ${app}:build inputs --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.files).toBeDefined();
+      });
+
+      it('should error when --check is used without a value', () => {
+        const output = runCLI(`show target inputs ${app}:build --check`, {
+          silenceError: true,
+        });
+        expect(output).toContain('Not enough arguments following: check');
+      });
+
+      describe('human-readable output', () => {
+        it('should render target info', () => {
+          const output = normalizeOutput(runCLI(`show target ${app}:build`));
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render output paths', () => {
+          const output = normalizeOutput(
+            runCLI(`show target outputs ${app}:build`)
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render matching --check input', () => {
+          const inputs = JSON.parse(
+            runCLI(`show target inputs ${app}:build --json`)
+          );
+          const firstFile = inputs.files[0];
+
+          const output = normalizeOutput(
+            runCLI(`show target inputs ${app}:build --check ${firstFile}`)
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render non-matching --check input', () => {
+          const output = normalizeOutput(
+            runCLI(
+              `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
+              { silenceError: true }
+            )
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render matching --check output', () => {
+          const outputs = JSON.parse(
+            runCLI(`show target outputs ${app}:build --json`)
+          );
+          const firstOutput = outputs.outputPaths[0];
+
+          const output = normalizeOutput(
+            runCLI(`show target outputs ${app}:build --check ${firstOutput}`)
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render non-matching --check output', () => {
+          const output = normalizeOutput(
+            runCLI(
+              `show target outputs ${app}:build --check definitely/not/an/output`,
+              { silenceError: true }
+            )
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render directory containing inputs', () => {
+          const output = normalizeOutput(
+            runCLI(`show target inputs ${app}:build --check apps/${app}/src`)
+          );
+          expect(output).toMatchSnapshot();
+        });
+      });
+    });
+
     it('should find alternative port when default port is occupied', async () => {
       const app = uniq('myapp');
       runCLI(`generate @nx/web:app apps/${app}`);
