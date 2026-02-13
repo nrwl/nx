@@ -19,9 +19,7 @@
 
 <hr>
 
-# Smart Monorepos · Fast Builds
-
-Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
+# The Monorepo Platform that amplifies both developers and AI agents. Nx optimizes your builds, scales your CI, and fixes failed PRs automatically. Ship in half the time.
 
 Create a new Nx workspace with
 
