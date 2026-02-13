@@ -48,17 +48,17 @@ pub struct HashInputs {
 /// Internal builder that uses HashSet for O(1) deduplication during accumulation.
 /// Convert to HashInputs via `into()` when ready to return via NAPI.
 #[derive(Debug, Default, Clone)]
-struct HashInputsBuilder {
-    files: HashSet<String>,
-    runtime: HashSet<String>,
-    environment: HashSet<String>,
-    dep_outputs: HashSet<String>,
-    external: HashSet<String>,
+pub(crate) struct HashInputsBuilder {
+    pub(crate) files: HashSet<String>,
+    pub(crate) runtime: HashSet<String>,
+    pub(crate) environment: HashSet<String>,
+    pub(crate) dep_outputs: HashSet<String>,
+    pub(crate) external: HashSet<String>,
 }
 
 impl HashInputsBuilder {
     /// Extends this builder with all values from another builder
-    fn extend(&mut self, other: HashInputsBuilder) {
+    pub(crate) fn extend(&mut self, other: HashInputsBuilder) {
         self.files.extend(other.files);
         self.runtime.extend(other.runtime);
         self.environment.extend(other.environment);
