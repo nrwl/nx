@@ -114,6 +114,16 @@ describe('Nx Commands', () => {
         runCLI(
           `generate @nx/web:app apps/${app} --bundler=webpack --unitTestRunner=vitest --linter=eslint`
         );
+        // Add a production configuration so the `-c production` test has something to resolve
+        updateJson(`apps/${app}/project.json`, (json) => {
+          json.targets ??= {};
+          json.targets.build ??= {};
+          json.targets.build.configurations ??= {};
+          json.targets.build.configurations.production = {
+            optimization: true,
+          };
+          return json;
+        });
       });
 
       /**

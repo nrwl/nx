@@ -232,7 +232,7 @@ const showTargetInfoCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> =
           type: 'string',
           choices: ['inputs', 'outputs'],
           description:
-            'Used to allow running `nx show target app:build inputs` in addition to `nx show target inputs app:build`',
+            'Used to allow running `nx show target app:build inputs` in addition to `nx show target inputs app:build`.',
         })
         .option('configuration', {
           type: 'string',
