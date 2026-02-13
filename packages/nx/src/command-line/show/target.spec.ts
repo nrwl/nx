@@ -79,6 +79,7 @@ describe('show target', () => {
     mockNxJson = {};
     mockHashInputs = {};
     mockExpandedOutputs = null;
+    process.exitCode = undefined;
     process.cwd = jest.fn().mockReturnValue(mockCwd);
   });
 
@@ -517,6 +518,7 @@ describe('show target', () => {
     const parsed = JSON.parse(logged);
     expect(parsed.isInput).toBe(true);
     expect(parsed.matchedCategory).toBe('files');
+    expect(process.exitCode).toBe(0);
   });
 
   it('should identify matching environment variable with --check', async () => {
@@ -556,6 +558,7 @@ describe('show target', () => {
     const parsed = JSON.parse(logged);
     expect(parsed.isInput).toBe(true);
     expect(parsed.matchedCategory).toBe('environment');
+    expect(process.exitCode).toBe(0);
   });
 
   it('should report non-match correctly with --check for inputs', async () => {
@@ -594,6 +597,7 @@ describe('show target', () => {
     const logged = (console.log as jest.Mock).mock.calls[0][0];
     const parsed = JSON.parse(logged);
     expect(parsed.isInput).toBe(false);
+    expect(process.exitCode).toBe(1);
   });
 
   it('should normalize leading ./ in --check paths', async () => {
@@ -632,6 +636,7 @@ describe('show target', () => {
     const logged = (console.log as jest.Mock).mock.calls[0][0];
     const parsed = JSON.parse(logged);
     expect(parsed.isInput).toBe(true);
+    expect(process.exitCode).toBe(0);
   });
 
   it('should report directory containing input files with --check', async () => {
@@ -673,6 +678,7 @@ describe('show target', () => {
     expect(parsed.isDirectoryContainingInputs).toBe(true);
     expect(parsed.containedInputFiles).toContain('apps/my-app/src/main.ts');
     expect(parsed.containedInputFiles).toContain('apps/my-app/src/app.ts');
+    expect(process.exitCode).toBe(0);
   });
 
   it('should list resolved output paths', async () => {
@@ -730,6 +736,7 @@ describe('show target', () => {
     const parsed = JSON.parse(logged);
     expect(parsed.isOutput).toBe(true);
     expect(parsed.matchedOutput).toBe('apps/my-app/dist');
+    expect(process.exitCode).toBe(0);
   });
 
   it('should detect directory containing output paths with --check for outputs', async () => {
@@ -762,6 +769,7 @@ describe('show target', () => {
     expect(parsed.containedOutputPaths).toEqual(
       expect.arrayContaining(['apps/my-app/dist', 'apps/my-app/coverage'])
     );
+    expect(process.exitCode).toBe(0);
   });
 
   it('should match file via expanded outputs when configured paths use globs', async () => {
@@ -797,6 +805,7 @@ describe('show target', () => {
     const parsed = JSON.parse(logged);
     expect(parsed.isOutput).toBe(true);
     expect(parsed.matchedOutput).toBe('apps/my-app/dist/main.js');
+    expect(process.exitCode).toBe(0);
   });
 
   it('should not flag {options.*} outputs as unresolved when option is set', async () => {
@@ -917,6 +926,7 @@ describe('show target', () => {
     expect(parsed.isOutput).toBe(false);
     expect(parsed.matchedOutput).toBeNull();
     expect(parsed.isDirectoryContainingOutputs).toBeUndefined();
+    expect(process.exitCode).toBe(1);
   });
 });
 
