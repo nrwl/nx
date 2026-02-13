@@ -6,16 +6,22 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../config/workspace-json-project-json';
-import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
+import { NX_PREFIX } from '../../utils/logger';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import { minimatch } from 'minimatch';
+import { existsSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { existsSync } from 'node:fs';
 
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isGlobPattern } from '../../utils/globs';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -33,14 +39,8 @@ import {
   ProjectWithNoNameError,
   WorkspaceValidityError,
 } from '../error-types';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
-import {
-  getExecutorInformation,
-  parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -1024,7 +1024,8 @@ function getMergeValueResult(
     // source in the source map. The last write wins — if a key appears in
     // both new and base, the one that comes later in iteration order wins.
     const res: any = {};
-    for (const newKey in newValue) {
+    const newKeys = Object.keys(newValue);
+    for (const newKey of newKeys) {
       if (newKey !== NX_SPREAD_TOKEN) {
         res[newKey] = newValue[newKey];
         if (sourceMapContext) {
