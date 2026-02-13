@@ -1,6 +1,6 @@
 ---
 title: 'Why we deleted (most of) our MCP tools'
-slug: 'from-mcp-tools-to-agent-skills'
+slug: 'why-we-deleted-most-of-our-mcp-tools'
 authors: ['Max Kless']
 tags: [nx, ai, mcp]
 cover_image: /blog/images/articles/bg-autonomous-agents-at-scale.avif
@@ -41,23 +41,25 @@ We've been building and shipping skills as part of the [Nx AI Agent Skills](/blo
 
 We ran benchmarks comparing agent performance with skills versus our previous MCP-only approach, and the results speak for themselves:
 
-<!-- TODO: Replace with actual graphic/table -->
+**Nx question accuracy** (various questions with clear right/wrong answers, scored by LLM):
 
-| Scenario                                                    | Improvement with Skills         |
-| ----------------------------------------------------------- | ------------------------------- |
-| Scaffolding tasks (generator usage & workspace consistency) | **[xyz]% more generator usage** |
-| Verification before returning to user                       | **[xyz]% more often**           |
-| Project graph / target / dependency questions               | **[xyz]% better scores**        |
+|        | Baseline | MCP only | Skills   |
+| ------ | -------- | -------- | -------- |
+| Sonnet | 78%      | 85%      | **100%** |
+| Haiku  | 60%      | 84%      | **94%**  |
 
-<!-- END TODO -->
+**Generation tasks** (mixed complexity scaffolding tasks):
 
-For scaffolding tasks where workspace consistency is important, our benchmarks show [xyz] more generator usage. With skills, agents actually run verification before returning to the user [xyz]% more often -- meaning fewer "looks good but doesn't compile" moments. For questions about the Nx project graph, targets, and dependencies -- where the MCP was also quite well-positioned -- the improvement is less dramatic but still measurable: [xyz]% better scores.
+|                               | MCP only | Skills  |
+| ----------------------------- | -------- | ------- |
+| Generator usage rate (Sonnet) | 71%      | **93%** |
+| Generator usage rate (Haiku)  | 71%      | **98%** |
+| Verification rate (Sonnet)    | 32%      | **80%** |
+| Verification rate (Haiku)     | 46%      | **64%** |
 
-One interesting pattern: for smaller models like Haiku, the improvements are even bigger. The structured guidance in skills helps patch the gaps where smarter models would just persevere through exploration. Skills act as a great equalizer across model capabilities.
+One interesting pattern: for smaller models like Haiku, the improvements are even more pronounced. With skills, Haiku nearly matches Sonnet on question accuracy -- up from just 60% at baseline. The structured guidance in skills helps compensate where smarter models would just persevere through exploration.
 
-{% callout type="info" title="A caveat on tokens" %}
-Right now, agents tend to use more tokens with skills than with MCP tools. We believe this is worth the tradeoff -- better results matter more than cheaper bad results -- but we're actively iterating to bring token usage down.
-{% /callout %}
+For simple question-answering tasks, skills reduced token consumption compared to MCP tools. For generation tasks, tokens went up -- the skills include more thorough steps to verify output and match workspace conventions. We think that's the right tradeoff, and we're actively iterating to bring the cost down further.
 
 ## Where MCP Still Shines
 
