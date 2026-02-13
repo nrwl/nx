@@ -74,7 +74,7 @@ This will execute the `build` script from `my-project`'s `package.json`, equival
 
 Similarly you [can run tasks across all projects](/docs/features/run-tasks), just specific ones or just those from projects you touched.
 
-From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/technologies), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
+From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/plugin-registry), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
 
 {% /callout %}
 
@@ -85,7 +85,7 @@ Nx is modular. Start with just the CLI and add capabilities as your needs grow.
 | Component                                            | What It Does                                                                                                                                                                           |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Nx Core**                                          | Task runner with [local caching](/docs/features/cache-task-results). Works with any tech stack.                                                                                        |
-| [**Nx Plugins**](/docs/technologies)                 | Technology-specific automation (generators, executors, dependency detection)                                                                                                           |
+| [**Nx Plugins**](/docs/plugin-registry)              | Technology-specific automation (generators, executors, dependency detection)                                                                                                           |
 | [**Nx Console**](/docs/getting-started/editor-setup) | Editor extension for VSCode/JetBrains with visual UI and [AI assistance](/docs/features/enhance-ai)                                                                                    |
 | [**Nx Cloud**](/docs/features/ci-features)           | [Remote caching](/docs/features/ci-features/remote-cache), [affected commands](/docs/features/ci-features/affected), and [self-healing CI](/docs/features/ci-features/self-healing-ci) |
 
@@ -111,7 +111,7 @@ Nx can also connect multiple repositories into a synthetic monorepo, letting you
 
 {% linkcard title="Quickstart" description="Get your first Nx project running in minutes." href="/docs/quickstart" /%}
 
-{% linkcard title="Technologies" description="Find plugins for React, Angular, Node, Gradle, Maven, .NET, and more." href="/docs/technologies" /%}
+{% linkcard title="Plugins" description="Find plugins for React, Angular, Node, Gradle, Maven, .NET, and more." href="/docs/plugin-registry" /%}
 
 {% linkcard title="Concepts" description="Improve your understanding of how Nx works under the hood." href="/docs/concepts" /%}
 
