@@ -74,8 +74,6 @@ pub struct InlineApp {
     // === Scrollback Rendering ===
     /// Track scrollback line count per task for incremental rendering
     task_scrollback_lines: HashMap<String, usize>,
-    /// Track last rendered scrollback lines per task for buffered rendering
-    task_last_rendered_scrollback: HashMap<String, usize>,
     /// Counter for buffering scrollback renders (render every 20th iteration)
     scrollback_render_counter: u32,
     /// Total lines inserted above TUI (for cleanup on exit)
@@ -126,7 +124,7 @@ impl InlineApp {
             countdown_popup: CountdownPopup::new(),
             is_interactive: false,
             task_scrollback_lines: HashMap::new(),
-            task_last_rendered_scrollback: HashMap::new(),
+
             scrollback_render_counter: 0,
             total_inserted_lines: 0,
             status_message: None,
@@ -156,7 +154,7 @@ impl InlineApp {
             // Reset all scrollback tracking when mode switching
             // PTYs will be resized in init(), which changes scrollback calculations
             task_scrollback_lines: HashMap::new(),
-            task_last_rendered_scrollback: HashMap::new(),
+
             // Start at 19 so the first render (increment to 20) will trigger scrollback rendering
             // This ensures existing PTY content from full-screen mode is immediately displayed
             scrollback_render_counter: 19,
@@ -239,11 +237,10 @@ impl InlineApp {
                 rows
             );
 
-            // Clone the PTY instance, resize it, and replace the Arc
-            let mut pty_clone = pty_arc.as_ref().clone();
-            if pty_clone.resize(rows, cols).is_ok() {
-                state.register_pty_instance(task_id.to_string(), Arc::new(pty_clone));
-            }
+            // Async resize moves the expensive reparse off the event loop.
+            // Scrollback rendering is skipped until the resize completes
+            // (detected via is_resize_pending).
+            pty_arc.resize_async(rows, cols);
         }
 
         Some(())
@@ -615,8 +612,6 @@ impl TuiApp for InlineApp {
     fn on_pty_registered(&mut self, task_id: &str) {
         // Initialize scrollback tracking for inline mode
         self.task_scrollback_lines.insert(task_id.to_string(), 0);
-        self.task_last_rendered_scrollback
-            .insert(task_id.to_string(), 0);
     }
 
     /// Override to resize interactive PTYs to inline dimensions
@@ -758,31 +753,22 @@ impl InlineApp {
                 let pty = pty.clone();
                 drop(state);
 
-                // Get last rendered scrollback line count for this task
-                let last_rendered_lines = self
-                    .task_last_rendered_scrollback
-                    .get(current_task)
-                    .copied()
-                    .unwrap_or(0);
+                const MAX_LINES_PER_RENDER: usize = 250;
 
-                // Get buffered scrollback content since last render
-                let buffered_scrollback_lines =
-                    pty.get_buffered_scrollback_content_for_inline(last_rendered_lines);
-
-                // Update tracking for next buffered render
-                let current_scrollback_lines = pty.get_scrollback_line_count();
+                // Get buffered scrollback content produced by the background thread.
+                // The background thread tracks its own cursor into the scrollback
+                // region and appends new lines to pending_lines. We drain up to
+                // MAX_LINES_PER_RENDER per frame — the rest stay in pending_lines.
+                let (buffered_scrollback_lines, current_scrollback_lines) =
+                    pty.get_buffered_scrollback_content_for_inline(MAX_LINES_PER_RENDER);
 
                 self.task_scrollback_lines
                     .insert(current_task.clone(), current_scrollback_lines);
 
                 // Render buffered scrollback above TUI using terminal.insert_before
-                // Render in batches to avoid overwhelming the terminal
                 if !buffered_scrollback_lines.is_empty() {
-                    const MAX_LINES_PER_RENDER: usize = 250;
-
-                    // Calculate how many lines to render this cycle
-                    let lines_to_render = buffered_scrollback_lines.len().min(MAX_LINES_PER_RENDER);
-                    let batch = &buffered_scrollback_lines[0..lines_to_render];
+                    let lines_to_render = buffered_scrollback_lines.len();
+                    let batch = &buffered_scrollback_lines[..];
 
                     use crate::native::tui::theme::THEME;
                     use ratatui::style::Style;
@@ -809,17 +795,10 @@ impl InlineApp {
                         // Track total lines inserted for cleanup on exit
                         self.total_inserted_lines += height as u32;
 
-                        // Update last rendered count to reflect what we actually rendered
-                        // This is incremental - we only advance by the batch size
-                        let new_last_rendered = last_rendered_lines + lines_to_render;
-                        self.task_last_rendered_scrollback
-                            .insert(current_task.clone(), new_last_rendered);
-
                         tracing::trace!(
-                            "render_scrollback_above_tui: Updated last_rendered from {} to {} (remaining: {})",
-                            last_rendered_lines,
-                            new_last_rendered,
-                            current_scrollback_lines - new_last_rendered
+                            "render_scrollback_above_tui: Rendered {} lines (total scrollback: {})",
+                            lines_to_render,
+                            current_scrollback_lines
                         );
                     } else {
                         tracing::error!(
@@ -1375,7 +1354,6 @@ mod tests {
 
         // Verify scrollback tracking initialized
         assert_eq!(app.task_scrollback_lines.get("app1"), Some(&0));
-        assert_eq!(app.task_last_rendered_scrollback.get("app1"), Some(&0));
 
         // Verify PTY registered in state
         let state_ref = app.get_state();
