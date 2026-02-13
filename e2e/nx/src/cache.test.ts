@@ -250,6 +250,93 @@ describe('cache', () => {
     expect(outputsWithoutOutputs).not.toContain('z.md');
   });
 
+  it('should handle outputs with globs and directories containing symlinks', async () => {
+    // Reproduces https://github.com/nrwl/nx/issues/34013
+    // When outputs include both glob patterns (*.json) and directory patterns
+    // (standalone, server), and those directories contain symlinks,
+    // the cache put operation fails with "File exists (os error 17)" (EEXIST).
+    const projectName = uniq('myapp');
+
+    // Create a build script that produces output with symlinks
+    // (simulating Next.js standalone build with pnpm/bun node_modules)
+    updateFile(
+      `apps/${projectName}/build.js`,
+      `
+const fs = require('fs');
+const path = require('path');
+
+const projectRoot = path.join(process.cwd(), 'apps/${projectName}');
+const nextDir = path.join(projectRoot, '.next');
+
+// Clean previous output
+fs.rmSync(nextDir, { recursive: true, force: true });
+
+// Create .next directory with JSON files
+fs.mkdirSync(nextDir, { recursive: true });
+fs.writeFileSync(path.join(nextDir, 'build-manifest.json'), JSON.stringify({pages:{}}));
+fs.writeFileSync(path.join(nextDir, 'routes-manifest.json'), JSON.stringify({routes:[]}));
+
+// Create .next/standalone with a symlink (simulating pnpm linker)
+const standaloneDir = path.join(nextDir, 'standalone');
+fs.mkdirSync(path.join(standaloneDir, 'real-pkg'), { recursive: true });
+fs.writeFileSync(path.join(standaloneDir, 'real-pkg', 'index.js'), 'module.exports = {}');
+fs.writeFileSync(path.join(standaloneDir, 'server.js'), 'require("./real-pkg")');
+
+// Create a symlink inside standalone (outside of node_modules)
+// This simulates the kind of symlink structure pnpm/bun creates
+fs.symlinkSync(
+  path.join(standaloneDir, 'real-pkg', 'index.js'),
+  path.join(standaloneDir, 'linked-entry.js')
+);
+
+// Create .next/server
+const serverDir = path.join(nextDir, 'server');
+fs.mkdirSync(serverDir, { recursive: true });
+fs.writeFileSync(path.join(serverDir, 'app.js'), 'module.exports = {}');
+
+console.log('Build complete');
+`
+    );
+
+    updateFile(
+      `apps/${projectName}/project.json`,
+      JSON.stringify({
+        name: projectName,
+        targets: {
+          build: {
+            cache: true,
+            command: `node apps/${projectName}/build.js`,
+            inputs: ['{projectRoot}/build.js'],
+            outputs: [
+              `{projectRoot}/.next/*.json`,
+              `{projectRoot}/.next/standalone`,
+              `{projectRoot}/.next/server`,
+            ],
+          },
+        },
+      })
+    );
+
+    // First run - should cache without error
+    const firstRun = runCLI(`build ${projectName}`);
+    expect(firstRun).not.toContain('read the output from the cache');
+    expect(firstRun).toContain('Build complete');
+
+    // Verify the output files exist including the symlink
+    expect(
+      fileExists(tmpProjPath(`apps/${projectName}/.next/build-manifest.json`))
+    ).toBe(true);
+    expect(
+      fileExists(
+        tmpProjPath(`apps/${projectName}/.next/standalone/linked-entry.js`)
+      )
+    ).toBe(true);
+
+    // Second run - should hit cache and restore without EEXIST error
+    const secondRun = runCLI(`build ${projectName}`);
+    expect(secondRun).toContain('local cache');
+  });
+
   it('should use consider filesets when hashing', async () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');

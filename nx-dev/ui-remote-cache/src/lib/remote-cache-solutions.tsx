@@ -5,7 +5,7 @@ import {
   ExclamationCircleIcon,
 } from '@heroicons/react/24/solid';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import Link from 'next/link';
 
 export function RemoteCacheSolutions(): ReactElement {
@@ -45,7 +45,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     size="default"
                     variant="contrast"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'manage-remote-cache-with-nx-cloud',
                         'managed-remote-cache',
                         'remote-cache'
@@ -174,7 +174,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     size="default"
                     variant="contrast"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'learn-more-self-hosted-cache-plugins',
                         'self-hosted-cache',
                         'remote-cache'
@@ -264,7 +264,7 @@ export function RemoteCacheSolutions(): ReactElement {
                     size="default"
                     variant="contrast"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'build-your-own-openapi',
                         'build-your-own',
                         'remote-cache'

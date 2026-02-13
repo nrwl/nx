@@ -383,9 +383,12 @@ export async function setupAiAgentsGeneratorImpl(
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  const expectedRules = getAgentRulesWrapped(writeNxCloudRules);
-
   if (!tree.exists(path)) {
+    // File doesn't exist - create with h1 header (standalone content)
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: true,
+    });
     tree.write(path, expectedRules);
     return;
   }
@@ -396,6 +399,14 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   const existingNxConfiguration = existing.match(regex);
 
   if (existingNxConfiguration) {
+    // Check the rest of the file (outside nx block) for an h1 header
+    // to ensure only one h1 exists in the document
+    const contentWithoutNxBlock = existing.replace(regex, '');
+    const hasExternalH1 = /^# /m.test(contentWithoutNxBlock);
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: !hasExternalH1,
+    });
     const contentOnly = (str: string) =>
       str
         .replace(nxRulesMarkerCommentStart, '')
@@ -413,13 +424,62 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const updatedContent = existing.replace(regex, expectedRules);
     tree.write(path, updatedContent);
   } else {
+    // Appending to existing content - use h2 only if the file already has an h1 header
+    // This prevents unnecessary changes when users add content without their own h1
+    const hasExistingH1 = /^# /m.test(existing);
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: !hasExistingH1,
+    });
     tree.write(path, existing + '\n\n' + expectedRules);
   }
+}
+
+/**
+ * Extract user-added extra args/flags from an existing MCP config args array
+ * by stripping the known base command prefix.
+ *
+ * Known base patterns (matched in order, first wins):
+ *   ['nx', 'mcp']  or  ['nx-mcp'] (possibly with @version suffix like nx-mcp@latest)
+ *   For opencode the caller prepends 'npx' to these patterns.
+ */
+function getExtraMcpArgs(
+  existingArgs: string[] | undefined,
+  knownBasePatterns: string[][]
+): string[] {
+  if (!Array.isArray(existingArgs) || existingArgs.length === 0) return [];
+
+  for (const pattern of knownBasePatterns) {
+    if (existingArgs.length < pattern.length) continue;
+
+    const matches = pattern.every((baseArg, i) => {
+      if (baseArg === 'nx-mcp') {
+        // Also match versioned variants like nx-mcp@latest
+        return (
+          existingArgs[i] === 'nx-mcp' || existingArgs[i].startsWith('nx-mcp@')
+        );
+      }
+      return existingArgs[i] === baseArg;
+    });
+
+    if (matches) {
+      return existingArgs.slice(pattern.length);
+    }
+  }
+
+  return [];
 }
 
 function mcpConfigUpdater(existing: any, nxVersion: string): any {
   const majorVersion = major(nxVersion);
   const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+
+  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+  const extraArgs = getExtraMcpArgs(existing.mcpServers?.['nx-mcp']?.args, [
+    ['nx', 'mcp'],
+    ['nx-mcp'],
+  ]);
+  mcpArgs.push(...extraArgs);
 
   if (existing.mcpServers) {
     existing.mcpServers['nx-mcp'] = {
@@ -443,6 +503,13 @@ function opencodeMcpConfigUpdater(existing: any, nxVersion: string): any {
   const majorVersion = major(nxVersion);
   const mcpCommand =
     majorVersion >= 22 ? ['npx', 'nx', 'mcp'] : ['npx', 'nx-mcp'];
+
+  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+  const extraArgs = getExtraMcpArgs(existing.mcp?.['nx-mcp']?.command, [
+    ['npx', 'nx', 'mcp'],
+    ['npx', 'nx-mcp'],
+  ]);
+  mcpCommand.push(...extraArgs);
 
   if (existing.mcp) {
     existing.mcp['nx-mcp'] = {

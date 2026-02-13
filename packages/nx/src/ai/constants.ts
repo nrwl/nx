@@ -2,7 +2,12 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
-import { getAgentRules } from './set-up-ai-agents/get-agent-rules';
+import {
+  getAgentRules,
+  AgentRulesOptions,
+} from './set-up-ai-agents/get-agent-rules';
+
+export type { AgentRulesOptions };
 
 export function agentsMdPath(root: string): string {
   return join(root, 'AGENTS.md');
@@ -47,9 +52,15 @@ export const rulesRegex = new RegExp(
   'm'
 );
 
-export const getAgentRulesWrapped = (writeNxCloudRules: boolean) => {
-  const agentRulesString = getAgentRules(writeNxCloudRules);
-  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
+export interface AgentRulesWrappedOptions {
+  writeNxCloudRules: boolean;
+  useH1?: boolean;
+}
+
+export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
+  const { writeNxCloudRules, useH1 = true } = options;
+  const agentRulesString = getAgentRules({ nxCloud: writeNxCloudRules, useH1 });
+  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
 };
 
 export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;

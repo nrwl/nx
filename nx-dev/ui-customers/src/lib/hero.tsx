@@ -1,5 +1,5 @@
 'use client';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 
@@ -25,7 +25,7 @@ export function Hero(): ReactElement {
               variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent('get-started-click', 'hero', 'customers')
+                sendCustomEventViaGtm('get-started-click', 'hero', 'customers')
               }
             >
               Get started now
@@ -36,7 +36,7 @@ export function Hero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'customers-hero-book-demo',
                   'customers'

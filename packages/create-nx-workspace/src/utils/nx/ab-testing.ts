@@ -2,9 +2,9 @@ import { execSync } from 'node:child_process';
 import {
   existsSync,
   readFileSync,
-  writeFileSync,
   statSync,
   unlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -80,7 +80,8 @@ function getFlowVariantInternal(): string {
 }
 
 /**
- * Returns the flow variant for tracking (0 = preset, 1 = template).
+ * Returns the flow variant for tracking (0, 1, or 2).
+ * Returns '0' for docs generation to preserve deterministic output.
  */
 export function getFlowVariant(): string {
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
@@ -97,12 +98,10 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
 }
 
-/**
- * Returns whether the cloud prompt should be shown.
- * Variant 2 skips the prompt (auto-connect). (CLOUD-4235)
- */
 export function shouldShowCloudPrompt(): boolean {
-  return getFlowVariant() !== '2';
+  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
+  // To re-enable A/B testing: return getFlowVariant() !== '2';
+  return false;
 }
 
 // ============================================================================
@@ -136,9 +135,8 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
 
 /**
  * Get the banner variant for completion messages.
- * Uses NX_CNW_FLOW_VARIANT to determine which banner to show.
- * - Variant 0: Plain link (control) - always used for enterprise URLs
- * - Variant 1: "Finish your set up in 5 minutes" banner
+ * Now locked to variant 2 (CLOUD-4255).
+ * - Variant 0: Plain link - used for enterprise URLs and docs generation
  * - Variant 2: "Enable remote caching and automatic fixes" banner
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
@@ -149,8 +147,13 @@ export function getBannerVariant(cloudUrl?: string): BannerVariant {
     return '0';
   }
 
-  // Use the flow variant (which handles docs generation, env var, and caching)
-  return getFlowVariant() as BannerVariant;
+  // Docs generation uses variant 0 for deterministic output
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    return '0';
+  }
+
+  // Standard URLs get variant 2 banner
+  return '2';
 }
 
 export const NxCloudChoices = [
