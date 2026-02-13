@@ -1,4 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 
 export const yargsNewCommand: CommandModule = {
   command: 'new [_..]',
@@ -8,7 +9,7 @@ export const yargsNewCommand: CommandModule = {
     args._ = args._.slice(1);
     process.exit(
       await (
-        await import('./new.js')
+        await handleImport('./new.js')
       ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
     );
   },
