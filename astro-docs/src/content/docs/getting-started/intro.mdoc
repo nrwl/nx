@@ -1,31 +1,44 @@
 ---
 title: What is Nx?
-description: 'Nx is an AI-first monorepo platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
+description: 'Nx is a build system with smart caching and task orchestration for monorepos. Ship faster without breaking things.'
 sidebar:
   order: 1
   label: Introduction
 filter: 'type:Features'
 ---
 
-Nx is a powerful, open-source, technology-agnostic **monorepo platform** designed to efficiently manage codebases of any scale. From small workspaces to large enterprise monorepos, Nx provides the tools to **efficiently get from starting a feature in your editor to a green PR**.
-
-As teams and codebases grow, productivity bottlenecks multiply: build times increase, CI becomes flaky, and code sharing becomes complex. **Nx reduces friction across your entire development cycle.**
+Nx is a build system for monorepos. It helps you **develop faster** and **keep CI fast** as your codebase scales.
 
 {% youtube src="https://youtu.be/pbAQErStl9o" title="What is Nx?" width="100%" /%}
 
-## Start small, extend as you grow
+## Challenges of Monorepos
 
-Nx is built in a modular fashion, allowing you to adopt as little or as much as you'd like at any moment in your development lifecycle. You can **start with just the core and add additional capabilities incrementally** as your needs grow and complexity increases.
+Monorepos have many advantages and are especially powerful for AI-assisted development. But as teams and codebases grow, monorepos are hard to scale:
 
-{% callout type="deepdive" title="Can I add Nx to a single-project repo?" %}
-Yes, Nx provides value even for single-project repositories. You get fast task caching, intelligent task orchestration, and access to Nx plugins for your specific technology stack. As your project grows into a monorepo, the foundation is already in place.
+- **Slow builds and tests** - Hundreds or thousands of tasks compete for CI resources.
+- **Complex task pipelines** - Projects depend on each other, so tasks need to run in the right order — and that's hard to manage by hand.
+- **Flaky CI** - Longer pipelines lead to random failures and inconsistent results between local and CI environments.
+- **Architectural erosion** - Without clear boundaries, unwanted dependencies creep in and projects become tightly coupled.
 
-Nx can also connect multiple repositories into a synthetic monorepo, letting you orchestrate large changes across all connected repos.
-{% /callout %}
+## What Nx Does
 
-At the **foundation is Nx Core**, a Rust-based, technology-agnostic task runner. Nx Core creates a knowledge graph of your workspace, understanding project relationships and dependencies. This enables highly optimized and fast task execution regardless of technology stack. It runs `package.json` scripts in [TypeScript monorepos](/docs/technologies/typescript/introduction) or Gradle tasks in [Java projects](/docs/technologies/java/introduction) or [can be extended](/docs/extending-nx/intro) to meet your project's specific needs.
+**Nx reduces friction across your entire development cycle** with intelligent caching, task orchestration, and deep understanding of your codebase structure.
 
-{% callout type="deepdive" title="What do you mean by \"running NPM scripts\"?" %}
+At its core, Nx:
+
+1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice
+2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects
+3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/concepts/task-pipeline-configuration), parallelizing when possible
+4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects
+5. **Handles flakiness** - [Automatically re-runs flaky tasks](/docs/features/ci-features/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci)
+
+```shell
+nx build myapp            # Run a task
+nx build myapp            # Run again - instant cache hit
+nx run-many -t build test # Run across all projects
+```
+
+{% callout type="deepdive" title="How does Nx run tasks?" %}
 
 At the very core, Nx is a super fast, intelligent task runner. Let's take the example of an NPM workspace. This could be a project's `package.json`:
 
@@ -61,31 +74,48 @@ This will execute the `build` script from `my-project`'s `package.json`, equival
 
 Similarly you [can run tasks across all projects](/docs/features/run-tasks), just specific ones or just those from projects you touched.
 
-From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/technologies), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
+From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/plugin-registry), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
 
 {% /callout %}
 
-Nx Core provides everything you need to get started and works perfectly on its own.
-**When you're ready for more, the Nx monorepo platform offers additional capabilities you can adopt incrementally**.
-Extend your setup with [**Nx Cloud**](/docs/getting-started/nx-cloud) for remote caching, distributed task execution, and [**AI-powered self-healing CI**](/docs/features/ci-features/self-healing-ci) that automatically detects, analyzes, and fixes CI failures.
-Integrate [**Nx Console**](/docs/getting-started/editor-setup) with your editor for powerful autocomplete, project graph visualization, CI notifications, and an MCP to [make your AI coding assistant smarter](/docs/features/enhance-ai).
-Add [**Nx Plugins**](/docs/technologies) for technology-specific automation and DX improvements, or build custom platform capabilities using [Nx Devkit](/docs/extending-nx/intro).
+## Start Small, Grow as Needed
 
-## Where to go from here?
+Nx is modular. Start with just the CLI and add capabilities as your needs grow.
+
+| Component                                            | What It Does                                                                                                                                                                           |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx Core**                                          | Task runner with [local caching](/docs/features/cache-task-results). Works with any tech stack.                                                                                        |
+| [**Nx Plugins**](/docs/plugin-registry)              | Technology-specific automation (generators, executors, dependency detection)                                                                                                           |
+| [**Nx Console**](/docs/getting-started/editor-setup) | Editor extension for VSCode/JetBrains with visual UI and [AI assistance](/docs/features/enhance-ai)                                                                                    |
+| [**Nx Cloud**](/docs/features/ci-features)           | [Remote caching](/docs/features/ci-features/remote-cache), [affected commands](/docs/features/ci-features/affected), and [self-healing CI](/docs/features/ci-features/self-healing-ci) |
+
+{% callout type="deepdive" title="Can I add Nx to a single-project repo?" %}
+Yes, Nx provides value even for single-project repositories. You get fast task caching, intelligent task orchestration, and access to Nx plugins for your specific technology stack. As your project grows into a monorepo, the foundation is already in place.
+
+Nx can also connect multiple repositories into a synthetic monorepo, letting you orchestrate large changes across all connected repos.
+{% /callout %}
+
+## Where to Go from Here
+
+{% callout type="note" title="Choose Your Path" %}
+**Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
+
+**Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
+
+**Want hands-on learning?** → [Follow a tutorial](/docs/getting-started/tutorials)
+
+**Prefer video?** → [Learn with our video courses](https://nx.dev/courses)
+{% /callout %}
 
 {% cardgrid %}
 
-{% linkcard title="Nx quickstart" description="Dive right in with our quickstart steps to create your first project or add Nx to your existing one."  href="/docs/quickstart"  /%}
+{% linkcard title="Quickstart" description="Get your first Nx project running in minutes." href="/docs/quickstart" /%}
 
-{% linkcard title="Explore Technologies" description="Explore Nx's technology integrations and how it can support your specific stack."  href="/docs/technologies" /%}
+{% linkcard title="Plugins" description="Find plugins for React, Angular, Node, Gradle, Maven, .NET, and more." href="/docs/plugin-registry" /%}
 
-{% linkcard title="Step by step with our tutorials" description="Learn more about Nx through hands-on tutorials for different technology stacks."  href="/docs/getting-started/tutorials" /%}
+{% linkcard title="Concepts" description="Improve your understanding of how Nx works under the hood." href="/docs/concepts" /%}
 
-{% linkcard title="Learn with our video courses" description="Dive deeper with comprehensive video courses that walk you through Nx concepts."  href="https://nx.dev/courses" /%}
-
-{% linkcard title="Dive deep into Nx features" description="Discover all the powerful features that Nx provides to streamline your workflow."  href="/docs/features" /%}
-
-{% linkcard title="Understand underlying concepts" description="Improve your understanding of the core concepts of how Nx works under the hood."  href="/docs/concepts" /%}
+{% linkcard title="Features" description="Discover all the powerful features that Nx provides to streamline your workflow." href="/docs/features" /%}
 
 {% /cardgrid %}
 
