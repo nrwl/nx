@@ -311,16 +311,7 @@ class CLIOutput {
     }
   }
 
-  private addTaskStatus(
-    taskStatus:
-      | 'success'
-      | 'failure'
-      | 'skipped'
-      | 'local-cache-kept-existing'
-      | 'local-cache'
-      | 'remote-cache',
-    commandOutput: string
-  ) {
+  private addTaskStatus(taskStatus: TaskStatus, commandOutput: string) {
     if (taskStatus === 'local-cache') {
       return `${commandOutput}  ${pc.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {

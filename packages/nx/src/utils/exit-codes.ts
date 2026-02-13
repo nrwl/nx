@@ -10,6 +10,8 @@ export function signalToCode(signal: NodeJS.Signals | null): number {
       return 128 + 2;
     case 'SIGTERM':
       return 128 + 15;
+    case 'SIGQUIT':
+      return 128 + 3;
     default:
       return 128;
   }
@@ -26,6 +28,8 @@ export function codeToSignal(code: number): NodeJS.Signals {
       return 'SIGINT';
     case 128 + 15:
       return 'SIGTERM';
+    case 128 + 3:
+      return 'SIGQUIT';
     default:
       return 'SIGTERM';
   }

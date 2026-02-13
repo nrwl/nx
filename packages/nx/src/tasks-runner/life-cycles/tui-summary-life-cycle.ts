@@ -93,6 +93,9 @@ export function getTuiTerminalSummaryLifeCycle({
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
       tasksToTaskStatus[task.id] = status;
+      if (status === 'stopped') {
+        stoppedTasks.add(task.id);
+      }
 
       switch (status) {
         case 'remote-cache':
