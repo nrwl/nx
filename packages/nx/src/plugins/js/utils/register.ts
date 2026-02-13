@@ -2,6 +2,7 @@ import { join, sep } from 'path';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { readTsConfigWithoutFiles } from './typescript';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
@@ -422,6 +423,21 @@ function readCompilerOptionsWithSwc(tsConfigPath) {
   // @swc-node/register filters the files to transpile based on it, but it can be limiting when processing
   // files not part of the received tsconfig included files (e.g. shared helpers, or config files not in source, etc.).
   delete compilerOptions.files;
+
+  // @swc-node/register's readDefaultTsConfig auto-sets baseUrl to the
+  // dirname of the tsconfig when not explicitly configured. This is incorrect
+  // when paths are inherited via "extends" from a parent tsconfig at a
+  // different directory level (e.g., tsconfig.base.json at workspace root),
+  // because SWC will resolve "./"-prefixed paths relative to the wrong
+  // directory. Use the workspace root as baseUrl in that case.
+  // baseUrl will not be configured when using newer versions of TypeScript like `tsgo`.
+  if (compilerOptions.paths) {
+    const { options: tsOptions } = readTsConfigWithoutFiles(tsConfigPath);
+    if (!tsOptions.baseUrl) {
+      compilerOptions.baseUrl = workspaceRoot;
+    }
+  }
+
   return compilerOptions;
 }
 
