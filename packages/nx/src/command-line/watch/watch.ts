@@ -155,7 +155,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
 }
 
 export async function watch(args: WatchArguments) {
-  reportCommandRunEvent('watch');
+  reportCommandRunEvent('watch', undefined, args);
   const projectReplacementRegex = new RegExp(
     args.projectNameEnvName ?? DEFAULT_PROJECT_NAME_ENV,
     'g'

@@ -23,7 +23,10 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
 import { getCwd } from '../../utils/path';
-import { reportNxGenerateCommand } from '../../analytics';
+import {
+  reportNxGenerateCommand,
+  reportCommandRunEvent,
+} from '../../analytics';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -304,6 +307,7 @@ export function printGenHelp(
 
 export async function generate(args: { [k: string]: any }) {
   return handleErrors(args.verbose, async () => {
+    reportCommandRunEvent('generate', undefined, args);
     const nxJsonConfiguration = readNxJson();
     const projectGraph = await createProjectGraphAsync();
     const projectsConfigurations =

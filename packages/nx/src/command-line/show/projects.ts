@@ -25,7 +25,7 @@ export async function showProjectsHandler(
   args: ShowProjectsOptions
 ): Promise<void> {
   performance.mark('code-loading:end');
-  reportCommandRunEvent('show projects');
+  reportCommandRunEvent('show projects', undefined, args);
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   let graph = await createProjectGraphAsync();
   const nxJson = readNxJson();

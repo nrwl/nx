@@ -107,7 +107,7 @@ export type PostGitTask = (latestCommit: string) => Promise<void>;
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunEvent('release changelog');
+    reportCommandRunEvent('release changelog', undefined, args);
     return createAPI({}, false)(args);
   });
 
