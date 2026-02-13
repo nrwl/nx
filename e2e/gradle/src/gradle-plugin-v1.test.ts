@@ -43,7 +43,10 @@ describe('Gradle Plugin V1', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app', { verbose: true });
+        const buildOutput = runCLI('build app', {
+          verbose: true,
+          timeout: 180000,
+        });
         expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain('nx run utilities:build');
@@ -94,7 +97,10 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2', { verbose: true });
+        let buildOutput = runCLI('build app2', {
+          verbose: true,
+          timeout: 180000,
+        });
         // app2 depends on app
         expect(buildOutput).toContain('nx run app:build');
         expect(buildOutput).toContain(':app:classes');
@@ -120,8 +126,14 @@ dependencies {
         });
 
         expect(() => {
-          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
-          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
+          runCLI('run app:test-ci--MessageUtilsTest', {
+            verbose: true,
+            timeout: 180000,
+          });
+          runCLI('run list:test-ci--LinkedListTest', {
+            verbose: true,
+            timeout: 180000,
+          });
         }).not.toThrow();
       });
     }

@@ -138,7 +138,7 @@ module.exports = withNx(
        */
       rmDist();
 
-      runCLI(`build ${parentLib} --skip-nx-cache`);
+      runCLI(`build ${parentLib} --skip-nx-cache`, { timeout: 300000 });
 
       checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
       checkFilesExist(`dist/libs/${childLib}/index.esm.js`);

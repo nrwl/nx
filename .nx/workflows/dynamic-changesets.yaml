@@ -1,28 +1,31 @@
 distribute-on:
-  extra-small-changeset: 6 linux-large, 3 linux-extra-large
-  small-changeset: 6 linux-large, 4 linux-extra-large
-  medium-changeset: 6 linux-large, 5 linux-extra-large
-  large-changeset: 6 linux-large, 6 linux-extra-large
-  extra-large-changeset: 8 linux-large, 8 linux-extra-large
+  extra-small-changeset: 3 linux-large, 2 linux-extra-large
+  small-changeset: 3 linux-large, 2 linux-extra-large
+  medium-changeset: 3 linux-large, 2 linux-extra-large
+  large-changeset: 4 linux-large, 3 linux-extra-large
+  extra-large-changeset: 5 linux-large, 4 linux-extra-large
 assignment-rules:
-  - projects:
-      - e2e-gradle
-      - e2e-next
-      - e2e-plugin
-    targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-extra-large
-        parallelism: 2
+  # E2E tests that are heavy
   - projects:
       - e2e-angular
       - e2e-node
       - e2e-react
+      - e2e-next
+      - e2e-gradle
     targets:
       - e2e-ci**
     run-on:
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 4
+
+  # All other e2e tests can run in parallel
+  - targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-large
+        parallelism: 3
+      - agent: linux-extra-large
+        parallelism: 6
 
   - projects:
       - nx
@@ -34,44 +37,14 @@ assignment-rules:
       - test
     run-on:
       - agent: linux-large
-        parallelism: 1
-      - agent: linux-extra-large
-        parallelism: 1
-
-  - projects:
-      - e2e-release
-      - e2e-nuxt
-      - e2e-web
-      - e2e-eslint
-      - e2e-remix
-      - e2e-cypress
-      - e2e-docker
-      - e2e-js
-      - e2e-nx
-      - e2e-nx-init
-      - e2e-dotnet
-      - e2e-workspace-create
-      - e2e-rollup
-    targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
-        parallelism: 1
-      - agent: linux-extra-large
-        parallelism: 2
-
-  # All other e2e tests can run in parallel
-  - targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
         parallelism: 2
       - agent: linux-extra-large
-        parallelism: 3
+        parallelism: 2
 
   # These projects should not need to be isolated.
   - projects:
       - nx-dev
+      - astro-docs
     targets:
       - build*
     run-on:
@@ -84,15 +57,15 @@ assignment-rules:
       - test
     run-on:
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 2
 
   - targets:
       - lint
     run-on:
       - agent: linux-large
-        parallelism: 6
+        parallelism: 12
       - agent: linux-extra-large
-        parallelism: 6
+        parallelism: 24
 
   - targets:
       - "*"
@@ -100,4 +73,4 @@ assignment-rules:
       - agent: linux-large
         parallelism: 3
       - agent: linux-extra-large
-        parallelism: 3
+        parallelism: 4
