@@ -113,6 +113,7 @@ import {
   Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
+import { handleImport } from '../../utils/handle-import';
 
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -1214,8 +1215,8 @@ export class DaemonClient {
     }
 
     try {
-      const { getProcessMetricsService } = await import(
-        '../../tasks-runner/process-metrics-service'
+      const { getProcessMetricsService } = await handleImport(
+        '../../tasks-runner/process-metrics-service.js'
       );
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {

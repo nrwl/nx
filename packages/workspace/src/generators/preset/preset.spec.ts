@@ -131,11 +131,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
@@ -162,7 +162,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "
@@ -287,11 +287,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
@@ -318,7 +318,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/react-standalone-preset-vite',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "
@@ -344,11 +344,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
@@ -375,7 +375,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/vue-standalone-preset',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "

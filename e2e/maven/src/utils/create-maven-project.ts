@@ -13,7 +13,7 @@ import {
   unlinkSync,
   chmodSync,
 } from 'fs';
-import * as extract from 'extract-zip';
+import extract from 'extract-zip';
 
 async function downloadFile(
   url: string,

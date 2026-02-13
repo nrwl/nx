@@ -3,11 +3,22 @@ import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/cre
 import { readJson, writeJson } from '../../generators/utils/json';
 import { Tree } from '../../generators/tree';
 
-const verifyOrUpdateNxCloudClient = jest.fn();
-jest.mock('../../nx-cloud/update-manager', () => ({
-  ...jest.requireActual('../../nx-cloud/update-manager'),
-  verifyOrUpdateNxCloudClient,
-}));
+// Module-level mock container - initialized early so jest.mock factories can reference it
+const mocks = {
+  verifyOrUpdateNxCloudClient: jest.fn(),
+};
+
+const verifyOrUpdateNxCloudClient = mocks.verifyOrUpdateNxCloudClient;
+
+jest.mock('../../nx-cloud/update-manager', () => {
+  const actual = jest.requireActual('../../nx-cloud/update-manager');
+  return {
+    ...actual,
+    verifyOrUpdateNxCloudClient: (...args: any[]) =>
+      mocks.verifyOrUpdateNxCloudClient(...args),
+  };
+});
+
 import migrate from './use-minimal-config-for-tasks-runner-options';
 
 describe('use-minimal-config-for-tasks-runner-options migration', () => {
