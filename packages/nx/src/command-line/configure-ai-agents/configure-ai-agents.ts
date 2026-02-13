@@ -18,6 +18,7 @@ import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
+import { handleImport } from '../../utils/handle-import';
 import ora = require('ora');
 
 export async function configureAiAgentsHandler(
@@ -63,8 +64,11 @@ export async function configureAiAgentsHandler(
       { paths: [packageInstallResults.tempDir] }
     );
 
-    const module = await import(modulePath);
-    await module.configureAiAgentsHandler(args, true);
+    const module = await handleImport(modulePath);
+    await module.configureAiAgentsHandler(
+      args,
+      true
+    );
     cleanup();
   } catch (error) {
     if (cleanup) {
