@@ -33,7 +33,7 @@ import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunEvent('release plan');
+    reportCommandRunEvent('release plan', undefined, args);
     return createAPI({})(args);
   });
 

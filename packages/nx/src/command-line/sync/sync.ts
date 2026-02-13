@@ -22,7 +22,11 @@ interface SyncOptions extends SyncArgs {
 
 export function syncHandler(options: SyncOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
-    reportCommandRunEvent(`sync${options.check ? ' :check' : ''}`);
+    reportCommandRunEvent(
+      `sync${options.check ? ' :check' : ''}`,
+      undefined,
+      options
+    );
     const projectGraph = await createProjectGraphAsync();
     const nxJson = readNxJson();
     const { globalGenerators, taskGenerators } =
