@@ -95,18 +95,44 @@ export function daemonStreamTransformer(outputStream: Writable): Writable {
 
       lineBuffer = lines.pop() || '';
 
+      let pendingWrites = 0;
+      let writeError: Error | null = null;
+
+      if (lines.length === 0 || lines.every((line) => !line.trim())) {
+        // No lines to write or all lines are empty
+        callback();
+        return;
+      }
+
       for (const line of lines) {
         if (line.trim()) {
-          outputStream.write(formatLogMessage(line) + '\n');
+          pendingWrites++;
+          const writeResult = outputStream.write(
+            formatLogMessage(line) + '\n',
+            (err) => {
+              if (err && !writeError) {
+                writeError = err;
+              }
+              pendingWrites--;
+              if (pendingWrites === 0) {
+                callback(writeError);
+              }
+            }
+          );
+
+          // Handle synchronous completion
+          if (writeResult && pendingWrites > 0) {
+            // Write completed synchronously, but callback will still be called
+          }
         }
       }
-      callback();
     },
     final(callback) {
       if (lineBuffer.trim()) {
-        outputStream.write(formatLogMessage(lineBuffer) + '\n');
+        outputStream.write(formatLogMessage(lineBuffer) + '\n', callback);
+      } else {
+        callback();
       }
-      callback();
     },
   });
 }
