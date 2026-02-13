@@ -1,5 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
+use crate::native::tasks::output_fingerprints::SCHEMA as OUTPUT_FINGERPRINTS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
 use rusqlite::vtab::array;
@@ -275,6 +276,7 @@ fn create_all_tables(c: &mut NxDbConnection) -> anyhow::Result<()> {
         // Order matters: tables with no FK dependencies first
         conn.execute_batch(TASK_DETAILS_SCHEMA)?;
         conn.execute_batch(RUNNING_TASKS_SCHEMA)?;
+        conn.execute_batch(OUTPUT_FINGERPRINTS_SCHEMA)?;
 
         // Tables with FK dependencies
         conn.execute_batch(TASK_HISTORY_SCHEMA)?;
