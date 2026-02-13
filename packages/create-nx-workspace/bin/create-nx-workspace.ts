@@ -645,6 +645,8 @@ async function normalizeArgsMiddleware(
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
+        // Deferred connection: skip cloud connect but show banner (CLOUD-4255)
+        skipCloudConnect: nxCloud !== 'skip',
         completionMessageKey,
         packageManager,
         defaultBase: 'main',
@@ -695,6 +697,7 @@ async function normalizeArgsMiddleware(
       let nxCloud: string;
       let useGitHub: boolean | undefined;
       let completionMessageKey: string | undefined;
+      let skipCloudConnect = false;
 
       if (argv.skipGit === true) {
         nxCloud = 'skip';
@@ -712,11 +715,14 @@ async function normalizeArgsMiddleware(
         useGitHub = nxCloud !== 'skip';
         completionMessageKey =
           nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
+        // Deferred connection: skip cloud connect but show banner (CLOUD-4255)
+        skipCloudConnect = nxCloud !== 'skip';
       }
 
       Object.assign(argv, {
         nxCloud,
         useGitHub,
+        skipCloudConnect,
         completionMessageKey,
         packageManager,
         defaultBase,

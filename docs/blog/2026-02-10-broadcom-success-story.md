@@ -15,7 +15,6 @@ metrics:
     label: 'projects unified'
   - value: '2x faster'
     label: 'CI pipelines'
-pinned: true
 ---
 
 Broadcom is a global technology leader providing semiconductor, enterprise software, and security solutions to thousands of customers worldwide. Their engineering organization manages a wide portfolio of complex applications, including the [VMware](https://www.vmware.com/) suite of products. Their frontend architecture team has spent nearly a decade figuring out how to manage this portfolio efficiently.
