@@ -8,7 +8,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
-import { TaskHasher } from '../hasher/task-hasher';
+import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -111,6 +111,8 @@ export class TaskOrchestrator {
   private cleanupDone = false;
 
   private batchTaskResultsStreamed = new Set<string>();
+
+  private batchStaleHashTasks = new Map<Batch, Set<string>>();
 
   // endregion internal state
 
@@ -297,6 +299,14 @@ export class TaskOrchestrator {
       this.taskDetails
     );
 
+    // Identify tasks whose hashes may be based on stale dependency outputs.
+    // When a task with depsOutputs is co-batched with its dependency, the hash
+    // was computed using outputs from a previous run that may no longer be valid.
+    const staleHashTasks = await this.identifyTasksWithStaleDepsOutputs(
+      batch.taskGraph
+    );
+    this.batchStaleHashTasks.set(batch, staleHashTasks);
+
     await Promise.all(
       Object.values(batch.taskGraph.tasks).map((task) =>
         this.options.lifeCycle.scheduleTask(task)
@@ -387,8 +397,13 @@ export class TaskOrchestrator {
 
     await this.preRunSteps(tasks, { groupId });
 
+    // Skip cache reads for tasks whose hashes may be based on stale dep outputs.
+    const staleHashTasks =
+      this.batchStaleHashTasks.get(batch) ?? new Set<string>();
+    const cacheableTasks = tasks.filter((t) => !staleHashTasks.has(t.id));
+
     let results: TaskResult[] = doNotSkipCache
-      ? await this.applyCachedResults(tasks)
+      ? await this.applyCachedResults(cacheableTasks)
       : [];
 
     // Run tasks that were not cached
@@ -409,9 +424,33 @@ export class TaskOrchestrator {
         this.batchEnv,
         groupId
       );
+
+      // Re-hash tasks that had stale dependency outputs. Now that the batch
+      // has run, fresh outputs are on disk and we can compute correct hashes
+      // so postRunSteps stores cache entries under the right key.
+      if (staleHashTasks.size > 0) {
+        for (const result of results) {
+          if (
+            staleHashTasks.has(result.task.id) &&
+            result.status === 'success'
+          ) {
+            result.task.hash = undefined;
+            result.task.hashDetails = undefined;
+          }
+        }
+        await hashTasks(
+          this.hasher,
+          this.projectGraph,
+          batch.taskGraph,
+          this.batchEnv,
+          this.taskDetails
+        );
+      }
     }
 
     await this.postRunSteps(results, doNotSkipCache, { groupId });
+
+    this.batchStaleHashTasks.delete(batch);
 
     // Update batch status based on all task results
     const hasFailures = taskEntries.some(([taskId]) => {
@@ -1177,6 +1216,61 @@ export class TaskOrchestrator {
     if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHash(task.outputs, task.hash);
     }
+  }
+
+  /**
+   * Identifies tasks in a batch whose hashes may be based on stale dependency
+   * outputs. When a task with `depsOutputs` is co-batched with its dependency,
+   * the hash was computed using outputs from a previous run that may no longer
+   * match the dependency's current hash.
+   */
+  private async identifyTasksWithStaleDepsOutputs(
+    taskGraph: TaskGraph
+  ): Promise<Set<string>> {
+    const staleTaskIds = new Set<string>();
+
+    // Without the daemon we can't verify output freshness, so assume all
+    // depsOutputs tasks in the batch may be stale (safe default).
+    if (!this.daemon?.enabled()) {
+      for (const task of Object.values(taskGraph.tasks)) {
+        if (
+          taskGraph.dependencies[task.id].length > 0 &&
+          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
+        ) {
+          staleTaskIds.add(task.id);
+        }
+      }
+      return staleTaskIds;
+    }
+
+    const batchTaskIds = new Set(Object.keys(taskGraph.tasks));
+
+    for (const task of Object.values(taskGraph.tasks)) {
+      const deps = taskGraph.dependencies[task.id];
+      if (deps.length === 0) continue;
+
+      const { depsOutputs } = getInputs(task, this.projectGraph, this.nxJson);
+      if (depsOutputs.length === 0) continue;
+
+      // Check each co-batched dependency's outputs
+      for (const depTaskId of deps) {
+        if (!batchTaskIds.has(depTaskId)) continue;
+
+        const depTask = taskGraph.tasks[depTaskId];
+        if (!depTask.hash || !depTask.outputs?.length) continue;
+
+        const outputsFresh = await this.daemon.outputsHashesMatch(
+          depTask.outputs,
+          depTask.hash
+        );
+        if (!outputsFresh) {
+          staleTaskIds.add(task.id);
+          break;
+        }
+      }
+    }
+
+    return staleTaskIds;
   }
 
   // endregion utils
