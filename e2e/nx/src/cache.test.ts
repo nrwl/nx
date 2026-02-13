@@ -190,7 +190,9 @@ describe('cache', () => {
 
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
-    expect(rerunWithUntouchedOutputs).toContain('local cache');
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache, left as is'
+    );
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -211,7 +213,9 @@ describe('cache', () => {
 
     // Rerun
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain('local cache');
+    expect(rerunWithNewUnrelatedFile).toContain(
+      'existing outputs match the cache, left as is'
+    );
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
