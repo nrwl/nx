@@ -123,10 +123,16 @@ fn initialize_logger() {
                 .unwrap_or_else(|_| EnvFilter::new("nx::native=info")),
         );
 
+    let tui_layer = if env::var("NX_TUI").map(|v| v == "true").unwrap_or(false) {
+        tui_logger::init_logger(tui_logger::LevelFilter::Trace).ok();
+        Some(TuiTracingSubscriberLayer)
+    } else {
+        None
+    };
+
     let registry = tracing_subscriber::registry()
         .with(stdout_layer)
-        .with(TuiTracingSubscriberLayer);
-    tui_logger::init_logger(tui_logger::LevelFilter::Trace).ok();
+        .with(tui_layer);
 
     if env::var("NX_NATIVE_FILE_LOGGING").is_err() {
         // File logging is not enabled
