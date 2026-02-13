@@ -528,6 +528,19 @@ describe('project-configuration-utils', () => {
           expect(result.inputs).toEqual(['new-input-1', 'new-input-2']);
         });
 
+        it('should handle "..." when base array is undefined', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input-1', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+            }
+          );
+          expect(result.inputs).toEqual(['new-input-1', 'new-input-2']);
+        });
+
         it('should spread in dependsOn array', () => {
           const result = mergeTargetConfigurations(
             {
@@ -571,7 +584,7 @@ describe('project-configuration-utils', () => {
               options: {
                 env: {
                   NEW_VAR: 'new',
-                  '...': '...',
+                  '...': true,
                 },
               },
             },
@@ -598,7 +611,7 @@ describe('project-configuration-utils', () => {
               executor: 'target',
               options: {
                 config: {
-                  '...': '...',
+                  '...': true,
                   sharedKey: 'new-value',
                 },
               },
@@ -626,7 +639,7 @@ describe('project-configuration-utils', () => {
               options: {
                 config: {
                   sharedKey: 'new-value',
-                  '...': '...',
+                  '...': true,
                 },
               },
             },
@@ -645,6 +658,32 @@ describe('project-configuration-utils', () => {
           expect(result.options?.config).toEqual({
             sharedKey: 'base-value',
             baseOnly: 'base',
+          });
+        });
+        it('should keep "..." with a comment string value as a regular property', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                  '...': 'This is a comment',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  BASE_VAR: 'base',
+                },
+              },
+            }
+          );
+          // String value for '...' should NOT trigger spread - only `true` triggers it
+          expect(result.options?.env).toEqual({
+            NEW_VAR: 'new',
+            '...': 'This is a comment',
           });
         });
       });
@@ -688,7 +727,7 @@ describe('project-configuration-utils', () => {
                 prod: {
                   env: {
                     NEW_VAR: 'new',
-                    '...': '...',
+                    '...': true,
                   },
                 },
               },
@@ -743,6 +782,76 @@ describe('project-configuration-utils', () => {
           expect(result.configurations?.prod.scripts).toEqual([
             'base-prod',
             'prod-script',
+          ]);
+        });
+      });
+
+      describe('"..." in base target should not affect result', () => {
+        it('should ignore "..." in base array when target overrides without spread', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['override-1', 'override-2'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-1', '...', 'base-2'],
+            }
+          );
+          expect(result.inputs).toEqual(['override-1', 'override-2']);
+        });
+
+        it('should ignore "..." in base object option when target overrides without spread', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  '...': true,
+                  BASE_VAR: 'base',
+                },
+              },
+            }
+          );
+          expect(result.options?.env).toEqual({
+            NEW_VAR: 'new',
+          });
+        });
+
+        it('should ignore "..." in base configuration array when target overrides without spread', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'new.ts', with: 'new.prod.ts' },
+                  ],
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'base.ts', with: 'base.prod.ts' },
+                    '...',
+                  ],
+                },
+              },
+            }
+          );
+          expect(result.configurations?.prod.fileReplacements).toEqual([
+            { replace: 'new.ts', with: 'new.prod.ts' },
           ]);
         });
       });
@@ -2849,6 +2958,11 @@ describe('project-configuration-utils', () => {
           'project-asset-1',
           'project-asset-2',
         ]);
+        // Source map should reflect that target defaults won for this property
+        expect(sourceMap['targets.build.options.assets']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
       });
 
       it('should spread objects in target default options using "..."', () => {
@@ -2878,7 +2992,7 @@ describe('project-configuration-utils', () => {
             options: {
               env: {
                 DEFAULT_VAR: 'default-value',
-                '...': '...',
+                '...': true,
               },
             },
           },
@@ -2970,6 +3084,148 @@ describe('project-configuration-utils', () => {
           '{workspaceRoot}/.eslintrc.json',
         ]);
       });
+
+      it('should let project.json override target defaults for core plugin targets', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'nx/core/project-json'],
+          'targets.build': ['project.json', 'nx/core/project-json'],
+          'targets.build.options': ['project.json', 'nx/core/project-json'],
+          'targets.build.options.command': [
+            'project.json',
+            'nx/core/project-json',
+          ],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo hello',
+                },
+              },
+            },
+          },
+          {
+            options: {
+              command: 'echo world',
+            },
+          },
+          sourceMap
+        );
+
+        // Core plugin source means project definition takes precedence
+        expect(result.options.command).toEqual('echo hello');
+      });
+
+      it('should let project.json override target default arrays for core plugin targets', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'nx/core/project-json'],
+          'targets.build': ['project.json', 'nx/core/project-json'],
+          'targets.build.inputs': ['project.json', 'nx/core/project-json'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                inputs: ['default', '{projectRoot}/**/*'],
+              },
+            },
+          },
+          {
+            inputs: ['production', '{workspaceRoot}/.eslintrc.json'],
+          },
+          sourceMap
+        );
+
+        // Core plugin source means project definition takes precedence
+        expect(result.inputs).toEqual(['default', '{projectRoot}/**/*']);
+      });
+
+      it('should ignore "..." in base target definition when target default overrides without spread', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.assets': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  assets: ['project-asset', '...'],
+                },
+              },
+            },
+          },
+          {
+            options: {
+              assets: ['default-asset-1', 'default-asset-2'],
+            },
+          },
+          sourceMap
+        );
+
+        // Target defaults override non-core plugin values, and the '...' in the
+        // project definition is irrelevant since the target default has no spread
+        expect(result.options.assets).toEqual([
+          'default-asset-1',
+          'default-asset-2',
+        ]);
+      });
+
+      it('should ignore "..." in base target definition object when target default overrides without spread', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.env': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    '...': true,
+                    PROJECT_VAR: 'project',
+                  },
+                },
+              },
+            },
+          },
+          {
+            options: {
+              env: {
+                DEFAULT_VAR: 'default',
+              },
+            },
+          },
+          sourceMap
+        );
+
+        // Target defaults override non-core, and the '...' in project definition
+        // doesn't affect the result since the override has no spread
+        expect(result.options.env).toEqual({
+          DEFAULT_VAR: 'default',
+        });
+      });
     });
   });
 
@@ -3036,7 +3292,7 @@ describe('project-configuration-utils', () => {
             options: {
               env: {
                 NEW_VAR: 'new',
-                '...': '...',
+                '...': true,
                 SHARED_VAR: 'new-shared',
               },
             },
