@@ -43,7 +43,8 @@ class NxTargetFactory(
 
 
   fun createNxTargets(
-    project: MavenProject
+    project: MavenProject,
+    externalDependencies: List<String> = emptyList()
   ): Pair<JsonObject, JsonObject> {
     val nxTargets = JsonObject()
     val targetGroups = mutableMapOf<String, List<String>>()
@@ -65,11 +66,12 @@ class NxTargetFactory(
       project,
       phaseTargets,
       ciPhaseTargets,
-      ciPhasesWithGoals
+      ciPhasesWithGoals,
+      externalDependencies
     )
 
     // Create individual goal targets for granular execution
-    createIndividualGoalTargets(plugins, project, nxTargets)
+    createIndividualGoalTargets(plugins, project, nxTargets, externalDependencies)
 
     val mavenPhasesGroup = mutableListOf<String>()
     phaseTargets.forEach { (phase, target) ->
@@ -90,7 +92,8 @@ class NxTargetFactory(
         project,
         nxTargets,
         ciPhaseTargets["${applyPrefix("test-ci")}"]!!,
-        phaseGoals["test"]!!
+        phaseGoals["test"]!!,
+        externalDependencies
       )
 
       atomizedTestTargets.forEach { (goal, target) ->
@@ -120,7 +123,8 @@ class NxTargetFactory(
    * This is similar to createPhaseTarget but delegates to the Maven batch runner.
    */
   private fun createPhaseBatchTarget(
-    project: MavenProject, phase: String, goals: List<GoalDescriptor>
+    project: MavenProject, phase: String, goals: List<GoalDescriptor>,
+    externalDependencies: List<String> = emptyList()
   ): NxTarget {
     // Sort goals by priority (lower numbers execute first)
     val sortedGoals = goals.sortedWith(compareBy<GoalDescriptor> { it.executionPriority }.thenBy { it.executionId })
@@ -206,6 +210,7 @@ class NxTargetFactory(
       outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
       addBuildStateJsonInputsAndOutputs(project, target)
+      addExternalDependenciesInput(target, externalDependencies)
     }
 
     return target
@@ -217,7 +222,8 @@ class NxTargetFactory(
     project: MavenProject,
     phaseTargets: MutableMap<String, NxTarget>,
     ciPhaseTargets: MutableMap<String, NxTarget>,
-    ciPhasesWithGoals: MutableSet<String>
+    ciPhasesWithGoals: MutableSet<String>,
+    externalDependencies: List<String>
   ) {
     lifecycles.forEach { lifecycle ->
       log.info(
@@ -233,7 +239,7 @@ class NxTargetFactory(
       lifecycle.phases.forEachIndexed { index, phase ->
         createRegularPhaseTarget(
           lifecycle.phases, index, phase, phaseGoals, project,
-          phaseTargets, hasInstall
+          phaseTargets, hasInstall, externalDependencies
         )
       }
 
@@ -242,7 +248,7 @@ class NxTargetFactory(
         if (testIndex > -1) {
           createCiPhaseTarget(
             lifecycle.phases, index, phase, phaseGoals, project,
-            ciPhaseTargets, ciPhasesWithGoals, hasInstall
+            ciPhaseTargets, ciPhasesWithGoals, hasInstall, externalDependencies
           )
         }
       }
@@ -256,13 +262,14 @@ class NxTargetFactory(
     phaseGoals: Map<String, MutableList<GoalDescriptor>>,
     project: MavenProject,
     phaseTargets: MutableMap<String, NxTarget>,
-    hasInstall: Boolean
+    hasInstall: Boolean,
+    externalDependencies: List<String>
   ) {
     val goalsForPhase = phaseGoals[phase]
     val hasGoals = goalsForPhase?.isNotEmpty() == true
 
     // Create target for all phases - either with goals or as noop
-    val target = createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList())
+    val target = createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
 
 
     target.dependsOn = target.dependsOn ?: JsonArray()
@@ -301,7 +308,8 @@ class NxTargetFactory(
     project: MavenProject,
     ciPhaseTargets: MutableMap<String, NxTarget>,
     ciPhasesWithGoals: MutableSet<String>,
-    hasInstall: Boolean
+    hasInstall: Boolean,
+    externalDependencies: List<String>
   ) {
     val goalsForPhase = phaseGoals[phase]
     val hasGoals = goalsForPhase?.isNotEmpty() == true
@@ -315,10 +323,10 @@ class NxTargetFactory(
 
     // Create CI targets for phases with goals, or noop for test/structural phases
     val ciTarget = if (hasGoals && phase != "test") {
-      createPhaseBatchTarget(project, phase, goalsForPhase!!)
+      createPhaseBatchTarget(project, phase, goalsForPhase!!, externalDependencies)
     } else {
       // Noop for test phase (will be orchestrated by atomized tests) or structural phases
-      createPhaseBatchTarget(project, phase, emptyList())
+      createPhaseBatchTarget(project, phase, emptyList(), externalDependencies)
     }
     // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
     ciTarget.dependsOn = ciTarget.dependsOn ?: JsonArray()
@@ -395,7 +403,8 @@ class NxTargetFactory(
   private fun createIndividualGoalTargets(
     plugins: List<Plugin>,
     project: MavenProject,
-    nxTargets: JsonObject
+    nxTargets: JsonObject,
+    externalDependencies: List<String>
   ) {
     plugins.forEach { plugin: Plugin ->
       val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
@@ -420,7 +429,8 @@ class NxTargetFactory(
             pluginDescriptor,
             goalPrefix,
             goal,
-            execution
+            execution,
+            externalDependencies
           ) ?: return@forEach
           nxTargets.add(goalTargetName, goalTarget.toJSON())
 
@@ -438,7 +448,8 @@ class NxTargetFactory(
             pluginDescriptor,
             goalPrefix,
             goal,
-            null
+            null,
+            externalDependencies
           ) ?: return@forEach
           nxTargets.add(goalTargetName, goalTarget.toJSON())
 
@@ -488,7 +499,8 @@ class NxTargetFactory(
     pluginDescriptor: PluginDescriptor,
     goalPrefix: String,
     goalName: String,
-    execution: PluginExecution?
+    execution: PluginExecution?,
+    externalDependencies: List<String>
   ): NxTarget? {
     val options = JsonObject()
     val goalSpec = if (execution != null) "$goalPrefix:$goalName@${execution.id}" else "$goalPrefix:$goalName"
@@ -531,6 +543,7 @@ class NxTargetFactory(
       val outputsArray = JsonArray()
       analysis.outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
+      addExternalDependenciesInput(target, externalDependencies)
     }
 
     addBuildStateJsonInputsAndOutputs(project, target)
@@ -545,7 +558,8 @@ class NxTargetFactory(
     project: MavenProject,
     nxTargets: JsonObject,
     testCiTarget: NxTarget,
-    testGoals: MutableList<GoalDescriptor>
+    testGoals: MutableList<GoalDescriptor>,
+    externalDependencies: List<String>
   ): Map<String, NxTarget> {
     val goalDescriptor = testGoals.first()
     val targets = mutableMapOf<String, NxTarget>()
@@ -594,6 +608,7 @@ class NxTargetFactory(
         if (input.transitive) obj.addProperty("transitive", true)
         target.inputs?.add(obj)
       }
+      addExternalDependenciesInput(target, externalDependencies)
 
       targets[targetName] = target
       testCiTargetGroup.add(targetName)
@@ -627,6 +642,16 @@ class NxTargetFactory(
     target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
   }
 
+
+  private fun addExternalDependenciesInput(target: NxTarget, externalDependencies: List<String>) {
+    if (externalDependencies.isNotEmpty() && target.inputs != null) {
+      val extDepsObj = JsonObject()
+      val extDepsArray = JsonArray()
+      externalDependencies.forEach { extDepsArray.add(it) }
+      extDepsObj.add("externalDependencies", extDepsArray)
+      target.inputs!!.add(extDepsObj)
+    }
+  }
 
   private fun getPluginDescriptor(
     plugin: Plugin,
