@@ -43,7 +43,7 @@ describe('Rollup Plugin', () => {
     `
     );
     rmDist();
-    runCLI(`build ${myPkg}`);
+    runCLI(`build ${myPkg}`, { timeout: 3 * 60 * 1000 });
     checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
       '.': {
@@ -77,7 +77,7 @@ describe('Rollup Plugin', () => {
     `
     );
     rmDist();
-    runCLI(`build ${myPkg}`);
+    runCLI(`build ${myPkg}`, { timeout: 3 * 60 * 1000 });
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
@@ -101,7 +101,7 @@ describe('Rollup Plugin', () => {
     `
     );
     rmDist();
-    runCLI(`build ${myPkg}`);
+    runCLI(`build ${myPkg}`, { timeout: 3 * 60 * 1000 });
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
   }, 500000);
@@ -134,7 +134,7 @@ describe('Rollup Plugin', () => {
     updateFile(`libs/${myPkg}/src/foo.ts`, `export const foo = 'foo';`);
     updateFile(`libs/${myPkg}/src/bar.ts`, `export const bar = 'bar';`);
 
-    runCLI(`build ${myPkg}`);
+    runCLI(`build ${myPkg}`, { timeout: 3 * 60 * 1000 });
 
     checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
     checkFilesExist(`dist/libs/${myPkg}/index.esm.js.map`);
@@ -177,7 +177,9 @@ describe('Rollup Plugin', () => {
     runCLI(
       `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup`
     );
-    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
+    expect(() =>
+      runCLI(`build ${jsLib}`, { timeout: 3 * 60 * 1000 })
+    ).not.toThrow();
   });
 
   it('should work correctly with custom, non-Nx rollup config', () => {
@@ -226,7 +228,9 @@ export default config;
     );
 
     // ACT
-    const output = runCLI(`build test --verbose`);
+    const output = runCLI(`build test --verbose`, {
+      timeout: 3 * 60 * 1000,
+    });
 
     // ASSERT
     expect(output).toContain('Successfully ran target build for project test');
@@ -278,7 +282,9 @@ export default config;
 
       // Build should succeed with the official @rollup/plugin-typescript
       rmDist();
-      const output = runCLI(`build ${myPkg} --verbose`);
+      const output = runCLI(`build ${myPkg} --verbose`, {
+        timeout: 3 * 60 * 1000,
+      });
 
       // Verify build succeeded
       expect(output).toContain('Successfully ran target build');
@@ -333,7 +339,9 @@ export default config;
 
       // Build should succeed with rollup-plugin-typescript2
       rmDist();
-      const output = runCLI(`build ${myPkg} --verbose`);
+      const output = runCLI(`build ${myPkg} --verbose`, {
+        timeout: 3 * 60 * 1000,
+      });
 
       // Verify build succeeded
       expect(output).toContain('Successfully ran target build');

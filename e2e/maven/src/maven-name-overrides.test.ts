@@ -48,7 +48,10 @@ describe('Maven with project name overrides', () => {
     // Build custom-app which depends on custom-lib -> custom-utils
     // This tests that the executor uses options.project (Maven coordinates)
     // instead of the Nx project name for the -pl flag
-    const buildOutput = runCLI('run custom-app:install', { verbose: true });
+    const buildOutput = runCLI('run custom-app:install', {
+      verbose: true,
+      timeout: 3 * 60 * 1000,
+    });
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });
