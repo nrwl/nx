@@ -4,6 +4,7 @@ import { appendFileSync } from 'fs';
 
 import { InitArgs } from '../../init-v1';
 import { fileExists } from '../../../../utils/fileutils';
+import { handleImport } from '../../../../utils/handle-import';
 import { output } from '../../../../utils/output';
 import {
   detectPackageManager,
@@ -93,7 +94,7 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
 }
 
 async function addBundler(options: NormalizedOptions) {
-  const { addViteCommandsToPackageScripts } = await import(
+  const { addViteCommandsToPackageScripts } = await handleImport(
     './add-vite-commands-to-package-scripts.js'
   );
   addViteCommandsToPackageScripts(options.reactAppName, options.isStandalone);

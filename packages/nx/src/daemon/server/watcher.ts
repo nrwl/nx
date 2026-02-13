@@ -6,6 +6,7 @@ import { normalizePath } from '../../utils/path';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { WatchEvent } from '../../native';
 import { openSockets } from './server';
+import { handleImport } from '../../utils/handle-import';
 
 export type FileWatcherCallback = (
   err: Error | string | null,
@@ -13,7 +14,7 @@ export type FileWatcherCallback = (
 ) => Promise<void>;
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
-  const { Watcher } = await import('../../native/index.js');
+  const { Watcher } = await handleImport('../../native/index.js');
 
   const watcher = new Watcher(workspaceRoot);
   watcher.watch((err, events) => {
@@ -43,7 +44,7 @@ export async function watchOutputFiles(
   server: Server,
   cb: FileWatcherCallback
 ) {
-  const { Watcher } = await import('../../native/index.js');
+  const { Watcher } = await handleImport('../../native/index.js');
 
   const relativeServerProcess = normalizePath(
     relative(workspaceRoot, serverProcessJsonPath)

@@ -1,4 +1,5 @@
 import { CommandModule } from 'yargs';
+import { handleImport } from '../../../utils/handle-import';
 import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsLogoutCommand: CommandModule = {
@@ -11,6 +12,6 @@ export const yargsLogoutCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await import('./logout.js')).logoutHandler(args));
+    process.exit(await (await handleImport('./logout.js')).logoutHandler(args));
   },
 };

@@ -1,5 +1,6 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
+import { handleImport } from '../../../utils/handle-import';
 
 export const yargsFixCiCommand: CommandModule = {
   command: 'fix-ci [options]',
@@ -11,6 +12,6 @@ export const yargsFixCiCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await import('./fix-ci.js')).fixCiHandler(args));
+    process.exit(await (await handleImport('./fix-ci.js')).fixCiHandler(args));
   },
 };

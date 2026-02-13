@@ -6,6 +6,7 @@ import {
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export interface NxShowArgs {
   json?: boolean;
@@ -154,7 +155,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showProjectsHandler } = await import('./projects.js');
+      const { showProjectsHandler } = await handleImport('./projects.js');
       await showProjectsHandler(args);
     });
     process.exit(exitCode);
@@ -211,7 +212,7 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showProjectHandler } = await import('./project.js');
+      const { showProjectHandler } = await handleImport('./project.js');
       await showProjectHandler(args);
     });
     process.exit(exitCode);
@@ -263,7 +264,7 @@ const showTargetInfoCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> =
           showTargetInfoHandler,
           showTargetInputsHandler,
           showTargetOutputsHandler,
-        } = await import('./target');
+        } = await handleImport('./target.js');
         if (args.subcommand === 'inputs') {
           await showTargetInputsHandler(args);
           return;
@@ -308,7 +309,7 @@ const showTargetInputsCommand: CommandModule<
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetInputsHandler } = await import('./target');
+      const { showTargetInputsHandler } = await handleImport('./target.js');
       await showTargetInputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);
@@ -351,7 +352,7 @@ const showTargetOutputsCommand: CommandModule<
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetOutputsHandler } = await import('./target');
+      const { showTargetOutputsHandler } = await handleImport('./target.js');
       await showTargetOutputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);

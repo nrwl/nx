@@ -1,6 +1,7 @@
 import { CommandModule, Argv } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { handleErrors } from '../../utils/handle-errors';
+import { handleImport } from '../../utils/handle-import';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { makeCommandModule } from '../yargs-utils/arguments-of';
 
@@ -14,7 +15,7 @@ export const yargsDaemonCommand = makeCommandModule({
   builder,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose, async () =>
-      (await import('./daemon.js')).daemonHandler(args)
+      (await handleImport('./daemon.js')).daemonHandler(args)
     );
     process.exit(exitCode);
   },

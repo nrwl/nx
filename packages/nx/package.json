@@ -10,7 +10,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/post-install || exit 0"
+    "postinstall": "node ./dist/bin/post-install || exit 0"
   },
   "keywords": [
     "Monorepo",
@@ -186,6 +186,21 @@
       "@nx/nx-source": "./bin/nx.ts",
       "types": "./bin/nx.d.ts",
       "default": "./dist/bin/nx.js"
+    },
+    "./src/plugins/js": {
+      "@nx/nx-source": "./src/plugins/js/index.ts",
+      "types": "./src/plugins/js/index.d.ts",
+      "default": "./dist/src/plugins/js/index.js"
+    },
+    "./src/plugins/package-json": {
+      "@nx/nx-source": "./src/plugins/package-json/index.ts",
+      "types": "./src/plugins/package-json/index.d.ts",
+      "default": "./dist/src/plugins/package-json/index.js"
+    },
+    "./src/plugins/**/*": {
+      "@nx/nx-source": "./src/**/*.ts",
+      "types": "./src/**/*.d.ts",
+      "default": "./dist/src/**/*.js"
     },
     "./src/**/*.js": {
       "@nx/nx-source": "./src/**/*.ts",

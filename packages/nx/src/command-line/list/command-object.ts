@@ -1,4 +1,5 @@
 import { CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 
 export const yargsListCommand: CommandModule = {
   command: 'list [plugin]',
@@ -15,7 +16,7 @@ export const yargsListCommand: CommandModule = {
         description: 'Output JSON.',
       }),
   handler: async (args: any) => {
-    await (await import('./list.js')).listHandler(args);
+    await (await handleImport('./list.js')).listHandler(args);
     process.exit(0);
   },
 };

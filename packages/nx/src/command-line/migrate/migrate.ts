@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
+import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
 import {
   clean,
@@ -2054,7 +2055,7 @@ const getNgCompatLayer = (() => {
   let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await import('../../adapter/ngcli-adapter.js');
+      _ngCliAdapter = await handleImport('../../adapter/ngcli-adapter.js');
       require('../../adapter/compat');
     }
     return _ngCliAdapter;
