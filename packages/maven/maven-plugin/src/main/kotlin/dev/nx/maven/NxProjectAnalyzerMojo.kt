@@ -286,6 +286,17 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       data.addProperty("groupId", extDep.groupId)
       data.addProperty("artifactId", extDep.artifactId)
       data.addProperty("version", extDep.version ?: "managed")
+
+      // Read the .sha1 sidecar file that Maven already computed next to the artifact
+      extDep.artifactFile?.let { jarFile ->
+        val sha1File = File("${jarFile.absolutePath}.sha1")
+        if (sha1File.exists()) {
+          data.addProperty("hash", sha1File.readText().trim())
+        } else {
+          log.warn("No .sha1 hash file found for ${coordinates} at ${sha1File.absolutePath}")
+        }
+      }
+
       node.add("data", data)
 
       externalNodes.add(nodeName, node)

@@ -51,8 +51,14 @@ class NxProjectAnalyzer(
     val configCreationTime = System.currentTimeMillis() - configCreationStart
     log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
+    // Build list of external dep node names for target inputs
+    val externalDepNames = project.artifacts
+      .filter { !coordinatesMap.containsKey("${it.groupId}:${it.artifactId}") }
+      .map { "maven:${it.groupId}:${it.artifactId}" }
+      .distinct()
+
     val targetAnalysisStart = System.currentTimeMillis()
-    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project)
+    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project, externalDepNames)
     val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
     log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
@@ -113,7 +119,8 @@ class NxProjectAnalyzer(
           groupId = artifact.groupId,
           artifactId = artifact.artifactId,
           version = artifact.version,
-          scope = artifact.scope
+          scope = artifact.scope,
+          artifactFile = artifact.file
         )
       }
 
@@ -152,7 +159,8 @@ data class ExternalMavenDependency(
   val groupId: String,
   val artifactId: String,
   val version: String?,
-  val scope: String?
+  val scope: String?,
+  val artifactFile: File?
 )
 
 data class NxDependency(val type: NxDependencyType, val source: String, val target: String, val sourceFile: File)
