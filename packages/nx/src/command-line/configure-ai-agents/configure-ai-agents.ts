@@ -33,7 +33,7 @@ export async function configureAiAgentsHandler(
     return await configureAiAgentsHandlerImpl(args);
   }
 
-  reportCommandRunEvent('configure-ai-agents');
+  reportCommandRunEvent('configure-ai-agents', undefined, args);
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||

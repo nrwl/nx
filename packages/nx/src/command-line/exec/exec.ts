@@ -41,7 +41,7 @@ export async function nxExecCommand(
   );
   const scriptArgV: string[] = readScriptArgV(overrides);
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  reportCommandRunEvent('exec');
+  reportCommandRunEvent('exec', undefined, args);
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
     const command = scriptArgV
