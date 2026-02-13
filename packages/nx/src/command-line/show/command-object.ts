@@ -1,11 +1,11 @@
-import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { CommandModule, showHelp } from 'yargs';
+import type { ProjectGraphProjectNode } from '../../config/project-graph';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   parseCSV,
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
 
 export interface NxShowArgs {
   json?: boolean;
@@ -33,14 +33,18 @@ export type ShowProjectOptions = NxShowArgs & {
   verbose?: boolean;
 };
 
-export type ShowTargetOptions = NxShowArgs & {
+export type ShowTargetBaseOptions = NxShowArgs & {
   target?: string;
   configuration?: string;
-  inputs?: boolean;
-  checkInput?: string;
-  outputs?: boolean;
-  checkOutput?: string;
   verbose?: boolean;
+};
+
+export type ShowTargetInputsOptions = ShowTargetBaseOptions & {
+  check?: string;
+};
+
+export type ShowTargetOutputsOptions = ShowTargetBaseOptions & {
+  check?: string;
 };
 
 export const yargsShowCommand: CommandModule<
@@ -76,8 +80,12 @@ export const yargsShowCommand: CommandModule<
         'Shows resolved configuration for the build target of my-app'
       )
       .example(
-        '$0 show target build',
-        'Shows resolved target configuration, inferring project from cwd'
+        '$0 show target inputs my-app:build',
+        'List resolved input files for the build target'
+      )
+      .example(
+        '$0 show target outputs my-app:build',
+        'List resolved output paths for the build target'
       ),
   handler: async (args) => {
     showHelp();
@@ -208,65 +216,158 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
   },
 };
 
-const showTargetCommand: CommandModule<NxShowArgs, ShowTargetOptions> = {
-  command: 'target [target]',
-  describe:
-    'Shows resolved target configuration for a given project target. Target can be specified as project:target or just target (infers project from cwd).',
+const showTargetInfoCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> =
+  {
+    command: '$0 [target] [subcommand]',
+    describe:
+      'Shows resolved target configuration for a given project target. Target can be specified as project:target or just target (infers project from cwd).',
+    builder: (yargs) =>
+      withVerbose(yargs)
+        .positional('target', {
+          type: 'string',
+          description:
+            'The target to show, in the format project:target or just target. If only a target name is provided, the project is inferred from the current working directory.',
+        })
+        .positional('subcommand', {
+          type: 'string',
+          choices: ['inputs', 'outputs'],
+          description:
+            'Used to allow running `nx show target app:build inputs` in addition to `nx show target inputs app:build`',
+        })
+        .option('configuration', {
+          type: 'string',
+          alias: 'c',
+          description: 'The configuration to inspect.',
+        })
+        .option('check', {
+          type: 'string',
+          requiresArg: true,
+          description:
+            'Check whether a specific value is an input or output. Requires inputs / outputs subcommand.',
+          implies: ['subcommand'],
+        })
+        .example(
+          '$0 show target my-app:build',
+          'Show target configuration for my-app:build'
+        )
+        .example(
+          '$0 show target my-app:build -c production',
+          'Show target configuration with production configuration applied'
+        ),
+    handler: async (args) => {
+      const exitCode = await handleErrors(args.verbose as boolean, async () => {
+        const {
+          showTargetInfoHandler,
+          showTargetInputsHandler,
+          showTargetOutputsHandler,
+        } = await import('./target');
+        if (!args.subcommand) {
+          await showTargetInfoHandler(args);
+        } else if (args.subcommand === 'inputs') {
+          await showTargetInputsHandler(args);
+        } else if (args.subcommand === 'outputs') {
+          await showTargetOutputsHandler(args);
+        } else {
+          throw new Error('Unknown subcommand: ' + args.subcommand);
+        }
+      });
+      process.exit(process.exitCode || exitCode);
+    },
+  };
+
+const showTargetInputsCommand: CommandModule<
+  NxShowArgs,
+  ShowTargetInputsOptions
+> = {
+  command: 'inputs [target]',
+  describe: 'List resolved input files for a target.',
   builder: (yargs) =>
     withVerbose(yargs)
       .positional('target', {
         type: 'string',
         description:
-          'The target to show, in the format project:target or just target. If only a target name is provided, the project is inferred from the current working directory.',
+          'The target to inspect, in the format project:target or just target.',
       })
       .option('configuration', {
         type: 'string',
         alias: 'c',
         description: 'The configuration to inspect.',
       })
-      .option('inputs', {
-        type: 'boolean',
-        description: 'List resolved input files for the target.',
+      .option('check', {
+        type: 'string',
+        requiresArg: true,
+        description:
+          'Check whether a specific value is an input for the target. Accepts a file path, environment variable name, runtime command, or external dependency.',
       })
-      .option('checkInput', {
+      .example(
+        '$0 show target inputs my-app:build',
+        'List resolved input files for my-app:build'
+      )
+      .example(
+        '$0 show target inputs my-app:build --check src/main.ts',
+        'Check if src/main.ts is an input for my-app:build'
+      ) as any,
+  handler: async (args) => {
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showTargetInputsHandler } = await import('./target');
+      await showTargetInputsHandler(args);
+    });
+    process.exit(process.exitCode || exitCode);
+  },
+};
+
+const showTargetOutputsCommand: CommandModule<
+  NxShowArgs,
+  ShowTargetOutputsOptions
+> = {
+  command: 'outputs [target]',
+  describe: 'List resolved output paths for a target.',
+  builder: (yargs) =>
+    withVerbose(yargs)
+      .positional('target', {
         type: 'string',
         description:
-          'Check whether a specific file is an input for the target. Accepts a workspace-relative path.',
+          'The target to inspect, in the format project:target or just target.',
       })
-      .option('outputs', {
-        type: 'boolean',
-        description: 'List resolved output paths for the target.',
-      })
-      .option('checkOutput', {
+      .option('configuration', {
         type: 'string',
+        alias: 'c',
+        description: 'The configuration to inspect.',
+      })
+      .option('check', {
+        type: 'string',
+        requiresArg: true,
         description:
           'Check whether a specific file is an output for the target. Accepts a workspace-relative path.',
       })
       .example(
-        '$0 show target my-app:build',
-        'Show target configuration for my-app:build'
+        '$0 show target outputs my-app:build',
+        'List resolved output paths for my-app:build'
       )
       .example(
-        '$0 show target my-app:build -c production',
-        'Show target configuration with production configuration applied'
-      )
-      .example(
-        '$0 show target my-app:build --inputs',
-        'List resolved input files for the build target'
-      )
-      .example(
-        '$0 show target my-app:build --outputs',
-        'List resolved output paths for the build target'
-      )
-      .example(
-        '$0 show target my-app:build --check-input src/main.ts',
-        'Check if src/main.ts is an input for the build target'
+        '$0 show target outputs my-app:build --check dist/my-app',
+        'Check if dist/my-app is an output of my-app:build'
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetHandler } = await import('./target');
-      await showTargetHandler(args);
+      const { showTargetOutputsHandler } = await import('./target');
+      await showTargetOutputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);
+  },
+};
+
+const showTargetCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> = {
+  command: 'target',
+  describe:
+    'Shows resolved target configuration for a given project target. Use subcommands to inspect inputs or outputs.',
+  builder: (yargs) =>
+    yargs
+      .command(showTargetInputsCommand)
+      .command(showTargetOutputsCommand)
+      .command(showTargetInfoCommand) as any,
+  handler: async () => {
+    showHelp();
+    process.exit(1);
   },
 };

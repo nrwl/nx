@@ -4,6 +4,7 @@ import {
   transferProjectGraph,
   ExternalObject,
   ProjectGraph as NativeProjectGraph,
+  HashInputs,
 } from '../native';
 import { readNxJson, NxJsonConfiguration } from '../config/nx-json';
 import { transformProjectGraphForRust } from '../native/transform-objects';
@@ -118,5 +119,44 @@ export class HashPlanInspector {
 
     const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
     return this.inspector.inspect(plansReference);
+  }
+
+  /**
+   * Like inspectTask() but returns structured HashInputs objects instead of flat strings.
+   * Each input is categorized into files, runtime, environment, depOutputs, or external.
+   */
+  inspectTaskInputs(
+    { project, target, configuration }: Target,
+    parsedArgs: { [k: string]: any } = {},
+    extraTargetDependencies: Record<
+      string,
+      (TargetDependencyConfig | string)[]
+    > = {},
+    excludeTaskDependencies: boolean = false
+  ): Record<string, HashInputs> {
+    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+      {
+        ...parsedArgs,
+        configuration: configuration,
+        targets: [target],
+      },
+      'run-one',
+      { printWarnings: false },
+      this.nxJson
+    );
+
+    const taskGraph = createTaskGraph(
+      this.projectGraph,
+      extraTargetDependencies,
+      [project],
+      nxArgs.targets,
+      nxArgs.configuration,
+      overrides,
+      excludeTaskDependencies
+    );
+
+    const taskIds = Object.keys(taskGraph.tasks);
+    const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
+    return this.inspector.inspectInputs(plansReference);
   }
 }

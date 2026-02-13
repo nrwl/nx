@@ -15,7 +15,12 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { output } from '../../utils/output';
 import { splitTarget } from '../../utils/split-target';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ShowTargetOptions } from './command-object';
+import type {
+  ShowTargetBaseOptions,
+  ShowTargetInputsOptions,
+  ShowTargetOutputsOptions,
+} from './command-object';
+import type { HashInputs } from '../../native';
 
 // ── Shared utilities ─────────────────────────────────────────────────
 
@@ -49,39 +54,10 @@ function omitEmptyArrays<T extends Record<string, unknown>>(obj: T): T {
   return result;
 }
 
-/**
- * Categorizes flat hash plan entries (e.g. "file:src/main.ts", "env:CI")
- * returned by the HashPlanInspector into typed buckets.
- */
-function categorizeHashPlan(entries: string[]) {
-  const files: string[] = [];
-  const environmentVariables: string[] = [];
-  const runtimeInputs: string[] = [];
-  const externalDependencies: string[] = [];
+// ── Entry points ─────────────────────────────────────────────────────
 
-  for (const entry of entries) {
-    if (entry.startsWith('file:')) files.push(entry.slice(5));
-    else if (entry.startsWith('env:'))
-      environmentVariables.push(entry.slice(4));
-    else if (entry.startsWith('runtime:')) runtimeInputs.push(entry.slice(8));
-    else if (
-      entry.endsWith(':ProjectConfiguration') ||
-      entry.endsWith(':TsConfig') ||
-      entry.startsWith('cwd:')
-    ) {
-      // Implicit inputs — already shown in base display
-    } else {
-      externalDependencies.push(entry);
-    }
-  }
-
-  return { files, environmentVariables, runtimeInputs, externalDependencies };
-}
-
-// ── Entry point ──────────────────────────────────────────────────────
-
-export async function showTargetHandler(
-  args: ShowTargetOptions
+export async function showTargetInfoHandler(
+  args: ShowTargetBaseOptions
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
@@ -96,58 +72,64 @@ export async function showTargetHandler(
   const targetConfig = node.data.targets?.[targetName];
 
   if (!targetConfig) {
-    const availableTargets = Object.keys(node.data.targets ?? {});
-    output.error({
-      title: `Target "${targetName}" not found for project "${projectName}".`,
-      bodyLines: availableTargets.length
-        ? [`Available targets:`, ...availableTargets.map((t) => `  - ${t}`)]
-        : [`This project has no targets configured.`],
-    });
-    process.exit(1);
+    reportTargetNotFound(projectName, targetName, node);
   }
 
   const configuration = configurationName ?? args.configuration;
   if (configuration) {
-    const availableConfigs = Object.keys(targetConfig.configurations ?? {});
-    if (!availableConfigs.includes(configuration)) {
-      output.error({
-        title: `Configuration "${configuration}" not found for target "${projectName}:${targetName}".`,
-        bodyLines: availableConfigs.length
-          ? [
-              `Available configurations:`,
-              ...availableConfigs.map((c) => `  - ${c}`),
-            ]
-          : [`This target has no configurations.`],
-      });
-      process.exit(1);
-    }
+    validateConfiguration(projectName, targetName, configuration, targetConfig);
   }
 
-  // --inputs and --check-input both use the HashPlanInspector
-  if (args.inputs || args.checkInput !== undefined) {
-    const inputFiles = await resolveInputFiles(
+  const data = resolveTargetInfoData(
+    projectName,
+    targetName,
+    configuration,
+    node,
+    graph,
+    nxJson
+  );
+  renderTargetInfo(data, args);
+  await flushOutput();
+}
+
+export async function showTargetInputsHandler(
+  args: ShowTargetInputsOptions
+): Promise<void> {
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
+
+  const graph = await createProjectGraphAsync();
+  const nxJson = readNxJson();
+
+  const { projectName, targetName, configurationName } =
+    resolveTargetIdentifier(args, graph, nxJson);
+
+  const node = resolveProjectNode(projectName, graph);
+  const targetConfig = node.data.targets?.[targetName];
+
+  if (!targetConfig) {
+    reportTargetNotFound(projectName, targetName, node);
+  }
+
+  const configuration = configurationName ?? args.configuration;
+  if (configuration) {
+    validateConfiguration(projectName, targetName, configuration, targetConfig);
+  }
+
+  const hashInputs = await resolveInputFiles(
+    projectName,
+    targetName,
+    configuration,
+    graph,
+    nxJson
+  );
+
+  if (args.check !== undefined) {
+    const data = resolveCheckFromInputs(
+      args.check,
       projectName,
       targetName,
-      configuration,
-      graph,
-      nxJson
-    );
-
-    if (args.inputs) {
-      renderInputs(
-        { project: projectName, target: targetName, ...inputFiles },
-        args
-      );
-      await flushOutput();
-      return;
-    }
-
-    // --check-input
-    const data = resolveCheckFromFiles(
-      args.checkInput,
-      projectName,
-      targetName,
-      inputFiles.files
+      hashInputs
     );
     renderCheckInput(data, args);
     await flushOutput();
@@ -156,20 +138,40 @@ export async function showTargetHandler(
     return;
   }
 
-  if (args.outputs) {
-    const data = resolveOutputsData(
-      projectName,
-      targetName,
-      configuration,
-      node
-    );
-    renderOutputs(data, args);
-    return;
+  renderInputs(
+    { project: projectName, target: targetName, ...hashInputs },
+    args
+  );
+  await flushOutput();
+}
+
+export async function showTargetOutputsHandler(
+  args: ShowTargetOutputsOptions
+): Promise<void> {
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
+
+  const graph = await createProjectGraphAsync();
+  const nxJson = readNxJson();
+
+  const { projectName, targetName, configurationName } =
+    resolveTargetIdentifier(args, graph, nxJson);
+
+  const node = resolveProjectNode(projectName, graph);
+  const targetConfig = node.data.targets?.[targetName];
+
+  if (!targetConfig) {
+    reportTargetNotFound(projectName, targetName, node);
   }
 
-  if (args.checkOutput !== undefined) {
+  const configuration = configurationName ?? args.configuration;
+  if (configuration) {
+    validateConfiguration(projectName, targetName, configuration, targetConfig);
+  }
+
+  if (args.check !== undefined) {
     const data = resolveCheckOutputData(
-      args.checkOutput,
+      args.check,
       projectName,
       targetName,
       configuration,
@@ -185,22 +187,14 @@ export async function showTargetHandler(
     return;
   }
 
-  const data = resolveTargetInfoData(
-    projectName,
-    targetName,
-    configuration,
-    node,
-    graph,
-    nxJson
-  );
-  renderTargetInfo(data, args);
-  await flushOutput();
+  const data = resolveOutputsData(projectName, targetName, configuration, node);
+  renderOutputs(data, args);
 }
 
 // ── Target identifier & project resolution ───────────────────────────
 
 function resolveTargetIdentifier(
-  args: ShowTargetOptions,
+  args: ShowTargetBaseOptions,
   graph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): { projectName: string; targetName: string; configurationName?: string } {
@@ -273,6 +267,42 @@ function resolveProjectNode(projectName: string, graph: ProjectGraph) {
   return node;
 }
 
+function reportTargetNotFound(
+  projectName: string,
+  targetName: string,
+  node: ProjectGraph['nodes'][string]
+): never {
+  const availableTargets = Object.keys(node.data.targets ?? {});
+  output.error({
+    title: `Target "${targetName}" not found for project "${projectName}".`,
+    bodyLines: availableTargets.length
+      ? [`Available targets:`, ...availableTargets.map((t) => `  - ${t}`)]
+      : [`This project has no targets configured.`],
+  });
+  process.exit(1);
+}
+
+function validateConfiguration(
+  projectName: string,
+  targetName: string,
+  configuration: string,
+  targetConfig: any
+): void {
+  const availableConfigs = Object.keys(targetConfig.configurations ?? {});
+  if (!availableConfigs.includes(configuration)) {
+    output.error({
+      title: `Configuration "${configuration}" not found for target "${projectName}:${targetName}".`,
+      bodyLines: availableConfigs.length
+        ? [
+            `Available configurations:`,
+            ...availableConfigs.map((c) => `  - ${c}`),
+          ]
+        : [`This target has no configurations.`],
+    });
+    process.exit(1);
+  }
+}
+
 // ── Data resolvers ───────────────────────────────────────────────────
 
 function resolveTargetInfoData(
@@ -321,11 +351,10 @@ function resolveTargetInfoData(
 
   const dependsOn =
     depConfigs && depConfigs.length > 0
-      ? depConfigs.map((dep) => ({
-          target: dep.target,
-          projects: resolveDependencyProjects(dep, projectName, graph),
-          ...(dep.params ? { params: dep.params } : {}),
-        }))
+      ? depConfigs.flatMap((dep) => {
+          const projects = resolveDependencyProjects(dep, projectName, graph);
+          return projects.map((p) => `${p}:${dep.target}`);
+        })
       : undefined;
 
   return {
@@ -351,8 +380,8 @@ function resolveTargetInfoData(
 
 /**
  * Uses the HashPlanInspector (native hash planner) to resolve the complete
- * set of inputs that affect a task's cache hash.  Returns categorized inputs:
- * files, environment variables, runtime inputs, and external dependencies.
+ * set of inputs that affect a task's cache hash. Returns structured HashInputs
+ * with files, runtime, environment, depOutputs, and external arrays.
  */
 async function resolveInputFiles(
   projectName: string,
@@ -360,47 +389,85 @@ async function resolveInputFiles(
   configuration: string | undefined,
   graph: ProjectGraph,
   nxJson: NxJsonConfiguration
-) {
+): Promise<HashInputs> {
   const { HashPlanInspector } = (await import(
     '../../hasher/hash-plan-inspector'
   )) as typeof import('../../hasher/hash-plan-inspector');
   const inspector = new HashPlanInspector(graph, workspaceRoot, nxJson);
   await inspector.init();
 
-  const plan = inspector.inspectTask({
+  const plan = inspector.inspectTaskInputs({
     project: projectName,
     target: targetName,
     configuration,
   });
 
   const taskId = `${projectName}:${targetName}`;
-  const entries = plan[taskId] ?? [];
-
-  return categorizeHashPlan(entries);
+  return (
+    plan[taskId] ?? {
+      files: [],
+      runtime: [],
+      environment: [],
+      depOutputs: [],
+      external: [],
+    }
+  );
 }
 
-function resolveCheckFromFiles(
-  rawFileToCheck: string,
+function resolveCheckFromInputs(
+  rawValue: string,
   projectName: string,
   targetName: string,
-  inputFiles: string[]
+  inputs: HashInputs
 ) {
-  const fileToCheck = normalizePath(rawFileToCheck);
-  const isInput = inputFiles.includes(fileToCheck);
+  // Check non-file categories first (exact match on raw value)
+  const isEnvironment = inputs.environment.includes(rawValue);
+  const isRuntime = inputs.runtime.includes(rawValue);
+  const isExternal = inputs.external.includes(rawValue);
+  const isDepOutput = inputs.depOutputs.includes(rawValue);
+
+  if (isEnvironment || isRuntime || isExternal || isDepOutput) {
+    const matchedCategory = isEnvironment
+      ? 'environment'
+      : isRuntime
+        ? 'runtime'
+        : isExternal
+          ? 'external'
+          : 'depOutputs';
+    return {
+      value: rawValue,
+      file: rawValue,
+      project: projectName,
+      target: targetName,
+      isInput: true,
+      matchedCategory,
+      containedInputFiles: [] as string[],
+    };
+  }
+
+  // Check files (with directory matching)
+  const fileToCheck = normalizePath(rawValue);
+  const isFile = inputs.files.includes(fileToCheck);
 
   let containedInputFiles: string[] = [];
-  if (!isInput) {
+  if (!isFile) {
     const dirPrefix = fileToCheck.endsWith('/')
       ? fileToCheck
       : fileToCheck + '/';
-    containedInputFiles = inputFiles.filter((f) => f.startsWith(dirPrefix));
+    containedInputFiles = inputs.files.filter((f) => f.startsWith(dirPrefix));
   }
 
   return {
+    value: rawValue,
     file: fileToCheck,
     project: projectName,
     target: targetName,
-    isInput,
+    isInput: isFile,
+    matchedCategory: isFile
+      ? 'files'
+      : containedInputFiles.length > 0
+        ? 'files'
+        : (null as string | null),
     containedInputFiles,
   };
 }
@@ -417,6 +484,27 @@ function resolveOutputsData(
     node
   );
 
+  // Detect outputs containing {options.*} that were dropped because the
+  // referenced option is not set. getOutputsForTargetAndConfiguration silently
+  // omits these — the resolved list will have fewer entries than configured.
+  const targetConfig = node.data.targets?.[targetName];
+  const configuredOutputs: string[] = targetConfig?.outputs ?? [];
+  const mergedOptions = {
+    ...targetConfig?.options,
+    ...(configuration
+      ? targetConfig?.configurations?.[configuration]
+      : undefined),
+  };
+  const unresolvedOutputs = configuredOutputs.filter((o) => {
+    if (!/\{options\./.test(o)) return false;
+    // Check if every {options.*} token in this template has a value
+    const unresolved = o.match(/\{options\.([^}]+)\}/g);
+    return unresolved?.some((token) => {
+      const key = token.slice('{options.'.length, -1);
+      return mergedOptions[key] === undefined;
+    });
+  });
+
   let expandedOutputs: string[];
   try {
     const { expandOutputs } = require('../../native');
@@ -430,6 +518,7 @@ function resolveOutputsData(
     target: targetName,
     outputPaths: resolvedOutputs,
     expandedOutputs,
+    unresolvedOutputs,
   };
 }
 
@@ -505,7 +594,7 @@ function resolveCheckOutputData(
 
 function renderTargetInfo(
   data: ReturnType<typeof resolveTargetInfoData>,
-  args: ShowTargetOptions
+  args: ShowTargetBaseOptions
 ) {
   if (args.json) {
     outputJson(data as Record<string, unknown>);
@@ -544,8 +633,8 @@ function renderTargetInfo(
 
   if (data.dependsOn && data.dependsOn.length > 0) {
     console.log(`${c.bold('Depends On')}:`);
-    for (const dep of data.dependsOn) {
-      console.log(`  ${dep.target} → ${dep.projects.join(', ')}`);
+    for (const taskId of data.dependsOn) {
+      console.log(`  ${taskId}`);
     }
   }
 
@@ -564,14 +653,14 @@ function renderTargetInfo(
 }
 
 function renderInputs(
-  data: ReturnType<typeof categorizeHashPlan> & {
+  data: HashInputs & {
     project: string;
     target: string;
   },
-  args: ShowTargetOptions
+  args: ShowTargetInputsOptions
 ) {
   if (args.json) {
-    outputJson(omitEmptyArrays(data as Record<string, unknown>));
+    outputJson(omitEmptyArrays(data as unknown as Record<string, unknown>));
     return;
   }
 
@@ -580,22 +669,26 @@ function renderInputs(
     `${c.bold('Inputs for')} ${c.cyan(data.project)}:${c.green(data.target)}`
   );
   printList(`Files (${data.files.length})`, data.files);
-  printList('Environment variables', data.environmentVariables);
-  printList('Runtime inputs', data.runtimeInputs);
-  printList('External dependencies', data.externalDependencies);
+  printList('Environment variables', data.environment);
+  printList('Runtime inputs', data.runtime);
+  printList('Dependent task outputs', data.depOutputs);
+  printList('External dependencies', data.external);
 }
 
 function renderCheckInput(
-  data: ReturnType<typeof resolveCheckFromFiles>,
-  args: ShowTargetOptions
+  data: ReturnType<typeof resolveCheckFromInputs>,
+  args: ShowTargetInputsOptions
 ) {
   if (args.json) {
     const result: Record<string, unknown> = {
-      file: data.file,
+      value: data.value,
       project: data.project,
       target: data.target,
       isInput: data.isInput,
     };
+    if (data.matchedCategory) {
+      result.matchedCategory = data.matchedCategory;
+    }
     if (data.containedInputFiles.length > 0) {
       result.isDirectoryContainingInputs = true;
       result.containedInputFiles = data.containedInputFiles;
@@ -605,11 +698,14 @@ function renderCheckInput(
   }
 
   const c = pc();
+  const categoryLabel = data.matchedCategory
+    ? ` (${data.matchedCategory})`
+    : '';
   if (data.isInput) {
     console.log(
-      `${c.green('✓')} ${c.bold(data.file)} is an input for ${c.cyan(
+      `${c.green('✓')} ${c.bold(data.value)} is an input for ${c.cyan(
         data.project
-      )}:${c.green(data.target)}`
+      )}:${c.green(data.target)}${categoryLabel}`
     );
   } else if (data.containedInputFiles.length > 0) {
     console.log(
@@ -620,7 +716,7 @@ function renderCheckInput(
     for (const f of data.containedInputFiles) console.log(`  ${f}`);
   } else {
     console.log(
-      `${c.red('✗')} ${c.bold(data.file)} is ${c.red(
+      `${c.red('✗')} ${c.bold(data.value)} is ${c.red(
         'not'
       )} an input for ${c.cyan(data.project)}:${c.green(data.target)}`
     );
@@ -629,10 +725,10 @@ function renderCheckInput(
 
 function renderOutputs(
   data: ReturnType<typeof resolveOutputsData>,
-  args: ShowTargetOptions
+  args: ShowTargetOutputsOptions
 ) {
   if (args.json) {
-    outputJson(data as Record<string, unknown>);
+    outputJson(omitEmptyArrays(data as unknown as Record<string, unknown>));
     return;
   }
 
@@ -650,16 +746,22 @@ function renderOutputs(
     data.expandedOutputs.length > 0 &&
     data.expandedOutputs !== data.outputPaths
   ) {
-    printList('Expanded files', data.expandedOutputs);
+    printList('Expanded outputs', data.expandedOutputs);
   }
-  if (data.outputPaths.length === 0) {
+  if (data.unresolvedOutputs.length > 0) {
+    printList(
+      `${c.yellow('Unresolved outputs')} (option not set)`,
+      data.unresolvedOutputs
+    );
+  }
+  if (data.outputPaths.length === 0 && data.unresolvedOutputs.length === 0) {
     console.log(`\n  No outputs configured for this target.`);
   }
 }
 
 function renderCheckOutput(
   data: ReturnType<typeof resolveCheckOutputData>,
-  args: ShowTargetOptions
+  args: ShowTargetOutputsOptions
 ) {
   const isDirectoryContainingOutputs =
     data.containedOutputPaths.length > 0 ||
@@ -692,15 +794,22 @@ function renderCheckOutput(
       )}:${c.green(data.target)}`
     );
   } else if (isDirectoryContainingOutputs) {
-    const totalCount =
-      data.containedOutputPaths.length + data.containedExpandedOutputs.length;
+    // Deduplicate across configured and expanded to avoid inflated counts
+    const uniquePaths = new Set([
+      ...data.containedOutputPaths,
+      ...data.containedExpandedOutputs,
+    ]);
     console.log(
       `${c.yellow('~')} ${c.bold(data.file)} is a directory containing ${c.bold(
-        String(totalCount)
+        String(uniquePaths.size)
       )} output path(s) for ${c.cyan(data.project)}:${c.green(data.target)}`
     );
     printList('Configured outputs', data.containedOutputPaths, '\n');
-    printList('Expanded output files', data.containedExpandedOutputs);
+    // Only show expanded outputs that aren't already in configured outputs
+    const extraExpanded = data.containedExpandedOutputs.filter(
+      (o) => !data.containedOutputPaths.includes(o)
+    );
+    printList('Expanded outputs', extraExpanded);
   } else {
     console.log(
       `${c.red('✗')} ${c.bold(data.file)} is ${c.red(

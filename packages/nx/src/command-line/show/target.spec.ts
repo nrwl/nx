@@ -3,7 +3,12 @@ import type {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { showTargetHandler } from './target';
+import type { HashInputs } from '../../native';
+import {
+  showTargetInfoHandler,
+  showTargetInputsHandler,
+  showTargetOutputsHandler,
+} from './target';
 
 let graph: ProjectGraph = {
   nodes: {},
@@ -13,7 +18,7 @@ let graph: ProjectGraph = {
 
 let mockCwd = '/workspace';
 let mockNxJson: Record<string, unknown> = {};
-let mockHashPlan: Record<string, string[]> = {};
+let mockHashInputs: Record<string, HashInputs> = {};
 let mockExpandedOutputs: string[] | null = null;
 
 jest.mock('../../project-graph/project-graph', () => ({
@@ -56,7 +61,7 @@ jest.mock('../../native', () => {
 jest.mock('../../hasher/hash-plan-inspector', () => ({
   HashPlanInspector: jest.fn().mockImplementation(() => ({
     init: jest.fn().mockResolvedValue(undefined),
-    inspectTask: jest.fn().mockImplementation(() => mockHashPlan),
+    inspectTaskInputs: jest.fn().mockImplementation(() => mockHashInputs),
   })),
 }));
 
@@ -72,7 +77,7 @@ describe('show target', () => {
     performance.mark('init-local');
     mockCwd = '/workspace';
     mockNxJson = {};
-    mockHashPlan = {};
+    mockHashInputs = {};
     mockExpandedOutputs = null;
     process.cwd = jest.fn().mockReturnValue(mockCwd);
   });
@@ -99,7 +104,7 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetInfoHandler({
       target: 'my-app:build',
       json: true,
     });
@@ -128,7 +133,7 @@ describe('show target', () => {
 
     process.cwd = jest.fn().mockReturnValue('/workspace/apps/my-app');
 
-    await showTargetHandler({
+    await showTargetInfoHandler({
       target: 'build',
       json: true,
     });
@@ -163,7 +168,7 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetInfoHandler({
       target: 'my-app:build',
       json: true,
     });
@@ -204,7 +209,7 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetInfoHandler({
       target: 'my-app:build',
       configuration: 'production',
       json: true,
@@ -219,7 +224,7 @@ describe('show target', () => {
     });
   });
 
-  it('should expand dependsOn ^build to dependency project:target pairs', async () => {
+  it('should expand dependsOn ^build to flat taskId list', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -258,7 +263,7 @@ describe('show target', () => {
       .addDependency('my-app', 'lib-b')
       .build();
 
-    await showTargetHandler({
+    await showTargetInfoHandler({
       target: 'my-app:build',
       json: true,
     });
@@ -266,16 +271,10 @@ describe('show target', () => {
     const logged = (console.log as jest.Mock).mock.calls[0][0];
     const parsed = JSON.parse(logged);
     expect(parsed.dependsOn).toBeDefined();
-    expect(parsed.dependsOn.length).toBeGreaterThan(0);
-
-    const buildDep = parsed.dependsOn.find(
-      (d: { target: string }) => d.target === 'build'
-    );
-    expect(buildDep).toBeDefined();
-    expect(buildDep.projects.sort()).toEqual(['lib-a', 'lib-b']);
+    expect(parsed.dependsOn.sort()).toEqual(['lib-a:build', 'lib-b:build']);
   });
 
-  it('should expand self-reference dependsOn to same project', async () => {
+  it('should expand self-reference dependsOn to same project taskId', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -293,7 +292,7 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetInfoHandler({
       target: 'my-app:test',
       json: true,
     });
@@ -301,11 +300,7 @@ describe('show target', () => {
     const logged = (console.log as jest.Mock).mock.calls[0][0];
     const parsed = JSON.parse(logged);
     expect(parsed.dependsOn).toBeDefined();
-    const selfBuild = parsed.dependsOn.find(
-      (d: { target: string }) => d.target === 'build'
-    );
-    expect(selfBuild).toBeDefined();
-    expect(selfBuild.projects).toContain('my-app');
+    expect(parsed.dependsOn).toContain('my-app:build');
   });
 
   it('should error when target not found and list available targets', async () => {
@@ -329,7 +324,7 @@ describe('show target', () => {
       .build();
 
     await expect(
-      showTargetHandler({
+      showTargetInfoHandler({
         target: 'my-app:serve',
         json: true,
       })
@@ -361,7 +356,7 @@ describe('show target', () => {
       .build();
 
     await expect(
-      showTargetHandler({
+      showTargetInfoHandler({
         target: 'nonexistent:build',
         json: true,
       })
@@ -400,7 +395,7 @@ describe('show target', () => {
       .build();
 
     await expect(
-      showTargetHandler({
+      showTargetInfoHandler({
         target: 'my-app:build',
         configuration: 'nonexistent',
         json: true,
@@ -435,9 +430,8 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetOutputsHandler({
       target: 'my-app:build',
-      outputs: true,
       json: true,
     });
 
@@ -447,7 +441,7 @@ describe('show target', () => {
     expect(parsed.outputPaths).toContain('dist/apps/my-app');
   });
 
-  it('should list resolved input files with --inputs via HashPlanInspector', async () => {
+  it('should list resolved input files via HashPlanInspector', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -464,19 +458,18 @@ describe('show target', () => {
       )
       .build();
 
-    mockHashPlan = {
-      'my-app:build': [
-        'file:apps/my-app/src/main.ts',
-        'file:apps/my-app/src/app.ts',
-        'env:NX_CLOUD_ENCRYPTION_KEY',
-        'my-app:ProjectConfiguration',
-        'my-app:TsConfig',
-      ],
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+        runtime: [],
+        environment: ['NX_CLOUD_ENCRYPTION_KEY'],
+        depOutputs: [],
+        external: [],
+      },
     };
 
-    await showTargetHandler({
+    await showTargetInputsHandler({
       target: 'my-app:build',
-      inputs: true,
       json: true,
     });
 
@@ -484,12 +477,10 @@ describe('show target', () => {
     const parsed = JSON.parse(logged);
     expect(parsed.files).toContain('apps/my-app/src/main.ts');
     expect(parsed.files).toContain('apps/my-app/src/app.ts');
-    expect(parsed.environmentVariables).toContain('NX_CLOUD_ENCRYPTION_KEY');
-    // ProjectConfiguration and TsConfig are implicit — not in output
-    expect(parsed.projectConfigurations).toBeUndefined();
+    expect(parsed.environment).toContain('NX_CLOUD_ENCRYPTION_KEY');
   });
 
-  it('should identify matching file with --check-input', async () => {
+  it('should identify matching file with --check', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -506,22 +497,29 @@ describe('show target', () => {
       )
       .build();
 
-    mockHashPlan = {
-      'my-app:build': ['file:apps/my-app/src/main.ts'],
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
     };
 
-    await showTargetHandler({
+    await showTargetInputsHandler({
       target: 'my-app:build',
-      checkInput: 'apps/my-app/src/main.ts',
+      check: 'apps/my-app/src/main.ts',
       json: true,
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
     const parsed = JSON.parse(logged);
     expect(parsed.isInput).toBe(true);
+    expect(parsed.matchedCategory).toBe('files');
   });
 
-  it('should report non-match correctly with --check-input', async () => {
+  it('should identify matching environment variable with --check', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -538,13 +536,58 @@ describe('show target', () => {
       )
       .build();
 
-    mockHashPlan = {
-      'my-app:build': ['file:apps/my-app/src/main.ts'],
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts'],
+        runtime: [],
+        environment: ['CI', 'NX_CLOUD_ENCRYPTION_KEY'],
+        depOutputs: [],
+        external: [],
+      },
     };
 
-    await showTargetHandler({
+    await showTargetInputsHandler({
       target: 'my-app:build',
-      checkInput: 'apps/my-app/README.md',
+      check: 'CI',
+      json: true,
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const parsed = JSON.parse(logged);
+    expect(parsed.isInput).toBe(true);
+    expect(parsed.matchedCategory).toBe('environment');
+  });
+
+  it('should report non-match correctly with --check for inputs', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              inputs: ['{projectRoot}/**/*.ts'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
+    };
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: 'apps/my-app/README.md',
       json: true,
     });
 
@@ -553,7 +596,7 @@ describe('show target', () => {
     expect(parsed.isInput).toBe(false);
   });
 
-  it('should normalize leading ./ in --check-input paths', async () => {
+  it('should normalize leading ./ in --check paths', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -570,13 +613,19 @@ describe('show target', () => {
       )
       .build();
 
-    mockHashPlan = {
-      'my-app:build': ['file:apps/my-app/src/main.ts'],
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
     };
 
-    await showTargetHandler({
+    await showTargetInputsHandler({
       target: 'my-app:build',
-      checkInput: './apps/my-app/src/main.ts',
+      check: './apps/my-app/src/main.ts',
       json: true,
     });
 
@@ -585,7 +634,7 @@ describe('show target', () => {
     expect(parsed.isInput).toBe(true);
   });
 
-  it('should report directory containing input files with --check-input', async () => {
+  it('should report directory containing input files with --check', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -602,16 +651,19 @@ describe('show target', () => {
       )
       .build();
 
-    mockHashPlan = {
-      'my-app:build': [
-        'file:apps/my-app/src/main.ts',
-        'file:apps/my-app/src/app.ts',
-      ],
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
     };
 
-    await showTargetHandler({
+    await showTargetInputsHandler({
       target: 'my-app:build',
-      checkInput: './apps/my-app/src',
+      check: './apps/my-app/src',
       json: true,
     });
 
@@ -623,7 +675,7 @@ describe('show target', () => {
     expect(parsed.containedInputFiles).toContain('apps/my-app/src/app.ts');
   });
 
-  it('should list resolved output paths with --outputs', async () => {
+  it('should list resolved output paths', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -641,9 +693,8 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetOutputsHandler({
       target: 'my-app:build',
-      outputs: true,
       json: true,
     });
 
@@ -652,7 +703,7 @@ describe('show target', () => {
     expect(parsed.outputPaths).toContain('dist/apps/my-app');
   });
 
-  it('should identify matching file with --check-output', async () => {
+  it('should identify matching file with --check for outputs', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -669,9 +720,9 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetOutputsHandler({
       target: 'my-app:build',
-      checkOutput: 'apps/my-app/dist/main.js',
+      check: 'apps/my-app/dist/main.js',
       json: true,
     });
 
@@ -681,7 +732,7 @@ describe('show target', () => {
     expect(parsed.matchedOutput).toBe('apps/my-app/dist');
   });
 
-  it('should detect directory containing output paths with --check-output', async () => {
+  it('should detect directory containing output paths with --check for outputs', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -698,9 +749,9 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetOutputsHandler({
       target: 'my-app:build',
-      checkOutput: 'apps/my-app',
+      check: 'apps/my-app',
       json: true,
     });
 
@@ -736,9 +787,9 @@ describe('show target', () => {
       'apps/my-app/dist/vendor.js',
     ];
 
-    await showTargetHandler({
+    await showTargetOutputsHandler({
       target: 'my-app:build',
-      checkOutput: 'apps/my-app/dist/main.js',
+      check: 'apps/my-app/dist/main.js',
       json: true,
     });
 
@@ -748,7 +799,97 @@ describe('show target', () => {
     expect(parsed.matchedOutput).toBe('apps/my-app/dist/main.js');
   });
 
-  it('should report no match for directory without outputs via --check-output', async () => {
+  it('should not flag {options.*} outputs as unresolved when option is set', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              options: { outputPath: 'dist/apps/my-app' },
+              outputs: ['{options.outputPath}'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    await showTargetOutputsHandler({
+      target: 'my-app:build',
+      json: true,
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const parsed = JSON.parse(logged);
+    expect(parsed.outputPaths).toContain('dist/apps/my-app');
+    expect(parsed.unresolvedOutputs).toBeUndefined();
+  });
+
+  it('should flag {options.*} outputs as unresolved when option is not set', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              outputs: ['{projectRoot}/dist', '{options.outputFile}'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    await showTargetOutputsHandler({
+      target: 'my-app:build',
+      json: true,
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const parsed = JSON.parse(logged);
+    expect(parsed.outputPaths).toContain('apps/my-app/dist');
+    expect(parsed.outputPaths).not.toContain('{options.outputFile}');
+    expect(parsed.unresolvedOutputs).toContain('{options.outputFile}');
+  });
+
+  it('should resolve {options.*} from configuration when provided', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              outputs: ['{options.outputFile}'],
+              configurations: {
+                production: { outputFile: 'dist/apps/my-app/main.js' },
+              },
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    await showTargetOutputsHandler({
+      target: 'my-app:build',
+      configuration: 'production',
+      json: true,
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const parsed = JSON.parse(logged);
+    expect(parsed.outputPaths).toContain('dist/apps/my-app/main.js');
+    expect(parsed.unresolvedOutputs).toBeUndefined();
+  });
+
+  it('should report no match for directory without outputs via --check for outputs', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -765,9 +906,9 @@ describe('show target', () => {
       )
       .build();
 
-    await showTargetHandler({
+    await showTargetOutputsHandler({
       target: 'my-app:build',
-      checkOutput: 'libs/other',
+      check: 'libs/other',
       json: true,
     });
 
