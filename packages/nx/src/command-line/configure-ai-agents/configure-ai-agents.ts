@@ -10,6 +10,7 @@ import {
   getAgentConfigurations,
   supportedAgents,
 } from '../../ai/utils';
+import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../devkit-internals';
 import { output } from '../../utils/output';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
@@ -274,6 +275,15 @@ export async function configureAiAgentsHandlerImpl(
     );
 
     configSpinner.stop();
+
+    // Tell the daemon to stop showing outdated agent messages
+    try {
+      if (await daemonClient.isServerAvailable()) {
+        await daemonClient.resetConfigureAiAgentsStatus();
+      }
+    } catch {
+      // Daemon may not be running, that's fine
+    }
 
     output.success({
       title: 'AI agents configured successfully',

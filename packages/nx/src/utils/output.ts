@@ -232,6 +232,11 @@ class CLIOutput {
     this.addNewline();
   }
 
+  logRawLine(message: string) {
+    this.writeToStdOut(`${message}${EOL}`);
+    this.addNewline();
+  }
+
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
     this.writeToStdOut(this.getCommandWithStatus(message, taskStatus));
