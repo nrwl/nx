@@ -485,7 +485,7 @@ export async function createProjectConfigurationsWithPlugins(
   });
 }
 
-export function mergeCreateNodesResults(
+function mergeCreateNodesResults(
   results: (readonly [
     plugin: string,
     file: string,
@@ -892,70 +892,133 @@ export function validateProject(
   }
 }
 
+/**
+ * Checks whether the source map entry for a given key comes from an Nx core
+ * plugin (one whose name starts with 'nx/'). Returns true when the property
+ * was defined by a core plugin, meaning the target definition takes precedence
+ * over target defaults.
+ *
+ * Returns false when there is no source info or the source is a non-core plugin,
+ * meaning target defaults should override.
+ */
 function definedSourceInfoComesFromCorePlugins(
   key: string,
   sourceMap: Record<string, SourceInformation>
 ) {
   const sourceInfo = sourceMap[key];
   if (!sourceInfo) {
-    return true;
+    return false;
   }
-  // The defined value of the target is from a plugin that
-  // isn't part of Nx's core plugins, so target defaults are
-  // applied on top of it.
   const [, plugin] = sourceInfo;
-  return !plugin?.startsWith('nx/');
+  return plugin?.startsWith('nx/');
 }
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function getMergeValueResult(baseValue: any, newValue: any): any {
+/**
+ * Returns deduplicated keys from all provided objects.
+ */
+function uniqueKeysInObjects(...objs: Record<string, any>[]): string[] {
+  const keys = new Set<string>();
+  for (const obj of objs) {
+    if (obj) {
+      for (const key of Object.keys(obj)) {
+        keys.add(key);
+      }
+    }
+  }
+  return Array.from(keys);
+}
+
+const NX_SPREAD_TOKEN = '...';
+
+/**
+ * Merges two values, supporting a spread token ('...') for arrays and objects.
+ *
+ * For arrays: The spread token ('...') acts as a placeholder that gets replaced
+ * with all elements from the base array. E.g., `['a', '...', 'b']` merged with
+ * base `['x', 'y']` produces `['a', 'x', 'y', 'b']`.
+ *
+ * For objects: A key of '...' set to `true` causes base object properties
+ * to be spread into the result at that position. Keys defined after '...' will
+ * override base properties.
+ *
+ * If no spread token is found, newValue fully replaces baseValue.
+ *
+ * When `sourceMapContext` is provided, the source map is updated to reflect
+ * which source contributed to the result. The source map is only updated when
+ * newValue contributes (including spread), not when baseValue is returned as-is.
+ */
+function getMergeValueResult(
+  baseValue: any,
+  newValue: any,
+  sourceMapContext?: {
+    sourceMap: Record<string, SourceInformation>;
+    key: string;
+    sourceInformation: SourceInformation;
+  }
+): any {
+  // no new value, use old value — source map stays as-is (base source)
   if (newValue === undefined && baseValue !== undefined) {
     return baseValue;
   }
-  if (
-    // Different types
-    typeof baseValue !== typeof newValue ||
-    // one is truthy, one is falsy
-    !!baseValue !== !!newValue
-  ) {
-    return newValue;
-  }
 
-  const newIsArray = Array.isArray(newValue);
-  if (newIsArray) {
-    const spreadIndex = newValue.findIndex((v) => v === '...');
+  // Check for spread syntax before type-mismatch bailout, since spread
+  // should work even when baseValue is undefined (treated as empty)
+  if (Array.isArray(newValue)) {
+    const spreadIndex = newValue.findIndex((v) => v === NX_SPREAD_TOKEN);
     if (spreadIndex !== -1) {
-      const baseIsArray = Array.isArray(baseValue);
-      const baseArray = baseIsArray ? baseValue : [];
+      // typeof [] === 'object', if baseValue isn't an array we can return new value.
+      // It's a type mismatch. On type mismatches, return new value without the `...`.
+      // To return without the ..., we substitute an empty array.
+      const baseArray = Array.isArray(baseValue) ? baseValue : [];
       const clone = [...newValue];
-      // delete 1 element at spreadIndex and insert all elements from baseArray in its place
       clone.splice(spreadIndex, 1, ...baseArray);
+      updateSourceMap(sourceMapContext);
       return clone;
     }
+    // no spread token, and looking at an array, so return new array.
+    updateSourceMap(sourceMapContext);
+    return newValue;
   } else if (
+    // new value is a non-null object, that we know is not an array
     typeof newValue === 'object' &&
     newValue != null &&
-    newValue['...']
+    // '...' is explicitly set to `true`
+    newValue[NX_SPREAD_TOKEN] === true
   ) {
-    const baseIsObject = typeof baseValue === 'object' && baseValue != null;
-    const baseObj = baseIsObject ? (baseValue as any) : {};
+    const baseObj =
+      typeof baseValue === 'object' && baseValue != null ? baseValue : {};
 
     const res: any = {};
+    // Iterate over the keys until you find the spread token.
+    // When its found, assign all keys from baseObj to res.
+    // Then continue until out of keys filling values from newValue.
     for (const newKey in newValue) {
-      if (newValue[newKey] === '...') {
-        Object.assign(res, baseObj);
-      } else {
+      if (newKey !== NX_SPREAD_TOKEN) {
         res[newKey] = newValue[newKey];
+      } else {
+        Object.assign(res, baseObj);
       }
     }
+    updateSourceMap(sourceMapContext);
     return res;
   }
 
-  // No spread syntax found - return newValue as-is (it takes precedence over baseValue)
+  updateSourceMap(sourceMapContext);
   return newValue;
+}
+
+function updateSourceMap(context?: {
+  sourceMap: Record<string, SourceInformation>;
+  key: string;
+  sourceInformation: SourceInformation;
+}) {
+  if (context) {
+    context.sourceMap[context.key] = context.sourceInformation;
+  }
 }
 
 function mergeOptionsBasedOnSource(
@@ -969,25 +1032,24 @@ function mergeOptionsBasedOnSource(
   };
   for (const optionKey in optionsFromTargetDefaults) {
     const sourceMapKey = `${sourceMapKeyBase}.${optionKey}`;
-    // Note: definedSourceInfoComesFromCorePlugins returns true when the value was defined
-    // by a NON-core plugin (i.e., plugins that don't start with 'nx/'). In that case,
-    // target defaults should override the value. When it returns false (core plugin),
-    // the target definition takes precedence.
-    if (definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)) {
-      // target defaults is overriding what's defined by non-core/inference plugins for this property
+    if (!definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)) {
+      // Property was defined by a non-core plugin, so target defaults take precedence
       result[optionKey] = getMergeValueResult(
         optionsFromTargetDefinition[optionKey], // base
-        optionsFromTargetDefaults[optionKey] // overrides
+        optionsFromTargetDefaults[optionKey], // overrides
+        {
+          sourceMap,
+          key: sourceMapKey,
+          sourceInformation: ['nx.json', 'nx/target-defaults'],
+        }
       );
-      // Update source map since target defaults is winning
-      sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
     } else {
-      // target definition (from core plugin) is overriding what's defined by target defaults
+      // target definition (from core plugin) takes precedence over target defaults
+      // Don't pass source map context - keep the original source from core plugin
       result[optionKey] = getMergeValueResult(
         optionsFromTargetDefaults[optionKey], // base
         optionsFromTargetDefinition[optionKey] // overrides
       );
-      // Don't update source map - keep the original source from core plugin
     }
   }
   return result;
@@ -1024,16 +1086,6 @@ export function mergeTargetDefaultWithTargetDefinition(
           project,
           targetName
         );
-        const keysFromCorePlugins = new Set<string>();
-        const keysFromOtherPlugins = new Set<string>();
-        for (const key in targetDefinition.options ?? {}) {
-          const sourceMapKey = `targets.${targetName}.options.${key}`;
-          if (definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)) {
-            keysFromCorePlugins.add(key);
-          } else {
-            keysFromOtherPlugins.add(key);
-          }
-        }
         result.options = mergeOptionsBasedOnSource(
           targetDefinition.options ?? {},
           normalizedDefaults,
@@ -1077,13 +1129,17 @@ export function mergeTargetDefaultWithTargetDefinition(
         const sourceMapKey = `targets.${targetName}.${key}`;
         if (
           targetDefinition[key] === undefined ||
-          definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)
+          !definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)
         ) {
           result[key] = getMergeValueResult(
             targetDefinition[key],
-            targetDefault[key]
+            targetDefault[key],
+            {
+              sourceMap,
+              key: sourceMapKey,
+              sourceInformation: ['nx.json', 'nx/target-defaults'],
+            }
           );
-          sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
         }
         break;
       }
@@ -1137,31 +1193,32 @@ export function mergeTargetConfigurations(
   const mergeBase = isCompatible ? baseTargetProperties : {};
 
   const keys = isCompatible
-    ? [
-        ...Array.from(
-          new Set<string>([
-            ...Object.keys(isCompatible ? baseTargetProperties : {}),
-            ...Object.keys(target),
-          ])
-        ),
-      ]
+    ? uniqueKeysInObjects(baseTargetProperties, target)
     : Object.keys(target);
 
   for (const key of keys) {
-    // Only apply merge logic if the key exists in target (has potential spread syntax)
-    // Otherwise, use base value or target value depending on which has it
-    if (key in target) {
-      result[key] = getMergeValueResult(mergeBase[key], target[key]);
-    } else {
-      // Key only exists in base, use base value
-      result[key] = mergeBase[key];
+    // options and configurations have their own merge logic below
+    if (key === 'options' || key === 'configurations') {
+      continue;
     }
 
-    // record top level properties in source map
-    if (projectConfigSourceMap && key in target) {
-      projectConfigSourceMap[targetIdentifier] = sourceInformation;
-      const targetPropertyId = `${targetIdentifier}.${key}`;
-      projectConfigSourceMap[targetPropertyId] = sourceInformation;
+    if (key in target) {
+      result[key] = getMergeValueResult(
+        mergeBase[key],
+        target[key],
+        projectConfigSourceMap
+          ? {
+              sourceMap: projectConfigSourceMap,
+              key: `${targetIdentifier}.${key}`,
+              sourceInformation,
+            }
+          : undefined
+      );
+      if (projectConfigSourceMap) {
+        projectConfigSourceMap[targetIdentifier] = sourceInformation;
+      }
+    } else {
+      result[key] = mergeBase[key];
     }
   }
 
@@ -1175,6 +1232,9 @@ export function mergeTargetConfigurations(
       sourceInformation,
       targetIdentifier
     );
+    if (projectConfigSourceMap && target.options) {
+      projectConfigSourceMap[`${targetIdentifier}.options`] = sourceInformation;
+    }
   }
 
   // merge configurations if there are any
@@ -1187,6 +1247,10 @@ export function mergeTargetConfigurations(
       sourceInformation,
       targetIdentifier
     );
+    if (projectConfigSourceMap && target.configurations) {
+      projectConfigSourceMap[`${targetIdentifier}.configurations`] =
+        sourceInformation;
+    }
   }
 
   if (target.metadata) {
@@ -1253,10 +1317,10 @@ function mergeConfigurations<T extends Object>(
 ): Record<string, T> | undefined {
   const mergedConfigurations = {};
 
-  const configurations = new Set([
-    ...Object.keys(baseConfigurations ?? {}),
-    ...Object.keys(newConfigurations ?? {}),
-  ]);
+  const configurations = uniqueKeysInObjects(
+    baseConfigurations ?? {},
+    newConfigurations ?? {}
+  );
   for (const configuration of configurations) {
     // Intentionally doesn't pass source map, as that is handled below
     mergedConfigurations[configuration] = mergeOptions(
@@ -1289,25 +1353,24 @@ function mergeOptions(
   sourceInformation?: SourceInformation,
   targetIdentifier?: string
 ): Record<string, any> | undefined {
-  const mergedOptionKeys = Object.keys({
-    ...(baseOptions ?? {}),
-    ...(newOptions ?? {}),
-  });
+  const mergedOptionKeys = uniqueKeysInObjects(
+    baseOptions ?? {},
+    newOptions ?? {}
+  );
   const mergedOptions = {};
 
   for (const optionKey of mergedOptionKeys) {
-    // Only apply merge logic if the key exists in newOptions (has potential spread syntax)
-    // Otherwise, use base value or new value depending on which has it
     mergedOptions[optionKey] = getMergeValueResult(
       baseOptions ? baseOptions[optionKey] : undefined,
-      newOptions ? newOptions[optionKey] : undefined
+      newOptions ? newOptions[optionKey] : undefined,
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.options.${optionKey}`,
+            sourceInformation,
+          }
+        : undefined
     );
-
-    // record new options & option properties in source map
-    if (projectConfigSourceMap && newOptions && optionKey in newOptions) {
-      projectConfigSourceMap[`${targetIdentifier}.options.${optionKey}`] =
-        sourceInformation;
-    }
   }
 
   return mergedOptions;
