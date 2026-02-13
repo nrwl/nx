@@ -169,6 +169,21 @@ describe('deps-sync syncGenerator()', () => {
     expect(result).toBeUndefined();
   });
 
+  it('should not add devDependency if already in dependencies under different version', async () => {
+    addProject('a');
+    addProject('b', ['a'], {
+      existingDeps: { a: '22.4.1' },
+    });
+
+    const result = await syncGenerator(tree);
+
+    const pkgJson = readJson(tree, 'packages/b/package.json');
+    expect(pkgJson.devDependencies).toBeUndefined();
+    expect(pkgJson.dependencies).toEqual({ a: '22.4.1' });
+    // No changes, so result should be void/undefined
+    expect(result).toBeUndefined();
+  });
+
   it('should return undefined when everything is in sync', async () => {
     addProject('a');
     addProject('b', ['a'], {

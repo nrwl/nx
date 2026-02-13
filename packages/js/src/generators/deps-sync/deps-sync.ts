@@ -84,7 +84,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     for (const depName of expectedInternalDeps) {
       if (
         currentDevDeps[depName] === versionString ||
-        packageJson.dependencies?.[depName] === versionString
+        packageJson.dependencies?.[depName]
       ) {
         continue;
       }
