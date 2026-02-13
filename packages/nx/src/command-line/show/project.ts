@@ -16,7 +16,7 @@ export async function showProjectHandler(
   args: ShowProjectOptions
 ): Promise<void> {
   performance.mark('code-loading:end');
-  reportCommandRunEvent('show project');
+  reportCommandRunEvent('show project', undefined, args);
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   const graph = await createProjectGraphAsync();
 

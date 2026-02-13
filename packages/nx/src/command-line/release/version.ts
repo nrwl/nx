@@ -66,7 +66,7 @@ export interface NxReleaseVersionResult {
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunEvent('release version');
+    reportCommandRunEvent('release version', undefined, args);
     return createAPI({}, false)(args);
   });
 

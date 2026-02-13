@@ -43,7 +43,7 @@ export interface PublishProjectsResult {
 
 export const releasePublishCLIHandler = (args: PublishOptions) =>
   handleErrors(args.verbose, async () => {
-    reportCommandRunEvent('release publish');
+    reportCommandRunEvent('release publish', undefined, args);
     const publishProjectsResult: PublishProjectsResult = await createAPI(
       {},
       false

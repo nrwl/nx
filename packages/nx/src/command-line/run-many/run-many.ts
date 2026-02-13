@@ -69,7 +69,7 @@ export async function runMany(
       projectNames
     );
   } else {
-    reportCommandRunEvent('run-many');
+    reportCommandRunEvent('run-many', undefined, args);
     const status = await runCommand(
       projects,
       projectGraph,

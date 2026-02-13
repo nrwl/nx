@@ -23,7 +23,7 @@ export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
-  reportCommandRunEvent('configure-ai-agents');
+  reportCommandRunEvent('configure-ai-agents', undefined, args);
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||
