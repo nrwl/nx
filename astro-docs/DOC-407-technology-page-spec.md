@@ -389,8 +389,10 @@ All hub pages follow this section flow. Every section is required.
 1. Use `{% cardgrid %}` with `{% linkcard %}` — not a flat bullet list.
 2. Maximum 6 cards.
 3. Every card has a `title`, `description`, and `href`. Descriptions are one sentence explaining what the user will learn.
-4. Prioritize: tutorial first (if one exists), then common workflows/recipes, then migration guide (if applicable), then generators/executors reference last.
-5. These cards point to the Knowledge Base content that doesn't belong on the hub page — the specific scenarios, the "long tail" of workflows.
+4. Always include links to the generators and executors reference pages when they exist for that technology.
+5. Always include a migration guide link when one exists for that technology.
+6. Prioritize: tutorial first (if one exists), then common workflows/recipes, then migration guide (if applicable), then generators/executors reference last.
+7. These cards point to the Knowledge Base content that doesn't belong on the hub page — the specific scenarios, the "long tail" of workflows.
 
 ---
 

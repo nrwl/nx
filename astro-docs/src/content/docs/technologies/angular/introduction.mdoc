@@ -9,12 +9,8 @@ filter: 'type:References'
 ---
 
 [Angular](https://angular.dev) is a framework for building web applications.
-
-The `@nx/angular` plugin adds [generators](#local-development), [inferred targets](#configure-angular-task-inference), and Angular CLI builder integration for Angular apps and libraries in Nx.
-
+The `@nx/angular` plugin adds [generators](#local-development), [inferred targets](#configure-angular-task-inference), and Angular CLI builder integration so you can run Angular tasks through Nx.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
-
-If you need version compatibility details, see the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
 
 ## Setup
 
@@ -22,6 +18,7 @@ If you need version compatibility details, see the [Nx and Angular versions matr
 
 {% aside type="note" title="Keep Nx package versions in sync" %}
 Install the `@nx/angular` version that matches your `nx` version to avoid hard-to-debug errors. See [Keep Nx versions in sync](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
 ```shell
@@ -34,13 +31,18 @@ Verify the plugin is active by inspecting an Angular project:
 nx show project my-app --web
 ```
 
+Look for `build`, `serve`, `test`, `lint`, or `e2e` targets generated from `angular.json`.
 Replace `my-app` with your project name.
+
+If you need version compatibility details, see the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
 
 ### Create a new workspace
 
 ```shell
-npx create-nx-workspace@latest --preset=angular-standalone
+npx create-nx-workspace my-org --preset=angular-standalone
 ```
+
+Replace `my-org` with your workspace name.
 
 {% aside type="note" title="Want a monorepo instead?" %}
 Use `--preset=angular-monorepo` to start with a monorepo layout.
@@ -52,7 +54,7 @@ For a guided walkthrough, follow the [Angular Monorepo Tutorial](/docs/getting-s
 
 ## Local Development
 
-Generate an Angular application or library:
+### Generate Angular Apps and Libraries
 
 ```shell
 nx g @nx/angular:app apps/my-app
@@ -61,7 +63,14 @@ nx g @nx/angular:lib libs/my-lib
 
 By default, Nx configures ESLint for linting, Jest for unit tests, and Cypress for e2e tests. Replace `my-app` and `my-lib` with your project names.
 
-Run tasks for your projects:
+### Generate Components and Services
+
+```shell
+nx g @nx/angular:component libs/my-lib/src/lib/my-component --project=my-lib
+nx g @nx/angular:service libs/my-lib/src/lib/my-service --project=my-lib
+```
+
+### Run Angular Tasks
 
 ```shell
 nx serve my-app
@@ -75,6 +84,8 @@ nx e2e my-app
 nx test my-lib
 nx lint my-lib
 ```
+
+For all generator and executor options, see the [Angular Generators Reference](/docs/technologies/angular/generators) and [Angular Executors Reference](/docs/technologies/angular/executors).
 
 ## Configure Angular Task Inference
 
@@ -98,11 +109,11 @@ Configure the plugin in `nx.json`:
 
 ### Options
 
-| Option             | Type     | Default | Description                                                                                        |
-| ------------------ | -------- | ------- | -------------------------------------------------------------------------------------------------- |
-| `targetNamePrefix` | `string` | none    | Prefix all inferred Angular targets (for example, `angular-build`). Useful in polyglot workspaces. |
+| Option             | Description                                                                                        | Default |
+| ------------------ | -------------------------------------------------------------------------------------------------- | ------- |
+| `targetNamePrefix` | Prefix all inferred Angular targets (for example, `angular-build`). Useful in polyglot workspaces. | none    |
 
-`@nx/angular` currently exposes `targetNamePrefix` as its only plugin option. There is no per-project or per-target disable switch; use explicit targets in a project's `project.json` to override inference or remove `@nx/angular` from the `plugins` array to disable inference entirely.
+`@nx/angular` currently exposes `targetNamePrefix` as its only plugin option. There is no per-project or per-target disable switch; remove `@nx/angular` from the `plugins` array to disable inference entirely and define explicit targets in `project.json` if you want full control.
 
 For full configuration options, see the [Angular plugin reference](/docs/technologies/angular/overview).
 
@@ -111,6 +122,11 @@ For full configuration options, see the [Angular plugin reference](/docs/technol
 ```shell
 nx show project my-app --web
 ```
+
+### Buildable and Publishable Libraries
+
+If you need libraries that build or publish, generate them with build output enabled and an import path. This creates build targets you can cache and run in CI.
+See [Set up incremental builds for Angular libraries](/docs/technologies/angular/guides/setup-incremental-builds-angular) for details.
 
 ## CI and Scale
 
@@ -125,6 +141,10 @@ Enable remote caching for faster CI runs:
 ```shell
 nx connect
 ```
+
+### CI Considerations
+
+If you use Angular CLI configurations, define a `ci` configuration in `angular.json` and run tasks with `--configuration=ci` for CI-specific settings.
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete guide. Angular CLI targets are executed via Nx, so your existing `angular.json` configuration continues to work in CI.
 
