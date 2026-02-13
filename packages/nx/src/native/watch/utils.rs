@@ -1,17 +1,12 @@
-use ignore_files::IgnoreFile;
 use std::path::Path;
 use std::{fs, path::PathBuf};
 use tracing::trace;
 use watchexec_events::{Event, Tag};
 
-pub(super) fn get_nx_ignore<P: AsRef<Path>>(origin: P) -> Option<IgnoreFile> {
+pub(super) fn get_nx_ignore<P: AsRef<Path>>(origin: P) -> Option<PathBuf> {
     let nx_ignore_path = PathBuf::from(origin.as_ref()).join(".nxignore");
     if nx_ignore_path.exists() {
-        Some(IgnoreFile {
-            path: nx_ignore_path,
-            applies_in: Some(origin.as_ref().into()),
-            applies_to: None,
-        })
+        Some(nx_ignore_path)
     } else {
         None
     }
