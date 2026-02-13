@@ -51,21 +51,27 @@ export function getTuiTerminalSummaryLifeCycle({
   const inProgressTasks = new Set<string>();
   const stoppedTasks = new Set<string>();
 
+  // Chunks accumulated progressively during task execution
+  const taskOutputChunks: Record<string, string[]> = {};
+  // Finalized output strings set on task completion — read by summary print functions
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToTaskStatus: Record<string, TaskStatus> = {};
 
   const taskIdsInTheOrderTheyStart: string[] = [];
 
+  const getTerminalOutput = (taskId: string): string =>
+    tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
+
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
-      tasksToTerminalOutputs[t.id] ??= '';
+      taskOutputChunks[t.id] ??= [];
       taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
-    tasksToTerminalOutputs[taskId] += output;
+    taskOutputChunks[taskId].push(output);
   };
 
   // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
@@ -89,7 +95,7 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (const { task, status } of taskResults) {
+    for (const { task, status, terminalOutput } of taskResults) {
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
 
@@ -107,6 +113,13 @@ export function getTuiTerminalSummaryLifeCycle({
           totalFailedTasks++;
           failedTasks.add(task.id);
           break;
+      }
+
+      // Store the final string directly — shares the same reference as
+      // TaskResultsLifeCycle, old chunks become GC-eligible
+      if (terminalOutput !== undefined) {
+        tasksToTerminalOutputs[task.id] = terminalOutput;
+        delete taskOutputChunks[task.id];
       }
     }
   };
@@ -163,7 +176,7 @@ export function getTuiTerminalSummaryLifeCycle({
     // above the summary, since run-one should print all task results.
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
+      const terminalOutput = getTerminalOutput(taskId);
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
@@ -308,7 +321,7 @@ export function getTuiTerminalSummaryLifeCycle({
     // First pass: Print task outputs and collect checklist lines
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
+      const terminalOutput = getTerminalOutput(taskId);
       // Task Status is null?
       if (!taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
