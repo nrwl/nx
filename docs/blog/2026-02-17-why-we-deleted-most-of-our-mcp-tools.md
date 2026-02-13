@@ -40,11 +40,11 @@ We've been building and shipping skills as part of the [Nx AI Agent Skills](/blo
 We ran benchmarks comparing agent performance with these new nx skills versus our previous approach with only the Nx MCP configured.
 The results clearly show our new skill-based setup performing better:
 
-![Nx question accuracy chart showing Baseline, MCP only, and Skills scores for Sonnet and Haiku](/blog/images/articles/chart-question-accuracy.png)
+![Nx question accuracy chart showing Baseline, MCP only, and Skills scores for Sonnet and Haiku](/blog/images/articles/chart-question-accuracy.avif)
 
 One interesting pattern: for smaller models like Haiku, the improvements from using skills are even bigger than for the more capable Sonnet. The structured guidance in skills helps patch the gaps where smarter models would just persevere through exploration.
 
-![Generation tasks chart showing MCP only vs Skills for generator usage and verification rates](/blog/images/articles/chart-generation-tasks.png)
+![Generation tasks chart showing MCP only vs Skills for generator usage and verification rates](/blog/images/articles/chart-generation-tasks.avif)
 
 For scaffolding tasks where workspace consistency is important, our benchmarks show significantly more generator usage. With the additional instructions from our skills, agents actually run verification before returning to the user far more often and make sure that newly generated artifacts didn't break the rest of the workspace.
 
