@@ -76,6 +76,11 @@ winapi = { version = "0.3", features = ["fileapi", "psapi"] }
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
 
+# Windows excluded: tikv-jemalloc-sys fails to build with MSVC (spaces in cl.exe path break configure).
+# Track https://github.com/tikv/jemallocator/pull/99 for upstream fix.
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+tikv-jemallocator = { version = "0.6", features = ["disable_initial_exec_tls"] }
+
 [target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
 mio = "1.0"
 nix = { version = "0.30.0", features = ["process", "signal"] }
