@@ -1,5 +1,5 @@
 import { createLogger, NX_PREFIX, NX_ERROR } from './logger';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 describe('createLogger', () => {
   let mockDriver: {
@@ -26,7 +26,7 @@ describe('createLogger', () => {
       logger.warn('warning message');
 
       expect(mockDriver.warn).toHaveBeenCalledWith(
-        chalk.bold(chalk.yellow('warning message'))
+        pc.bold(pc.yellow('warning message'))
       );
     });
   });
@@ -37,7 +37,7 @@ describe('createLogger', () => {
       logger.error('NX some error');
 
       expect(mockDriver.error).toHaveBeenCalledWith(
-        `\n${NX_ERROR} ${chalk.bold(chalk.red('some error'))}\n`
+        `\n${NX_ERROR} ${pc.bold(pc.red('some error'))}\n`
       );
     });
 
@@ -48,7 +48,7 @@ describe('createLogger', () => {
       logger.error(error);
 
       expect(mockDriver.error).toHaveBeenCalledWith(
-        chalk.bold(chalk.red('Error: test error\n    at Test.fn'))
+        pc.bold(pc.red('Error: test error\n    at Test.fn'))
       );
     });
 
@@ -57,7 +57,7 @@ describe('createLogger', () => {
       logger.error('plain error');
 
       expect(mockDriver.error).toHaveBeenCalledWith(
-        chalk.bold(chalk.red('plain error'))
+        pc.bold(pc.red('plain error'))
       );
     });
   });
@@ -68,7 +68,7 @@ describe('createLogger', () => {
       logger.info('NX some info');
 
       expect(mockDriver.info).toHaveBeenCalledWith(
-        `\n${NX_PREFIX} ${chalk.bold('some info')}\n`
+        `\n${NX_PREFIX} ${pc.bold('some info')}\n`
       );
     });
 
