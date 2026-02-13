@@ -18,6 +18,7 @@ You can use Jest with Nx without the plugin and still get [task caching](/docs/f
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
 ```shell
@@ -160,7 +161,6 @@ nx show project my-app --web
 
 Replace `my-app` with your project name.
 
-For all generator and executor options, see the [Jest generators reference](/docs/technologies/test-tools/jest/generators).
 
 ## CI and Scale
 
@@ -178,12 +178,9 @@ nx connect
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a full CI guide.
 
-{% aside type="tip" title="AI Prompt" %}
-Copy this prompt to your AI assistant:
+### CI Considerations
 
-> Add `@nx/jest` to my workspace, configure Jest for `my-app`, and show me how to run tests, watch, and collect coverage.
-
-{% /aside %}
+Use `--runInBand` (or reduce Jest workers) in CI to avoid oversubscribing CPU when running many projects.
 
 ## What's Next
 

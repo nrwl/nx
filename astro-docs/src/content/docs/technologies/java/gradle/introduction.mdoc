@@ -147,6 +147,7 @@ Nx passes the plugin options to the Gradle `nxProjectGraph` task as Gradle prope
 | `gradleExecutableDirectory` | string | none    | Directory containing the Gradle wrapper to use.                            |
 | `<taskName>TargetName`      | string | none    | Override for any Gradle task name (for example `assembleTargetName`).      |
 
+
 ### Batch Mode
 
 Batch mode runs multiple Gradle tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
@@ -171,12 +172,9 @@ nx connect
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for provider-specific workflows. If you set `ciTestTargetName`, Nx will create CI variants that use atomized test targets.
 
-{% aside type="tip" title="AI Prompt" %}
-Copy this prompt to your AI assistant:
+### CI Considerations
 
-> Add Nx to my Gradle workspace, then show how to list projects, run `build` and `test` through Nx, and enable CI test atomization with `ciTestTargetName`.
-
-{% /aside %}
+If your Gradle builds require specific CI flags (for example `--no-daemon` or custom JVM args), add them to `gradle.properties` so Nx runs consistent settings locally and in CI.
 
 ## What's Next
 
@@ -184,5 +182,6 @@ Copy this prompt to your AI assistant:
 {% linkcard title="Gradle Tutorial" description="Add Nx to an existing Gradle workspace step-by-step." href="/docs/getting-started/tutorials/gradle-tutorial" /%}
 {% linkcard title="Java with Nx" description="Overview of Java support across Gradle and Maven." href="/docs/technologies/java/introduction" /%}
 {% linkcard title="CI Workflow Generator" description="Generate CI workflows that run affected tasks." href="/docs/reference/workspace/generators#ci-workflow" /%}
-{% linkcard title="Gradle Plugin Reference" description="Full reference for the Gradle plugin and DSL." href="https://nx.dev/packages/gradle/documents/overview" /%}
+{% linkcard title="Gradle Generators Reference" description="Full reference for @nx/gradle generators." href="/docs/technologies/java/gradle/generators" /%}
+{% linkcard title="Gradle Executors Reference" description="Full reference for @nx/gradle executors." href="/docs/technologies/java/gradle/executors" /%}
 {% /cardgrid %}

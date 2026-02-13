@@ -88,6 +88,14 @@ If you already have an Nx workspace, add the Maven plugin:
 nx add @nx/maven
 ```
 
+Verify the plugin is active by inspecting a module:
+
+```shell
+nx show project my-app --web
+```
+
+Replace `my-app` with a module name from your workspace.
+
 ## Local Development
 
 The plugin infers targets from Maven phases and plugin goals defined in your `pom.xml` files. By default, the target names are the Maven phase names:
@@ -143,6 +151,7 @@ Configure the plugin in the `plugins` array of `nx.json`.
 
 There is no per-project disable for the plugin. To stop inference, remove `@nx/maven` from the `plugins` array in `nx.json`.
 
+
 ## CI and Scale
 
 Build and test only what changed using the project graph:
@@ -159,12 +168,9 @@ nx connect
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete configuration guide.
 
-{% aside type="tip" title="AI Prompt" %}
-Copy this prompt to your AI assistant:
+### CI Considerations
 
-> Add Nx to my Maven workspace with `nx init`, show me the inferred targets for `my-module`, and run the test and package phases using Nx.
-
-{% /aside %}
+If you use Maven profiles or parallel builds in CI, define them in `.mvn/maven.config` (for example `-Pci` or `-T1C`) so Nx runs the same settings consistently.
 
 ## What's Next
 
@@ -172,5 +178,6 @@ Copy this prompt to your AI assistant:
 {% linkcard title="Java with Nx" description="Learn how Nx supports Maven and Gradle together." href="/docs/technologies/java/introduction" /%}
 {% linkcard title="Gradle Plugin" description="See the Nx plugin for Gradle." href="/docs/technologies/java/gradle/introduction" /%}
 {% linkcard title="Set Up CI" description="Configure fast, reliable CI for Nx workspaces." href="/docs/guides/nx-cloud/setup-ci" /%}
-{% linkcard title="Nx Environment Variables" description="Reference for Nx environment configuration." href="/docs/reference/environment-variables" /%}
+{% linkcard title="Maven Generators Reference" description="Full reference for @nx/maven generators." href="/docs/technologies/java/maven/generators" /%}
+{% linkcard title="Maven Executors Reference" description="Full reference for @nx/maven executors." href="/docs/technologies/java/maven/executors" /%}
 {% /cardgrid %}

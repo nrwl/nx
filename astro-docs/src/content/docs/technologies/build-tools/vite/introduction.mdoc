@@ -18,6 +18,7 @@ You can use Vite with Nx without the plugin and still get [task caching](/docs/f
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/vite` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
 Install the plugin:
@@ -180,7 +181,6 @@ To see what tasks Nx inferred for a project, open the [project details view](/do
 nx show project my-app --web
 ```
 
-For all generator and executor options, see the [Vite generators reference](/docs/technologies/build-tools/vite/generators).
 
 ## CI and Scale
 
@@ -192,12 +192,9 @@ Use Nx to keep CI fast in large monorepos:
 
 If you use Vitest with `@nx/vite`, set `ciTargetName` to enable test splitting by file for faster CI and better caching.
 
-{% aside type="tip" title="AI Prompt" %}
-Copy this prompt to your AI assistant:
+### CI Considerations
 
-> In this Nx workspace, convert `my-app` to Vite using `nx g @nx/vite:configuration --project=my-app`, add Vitest with `nx g @nx/vite:vitest --project=my-app`, verify inferred tasks with `nx show project my-app --web`, then run `nx dev my-app` and `nx build my-app`. If tests are configured, run `nx test my-app`.
-
-{% /aside %}
+Use `nx affected -t test` with `ciTargetName` to split tests by file when Vitest is configured in CI.
 
 ## What's Next
 
@@ -207,4 +204,5 @@ Copy this prompt to your AI assistant:
 {% linkcard title="Vue with Nx" description="See the Vue workflow in Nx and where Vite is used." href="/docs/technologies/vue/introduction" /%}
 {% linkcard title="Vitest with Nx" description="Add and run Vitest tests, including CI-friendly patterns." href="/docs/technologies/test-tools/vitest/introduction" /%}
 {% linkcard title="Vite Generators" description="Browse all Vite generator options for configuration and testing." href="/docs/technologies/build-tools/vite/generators" /%}
+{% linkcard title="Vite Executors" description="Browse all Vite executor options for dev and build." href="/docs/technologies/build-tools/vite/executors" /%}
 {% /cardgrid %}
