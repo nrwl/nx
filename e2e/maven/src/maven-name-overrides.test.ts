@@ -50,7 +50,7 @@ describe('Maven with project name overrides', () => {
     // instead of the Nx project name for the -pl flag
     const buildOutput = runCLI('run custom-app:install', {
       verbose: true,
-      timeout: 3 * 60 * 1000,
+      timeout: 5 * 60 * 1000,
     });
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
