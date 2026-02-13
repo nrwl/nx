@@ -206,6 +206,7 @@ async function buildRollupTarget(
   if (isTsSolutionSetup) {
     targets[options.buildTargetName].syncGenerators = [
       '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
     ];
   }
 

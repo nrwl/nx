@@ -203,7 +203,10 @@ async function getBuildTargetConfig(
   targetConfig.options.tty = false;
 
   if (isTsSolutionSetup) {
-    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+    targetConfig.syncGenerators = [
+      '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
+    ];
   }
 
   return targetConfig;
@@ -219,7 +222,10 @@ function getDevTargetConfig(projectRoot: string, isTsSolutionSetup: boolean) {
   };
 
   if (isTsSolutionSetup) {
-    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+    targetConfig.syncGenerators = [
+      '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
+    ];
   }
 
   return targetConfig;
