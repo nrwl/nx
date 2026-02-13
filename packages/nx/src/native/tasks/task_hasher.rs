@@ -17,7 +17,7 @@ use crate::native::{
 use crate::native::{
     tasks::hashers::{
         CachedTaskOutput, hash_all_externals, hash_external, hash_project_config,
-        hash_project_files_with_inputs, hash_task_output, hash_tsconfig_selectively,
+        hash_project_files_with_inputs, hash_task_output_impl, hash_tsconfig_selectively,
         hash_workspace_files_with_inputs,
     },
     types::FileData,
@@ -432,7 +432,7 @@ impl TaskHasher {
             }
             HashInstruction::TaskOutput(glob, outputs) => {
                 let result =
-                    hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
+                    hash_task_output_impl(&self.workspace_root, glob, outputs, task_output_cache)?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 (
                     result.hash,
