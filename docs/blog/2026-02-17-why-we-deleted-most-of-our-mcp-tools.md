@@ -40,29 +40,15 @@ We've been building and shipping skills as part of the [Nx AI Agent Skills](/blo
 We ran benchmarks comparing agent performance with these new nx skills versus our previous approach with only the Nx MCP configured.
 The results clearly show our new skill-based setup performing better:
 
-**Nx analysis tasks**
+![Nx question accuracy chart showing Baseline, MCP only, and Skills scores for Sonnet and Haiku](/blog/images/articles/chart-question-accuracy.png)
 
-Here, the agent has to answer various questions about a complex monorepo with clear right/wrong answers that are scored by an LLM
+One interesting pattern: for smaller models like Haiku, the improvements from using skills are even bigger than for the more capable Sonnet. The structured guidance in skills helps patch the gaps where smarter models would just persevere through exploration.
 
-|                       | Baseline | MCP only | Skills   |
-| --------------------- | -------- | -------- | -------- |
-| Answer Score (Sonnet) | 78%      | 85%      | **100%** |
-| Answer Score (Haiku)  | 60%      | 84%      | **94%**  |
+![Generation tasks chart showing MCP only vs Skills for generator usage and verification rates](/blog/images/articles/chart-generation-tasks.png)
 
-**Generation tasks**
+For scaffolding tasks where workspace consistency is important, our benchmarks show significantly more generator usage. With the additional instructions from our skills, agents actually run verification before returning to the user far more often and make sure that newly generated artifacts didn't break the rest of the workspace.
 
-Here, the agent has to complete various generation tasks in different repos with varying complexity.
-
-|                               | MCP only | Skills  |
-| ----------------------------- | -------- | ------- |
-| Generator usage rate (Sonnet) | 71%      | **93%** |
-| Generator usage rate (Haiku)  | 71%      | **98%** |
-| Verification rate (Sonnet)    | 32%      | **80%** |
-| Verification rate (Haiku)     | 46%      | **64%** |
-
-One interesting pattern: for smaller models like Haiku, the improvements are even more pronounced. With skills, Haiku nearly matches Sonnet on question accuracy -- up from just 60% at baseline. The structured guidance in skills helps compensate where smarter models would just persevere through exploration.
-
-For simple question-answering tasks, skills reduced token consumption compared to MCP tools. For generation tasks, tokens went up - the skills include more thorough steps to verify output and match workspace conventions. We think that's the right tradeoff, and we're actively iterating to bring the cost down further.
+While token usage for simple question answering has gone down across the board with the more token-efficient skill approach, agents tend to use more tokens with skills than before for these tasks. We believe this is worth the tradeoff - better results matter more than cheaper bad results - but we're actively iterating to bring token usage down.
 
 ## Where MCP Still Shines
 
