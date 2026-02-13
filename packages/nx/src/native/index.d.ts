@@ -104,6 +104,12 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+export declare class OutputFingerprints {
+  constructor(db: ExternalObject<NxDbConnection>)
+  record(taskHash: string, fingerprint: string): void
+  get(taskHash: string): string | null
+}
+
 /**
  * High-performance metrics collector for Nx tasks
  * Thread-safe and designed for minimal overhead
@@ -353,6 +359,9 @@ export interface HashInputs {
   /** External dependencies */
   external: Array<string>
 }
+
+/** Fingerprints all output files for a task. Exposed to TypeScript via napi. */
+export declare export declare function hashTaskOutput(workspaceRoot: string, outputs: Array<string>): string
 
 export interface InputsInput {
   input: string

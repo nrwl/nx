@@ -11,7 +11,9 @@ import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
+  hashTaskOutput,
   IS_WASM,
+  OutputFingerprints,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
@@ -63,6 +65,9 @@ export class TaskOrchestrator {
 
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getDbConnection())
+    : null;
+  private outputFingerprints = !IS_WASM
+    ? new OutputFingerprints(getDbConnection())
     : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -1205,16 +1210,29 @@ export class TaskOrchestrator {
   }
 
   private async shouldCopyOutputsFromCache(outputs: string[], hash: string) {
+    return !(await this.outputsHashesMatch(outputs, hash));
+  }
+
+  private async outputsHashesMatch(
+    outputs: string[],
+    hash: string
+  ): Promise<boolean> {
     if (this.daemon?.enabled()) {
-      return !(await this.daemon.outputsHashesMatch(outputs, hash));
-    } else {
-      return true;
+      return this.daemon.outputsHashesMatch(outputs, hash);
     }
+    if (!this.outputFingerprints) return false;
+    const stored = this.outputFingerprints.get(hash);
+    if (!stored) return false;
+    return hashTaskOutput(workspaceRoot, outputs) === stored;
   }
 
   private async recordOutputsHash(task: Task) {
     if (this.daemon?.enabled()) {
-      return this.daemon.recordOutputsHash(task.outputs, task.hash);
+      await this.daemon.recordOutputsHash(task.outputs, task.hash);
+    }
+    if (this.outputFingerprints) {
+      const fingerprint = hashTaskOutput(workspaceRoot, task.outputs);
+      this.outputFingerprints.record(task.hash, fingerprint);
     }
   }
 
@@ -1228,21 +1246,6 @@ export class TaskOrchestrator {
     taskGraph: TaskGraph
   ): Promise<Set<string>> {
     const staleTaskIds = new Set<string>();
-
-    // Without the daemon we can't verify output freshness, so assume all
-    // depsOutputs tasks in the batch may be stale (safe default).
-    if (!this.daemon?.enabled()) {
-      for (const task of Object.values(taskGraph.tasks)) {
-        if (
-          taskGraph.dependencies[task.id].length > 0 &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
-        ) {
-          staleTaskIds.add(task.id);
-        }
-      }
-      return staleTaskIds;
-    }
-
     const batchTaskIds = new Set(Object.keys(taskGraph.tasks));
 
     for (const task of Object.values(taskGraph.tasks)) {
@@ -1259,7 +1262,7 @@ export class TaskOrchestrator {
         const depTask = taskGraph.tasks[depTaskId];
         if (!depTask.hash || !depTask.outputs?.length) continue;
 
-        const outputsFresh = await this.daemon.outputsHashesMatch(
+        const outputsFresh = await this.outputsHashesMatch(
           depTask.outputs,
           depTask.hash
         );
