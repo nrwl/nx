@@ -3,6 +3,7 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { readNxJson } from '../../config/configuration';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
+import type { TargetConfiguration } from '../../config/workspace-json-project-json';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -72,7 +73,7 @@ export async function showTargetInfoHandler(
   const targetConfig = node.data.targets?.[targetName];
 
   if (!targetConfig) {
-    reportTargetNotFound(projectName, targetName, node);
+    return reportTargetNotFound(projectName, targetName, node);
   }
 
   const configuration = configurationName ?? args.configuration;
@@ -108,7 +109,7 @@ export async function showTargetInputsHandler(
   const targetConfig = node.data.targets?.[targetName];
 
   if (!targetConfig) {
-    reportTargetNotFound(projectName, targetName, node);
+    return reportTargetNotFound(projectName, targetName, node);
   }
 
   const configuration = configurationName ?? args.configuration;
@@ -161,7 +162,7 @@ export async function showTargetOutputsHandler(
   const targetConfig = node.data.targets?.[targetName];
 
   if (!targetConfig) {
-    reportTargetNotFound(projectName, targetName, node);
+    return reportTargetNotFound(projectName, targetName, node);
   }
 
   const configuration = configurationName ?? args.configuration;
@@ -178,6 +179,7 @@ export async function showTargetOutputsHandler(
       node
     );
     renderCheckOutput(data, args);
+    await flushOutput();
     process.exitCode ||=
       data.matchedOutput ||
       data.containedOutputPaths.length ||
@@ -189,6 +191,7 @@ export async function showTargetOutputsHandler(
 
   const data = resolveOutputsData(projectName, targetName, configuration, node);
   renderOutputs(data, args);
+  await flushOutput();
 }
 
 // ── Target identifier & project resolution ───────────────────────────
@@ -233,7 +236,7 @@ function resolveTargetIdentifier(
       title: `Could not infer project from the current working directory.`,
       bodyLines: [
         `Please specify the project explicitly:`,
-        `  nx show target ${projectName ?? '<project>'}:${targetName}`,
+        `  nx show target <project>:${targetName}`,
         ``,
         `Or run this command from within a project directory.`,
       ],
@@ -286,7 +289,7 @@ function validateConfiguration(
   projectName: string,
   targetName: string,
   configuration: string,
-  targetConfig: any
+  targetConfig: TargetConfiguration
 ): void {
   const availableConfigs = Object.keys(targetConfig.configurations ?? {});
   if (!availableConfigs.includes(configuration)) {
@@ -451,10 +454,15 @@ function resolveCheckFromInputs(
 
   let containedInputFiles: string[] = [];
   if (!isFile) {
-    const dirPrefix = fileToCheck.endsWith('/')
-      ? fileToCheck
-      : fileToCheck + '/';
-    containedInputFiles = inputs.files.filter((f) => f.startsWith(dirPrefix));
+    // Empty string means workspace root — all files are contained
+    if (fileToCheck === '') {
+      containedInputFiles = inputs.files;
+    } else {
+      const dirPrefix = fileToCheck.endsWith('/')
+        ? fileToCheck
+        : fileToCheck + '/';
+      containedInputFiles = inputs.files.filter((f) => f.startsWith(dirPrefix));
+    }
   }
 
   return {
@@ -536,8 +544,6 @@ function resolveCheckOutputData(
     node
   );
 
-  const normalizedFile = fileToCheck.replace(/\\/g, '/');
-
   // Expand globs to actual files on disk
   let expandedOutputs: string[];
   try {
@@ -553,34 +559,41 @@ function resolveCheckOutputData(
   for (const outputPath of resolvedOutputs) {
     const normalizedOutput = outputPath.replace(/\\/g, '/');
     if (
-      normalizedFile === normalizedOutput ||
-      normalizedFile.startsWith(normalizedOutput + '/')
+      fileToCheck === normalizedOutput ||
+      fileToCheck.startsWith(normalizedOutput + '/')
     ) {
       matchedOutput = outputPath;
       break;
     }
   }
-  if (!matchedOutput && expandedOutputs.includes(normalizedFile)) {
-    matchedOutput = normalizedFile;
+  if (!matchedOutput && expandedOutputs.includes(fileToCheck)) {
+    matchedOutput = fileToCheck;
   }
 
   // If the path isn't directly an output, check if it's a directory containing outputs
   let containedOutputPaths: string[] = [];
   let containedExpandedOutputs: string[] = [];
   if (!matchedOutput) {
-    const dirPrefix = normalizedFile.endsWith('/')
-      ? normalizedFile
-      : normalizedFile + '/';
+    if (fileToCheck === '') {
+      // Workspace root — all outputs are contained
+      containedOutputPaths = [...resolvedOutputs];
+      containedExpandedOutputs = [...expandedOutputs];
+    } else {
+      const dirPrefix = fileToCheck.endsWith('/')
+        ? fileToCheck
+        : fileToCheck + '/';
 
-    containedOutputPaths = resolvedOutputs.filter((o) =>
-      o.replace(/\\/g, '/').startsWith(dirPrefix)
-    );
-    containedExpandedOutputs = expandedOutputs.filter((o) =>
-      o.replace(/\\/g, '/').startsWith(dirPrefix)
-    );
+      containedOutputPaths = resolvedOutputs.filter((o) =>
+        o.replace(/\\/g, '/').startsWith(dirPrefix)
+      );
+      containedExpandedOutputs = expandedOutputs.filter((o) =>
+        o.replace(/\\/g, '/').startsWith(dirPrefix)
+      );
+    }
   }
 
   return {
+    value: rawFileToCheck,
     file: fileToCheck,
     project: projectName,
     target: targetName,
@@ -742,11 +755,11 @@ function renderOutputs(
   if (data.outputPaths.length > 0) {
     printList('Configured outputs', data.outputPaths);
   }
-  if (
-    data.expandedOutputs.length > 0 &&
-    data.expandedOutputs !== data.outputPaths
-  ) {
-    printList('Expanded outputs', data.expandedOutputs);
+  const extraExpanded = data.expandedOutputs.filter(
+    (o) => !data.outputPaths.includes(o)
+  );
+  if (extraExpanded.length > 0) {
+    printList('Expanded outputs', extraExpanded);
   }
   if (data.unresolvedOutputs.length > 0) {
     printList(
@@ -787,9 +800,10 @@ function renderCheckOutput(
   }
 
   const c = pc();
+  const displayPath = data.value || data.file;
   if (data.matchedOutput) {
     console.log(
-      `${c.green('✓')} ${c.bold(data.file)} is an output of ${c.cyan(
+      `${c.green('✓')} ${c.bold(displayPath)} is an output of ${c.cyan(
         data.project
       )}:${c.green(data.target)}`
     );
@@ -800,7 +814,7 @@ function renderCheckOutput(
       ...data.containedExpandedOutputs,
     ]);
     console.log(
-      `${c.yellow('~')} ${c.bold(data.file)} is a directory containing ${c.bold(
+      `${c.yellow('~')} ${c.bold(displayPath)} is a directory containing ${c.bold(
         String(uniquePaths.size)
       )} output path(s) for ${c.cyan(data.project)}:${c.green(data.target)}`
     );
@@ -812,7 +826,7 @@ function renderCheckOutput(
     printList('Expanded outputs', extraExpanded);
   } else {
     console.log(
-      `${c.red('✗')} ${c.bold(data.file)} is ${c.red(
+      `${c.red('✗')} ${c.bold(displayPath)} is ${c.red(
         'not'
       )} an output of ${c.cyan(data.project)}:${c.green(data.target)}`
     );
