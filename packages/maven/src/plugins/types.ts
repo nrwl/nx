@@ -1,4 +1,4 @@
-import type { CreateNodesResultV2 } from '@nx/devkit';
+import type { CreateNodesResultV2, ProjectGraphExternalNode } from '@nx/devkit';
 import type { RawProjectGraphDependency } from 'nx/src/project-graph/project-graph-builder';
 
 export interface MavenPluginOptions {
@@ -14,6 +14,7 @@ export const DEFAULT_OPTIONS: MavenPluginOptions = {};
 export interface MavenAnalysisData {
   createNodesResults: CreateNodesResultV2;
   createDependenciesResults: RawProjectGraphDependency[];
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
   generatedAt?: number;
   workspaceRoot?: string;
   totalProjects?: number;
