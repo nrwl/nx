@@ -7,8 +7,23 @@ export const yargsConnectCommand: CommandModule = {
   command: 'connect',
   aliases: ['connect-to-nx-cloud'],
   describe: `Connect workspace to Nx Cloud.`,
-  builder: (yargs) =>
-    linkToNxDevAndExamples(withConnectOptions(yargs), 'connect-to-nx-cloud'),
+  builder: (yargs) => {
+    // Check for --help flag directly since handler runs before yargs can show help
+    const wantsHelp =
+      process.argv.includes('--help') || process.argv.includes('-h');
+    if (wantsHelp) {
+      const y = linkToNxDevAndExamples(
+        withConnectOptions(yargs),
+        'connect-to-nx-cloud'
+      );
+      y.showHelp();
+      process.exit(0);
+    }
+    return linkToNxDevAndExamples(
+      withConnectOptions(yargs),
+      'connect-to-nx-cloud'
+    );
+  },
   handler: async (args: any) => {
     const checkRemote = process.env.NX_SKIP_CHECK_REMOTE !== 'true';
     await (

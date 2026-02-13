@@ -1,4 +1,5 @@
 import { existsSync } from 'fs';
+import { join } from 'path';
 
 import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
@@ -15,7 +16,6 @@ import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { determineAiAgents } from './ai-agent-prompts';
 import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
 import { FsTree, flushChanges } from '../../generators/tree';
-import { Agent } from '../../ai/utils';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -32,6 +32,18 @@ import {
 import { addNxToCraRepo } from './implementation/react';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
+import { isAiAgent } from '../../native';
+import { supportedAgents, Agent } from '../../ai/utils';
+import {
+  logProgress,
+  writeAiOutput,
+  buildNeedsInputResult,
+  buildSuccessResult,
+  buildErrorResult,
+  writeErrorLog,
+  determineErrorCode,
+  DetectedPlugin,
+} from './utils/ai-output';
 
 export interface InitArgs {
   interactive: boolean;
@@ -41,6 +53,8 @@ export interface InitArgs {
   verbose?: boolean;
   force?: boolean;
   aiAgents?: Agent[];
+  plugins?: string; // 'skip' | 'all' | comma-separated list
+  cacheable?: string[]; // Cacheable operations (e.g., ['build', 'test', 'lint'])
 }
 
 export async function initHandler(
@@ -83,6 +97,38 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
   }
 
+  // AI agent mode: apply defaults for non-interactive operation
+  const aiMode = isAiAgent();
+  if (aiMode) {
+    options.interactive = false; // Force non-interactive
+
+    if (options.nxCloud === undefined) {
+      options.nxCloud = false; // Default to skip Nx Cloud
+    }
+
+    // Auto-detect .nx installation for non-JS projects
+    if (options.useDotNxInstallation === undefined) {
+      const hasPackageJson = existsSync('package.json');
+      options.useDotNxInstallation = !hasPackageJson;
+    }
+
+    // Auto-detect and set the current AI agent for setup
+    if (options.aiAgents === undefined) {
+      const detectedAgent = detectCurrentAiAgent();
+      if (detectedAgent) {
+        options.aiAgents = [detectedAgent];
+      }
+    }
+
+    // Set default cacheable operations for AI mode
+    // These are commonly cacheable scripts that benefit from caching
+    if (options.cacheable === undefined) {
+      options.cacheable = ['build', 'test', 'lint'];
+    }
+
+    logProgress('starting', 'Initializing Nx...');
+  }
+
   // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
   if (existsSync('angular.json')) {
     await addNxToAngularCliRepo({
@@ -104,7 +150,8 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
   const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
   const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
-  let guided = true;
+  // AI mode defaults to minimum setup, humans can choose
+  let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
   if (options.interactive && !(_isTurborepo || _isCRA || _isNonJs)) {
     const setupType = await prompt<{ setupPreference: string }>([
       {
@@ -124,6 +171,9 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
    * inputs and outputs.
    */
   if (_isTurborepo) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected Turborepo project');
+    }
     await addNxToTurborepo({
       interactive: options.interactive,
     });
@@ -136,6 +186,9 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
   const pmc = getPackageManagerCommand();
 
   if (_isCRA) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected Create React App project');
+    }
     await addNxToCraRepo({
       addE2e: false,
       force: options.force,
@@ -145,21 +198,32 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
       nxCloud: false,
     });
   } else if (_isMonorepo) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected monorepo project');
+    }
     await addNxToMonorepo(
       {
         interactive: options.interactive,
         nxCloud: false,
+        cacheable: options.cacheable,
       },
       guided
     );
   } else if (_isNonJs) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected non-JavaScript project');
+    }
     generateDotNxSetup(version);
     console.log('');
   } else {
+    if (aiMode) {
+      logProgress('detecting', 'Detected NPM project');
+    }
     await addNxToNpmRepo(
       {
         interactive: options.interactive,
         nxCloud: false,
+        cacheable: options.cacheable,
       },
       guided
     );
@@ -167,37 +231,112 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 
   const repoRoot = process.cwd();
 
-  createNxJsonFile(repoRoot, [], [], {});
+  if (aiMode) {
+    logProgress('configuring', 'Creating nx.json...');
+  }
+  createNxJsonFile(repoRoot, [], options.cacheable ?? [], {});
   updateGitIgnore(repoRoot);
 
   const nxJson = readNxJson(repoRoot);
 
-  if (guided) {
+  // Handle plugins based on mode and flags
+  let pluginsToInstall: string[] = [];
+  let updatePackageScripts = false;
+
+  if (aiMode) {
+    // AI mode: handle --plugins flag
+    const parsedPlugins = parsePluginsFlag(options.plugins);
+
+    if (parsedPlugins === 'skip') {
+      // Skip plugins entirely
+      logProgress('detecting', 'Skipping plugin installation');
+      pluginsToInstall = [];
+    } else {
+      // Need to detect plugins for 'all' or to return needs_input
+      logProgress('detecting', 'Checking for recommended plugins...');
+
+      let detectedPluginNames: string[];
+      if (_isCRA) {
+        detectedPluginNames = ['@nx/vite'];
+      } else {
+        const { plugins: detected } = await detectPlugins(
+          nxJson,
+          packageJson,
+          false // non-interactive
+        );
+        detectedPluginNames = detected;
+      }
+
+      if (parsedPlugins === 'all') {
+        // Install all detected plugins
+        pluginsToInstall = detectedPluginNames;
+        updatePackageScripts = true;
+      } else if (Array.isArray(parsedPlugins)) {
+        // Install specific plugins from the comma-separated list
+        pluginsToInstall = parsedPlugins;
+        updatePackageScripts = true;
+      } else if (detectedPluginNames.length > 0) {
+        // No --plugins flag provided and plugins were detected
+        // Return needs_input for AI to ask user
+        const detectedPlugins: DetectedPlugin[] = detectedPluginNames.map(
+          (name) => ({
+            name,
+            reason: getPluginReason(name),
+          })
+        );
+
+        logProgress(
+          'detecting',
+          `Detected ${detectedPluginNames.length} plugin(s): ${detectedPluginNames.join(', ')}`
+        );
+        writeAiOutput(buildNeedsInputResult(detectedPlugins));
+        process.exit(0);
+      }
+      // else: no plugins flag and no plugins detected, proceed with empty array
+    }
+
+    if (pluginsToInstall.length > 0) {
+      logProgress('installing', 'Installing Nx packages...');
+
+      for (const plugin of pluginsToInstall) {
+        logProgress('plugins', `Installing ${plugin}...`);
+      }
+
+      installPluginPackages(repoRoot, pmc, pluginsToInstall);
+      await configurePlugins(
+        pluginsToInstall,
+        updatePackageScripts,
+        pmc,
+        repoRoot,
+        options.verbose
+      );
+    }
+  } else if (guided) {
+    // Non-AI guided mode: existing behavior with interactive prompts
     output.log({ title: '🧐 Checking dependencies' });
 
-    let plugins: string[];
-    let updatePackageScripts: boolean;
-
     if (_isCRA) {
-      plugins = ['@nx/vite'];
+      pluginsToInstall = ['@nx/vite'];
       updatePackageScripts = true;
     } else {
       const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
         await detectPlugins(nxJson, packageJson, options.interactive);
-      plugins = _plugins;
+      pluginsToInstall = _plugins;
       updatePackageScripts = _updatePackageScripts;
     }
 
-    output.log({ title: '📦 Installing Nx' });
+    if (pluginsToInstall.length > 0) {
+      output.log({ title: '📦 Installing Nx' });
 
-    installPluginPackages(repoRoot, pmc, plugins);
-    await configurePlugins(
-      plugins,
-      updatePackageScripts,
-      pmc,
-      repoRoot,
-      options.verbose
-    );
+      installPluginPackages(repoRoot, pmc, pluginsToInstall);
+      await configurePlugins(
+        pluginsToInstall,
+        updatePackageScripts,
+        pmc,
+        repoRoot,
+        options.verbose
+      );
+    }
   }
 
   const selectedAgents = await determineAiAgents(
@@ -235,6 +374,17 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     await initCloud('nx-init');
   }
 
+  // Output success result for AI agents
+  if (aiMode) {
+    writeAiOutput(
+      buildSuccessResult({
+        nxVersion: version,
+        projectsDetected: 1, // Simplified for Phase 1
+        pluginsInstalled: pluginsToInstall,
+      })
+    );
+  }
+
   printFinalMessage({
     learnMoreLink: 'https://nx.dev/getting-started/adding-to-existing',
     appendLines: _isMonorepo
@@ -244,6 +394,58 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
         ]
       : [],
   });
+}
+
+/**
+ * Generate a reason for why a plugin was detected.
+ * Used for AI `needs_input` output.
+ */
+function getPluginReason(plugin: string): string {
+  const reasonMap: Record<string, string> = {
+    '@nx/eslint': 'eslint detected in dependencies',
+    '@nx/storybook': 'storybook detected in dependencies',
+    '@nx/vite': 'vite detected in dependencies',
+    '@nx/vitest': 'vitest detected in dependencies',
+    '@nx/webpack': 'webpack detected in dependencies',
+    '@nx/rspack': '@rspack/core detected in dependencies',
+    '@nx/rollup': 'rollup detected in dependencies',
+    '@nx/jest': 'jest detected in dependencies',
+    '@nx/cypress': 'cypress detected in dependencies',
+    '@nx/playwright': '@playwright/test detected in dependencies',
+    '@nx/detox': 'detox detected in dependencies',
+    '@nx/expo': 'expo detected in dependencies',
+    '@nx/next': 'next.js detected in dependencies',
+    '@nx/nuxt': 'nuxt detected in dependencies',
+    '@nx/react-native': 'react-native detected in dependencies',
+    '@nx/remix': '@remix-run/dev detected in dependencies',
+    '@nx/rsbuild': '@rsbuild/core detected in dependencies',
+    '@nx/react': '@react-router/dev detected in dependencies',
+    '@nx/gradle': 'gradlew detected in workspace',
+    '@nx/dotnet': '.NET project files detected',
+    '@nx/maven': 'maven project files detected',
+    '@nx/docker': 'Dockerfile detected in workspace',
+  };
+  return reasonMap[plugin] || `${plugin} detected`;
+}
+
+/**
+ * Parse the --plugins flag value.
+ * Returns: 'skip' | 'all' | string[] (specific plugins)
+ */
+function parsePluginsFlag(
+  value: string | undefined
+): 'skip' | 'all' | string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === 'skip') {
+    return 'skip';
+  }
+  if (value === 'all') {
+    return 'all';
+  }
+  // Comma-separated list
+  return value.split(',').map((p) => p.trim());
 }
 
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
@@ -445,4 +647,42 @@ export async function detectPlugins(
     ]).then((r) => r.updatePackageScripts === 'Yes'));
 
   return { plugins: pluginsToInstall, updatePackageScripts };
+}
+
+/**
+ * Detect the current AI agent from environment variables.
+ * Returns the agent name if detected and supported, null otherwise.
+ *
+ * Maps environment variable detection to supported agent names:
+ * - CLAUDECODE → 'claude'
+ * - OPENCODE → 'opencode'
+ * - CURSOR_TRACE_ID + PAGER + COMPOSER_NO_INTERACTION → 'cursor'
+ *
+ * Note: replit (REPL_ID) is detected by isAiAgent() but not in supportedAgents,
+ * so it returns null.
+ */
+function detectCurrentAiAgent(): Agent | null {
+  // Check Claude Code (CLAUDECODE env var)
+  if (process.env.CLAUDECODE) {
+    return supportedAgents.includes('claude') ? 'claude' : null;
+  }
+
+  // Check OpenCode (OPENCODE env var)
+  if (process.env.OPENCODE) {
+    return supportedAgents.includes('opencode') ? 'opencode' : null;
+  }
+
+  // Check Cursor (requires all three env vars)
+  if (
+    process.env.PAGER === 'head -n 10000 | cat' &&
+    process.env.CURSOR_TRACE_ID &&
+    process.env.COMPOSER_NO_INTERACTION
+  ) {
+    return supportedAgents.includes('cursor') ? 'cursor' : null;
+  }
+
+  // Note: replit (REPL_ID) is detected by isAiAgent() but not in supportedAgents
+  // so we don't return it here
+
+  return null;
 }

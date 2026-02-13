@@ -19,6 +19,14 @@ import {
 import { nxVersion } from '../../../utils/versions';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
+import { isAiAgent } from '../../../native';
+import {
+  writeConnectAiOutput,
+  logConnectProgress,
+  buildMissingVcsResult,
+  buildAlreadyConnectedResult,
+  buildConnectedResult,
+} from './ai-output';
 import * as pc from 'picocolors';
 const ora = require('ora');
 const open = require('open');
@@ -83,8 +91,18 @@ export async function connectToNxCloudCommand(
     ? 'nx-console'
     : 'nx-connect';
 
+  const aiMode = isAiAgent();
+
+  if (aiMode) {
+    logConnectProgress('starting', 'Connecting workspace to Nx Cloud...');
+  }
+
   const hasRemote = !!getVcsRemoteInfo();
   if (!hasRemote && options.checkRemote) {
+    if (aiMode) {
+      writeConnectAiOutput(buildMissingVcsResult());
+      return false;
+    }
     output.error({
       title: 'Missing VCS provider',
       bodyLines: [
@@ -112,6 +130,12 @@ export async function connectToNxCloudCommand(
       undefined,
       options?.generateToken === true
     );
+
+    if (aiMode) {
+      writeConnectAiOutput(buildAlreadyConnectedResult(connectCloudUrl));
+      return false;
+    }
+
     output.log({
       title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
@@ -123,6 +147,10 @@ export async function connectToNxCloudCommand(
 
     return false;
   }
+  if (aiMode) {
+    logConnectProgress('connecting', 'Registering workspace with Nx Cloud...');
+  }
+
   const token = await connectWorkspaceToCloud({
     generateToken: options?.generateToken,
     installationSource: command ?? installationSource,
@@ -134,6 +162,12 @@ export async function connectToNxCloudCommand(
     undefined,
     options?.generateToken === true
   );
+
+  if (aiMode) {
+    writeConnectAiOutput(buildConnectedResult(connectCloudUrl));
+    return true;
+  }
+
   try {
     const cloudConnectSpinner = ora(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
