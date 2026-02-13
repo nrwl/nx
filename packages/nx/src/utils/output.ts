@@ -1,7 +1,7 @@
-import * as pc from 'picocolors';
 import { EOL } from 'os';
 import * as readline from 'readline';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
+import { styleText } from 'node:util';
 
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';
@@ -28,33 +28,41 @@ export interface CLISuccessMessageConfig {
   bodyLines?: string[];
 }
 
+const IS_COLOR_SUPPORTED =
+  !(!!process.env.NO_COLOR || process.argv.includes('--no-color')) &&
+  (!!process.env.FORCE_COLOR ||
+    process.argv.includes('--color') ||
+    process.platform === 'win32' ||
+    ((process.stdout || {}).isTTY && process.env.TERM !== 'dumb') ||
+    !!process.env.CI);
+
 /**
  * Custom orange color using ANSI 256-color code 214.
- * picocolors does not support keyword-based colors like chalk,
+ * native styleText does not support keyword-based colors like chalk,
  * so orange is implemented manually.
  */
 export function orange(text: string): string {
-  return pc.isColorSupported ? `\x1b[38;5;214m${text}\x1b[39m` : String(text);
+  return IS_COLOR_SUPPORTED ? `\x1b[38;5;214m${text}\x1b[39m` : String(text);
 }
 
 /**
- * Map of color names to picocolors functions, used for dynamic color access.
+ * Map of color names to styleText functions, used for dynamic color access.
  */
-const pcColors: Record<string, (text: string) => string> = {
-  cyan: pc.cyan,
-  red: pc.red,
-  yellow: pc.yellow,
-  green: pc.green,
-  gray: pc.gray,
-  white: pc.white,
-  blue: pc.blue,
-  magenta: pc.magenta,
+const colorFnMapper: Record<string, (text: string) => string> = {
+  cyan: (text) => styleText('cyan', text),
+  red: (text) => styleText('red', text),
+  yellow: (text) => styleText('yellow', text),
+  green: (text) => styleText('green', text),
+  gray: (text) => styleText('gray', text),
+  white: (text) => styleText('white', text),
+  blue: (text) => styleText('blue', text),
+  magenta: (text) => styleText('magenta', text),
   orange,
 };
 
 class CLIOutput {
   cliName = 'NX';
-  formatCommand = (taskId: string) => `${pc.dim('nx run')} ${taskId}`;
+  formatCommand = (taskId: string) => `${styleText('dim', 'nx run')} ${taskId}`;
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -74,16 +82,16 @@ class CLIOutput {
    * implementation.
    */
   colors = {
-    gray: pc.gray,
-    green: pc.green,
-    red: pc.red,
-    cyan: pc.cyan,
-    white: pc.white,
-    orange,
+    gray: colorFnMapper.gray,
+    green: colorFnMapper.green,
+    red: colorFnMapper.red,
+    cyan: colorFnMapper.cyan,
+    white: colorFnMapper.white,
+    orange: colorFnMapper.orange,
   };
-  bold = pc.bold;
-  underline = pc.underline;
-  dim = pc.dim;
+  bold = (text) => styleText('bold', String(text));
+  underline = (text) => styleText('underline', String(text));
+  dim = (text) => styleText('dim', String(text));
 
   private writeToStdOut(str: string) {
     process.stdout.write(str);
@@ -117,8 +125,11 @@ class CLIOutput {
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {
-    const colorFn = pcColors[color] || ((t: string) => t);
-    const nxPrefix = pc.inverse(pc.bold(colorFn(` ${this.cliName} `)));
+    const colorFn = colorFnMapper[color] || ((t: string) => t);
+    const nxPrefix = styleText(
+      ['inverse', 'bold'],
+      colorFn(` ${this.cliName} `)
+    );
     return `${nxPrefix}  ${text}`;
   }
 
@@ -141,8 +152,8 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: string): string {
-    const colorFn = pcColors[color] || ((t: string) => t);
-    return pc.dim(colorFn(this.VERTICAL_SEPARATOR));
+    const colorFn = colorFnMapper[color] || ((t: string) => t);
+    return styleText('dim', colorFn(this.VERTICAL_SEPARATOR));
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
@@ -150,7 +161,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'red',
-      title: pc.red(title),
+      title: styleText('red', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -161,7 +172,8 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        `${pc.gray(
+        `${styleText(
+          'gray',
           '  Learn more about this error: '
         )}https://errors.nx.dev/${slug}${EOL}`
       );
@@ -175,7 +187,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'yellow',
-      title: pc.yellow(title),
+      title: styleText('yellow', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -186,7 +198,8 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        `${pc.gray(
+        `${styleText(
+          'gray',
           '  Learn more about this warning: '
         )}https://errors.nx.dev/${slug}${EOL}`
       );
@@ -213,7 +226,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'green',
-      title: pc.green(title),
+      title: styleText('green', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -272,7 +285,8 @@ class CLIOutput {
     taskStatus: TaskStatus
   ): string {
     const commandOutput =
-      pc.dim('> ') + this.formatCommand(this.normalizeMessage(message));
+      styleText('dim', '> ') +
+      this.formatCommand(this.normalizeMessage(message));
     return this.addTaskStatus(taskStatus, commandOutput);
   }
 
@@ -312,11 +326,12 @@ class CLIOutput {
     commandOutput: string
   ) {
     if (taskStatus === 'local-cache') {
-      return `${commandOutput}  ${pc.dim('[local cache]')}`;
+      return `${commandOutput}  ${styleText('dim', '[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {
-      return `${commandOutput}  ${pc.dim('[remote cache]')}`;
+      return `${commandOutput}  ${styleText('dim', '[remote cache]')}`;
     } else if (taskStatus === 'local-cache-kept-existing') {
-      return `${commandOutput}  ${pc.dim(
+      return `${commandOutput}  ${styleText(
+        'dim',
         '[existing outputs match the cache, left as is]'
       )}`;
     } else {
@@ -327,7 +342,7 @@ class CLIOutput {
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
-    const colorFn = color ? pcColors[color] : undefined;
+    const colorFn = color ? colorFnMapper[color] : undefined;
     this.writeOutputTitle({
       color: 'cyan',
       title: colorFn ? colorFn(title) : title,

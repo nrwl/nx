@@ -1,4 +1,4 @@
-import chalk = require('chalk');
+import { styleText } from 'node:util';
 import yargs = require('yargs');
 import { NxCloudChoices, messages } from '../utils/nx/ab-testing';
 import { packageManagerList } from '../utils/package-manager';
@@ -8,7 +8,7 @@ export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
 
   const result = argv.option('nxCloud', {
     alias: 'ci',
-    describe: chalk.dim(message),
+    describe: styleText('dim', message),
     choices: NxCloudChoices,
     type: 'string',
   });
@@ -17,7 +17,10 @@ export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
 
 export function withUseGitHub<T = unknown>(argv: yargs.Argv<T>) {
   return argv.option('useGitHub', {
-    describe: chalk.dim`Will you be using GitHub as your git hosting provider?`,
+    describe: styleText(
+      'dim',
+      'Will you be using GitHub as your git hosting provider?'
+    ),
     type: 'boolean',
     default: false,
   });
@@ -26,7 +29,7 @@ export function withUseGitHub<T = unknown>(argv: yargs.Argv<T>) {
 export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
   return argv.option('allPrompts', {
     alias: 'a',
-    describe: chalk.dim`Show all prompts.`,
+    describe: styleText('dim', 'Show all prompts.'),
     type: 'boolean',
     default: false,
   });
@@ -35,7 +38,7 @@ export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
 export function withPackageManager<T = unknown>(argv: yargs.Argv<T>) {
   return argv.option('packageManager', {
     alias: 'pm',
-    describe: chalk.dim`Package manager to use.`,
+    describe: styleText('dim', 'Package manager to use.'),
     choices: [...packageManagerList].sort(),
     defaultDescription: 'npm',
     type: 'string',
@@ -46,36 +49,36 @@ export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
   return argv
     .option('defaultBase', {
       defaultDescription: 'main',
-      describe: chalk.dim`Default base to use for new projects.`,
+      describe: styleText('dim', 'Default base to use for new projects.'),
       type: 'string',
     })
     .option('skipGit', {
-      describe: chalk.dim`Skip initializing a git repository.`,
+      describe: styleText('dim', 'Skip initializing a git repository.'),
       type: 'boolean',
       default: false,
       alias: 'g',
     })
     .option('skipGitHubPush', {
-      describe: chalk.dim`Skip pushing to GitHub via gh CLI.`,
+      describe: styleText('dim', 'Skip pushing to GitHub via gh CLI.'),
       type: 'boolean',
       default: false,
     })
     .option('verbose', {
-      describe: chalk.dim`Enable verbose logging.`,
+      describe: styleText('dim', 'Enable verbose logging.'),
       type: 'boolean',
       default: false,
       alias: 'v',
     })
     .option('commit.name', {
-      describe: chalk.dim`Name of the committer.`,
+      describe: styleText('dim', 'Name of the committer.'),
       type: 'string',
     })
     .option('commit.email', {
-      describe: chalk.dim`E-mail of the committer.`,
+      describe: styleText('dim', 'E-mail of the committer.'),
       type: 'string',
     })
     .option('commit.message', {
-      describe: chalk.dim`Commit message.`,
+      describe: styleText('dim', 'Commit message.'),
       type: 'string',
       default: 'Initial commit',
     });

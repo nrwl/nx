@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { output } from '../../utils/output';
 import { join } from 'path';
 import {
@@ -117,14 +117,14 @@ export async function reportHandler() {
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
-      `${pc.green(p.package.padEnd(padding))} : ${pc.bold(p.version)}`
+      `${styleText('green', p.package.padEnd(padding))} : ${styleText('bold', p.version)}`
     );
   });
 
   if (nxKey) {
     bodyLines.push('');
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(pc.green('Nx key licensed packages'));
+    bodyLines.push(styleText('green', 'Nx key licensed packages'));
 
     bodyLines.push(createNxKeyLicenseeInformation(nxKey));
 
@@ -171,7 +171,8 @@ export async function reportHandler() {
       ) + 1;
     for (const powerpackPlugin of powerpackPlugins) {
       bodyLines.push(
-        `${pc.green(powerpackPlugin.name.padEnd(padding))} : ${pc.bold(
+        `${styleText('green', powerpackPlugin.name.padEnd(padding))} : ${styleText(
+          'bold',
           powerpackPlugin.version
         )}`
       );
@@ -179,7 +180,7 @@ export async function reportHandler() {
     bodyLines.push('');
   } else if (nxKeyError) {
     bodyLines.push('');
-    bodyLines.push(pc.red('Nx key'));
+    bodyLines.push(styleText('red', 'Nx key'));
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(nxKeyError.message);
     bodyLines.push('');
@@ -189,7 +190,7 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push('Registered Plugins:');
     for (const plugin of registeredPlugins) {
-      bodyLines.push(`${pc.green(plugin)}`);
+      bodyLines.push(`${styleText('green', plugin)}`);
     }
   }
 
@@ -199,7 +200,7 @@ export async function reportHandler() {
     bodyLines.push('Community plugins:');
     communityPlugins.forEach((p) => {
       bodyLines.push(
-        `${pc.green(p.name.padEnd(padding))}: ${pc.bold(p.version)}`
+        `${styleText('green', p.name.padEnd(padding))}: ${styleText('bold', p.version)}`
       );
     });
   }
@@ -210,7 +211,7 @@ export async function reportHandler() {
     bodyLines.push('Local workspace plugins:');
 
     for (const plugin of localPlugins) {
-      bodyLines.push(`${pc.green(plugin)}`);
+      bodyLines.push(`${styleText('green', plugin)}`);
     }
   }
 
@@ -239,17 +240,17 @@ export async function reportHandler() {
 
   if (mismatchedNxVersions && mismatchedNxVersions.length > 0) {
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(pc.yellow('⚠️ Multiple Nx versions detected'));
+    bodyLines.push(styleText('yellow', '⚠️ Multiple Nx versions detected'));
     bodyLines.push('');
     bodyLines.push(
       `Your workspace uses nx@${nxVersion}, but other packages depend on a different version:`
     );
     for (const { version, chain } of mismatchedNxVersions) {
       if (chain.length === 0) {
-        bodyLines.push(`  - ${pc.bold(`nx@${version}`)}`);
+        bodyLines.push(`  - ${styleText('bold', `nx@${version}`)}`);
       } else {
         bodyLines.push(
-          `  - ${chain.reverse().join(' → ')} → ${pc.bold(`nx@${version}`)}`
+          `  - ${chain.reverse().join(' → ')} → ${styleText('bold', `nx@${version}`)}`
         );
       }
     }

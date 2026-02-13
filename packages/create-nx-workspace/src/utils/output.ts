@@ -3,7 +3,7 @@
  * we duplicate the helper functions from @nx/workspace in this file.
  */
 
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 import { EOL } from 'os';
 import { isCI } from './ci/is-ci';
 
@@ -27,11 +27,21 @@ export interface CLISuccessMessageConfig {
   bodyLines?: string[];
 }
 
+const IS_COLOR_SUPPORTED =
+  !isCI() &&
+  !(!!process.env.NO_COLOR || process.argv.includes('--no-color')) &&
+  (!!process.env.FORCE_COLOR ||
+    process.argv.includes('--color') ||
+    process.platform === 'win32' ||
+    ((process.stdout || {}).isTTY && process.env.TERM !== 'dumb'));
+
 /**
- * Automatically disable styling applied by chalk if CI=true
+ * Custom orange color using ANSI 256-color code 214.
+ * native styleText does not support keyword-based colors like chalk,
+ * so orange is implemented manually.
  */
-if (isCI()) {
-  (chalk as any).level = 0;
+function orange(text: string): string {
+  return IS_COLOR_SUPPORTED ? `\x1b[38;5;214m${text}\x1b[39m` : String(text);
 }
 
 export class CLIOutput {
@@ -55,15 +65,15 @@ export class CLIOutput {
    * implementation.
    */
   colors = {
-    gray: chalk.gray,
-    green: chalk.green,
-    red: chalk.red,
-    cyan: chalk.cyan,
-    white: chalk.white,
+    gray: (text: string) => styleText('gray', text),
+    green: (text: string) => styleText('green', text),
+    red: (text: string) => styleText('red', text),
+    cyan: (text: string) => styleText('cyan', text),
+    white: (text: string) => styleText('white', text),
   };
-  bold = chalk.bold;
-  underline = chalk.underline;
-  dim = chalk.dim;
+  bold = (text) => styleText('bold', String(text));
+  underline = (text) => styleText('underline', String(text));
+  dim = (text) => styleText('dim', String(text));
 
   private writeToStdOut(str: string) {
     this.outstream.write(str);
@@ -95,10 +105,13 @@ export class CLIOutput {
 
   applyCLIPrefix(color = 'cyan', text: string): string {
     let cliPrefix = '';
-    if ((chalk as any)[color]) {
-      cliPrefix = (chalk as any).reset.inverse.bold[color](` ${this.cliName} `);
+    if (color === 'orange') {
+      cliPrefix = styleText(['inverse', 'bold'], orange(` ${this.cliName} `));
     } else {
-      cliPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
+      cliPrefix = styleText(
+        ['inverse', 'bold', color as any],
+        ` ${this.cliName} `
+      );
     }
     return `${cliPrefix}  ${text}`;
   }
@@ -115,7 +128,7 @@ export class CLIOutput {
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
     this.writeToStdOut(
-      `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
+      `${styleText('dim', styleText(color as any, this.VERTICAL_SEPARATOR))}${EOL}`
     );
   }
 
@@ -124,7 +137,7 @@ export class CLIOutput {
 
     this.writeOutputTitle({
       color: 'red',
-      title: chalk.red(title),
+      title: styleText('red', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -137,7 +150,7 @@ export class CLIOutput {
 
     this.writeOutputTitle({
       color: 'yellow',
-      title: chalk.yellow(title),
+      title: styleText('yellow', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -150,7 +163,7 @@ export class CLIOutput {
 
     this.writeOutputTitle({
       color: 'orange',
-      title: chalk.keyword('orange')(title),
+      title: orange(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -163,7 +176,7 @@ export class CLIOutput {
 
     this.writeOutputTitle({
       color: 'green',
-      title: chalk.green(title),
+      title: styleText('green', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -185,7 +198,7 @@ export class CLIOutput {
 
     this.writeOutputTitle({
       color: 'cyan',
-      title: color ? (chalk as any)[color](title) : title,
+      title: color ? styleText(color as any, title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);

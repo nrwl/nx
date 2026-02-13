@@ -8,7 +8,7 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as figures from 'figures';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
 import { getLeafTasks } from '../task-graph-utils';
 
@@ -197,11 +197,14 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         messageLines.push('');
         messageLines.push(
-          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
+          `${EXTENDED_LEFT_PAD}${styleText(['dim', 'green'], 'With additional flags:')}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
+            styleText(
+              ['dim', 'green'],
+              formatFlags(EXTENDED_LEFT_PAD, flag, value)
+            )
           )
           .forEach((arg) => messageLines.push(arg));
       }
@@ -239,11 +242,14 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         messageLines.push('');
         messageLines.push(
-          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
+          `${EXTENDED_LEFT_PAD}${styleText(['dim', 'red'], 'With additional flags:')}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
+            styleText(
+              ['dim', 'red'],
+              formatFlags(EXTENDED_LEFT_PAD, flag, value)
+            )
           )
           .forEach((arg) => messageLines.push(arg));
       }
@@ -389,7 +395,8 @@ export function getTuiTerminalSummaryLifeCycle({
       const successSummaryRows = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + pc.dim(pc.white(` (${timeTakenText})`))
+          output.colors.green(text) +
+            styleText(['dim', 'white'], ` (${timeTakenText})`)
         ),
       ];
 
@@ -400,11 +407,14 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         successSummaryRows.push('');
         successSummaryRows.push(
-          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
+          `${EXTENDED_LEFT_PAD}${styleText(['dim', 'green'], 'With additional flags:')}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
+            styleText(
+              ['dim', 'green'],
+              formatFlags(EXTENDED_LEFT_PAD, flag, value)
+            )
           )
           .forEach((arg) => successSummaryRows.push(arg));
       }
@@ -426,7 +436,8 @@ export function getTuiTerminalSummaryLifeCycle({
       const failureSummaryRows: string[] = [
         output.applyNxPrefix(
           'red',
-          output.colors.red(text) + pc.dim(pc.white(` (${timeTakenText})`))
+          output.colors.red(text) +
+            styleText(['dim', 'white'], ` (${timeTakenText})`)
         ),
       ];
 
@@ -437,11 +448,14 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         failureSummaryRows.push('');
         failureSummaryRows.push(
-          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
+          `${EXTENDED_LEFT_PAD}${styleText(['dim', 'red'], 'With additional flags:')}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
+            styleText(
+              ['dim', 'red'],
+              formatFlags(EXTENDED_LEFT_PAD, flag, value)
+            )
           )
           .forEach((arg) => failureSummaryRows.push(arg));
       }

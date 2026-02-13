@@ -1,4 +1,4 @@
-import { bold } from 'picocolors';
+import { styleText } from 'node:util';
 
 import {
   getPackageManagerCommand,
@@ -178,7 +178,7 @@ export async function configurePlugins(
   if (succeededPlugins.length > 0) {
     output.success({
       title: 'Installed Plugins',
-      bodyLines: succeededPlugins.map((p) => `- ${bold(p)}`),
+      bodyLines: succeededPlugins.map((p) => `- ${styleText('bold', p)}`),
     });
   }
   if (Object.keys(failedPlugins).length > 0) {
@@ -186,7 +186,7 @@ export async function configurePlugins(
       title: `Failed to install plugins`,
       bodyLines: [
         'The following plugins were not installed:',
-        ...Object.keys(failedPlugins).map((p) => `- ${bold(p)}`),
+        ...Object.keys(failedPlugins).map((p) => `- ${styleText('bold', p)}`),
       ],
     });
     Object.entries(failedPlugins).forEach(([plugin, error]) => {
@@ -200,7 +200,7 @@ export async function configurePlugins(
       bodyLines: [
         'You may need to run commands to install the plugins:',
         ...Object.keys(failedPlugins).map(
-          (p) => `- ${bold(pmc.exec + ' nx add ' + p)}`
+          (p) => `- ${styleText('bold', pmc.exec + ' nx add ' + p)}`
         ),
       ],
     });
@@ -235,7 +235,7 @@ export function getFailedToInstallPluginErrorMessages(e: any): string[] {
         const innerErrors = error.errors;
         for (const [file, e] of innerErrors) {
           if (file) {
-            errorBodyLines.push(`  - ${bold(file)}: ${e.message}`);
+            errorBodyLines.push(`  - ${styleText('bold', file)}: ${e.message}`);
           } else {
             errorBodyLines.push(`  - ${e.message}`);
           }

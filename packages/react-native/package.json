@@ -33,7 +33,6 @@
     "ajv": "^8.12.0",
     "enhanced-resolve": "^5.8.3",
     "ignore": "^5.0.4",
-    "picocolors": "catalog:",
     "tinyglobby": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript"

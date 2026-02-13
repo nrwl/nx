@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import type { ExecutorContext } from '@nx/devkit';
 import {
   cacheDir,
@@ -33,10 +33,12 @@ import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-u
 import { rmSync } from 'node:fs';
 import { join, relative } from 'path';
 
-const BUILD_WATCH_FAILED = `[ ${pc.red(
+const BUILD_WATCH_FAILED = `[ ${styleText(
+  'red',
   'watch'
 )} ] build finished with errors (see above), watching for changes...`;
-const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
+const BUILD_WATCH_SUCCEEDED = `[ ${styleText(
+  'green',
   'watch'
 )} ] build succeeded, watching for changes...`;
 

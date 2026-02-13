@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import type { ValidationError } from './types';
 
 export function arrayToString(array: string[]): string {
@@ -18,7 +18,7 @@ export function arrayToString(array: string[]): string {
 export function getProjectValidationResultMessage(
   validationResult: ValidationError[]
 ): string {
-  return `${pc.bold('Validation results')}:
+  return `${styleText('bold', 'Validation results')}:
 
   ${validationResult
     .map((error) => getValidationErrorText(error))
@@ -31,12 +31,15 @@ function getValidationErrorText({
   hint,
 }: ValidationError): string {
   let lines = message
-    ? [`- ${message}`, ...(hint ? [pc.dim(pc.italic(`  ${hint}`))] : [])]
+    ? [
+        `- ${message}`,
+        ...(hint ? [styleText(['dim', 'italic'], `  ${hint}`)] : []),
+      ]
     : [
         `- ${messageGroup.title}:`,
         '  - Errors:',
         ...messageGroup.messages.map((message) => `    - ${message}`),
-        ...(hint ? [pc.dim(pc.italic(`  - ${hint}`))] : []),
+        ...(hint ? [styleText(['dim', 'italic'], `  - ${hint}`)] : []),
       ];
 
   return lines.join('\n  ');

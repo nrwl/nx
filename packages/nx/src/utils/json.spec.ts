@@ -60,12 +60,12 @@ describe('parseJson', () => {
       )
     ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
-      [0m [90m 1 | [39m{
-      [31m[1m>[22m[39m[90m 2 | [39m      //"test": 123,
-       [90m   | [39m      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
-       [90m 3 | [39m      "nested": {
-       [90m 4 | [39m          "test": 123
-       [90m 5 | [39m          /*[0m
+        1 | {
+      > 2 |       //"test": 123,
+          |       ^^^^^^^^^^^^^^
+        3 |       "nested": {
+        4 |           "test": 123
+        5 |           /*
       "
     `);
   });
@@ -88,12 +88,12 @@ describe('parseJson', () => {
       )
     ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
-      [0m [90m 1 | [39m{
-      [31m[1m>[22m[39m[90m 2 | [39m      //"test": 123,
-       [90m   | [39m      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
-       [90m 3 | [39m      "nested": {
-       [90m 4 | [39m          "test": 123
-       [90m 5 | [39m          /*[0m
+        1 | {
+      > 2 |       //"test": 123,
+          |       ^^^^^^^^^^^^^^
+        3 |       "nested": {
+        4 |           "test": 123
+        5 |           /*
       "
     `);
   });
@@ -128,12 +128,12 @@ describe('parseJson', () => {
       )
     ).toThrowErrorMatchingInlineSnapshot(`
       "PropertyNameExpected in JSON at 6:6
-      [0m [90m 4 | [39m          "test": 123,
-       [90m 5 | [39m          "more": 456,
-      [31m[1m>[22m[39m[90m 6 | [39m     },
-       [90m   | [39m     [31m[1m^[22m[39m
-       [90m 7 | [39m      "array": [1, 2, 3,]
-       [90m 8 | [39m  }[0m
+        4 |           "test": 123,
+        5 |           "more": 456,
+      > 6 |      },
+          |      ^
+        7 |       "array": [1, 2, 3,]
+        8 |   }
       "
     `);
   });

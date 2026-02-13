@@ -4,7 +4,7 @@ import {
   DefinePlugin,
   RspackPluginInstance,
 } from '@rspack/core';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import {
   logger,
   readCachedProjectGraph,
@@ -57,7 +57,8 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
           const staticRemotesConfig = await this.setup();
 
           logger.info(
-            `NX Starting module federation dev-server for ${pc.bold(
+            `NX Starting module federation dev-server for ${styleText(
+              'bold',
               this._options.config.name
             )} with ${Object.keys(staticRemotesConfig).length} remotes`
           );

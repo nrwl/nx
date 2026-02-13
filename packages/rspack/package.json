@@ -42,7 +42,6 @@
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",
     "parse5": "4.0.0",
-    "picocolors": "catalog:",
     "postcss": "^8.4.38",
     "postcss-import": "~14.1.0",
     "postcss-loader": "^8.1.1",

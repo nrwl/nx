@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { prerelease } from 'semver';
@@ -959,7 +959,8 @@ async function generateChangelogForWorkspace({
   if (interpolatedTreePath) {
     const prefix = dryRun ? 'Previewing' : 'Generating';
     output.log({
-      title: `${prefix} an entry in ${interpolatedTreePath} for ${pc.white(
+      title: `${prefix} an entry in ${interpolatedTreePath} for ${styleText(
+        'white',
         releaseVersion.gitTag
       )}`,
     });
@@ -1127,7 +1128,8 @@ async function generateChangelogForProjects({
     if (interpolatedTreePath) {
       const prefix = dryRun ? 'Previewing' : 'Generating';
       output.log({
-        title: `${prefix} an entry in ${interpolatedTreePath} for ${pc.white(
+        title: `${prefix} an entry in ${interpolatedTreePath} for ${styleText(
+          'white',
           releaseVersion.gitTag
         )}`,
       });

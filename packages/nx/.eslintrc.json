@@ -16,7 +16,11 @@
               },
               {
                 "name": "chalk",
-                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+                "message": "Please use native `styleText` in place of `chalk` for rendering terminal colors. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "picocolors",
+                "message": "Please use native `styleText` in place of `picocolors` for rendering terminal colors"
               }
             ],
             "patterns": [

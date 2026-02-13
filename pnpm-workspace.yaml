@@ -19,11 +19,9 @@ patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
   '@zkochan/js-yaml': '0.0.7'
-  chalk: '^4.1.0'
   enquirer: '~2.3.6'
   minimatch: '10.1.1'
   picomatch: '4.0.2'
-  picocolors: '^1.1.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
   yargs: '^17.6.2'

@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { diff } from 'jest-diff';
 import { readFileSync } from 'node:fs';
 import { Tree, flushChanges } from '../../../generators/tree';
@@ -20,8 +20,8 @@ export function printDiff(
     omitAnnotationLines: true,
     contextLines,
     expand: false,
-    aColor: pc.red,
-    bColor: pc.green,
+    aColor: (s: string) => styleText('red', s),
+    bColor: (s: string) => styleText('green', s),
     patchColor: (s) => '',
   });
   // It is not an exact match because of the color codes
@@ -55,7 +55,7 @@ export function printAndFlushChanges(
   changes.filter(changePredicate).forEach((f) => {
     if (f.type === 'CREATE') {
       console.error(
-        `${pc.green('CREATE')} ${f.path}${isDryRun ? orange(' [dry-run]') : ''}`
+        `${styleText('green', 'CREATE')} ${f.path}${isDryRun ? orange(' [dry-run]') : ''}`
       );
       printDiff(
         '',
@@ -65,7 +65,7 @@ export function printAndFlushChanges(
       );
     } else if (f.type === 'UPDATE') {
       console.error(
-        `${pc.white('UPDATE')} ${f.path}${isDryRun ? orange(' [dry-run]') : ''}`
+        `${styleText('white', 'UPDATE')} ${f.path}${isDryRun ? orange(' [dry-run]') : ''}`
       );
       const currentContentsOnDisk = readFileSync(
         joinPathFragments(tree.root, f.path)

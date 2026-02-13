@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
@@ -660,7 +660,8 @@ export class Migrator {
     if (packageName.startsWith('@nx/')) {
       // @ts-expect-error -- enquirer types aren't correct, footer does exist
       promptConfig.footer = () =>
-        pc.dim(
+        styleText(
+          'dim',
           `  View migration details at https://nx.dev/nx-api/${packageName.replace(
             '@nx/',
             ''
@@ -1717,16 +1718,19 @@ export async function runNxOrAngularMigration(
       const committedSha = commitChanges(commitMessage, root);
 
       if (committedSha) {
-        logger.info(pc.dim(`- Commit created for changes: ${committedSha}`));
+        logger.info(
+          styleText('dim', `- Commit created for changes: ${committedSha}`)
+        );
       } else {
         logger.info(
-          pc.red(
+          styleText(
+            'red',
             `- A commit could not be created/retrieved for an unknown reason`
           )
         );
       }
     } catch (e) {
-      logger.info(pc.red(`- ${e.message}`));
+      logger.info(styleText('red', `- ${e.message}`));
     }
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {

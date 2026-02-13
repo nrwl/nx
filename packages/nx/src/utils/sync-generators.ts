@@ -20,7 +20,7 @@ import {
 } from '../project-graph/project-graph';
 import { updateContextWithChangedFiles } from './workspace-context';
 import { workspaceRoot } from './workspace-root';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
 export type SyncGeneratorResult = void | {
   callback?: GeneratorCallback;
@@ -277,7 +277,7 @@ export function getSyncGeneratorSuccessResultsMessageLines(
     }
 
     messageLines.push(
-      `[${pc.bold(result.generatorName)}]: ${
+      `[${styleText('bold', result.generatorName)}]: ${
         result.outOfSyncMessage ?? `Some files are out of sync.`
       }`
     );
@@ -306,7 +306,7 @@ export function getFailedSyncGeneratorsFixMessageLines(
       }
       isFirst = false;
       messageLines.push(
-        `[${pc.bold(result.generatorName)}]: ${errorToString(
+        `[${styleText('bold', result.generatorName)}]: ${errorToString(
           result.error,
           verbose
         )}`
@@ -346,7 +346,7 @@ export function getFlushFailureMessageLines(
     }
     isFirst = false;
     messageLines.push(
-      `[${pc.bold(failure.generator)}]: ${errorToString(
+      `[${styleText('bold', failure.generator)}]: ${errorToString(
         failure.error,
         verbose
       )}`
@@ -547,7 +547,7 @@ function getFailedSyncGeneratorsMessageLines(
 
 function errorToString(error: SerializableSimpleError, verbose: boolean) {
   if (error.title) {
-    let message = `${pc.red(error.title)}`;
+    let message = `${styleText('red', error.title)}`;
     if (error.bodyLines?.length) {
       message += `
 
@@ -559,7 +559,7 @@ function errorToString(error: SerializableSimpleError, verbose: boolean) {
     }
   }
 
-  return `${pc.red(error.message)}${
+  return `${styleText('red', error.message)}${
     verbose && error.stack ? '\n  ' + error.stack : ''
   }`;
 }

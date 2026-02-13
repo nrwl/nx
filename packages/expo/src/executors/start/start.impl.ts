@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { ExecutorContext, logger, names } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
@@ -22,7 +22,7 @@ export default async function* startExecutor(
 
   try {
     const baseUrl = `http://localhost:${options.port}`;
-    logger.info(pc.cyan(`Packager is ready at ${baseUrl}`));
+    logger.info(styleText('cyan', `Packager is ready at ${baseUrl}`));
 
     await startAsync(context.root, projectRoot, options);
 

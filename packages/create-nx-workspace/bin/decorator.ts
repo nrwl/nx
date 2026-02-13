@@ -1,14 +1,14 @@
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 
 export const yargsDecorator = {
-  'Options:': `${chalk.green`Options`}:`,
-  'Examples:': `${chalk.green`Examples`}:`,
-  boolean: `${chalk.blue`boolean`}`,
-  count: `${chalk.blue`count`}`,
-  string: `${chalk.blue`string`}`,
-  array: `${chalk.blue`array`}`,
-  required: `${chalk.blue`required`}`,
-  'default:': `${chalk.blue`default`}:`,
-  'choices:': `${chalk.blue`choices`}:`,
-  'aliases:': `${chalk.blue`aliases`}:`,
+  'Options:': `${styleText('green', 'Options')}:`,
+  'Examples:': `${styleText('green', 'Examples')}:`,
+  boolean: `${styleText('blue', 'boolean')}`,
+  count: `${styleText('blue', 'count')}`,
+  string: `${styleText('blue', 'string')}`,
+  array: `${styleText('blue', 'array')}`,
+  required: `${styleText('blue', 'required')}`,
+  'default:': `${styleText('blue', 'default')}:`,
+  'choices:': `${styleText('blue', 'choices')}:`,
+  'aliases:': `${styleText('blue', 'aliases')}:`,
 };

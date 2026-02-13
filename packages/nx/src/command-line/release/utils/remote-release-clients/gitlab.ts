@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { orange, output } from '../../../../utils/output';
@@ -219,11 +219,11 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
     }/-/releases/${encodeURIComponent(gitTag)}`;
     if (existingRelease) {
       console.error(
-        `${pc.white('UPDATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
+        `${styleText('white', 'UPDATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     } else {
       console.error(
-        `${pc.green('CREATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
+        `${styleText('green', 'CREATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     }
   }
@@ -265,14 +265,14 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            pc.underline(pc.cyan(result.url)) +
+            styleText(['underline', 'cyan'], result.url) +
             `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            pc.underline(pc.cyan(result.url)) +
+            styleText(['underline', 'cyan'], result.url) +
             '\n'
         );
       });

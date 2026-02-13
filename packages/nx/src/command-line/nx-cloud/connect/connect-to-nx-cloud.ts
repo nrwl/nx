@@ -19,7 +19,7 @@ import {
 import { nxVersion } from '../../../utils/versions';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 const ora = require('ora');
 const open = require('open');
 
@@ -201,10 +201,10 @@ async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
     initial,
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
-    promptConfig.footer = () => pc.dim(footer);
+    promptConfig.footer = () => styleText('dim', footer);
   }
   if (hint) {
-    promptConfig.hint = () => pc.dim(hint);
+    promptConfig.hint = () => styleText('dim', hint);
   }
 
   return await (await import('enquirer'))

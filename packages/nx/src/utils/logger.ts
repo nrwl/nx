@@ -1,23 +1,25 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
-export const NX_PREFIX = pc.inverse(pc.bold(pc.cyan(' NX ')));
+export const NX_PREFIX = styleText(['inverse', 'bold', 'cyan'], ' NX ');
 
-export const NX_ERROR = pc.inverse(pc.bold(pc.red(' ERROR ')));
+export const NX_ERROR = styleText(['inverse', 'bold', 'red'], ' ERROR ');
 
 export const logger = {
-  warn: (s) => console.warn(pc.bold(pc.yellow(s))),
+  warn: (s) => console.warn(styleText(['bold', 'yellow'], String(s))),
   error: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
-      console.error(`\n${NX_ERROR} ${pc.bold(pc.red(s.slice(3)))}\n`);
+      console.error(
+        `\n${NX_ERROR} ${styleText(['bold', 'red'], s.slice(3))}\n`
+      );
     } else if (s instanceof Error && s.stack) {
-      console.error(pc.bold(pc.red(s.stack)));
+      console.error(styleText(['bold', 'red'], s.stack));
     } else {
-      console.error(pc.bold(pc.red(s)));
+      console.error(styleText(['bold', 'red'], String(s)));
     }
   },
   info: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
-      console.info(`\n${NX_PREFIX} ${pc.bold(s.slice(3))}\n`);
+      console.info(`\n${NX_PREFIX} ${styleText('bold', s.slice(3))}\n`);
     } else {
       console.info(s);
     }

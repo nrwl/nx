@@ -35,7 +35,6 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@svgr/webpack": "^8.0.1",
     "minimatch": "catalog:",
-    "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",

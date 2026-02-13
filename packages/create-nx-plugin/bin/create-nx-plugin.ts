@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import enquirer = require('enquirer');
 import yargs = require('yargs');
 import {
@@ -25,16 +25,16 @@ import {
 import { Arguments } from 'yargs';
 
 export const yargsDecorator = {
-  'Options:': `${pc.green(`Options`)}:`,
-  'Examples:': `${pc.green(`Examples`)}:`,
-  boolean: `${pc.blue(`boolean`)}`,
-  count: `${pc.blue(`count`)}`,
-  string: `${pc.blue(`string`)}`,
-  array: `${pc.blue(`array`)}`,
-  required: `${pc.blue(`required`)}`,
-  'default:': `${pc.blue(`default`)}:`,
-  'choices:': `${pc.blue(`choices`)}:`,
-  'aliases:': `${pc.blue(`aliases`)}:`,
+  'Options:': `${styleText('green', `Options`)}:`,
+  'Examples:': `${styleText('green', `Examples`)}:`,
+  boolean: `${styleText('blue', `boolean`)}`,
+  count: `${styleText('blue', `count`)}`,
+  string: `${styleText('blue', `string`)}`,
+  array: `${styleText('blue', `array`)}`,
+  required: `${styleText('blue', `required`)}`,
+  'default:': `${styleText('blue', `default`)}:`,
+  'choices:': `${styleText('blue', `choices`)}:`,
+  'aliases:': `${styleText('blue', `aliases`)}:`,
 };
 
 const nxVersion = require('../package.json').version;
@@ -96,7 +96,7 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
       withOptions(
         yargs
           .positional('pluginName', {
-            describe: pc.dim(`Plugin name`),
+            describe: styleText('dim', `Plugin name`),
             type: 'string',
             alias: ['name'],
           })
@@ -120,11 +120,11 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
     },
     [normalizeArgsMiddleware]
   )
-  .help('help', pc.dim(`Show help`))
+  .help('help', styleText('dim', `Show help`))
   .updateLocale(yargsDecorator)
   .version(
     'version',
-    pc.dim(`Show version`),
+    styleText('dim', `Show version`),
     nxVersion
   ) as yargs.Argv<CreateNxPluginArguments>;
 

@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import yargs = require('yargs');
 import { examples } from '../examples';
 
@@ -10,7 +10,8 @@ export function linkToNxDevAndExamples<T>(
     yargs = yargs.example(t.command, t.description);
   });
   return yargs.epilog(
-    pc.bold(
+    styleText(
+      'bold',
       `Find more information and examples at https://nx.dev/nx/${command.replace(
         ':',
         '-'

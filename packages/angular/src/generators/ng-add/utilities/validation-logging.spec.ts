@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import {
   arrayToString,
   getProjectValidationResultMessage,
@@ -48,10 +48,10 @@ describe('getProjectValidationResultMessage', () => {
       },
     ]);
 
-    expect(message).toBe(`${pc.bold(`Validation results`)}:
+    expect(message).toBe(`${styleText('bold', `Validation results`)}:
 
   - Simple error message with hint
-  ${pc.dim(pc.italic(`  Some hint message`))}
+  ${styleText(['dim', 'italic'], `  Some hint message`)}
 
   - Simple error message without hint
 
@@ -60,7 +60,7 @@ describe('getProjectValidationResultMessage', () => {
       - First error message
       - Second error message
       - Third error message
-  ${pc.dim(pc.italic(`  - Some hint message`))}
+  ${styleText(['dim', 'italic'], `  - Some hint message`)}
 
   - Message group without hint:
     - Errors:

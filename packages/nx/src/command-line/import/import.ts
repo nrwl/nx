@@ -1,6 +1,6 @@
 import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync, promises as fsp } from 'node:fs';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
@@ -340,14 +340,16 @@ export async function importHandler(options: ImportOptions) {
         title: `Failed to install plugins`,
         bodyLines: [
           'The following plugins were not installed:',
-          ...plugins.map((p) => `- ${pc.bold(p)}`),
+          ...plugins.map((p) => `- ${styleText('bold', p)}`),
         ],
       });
       output.error({
         title: `To install the plugins manually`,
         bodyLines: [
           'You may need to run commands to install the plugins:',
-          ...plugins.map((p) => `- ${pc.bold(pmc.exec + ' nx add ' + p)}`),
+          ...plugins.map(
+            (p) => `- ${styleText('bold', pmc.exec + ' nx add ' + p)}`
+          ),
         ],
       });
     }
@@ -458,7 +460,7 @@ async function runPluginsInstall(
       title: `Install failed: ${e.message || 'Unknown error'}`,
       bodyLines: [
         'The following plugins were not installed:',
-        ...plugins.map((p) => `- ${pc.bold(p)}`),
+        ...plugins.map((p) => `- ${styleText('bold', p)}`),
         e.stack,
       ],
     });
@@ -466,7 +468,9 @@ async function runPluginsInstall(
       title: `To install the plugins manually`,
       bodyLines: [
         'You may need to run commands to install the plugins:',
-        ...plugins.map((p) => `- ${pc.bold(pmc.exec + ' nx add ' + p)}`),
+        ...plugins.map(
+          (p) => `- ${styleText('bold', pmc.exec + ' nx add ' + p)}`
+        ),
       ],
     });
   }
@@ -507,7 +511,7 @@ async function handleMissingWorkspacesEntry(
               : [
                   `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
                   `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
-                  pc.bold(`packages:\n  - '${pkgPath}'`),
+                  styleText('bold', `packages:\n  - '${pkgPath}'`),
                   `See: https://pnpm.io/workspaces`,
                 ],
     });
@@ -525,16 +529,18 @@ async function handleMissingWorkspacesEntry(
       bodyLines:
         pm === 'npm' || pm === 'yarn' || pm === 'bun'
           ? [
-              `The imported project (${pc.bold(
+              `The imported project (${styleText(
+                'bold',
                 pkgPath
               )}) is missing the "workspaces" field in package.json.`,
-              `Added "${pc.bold(pkgPath)}" to workspaces.`,
+              `Added "${styleText('bold', pkgPath)}" to workspaces.`,
             ]
           : [
-              `The imported project (${pc.bold(
+              `The imported project (${styleText(
+                'bold',
                 pkgPath
               )}) is missing the "packages" field in pnpm-workspaces.yaml.`,
-              `Added "${pc.bold(pkgPath)}" to packages.`,
+              `Added "${styleText('bold', pkgPath)}" to packages.`,
             ],
     });
   }

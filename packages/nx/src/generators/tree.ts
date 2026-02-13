@@ -11,7 +11,7 @@ import type { Mode } from 'node:fs';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
@@ -455,11 +455,11 @@ export function printChanges(
 ): void {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
-      console.log(`${indent}${pc.green('CREATE')} ${f.path}`);
+      console.log(`${indent}${styleText('green', 'CREATE')} ${f.path}`);
     } else if (f.type === 'UPDATE') {
-      console.log(`${indent}${pc.white('UPDATE')} ${f.path}`);
+      console.log(`${indent}${styleText('white', 'UPDATE')} ${f.path}`);
     } else if (f.type === 'DELETE') {
-      console.log(`${indent}${pc.yellow('DELETE')} ${f.path}`);
+      console.log(`${indent}${styleText('yellow', 'DELETE')} ${f.path}`);
     }
   });
 }

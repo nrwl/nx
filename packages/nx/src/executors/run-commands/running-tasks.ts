@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
@@ -393,7 +393,8 @@ class RunningNodeProcess implements RunningTask {
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
-    this.terminalOutput = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
+    this.terminalOutput =
+      styleText('dim', '> ') + commandConfig.command + '\r\n\r\n';
     if (streamOutput) {
       process.stdout.write(this.terminalOutput);
     }
@@ -584,19 +585,19 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
       .split('\n')
       .map((l) => {
         let prefixText = config.prefix;
-        if (config.prefixColor && pc[config.prefixColor]) {
-          prefixText = pc[config.prefixColor](prefixText);
+        if (config.prefixColor) {
+          prefixText = styleText(config.prefixColor as any, prefixText);
         }
-        prefixText = pc.bold(prefixText);
+        prefixText = styleText('bold', prefixText);
         return l.trim().length > 0 ? `${prefixText} ${l}` : l;
       })
       .join('\n');
   }
-  if (config.color && pc[config.color]) {
-    out = pc[config.color](out);
+  if (config.color) {
+    out = styleText(config.color as any, out);
   }
-  if (config.bgColor && pc[config.bgColor]) {
-    out = pc[config.bgColor](out);
+  if (config.bgColor) {
+    out = styleText(config.bgColor as any, out);
   }
   return out;
 }

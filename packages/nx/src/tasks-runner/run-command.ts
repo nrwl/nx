@@ -67,7 +67,7 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -849,7 +849,8 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
         },
       ],
       footer: () =>
-        pc.dim(
+        styleText(
+          'dim',
           '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
         ),
     };
@@ -880,7 +881,8 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
         },
       ],
       footer: () =>
-        pc.dim(
+        styleText(
+          'dim',
           `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
         ),
     };

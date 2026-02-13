@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
@@ -25,9 +25,11 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
 
         this.childProcess.stdout
           .pipe(
-            logClearLineToPrefixTransformer(pc.bold(color(prefixText)) + ' ')
+            logClearLineToPrefixTransformer(
+              styleText('bold', color(prefixText)) + ' '
+            )
           )
-          .pipe(addPrefixTransformer(pc.bold(color(prefixText))))
+          .pipe(addPrefixTransformer(styleText('bold', color(prefixText))))
           .pipe(process.stdout);
         this.childProcess.stderr
           .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
@@ -128,17 +130,17 @@ function addPrefixTransformer(prefix?: string) {
   });
 }
 
-const colors = [
-  pc.green,
-  pc.greenBright,
-  pc.blue,
-  pc.blueBright,
-  pc.cyan,
-  pc.cyanBright,
-  pc.yellow,
-  pc.yellowBright,
-  pc.magenta,
-  pc.magentaBright,
+const colors: ((s: string) => string)[] = [
+  (s) => styleText('green', s),
+  (s) => styleText('greenBright', s),
+  (s) => styleText('blue', s),
+  (s) => styleText('blueBright', s),
+  (s) => styleText('cyan', s),
+  (s) => styleText('cyanBright', s),
+  (s) => styleText('yellow', s),
+  (s) => styleText('yellowBright', s),
+  (s) => styleText('magenta', s),
+  (s) => styleText('magentaBright', s),
 ];
 
 function getColor(projectName: string) {

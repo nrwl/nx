@@ -1,6 +1,6 @@
 import { signalToCode } from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import {
   ExecutorContext,
   output,
@@ -185,7 +185,7 @@ export default async function* fileServerExecutor(
           });
         } catch {
           throw new Error(
-            `Build target failed: ${pc.bold(options.buildTarget)}`
+            `Build target failed: ${styleText('bold', options.buildTarget)}`
           );
         } finally {
           process.env.NX_SERVE_STATIC_BUILD_RUNNING = undefined;

@@ -80,10 +80,10 @@ export async function showProjectHandler(
       []
     );
   } else {
-    const pc = require('picocolors') as typeof import('picocolors');
+    const { styleText } = require('node:util') as typeof import('node:util');
     const logIfExists = (label, key: keyof (typeof node)['data']) => {
       if (node.data[key]) {
-        console.log(`${pc.bold(label)}: ${node.data[key]}`);
+        console.log(`${styleText('bold', label)}: ${node.data[key]}`);
       }
     };
 
@@ -100,7 +100,7 @@ export async function showProjectHandler(
     );
 
     if (targets.length > 0) {
-      console.log(`${pc.bold('Targets')}: `);
+      console.log(`${styleText('bold', 'Targets')}: `);
       for (const [target, targetConfig] of targets) {
         const executorCommandText =
           targetConfig.metadata?.scriptContent ??
@@ -110,14 +110,15 @@ export async function showProjectHandler(
             : targetConfig?.executor) ??
           '';
         console.log(
-          `- ${pc.bold(
+          `- ${styleText(
+            'bold',
             (target + ':').padEnd(maxTargetNameLength + 2)
           )} ${executorCommandText.padEnd(maxExecutorNameLength + 2)} ${(() => {
             const configurations = Object.keys(
               targetConfig.configurations ?? {}
             );
             if (configurations.length) {
-              return pc.dim(configurations.join(', '));
+              return styleText('dim', configurations.join(', '));
             }
             return '';
           })()}`

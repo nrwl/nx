@@ -14,7 +14,7 @@ import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
 import { logger, workspaceRoot } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
-import { dim } from 'picocolors';
+import { styleText } from 'node:util';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -57,7 +57,7 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
     }
     const eventDir = path.dirname(event.src);
     const relativeDest = path.relative(eventDir, event.dest);
-    logger.verbose(`\n${dim(relativeDest)}`);
+    logger.verbose(`\n${styleText('dim', relativeDest)}`);
   });
 };
 
