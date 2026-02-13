@@ -1,4 +1,5 @@
 import { type Argv, type CommandModule, showHelp } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { logger } from '../../utils/logger';
 import {
   type OutputStyle,
@@ -177,7 +178,9 @@ export const yargsReleaseCommand: CommandModule<
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
-        const nxJson = (await import('../../config/nx-json.js')).readNxJson();
+        const nxJson = (
+          await handleImport('../../config/nx-json.js')
+        ).readNxJson();
         if (argv.groups?.length) {
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
@@ -236,7 +239,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./release.js');
+    const release = await handleImport('./release.js');
     const result = await release.releaseCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -276,7 +279,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./version.js');
+    const release = await handleImport('./version.js');
     const result = await release.releaseVersionCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -344,7 +347,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./changelog.js');
+    const release = await handleImport('./changelog.js');
     const result = await release.releaseChangelogCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -384,7 +387,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     ),
   handler: async (args) => {
     const status = await (
-      await import('./publish.js')
+      await handleImport('./publish.js')
     ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -426,7 +429,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
         default: true,
       }),
   handler: async (args) => {
-    const release = await import('./plan.js');
+    const release = await handleImport('./plan.js');
     const result = await release.releasePlanCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -442,7 +445,7 @@ const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
     'Ensure that all touched projects have an applicable version plan created for them.',
   builder: (yargs) => withAffectedOptions(yargs),
   handler: async (args) => {
-    const release = await import('./plan-check.js');
+    const release = await handleImport('./plan-check.js');
     const result = await release.releasePlanCheckCLIHandler(args);
     process.exit(result);
   },

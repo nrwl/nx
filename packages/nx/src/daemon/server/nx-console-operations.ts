@@ -6,6 +6,7 @@ import {
   NxConsolePreferences,
 } from '../../native';
 import { serverLogger } from '../logger';
+import { handleImport } from '../../utils/handle-import';
 
 // Module-level state - persists across invocations within daemon lifecycle
 let latestNxTmpPath: string | null = null;
@@ -53,7 +54,7 @@ export async function getNxConsoleStatus({
       { paths: [latestNxTmpPath] }
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.getNxConsoleStatus({ inner: true });
     log('Console status check completed, shouldPrompt:', result);
     return result;
@@ -110,7 +111,7 @@ export async function handleNxConsolePreferenceAndInstall({
       { paths: [latestNxTmpPath] }
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.handleNxConsolePreferenceAndInstall({
       preference,
       inner: true,
