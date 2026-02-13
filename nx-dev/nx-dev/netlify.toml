@@ -1,5 +1,6 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
 [functions]
 # Exclude large native binaries from function bundles to stay under the 250MB limit.
 # should also look at outputFileTracingExcludes in next.config.js.
