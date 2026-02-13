@@ -423,6 +423,8 @@ export function runCLI(
       (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     const timeoutMs = opts.timeout ?? 2 * 60 * 1000;
+    console.log(`Run Command: ${command}`);
+    const startTime = performance.now();
     const logs = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
@@ -437,6 +439,8 @@ export function runCLI(
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+    console.log(`Run Command: ${command} (${elapsed}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
