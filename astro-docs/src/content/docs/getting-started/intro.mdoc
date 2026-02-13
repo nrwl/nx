@@ -26,11 +26,11 @@ Monorepos have many advantages and are especially powerful for AI-assisted devel
 
 At its core, Nx:
 
-1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice
-2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects
-3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/concepts/task-pipeline-configuration), parallelizing when possible
-4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects
-5. **Handles flakiness** - [Automatically re-runs flaky tasks](/docs/features/ci-features/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci)
+1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice.
+2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects.
+3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/concepts/task-pipeline-configuration), parallelizing when possible.
+4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects.
+5. **Handles flakiness** - [Automatically re-runs flaky tasks](/docs/features/ci-features/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci).
 
 ```shell
 nx build myapp            # Run a task
@@ -82,12 +82,12 @@ From there, you can gradually enhance your setup by adding features like [task c
 
 Nx is modular. Start with just the CLI and add capabilities as your needs grow.
 
-| Component                                            | What It Does                                                                                                                                                                           |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Nx Core**                                          | Task runner with [local caching](/docs/features/cache-task-results). Works with any tech stack.                                                                                        |
-| [**Nx Plugins**](/docs/plugin-registry)              | Technology-specific automation (generators, executors, dependency detection)                                                                                                           |
-| [**Nx Console**](/docs/getting-started/editor-setup) | Editor extension for VSCode/JetBrains with visual UI and [AI assistance](/docs/features/enhance-ai)                                                                                    |
-| [**Nx Cloud**](/docs/features/ci-features)           | [Remote caching](/docs/features/ci-features/remote-cache), [affected commands](/docs/features/ci-features/affected), and [self-healing CI](/docs/features/ci-features/self-healing-ci) |
+| Component                                            | What It Does                                                                                                                                                                            |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx Core**                                          | Task runner with [local caching](/docs/features/cache-task-results). Works with any tech stack.                                                                                         |
+| [**Nx Plugins**](/docs/plugin-registry)              | Technology-specific automation (generators, executors, dependency detection).                                                                                                           |
+| [**Nx Console**](/docs/getting-started/editor-setup) | Editor extension for VSCode/JetBrains with visual UI and [AI assistance](/docs/features/enhance-ai).                                                                                    |
+| [**Nx Cloud**](/docs/features/ci-features)           | [Remote caching](/docs/features/ci-features/remote-cache), [affected commands](/docs/features/ci-features/affected), and [self-healing CI](/docs/features/ci-features/self-healing-ci). |
 
 {% callout type="deepdive" title="Can I add Nx to a single-project repo?" %}
 Yes, Nx provides value even for single-project repositories. You get fast task caching, intelligent task orchestration, and access to Nx plugins for your specific technology stack. As your project grows into a monorepo, the foundation is already in place.
