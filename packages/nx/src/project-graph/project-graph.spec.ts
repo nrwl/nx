@@ -39,9 +39,10 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       ],
     } as any;
 
-    jest
-      .spyOn(plugins, 'getPlugins')
-      .mockImplementation(async () => [testPlugin]);
+    jest.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
+      specifiedPlugins: [testPlugin],
+      defaultPlugins: [],
+    }));
 
     try {
       const p = await buildProjectGraphAndSourceMapsWithoutDaemon();
@@ -72,9 +73,10 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
         }),
       ],
     } as any;
-    jest
-      .spyOn(plugins, 'getPlugins')
-      .mockImplementation(async () => [testPlugin]);
+    jest.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
+      specifiedPlugins: [testPlugin],
+      defaultPlugins: [],
+    }));
 
     const p = await buildProjectGraphAndSourceMapsWithoutDaemon();
     expect(testPlugin.createNodes[1]).toHaveBeenCalled();
@@ -90,9 +92,10 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
         }),
       ],
     } as any;
-    jest
-      .spyOn(plugins, 'getPlugins')
-      .mockImplementation(async () => [testPlugin]);
+    jest.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
+      specifiedPlugins: [testPlugin],
+      defaultPlugins: [],
+    }));
 
     return Promise.all([
       buildProjectGraphAndSourceMapsWithoutDaemon(),
