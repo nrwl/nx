@@ -12,9 +12,6 @@ const BASE = '/docs';
 
 // This is exposed as window.__CONFIG
 const PUBLIC_CONFIG = {
-  cookiebotDisabled: process.env.COOKIEBOT_DISABLED === 'true',
-  cookiebotId: process.env.COOKIEBOT_ID ?? null,
-  gaMeasurementId: 'UA-88380372-10',
   gtmMeasurementId: 'GTM-KW8423B6',
   isProd: process.env.NODE_ENV === 'production',
 };
@@ -60,22 +57,6 @@ export default defineConfig({
           tag: 'script',
           content: `window.__CONFIG = ${JSON.stringify(PUBLIC_CONFIG)};`,
         },
-        ...(process.env.COOKIEBOT_ID &&
-        process.env.COOKIEBOT_DISABLED !== 'true'
-          ? [
-              {
-                /** @type {"script"} */
-                tag: 'script',
-                attrs: {
-                  id: 'Cookiebot',
-                  src: 'https://consent.cookiebot.com/uc.js',
-                  'data-cbid': process.env.COOKIEBOT_ID,
-                  'data-blockingmode': 'auto',
-                  type: 'text/javascript',
-                },
-              },
-            ]
-          : []),
         {
           tag: 'script',
           attrs: {

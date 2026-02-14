@@ -9,7 +9,7 @@ import {
   VideoPlayerProvider,
   VideoPlayerThumbnail,
 } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { UkgIcon } from '@nx/nx-dev-ui-icons';
 import { WebinarSection } from '../../webinar-section';
@@ -46,7 +46,7 @@ export function SolutionsEngineeringHero(): ReactElement {
               variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'solutions-engineering-hero',
                   'solutions-engineering'
@@ -62,7 +62,7 @@ export function SolutionsEngineeringHero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'solutions-engineering-hero',
                   'solutions-engineering'

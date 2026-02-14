@@ -1,7 +1,7 @@
 'use client';
 import { ReactElement } from 'react';
 import { ButtonLink, SectionHeading, TrustedBy } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { PlusIcon } from '@heroicons/react/24/outline';
@@ -28,7 +28,11 @@ export function Pricing(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent('contact-sales-click', 'pricing', 'nx-cloud')
+                sendCustomEventViaGtm(
+                  'contact-sales-click',
+                  'pricing',
+                  'nx-cloud'
+                )
               }
             >
               Got questions? Talk to our team
@@ -65,7 +69,7 @@ export function Pricing(): ReactElement {
                     size="default"
                     variant="contrast"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'start-hobby-plan-click',
                         'plans-table',
                         'pricing-plans'
@@ -97,7 +101,7 @@ export function Pricing(): ReactElement {
                       target="_blank"
                       title="AI powered Nx"
                       onClick={() =>
-                        sendCustomEvent(
+                        sendCustomEventViaGtm(
                           'learn-ai-integrations-click',
                           'plans-table',
                           'pricing-plans'
@@ -120,7 +124,7 @@ export function Pricing(): ReactElement {
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
-                          sendCustomEvent(
+                          sendCustomEventViaGtm(
                             'learn-nx-replay-click',
                             'plans-table',
                             'pricing-plans'
@@ -146,7 +150,7 @@ export function Pricing(): ReactElement {
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
                         onClick={() =>
-                          sendCustomEvent(
+                          sendCustomEventViaGtm(
                             'learn-nx-agents-click',
                             'plans-table',
                             'pricing-plans'
@@ -192,7 +196,7 @@ export function Pricing(): ReactElement {
                   size="default"
                   variant="secondary"
                   onClick={() =>
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'start-team-plan-click',
                       'plans-table',
                       'pricing-plans'
@@ -238,7 +242,7 @@ export function Pricing(): ReactElement {
                     target="_blank"
                     title="AI powered Nx"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'learn-ai-integrations-click',
                         'plans-table',
                         'pricing-plans'
@@ -311,7 +315,7 @@ export function Pricing(): ReactElement {
                   size="default"
                   variant="secondary"
                   onClick={() =>
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'request-trial-click',
                       'plans-table',
                       'pricing-plans'
@@ -351,7 +355,7 @@ export function Pricing(): ReactElement {
                       target="_blank"
                       title="Check our enterprise features"
                       onClick={() =>
-                        sendCustomEvent(
+                        sendCustomEventViaGtm(
                           'learn-nx-enterprise-click',
                           'plans-table',
                           'pricing-plans'

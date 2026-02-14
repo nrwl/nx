@@ -184,6 +184,43 @@ describe('task graph utils', () => {
       });
       expect(graph.roots).toEqual(['d', 'e']);
     });
+
+    it('should not drop unrelated dependencies when only one dep type has the cycle', () => {
+      const graph = {
+        roots: ['d'],
+        dependencies: {
+          a: ['b', 'c'],
+          b: ['d'],
+          c: ['e'],
+          d: [],
+          e: ['a'],
+        },
+        continuousDependencies: {
+          a: ['b'],
+          b: [],
+          c: [],
+          d: [],
+          e: ['b'],
+        },
+      };
+
+      makeAcyclic(graph);
+
+      expect(graph.dependencies).toEqual({
+        a: ['b', 'c'],
+        b: ['d'],
+        c: ['e'],
+        d: [],
+        e: [],
+      });
+      expect(graph.continuousDependencies).toEqual({
+        a: ['b'],
+        b: [],
+        c: [],
+        d: [],
+        e: ['b'],
+      });
+    });
   });
 
   describe('validateNoAtomizedTasks', () => {
