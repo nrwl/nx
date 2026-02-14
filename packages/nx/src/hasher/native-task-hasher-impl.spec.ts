@@ -933,6 +933,304 @@ describe('native task hasher', () => {
     expect(noTypescriptHash).toMatchInlineSnapshot(`"11547179436948425249"`);
   });
 
+  it('should use child task hash as proxy when dependentTasksOutputFiles is **/*', async () => {
+    const nxJsonWithDepsOutputs: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+      },
+      targetDefaults: {
+        build: {
+          cache: true,
+          dependsOn: ['^build'],
+          inputs: [
+            'default',
+            { dependentTasksOutputFiles: '**/*', transitive: false },
+          ],
+        },
+      },
+    };
+    tempFs.writeFile('nx.json', JSON.stringify(nxJsonWithDepsOutputs));
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    // Pre-set the child task's hash to simulate it already being computed
+    taskGraph.tasks['child:build'].hash = 'precomputed-child-hash-123';
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJsonWithDepsOutputs,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
+
+    // The hash details should contain a TaskHash entry for the child task
+    // formatted as "child:build:precomputed-child-hash-123"
+    const detailKeys = Object.keys(hash.details);
+    const taskHashKey = detailKeys.find((k) =>
+      k.includes('child:build:precomputed-child-hash-123')
+    );
+    expect(taskHashKey).toBeDefined();
+    // Should NOT contain a TaskOutput entry for the child's outputs
+    const taskOutputKey = detailKeys.find(
+      (k) => k.includes('**/*:') && k.includes('libs/child')
+    );
+    expect(taskOutputKey).toBeUndefined();
+  });
+
+  it('should produce different hashes when child task hash changes with **/* depsOutputs', async () => {
+    const nxJsonWithDepsOutputs: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+      },
+      targetDefaults: {
+        build: {
+          cache: true,
+          dependsOn: ['^build'],
+          inputs: [
+            'default',
+            { dependentTasksOutputFiles: '**/*', transitive: false },
+          ],
+        },
+      },
+    };
+    tempFs.writeFile('nx.json', JSON.stringify(nxJsonWithDepsOutputs));
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+
+    // Hash with first child hash
+    const taskGraph1 = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    taskGraph1.tasks['child:build'].hash = 'child-hash-v1';
+
+    const hash1 = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJsonWithDepsOutputs,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph1.tasks['parent:build'], taskGraph1, {});
+
+    // Hash with different child hash
+    const taskGraph2 = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    taskGraph2.tasks['child:build'].hash = 'child-hash-v2';
+
+    const hash2 = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJsonWithDepsOutputs,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph2.tasks['parent:build'], taskGraph2, {});
+
+    // Different child hashes should produce different parent hashes
+    expect(hash1.value).not.toEqual(hash2.value);
+  });
+
+  it('should use child task hash transitively when dependentTasksOutputFiles is **/*', async () => {
+    const nxJsonWithDepsOutputs: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+      },
+      targetDefaults: {
+        build: {
+          cache: true,
+          dependsOn: ['^build'],
+          inputs: [
+            'default',
+            { dependentTasksOutputFiles: '**/*', transitive: true },
+          ],
+        },
+      },
+    };
+    tempFs.writeFile('nx.json', JSON.stringify(nxJsonWithDepsOutputs));
+
+    await tempFs.createFiles({
+      'libs/grandchild/src/index.ts': 'grandchild-content',
+      'libs/grandchild/project.json': JSON.stringify({ name: 'grandchild' }),
+    });
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+      'libs/grandchild': 'grandchild',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'grandchild',
+      type: 'lib',
+      data: {
+        root: 'libs/grandchild',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/dist'],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    builder.addStaticDependency('child', 'grandchild', 'libs/child/fileb.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    // Pre-set hashes for both child and grandchild tasks
+    taskGraph.tasks['child:build'].hash = 'child-hash-abc';
+    taskGraph.tasks['grandchild:build'].hash = 'grandchild-hash-xyz';
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJsonWithDepsOutputs,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
+
+    // Should include TaskHash entries for both child and grandchild
+    const detailKeys = Object.keys(hash.details);
+    const childHashKey = detailKeys.find((k) =>
+      k.includes('child:build:child-hash-abc')
+    );
+    const grandchildHashKey = detailKeys.find((k) =>
+      k.includes('grandchild:build:grandchild-hash-xyz')
+    );
+    expect(childHashKey).toBeDefined();
+    expect(grandchildHashKey).toBeDefined();
+  });
+
   /**
    * commented out to show how to debug issues with hashing
    *
