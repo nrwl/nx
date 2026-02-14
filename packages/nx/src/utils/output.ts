@@ -1,6 +1,7 @@
-import * as pc from 'picocolors';
 import { EOL } from 'os';
+import * as pc from 'picocolors';
 import * as readline from 'readline';
+import { WriteStream } from 'tty';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
 const GH_GROUP_PREFIX = '::group::';
@@ -85,8 +86,8 @@ class CLIOutput {
   underline = pc.underline;
   dim = pc.dim;
 
-  private writeToStdOut(str: string) {
-    process.stdout.write(str);
+  private writeToStream(str: string, stream: WriteStream = process.stdout) {
+    stream.write(str);
   }
 
   overwriteLine(lineText: string = '') {
@@ -98,22 +99,31 @@ class CLIOutput {
     process.stdout.write(EOL);
   }
 
-  private writeOutputTitle({
-    color,
-    title,
-  }: {
-    color: string;
-    title: string;
-  }): void {
-    this.writeToStdOut(`${this.applyNxPrefix(color, title)}${EOL}`);
+  private writeOutputTitle(
+    {
+      color,
+      title,
+    }: {
+      color: string;
+      title: string;
+    },
+    stream: WriteStream = process.stdout
+  ): void {
+    this.writeToStream(`${this.applyNxPrefix(color, title)}${EOL}`, stream);
   }
 
-  private writeOptionalOutputBody(bodyLines?: string[]): void {
+  private writeOptionalOutputBody(
+    bodyLines?: string[],
+    stream: WriteStream = process.stdout
+  ): void {
     if (!bodyLines) {
       return;
     }
-    this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
+    this.addNewline(stream);
+    bodyLines.forEach(
+      (bodyLine) => this.writeToStream(`${bodyLine}${EOL}`),
+      stream
+    );
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {
@@ -122,8 +132,8 @@ class CLIOutput {
     return `${nxPrefix}  ${text}`;
   }
 
-  addNewline() {
-    this.writeToStdOut(EOL);
+  addNewline(stream: WriteStream = process.stdout) {
+    this.writeToStream(EOL, stream);
   }
 
   addVerticalSeparator(color = 'gray') {
@@ -133,7 +143,7 @@ class CLIOutput {
   }
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
-    this.writeToStdOut(`${this.getVerticalSeparator(color)}${EOL}`);
+    this.writeToStream(`${this.getVerticalSeparator(color)}${EOL}`);
   }
 
   getVerticalSeparatorLines(color = 'gray') {
@@ -146,53 +156,62 @@ class CLIOutput {
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
-    this.addNewline();
+    const stream = process.stderr;
+    this.addNewline(stream);
 
-    this.writeOutputTitle({
-      color: 'red',
-      title: pc.red(title),
-    });
+    this.writeOutputTitle(
+      {
+        color: 'red',
+        title: pc.red(title),
+      },
+      stream
+    );
 
-    this.writeOptionalOutputBody(bodyLines);
+    this.writeOptionalOutputBody(bodyLines, stream);
 
     /**
      * Optional slug to be used in an Nx error message redirect URL
      */
     if (slug && typeof slug === 'string') {
-      this.addNewline();
-      this.writeToStdOut(
+      this.addNewline(stream);
+      this.writeToStream(
         `${pc.gray(
           '  Learn more about this error: '
-        )}https://errors.nx.dev/${slug}${EOL}`
+        )}https://errors.nx.dev/${slug}${EOL}`,
+        stream
       );
     }
 
-    this.addNewline();
+    this.addNewline(stream);
   }
 
   warn({ title, slug, bodyLines }: CLIWarnMessageConfig) {
-    this.addNewline();
+    this.addNewline(process.stderr);
 
-    this.writeOutputTitle({
-      color: 'yellow',
-      title: pc.yellow(title),
-    });
+    this.writeOutputTitle(
+      {
+        color: 'yellow',
+        title: pc.yellow(title),
+      },
+      process.stderr
+    );
 
-    this.writeOptionalOutputBody(bodyLines);
+    this.writeOptionalOutputBody(bodyLines, process.stderr);
 
     /**
      * Optional slug to be used in an Nx warning message redirect URL
      */
     if (slug && typeof slug === 'string') {
-      this.addNewline();
-      this.writeToStdOut(
+      this.addNewline(process.stderr);
+      this.writeToStream(
         `${pc.gray(
           '  Learn more about this warning: '
-        )}https://errors.nx.dev/${slug}${EOL}`
+        )}https://errors.nx.dev/${slug}${EOL}`,
+        process.stderr
       );
     }
 
-    this.addNewline();
+    this.addNewline(process.stderr);
   }
 
   note({ title, bodyLines }: CLINoteMessageConfig) {
@@ -234,7 +253,7 @@ class CLIOutput {
 
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
-    this.writeToStdOut(this.getCommandWithStatus(message, taskStatus));
+    this.writeToStream(this.getCommandWithStatus(message, taskStatus));
     this.addNewline();
     this.addNewline();
   }
@@ -254,16 +273,16 @@ class CLIOutput {
     }
 
     this.addNewline();
-    this.writeToStdOut(commandOutputWithStatus);
+    this.writeToStream(commandOutputWithStatus);
     this.addNewline();
     this.addNewline();
-    this.writeToStdOut(output);
+    this.writeToStream(output);
 
     if (
       process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
       process.env.GITHUB_ACTIONS
     ) {
-      this.writeToStdOut(GH_GROUP_SUFFIX);
+      this.writeToStream(GH_GROUP_SUFFIX);
     }
   }
 
