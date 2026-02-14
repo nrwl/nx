@@ -75,8 +75,11 @@ describe('project-configuration-utils', () => {
     it('should return longest matching target', () => {
       expect(
         // This matches both 'e2e-ci--*' and 'e2e-ci--file-*', we expect the first match to be returned.
-        readTargetDefaultsForTarget('e2e-ci--file-foo', targetDefaults, null)
-          .options['key']
+        readTargetDefaultsForTarget(
+          'e2e-ci--file-foo',
+          targetDefaults,
+          undefined
+        ).options['key']
       ).toEqual('default-value-for-e2e-ci-file');
     });
 
@@ -1063,7 +1066,7 @@ describe('project-configuration-utils', () => {
           ['dummy', 'dummy.ts']
         );
 
-        expect(rootMap['libs/lib-a'].targets.build.metadata).toEqual({
+        expect(rootMap['libs/lib-a'].targets!.build.metadata).toEqual({
           description: 'do stuff',
           technologies: ['tech'],
         });
@@ -1116,7 +1119,7 @@ describe('project-configuration-utils', () => {
           ['dummy', 'dummy.ts']
         );
 
-        expect(rootMap['libs/lib-a'].targets.build.metadata).toEqual({
+        expect(rootMap['libs/lib-a'].targets!.build.metadata).toEqual({
           description: 'do cool stuff',
           technologies: ['tech', 'tech2'],
         });
@@ -1247,10 +1250,10 @@ describe('project-configuration-utils', () => {
         },
       });
       const merged = rootMap['libs/lib-a'];
-      expect(merged.targets['existingTarget']).toEqual(
+      expect(merged.targets!['existingTarget']).toEqual(
         existingTargetConfiguration
       );
-      expect(merged.targets['shouldMerge']).toMatchInlineSnapshot(`
+      expect(merged.targets!['shouldMerge']).toMatchInlineSnapshot(`
         {
           "configurations": {
             "dev": {
@@ -1271,10 +1274,10 @@ describe('project-configuration-utils', () => {
           },
         }
       `);
-      expect(merged.targets['shouldntMerge']).toEqual(
+      expect(merged.targets!['shouldntMerge']).toEqual(
         shouldntMergeConfigurationB
       );
-      expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
+      expect(merged.targets!['newTarget']).toEqual(newTargetConfiguration);
     });
 
     it('should merge target configurations with glob pattern matching', () => {
@@ -1321,7 +1324,7 @@ describe('project-configuration-utils', () => {
         },
       });
       const merged = rootMap['libs/lib-a'];
-      expect(merged.targets['partial-path/a']).toMatchInlineSnapshot(`
+      expect(merged.targets!['partial-path/a']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -1333,7 +1336,7 @@ describe('project-configuration-utils', () => {
           "executor": "build",
         }
       `);
-      expect(merged.targets['partial-path/b']).toMatchInlineSnapshot(`
+      expect(merged.targets!['partial-path/b']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -1345,7 +1348,7 @@ describe('project-configuration-utils', () => {
           "executor": "build",
         }
       `);
-      expect(merged.targets['partial-path/c']).toMatchInlineSnapshot(`
+      expect(merged.targets!['partial-path/c']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -1358,7 +1361,7 @@ describe('project-configuration-utils', () => {
         }
       `);
       // if the glob pattern doesn't match, the target is not merged
-      expect(merged.targets['ci-*']).toMatchInlineSnapshot(`
+      expect(merged.targets!['ci-*']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^production",
@@ -1367,7 +1370,7 @@ describe('project-configuration-utils', () => {
         }
       `);
       // if the glob pattern matches, the target is merged
-      expect(merged.targets['partial-**/*']).toBeUndefined();
+      expect(merged.targets!['partial-**/*']).toBeUndefined();
     });
 
     it('should concatenate tags and implicitDependencies', () => {
@@ -2304,8 +2307,8 @@ describe('project-configuration-utils', () => {
               };
             },
             vitestConfigPaths,
-            null,
-            null
+            {} as any,
+            {} as any
           ),
       ],
     };
@@ -2335,8 +2338,8 @@ describe('project-configuration-utils', () => {
               };
             },
             projectJsonPaths,
-            null,
-            null
+            {} as any,
+            {} as any
           ),
       ],
     };
@@ -2359,8 +2362,8 @@ describe('project-configuration-utils', () => {
               };
             },
             projectJsonPaths,
-            null,
-            null
+            {} as any,
+            {} as any
           ),
       ],
     };
@@ -2370,12 +2373,20 @@ describe('project-configuration-utils', () => {
         await createProjectConfigurationsWithPlugins(
           undefined,
           {},
-          [['libs/a/project.json', 'libs/b/project.json']],
-          [
-            new LoadedNxPlugin(fakeTagPlugin, {
-              plugin: fakeTagPlugin.name,
-            }),
-          ]
+          {
+            specifiedPluginFiles: [],
+            defaultPluginFiles: [
+              ['libs/a/project.json', 'libs/b/project.json'],
+            ],
+          },
+          {
+            specifiedPlugins: [],
+            defaultPlugins: [
+              new LoadedNxPlugin(fakeTagPlugin, {
+                plugin: fakeTagPlugin.name,
+              }),
+            ],
+          }
         );
 
       expect(projectConfigurations.projects).toEqual({
@@ -2397,13 +2408,21 @@ describe('project-configuration-utils', () => {
         await createProjectConfigurationsWithPlugins(
           undefined,
           {},
-          [['libs/a/project.json', 'libs/b/project.json']],
-          [
-            new LoadedNxPlugin(fakeTagPlugin, {
-              plugin: fakeTagPlugin.name,
-              include: ['libs/a/**'],
-            }),
-          ]
+          {
+            specifiedPluginFiles: [],
+            defaultPluginFiles: [
+              ['libs/a/project.json', 'libs/b/project.json'],
+            ],
+          },
+          {
+            specifiedPlugins: [],
+            defaultPlugins: [
+              new LoadedNxPlugin(fakeTagPlugin, {
+                plugin: fakeTagPlugin.name,
+                include: ['libs/a/**'],
+              }),
+            ],
+          }
         );
 
       expect(projectConfigurations.projects).toEqual({
@@ -2420,13 +2439,21 @@ describe('project-configuration-utils', () => {
         await createProjectConfigurationsWithPlugins(
           undefined,
           {},
-          [['libs/a/project.json', 'libs/b/project.json']],
-          [
-            new LoadedNxPlugin(fakeTagPlugin, {
-              plugin: fakeTagPlugin.name,
-              exclude: ['libs/b/**'],
-            }),
-          ]
+          {
+            specifiedPluginFiles: [],
+            defaultPluginFiles: [
+              ['libs/a/project.json', 'libs/b/project.json'],
+            ],
+          },
+          {
+            specifiedPlugins: [],
+            defaultPlugins: [
+              new LoadedNxPlugin(fakeTagPlugin, {
+                plugin: fakeTagPlugin.name,
+                exclude: ['libs/b/**'],
+              }),
+            ],
+          }
         );
 
       expect(projectConfigurations.projects).toEqual({
@@ -2444,19 +2471,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a-e2e/project.json',
-                'libs/b-e2e/project.json',
-                'libs/toolkit-workspace-e2e/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a-e2e/project.json',
+                  'libs/b-e2e/project.json',
+                  'libs/toolkit-workspace-e2e/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['**/*-e2e/**', '!**/toolkit-workspace-e2e/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['**/*-e2e/**', '!**/toolkit-workspace-e2e/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -2473,19 +2506,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/**', '!libs/b/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['libs/**', '!libs/b/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -2507,20 +2546,26 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
-                'libs/d/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                  'libs/d/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['libs/**', '!libs/b/**', '!libs/c/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['libs/**', '!libs/b/**', '!libs/c/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -2542,19 +2587,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['!libs/a/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['!libs/a/**'],
+                }),
+              ],
+            }
           );
 
         // Should exclude everything except libs/a (first pattern is negation)
@@ -2572,19 +2623,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['!libs/b/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['!libs/b/**'],
+                }),
+              ],
+            }
           );
 
         // Should include everything except libs/b (first pattern is negation)
@@ -2607,14 +2664,22 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [['libs/a/project.json', 'libs/b/project.json']],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/a/**'],
-                exclude: ['libs/b/**'],
-              }),
-            ]
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                ['libs/a/project.json', 'libs/b/project.json'],
+              ],
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['libs/a/**'],
+                  exclude: ['libs/b/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -2631,19 +2696,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/a/special/project.json',
-                'libs/b/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/a/special/project.json',
+                  'libs/b/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['libs/**', '!libs/a/**', 'libs/a/special/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['libs/**', '!libs/a/**', 'libs/a/special/**'],
+                }),
+              ],
+            }
           );
 
         // Exclude all libs, except a, but re-exclude a/special (last match wins)
@@ -2661,21 +2732,27 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
-                'libs/d/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                  'libs/d/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/**', '!libs/d/**'],
-                exclude: ['libs/b/**', '!libs/c/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['libs/**', '!libs/d/**'],
+                  exclude: ['libs/b/**', '!libs/c/**'],
+                }),
+              ],
+            }
           );
 
         // Include: a, b, c (all except d)
@@ -2700,14 +2777,22 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [['libs/a/project.json', 'libs/b/project.json']],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: [],
-                exclude: [],
-              }),
-            ]
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                ['libs/a/project.json', 'libs/b/project.json'],
+              ],
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: [],
+                  exclude: [],
+                }),
+              ],
+            }
           );
 
         // Empty arrays should not filter anything
@@ -2730,13 +2815,22 @@ describe('project-configuration-utils', () => {
       const { projects } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json'], ['libs/a/project.json']],
-        [
-          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
-          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
-        ]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            ['libs/a/project.json'],
+            ['libs/a/project.json'],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+            new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+          ],
+        }
       );
-      expect(projects['libs/a'].targets.build).toMatchInlineSnapshot(`
+      expect(projects['libs/a'].targets!.build).toMatchInlineSnapshot(`
         {
           "configurations": {},
           "executor": "nx:run-commands",
@@ -2752,8 +2846,22 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
-        [new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            [
+              'libs/a/project.json',
+              'libs/b/project.json',
+              'libs/c/project.json',
+            ],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin'),
+          ],
+        }
       ).catch((e) => e);
       const isErrorType = isProjectConfigurationsError(error);
       expect(isErrorType).toBe(true);
@@ -2776,8 +2884,22 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
-        [new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            [
+              'libs/a/project.json',
+              'libs/b/project.json',
+              'libs/c/project.json',
+            ],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+          ],
+        }
       ).catch((e) => e);
       const isErrorType = isProjectConfigurationsError(error);
       expect(isErrorType).toBe(true);
@@ -2833,8 +2955,16 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/my-lib/project.json']],
-        [new LoadedNxPlugin(invalidCachePlugin, 'invalid-cache-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [['libs/my-lib/project.json']],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(invalidCachePlugin, 'invalid-cache-plugin'),
+          ],
+        }
       ).catch((e) => e);
 
       const isErrorType = isProjectConfigurationsError(error);
@@ -2854,11 +2984,20 @@ describe('project-configuration-utils', () => {
       const { sourceMaps } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json'], ['libs/a/project.json']],
-        [
-          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
-          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
-        ]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            ['libs/a/project.json'],
+            ['libs/a/project.json'],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+            new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+          ],
+        }
       );
       expect(sourceMaps).toMatchInlineSnapshot(`
         {
@@ -2932,8 +3071,8 @@ describe('project-configuration-utils', () => {
                 };
               },
               projectJsonPaths,
-              null,
-              null
+              {} as any,
+              {} as any
             ),
         ],
       };
@@ -2941,8 +3080,16 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/my-app/project.json']],
-        [new LoadedNxPlugin(invalidTokenPlugin, 'invalid-token-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [['libs/my-app/project.json']],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(invalidTokenPlugin, 'invalid-token-plugin'),
+          ],
+        }
       ).catch((e) => e);
 
       expect(error.message).toContain(
@@ -2979,8 +3126,8 @@ describe('project-configuration-utils', () => {
                 };
               },
               projectJsonPaths,
-              null,
-              null
+              {} as any,
+              {} as any
             ),
         ],
       };
@@ -2998,8 +3145,14 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         nxJsonWithInvalidDefaults,
-        [['libs/my-lib/project.json']],
-        [new LoadedNxPlugin(simplePlugin, 'simple-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [['libs/my-lib/project.json']],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [new LoadedNxPlugin(simplePlugin, 'simple-plugin')],
+        }
       ).catch((e) => e);
 
       expect(error.message).toContain(
@@ -3744,6 +3897,420 @@ describe('project-configuration-utils', () => {
       ).toEqual(['base', 'base-plugin']);
     });
   });
+
+  describe('two-phase spread: project.json spread includes target defaults', () => {
+    const projectJsonPaths = ['libs/my-lib/project.json'];
+
+    /**
+     * Creates a specified plugin that infers targets for a project.
+     * Simulates plugins like @nx/webpack, @nx/jest, etc.
+     */
+    function makeSpecifiedPlugin(
+      targets: Record<string, TargetConfiguration>,
+      projectRoot = 'libs/my-lib'
+    ): NxPluginV2 {
+      return {
+        name: 'specified-plugin',
+        createNodesV2: [
+          'libs/*/project.json',
+          (configFiles) =>
+            createNodesFromFiles(
+              (configFile) => {
+                const root = dirname(configFile);
+                if (root !== projectRoot) return {};
+                return {
+                  projects: {
+                    [root]: { targets },
+                  },
+                };
+              },
+              configFiles,
+              {} as any,
+              {} as any
+            ),
+        ],
+      };
+    }
+
+    /**
+     * Creates a default plugin (like project.json) that defines targets.
+     */
+    function makeDefaultPlugin(
+      targets: Record<string, TargetConfiguration>,
+      projectRoot = 'libs/my-lib',
+      name = 'default-plugin'
+    ): NxPluginV2 {
+      return {
+        name,
+        createNodesV2: [
+          'libs/*/project.json',
+          (configFiles) =>
+            createNodesFromFiles(
+              (configFile) => {
+                const root = dirname(configFile);
+                if (root !== projectRoot) return {};
+                return {
+                  projects: {
+                    [root]: {
+                      name: 'my-lib',
+                      targets,
+                    },
+                  },
+                };
+              },
+              configFiles,
+              {} as any,
+              {} as any
+            ),
+        ],
+      };
+    }
+
+    it('Case C: spread in project.json target includes target defaults (specified + defaults)', async () => {
+      // Scenario: Specified plugin infers build.inputs, target defaults define
+      // build.inputs, project.json uses spread to include defaults.
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          inputs: ['explicit', '...'],
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // project.json spread expands with (specified + target defaults)
+      // Since target defaults override specified: base is ['default']
+      // project.json merges ['explicit', '...'] on top → ['explicit', 'default']
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'explicit',
+        'default',
+      ]);
+    });
+
+    it('Case B: spread in project.json-only target includes target defaults', async () => {
+      // Scenario: No specified plugin defines the target, only project.json
+      // does. The spread should expand with target defaults.
+      const defaultPlugin = makeDefaultPlugin({
+        deploy: {
+          executor: 'nx:run-commands',
+          inputs: ['explicit', '...'],
+          options: { command: 'echo deploy' },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            deploy: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // project.json spread expands with target defaults (no specified values)
+      // Base is ['default'], project.json merges ['explicit', '...'] on top
+      expect(projects['libs/my-lib'].targets!.deploy.inputs).toEqual([
+        'explicit',
+        'default',
+      ]);
+    });
+
+    it('Case C without spread: project.json fully replaces (existing behavior)', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          inputs: ['explicit'],
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // No spread: project.json fully replaces
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'explicit',
+      ]);
+    });
+
+    it('Case A: target defaults override specified plugin (no project.json target)', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({});
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Target defaults override specified plugin values
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'default',
+      ]);
+    });
+
+    it('Case A: target defaults with spread include specified plugin values', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({});
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default', '...'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Target defaults spread includes specified plugin values
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'default',
+        'inferred',
+      ]);
+    });
+
+    it('Case B without spread: project.json fully replaces target defaults', async () => {
+      const defaultPlugin = makeDefaultPlugin({
+        deploy: {
+          executor: 'nx:run-commands',
+          inputs: ['explicit'],
+          options: { command: 'echo deploy' },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            deploy: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // No spread: project.json fully replaces target defaults
+      expect(projects['libs/my-lib'].targets!.deploy.inputs).toEqual([
+        'explicit',
+      ]);
+    });
+
+    it('full three-layer spread chain', async () => {
+      // All three layers have values and use spread
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo build',
+            assets: ['inferred'],
+          },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          options: {
+            assets: ['explicit', '...'],
+          },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              options: {
+                assets: ['default', '...'],
+              },
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Three-layer chain:
+      // 1. Specified: ['inferred']
+      // 2. Target defaults: ['default', '...'] → ['default', 'inferred']
+      // 3. project.json: ['explicit', '...'] → ['explicit', 'default', 'inferred']
+      expect(projects['libs/my-lib'].targets!.build.options.assets).toEqual([
+        'explicit',
+        'default',
+        'inferred',
+      ]);
+    });
+
+    it('spread in project.json options includes target default options', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo build',
+            env: { SPECIFIED: 'true' },
+          },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          options: {
+            env: { PROJECT: 'true', '...': true },
+          },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              options: {
+                env: { DEFAULT: 'true', '...': true },
+              },
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Object spread through all three layers:
+      // 1. Specified: { SPECIFIED: 'true' }
+      // 2. Target defaults: { DEFAULT: 'true', '...': true } → { DEFAULT: 'true', SPECIFIED: 'true' }
+      // 3. project.json: { PROJECT: 'true', '...': true } → { PROJECT: 'true', DEFAULT: 'true', SPECIFIED: 'true' }
+      expect(projects['libs/my-lib'].targets!.build.options.env).toEqual({
+        PROJECT: 'true',
+        DEFAULT: 'true',
+        SPECIFIED: 'true',
+      });
+    });
+  });
 });
 
 class RootMapBuilder {
@@ -3773,7 +4340,9 @@ function assertCorrectKeysInSourceMap(
       expect(sourceMap[key][0]).toEqual(value);
     } catch (error) {
       // Enhancing the error message with the problematic key
-      throw new Error(`Assertion failed for key '${key}': \n ${error.message}`);
+      throw new Error(
+        `Assertion failed for key '${key}': \n ${(error as Error).message}`
+      );
     }
   });
 }
