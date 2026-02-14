@@ -56,6 +56,7 @@ export function startStaticRemotesFileServer(
         FORCE_COLOR: 'true',
         ...process.env,
       },
+      windowsHide: true,
     }
   );
   process.on('SIGTERM', () => httpServerProcess.kill('SIGTERM'));

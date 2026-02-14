@@ -36,6 +36,7 @@ export function runCliUpgrade(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
+        windowsHide: true,
       }
     );
 

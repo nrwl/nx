@@ -25,7 +25,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       } upgrade ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
       {
         stdio: [0, 1, 2],
-        windowsHide: false,
+        windowsHide: true,
       }
     );
 
@@ -90,7 +90,7 @@ export function callAutomigrate(
           `${commandToRun}  ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
           {
             stdio: 'inherit',
-            windowsHide: false,
+            windowsHide: true,
             env: process.env,
           }
         );
