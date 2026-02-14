@@ -97,6 +97,7 @@ function startVerdaccio(
             : {}),
         },
         stdio: 'inherit',
+        windowsHide: true,
       }
     );
 
@@ -139,7 +140,7 @@ function createVerdaccioOptions(
 
 function setupNpm(options: VerdaccioExecutorSchema) {
   try {
-    execSync('npm --version', { env, windowsHide: false });
+    execSync('npm --version', { env, windowsHide: true });
   } catch (e) {
     return () => {};
   }
@@ -154,7 +155,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
         npmRegistryPaths.push(
           execSync(
             `npm config get ${registryName} --location ${options.location}`,
-            { env, windowsHide: false }
+            { env, windowsHide: true }
           )
             ?.toString()
             ?.trim()
@@ -162,12 +163,12 @@ function setupNpm(options: VerdaccioExecutorSchema) {
         );
         execSync(
           `npm config set ${registryName} http://${options.listenAddress}:${options.port}/ --location ${options.location}`,
-          { env, windowsHide: false }
+          { env, windowsHide: true }
         );
 
         execSync(
           `npm config set //${options.listenAddress}:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`,
-          { env, windowsHide: false }
+          { env, windowsHide: true }
         );
 
         logger.info(
@@ -184,7 +185,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
       try {
         const currentNpmRegistryPath = execSync(
           `npm config get registry --location ${options.location}`,
-          { env, windowsHide: false }
+          { env, windowsHide: true }
         )
           ?.toString()
           ?.trim()
@@ -197,7 +198,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
           ) {
             execSync(
               `npm config set ${registryName} ${npmRegistryPaths[index]} --location ${options.location}`,
-              { env, windowsHide: false }
+              { env, windowsHide: true }
             );
             logger.info(
               `Reset npm ${registryName} to ${npmRegistryPaths[index]}`
@@ -207,7 +208,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
               `npm config delete ${registryName} --location ${options.location}`,
               {
                 env,
-                windowsHide: false,
+                windowsHide: true,
               }
             );
             logger.info('Cleared custom npm registry');
@@ -215,7 +216,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
         });
         execSync(
           `npm config delete //${options.listenAddress}:${options.port}/:_authToken  --location ${options.location}`,
-          { env, windowsHide: false }
+          { env, windowsHide: true }
         );
       } catch (e) {
         throw new Error(`Failed to reset npm registry: ${e.message}`);
@@ -234,7 +235,7 @@ function getYarnUnsafeHttpWhitelist(isYarnV1: boolean) {
         JSON.parse(
           execSync(`yarn config get unsafeHttpWhitelist --json`, {
             env,
-            windowsHide: false,
+            windowsHide: true,
           }).toString()
         )
       )
@@ -250,13 +251,13 @@ function setYarnUnsafeHttpWhitelist(
       `yarn config set unsafeHttpWhitelist --json '${JSON.stringify(
         Array.from(currentWhitelist)
       )}'` + (options.location === 'user' ? ' --home' : ''),
-      { env, windowsHide: false }
+      { env, windowsHide: true }
     );
   } else {
     execSync(
       `yarn config unset unsafeHttpWhitelist` +
         (options.location === 'user' ? ' --home' : ''),
-      { env, windowsHide: false }
+      { env, windowsHide: true }
     );
   }
 }
@@ -269,9 +270,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
   try {
     isYarnV1 =
       major(
-        execSync('yarn --version', { env, windowsHide: false })
-          .toString()
-          .trim()
+        execSync('yarn --version', { env, windowsHide: true }).toString().trim()
       ) === 1;
   } catch {
     // This would fail if yarn is not installed which is okay
@@ -286,7 +285,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
       yarnRegistryPaths.push(
         execSync(`yarn config get ${scopeName}${registryConfigName}`, {
           env,
-          windowsHide: false,
+          windowsHide: true,
         })
           ?.toString()
           ?.trim()
@@ -296,7 +295,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
       execSync(
         `yarn config set ${scopeName}${registryConfigName} http://${options.listenAddress}:${options.port}/` +
           (options.location === 'user' ? ' --home' : ''),
-        { env, windowsHide: false }
+        { env, windowsHide: true }
       );
 
       logger.info(
@@ -323,7 +322,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
       try {
         const currentYarnRegistryPath = execSync(
           `yarn config get ${registryConfigName}`,
-          { env, windowsHide: false }
+          { env, windowsHide: true }
         )
           ?.toString()
           ?.trim()
@@ -344,7 +343,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
               {
                 env,
 
-                windowsHide: false,
+                windowsHide: true,
               }
             );
             logger.info(
@@ -354,7 +353,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
             execSync(
               `yarn config ${isYarnV1 ? 'delete' : 'unset'} ${registryName}` +
                 (options.location === 'user' ? ' --home' : ''),
-              { env, windowsHide: false }
+              { env, windowsHide: true }
             );
             logger.info(`Cleared custom yarn ${registryConfigName}`);
           }

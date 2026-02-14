@@ -76,7 +76,8 @@
             ]
           }
         ],
-        "@nx/workspace/valid-command-object": "error"
+        "@nx/workspace/valid-command-object": "error",
+        "@nx/workspace/require-windows-hide": "error"
       }
     },
     {

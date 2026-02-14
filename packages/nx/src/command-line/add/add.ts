@@ -61,7 +61,7 @@ async function installPackage(
       exec(
         command,
         {
-          windowsHide: false,
+          windowsHide: true,
         },
         (error, stdout, stderr) => {
           if (error) {

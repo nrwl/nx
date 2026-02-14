@@ -80,6 +80,7 @@ function serveAsync(
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+        windowsHide: true,
       }
     );
 

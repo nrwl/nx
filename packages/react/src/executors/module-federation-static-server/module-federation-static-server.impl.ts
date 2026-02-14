@@ -98,6 +98,7 @@ async function buildHost(
       {
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        windowsHide: true,
       }
     );
     staticProcess.stdout.on('data', (data) => {

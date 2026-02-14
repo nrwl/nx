@@ -88,7 +88,7 @@ async function checkDockerImageExistsLocally(imageRef: string) {
         : imageRef;
       const childProcess = exec(
         `docker images --filter "reference=${normalizedImageRef}" --quiet`,
-        { encoding: 'utf8' }
+        { encoding: 'utf8', windowsHide: true }
       );
       let result = '';
       childProcess.stdout?.on('data', (data) => {
@@ -118,6 +118,7 @@ async function dockerPush(imageReference: string, quiet: boolean) {
         {
           encoding: 'utf8',
           maxBuffer: LARGE_BUFFER,
+          windowsHide: true,
         }
       );
       let result = '';

@@ -66,6 +66,7 @@ function runCliRun(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
+        windowsHide: true,
       }
     );
 

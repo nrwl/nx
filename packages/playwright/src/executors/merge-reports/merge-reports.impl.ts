@@ -84,7 +84,7 @@ export async function mergeReportsExecutor(
       cwd: projectRoot,
       stdio: 'inherit',
       shell: true,
-      windowsHide: false,
+      windowsHide: true,
     }
   );
 

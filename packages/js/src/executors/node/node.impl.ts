@@ -190,6 +190,7 @@ export async function* nodeExecutor(
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
                   NX_MAPPINGS: JSON.stringify(mappings),
                 },
+                windowsHide: true,
               }
             );
 
@@ -306,6 +307,7 @@ export async function* nodeExecutor(
             {
               cwd: context.root,
               stdio: 'inherit',
+              windowsHide: true,
             }
           );
           childProcess.once('exit', (code) => {
