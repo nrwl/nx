@@ -30,7 +30,7 @@ interface AdapterInvoker : AutoCloseable {
 
     /**
      * Record build states for the specified projects.
-     * Called after batch execution to save state for future runs.
+     * Called after each task completes to save state before Nx caches outputs.
      *
      * @param projectSelectors Project selectors (e.g., "groupId:artifactId")
      */
