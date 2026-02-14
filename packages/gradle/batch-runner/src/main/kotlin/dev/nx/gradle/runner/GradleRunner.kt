@@ -1,14 +1,29 @@
 package dev.nx.gradle.runner
 
+import com.google.gson.Gson
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
-import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
-import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import org.gradle.tooling.BuildCancelledException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
+import org.gradle.tooling.events.ProgressEvent
+import org.gradle.tooling.events.task.TaskFailureResult
+import org.gradle.tooling.events.task.TaskFinishEvent
+import org.gradle.tooling.events.task.TaskStartEvent
+import org.gradle.tooling.events.task.TaskSuccessResult
+import org.gradle.tooling.events.test.*
+
+private val gson = Gson()
+
+/**
+ * Normalizes a Gradle task path by removing the leading colon. Gradle events use paths like
+ * `:project:task` but Nx uses `project:task`.
+ */
+private fun normalizeTaskPath(taskPath: String): String = taskPath.trimStart(':')
 
 fun runTasksInParallel(
     connection: ProjectConnection,
@@ -23,11 +38,6 @@ fun runTasksInParallel(
 
   logger.info("🧪 Test launcher tasks: ${testClassTasks.joinToString(", ") { it.key }}")
   logger.info("🛠️ Build launcher tasks: ${buildTasks.joinToString(", ") { it.key }}")
-
-  val outputStream1 = ByteArrayOutputStream()
-  val errorStream1 = ByteArrayOutputStream()
-  val outputStream2 = ByteArrayOutputStream()
-  val errorStream2 = ByteArrayOutputStream()
 
   // --info is for terminal per task
   // --continue is for continue running tasks if one failed in a batch
@@ -51,53 +61,71 @@ fun runTasksInParallel(
 
   logger.info("🏳️ Args: ${args.joinToString(", ")}")
 
-  val allResults = mutableMapOf<String, TaskResult>()
+  val allResults = ConcurrentHashMap<String, TaskResult>()
 
   if (buildTasks.isNotEmpty()) {
     val buildResults =
         runBuildLauncher(
-            connection,
-            buildTasks.associate { it.key to it.value },
-            args,
-            excludeTasks,
-            outputStream1,
-            errorStream1)
+            connection, buildTasks.associate { it.key to it.value }, args, excludeTasks)
     allResults.putAll(buildResults)
   }
 
   if (testClassTasks.isNotEmpty()) {
     val testResults =
         runTestLauncher(
-            connection,
-            testClassTasks.associate { it.key to it.value },
-            args,
-            excludeTestTasks,
-            outputStream2,
-            errorStream2)
+            connection, testClassTasks.associate { it.key to it.value }, args, excludeTestTasks)
     allResults.putAll(testResults)
   }
 
-  return allResults
+  return allResults.toMap()
 }
 
 fun runBuildLauncher(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
     args: List<String>,
-    excludeTasks: List<String>,
-    outputStream: ByteArrayOutputStream,
-    errorStream: ByteArrayOutputStream
+    excludeTasks: List<String>
 ): Map<String, TaskResult> {
   val taskNames = tasks.values.map { it.taskName }.distinct().toTypedArray()
   logger.info("📋 Collected ${taskNames.size} unique task names: ${taskNames.joinToString(", ")}")
 
-  val taskStartTimes = mutableMapOf<String, Long>()
-  val taskResults = mutableMapOf<String, TaskResult>()
+  val taskStartTimes = ConcurrentHashMap<String, Long>()
+  val taskResults = ConcurrentHashMap<String, TaskResult>()
+  val taskOutputBuffers = ConcurrentHashMap<String, StringBuilder>()
+
+  // Track current task for output attribution
+  val currentTaskRef = AtomicReference<String?>(null)
 
   val globalStart = System.currentTimeMillis()
-  var globalOutput: String
+  val errorStream = ByteArrayOutputStream()
 
   val excludeArgs = excludeTasks.map { "--exclude-task=$it" }
+
+  // Create a TeeOutputStream that:
+  // 1. Forwards to System.out (real-time terminal output)
+  // 2. Buffers per-task output for result emission
+  val teeOutputStream =
+      TeeOutputStream(System.out) { line ->
+        // Detect task headers and attribute output
+        val taskMatch = Regex("> Task (:[^\\s]+)").find(line)
+        if (taskMatch != null) {
+          val gradleTaskName = taskMatch.groupValues[1]
+          // Find the Nx task ID for this Gradle task
+          val nxTaskId =
+              tasks.entries
+                  .find {
+                    normalizeTaskPath(it.value.taskName) == normalizeTaskPath(gradleTaskName)
+                  }
+                  ?.key
+          currentTaskRef.set(nxTaskId)
+          nxTaskId?.let { taskOutputBuffers.getOrPut(it) { StringBuilder() } }
+        }
+
+        // Append line to current task's buffer
+        currentTaskRef.get()?.let { taskId ->
+          taskOutputBuffers.getOrPut(taskId) { StringBuilder() }.appendLine(line)
+        }
+      }
 
   try {
     connection
@@ -105,19 +133,21 @@ fun runBuildLauncher(
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          setStandardOutput(outputStream)
+          setStandardOutput(teeOutputStream)
           setStandardError(errorStream)
           withDetailedFailure()
-          addProgressListener(buildListener(tasks, taskStartTimes, taskResults), OperationType.TASK)
+          addProgressListener(
+              streamingBuildListener(tasks, taskStartTimes, taskResults, taskOutputBuffers),
+              OperationType.TASK)
         }
         .run()
-    globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: Exception) {
-    globalOutput =
-        buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
-    logger.warning("\ud83d\udca5 Gradle run failed: ${e.message} $errorStream")
+    logger.warning("\uD83D\uDCA5 Gradle run failed: ${e.message}")
+    // Emit failures for any tasks that didn't complete
+    emitFailuresForIncompleteTasks(
+        tasks, taskResults, taskStartTimes, taskOutputBuffers, e.message ?: "Unknown error")
   } finally {
-    outputStream.close()
+    teeOutputStream.close()
     errorStream.close()
   }
 
@@ -129,36 +159,31 @@ fun runBuildLauncher(
   logger.info(
       "⏱️ Build completion timing gap: ${globalEnd - maxEndTime}ms (time between last task finish and build end)")
 
-  finalizeTaskResults(
-      tasks = tasks,
-      taskResults = taskResults,
-      globalOutput = globalOutput,
-      errorStream = errorStream,
-      globalStart = globalStart,
-      globalEnd = globalEnd)
-
   logger.info("\u2705 Finished build tasks")
-  return taskResults
+  return taskResults.toMap()
 }
 
 fun runTestLauncher(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
     args: List<String>,
-    excludeTestTasks: List<String>,
-    outputStream: ByteArrayOutputStream,
-    errorStream: ByteArrayOutputStream
+    excludeTestTasks: List<String>
 ): Map<String, TaskResult> {
-  val testTaskStatus = mutableMapOf<String, Boolean>()
-  val testStartTimes = mutableMapOf<String, Long>()
-  val testEndTimes = mutableMapOf<String, Long>()
+  val testTaskStatus = ConcurrentHashMap<String, Boolean>()
+  val testStartTimes = ConcurrentHashMap<String, Long>()
+  val testEndTimes = ConcurrentHashMap<String, Long>()
+  val taskOutputBuffers = ConcurrentHashMap<String, StringBuilder>()
+  val taskResults = ConcurrentHashMap<String, TaskResult>()
+
+  // Track current task for output attribution
+  val currentTaskRef = AtomicReference<String?>(null)
 
   // Group the list of GradleTask by their taskName
   val groupedTasks: Map<String, List<GradleTask>> = tasks.values.groupBy { it.taskName }
   logger.info("📋 Collected ${groupedTasks.keys.size} unique task names: $groupedTasks")
 
   val globalStart = System.currentTimeMillis()
-  var globalOutput: String
+  val errorStream = ByteArrayOutputStream()
   val eventTypes: MutableSet<OperationType> = HashSet()
   eventTypes.add(OperationType.TASK)
   eventTypes.add(OperationType.TEST)
@@ -166,33 +191,74 @@ fun runTestLauncher(
   val excludeArgs = excludeTestTasks.flatMap { listOf("--exclude-task", it) }
   logger.info("excludeTestTasks $excludeArgs")
 
+  // Create a TeeOutputStream for real-time output
+  val teeOutputStream =
+      TeeOutputStream(System.out) { line ->
+        // Detect task headers and attribute output
+        val taskMatch = Regex("> Task (:[^\\s]+)").find(line)
+        if (taskMatch != null) {
+          val gradleTaskName = taskMatch.groupValues[1]
+          // For test tasks, we may have multiple Nx tasks per Gradle task
+          // Find all matching Nx task IDs
+          val matchingTasks =
+              tasks.entries.filter {
+                normalizeTaskPath(it.value.taskName) == normalizeTaskPath(gradleTaskName)
+              }
+          if (matchingTasks.isNotEmpty()) {
+            // Use the first matching task as current (output will be duplicated to all matching
+            // tasks)
+            currentTaskRef.set(matchingTasks.first().key)
+            matchingTasks.forEach { (taskId, _) ->
+              taskOutputBuffers.getOrPut(taskId) { StringBuilder() }
+            }
+          }
+        }
+
+        // Append line to all matching test task buffers
+        currentTaskRef.get()?.let { primaryTaskId ->
+          val gradleTaskName = tasks[primaryTaskId]?.taskName
+          if (gradleTaskName != null) {
+            tasks.entries
+                .filter {
+                  normalizeTaskPath(it.value.taskName) == normalizeTaskPath(gradleTaskName)
+                }
+                .forEach { (taskId, _) ->
+                  taskOutputBuffers.getOrPut(taskId) { StringBuilder() }.appendLine(line)
+                }
+          }
+        }
+      }
+
   try {
     connection
         .newTestLauncher()
         .apply {
           groupedTasks.forEach { withTaskAndTestClasses(it.key, it.value.map { it.testClassName }) }
-          addArguments("-Djunit.jupiter.execution.parallel.enabled=true") // Add JUnit 5 parallelism
-          // arguments here
-          addArguments(
-              *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(outputStream)
+          addArguments("-Djunit.jupiter.execution.parallel.enabled=true")
+          addArguments(*(args + excludeArgs).toTypedArray())
+          setStandardOutput(teeOutputStream)
           setStandardError(errorStream)
           addProgressListener(
-              testListener(tasks, testTaskStatus, testStartTimes, testEndTimes), eventTypes)
+              streamingTestListener(
+                  tasks,
+                  testTaskStatus,
+                  testStartTimes,
+                  testEndTimes,
+                  taskOutputBuffers,
+                  taskResults),
+              eventTypes)
           withDetailedFailure()
         }
         .run()
-    globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: BuildCancelledException) {
-    globalOutput = buildTerminalOutput(outputStream, errorStream)
     logger.info("✅ Build cancelled gracefully by token.")
   } catch (e: Exception) {
-    logger.warning(errorStream.toString())
-    globalOutput =
-        buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
-    logger.warning("\ud83d\udca5 Gradle test run failed: ${e.message} $errorStream")
+    logger.warning("\uD83D\uDCA5 Gradle test run failed: ${e.message}")
+    // Emit failures for any tasks that didn't complete
+    emitFailuresForIncompleteTestTasks(
+        tasks, taskResults, testStartTimes, taskOutputBuffers, e.message ?: "Unknown error")
   } finally {
-    outputStream.close()
+    teeOutputStream.close()
     errorStream.close()
   }
 
@@ -204,25 +270,222 @@ fun runTestLauncher(
   logger.info(
       "⏱️ Test completion timing gap: ${globalEnd - maxEndTime}ms (time between last test finish and test launcher end)")
 
-  val taskResults = mutableMapOf<String, TaskResult>()
-  tasks.forEach { (nxTaskId, taskConfig) ->
-    if (taskConfig.testClassName != null) {
-      val success = testTaskStatus[nxTaskId] ?: false
-      val startTime = testStartTimes[nxTaskId] ?: globalStart
-      val endTime = testEndTimes[nxTaskId] ?: globalEnd
+  logger.info("\u2705 Finished test tasks")
+  return taskResults.toMap()
+}
 
-      taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
+/** Progress listener that emits NX_RESULT to stderr when build tasks complete. */
+private fun streamingBuildListener(
+    tasks: Map<String, GradleTask>,
+    taskStartTimes: ConcurrentHashMap<String, Long>,
+    taskResults: ConcurrentHashMap<String, TaskResult>,
+    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>
+): (ProgressEvent) -> Unit = { event ->
+  when (event) {
+    is TaskStartEvent -> {
+      val taskPath = event.descriptor.taskPath
+      tasks.entries
+          .find { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
+          ?.key
+          ?.let { nxTaskId ->
+            taskStartTimes[nxTaskId] = event.eventTime
+            logger.info("🏁 Task start: $nxTaskId $taskPath")
+          }
+    }
+
+    is TaskFinishEvent -> {
+      val taskPath = event.descriptor.taskPath
+      val success =
+          when (event.result) {
+            is TaskSuccessResult -> {
+              logger.info("✅ Task finished successfully: $taskPath")
+              true
+            }
+            is TaskFailureResult -> {
+              logger.warning("❌ Task failed: $taskPath")
+              false
+            }
+            else -> true
+          }
+
+      tasks.entries
+          .find { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
+          ?.key
+          ?.let { nxTaskId ->
+            val endTime = event.result.endTime
+            val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
+            val output = taskOutputBuffers[nxTaskId]?.toString() ?: ""
+
+            val result = TaskResult(success, startTime, endTime, output)
+            taskResults[nxTaskId] = result
+
+            // Emit result to stderr immediately
+            emitResult(nxTaskId, result)
+          }
     }
   }
+}
 
-  finalizeTaskResults(
-      tasks = tasks,
-      taskResults = taskResults,
-      globalOutput = globalOutput,
-      errorStream = errorStream,
-      globalStart = globalStart,
-      globalEnd = globalEnd)
+/** Progress listener that emits NX_RESULT to stderr when test tasks complete. */
+private fun streamingTestListener(
+    tasks: Map<String, GradleTask>,
+    testTaskStatus: ConcurrentHashMap<String, Boolean>,
+    testStartTimes: ConcurrentHashMap<String, Long>,
+    testEndTimes: ConcurrentHashMap<String, Long>,
+    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
+    taskResults: ConcurrentHashMap<String, TaskResult>
+): (ProgressEvent) -> Unit = { event ->
+  when (event) {
+    is TaskFinishEvent -> {
+      val taskPath = event.descriptor.taskPath
+      val success =
+          when (event.result) {
+            is TaskSuccessResult -> {
+              logger.info("✅ Task finished successfully: $taskPath")
+              true
+            }
+            is TaskFailureResult -> {
+              logger.warning("❌ Task failed: $taskPath")
+              false
+            }
+            else -> true
+          }
 
-  logger.info("\u2705 Finished test tasks")
-  return taskResults
+      tasks.entries
+          .filter { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
+          .forEach { (nxTaskId, _) ->
+            testTaskStatus.computeIfAbsent(nxTaskId) { success }
+            testEndTimes.computeIfAbsent(nxTaskId) { event.result.endTime }
+          }
+    }
+
+    is TestStartEvent -> {
+      val descriptor = event.descriptor as? JvmTestOperationDescriptor
+      descriptor?.className?.let { className ->
+        tasks.entries
+            .find { (_, v) -> v.testClassName == className }
+            ?.key
+            ?.let { nxTaskId ->
+              testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
+              logger.info("🏁 Test start: $nxTaskId $className")
+            }
+      }
+    }
+
+    is TestFinishEvent -> {
+      val descriptor = event.descriptor as? JvmTestOperationDescriptor
+      val nxTaskId =
+          descriptor?.className?.let { className ->
+            tasks.entries.find { (_, v) -> v.testClassName == className }?.key
+          }
+
+      nxTaskId?.let { taskId ->
+        testEndTimes[taskId] = event.result.endTime
+        val name = descriptor?.className ?: "unknown"
+
+        val success =
+            when (event.result) {
+              is TestSuccessResult -> {
+                testTaskStatus[taskId] = true
+                logger.info("✅ Test passed: $taskId $name")
+                true
+              }
+              is TestFailureResult -> {
+                testTaskStatus[taskId] = false
+                logger.warning("❌ Test failed: $taskId $name")
+                false
+              }
+              is TestSkippedResult -> {
+                testTaskStatus[taskId] = true
+                logger.warning("⚠️ Test skipped: $taskId $name")
+                true
+              }
+              else -> {
+                testTaskStatus[taskId] = true
+                logger.warning("⚠️ Unknown test result: $taskId $name")
+                true
+              }
+            }
+
+        val startTime = testStartTimes[taskId] ?: event.result.startTime
+        val endTime = event.result.endTime
+        val output = taskOutputBuffers[taskId]?.toString() ?: ""
+
+        val result = TaskResult(success, startTime, endTime, output)
+        taskResults[taskId] = result
+
+        // Emit result to stderr immediately
+        emitResult(taskId, result)
+      }
+    }
+  }
+}
+
+/**
+ * Emit a task result to stderr as JSON for streaming to Nx. Format:
+ * NX_RESULT:{"task":"taskId","result":{...}}
+ */
+private fun emitResult(taskId: String, result: TaskResult) {
+  val resultData =
+      mapOf(
+          "task" to taskId,
+          "result" to
+              mapOf(
+                  "success" to result.success,
+                  "terminalOutput" to result.terminalOutput,
+                  "startTime" to result.startTime,
+                  "endTime" to result.endTime))
+  val json = gson.toJson(resultData)
+  System.err.println("NX_RESULT:$json")
+  System.err.flush()
+}
+
+/** Emit failures for any build tasks that didn't complete when an exception occurs. */
+private fun emitFailuresForIncompleteTasks(
+    tasks: Map<String, GradleTask>,
+    taskResults: ConcurrentHashMap<String, TaskResult>,
+    taskStartTimes: ConcurrentHashMap<String, Long>,
+    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
+    errorMessage: String
+) {
+  val currentTime = System.currentTimeMillis()
+  tasks.forEach { (taskId, _) ->
+    if (!taskResults.containsKey(taskId)) {
+      val startTime = taskStartTimes[taskId] ?: currentTime
+      val output = taskOutputBuffers[taskId]?.toString() ?: ""
+      val result =
+          TaskResult(
+              success = false,
+              startTime = startTime,
+              endTime = currentTime,
+              terminalOutput = "$output\nException occurred: $errorMessage")
+      taskResults[taskId] = result
+      emitResult(taskId, result)
+    }
+  }
+}
+
+/** Emit failures for any test tasks that didn't complete when an exception occurs. */
+private fun emitFailuresForIncompleteTestTasks(
+    tasks: Map<String, GradleTask>,
+    taskResults: ConcurrentHashMap<String, TaskResult>,
+    testStartTimes: ConcurrentHashMap<String, Long>,
+    taskOutputBuffers: ConcurrentHashMap<String, StringBuilder>,
+    errorMessage: String
+) {
+  val currentTime = System.currentTimeMillis()
+  tasks.forEach { (taskId, _) ->
+    if (!taskResults.containsKey(taskId)) {
+      val startTime = testStartTimes[taskId] ?: currentTime
+      val output = taskOutputBuffers[taskId]?.toString() ?: ""
+      val result =
+          TaskResult(
+              success = false,
+              startTime = startTime,
+              endTime = currentTime,
+              terminalOutput = "$output\nException occurred: $errorMessage")
+      taskResults[taskId] = result
+      emitResult(taskId, result)
+    }
+  }
 }
