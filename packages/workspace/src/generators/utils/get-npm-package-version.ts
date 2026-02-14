@@ -24,7 +24,7 @@ export function getNpmPackageVersion(
       ['view', packageSpec, 'version', '--json'],
       {
         stdio: ['pipe', 'pipe', 'ignore'],
-        windowsHide: false,
+        windowsHide: true,
       }
     );
 

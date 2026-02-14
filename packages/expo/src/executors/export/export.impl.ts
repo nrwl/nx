@@ -44,7 +44,11 @@ function exportAsync(
     childProcess = fork(
       require.resolve('@expo/cli/build/bin/cli'),
       [`export`, ...createExportOptions(options, projectRoot)],
-      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
+        windowsHide: true,
+      }
     );
 
     // Ensure the child process is killed when the parent exits

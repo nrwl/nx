@@ -72,7 +72,7 @@ function installDependencies(options: NormalizedOptions) {
 
   execSync(`${options.pmc.addDev} ${dependencies.join(' ')}`, {
     stdio: [0, 1, 2],
-    windowsHide: false,
+    windowsHide: true,
   });
 }
 

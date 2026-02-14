@@ -401,7 +401,7 @@ class RunningNodeProcess implements RunningTask {
       maxBuffer: LARGE_BUFFER,
       env,
       cwd,
-      windowsHide: false,
+      windowsHide: true,
     });
 
     // Register process for metrics collection

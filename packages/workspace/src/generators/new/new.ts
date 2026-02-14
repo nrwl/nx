@@ -81,7 +81,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-          windowsHide: false,
+          windowsHide: true,
         });
       }
       installPackagesTask(

@@ -1521,6 +1521,6 @@ function getHelpTextFromTarget(
 
   return execSync(command, {
     cwd: target.options?.cwd ?? workspaceRoot,
-    windowsHide: false,
+    windowsHide: true,
   }).toString();
 }

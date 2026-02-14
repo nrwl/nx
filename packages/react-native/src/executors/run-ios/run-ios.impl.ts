@@ -56,6 +56,7 @@ function runCliRunIOS(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
+        windowsHide: true,
       }
     );
 

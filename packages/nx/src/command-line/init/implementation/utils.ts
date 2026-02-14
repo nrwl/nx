@@ -233,7 +233,7 @@ export function runInstall(
   execSync(pmc.install, {
     stdio: [0, 1, 2],
     cwd: repoRoot,
-    windowsHide: false,
+    windowsHide: true,
   });
 }
 

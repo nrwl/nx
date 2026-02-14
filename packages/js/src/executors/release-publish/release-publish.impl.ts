@@ -148,7 +148,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         env: processEnv(true),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: false,
+        windowsHide: true,
       });
 
       const resultJson = JSON.parse(result.toString());
@@ -174,7 +174,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
               env: processEnv(true),
               cwd: context.root,
               stdio: 'ignore',
-              windowsHide: false,
+              windowsHide: true,
             });
             console.log(
               `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
@@ -295,7 +295,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: false,
+      windowsHide: true,
     });
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';

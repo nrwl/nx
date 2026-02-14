@@ -35,7 +35,7 @@ export function startLocalRegistry({
         }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
       ],
-      { stdio: 'pipe' }
+      { stdio: 'pipe', windowsHide: true }
     );
 
     const listener = (data) => {
@@ -58,7 +58,7 @@ export function startLocalRegistry({
         execSync(
           `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
           {
-            windowsHide: false,
+            windowsHide: true,
           }
         );
 
@@ -78,7 +78,7 @@ export function startLocalRegistry({
           execSync(
             `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
             {
-              windowsHide: false,
+              windowsHide: true,
             }
           );
         });

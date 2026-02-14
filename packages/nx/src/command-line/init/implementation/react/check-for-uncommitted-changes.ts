@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 
 export function checkForUncommittedChanges() {
   const gitResult = execSync('git status --porcelain', {
-    windowsHide: false,
+    windowsHide: true,
   }).toString();
 
   const filteredResults = gitResult
