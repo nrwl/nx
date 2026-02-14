@@ -406,6 +406,75 @@ console.log('Build complete');
     );
   }, 120000);
 
+  it('should support dependency filesets with ^{projectRoot} syntax', async () => {
+    const parent = uniq('parent');
+    const child = uniq('child');
+    runCLI(`generate @nx/js:lib libs/${parent}`);
+    runCLI(`generate @nx/js:lib libs/${child}`);
+
+    // Use the new ^{projectRoot} syntax directly in inputs (without named inputs)
+    // This tests the shorthand: ^{projectRoot}/src/**/*.ts means "include src .ts files from dependencies"
+    updateJson(`nx.json`, (c) => {
+      c.targetDefaults = {
+        build: {
+          cache: true,
+          inputs: [
+            '{projectRoot}/src/**/*.ts', // self src .ts files
+            '^{projectRoot}/src/**/*.ts', // dependency src .ts files
+          ],
+        },
+      };
+      return c;
+    });
+
+    updateJson(`libs/${parent}/project.json`, (c) => {
+      c.implicitDependencies = [child];
+      c.targets = {
+        build: {
+          command: 'echo "building parent"',
+        },
+      };
+      return c;
+    });
+
+    updateJson(`libs/${child}/project.json`, (c) => {
+      c.targets = {
+        build: {
+          command: 'echo "building child"',
+        },
+      };
+      return c;
+    });
+
+    // First run - should not be cached
+    const firstRun = runCLI(`build ${parent}`);
+    expect(firstRun).not.toContain('read the output from the cache');
+
+    // Second run - should be cached
+    const secondRun = runCLI(`build ${parent}`);
+    expect(secondRun).toContain('read the output from the cache');
+
+    // Change child's src .ts file - should invalidate parent's cache
+    // because of ^{projectRoot}/src/**/*.ts dependency fileset
+    updateFile(`libs/${child}/src/lib/${child}.ts`, (c) => {
+      return c + '\n// some change to child';
+    });
+
+    const afterChildChange = runCLI(`build ${parent}`);
+    expect(afterChildChange).not.toContain('read the output from the cache');
+
+    // Verify cache works again after the change
+    const afterChildChangeSecond = runCLI(`build ${parent}`);
+    expect(afterChildChangeSecond).toContain('read the output from the cache');
+
+    // Change child's foo.json - should NOT invalidate parent's cache
+    // because ^{projectRoot}/src/**/*.ts only includes src .ts files from dependencies
+    updateFile(`libs/${child}/foo.json`, JSON.stringify({ some: 'change' }));
+
+    const afterChildConfigChange = runCLI(`build ${parent}`);
+    expect(afterChildConfigChange).toContain('read the output from the cache');
+  }, 120000);
+
   it('should support ENV as an input', () => {
     const lib = uniq('lib');
     runCLI(`generate @nx/js:lib libs/${lib}`);

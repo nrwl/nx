@@ -261,6 +261,7 @@ export interface FileMap {
 
 export interface FileSetInput {
   fileset: string
+  dependencies?: boolean
 }
 
 export declare export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
