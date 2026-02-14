@@ -29,7 +29,7 @@ jest.debug.config.js
 # Banner JSON files are generated during static builds
 /nx-dev/nx-dev/lib/banner.json
 /astro-docs/src/content/banner.json
-**/tests/temp-db
+**/tests/temp-db*
 
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
@@ -71,7 +71,7 @@ dependency-reduced-pom.xml
 *.wasm
 /wasi-sdk*
 
-vite.config.*.timestamp*
+*.config.timestamp*
 
 storybook-static
 

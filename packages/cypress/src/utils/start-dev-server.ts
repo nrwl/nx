@@ -16,7 +16,10 @@ import {
   getExecutorInformation,
   parseExecutor,
 } from 'nx/src/command-line/run/executor-utils';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync, writeFileSync, mkdirSync } from 'fs';
+import { tmpdir } from 'os';
+
+const PORT_LOCK_DIR = join(tmpdir(), 'nx-cypress-port-locks');
 
 export async function* startDevServer(
   opts: Omit<CypressExecutorOptions, 'cypressConfig'>,
@@ -82,7 +85,7 @@ If the port is in use, try using a different port value or passing --port='cypre
     yield {
       baseUrl: opts.baseUrl || output.baseUrl || output.info?.baseUrl,
       portLockFilePath:
-        overrides.port && join(__dirname, `${overrides.port}.txt`),
+        overrides.port && join(PORT_LOCK_DIR, `${overrides.port}.lock`),
     };
   }
 }
@@ -209,7 +212,12 @@ ${e.message || e}`);
 }
 
 function attemptToLockPort(port: number): boolean {
-  const portLockFilePath = join(__dirname, `${port}.txt`);
+  try {
+    mkdirSync(PORT_LOCK_DIR, { recursive: true });
+  } catch {
+    // ignore if already exists
+  }
+  const portLockFilePath = join(PORT_LOCK_DIR, `${port}.lock`);
   try {
     if (existsSync(portLockFilePath)) {
       return false;
