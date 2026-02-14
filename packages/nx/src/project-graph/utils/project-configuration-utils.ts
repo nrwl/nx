@@ -6,16 +6,22 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../config/workspace-json-project-json';
-import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
+import { NX_PREFIX } from '../../utils/logger';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import { minimatch } from 'minimatch';
+import { existsSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { existsSync } from 'node:fs';
 
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isGlobPattern } from '../../utils/globs';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -33,14 +39,8 @@ import {
   ProjectWithNoNameError,
   WorkspaceValidityError,
 } from '../error-types';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
-import {
-  getExecutorInformation,
-  parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -338,16 +338,30 @@ export type ConfigurationResult = {
 /**
  * Transforms a list of project paths into a map of project configurations.
  *
+ * Uses a two-phase approach to ensure spread tokens in default plugin
+ * configurations (project.json, package.json) can reference target defaults:
+ *
+ * Phase 1: Process specified plugins (from nx.json) and default plugins
+ *          separately, merging results within each set.
+ * Phase 2: Apply target defaults between the two sets, then merge default
+ *          plugin results on top so that '...' expands with target defaults.
+ *
  * @param root The workspace root
  * @param nxJson The NxJson configuration
- * @param workspaceFiles A list of non-ignored workspace files
- * @param plugins The plugins that should be used to infer project configuration
+ * @param projectFiles Plugin config files, separated by plugin set
+ * @param plugins The plugins separated into specified and default sets
  */
 export async function createProjectConfigurationsWithPlugins(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
-  projectFiles: string[][], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[]
+  projectFiles: {
+    specifiedPluginFiles: string[][];
+    defaultPluginFiles: string[][];
+  },
+  plugins: {
+    specifiedPlugins: LoadedNxPlugin[];
+    defaultPlugins: LoadedNxPlugin[];
+  }
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
 
@@ -379,11 +393,24 @@ export async function createProjectConfigurationsWithPlugins(
     }
   }
 
-  const createNodesPlugins = plugins.filter(
+  const specifiedCreateNodesPlugins = plugins.specifiedPlugins.filter(
     (plugin) => plugin.createNodes?.[0]
   );
+  const defaultCreateNodesPlugins = plugins.defaultPlugins.filter(
+    (plugin) => plugin.createNodes?.[0]
+  );
+  const allCreateNodesPlugins = [
+    ...specifiedCreateNodesPlugins,
+    ...defaultCreateNodesPlugins,
+  ];
+  const allProjectFiles = [
+    ...projectFiles.specifiedPluginFiles,
+    ...projectFiles.defaultPluginFiles,
+  ];
+  const specifiedCount = specifiedCreateNodesPlugins.length;
+
   spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
+    `Creating project graph nodes with ${allCreateNodesPlugins.length} plugins`
   );
 
   const results: Promise<
@@ -412,11 +439,11 @@ export async function createProjectConfigurationsWithPlugins(
       exclude,
       name: pluginName,
     },
-  ] of createNodesPlugins.entries()) {
+  ] of allCreateNodesPlugins.entries()) {
     const [pattern, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
-      projectFiles[index],
+      allProjectFiles[index],
       pattern,
       include,
       exclude
@@ -455,8 +482,18 @@ export async function createProjectConfigurationsWithPlugins(
   return Promise.all(results).then((results) => {
     spinner?.cleanup();
 
+    // Split results into specified and default plugin sets
+    const specifiedResults = results.slice(0, specifiedCount);
+    const defaultResults = results.slice(specifiedCount);
+
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =
-      mergeCreateNodesResults(results, nxJson, root, errors);
+      mergeCreateNodesResultsTwoPhase(
+        specifiedResults,
+        defaultResults,
+        nxJson,
+        root,
+        errors
+      );
 
     performance.mark('build-project-configs:end');
     performance.measure(
@@ -465,13 +502,18 @@ export async function createProjectConfigurationsWithPlugins(
       'build-project-configs:end'
     );
 
+    const allProjectFilesFlat = [
+      ...projectFiles.specifiedPluginFiles.flat(),
+      ...projectFiles.defaultPluginFiles.flat(),
+    ];
+
     if (errors.length === 0) {
       return {
         projects: projectRootMap,
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles.flat(),
+        matchingProjectFiles: allProjectFilesFlat,
       };
     } else {
       throw new ProjectConfigurationsError(errors, {
@@ -479,37 +521,38 @@ export async function createProjectConfigurationsWithPlugins(
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles.flat(),
+        matchingProjectFiles: allProjectFilesFlat,
       });
     }
   });
 }
 
-function mergeCreateNodesResults(
-  results: (readonly [
-    plugin: string,
-    file: string,
-    result: CreateNodesResult,
-    pluginIndex?: number,
-  ])[][],
-  nxJsonConfiguration: NxJsonConfiguration,
-  workspaceRoot: string,
-  errors: (
-    | AggregateCreateNodesError
-    | MergeNodesError
-    | ProjectsWithNoNameError
-    | MultipleProjectsWithSameNameError
-    | WorkspaceValidityError
-  )[]
-) {
-  performance.mark('createNodes:merge - start');
-  const projectRootMap: Record<string, ProjectConfiguration> = {};
-  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-  const configurationSourceMaps: Record<
-    string,
-    Record<string, SourceInformation>
-  > = {};
+type CreateNodesResultEntry = readonly [
+  plugin: string,
+  file: string,
+  result: CreateNodesResult,
+  pluginIndex?: number,
+];
 
+type MergeError =
+  | AggregateCreateNodesError
+  | MergeNodesError
+  | ProjectsWithNoNameError
+  | MultipleProjectsWithSameNameError
+  | WorkspaceValidityError;
+
+/**
+ * Merges plugin results into a project root map, collecting external nodes
+ * and updating source maps. Does NOT validate or normalize — that is done
+ * after the two-phase merge so target defaults can be applied in between.
+ */
+function mergePluginResultsIntoRootMap(
+  results: CreateNodesResultEntry[][],
+  projectRootMap: Record<string, ProjectConfiguration>,
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  configurationSourceMaps: ConfigurationSourceMaps,
+  errors: MergeError[]
+) {
   for (const result of results.flat()) {
     const [pluginName, file, nodes, pluginIndex] = result;
 
@@ -547,7 +590,59 @@ function mergeCreateNodesResults(
     }
     Object.assign(externalNodes, pluginExternalNodes);
   }
+}
 
+/**
+ * Two-phase merge for project configurations.
+ *
+ * Phase 1: Merge specified plugin results into a root map.
+ * Phase 1.5: Apply target defaults to the root map. For targets that will
+ *            be introduced by default plugins, add target defaults as a base.
+ * Phase 2: Merge default plugin results on top. Spread tokens in default
+ *          plugin targets now expand against (specified + target defaults).
+ * Phase 3: Validate and normalize (without re-applying target defaults).
+ */
+function mergeCreateNodesResultsTwoPhase(
+  specifiedResults: CreateNodesResultEntry[][],
+  defaultResults: CreateNodesResultEntry[][],
+  nxJsonConfiguration: NxJsonConfiguration,
+  workspaceRoot: string,
+  errors: MergeError[]
+) {
+  performance.mark('createNodes:merge - start');
+
+  const projectRootMap: Record<string, ProjectConfiguration> = {};
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const configurationSourceMaps: ConfigurationSourceMaps = {};
+
+  // Phase 1: Merge specified plugin results
+  mergePluginResultsIntoRootMap(
+    specifiedResults,
+    projectRootMap,
+    externalNodes,
+    configurationSourceMaps,
+    errors
+  );
+
+  // Phase 1.5: Apply target defaults between phases
+  applyTargetDefaultsBetweenPhases(
+    projectRootMap,
+    configurationSourceMaps,
+    defaultResults,
+    nxJsonConfiguration,
+    workspaceRoot
+  );
+
+  // Phase 2: Merge default plugin results on top
+  mergePluginResultsIntoRootMap(
+    defaultResults,
+    projectRootMap,
+    externalNodes,
+    configurationSourceMaps,
+    errors
+  );
+
+  // Phase 3: Validate and normalize (target defaults already applied)
   try {
     validateAndNormalizeProjectRootMap(
       workspaceRoot,
@@ -556,7 +651,6 @@ function mergeCreateNodesResults(
       configurationSourceMaps
     );
   } catch (error) {
-    const unknownErrors: Error[] = [];
     let _errors = error instanceof AggregateError ? error.errors : [error];
     for (const e of _errors) {
       if (
@@ -579,7 +673,187 @@ function mergeCreateNodesResults(
     'createNodes:merge - start',
     'createNodes:merge - end'
   );
+
   return { projectRootMap, externalNodes, rootMap, configurationSourceMaps };
+}
+
+/**
+ * Applies target defaults from nx.json between the specified and default
+ * plugin phases. This ensures that when default plugins (project.json,
+ * package.json) are merged in Phase 2, their spread tokens ('...') can
+ * expand against (specified plugin values + target defaults).
+ *
+ * For targets already in the root map (from specified plugins):
+ *   Target defaults are merged on top (target defaults override specified).
+ *
+ * For targets that will be introduced by default plugins:
+ *   Target defaults are added as a base so that the subsequent merge
+ *   in Phase 2 can expand spread tokens against them.
+ */
+function applyTargetDefaultsBetweenPhases(
+  projectRootMap: Record<string, ProjectConfiguration>,
+  configurationSourceMaps: ConfigurationSourceMaps,
+  defaultResults: CreateNodesResultEntry[][],
+  nxJsonConfiguration: NxJsonConfiguration,
+  wsRoot: string
+) {
+  if (!nxJsonConfiguration.targetDefaults) {
+    return;
+  }
+
+  const targetDefaultsSourceInfo: SourceInformation = [
+    'nx.json',
+    'nx/target-defaults',
+  ];
+
+  // Apply target defaults to existing targets from specified plugins
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    if (!project.targets) continue;
+
+    const sourceMap = configurationSourceMaps[root];
+
+    for (const targetName in project.targets) {
+      const targetConfig = project.targets[targetName];
+      const rawTargetDefaults = readTargetDefaultsForTarget(
+        targetName,
+        nxJsonConfiguration.targetDefaults,
+        targetConfig.executor
+      );
+
+      if (
+        rawTargetDefaults &&
+        isCompatibleTarget(targetConfig, rawTargetDefaults)
+      ) {
+        const targetDefaults = deepClone(rawTargetDefaults);
+        const errorMsgKey = ['nx.json[targetDefaults]', targetName].join(':');
+        const normalizedDefaults = resolveCommandSyntacticSugar(
+          targetDefaults,
+          project.root
+        );
+        normalizedDefaults.options = resolveNxTokensInOptions(
+          normalizedDefaults.options,
+          project,
+          errorMsgKey
+        );
+        for (const configuration in normalizedDefaults.configurations) {
+          normalizedDefaults.configurations[configuration] =
+            resolveNxTokensInOptions(
+              normalizedDefaults.configurations[configuration],
+              project,
+              `${errorMsgKey}:${configuration}`
+            );
+        }
+
+        // Target defaults override specified plugin values
+        project.targets[targetName] = mergeTargetConfigurations(
+          normalizedDefaults,
+          targetConfig,
+          sourceMap,
+          targetDefaultsSourceInfo,
+          `targets.${targetName}`
+        );
+      }
+    }
+  }
+
+  // Scan default plugin results to find targets that will be added
+  // For those targets, add target defaults as a base in the root map
+  for (const result of defaultResults.flat()) {
+    const [, , nodes] = result;
+    const { projects: projectNodes } = nodes;
+
+    for (const nodeRoot in projectNodes) {
+      if (!projectNodes[nodeRoot]?.targets) continue;
+
+      for (const targetName in projectNodes[nodeRoot].targets) {
+        // Only add target defaults as base for targets NOT already in root map
+        if (projectRootMap[nodeRoot]?.targets?.[targetName]) {
+          continue;
+        }
+
+        const defaultTarget = projectNodes[nodeRoot].targets[targetName];
+        const resolvedDefaultTarget = resolveCommandSyntacticSugar(
+          defaultTarget,
+          nodeRoot
+        );
+
+        const rawTargetDefaults = readTargetDefaultsForTarget(
+          targetName,
+          nxJsonConfiguration.targetDefaults,
+          resolvedDefaultTarget.executor
+        );
+
+        if (!rawTargetDefaults) continue;
+
+        const targetDefaults = deepClone(rawTargetDefaults);
+        const errorMsgKey = ['nx.json[targetDefaults]', targetName].join(':');
+        const normalizedDefaults = resolveCommandSyntacticSugar(
+          targetDefaults,
+          nodeRoot
+        );
+
+        if (!isCompatibleTarget(resolvedDefaultTarget, normalizedDefaults)) {
+          continue;
+        }
+
+        // Ensure the project and targets exist in the root map
+        if (!projectRootMap[nodeRoot]) {
+          projectRootMap[nodeRoot] = { root: nodeRoot };
+          configurationSourceMaps[nodeRoot] = {};
+        }
+        if (!projectRootMap[nodeRoot].targets) {
+          projectRootMap[nodeRoot].targets = {};
+        }
+
+        // Resolve Nx tokens in target default options
+        const projectForTokens = projectRootMap[nodeRoot];
+        normalizedDefaults.options = resolveNxTokensInOptions(
+          normalizedDefaults.options,
+          projectForTokens,
+          errorMsgKey
+        );
+        for (const configuration in normalizedDefaults.configurations) {
+          normalizedDefaults.configurations[configuration] =
+            resolveNxTokensInOptions(
+              normalizedDefaults.configurations[configuration],
+              projectForTokens,
+              `${errorMsgKey}:${configuration}`
+            );
+        }
+
+        const sourceMap = configurationSourceMaps[nodeRoot];
+
+        // Add target defaults as the base for this target
+        projectRootMap[nodeRoot].targets[targetName] = normalizedDefaults;
+        sourceMap[`targets.${targetName}`] = targetDefaultsSourceInfo;
+        for (const key of Object.keys(normalizedDefaults)) {
+          sourceMap[`targets.${targetName}.${key}`] = targetDefaultsSourceInfo;
+          if (key === 'options' && normalizedDefaults.options) {
+            for (const optKey of Object.keys(normalizedDefaults.options)) {
+              sourceMap[`targets.${targetName}.options.${optKey}`] =
+                targetDefaultsSourceInfo;
+            }
+          }
+          if (key === 'configurations' && normalizedDefaults.configurations) {
+            for (const confName of Object.keys(
+              normalizedDefaults.configurations
+            )) {
+              sourceMap[`targets.${targetName}.configurations.${confName}`] =
+                targetDefaultsSourceInfo;
+              for (const confKey of Object.keys(
+                normalizedDefaults.configurations[confName]
+              )) {
+                sourceMap[
+                  `targets.${targetName}.configurations.${confName}.${confKey}`
+                ] = targetDefaultsSourceInfo;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -790,6 +1064,11 @@ function validateAndNormalizeProjectRootMap(
   return projectRootMap;
 }
 
+/**
+ * Normalizes targets for a project. Target defaults are NOT applied here —
+ * they are applied in `applyTargetDefaultsBetweenPhases` during the
+ * two-phase merge process, before default plugins are merged.
+ */
 function normalizeTargets(
   project: ProjectConfiguration,
   sourceMaps: ConfigurationSourceMaps,
@@ -810,33 +1089,6 @@ function normalizeTargets(
       projects,
       [project.root, targetName].join(':')
     );
-
-    const projectSourceMaps = sourceMaps[project.root];
-
-    const targetConfig = project.targets[targetName];
-    const targetDefaults = deepClone(
-      readTargetDefaultsForTarget(
-        targetName,
-        nxJsonConfiguration.targetDefaults,
-        targetConfig.executor
-      )
-    );
-
-    // We only apply defaults if they exist
-    if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
-      project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
-        targetName,
-        project,
-        normalizeTarget(
-          targetDefaults,
-          project,
-          workspaceRoot,
-          projects,
-          ['nx.json[targetDefaults]', targetName].join(':')
-        ),
-        projectSourceMaps
-      );
-    }
 
     const target = project.targets[targetName];
 
@@ -892,25 +1144,218 @@ export function validateProject(
   }
 }
 
-function targetDefaultShouldBeApplied(
+/**
+ * Checks whether the source map entry for a given key comes from an Nx core
+ * plugin (one whose name starts with 'nx/'). Returns true when the property
+ * was defined by a core plugin, meaning the target definition takes precedence
+ * over target defaults.
+ *
+ * Returns false when there is no source info or the source is a non-core plugin,
+ * meaning target defaults should override.
+ */
+function definedSourceInfoComesFromCorePlugins(
   key: string,
   sourceMap: Record<string, SourceInformation>
 ) {
   const sourceInfo = sourceMap[key];
   if (!sourceInfo) {
-    return true;
+    return false;
   }
-  // The defined value of the target is from a plugin that
-  // isn't part of Nx's core plugins, so target defaults are
-  // applied on top of it.
   const [, plugin] = sourceInfo;
-  return !plugin?.startsWith('nx/');
+  return plugin?.startsWith('nx/');
 }
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+/**
+ * Returns deduplicated keys from all provided objects.
+ */
+function uniqueKeysInObjects(...objs: Record<string, any>[]): string[] {
+  const keys = new Set<string>();
+  for (const obj of objs) {
+    if (obj) {
+      for (const key of Object.keys(obj)) {
+        keys.add(key);
+      }
+    }
+  }
+  return Array.from(keys);
+}
+
+const NX_SPREAD_TOKEN = '...';
+
+/**
+ * Merges two values, supporting a spread token ('...') for arrays and objects.
+ *
+ * For arrays: The spread token ('...') acts as a placeholder that gets replaced
+ * with all elements from the base array. E.g., `['a', '...', 'b']` merged with
+ * base `['x', 'y']` produces `['a', 'x', 'y', 'b']`.
+ *
+ * For objects: A key of '...' set to `true` causes base object properties
+ * to be spread into the result at that position. Keys defined after '...' will
+ * override base properties.
+ *
+ * If no spread token is found, newValue fully replaces baseValue.
+ *
+ * When `sourceMapContext` is provided, the source map is updated per property
+ * to track which source each element/key came from. The existing source map
+ * entry for `key` is used as the base source information.
+ */
+function getMergeValueResult(
+  baseValue: any,
+  newValue: any,
+  sourceMapContext?: {
+    sourceMap: Record<string, SourceInformation>;
+    key: string;
+    sourceInformation: SourceInformation;
+  }
+): any {
+  // no new value, use old value — source map stays as-is (base source)
+  if (newValue === undefined && baseValue !== undefined) {
+    return baseValue;
+  }
+
+  // Check for spread syntax before type-mismatch bailout, since spread
+  // should work even when baseValue is undefined (treated as empty)
+  if (Array.isArray(newValue)) {
+    const spreadIndex = newValue.findIndex((v) => v === NX_SPREAD_TOKEN);
+    if (spreadIndex !== -1) {
+      const baseArray = Array.isArray(baseValue) ? baseValue : [];
+      const baseSourceInfo = sourceMapContext?.sourceMap[sourceMapContext.key];
+
+      // Build the result array element by element so we can track each
+      // element's source in the source map.
+      const result: any[] = [];
+      let resultIdx = 0;
+      for (let i = 0; i < newValue.length; i++) {
+        if (newValue[i] === NX_SPREAD_TOKEN) {
+          for (let j = 0; j < baseArray.length; j++) {
+            result.push(baseArray[j]);
+            if (sourceMapContext && baseSourceInfo) {
+              sourceMapContext.sourceMap[
+                `${sourceMapContext.key}.${resultIdx}`
+              ] = baseSourceInfo;
+            }
+            resultIdx++;
+          }
+        } else {
+          result.push(newValue[i]);
+          if (sourceMapContext) {
+            sourceMapContext.sourceMap[`${sourceMapContext.key}.${resultIdx}`] =
+              sourceMapContext.sourceInformation;
+          }
+          resultIdx++;
+        }
+      }
+      if (sourceMapContext) {
+        sourceMapContext.sourceMap[sourceMapContext.key] =
+          sourceMapContext.sourceInformation;
+      }
+      return result;
+    }
+    // no spread token, and looking at an array, so return new array.
+    if (sourceMapContext) {
+      sourceMapContext.sourceMap[sourceMapContext.key] =
+        sourceMapContext.sourceInformation;
+    }
+    return newValue;
+  } else if (
+    // new value is a non-null object, that we know is not an array
+    typeof newValue === 'object' &&
+    newValue != null &&
+    // '...' is explicitly set to `true`
+    newValue[NX_SPREAD_TOKEN] === true
+  ) {
+    const baseObj =
+      typeof baseValue === 'object' && baseValue != null ? baseValue : {};
+    const baseSourceInfo = sourceMapContext?.sourceMap[sourceMapContext.key];
+
+    // Build the result object key by key so we can track each property's
+    // source in the source map. The last write wins — if a key appears in
+    // both new and base, the one that comes later in iteration order wins.
+    const res: any = {};
+    const newKeys = Object.keys(newValue);
+    for (const newKey of newKeys) {
+      if (newKey !== NX_SPREAD_TOKEN) {
+        res[newKey] = newValue[newKey];
+        if (sourceMapContext) {
+          sourceMapContext.sourceMap[`${sourceMapContext.key}.${newKey}`] =
+            sourceMapContext.sourceInformation;
+        }
+      } else {
+        for (const baseKey in baseObj) {
+          res[baseKey] = baseObj[baseKey];
+          if (sourceMapContext && baseSourceInfo) {
+            sourceMapContext.sourceMap[`${sourceMapContext.key}.${baseKey}`] =
+              baseSourceInfo;
+          }
+        }
+      }
+    }
+    if (sourceMapContext) {
+      sourceMapContext.sourceMap[sourceMapContext.key] =
+        sourceMapContext.sourceInformation;
+    }
+    return res;
+  }
+
+  if (sourceMapContext) {
+    sourceMapContext.sourceMap[sourceMapContext.key] =
+      sourceMapContext.sourceInformation;
+  }
+  return newValue;
+}
+
+function mergeOptionsBasedOnSource(
+  optionsFromTargetDefinition: Record<string, any>,
+  optionsFromTargetDefaults: Record<string, any>,
+  sourceMapKeyBase: string,
+  sourceMap: Record<string, SourceInformation>
+) {
+  const result = {
+    ...optionsFromTargetDefinition,
+  };
+  for (const optionKey in optionsFromTargetDefaults) {
+    const sourceMapKey = `${sourceMapKeyBase}.${optionKey}`;
+    if (!definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)) {
+      // Property was defined by a non-core plugin, so target defaults take precedence
+      result[optionKey] = getMergeValueResult(
+        optionsFromTargetDefinition[optionKey], // base
+        optionsFromTargetDefaults[optionKey], // overrides
+        {
+          sourceMap,
+          key: sourceMapKey,
+          sourceInformation: ['nx.json', 'nx/target-defaults'],
+        }
+      );
+    } else {
+      // target definition (from core plugin) takes precedence over target defaults
+      // Don't pass source map context - keep the original source from core plugin
+      result[optionKey] = getMergeValueResult(
+        optionsFromTargetDefaults[optionKey], // base
+        optionsFromTargetDefinition[optionKey] // overrides
+      );
+    }
+  }
+  return result;
+}
+
+/**
+ * Merges a given target default with a target definition inside a project configuration.
+ *
+ * NOTE: Target defaults are applied differently based on where the target definition came from.
+ * If the target definition was defined by a plugin outside of Nx core plugins, the target default
+ * is always applied on top of it. If the target definition was defined by Nx core plugins, the definition
+ * takes precedence and target defaults are only applied for properties that are not defined in the target definition.
+ *
+ * @param targetName The name of the target
+ * @param project  The project configuration
+ * @param targetDefault The target default to merge with the target definition
+ * @param sourceMap Source map info to track where properties came from
+ * @returns The merged target configuration
+ */
 export function mergeTargetDefaultWithTargetDefinition(
   targetName: string,
   project: ProjectConfiguration,
@@ -928,16 +1373,12 @@ export function mergeTargetDefaultWithTargetDefinition(
           project,
           targetName
         );
-        for (const optionKey in normalizedDefaults) {
-          const sourceMapKey = `targets.${targetName}.options.${optionKey}`;
-          if (
-            targetDefinition.options[optionKey] === undefined ||
-            targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-          ) {
-            result.options[optionKey] = targetDefault.options[optionKey];
-            sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-          }
-        }
+        result.options = mergeOptionsBasedOnSource(
+          targetDefinition.options ?? {},
+          normalizedDefaults,
+          `targets.${targetName}.options`,
+          sourceMap
+        );
         break;
       }
       case 'configurations': {
@@ -949,29 +1390,25 @@ export function mergeTargetDefaultWithTargetDefinition(
           ];
         }
         for (const configuration in targetDefault.configurations) {
+          // easy case, target defaults is adding a new configuration, nothing to merge.
           if (!result.configurations[configuration]) {
             result.configurations[configuration] = {};
             sourceMap[`targets.${targetName}.configurations.${configuration}`] =
               ['nx.json', 'nx/target-defaults'];
           }
-          const normalizedConfigurationDefaults = resolveNxTokensInOptions(
+          // must merge...
+          // Configurations are very similar to options above in how we merge them, just a layer deeper.
+          const configurationTargetDefaults = resolveNxTokensInOptions(
             targetDefault.configurations[configuration],
             project,
             targetName
           );
-          for (const configurationKey in normalizedConfigurationDefaults) {
-            const sourceMapKey = `targets.${targetName}.configurations.${configuration}.${configurationKey}`;
-            if (
-              targetDefinition.configurations?.[configuration]?.[
-                configurationKey
-              ] === undefined ||
-              targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-            ) {
-              result.configurations[configuration][configurationKey] =
-                targetDefault.configurations[configuration][configurationKey];
-              sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-            }
-          }
+          result.configurations[configuration] = mergeOptionsBasedOnSource(
+            targetDefinition.configurations?.[configuration] ?? {},
+            configurationTargetDefaults,
+            `targets.${targetName}.configurations.${configuration}`,
+            sourceMap
+          );
         }
         break;
       }
@@ -979,10 +1416,17 @@ export function mergeTargetDefaultWithTargetDefinition(
         const sourceMapKey = `targets.${targetName}.${key}`;
         if (
           targetDefinition[key] === undefined ||
-          targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
+          !definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)
         ) {
-          result[key] = targetDefault[key];
-          sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
+          result[key] = getMergeValueResult(
+            targetDefinition[key],
+            targetDefault[key],
+            {
+              sourceMap,
+              key: sourceMapKey,
+              sourceInformation: ['nx.json', 'nx/target-defaults'],
+            }
+          );
         }
         break;
       }
@@ -1032,19 +1476,36 @@ export function mergeTargetConfigurations(
   }
 
   // merge top level properties if they're compatible
-  const result = {
-    ...(isCompatible ? baseTargetProperties : {}),
-    ...target,
-  };
+  const result: Partial<TargetConfiguration> = {};
+  const mergeBase = isCompatible ? baseTargetProperties : {};
 
-  // record top level properties in source map
-  if (projectConfigSourceMap) {
-    projectConfigSourceMap[targetIdentifier] = sourceInformation;
+  const keys = isCompatible
+    ? uniqueKeysInObjects(baseTargetProperties, target)
+    : Object.keys(target);
 
-    // record root level target properties to source map
-    for (const targetProperty in target) {
-      const targetPropertyId = `${targetIdentifier}.${targetProperty}`;
-      projectConfigSourceMap[targetPropertyId] = sourceInformation;
+  for (const key of keys) {
+    // options and configurations have their own merge logic below
+    if (key === 'options' || key === 'configurations') {
+      continue;
+    }
+
+    if (key in target) {
+      result[key] = getMergeValueResult(
+        mergeBase[key],
+        target[key],
+        projectConfigSourceMap
+          ? {
+              sourceMap: projectConfigSourceMap,
+              key: `${targetIdentifier}.${key}`,
+              sourceInformation,
+            }
+          : undefined
+      );
+      if (projectConfigSourceMap) {
+        projectConfigSourceMap[targetIdentifier] = sourceInformation;
+      }
+    } else {
+      result[key] = mergeBase[key];
     }
   }
 
@@ -1058,6 +1519,9 @@ export function mergeTargetConfigurations(
       sourceInformation,
       targetIdentifier
     );
+    if (projectConfigSourceMap && target.options) {
+      projectConfigSourceMap[`${targetIdentifier}.options`] = sourceInformation;
+    }
   }
 
   // merge configurations if there are any
@@ -1070,6 +1534,10 @@ export function mergeTargetConfigurations(
       sourceInformation,
       targetIdentifier
     );
+    if (projectConfigSourceMap && target.configurations) {
+      projectConfigSourceMap[`${targetIdentifier}.configurations`] =
+        sourceInformation;
+    }
   }
 
   if (target.metadata) {
@@ -1136,15 +1604,16 @@ function mergeConfigurations<T extends Object>(
 ): Record<string, T> | undefined {
   const mergedConfigurations = {};
 
-  const configurations = new Set([
-    ...Object.keys(baseConfigurations ?? {}),
-    ...Object.keys(newConfigurations ?? {}),
-  ]);
+  const configurations = uniqueKeysInObjects(
+    baseConfigurations ?? {},
+    newConfigurations ?? {}
+  );
   for (const configuration of configurations) {
-    mergedConfigurations[configuration] = {
-      ...(baseConfigurations?.[configuration] ?? {}),
-      ...(newConfigurations?.[configuration] ?? {}),
-    };
+    // Intentionally doesn't pass source map, as that is handled below
+    mergedConfigurations[configuration] = mergeOptions(
+      newConfigurations?.[configuration],
+      baseConfigurations?.[configuration]
+    );
   }
 
   // record new configurations & configuration properties in source map
@@ -1171,17 +1640,24 @@ function mergeOptions(
   sourceInformation?: SourceInformation,
   targetIdentifier?: string
 ): Record<string, any> | undefined {
-  const mergedOptions = {
-    ...(baseOptions ?? {}),
-    ...(newOptions ?? {}),
-  };
+  const mergedOptionKeys = uniqueKeysInObjects(
+    baseOptions ?? {},
+    newOptions ?? {}
+  );
+  const mergedOptions = {};
 
-  // record new options & option properties in source map
-  if (projectConfigSourceMap) {
-    for (const newOption in newOptions) {
-      projectConfigSourceMap[`${targetIdentifier}.options.${newOption}`] =
-        sourceInformation;
-    }
+  for (const optionKey of mergedOptionKeys) {
+    mergedOptions[optionKey] = getMergeValueResult(
+      baseOptions ? baseOptions[optionKey] : undefined,
+      newOptions ? newOptions[optionKey] : undefined,
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.options.${optionKey}`,
+            sourceInformation,
+          }
+        : undefined
+    );
   }
 
   return mergedOptions;
