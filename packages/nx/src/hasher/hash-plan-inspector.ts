@@ -1,22 +1,25 @@
+import type { Target } from '../command-line/run/run';
 import {
-  HashPlanInspector as NativeHashPlanInspector,
-  HashPlanner,
-  transferProjectGraph,
-  ExternalObject,
-  ProjectGraph as NativeProjectGraph,
-  HashInputs,
-} from '../native';
-import { readNxJson, NxJsonConfiguration } from '../config/nx-json';
-import { transformProjectGraphForRust } from '../native/transform-objects';
+  NxJsonConfiguration,
+  readNxJson,
+  TargetDependencies,
+} from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
-import { workspaceRoot } from '../utils/workspace-root';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import {
+  ExternalObject,
+  HashInputs,
+  HashPlanner,
+  HashPlanInspector as NativeHashPlanInspector,
+  ProjectGraph as NativeProjectGraph,
+  transferProjectGraph,
+} from '../native';
+import { transformProjectGraphForRust } from '../native/transform-objects';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-import type { Target } from '../command-line/run/run';
-import { TargetDependencies } from '../config/nx-json';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { getNxWorkspaceFilesFromContext } from '../utils/workspace-context';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export class HashPlanInspector {
   private readonly projectGraphRef: ExternalObject<NativeProjectGraph>;
@@ -47,7 +50,8 @@ export class HashPlanInspector {
     this.inspector = new NativeHashPlanInspector(
       externalReferences.allWorkspaceFiles,
       this.projectGraphRef,
-      externalReferences.projectFiles
+      externalReferences.projectFiles,
+      this.workspaceRootPath
     );
   }
 
@@ -81,6 +85,7 @@ export class HashPlanInspector {
 
   /**
    * This inspects tasks involved in the execution of a task, including its dependencies by default.
+   * @deprecated Prefer inspectTaskInputs
    */
   inspectTask(
     { project, target, configuration }: Target,

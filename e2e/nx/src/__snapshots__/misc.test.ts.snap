@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Nx Commands show show target human-readable output should render directory containing inputs 1`] = `
 "~ apps/<APP>/src is a directory containing 7 input file(s) for <APP>:build
@@ -13,7 +13,7 @@ exports[`Nx Commands show show target human-readable output should render direct
 `;
 
 exports[`Nx Commands show show target human-readable output should render matching --check input 1`] = `
-"✓ .gitignore is an input for <APP>:build (files)
+"✓ apps/<APP>/src/main.ts is an input for <APP>:build (files)
 "
 `;
 

@@ -510,14 +510,12 @@ describe('show target', () => {
 
     await showTargetInputsHandler({
       target: 'my-app:build',
-      check: 'apps/my-app/src/main.ts',
-      json: true,
+      check: ['apps/my-app/src/main.ts'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isInput).toBe(true);
-    expect(parsed.matchedCategory).toBe('files');
+    expect(logged).toContain('apps/my-app/src/main.ts');
+    expect(logged).toContain('is an input');
     expect(process.exitCode).toBe(0);
   });
 
@@ -550,14 +548,13 @@ describe('show target', () => {
 
     await showTargetInputsHandler({
       target: 'my-app:build',
-      check: 'CI',
-      json: true,
+      check: ['CI'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isInput).toBe(true);
-    expect(parsed.matchedCategory).toBe('environment');
+    expect(logged).toContain('CI');
+    expect(logged).toContain('is an input');
+    expect(logged).toContain('environment');
     expect(process.exitCode).toBe(0);
   });
 
@@ -590,13 +587,12 @@ describe('show target', () => {
 
     await showTargetInputsHandler({
       target: 'my-app:build',
-      check: 'apps/my-app/README.md',
-      json: true,
+      check: ['apps/my-app/README.md'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isInput).toBe(false);
+    expect(logged).toContain('apps/my-app/README.md');
+    expect(logged).toContain('not');
     expect(process.exitCode).toBe(1);
   });
 
@@ -629,13 +625,11 @@ describe('show target', () => {
 
     await showTargetInputsHandler({
       target: 'my-app:build',
-      check: './apps/my-app/src/main.ts',
-      json: true,
+      check: ['./apps/my-app/src/main.ts'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isInput).toBe(true);
+    expect(logged).toContain('is an input');
     expect(process.exitCode).toBe(0);
   });
 
@@ -668,16 +662,15 @@ describe('show target', () => {
 
     await showTargetInputsHandler({
       target: 'my-app:build',
-      check: './apps/my-app/src',
-      json: true,
+      check: ['./apps/my-app/src'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isInput).toBe(false);
-    expect(parsed.isDirectoryContainingInputs).toBe(true);
-    expect(parsed.containedInputFiles).toContain('apps/my-app/src/main.ts');
-    expect(parsed.containedInputFiles).toContain('apps/my-app/src/app.ts');
+    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
+    const allLogged = calls.join('\n');
+    expect(allLogged).toContain('directory containing');
+    expect(allLogged).toContain('2');
+    expect(allLogged).toContain('apps/my-app/src/main.ts');
+    expect(allLogged).toContain('apps/my-app/src/app.ts');
     expect(process.exitCode).toBe(0);
   });
 
@@ -728,14 +721,12 @@ describe('show target', () => {
 
     await showTargetOutputsHandler({
       target: 'my-app:build',
-      check: 'apps/my-app/dist/main.js',
-      json: true,
+      check: ['apps/my-app/dist/main.js'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isOutput).toBe(true);
-    expect(parsed.matchedOutput).toBe('apps/my-app/dist');
+    expect(logged).toContain('apps/my-app/dist/main.js');
+    expect(logged).toContain('is an output');
     expect(process.exitCode).toBe(0);
   });
 
@@ -758,17 +749,13 @@ describe('show target', () => {
 
     await showTargetOutputsHandler({
       target: 'my-app:build',
-      check: 'apps/my-app',
-      json: true,
+      check: ['apps/my-app'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isOutput).toBe(false);
-    expect(parsed.isDirectoryContainingOutputs).toBe(true);
-    expect(parsed.containedOutputPaths).toEqual(
-      expect.arrayContaining(['apps/my-app/dist', 'apps/my-app/coverage'])
-    );
+    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
+    const allLogged = calls.join('\n');
+    expect(allLogged).toContain('directory containing');
+    expect(allLogged).toContain('2');
     expect(process.exitCode).toBe(0);
   });
 
@@ -797,14 +784,12 @@ describe('show target', () => {
 
     await showTargetOutputsHandler({
       target: 'my-app:build',
-      check: 'apps/my-app/dist/main.js',
-      json: true,
+      check: ['apps/my-app/dist/main.js'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isOutput).toBe(true);
-    expect(parsed.matchedOutput).toBe('apps/my-app/dist/main.js');
+    expect(logged).toContain('apps/my-app/dist/main.js');
+    expect(logged).toContain('is an output');
     expect(process.exitCode).toBe(0);
   });
 
@@ -917,16 +902,133 @@ describe('show target', () => {
 
     await showTargetOutputsHandler({
       target: 'my-app:build',
-      check: 'libs/other',
-      json: true,
+      check: ['libs/other'],
     });
 
     const logged = (console.log as jest.Mock).mock.calls[0][0];
-    const parsed = JSON.parse(logged);
-    expect(parsed.isOutput).toBe(false);
-    expect(parsed.matchedOutput).toBeNull();
-    expect(parsed.isDirectoryContainingOutputs).toBeUndefined();
+    expect(logged).toContain('libs/other');
+    expect(logged).toContain('not');
     expect(process.exitCode).toBe(1);
+  });
+
+  it('should check multiple input paths in a single invocation', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              inputs: ['{projectRoot}/**/*.ts'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+        runtime: [],
+        environment: ['CI'],
+        depOutputs: [],
+        external: [],
+      },
+    };
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: ['apps/my-app/src/main.ts', 'CI', 'apps/my-app/README.md'],
+    });
+
+    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
+    expect(calls).toHaveLength(3);
+    // First: matching file
+    expect(calls[0]).toContain('apps/my-app/src/main.ts');
+    expect(calls[0]).toContain('is an input');
+    // Second: matching env var
+    expect(calls[1]).toContain('CI');
+    expect(calls[1]).toContain('is an input');
+    // Third: non-match
+    expect(calls[2]).toContain('apps/my-app/README.md');
+    expect(calls[2]).toContain('not');
+    // exitCode should be 1 because at least one path didn't match
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('should check multiple output paths in a single invocation', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              outputs: ['{projectRoot}/dist'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    await showTargetOutputsHandler({
+      target: 'my-app:build',
+      check: ['apps/my-app/dist/main.js', 'libs/other/file.js'],
+    });
+
+    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
+    expect(calls).toHaveLength(2);
+    // First: matching output
+    expect(calls[0]).toContain('apps/my-app/dist/main.js');
+    expect(calls[0]).toContain('is an output');
+    // Second: non-match
+    expect(calls[1]).toContain('libs/other/file.js');
+    expect(calls[1]).toContain('not');
+    // exitCode should be 1 because at least one path didn't match
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('should set exitCode 0 when all multiple check values match', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              inputs: ['{projectRoot}/**/*.ts'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
+    };
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+    });
+
+    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
+    expect(calls).toHaveLength(2);
+    expect(calls[0]).toContain('is an input');
+    expect(calls[1]).toContain('is an input');
+    expect(process.exitCode).toBe(0);
   });
 });
 

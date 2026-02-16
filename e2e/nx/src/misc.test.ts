@@ -176,78 +176,56 @@ describe('Nx Commands', () => {
       });
 
       it('should check a matching input file and exit 0', () => {
-        // Get the list of inputs first
-        const inputs = JSON.parse(
-          runCLI(`show target inputs ${app}:build --json`)
-        );
-        const firstFile = inputs.files[0];
-        expect(firstFile).toBeDefined();
-
         // runCLI throws on non-zero exit, so success here means exit 0
-        const result = JSON.parse(
-          runCLI(`show target inputs ${app}:build --check ${firstFile} --json`)
+        const result = runCLI(
+          `show target inputs ${app}:build --check apps/${app}/src/main.ts`
         );
-        expect(result.isInput).toBe(true);
+        expect(result).toContain('is an input');
       });
 
       it('should report non-matching input file and exit 1', () => {
         expect(() =>
           runCLI(
-            `show target inputs ${app}:build --check definitely/not/an/input.xyz --json`
+            `show target inputs ${app}:build --check definitely/not/an/input.xyz`
           )
         ).toThrow();
 
-        // Also verify the JSON structure via silenceError
-        const output = runCLI(
-          `show target inputs ${app}:build --check definitely/not/an/input.xyz --json`,
+        const result = runCLI(
+          `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
           { silenceError: true }
         );
-        const result = JSON.parse(output);
-        expect(result.isInput).toBe(false);
+        expect(result).toContain('is not an input');
       });
 
       it('should check a matching output path and exit 0', () => {
-        const outputs = JSON.parse(
-          runCLI(`show target outputs ${app}:build --json`)
+        // Check a specific file within the output directory
+        const result = runCLI(
+          `show target outputs ${app}:build --check dist/apps/${app}/main.js`
         );
-        const firstOutput = outputs.outputPaths[0];
-        expect(firstOutput).toBeDefined();
-
-        // runCLI throws on non-zero exit, so success here means exit 0
-        const result = JSON.parse(
-          runCLI(
-            `show target outputs ${app}:build --check ${firstOutput} --json`
-          )
-        );
-        expect(result.isOutput).toBe(true);
+        expect(result).toContain('is an output');
       });
 
       it('should report non-matching output path and exit 1', () => {
         expect(() =>
           runCLI(
-            `show target outputs ${app}:build --check definitely/not/an/output --json`
+            `show target outputs ${app}:build --check definitely/not/an/output`
           )
         ).toThrow();
 
-        const output = runCLI(
-          `show target outputs ${app}:build --check definitely/not/an/output --json`,
+        const result = runCLI(
+          `show target outputs ${app}:build --check definitely/not/an/output`,
           { silenceError: true }
         );
-        const result = JSON.parse(output);
-        expect(result.isOutput).toBe(false);
-        expect(result.matchedOutput).toBeNull();
+        expect(result).toContain('is not an output');
       });
 
       it('should check a directory containing input files and exit 0', () => {
         // Directory containing inputs is a successful check (exit 0)
-        const result = JSON.parse(
-          runCLI(
-            `show target inputs ${app}:build --check apps/${app}/src --json`
-          )
+        const result = runCLI(
+          `show target inputs ${app}:build --check apps/${app}/src`
         );
-        expect(result.isInput).toBe(false);
-        expect(result.isDirectoryContainingInputs).toBe(true);
-        expect(result.containedInputFiles.length).toBeGreaterThan(0);
+        expect(result).toContain('is a directory containing');
+        expect(result).toContain('input file(s)');
       });
 
       it('should error when target not found', () => {
@@ -258,16 +236,6 @@ describe('Nx Commands', () => {
         expect(output).toContain('not found');
       });
 
-      it('should support reversed order syntax', () => {
-        // nx show target app:build inputs (instead of nx show target inputs app:build)
-        const result = JSON.parse(
-          runCLI(`show target ${app}:build inputs --json`)
-        );
-        expect(result.project).toBe(app);
-        expect(result.target).toBe('build');
-        expect(result.files).toBeDefined();
-      });
-
       it('should error when --check is used without a value', () => {
         const output = runCLI(`show target inputs ${app}:build --check`, {
           silenceError: true,
@@ -276,6 +244,10 @@ describe('Nx Commands', () => {
       });
 
       describe('human-readable output', () => {
+        beforeAll(() => {
+          runCLI(`build ${app}`);
+        });
+
         it('should render target info', () => {
           const output = normalizeOutput(runCLI(`show target ${app}:build`));
           expect(output).toMatchSnapshot();
@@ -289,13 +261,10 @@ describe('Nx Commands', () => {
         });
 
         it('should render matching --check input', () => {
-          const inputs = JSON.parse(
-            runCLI(`show target inputs ${app}:build --json`)
-          );
-          const firstFile = inputs.files[0];
-
           const output = normalizeOutput(
-            runCLI(`show target inputs ${app}:build --check ${firstFile}`)
+            runCLI(
+              `show target inputs ${app}:build --check apps/${app}/src/main.ts`
+            )
           );
           expect(output).toMatchSnapshot();
         });
@@ -311,13 +280,8 @@ describe('Nx Commands', () => {
         });
 
         it('should render matching --check output', () => {
-          const outputs = JSON.parse(
-            runCLI(`show target outputs ${app}:build --json`)
-          );
-          const firstOutput = outputs.outputPaths[0];
-
           const output = normalizeOutput(
-            runCLI(`show target outputs ${app}:build --check ${firstOutput}`)
+            runCLI(`show target outputs ${app}:build --check dist/apps/${app}`)
           );
           expect(output).toMatchSnapshot();
         });

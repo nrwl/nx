@@ -4,6 +4,7 @@ import { readNxJson } from '../../config/configuration';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { TargetConfiguration } from '../../config/workspace-json-project-json';
+import type { HashInputs } from '../../native';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -21,39 +22,6 @@ import type {
   ShowTargetInputsOptions,
   ShowTargetOutputsOptions,
 } from './command-object';
-import type { HashInputs } from '../../native';
-
-// ── Shared utilities ─────────────────────────────────────────────────
-
-let _pc: typeof import('picocolors');
-function pc() {
-  return (_pc ??= require('picocolors'));
-}
-
-async function flushOutput() {
-  await new Promise((res) => setImmediate(res));
-  await output.drain();
-}
-
-function printList(header: string, items: unknown[], prefix = '\n') {
-  if (items.length === 0) return;
-  console.log(`${prefix}${pc().bold(header)}:`);
-  for (const item of items) console.log(`  ${item}`);
-}
-
-function outputJson(data: Record<string, unknown>) {
-  console.log(JSON.stringify(data, null, 2));
-}
-
-/** Strips entries whose values are empty arrays from an object. */
-function omitEmptyArrays<T extends Record<string, unknown>>(obj: T): T {
-  const result = {} as T;
-  for (const [k, v] of Object.entries(obj)) {
-    if (Array.isArray(v) && v.length === 0) continue;
-    (result as Record<string, unknown>)[k] = v;
-  }
-  return result;
-}
 
 // ── Entry points ─────────────────────────────────────────────────────
 
@@ -90,7 +58,6 @@ export async function showTargetInfoHandler(
     nxJson
   );
   renderTargetInfo(data, args);
-  await flushOutput();
 }
 
 export async function showTargetInputsHandler(
@@ -102,8 +69,11 @@ export async function showTargetInputsHandler(
   const graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
 
-  const { projectName, targetName, configurationName } =
-    resolveTargetIdentifier(args, graph, nxJson);
+  const { projectName, targetName } = resolveTargetIdentifier(
+    args,
+    graph,
+    nxJson
+  );
 
   const node = resolveProjectNode(projectName, graph);
   const targetConfig = node.data.targets?.[targetName];
@@ -112,38 +82,35 @@ export async function showTargetInputsHandler(
     return reportTargetNotFound(projectName, targetName, node);
   }
 
-  const configuration = configurationName ?? args.configuration;
-  if (configuration) {
-    validateConfiguration(projectName, targetName, configuration, targetConfig);
-  }
-
   const hashInputs = await resolveInputFiles(
     projectName,
     targetName,
-    configuration,
+    undefined,
     graph,
     nxJson
   );
 
   if (args.check !== undefined) {
-    const data = resolveCheckFromInputs(
-      args.check,
-      projectName,
-      targetName,
-      hashInputs
-    );
-    renderCheckInput(data, args);
-    await flushOutput();
-    process.exitCode ||=
-      data.isInput || data.containedInputFiles.length ? 0 : 1;
+    for (const input of args.check) {
+      const data = resolveCheckFromInputs(
+        input,
+        projectName,
+        targetName,
+        hashInputs
+      );
+      renderCheckInput(data);
+      process.exitCode ||=
+        data.isInput || data.containedInputFiles.length ? 0 : 1;
+    }
     return;
   }
 
+  const configuredInputs = targetConfig.inputs;
   renderInputs(
     { project: projectName, target: targetName, ...hashInputs },
+    configuredInputs,
     args
   );
-  await flushOutput();
 }
 
 export async function showTargetOutputsHandler(
@@ -170,34 +137,34 @@ export async function showTargetOutputsHandler(
     validateConfiguration(projectName, targetName, configuration, targetConfig);
   }
 
+  const outputsData = resolveOutputsData(
+    projectName,
+    targetName,
+    configuration,
+    node
+  );
+
   if (args.check !== undefined) {
-    const data = resolveCheckOutputData(
-      args.check,
-      projectName,
-      targetName,
-      configuration,
-      node
-    );
-    renderCheckOutput(data, args);
-    await flushOutput();
-    process.exitCode ||=
-      data.matchedOutput ||
-      data.containedOutputPaths.length ||
-      data.containedExpandedOutputs.length
-        ? 0
-        : 1;
+    for (const output of args.check) {
+      const data = resolveCheckOutputData(output, outputsData);
+      renderCheckOutput(data);
+      process.exitCode ||=
+        data.matchedOutput ||
+        data.containedOutputPaths.length ||
+        data.containedExpandedOutputs.length
+          ? 0
+          : 1;
+    }
     return;
   }
 
-  const data = resolveOutputsData(projectName, targetName, configuration, node);
-  renderOutputs(data, args);
-  await flushOutput();
+  renderOutputs(outputsData, args);
 }
 
 // ── Target identifier & project resolution ───────────────────────────
 
 function resolveTargetIdentifier(
-  args: ShowTargetBaseOptions,
+  args: ShowTargetBaseOptions | ShowTargetInputsOptions,
   graph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): { projectName: string; targetName: string; configurationName?: string } {
@@ -318,11 +285,6 @@ function resolveTargetInfoData(
 ) {
   const targetConfig = node.data.targets[targetName];
 
-  const baseOptions = targetConfig.options ?? {};
-  const configOptions = configuration
-    ? (targetConfig.configurations?.[configuration] ?? {})
-    : {};
-
   const allTargetNames = new Set<string>();
   for (const n of Object.values(graph.nodes)) {
     for (const t of Object.keys(n.data.targets ?? {})) {
@@ -366,7 +328,12 @@ function resolveTargetInfoData(
     ...(configuration ? { configuration } : {}),
     executor: targetConfig.executor,
     ...(command ? { command } : {}),
-    options: { ...baseOptions, ...configOptions } as Record<string, unknown>,
+    options: {
+      ...targetConfig.options,
+      ...(configuration
+        ? targetConfig.configurations?.[configuration]
+        : undefined),
+    },
     ...(targetConfig.inputs ? { inputs: targetConfig.inputs } : {}),
     ...(targetConfig.outputs
       ? { outputs: targetConfig.outputs as string[] }
@@ -448,7 +415,7 @@ function resolveCheckFromInputs(
     };
   }
 
-  // Check files (with directory matching)
+  // Resolve path relative to cwd for file checking
   const fileToCheck = normalizePath(rawValue);
   const isFile = inputs.files.includes(fileToCheck);
 
@@ -505,7 +472,6 @@ function resolveOutputsData(
   };
   const unresolvedOutputs = configuredOutputs.filter((o) => {
     if (!/\{options\./.test(o)) return false;
-    // Check if every {options.*} token in this template has a value
     const unresolved = o.match(/\{options\.([^}]+)\}/g);
     return unresolved?.some((token) => {
       const key = token.slice('{options.'.length, -1);
@@ -532,31 +498,15 @@ function resolveOutputsData(
 
 function resolveCheckOutputData(
   rawFileToCheck: string,
-  projectName: string,
-  targetName: string,
-  configuration: string | undefined,
-  node: ProjectGraph['nodes'][string]
+  outputsData: ReturnType<typeof resolveOutputsData>
 ) {
   const fileToCheck = normalizePath(rawFileToCheck);
-  const resolvedOutputs = getOutputsForTargetAndConfiguration(
-    { project: projectName, target: targetName, configuration },
-    {},
-    node
-  );
-
-  // Expand globs to actual files on disk
-  let expandedOutputs: string[];
-  try {
-    const { expandOutputs } = require('../../native');
-    expandedOutputs = expandOutputs(workspaceRoot, resolvedOutputs);
-  } catch {
-    expandedOutputs = resolvedOutputs;
-  }
+  const { outputPaths, expandedOutputs } = outputsData;
 
   // Check if the file is an output — try configured paths first (prefix match
   // covers directory outputs), then fall back to expanded outputs (handles globs).
   let matchedOutput: string | null = null;
-  for (const outputPath of resolvedOutputs) {
+  for (const outputPath of outputPaths) {
     const normalizedOutput = outputPath.replace(/\\/g, '/');
     if (
       fileToCheck === normalizedOutput ||
@@ -575,15 +525,14 @@ function resolveCheckOutputData(
   let containedExpandedOutputs: string[] = [];
   if (!matchedOutput) {
     if (fileToCheck === '') {
-      // Workspace root — all outputs are contained
-      containedOutputPaths = [...resolvedOutputs];
+      containedOutputPaths = [...outputPaths];
       containedExpandedOutputs = [...expandedOutputs];
     } else {
       const dirPrefix = fileToCheck.endsWith('/')
         ? fileToCheck
         : fileToCheck + '/';
 
-      containedOutputPaths = resolvedOutputs.filter((o) =>
+      containedOutputPaths = outputPaths.filter((o) =>
         o.replace(/\\/g, '/').startsWith(dirPrefix)
       );
       containedExpandedOutputs = expandedOutputs.filter((o) =>
@@ -595,8 +544,8 @@ function resolveCheckOutputData(
   return {
     value: rawFileToCheck,
     file: fileToCheck,
-    project: projectName,
-    target: targetName,
+    project: outputsData.project,
+    target: outputsData.target,
     matchedOutput,
     containedOutputPaths,
     containedExpandedOutputs,
@@ -610,7 +559,7 @@ function renderTargetInfo(
   args: ShowTargetBaseOptions
 ) {
   if (args.json) {
-    outputJson(data as Record<string, unknown>);
+    console.log(JSON.stringify(data, null, 2));
     return;
   }
 
@@ -670,10 +619,18 @@ function renderInputs(
     project: string;
     target: string;
   },
+  configuredInputs: TargetConfiguration['inputs'] | undefined,
   args: ShowTargetInputsOptions
 ) {
   if (args.json) {
-    outputJson(omitEmptyArrays(data as unknown as Record<string, unknown>));
+    const jsonData = data as unknown as Record<string, unknown>;
+    // Inline omitEmptyArrays
+    const result = {} as Record<string, unknown>;
+    for (const [k, v] of Object.entries(jsonData)) {
+      if (Array.isArray(v) && v.length === 0) continue;
+      result[k] = v;
+    }
+    console.log(JSON.stringify(result, null, 2));
     return;
   }
 
@@ -681,35 +638,24 @@ function renderInputs(
   console.log(
     `${c.bold('Inputs for')} ${c.cyan(data.project)}:${c.green(data.target)}`
   );
-  printList(`Files (${data.files.length})`, data.files);
-  printList('Environment variables', data.environment);
-  printList('Runtime inputs', data.runtime);
-  printList('Dependent task outputs', data.depOutputs);
-  printList('External dependencies', data.external);
-}
 
-function renderCheckInput(
-  data: ReturnType<typeof resolveCheckFromInputs>,
-  args: ShowTargetInputsOptions
-) {
-  if (args.json) {
-    const result: Record<string, unknown> = {
-      value: data.value,
-      project: data.project,
-      target: data.target,
-      isInput: data.isInput,
-    };
-    if (data.matchedCategory) {
-      result.matchedCategory = data.matchedCategory;
-    }
-    if (data.containedInputFiles.length > 0) {
-      result.isDirectoryContainingInputs = true;
-      result.containedInputFiles = data.containedInputFiles;
-    }
-    outputJson(result);
-    return;
+  // Show configured input groups (named inputs like "production", "^production")
+  if (configuredInputs && configuredInputs.length > 0) {
+    printList(
+      'Configured inputs',
+      configuredInputs.map((i) =>
+        typeof i === 'string' ? i : JSON.stringify(i)
+      )
+    );
   }
 
+  printList('External dependencies', data.external);
+  printList('Runtime inputs', data.runtime);
+  printList('Environment variables', data.environment);
+  printList(`Files (${data.files.length})`, data.files.concat(data.depOutputs));
+}
+
+function renderCheckInput(data: ReturnType<typeof resolveCheckFromInputs>) {
   const c = pc();
   const categoryLabel = data.matchedCategory
     ? ` (${data.matchedCategory})`
@@ -741,7 +687,14 @@ function renderOutputs(
   args: ShowTargetOutputsOptions
 ) {
   if (args.json) {
-    outputJson(omitEmptyArrays(data as unknown as Record<string, unknown>));
+    // Inline omitEmptyArrays
+    const jsonData = data as unknown as Record<string, unknown>;
+    const result = {} as Record<string, unknown>;
+    for (const [k, v] of Object.entries(jsonData)) {
+      if (Array.isArray(v) && v.length === 0) continue;
+      result[k] = v;
+    }
+    console.log(JSON.stringify(result, null, 2));
     return;
   }
 
@@ -772,32 +725,10 @@ function renderOutputs(
   }
 }
 
-function renderCheckOutput(
-  data: ReturnType<typeof resolveCheckOutputData>,
-  args: ShowTargetOutputsOptions
-) {
+function renderCheckOutput(data: ReturnType<typeof resolveCheckOutputData>) {
   const isDirectoryContainingOutputs =
     data.containedOutputPaths.length > 0 ||
     data.containedExpandedOutputs.length > 0;
-
-  if (args.json) {
-    const result: Record<string, unknown> = {
-      file: data.file,
-      isOutput: data.matchedOutput !== null,
-      matchedOutput: data.matchedOutput,
-      project: data.project,
-      target: data.target,
-    };
-    if (isDirectoryContainingOutputs) {
-      result.isDirectoryContainingOutputs = true;
-      if (data.containedOutputPaths.length > 0)
-        result.containedOutputPaths = data.containedOutputPaths;
-      if (data.containedExpandedOutputs.length > 0)
-        result.containedExpandedOutputs = data.containedExpandedOutputs;
-    }
-    outputJson(result);
-    return;
-  }
 
   const c = pc();
   const displayPath = data.value || data.file;
@@ -808,7 +739,6 @@ function renderCheckOutput(
       )}:${c.green(data.target)}`
     );
   } else if (isDirectoryContainingOutputs) {
-    // Deduplicate across configured and expanded to avoid inflated counts
     const uniquePaths = new Set([
       ...data.containedOutputPaths,
       ...data.containedExpandedOutputs,
@@ -818,12 +748,13 @@ function renderCheckOutput(
         String(uniquePaths.size)
       )} output path(s) for ${c.cyan(data.project)}:${c.green(data.target)}`
     );
-    printList('Configured outputs', data.containedOutputPaths, '\n');
-    // Only show expanded outputs that aren't already in configured outputs
+    // Only show expanded outputs (not configured paths) per review feedback
     const extraExpanded = data.containedExpandedOutputs.filter(
       (o) => !data.containedOutputPaths.includes(o)
     );
-    printList('Expanded outputs', extraExpanded);
+    if (extraExpanded.length > 0) {
+      printList('Expanded outputs', extraExpanded);
+    }
   } else {
     console.log(
       `${c.red('✗')} ${c.bold(displayPath)} is ${c.red(
@@ -855,9 +786,21 @@ function resolveDependencyProjects(
 
 /**
  * Converts a user-provided path into a workspace-relative path for comparison
- * against project file maps.
+ * against project file maps. Resolves relative to process.cwd() so that
+ * --check arguments work correctly from any directory.
  */
 function normalizePath(p: string): string {
-  const absolute = resolve(workspaceRoot, p);
+  const absolute = resolve(process.cwd(), p);
   return relative(workspaceRoot, absolute).replace(/\\/g, '/');
+}
+
+let _pc: typeof import('picocolors');
+function pc() {
+  return (_pc ??= require('picocolors'));
+}
+
+function printList(header: string, items: unknown[], prefix = '\n') {
+  if (items.length === 0) return;
+  console.log(`${prefix}${pc().bold(header)}:`);
+  for (const item of items) console.log(`  ${item}`);
 }
