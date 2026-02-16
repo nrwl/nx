@@ -120,6 +120,14 @@ export class CLIOutput {
     this.writeToStdOut(EOL);
   }
 
+  /**
+   * Write lines directly without CLI prefix/badge.
+   * Used for banner output when no title is needed.
+   */
+  writeLines(lines: string[]) {
+    lines.forEach((line) => this.writeToStdOut(`${line}${EOL}`));
+  }
+
   addVerticalSeparator(color = 'gray') {
     this.addNewline();
     this.addVerticalSeparatorWithoutNewLines(color);
