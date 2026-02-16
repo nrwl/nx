@@ -13,6 +13,7 @@ const emptyStatus: ConfigureAiAgentsStatusResponse = {
 
 let cachedStatus: ConfigureAiAgentsStatusResponse | null = null;
 let isComputing = false;
+let computationEpoch = 0;
 
 const log = (...messageParts: unknown[]) => {
   serverLogger.log('[AI-AGENTS]:', ...messageParts);
@@ -29,9 +30,17 @@ export async function handleGetConfigureAiAgentsStatus(): Promise<HandlerResult>
 
   if (!isComputing) {
     isComputing = true;
+    const currentEpoch = computationEpoch;
     log('Starting agent configuration status computation');
     computeAgentStatuses()
       .then((result) => {
+        if (currentEpoch !== computationEpoch) {
+          log(
+            'Discarding stale agent configuration status computation (generation mismatch)'
+          );
+          isComputing = false;
+          return;
+        }
         cachedStatus = result;
         isComputing = false;
         log(
@@ -43,6 +52,13 @@ export async function handleGetConfigureAiAgentsStatus(): Promise<HandlerResult>
         );
       })
       .catch((e) => {
+        if (currentEpoch !== computationEpoch) {
+          log(
+            'Discarding stale agent configuration status error (generation mismatch)'
+          );
+          isComputing = false;
+          return;
+        }
         log(`Error computing agent configuration status: ${e.message}`);
         cachedStatus = { ...emptyStatus };
         isComputing = false;
@@ -64,6 +80,7 @@ export async function handleResetConfigureAiAgentsStatus(): Promise<HandlerResul
   );
   cachedStatus = null;
   isComputing = false;
+  computationEpoch++;
   return {
     response: { success: true },
     description: 'handleResetConfigureAiAgentsStatus',
