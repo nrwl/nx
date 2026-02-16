@@ -38,17 +38,25 @@ We've been building and shipping skills as part of the [Nx AI Agent Skills](/blo
 ### The Numbers
 
 We ran benchmarks comparing agent performance with these new nx skills versus our previous approach with only the Nx MCP configured.
-The results clearly show our new skill-based setup performing better:
+The results clearly show our new skill-based setup performing better.
+
+**Nx Analysis Tasks**
+
+Here, the agent has to answer various questions about a complex monorepo with clear right/wrong answers that are scored by an LLM. We objectively measure if the agent gives the right answers, disregarding subjective measures like the level of detail of responses or if the agent was friendly.
 
 ![Nx question accuracy chart showing Baseline, MCP only, and Skills scores for Sonnet and Haiku](/blog/images/articles/chart-question-accuracy.avif)
 
 One interesting pattern: for smaller models like Haiku, the improvements from using skills are even bigger than for the more capable Sonnet. The structured guidance in skills helps patch the gaps where smarter models would just persevere through exploration.
 
+**Generation Tasks**
+
+Here, the agent has to complete various generation tasks in different repos - both the complexity of tasks and the repos they operate in varies. We measure how often the agent uses the appropriate nx generators and whether it validates its work.
+
 ![Generation tasks chart showing MCP only vs Skills for generator usage and verification rates](/blog/images/articles/chart-generation-tasks.avif)
 
 For scaffolding tasks where workspace consistency is important, our benchmarks show significantly more generator usage. With the additional instructions from our skills, agents actually run verification before returning to the user far more often and make sure that newly generated artifacts didn't break the rest of the workspace.
 
-While token usage for simple question answering has gone down across the board with the more token-efficient skill approach, agents tend to use more tokens with skills than before for these tasks. We believe this is worth the tradeoff - better results matter more than cheaper bad results - but we're actively iterating to bring token usage down.
+While token usage for simple question answering has gone down across the board with the more token-efficient skill approach, agents tend to use more tokens with skills than before for these tasks. We believe this is worth the tradeoff - better results matter more than cheaper bad results - but we're actively iterating to bring token usage down. We only started collecting these numbers are after Anthropic introduced dynamic MCP tool loading - this further narrows the gap in token consumption. In MCP clients that don't support this, the token consumption from MCP tools will be significantly higher.
 
 ## Where MCP Still Shines
 
