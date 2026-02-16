@@ -913,7 +913,9 @@ export function setEnvVarsBasedOnArgs(
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+  // Force streaming only when the TUI is active, so it can capture and
+  // render task output. Other output styles manage their own streaming.
+  if (isTuiEnabled()) {
     process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {
