@@ -91,13 +91,13 @@ Following the AX principles from DOC-405: descriptive headings, short paragraphs
 
 Technology pages follow the same stage model as the Getting Started pages, adapted for a user who already has Nx:
 
-| Stage                | Content                                                            | Depth                                     |
-| -------------------- | ------------------------------------------------------------------ | ----------------------------------------- |
-| **Setup**            | Install plugin, verify, configure existing projects                | Thorough — every step explicit            |
-| **Daily Workflow**   | Generate, build, test, lint — the common tasks                     | Thorough — this is where users spend time |
-| **Configuration**    | Inference from existing config, plugin options, exclude/include    | Thorough — daily-driver reference content |
-| **CI**               | Affected, caching, tool-specific optimizations                     | Enough to get started, link for advanced  |
-| **Advanced**         | Custom executors, deployment, edge cases                           | Link only — lives in Knowledge Base       |
+| Stage              | Content                                                         | Depth                                     |
+| ------------------ | --------------------------------------------------------------- | ----------------------------------------- |
+| **Setup**          | Install plugin, verify, configure existing projects             | Thorough — every step explicit            |
+| **Daily Workflow** | Generate, build, test, lint — the common tasks                  | Thorough — this is where users spend time |
+| **Configuration**  | Inference from existing config, plugin options, exclude/include | Thorough — daily-driver reference content |
+| **CI**             | Affected, caching, tool-specific optimizations                  | Enough to get started, link for advanced  |
+| **Advanced**       | Custom executors, deployment, edge cases                        | Link only — lives in Knowledge Base       |
 
 ### 5. Consistent flow, flexible headings
 
@@ -153,18 +153,18 @@ Each technology falls into a category. The category shapes which user journeys a
 
 ### Universal Journeys (every hub page must address)
 
-| #   | Journey                    | Question the user is asking                                        | Maps to section |
-| --- | -------------------------- | ------------------------------------------------------------------ | --------------- |
-| 1   | Understand                 | "What is this plugin and what does it give me?"                    | Opening         |
-| 2   | Requirements               | "What versions/tools do I need?"                                   | Opening / Setup |
-| 3   | Add to workspace           | "How do I add this to my existing Nx workspace?"                   | Setup           |
-| 4   | Configure existing project | "I have a project already — how do I add this tool to it?"         | Setup           |
-| 5   | Create new                 | "How do I start a new project with this?"                          | Setup           |
-| 6   | Daily workflow             | "What are the common tasks I'll run?"                              | Daily Workflow  |
-| 7   | Configure inference        | "How does the plugin work with my existing config files?"          | Configuration   |
-| 8   | Exclude/include            | "How do I opt specific projects in or out?"                        | Configuration   |
-| 9   | Run in CI                  | "What's specific to this tool in CI?"                              | CI              |
-| 10  | Go deeper                  | "Where do I go for specific recipes and reference?"                | What's Next     |
+| #   | Journey                    | Question the user is asking                                | Maps to section |
+| --- | -------------------------- | ---------------------------------------------------------- | --------------- |
+| 1   | Understand                 | "What is this plugin and what does it give me?"            | Opening         |
+| 2   | Requirements               | "What versions/tools do I need?"                           | Opening / Setup |
+| 3   | Add to workspace           | "How do I add this to my existing Nx workspace?"           | Setup           |
+| 4   | Configure existing project | "I have a project already — how do I add this tool to it?" | Setup           |
+| 5   | Create new                 | "How do I start a new project with this?"                  | Setup           |
+| 6   | Daily workflow             | "What are the common tasks I'll run?"                      | Daily Workflow  |
+| 7   | Configure inference        | "How does the plugin work with my existing config files?"  | Configuration   |
+| 8   | Exclude/include            | "How do I opt specific projects in or out?"                | Configuration   |
+| 9   | Run in CI                  | "What's specific to this tool in CI?"                      | CI              |
+| 10  | Go deeper                  | "Where do I go for specific recipes and reference?"        | What's Next     |
 
 ### Problems These Pages Must Answer
 
@@ -238,14 +238,14 @@ Beyond the universal journeys, each category has additional questions. Writers s
 
 Not every section carries the same weight on every page. Use this matrix to calibrate how much to write:
 
-| Section              | Framework                   | Build Tool                           | Test Tool                       | Non-JS                         | Quality                  |
-| -------------------- | --------------------------- | ------------------------------------ | ------------------------------- | ------------------------------ | ------------------------ |
-| **Opening**          | Medium                      | Medium                               | Medium                          | Long (value prop)              | Medium                   |
-| **Setup**            | Medium                      | Medium (+ config generator)          | Medium (+ config generator)     | Long (prerequisites + nx init) | Medium                   |
-| **Daily Workflow**   | Long (generators + tasks)   | Medium (inferred tasks + conversion) | Long (all test modes)           | Medium (task mapping)          | Medium                   |
-| **Configuration**    | Medium                      | Medium                               | Long (dual config, include/exclude) | Medium (target customization)  | Long (rules, boundaries) |
-| **CI Considerations**| Medium (affected + caching) | Short (caching + link)               | Long (performance + splitting + atomizer) | Long (value proposition) | Short                    |
-| **What's Next**      | 4-6 cards                   | 4 cards                              | 4-6 cards                       | 4 cards                        | 3-4 cards                |
+| Section               | Framework                   | Build Tool                           | Test Tool                                 | Non-JS                         | Quality                  |
+| --------------------- | --------------------------- | ------------------------------------ | ----------------------------------------- | ------------------------------ | ------------------------ |
+| **Opening**           | Medium                      | Medium                               | Medium                                    | Long (value prop)              | Medium                   |
+| **Setup**             | Medium                      | Medium (+ config generator)          | Medium (+ config generator)               | Long (prerequisites + nx init) | Medium                   |
+| **Daily Workflow**    | Long (generators + tasks)   | Medium (inferred tasks + conversion) | Long (all test modes)                     | Medium (task mapping)          | Medium                   |
+| **Configuration**     | Medium                      | Medium                               | Long (dual config, include/exclude)       | Medium (target customization)  | Long (rules, boundaries) |
+| **CI Considerations** | Medium (affected + caching) | Short (caching + link)               | Long (performance + splitting + atomizer) | Long (value proposition)       | Short                    |
+| **What's Next**       | 4-6 cards                   | 4 cards                              | 4-6 cards                                 | 4 cards                        | 3-4 cards                |
 
 **"Long"** = thorough coverage with multiple subsections, code examples, and explanation.
 **"Medium"** = cover the topic with one or two focused examples and brief explanation.
@@ -272,16 +272,16 @@ All hub pages follow this section flow. Every section is required unless marked 
 
 These are the core questions every hub page answers. They map to sections but aren't 1:1 — a topic may be a subsection, a paragraph, or a callout depending on the plugin.
 
-| Topic | Question | Where it lives |
-|---|---|---|
-| **Requirements** | "What versions/tools do I need?" | Opening or Setup (callout if brief, subsection if substantial) |
-| **Features / Why** | "What does this plugin give me beyond core Nx?" | Opening — feature list with links to in-page sections |
-| **Add and configure the plugin** | "How do I install it and verify it works?" | Setup |
-| **Configure for existing project** | "I already have a project — how do I add this tool to it?" | Setup (subsection after plugin install) |
-| **How existing config files work** | "I already have a tsconfig / jest.config / vite.config — what happens?" | Configuration — inference explanation |
-| **Plugin options** | "How do I customize what the plugin does?" | Configuration — `nx.json` plugin options |
-| **Exclude/include projects** | "How do I opt specific projects in or out?" | Configuration — explicit subsection |
-| **CI considerations** | "What's specific to this tool in CI?" | CI Considerations |
+| Topic                              | Question                                                                | Where it lives                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Requirements**                   | "What versions/tools do I need?"                                        | Opening or Setup (callout if brief, subsection if substantial) |
+| **Features / Why**                 | "What does this plugin give me beyond core Nx?"                         | Opening — feature list with links to in-page sections          |
+| **Add and configure the plugin**   | "How do I install it and verify it works?"                              | Setup                                                          |
+| **Configure for existing project** | "I already have a project — how do I add this tool to it?"              | Setup (subsection after plugin install)                        |
+| **How existing config files work** | "I already have a tsconfig / jest.config / vite.config — what happens?" | Configuration — inference explanation                          |
+| **Plugin options**                 | "How do I customize what the plugin does?"                              | Configuration — `nx.json` plugin options                       |
+| **Exclude/include projects**       | "How do I opt specific projects in or out?"                             | Configuration — explicit subsection                            |
+| **CI considerations**              | "What's specific to this tool in CI?"                                   | CI Considerations                                              |
 
 ---
 
@@ -310,6 +310,7 @@ These are the core questions every hub page answers. They map to sections but ar
 **Purpose:** Get the plugin installed, verified, and configured for existing projects.
 
 This section answers three distinct questions in order:
+
 1. "How do I add the plugin to my workspace?" (plugin installation)
 2. "How do I start a new project from scratch?" (create new — secondary)
 3. "How do I add this tool to a project that already exists?" (configuration generators)
@@ -358,6 +359,7 @@ This section answers three distinct questions in order:
 **Purpose:** How the plugin reads existing configuration, how to customize its behavior, and how to control which projects it applies to. This is daily-driver reference content.
 
 This section answers three distinct questions:
+
 1. "How does the plugin work with my existing config files?" (inference)
 2. "How do I customize what the plugin does?" (plugin options)
 3. "How do I include or exclude specific projects?" (scoping)
