@@ -22,7 +22,7 @@ export const yargsRunCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        await handleImport('./run-one.js').then((m) =>
+        await handleImport('./run-one.js', __dirname).then((m) =>
           m.runOne(process.cwd(), withOverrides(args))
         );
       }
@@ -47,7 +47,7 @@ export const yargsNxInfixCommand: CommandModule = {
           showHelp();
           process.exit(1);
         }
-        return (await handleImport('./run-one.js')).runOne(
+        return (await handleImport('./run-one.js', __dirname)).runOne(
           process.cwd(),
           withOverrides(args, 0)
         );
