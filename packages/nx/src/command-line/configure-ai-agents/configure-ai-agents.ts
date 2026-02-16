@@ -22,13 +22,19 @@ export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
+  // When called as inner from the tmp install, just run the impl directly
+  if (inner) {
+    return await configureAiAgentsHandlerImpl(args);
+  }
+
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||
-    process.env.NX_AI_FILES_USE_LOCAL === 'true' ||
-    inner
+    process.env.NX_AI_FILES_USE_LOCAL === 'true'
   ) {
-    return await configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
+    await resetDaemonAgentStatus();
+    return;
   }
 
   let cleanup: () => void | undefined;
@@ -43,19 +49,19 @@ export async function configureAiAgentsHandler(
     );
 
     const module = await import(modulePath);
-    const configureAiAgentsResult = await module.configureAiAgentsHandler(
-      args,
-      true
-    );
+    await module.configureAiAgentsHandler(args, true);
     cleanup();
-    return configureAiAgentsResult;
   } catch (error) {
     if (cleanup) {
       cleanup();
     }
     // Fall back to local implementation
-    return configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
   }
+
+  // Reset daemon cache using the local daemon client (the inner handler's
+  // client belongs to the tmp install and isn't connected to our daemon)
+  await resetDaemonAgentStatus();
 }
 
 export async function configureAiAgentsHandlerImpl(
@@ -276,15 +282,6 @@ export async function configureAiAgentsHandlerImpl(
 
     configSpinner.stop();
 
-    // Tell the daemon to stop showing outdated agent messages
-    try {
-      if (await daemonClient.isServerAvailable()) {
-        await daemonClient.resetConfigureAiAgentsStatus();
-      }
-    } catch {
-      // Daemon may not be running, that's fine
-    }
-
     output.success({
       title: 'AI agents configured successfully',
       bodyLines: configuredOrUpdatedAgents.map(
@@ -407,4 +404,21 @@ function normalizeOptions(
     agents,
     check,
   };
+}
+
+async function resetDaemonAgentStatus(): Promise<void> {
+  try {
+    // Don't check daemonClient.enabled() — the CLI sets NX_DAEMON=false for
+    // configure-ai-agents (it doesn't need the daemon to do its work), but a
+    // daemon started by a previous command may still be running and serving
+    // cached status. We just need to reach it to reset its cache.
+    if (await daemonClient.isServerAvailable()) {
+      await daemonClient.resetConfigureAiAgentsStatus();
+    }
+  } catch {
+    // Daemon may not be running, that's fine
+  } finally {
+    // Close the daemon socket so the process can exit cleanly.
+    daemonClient.reset();
+  }
 }
