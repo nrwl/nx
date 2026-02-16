@@ -100,7 +100,7 @@ export async function getNxConsoleStatusImpl(): Promise<boolean> {
   const preferences = new NxConsolePreferences(homedir());
   const preference = preferences.getAutoInstallPreference();
 
-  const canInstallConsole = canInstallNxConsole();
+  const canInstallConsole = await canInstallNxConsole();
 
   // If user previously opted in but extension is not installed,
   // they must have manually uninstalled it - respect that choice
@@ -127,7 +127,7 @@ export async function handleNxConsolePreferenceAndInstallImpl(
 
   let installed = false;
   if (preference) {
-    installed = installNxConsole();
+    installed = await installNxConsole();
   }
 
   return { installed };
