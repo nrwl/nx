@@ -2,19 +2,10 @@
 
 We would love for you to contribute to Nx! Read this document to see how to do it.
 
-## How to Get Started Video
-
-Watch this 5-minute video:
-
-<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank" rel="noreferrer">
-<p style="text-align: center;"><img src="./images/how-to-contribute.png" width="600" alt="Nx - How to contribute"></p>
-</a>
-
 ## Got a Question?
 
-We are trying to keep GitHub issues for bug reports and feature requests. Using the `nrwl` tag
-on [Stack Overflow](https://stackoverflow.com/questions/tagged/nrwl) is a much better place to ask general questions
-about how to use Nx.
+We are trying to keep GitHub issues for bug reports and feature requests.
+You can join our [Discord](https://go.nx.dev/community) for general questions and seeking help from others.
 
 ## Found an Issue?
 
