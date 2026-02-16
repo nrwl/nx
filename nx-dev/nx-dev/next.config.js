@@ -2,8 +2,19 @@
 const { withNx } = require('@nx/next/plugins/with-nx');
 const redirectRules = require('./redirect-rules');
 
-if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
-  // If we're building for production throw error as each env must set this value.
+// For deploy previews, always point to the matching astro-docs preview
+// (overrides any site-level env var that would otherwise point to production).
+if (
+  !global.NX_GRAPH_CREATION &&
+  process.env.NETLIFY &&
+  process.env.CONTEXT === 'deploy-preview' &&
+  process.env.REVIEW_ID
+) {
+  process.env.NEXT_PUBLIC_ASTRO_URL = `https://deploy-preview-${process.env.REVIEW_ID}--nx-docs.netlify.app`;
+  console.log(
+    `[deploy-preview] NEXT_PUBLIC_ASTRO_URL overridden to: ${process.env.NEXT_PUBLIC_ASTRO_URL}`
+  );
+} else if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
   if (
     process.env.NODE_ENV === 'production' &&
     (process.env.VERCEL || process.env.NETLIFY)
@@ -11,9 +22,8 @@ if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
     throw new Error(
       `The NEXT_PUBLIC_ASTRO_URL environment variable is not set. Please set it to the URL of the Astro site.`
     );
-  }
-  // For dev, default to the canary docs.
-  else {
+  } else {
+    // For dev, default to the canary docs.
     process.env.NEXT_PUBLIC_ASTRO_URL = 'https://master--nx-docs.netlify.app';
   }
 }
