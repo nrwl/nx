@@ -28,10 +28,8 @@ nx add @nx/jest
 Verify the inferred test target in the project details view:
 
 ```shell
-nx show project my-app --web
+nx show project my-app
 ```
-
-Replace `my-app` with your project name.
 
 ### Add Jest to a project
 
@@ -42,6 +40,39 @@ nx g @nx/jest:configuration --project=my-app
 ```
 
 Replace `my-app` with your project name.
+
+The generator accepts framework-specific options to configure Jest correctly for your project:
+
+```shell
+# React project (enables JSX/TSX transform)
+nx g @nx/jest:configuration --project=my-react-lib --supportTsx
+
+# Angular project (configures jest-preset-angular)
+nx g @nx/jest:configuration --project=my-angular-lib --setupFile=angular
+
+# Node or plain TypeScript project
+nx g @nx/jest:configuration --project=my-node-lib --testEnvironment=node
+```
+
+| Option            | Description                                                    | Default |
+| ----------------- | -------------------------------------------------------------- | ------- |
+| `testEnvironment` | Test environment: `jsdom` (browser) or `node` (server)         | `jsdom` |
+| `supportTsx`      | Enable JSX/TSX support. Required for React projects.           | `false` |
+| `setupFile`       | Setup file preset: `none`, `angular`, or `web-components`      | `none`  |
+| `compiler`        | Compiler to use: `tsc`, `babel`, or `swc`                      | `tsc`   |
+| `skipSerializers` | Skip Angular snapshot serializers. Set to `false` for Angular. | `false` |
+
+See the full [configuration generator reference](/docs/technologies/test-tools/jest/generators#configuration) for all options.
+
+{% aside type="tip" title="Framework generators handle this automatically" %}
+When generating a new project with a framework generator, you can specify Jest as the test runner and Nx passes the correct options automatically:
+
+```shell
+nx g @nx/react:lib libs/my-react-lib --unitTestRunner=jest
+nx g @nx/node:app apps/my-api --unitTestRunner=jest
+```
+
+{% /aside %}
 
 ## Local Development
 
@@ -60,7 +91,7 @@ nx test my-app --watch
 Run a specific file (positional argument or `--testFile`):
 
 ```shell
-nx test my-app user-profile.spec.ts
+nx test my-app ./path/to/spec/file/user-profile.spec.ts
 nx test my-app --testFile user-profile.spec.ts
 ```
 
@@ -141,7 +172,7 @@ Use two plugin entries to separate unit and E2E Jest tasks, and enable CI splitt
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/**/*"],
       "options": {
-        "targetName": "e2e-local",
+        "targetName": "e2e",
         "ciTargetName": "e2e-ci"
       }
     }
@@ -156,30 +187,43 @@ Use two plugin entries to separate unit and E2E Jest tasks, and enable CI splitt
 Open the project details view in Nx Console or run:
 
 ```shell
-nx show project my-app --web
+nx show project my-app
 ```
 
-Replace `my-app` with your project name.
+## CI Considerations
 
-## CI and Scale
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-Run affected tests in CI with single-process Jest workers:
+### Build and Test Only What Changed
 
 ```shell
-nx affected -t test -- --runInBand
+nx affected -t build test typecheck lint
 ```
 
-Connect the workspace to Nx Cloud for remote caching and distributed task execution:
+This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
+Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
+
+### Remote Caching
+
+Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
 ```shell
 nx connect
 ```
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a full CI guide.
+### Performance with parallelization
 
-### CI Considerations
+Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] --runInBand` for the best performance.
 
-Use `--runInBand` (or reduce Jest workers) in CI to avoid oversubscribing CPU when running many projects.
+This is because each jest process creates a workers based on system resources, running multiple projects via nx and using jest workers will create too many process overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process. You can then leverage Nx parallelism to run multiple jest projects at once.
+
+### Batch Mode
+
+For large monorepos with many Jest projects, Batch mode can improve performance by batching compilation across projects into a single process.
+
+```shell
+NX_BATCH_MODE=true nx run-many -t test
+```
 
 ## What's Next
 

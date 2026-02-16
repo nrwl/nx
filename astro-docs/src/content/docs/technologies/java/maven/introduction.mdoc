@@ -12,7 +12,7 @@ The `@nx/maven` plugin is currently experimental. Features and APIs may change.
 
 [Apache Maven](https://maven.apache.org/) is a build tool for Java projects that uses a project object model (POM) to manage builds.
 
-The `@nx/maven` plugin registers Maven modules as Nx projects so you can [set up Maven with Nx](#setup), [run daily Maven tasks](#local-development), [configure task inference](#configuration), and [run in CI](#ci-and-scale).
+The `@nx/maven` plugin registers Maven modules as Nx projects so you can [set up Maven with Nx](#setup), [run daily Maven tasks](#local-development), [configure task inference](#configuration), and [run in CI](#ci-considerations).
 
 You can use Maven with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -31,8 +31,10 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tabitem label="npm" %}
 
 ```shell
-npm add --global nx@latest
+npm install --global nx@latest
 ```
+
+> You can use `pnpm`, `yarn`, or `bun` if you prefer as well.
 
 {% /tabitem %}
 {% tabitem label="Homebrew (macOS, Linux)" %}
@@ -149,9 +151,27 @@ Configure the plugin in the `plugins` array of `nx.json`.
 | `targetNamePrefix` | string  | `undefined` | Prefix all inferred Maven targets to avoid name collisions in polyglot workspaces.          |
 | `verbose`          | boolean | `false`     | Enable verbose logging for the Maven analyzer. Also settable via `NX_VERBOSE_LOGGING=true`. |
 
-There is no per-project disable for the plugin. To stop inference, remove `@nx/maven` from the `plugins` array in `nx.json`.
+### Exclude or Include Specific Projects
 
-## CI and Scale
+Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
+
+```json {% meta="{5-6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/maven",
+      "include": ["apps/**/*"],
+      "exclude": ["apps/legacy-app/**/*"],
+      "options": { ... }
+    }
+  ]
+}
+```
+
+There is no per-project disable for `@nx/maven`. To stop inference entirely, remove `@nx/maven` from the `plugins` array in `nx.json`.
+
+## CI Considerations
 
 Build and test only what changed using the project graph:
 
@@ -165,9 +185,15 @@ Connect Nx Cloud to share cache results and speed up Maven builds in CI:
 nx connect
 ```
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete configuration guide.
+### Batch Mode
 
-### CI Considerations
+Batch mode runs multiple Gradle tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
+
+```shell
+NX_BATCH_MODE=true nx run-many -t build test
+```
+
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete configuration guide.
 
 If you use Maven profiles or parallel builds in CI, define them in `.mvn/maven.config` (for example `-Pci` or `-T1C`) so Nx runs the same settings consistently.
 

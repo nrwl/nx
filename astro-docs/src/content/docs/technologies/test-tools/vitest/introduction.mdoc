@@ -8,7 +8,7 @@ filter: 'type:References'
 
 [Vitest](https://vitest.dev) is a fast test runner built on Vite.
 
-The `@nx/vitest` plugin adds [inferred Vitest targets](#configuration), a [project configuration generator](#add-vitest-to-a-project), and CI-friendly [test splitting](#ci-and-scale).
+The `@nx/vitest` plugin adds [inferred Vitest targets](#configuration), a [project configuration generator](#add-vitest-to-a-project), and CI-friendly [test splitting](#ci-considerations).
 
 You can use Vitest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -30,20 +30,51 @@ nx add @nx/vitest
 Nx infers Vitest tasks from your Vitest or Vite config files. To confirm which targets were created, open the project details view in Nx Console or run:
 
 ```shell
-nx show project my-app --web
+nx show project my-app
 ```
-
-Replace `my-app` with your project name.
 
 ### Add Vitest to a project
 
-For test tools, "create new" means adding test configuration to an existing project. Use the configuration generator:
+Use the configuration generator to set up a project with Vitest:
 
 ```shell
 nx g @nx/vitest:configuration --project=my-app
 ```
 
-Replace `my-app` with your project name.
+The generator accepts framework-specific options to configure Vitest correctly for your project:
+
+```shell
+# React project
+nx g @nx/vitest:configuration --project=my-react-lib --uiFramework=react
+
+# Vue project
+nx g @nx/vitest:configuration --project=my-vue-lib --uiFramework=vue
+
+# Angular project
+nx g @nx/vitest:configuration --project=my-angular-lib --uiFramework=angular
+
+# Node or plain TypeScript project
+nx g @nx/vitest:configuration --project=my-node-lib --testEnvironment=node
+```
+
+| Option             | Description                                                       | Default       |
+| ------------------ | ----------------------------------------------------------------- | ------------- |
+| `uiFramework`      | UI framework: `react`, `vue`, `angular`, or `none`                | auto-detected |
+| `testEnvironment`  | Test environment: `jsdom`, `node`, `happy-dom`, or `edge-runtime` | `jsdom`       |
+| `coverageProvider` | Coverage provider: `v8`, `istanbul`, or `custom`                  | `v8`          |
+| `compiler`         | Compiler to use: `babel` or `swc`                                 | `babel`       |
+
+See the full [configuration generator reference](/docs/technologies/test-tools/vitest/generators#configuration) for all options.
+
+{% aside type="tip" title="Framework generators handle this automatically" %}
+When generating a new project with a framework generator, you can specify Vitest as the test runner and Nx passes the correct options automatically:
+
+```shell
+nx g @nx/react:lib libs/my-react-lib --unitTestRunner=vitest
+nx g @nx/vue:lib libs/my-vue-lib --unitTestRunner=vitest
+```
+
+{% /aside %}
 
 ## Local Development
 
@@ -92,7 +123,7 @@ The `@nx/vitest` plugin creates a target for any project that has a Vitest or Vi
 - `vite.config.cjs` (with `test` configuration)
 - `vite.config.cts` (with `test` configuration)
 
-To view inferred tasks, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-app --web`.
+To view inferred tasks, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-app`.
 
 ### Plugin options
 
@@ -144,7 +175,7 @@ If you use Vitest for unit and e2e tests, configure the plugin twice with differ
       "plugin": "@nx/vitest",
       "include": ["e2e/**/*"],
       "options": {
-        "testTargetName": "e2e-local",
+        "testTargetName": "e2e",
         "ciTargetName": "e2e-ci",
         "ciGroupName": "E2E Tests (CI)",
         "testMode": "run"
@@ -154,25 +185,30 @@ If you use Vitest for unit and e2e tests, configure the plugin twice with differ
 }
 ```
 
-## CI and Scale
+## CI Considerations
 
-Use affected commands to run only the tests that changed:
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+
+### Build and Test Only What Changed
 
 ```shell
 nx affected -t test
 ```
 
-Connect Nx Cloud to share cache results across your team and CI:
+This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
+Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
+
+### Remote Caching
+
+Share test and e2e cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
 ```shell
 nx connect
 ```
 
+### Task splitting with Atomizer
+
 If Vitest is running E2E tests, set `ciTargetName` to split tests by file for distributed CI runs. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
-
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
-
-### CI Considerations
 
 If you use `testMode: "watch"` locally, set `ciTargetName` and use `testMode: "run"` for CI to keep runs deterministic.
 

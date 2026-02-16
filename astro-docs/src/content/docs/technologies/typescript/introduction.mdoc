@@ -8,8 +8,11 @@ sidebar:
 filter: 'type:References'
 ---
 
-The TypeScript plugin for Nx, `@nx/js`, provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-nxjstypescript-infers-tasks) for your projects.
+The TypeScript plugin for Nx, `@nx/js`, provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-nxjstypescript-infers-tasks) for your projects using package manager workspaces and TypeScript project references. Maintaining TypeScript project references in a monorepo can be cumbersome, the `@nx/js` plugin comes with a [sync generator](/docs/concepts/sync-generators) to automatically upkeep these references.
+
 You don't need the plugin to use TypeScript with Nx, any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin can help simplify setups and maintenance of TypeScript projects at scale.
+
+See the [TypeScript compatibility matrix](/docs/reference/nodejs-typescript-compatibility#typescript-compatibility) for supported TypeScript versions.
 
 ## Setting Up @nx/js plugin
 
@@ -87,6 +90,16 @@ You can [migrate an existing workspace from path aliases ](/docs/technologies/ty
 
 If you want to keep using the older style of setups with `compilerOptions.paths`, use `create-nx-workspace --preset=apps`.
 
+### Add Build Support to an Existing Project
+
+If you have a TypeScript project that doesn't have a build target, you can use the [`setup-build` generator](/docs/technologies/typescript/generators#setup-build) to add one:
+
+```shell
+nx g @nx/js:setup-build my-lib
+```
+
+You'll be prompted to choose a bundler. This configures the project for compilation without recreating it from scratch.
+
 ## Generate and Manage TypeScript Libraries
 
 ### Create a Library
@@ -129,8 +142,6 @@ SWC dependencies are installed automatically the first time the generator is ran
 
 ### Build TypeScript Libraries
 
-> If you did not select a bundler for your project initially, you can use the [`nx g @nx/js:setup-build` generator](/docs/technologies/typescript/generators#setup-build) to add a build target!
-
 ```shell
 nx build my-lib
 ```
@@ -160,22 +171,6 @@ nx typecheck my-lib
 The `typecheck` task is automatically inferred for any project with a `tsconfig.json`.
 
 If you're not using inferred plugins, then you can manually define a `typecheck` target in your [projects configuration](/docs/reference/project-configuration#project-level-configuration-files).
-
-### Run Unit Tests
-
-By default, new libraries are generated with [Jest](/docs/technologies/test-tools/jest/introduction). You can also use [Vitest](/docs/technologies/test-tools/vitest/introduction) by specifying the [`--unitTestRunner` option](/docs/technologies/typescript/generators#unittestrunner) when generating a library.
-
-```shell
-nx test <project-name>
-```
-
-### Run Linting
-
-Linting is configured with [ESLint](/docs/technologies/eslint/introduction) by default. See the [`@nx/eslint` plugin](/docs/technologies/eslint/introduction) for configuration options.
-
-```shell
-nx lint <project-name>
-```
 
 ## Configure `@nx/js` TypeScript Inference
 
@@ -261,11 +256,29 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 
 Set `typecheck` or `build` to `false` to disable that task entirely.
 
-### Disable Typechecking for a Specific Project
+### Exclude or Include Specific Projects
 
-To opt a specific project out of the `typecheck` task, set `nx.addTypecheckTarget` to `false` in that project's `tsconfig.json`:
+You can control which projects the plugin applies to at three levels:
 
-```json {% meta="{8-10}" %}
+**Plugin-level:** Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
+
+```json {% meta="{5-6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["packages/**/*"],
+      "exclude": ["packages/legacy-app/**/*"],
+      "options": { ... }
+    }
+  ]
+}
+```
+
+**Project-level:** To opt a specific project out of the `typecheck` task, set `nx.addTypecheckTarget` to `false` in that project's `tsconfig.json`:
+
+```json {% meta="{6-8}" %}
 // packages/my-lib/tsconfig.json
 {
   "extends": "../../tsconfig.base.json",
@@ -299,6 +312,7 @@ nx affected -t build test typecheck lint
 ```
 
 This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
+Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
 ### Remote Caching
 

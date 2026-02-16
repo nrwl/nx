@@ -8,9 +8,11 @@ sidebar:
 filter: 'type:References'
 ---
 
-[Angular](https://angular.dev) is a framework for building web applications.
-The `@nx/angular` plugin adds [generators](#local-development), [inferred targets](#configure-angular-task-inference), and Angular CLI builder integration so you can run Angular tasks through Nx.
+[Angular](https://angular.dev) is a framework for building web applications. Nx has first party support for Angular projects. If you're familar with the Angular CLI, `ng`, then Nx CLI will feel very familiar.
+The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+See the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) to know which Nx version supports a given Angular version.
 
 ## Setup
 
@@ -28,49 +30,30 @@ nx add @nx/angular
 Verify the plugin is active by inspecting an Angular project:
 
 ```shell
-nx show project my-app --web
+nx show project <your-app-name>
 ```
 
 Look for `build`, `serve`, `test`, `lint`, or `e2e` targets generated from `angular.json`.
-Replace `my-app` with your project name.
-
-If you need version compatibility details, see the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
 
 ### Create a new workspace
 
 ```shell
-npx create-nx-workspace my-org --preset=angular-standalone
+npx create-nx-workspace my-org --preset=angular-monorepo
 ```
 
-Replace `my-org` with your workspace name.
-
-{% aside type="note" title="Want a monorepo instead?" %}
-Use `--preset=angular-monorepo` to start with a monorepo layout.
-{% /aside %}
-
-{% aside type="note" title="Angular Tutorial" %}
+{% aside type="tip" title="Angular Tutorial" %}
 For a guided walkthrough, follow the [Angular Monorepo Tutorial](/docs/getting-started/tutorials/angular-monorepo-tutorial).
 {% /aside %}
 
 ## Local Development
 
-### Generate Angular Apps and Libraries
+### Generate an Angular Application
 
 ```shell
 nx g @nx/angular:app apps/my-app
-nx g @nx/angular:lib libs/my-lib
 ```
 
-By default, Nx configures ESLint for linting, Jest for unit tests, and Cypress for e2e tests. Replace `my-app` and `my-lib` with your project names.
-
-### Generate Components and Services
-
-```shell
-nx g @nx/angular:component libs/my-lib/src/lib/my-component --project=my-lib
-nx g @nx/angular:service libs/my-lib/src/lib/my-service --project=my-lib
-```
-
-### Run Angular Tasks
+By default, Nx configures ESLint for linting, Jest for unit tests, and Cypress for e2e tests. Read more of the options available for the application generator in the [Angular application generators reference](/docs/technologies/angular/generators#application).
 
 ```shell
 nx serve my-app
@@ -80,47 +63,24 @@ nx lint my-app
 nx e2e my-app
 ```
 
+### Generate an Angular Library
+
+```shell
+nx g @nx/angular:lib libs/my-lib
+```
+
+By default, Nx configures ESLint for linting, Jest for unit tests. Read more of the options available for the application generator in the [angular library generators reference](/docs/technologies/angular/generators#library).
+
+There are also generators for setting up common items inside your projects, such as components and services:
+
+```shell
+nx g @nx/angular:component libs/my-lib/src/lib/my-component --project=my-lib
+nx g @nx/angular:service libs/my-lib/src/lib/my-service --project=my-lib
+```
+
 ```shell
 nx test my-lib
 nx lint my-lib
-```
-
-For all generator and executor options, see the [Angular Generators Reference](/docs/technologies/angular/generators) and [Angular Executors Reference](/docs/technologies/angular/executors).
-
-## Configure Angular Task Inference
-
-The Angular plugin infers tasks by reading the targets (or legacy `architect`) defined in `angular.json` and turns them into runnable Nx targets. This means Angular CLI builders run through Nx with caching and task orchestration applied.
-
-Configure the plugin in `nx.json`:
-
-```json
-// nx.json
-{
-  "plugins": [
-    {
-      "plugin": "@nx/angular",
-      "options": {
-        "targetNamePrefix": "angular-"
-      }
-    }
-  ]
-}
-```
-
-### Options
-
-| Option             | Description                                                                                        | Default |
-| ------------------ | -------------------------------------------------------------------------------------------------- | ------- |
-| `targetNamePrefix` | Prefix all inferred Angular targets (for example, `angular-build`). Useful in polyglot workspaces. | none    |
-
-`@nx/angular` currently exposes `targetNamePrefix` as its only plugin option. There is no per-project or per-target disable switch; remove `@nx/angular` from the `plugins` array to disable inference entirely and define explicit targets in `project.json` if you want full control.
-
-For all generator and executor options, see the [Angular Generators Reference](/docs/technologies/angular/generators) and [Angular Executors Reference](/docs/technologies/angular/executors).
-
-### View Inferred Tasks
-
-```shell
-nx show project my-app --web
 ```
 
 ### Buildable and Publishable Libraries
@@ -128,7 +88,31 @@ nx show project my-app --web
 If you need libraries that build or publish, generate them with build output enabled and an import path. This creates build targets you can cache and run in CI.
 See [Set up incremental builds for Angular libraries](/docs/technologies/angular/guides/setup-incremental-builds-angular) for details.
 
-## CI and Scale
+```shell
+nx g @nx/angular:lib libs/my-lib
+```
+
+### Set Up Module Federation
+
+Nx includes generators for scaffolding [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx) architectures with Angular. Generate a host application and its remotes in one command:
+
+```shell
+nx g @nx/angular:host apps/shell --remotes=products,checkout
+```
+
+> See all options in the [Angular host generators reference](/docs/technologies/angular/generators#host).
+
+Add a remote to an existing host:
+
+```shell
+nx g @nx/angular:remote apps/login --host=shell
+```
+
+> See all options in the [Angular remote generators reference](/docs/technologies/angular/generators#remote).
+
+Pass `--dynamic` for [dynamic federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/technologies/angular/guides/module-federation-with-ssr).
+
+## CI Considerations
 
 Run only what changed using the project graph:
 
@@ -142,27 +126,16 @@ Enable remote caching for faster CI runs:
 nx connect
 ```
 
-### CI Considerations
-
 If you use Angular CLI configurations, define a `ci` configuration in `angular.json` and run tasks with `--configuration=ci` for CI-specific settings.
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete guide. Angular CLI targets are executed via Nx, so your existing `angular.json` configuration continues to work in CI.
-
-## AI Prompt
-
-{% aside type="tip" title="AI Prompt" %}
-Copy this prompt to your AI assistant:
-
-> Add `@nx/angular` to my workspace, generate an Angular app called `my-app` and a library called `my-lib`, then show me how to serve, build, test, lint, and run e2e.
-
-{% /aside %}
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a sample CI setup.
 
 ## What's Next
 
 {% cardgrid %}
 {% linkcard title="Angular Monorepo Tutorial" description="Build an Angular monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/angular-monorepo-tutorial" /%}
 {% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/technologies/angular/migration/angular" /%}
-{% linkcard title="Module Federation with Angular" description="Scale Angular with Module Federation and Nx." href="/docs/technologies/module-federation/concepts/faster-builds-with-module-federation" /%}
+{% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="/docs/technologies/angular/guides/dynamic-module-federation-with-angular" /%}
 {% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects" /%}
 {% linkcard title="Angular Generators Reference" description="All @nx/angular generators." href="/docs/technologies/angular/generators" /%}
 {% linkcard title="Angular Executors Reference" description="All @nx/angular executors." href="/docs/technologies/angular/executors" /%}
