@@ -11,7 +11,7 @@ export const yargsListCommand: CommandModule = {
       description: 'The name of an installed plugin to query.',
     }),
   handler: async (args: any) => {
-    await (await handleImport('./list.js')).listHandler(args);
+    await (await handleImport('./list.js', __dirname)).listHandler(args);
     process.exit(0);
   },
 };

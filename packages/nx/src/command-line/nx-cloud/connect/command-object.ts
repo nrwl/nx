@@ -13,10 +13,10 @@ export const yargsConnectCommand: CommandModule = {
   handler: async (args: any) => {
     const checkRemote = process.env.NX_SKIP_CHECK_REMOTE !== 'true';
     await (
-      await handleImport('./connect-to-nx-cloud.js')
+      await handleImport('./connect-to-nx-cloud.js', __dirname)
     ).connectToNxCloudCommand({ ...args, checkRemote });
     await (
-      await handleImport('../../../utils/ab-testing.js')
+      await handleImport('../../../utils/ab-testing.js', __dirname)
     ).recordStat({
       command: 'connect',
       nxVersion,
@@ -39,5 +39,7 @@ export const yargsViewLogsCommand: CommandModule = {
   describe:
     'Enables you to view and interact with the logs via the advanced analytic UI from Nx Cloud to help you debug your issue. To do this, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details. Only the metrics are uploaded, not the artefacts.',
   handler: async () =>
-    process.exit(await (await handleImport('./view-logs.js')).viewLogs()),
+    process.exit(
+      await (await handleImport('./view-logs.js', __dirname)).viewLogs()
+    ),
 };

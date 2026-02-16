@@ -13,7 +13,7 @@ export const yargsExecCommand: CommandModule = {
   handler: async (args) => {
     try {
       await (
-        await handleImport('./exec.js')
+        await handleImport('./exec.js', __dirname)
       ).nxExecCommand(withOverrides(args) as any);
       process.exit(0);
     } catch (e) {

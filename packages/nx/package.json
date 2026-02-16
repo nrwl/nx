@@ -202,6 +202,26 @@
       "types": "./src/**/*.d.ts",
       "default": "./dist/src/**/*.js"
     },
+    "./src/utils/plugins": {
+      "@nx/nx-source": "./src/utils/plugins/index.ts",
+      "types": "./src/utils/plugins/index.d.ts",
+      "default": "./dist/src/utils/plugins/index.js"
+    },
+    "./src/utils/plugins/*": {
+      "@nx/nx-source": "./src/utils/plugins/*.ts",
+      "types": "./src/utils/plugins/*.d.ts",
+      "default": "./dist/src/utils/plugins/*.js"
+    },
+    "./src/utils/catalog": {
+      "@nx/nx-source": "./src/utils/catalog/index.ts",
+      "types": "./src/utils/catalog/index.d.ts",
+      "default": "./dist/src/utils/catalog/index.js"
+    },
+    "./src/utils/catalog/*": {
+      "@nx/nx-source": "./src/utils/catalog/*.ts",
+      "types": "./src/utils/catalog/*.d.ts",
+      "default": "./dist/src/utils/catalog/*.js"
+    },
     "./src/**/*.js": {
       "@nx/nx-source": "./src/**/*.ts",
       "types": "./src/**/*.d.ts",
@@ -221,6 +241,10 @@
       "@nx/nx-source": "./release/index.ts",
       "types": "./release/index.d.ts",
       "default": "./dist/release/index.js"
+    },
+    "./presets/*": {
+      "@nx/nx-source": "./presets/*.json",
+      "default": "./dist/presets/*.json"
     }
   }
 }

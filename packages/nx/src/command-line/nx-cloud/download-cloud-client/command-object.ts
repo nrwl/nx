@@ -9,7 +9,7 @@ export const yargsDownloadCloudClientCommand: CommandModule = {
   handler: async (args: any) => {
     process.exit(
       await (
-        await handleImport('./download-cloud-client.js')
+        await handleImport('./download-cloud-client.js', __dirname)
       ).downloadCloudClientHandler(args)
     );
   },

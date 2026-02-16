@@ -7,7 +7,7 @@ export const yargsMcpCommand: CommandModule = {
   // @ts-expect-error - yargs types are outdated, refer to docs - https://github.com/yargs/yargs/blob/main/docs/api.md#commandmodule
   builder: async (y: Argv, helpOrVersionSet: boolean) => {
     if (helpOrVersionSet) {
-      (await handleImport('./mcp')).showHelp();
+      (await handleImport('./mcp', __dirname)).showHelp();
       process.exit(0);
     }
     return y
@@ -22,7 +22,7 @@ export const yargsMcpCommand: CommandModule = {
       .showHelpOnFail(false);
   },
   handler: async (args: any) => {
-    await (await handleImport('./mcp.js')).mcpHandler(args);
+    await (await handleImport('./mcp.js', __dirname)).mcpHandler(args);
     process.exit(0);
   },
 };

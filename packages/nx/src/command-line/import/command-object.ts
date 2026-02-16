@@ -47,7 +47,9 @@ export const yargsImportCommand: CommandModule = {
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      return (await handleImport('./import.js')).importHandler(args as any);
+      return (await handleImport('./import.js', __dirname)).importHandler(
+        args as any
+      );
     });
     process.exit(exitCode);
   },

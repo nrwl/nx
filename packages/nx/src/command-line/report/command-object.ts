@@ -6,7 +6,7 @@ export const yargsReportCommand: CommandModule = {
   describe:
     'Reports useful version numbers to copy into the Nx issue template.',
   handler: async () => {
-    await (await handleImport('./report.js')).reportHandler();
+    await (await handleImport('./report.js', __dirname)).reportHandler();
     process.exit(0);
   },
 };

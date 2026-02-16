@@ -9,7 +9,7 @@ export const yargsWatchCommand: CommandModule = {
   describe: 'Watch for changes within projects, and execute commands.',
   builder: (yargs) => linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
   handler: async (args) => {
-    await handleImport('./watch.js').then((m) =>
+    await handleImport('./watch.js', __dirname).then((m) =>
       m.watch(args as WatchArguments)
     );
   },

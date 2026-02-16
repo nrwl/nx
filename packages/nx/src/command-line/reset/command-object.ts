@@ -39,5 +39,5 @@ export const yargsResetCommand: CommandModule<
         type: 'boolean',
       }),
   handler: async (argv) =>
-    (await handleImport('./reset.js')).resetHandler(argv),
+    (await handleImport('./reset.js', __dirname)).resetHandler(argv),
 };

@@ -133,8 +133,10 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } =
-      await handleImport('../native/index.js');
+    const { AppLifeCycle, restoreTerminal } = await handleImport(
+      '../native/index.js',
+      __dirname
+    );
     let appLifeCycle;
 
     const isRunOne = initiatingProject != null;
