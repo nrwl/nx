@@ -42,7 +42,7 @@ export const yargsAddCommand: CommandModule<{}, AddOptions> = {
       ) as any,
   handler: async (args) => {
     process.exit(
-      await handleImport('./add.js').then((m) =>
+      await handleImport('./add.js', __dirname).then((m) =>
         m.addHandler(withOverrides(args))
       )
     );

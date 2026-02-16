@@ -414,7 +414,9 @@ export async function generate(args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (await handleImport('../../adapter/ngcli-adapter.js')).generate(
+      return (
+        await handleImport('../../adapter/ngcli-adapter.js', __dirname)
+      ).generate(
         workspaceRoot,
         {
           ...opts,

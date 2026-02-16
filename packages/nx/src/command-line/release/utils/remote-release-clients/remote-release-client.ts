@@ -251,7 +251,10 @@ export async function createRemoteReleaseClient(
         createReleaseConfig.provider === 'github'):
     // If remote releases are disabled, assume GitHub repo data resolution (but don't attempt to resolve a token) to match existing behavior
     case createReleaseConfig === false: {
-      const { GithubRemoteReleaseClient } = await handleImport('./github.js');
+      const { GithubRemoteReleaseClient } = await handleImport(
+        './github.js',
+        __dirname
+      );
       const repoData = GithubRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
         remoteName
@@ -269,7 +272,10 @@ export async function createRemoteReleaseClient(
     // GitLab
     case typeof createReleaseConfig === 'object' &&
       createReleaseConfig.provider === 'gitlab': {
-      const { GitLabRemoteReleaseClient } = await handleImport('./gitlab.js');
+      const { GitLabRemoteReleaseClient } = await handleImport(
+        './gitlab.js',
+        __dirname
+      );
       const repoData = GitLabRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
         remoteName

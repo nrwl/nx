@@ -13,7 +13,9 @@ export const yargsStartCiRunCommand: CommandModule = {
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(
-      await (await handleImport('./start-ci-run.js')).startCiRunHandler(args)
+      await (
+        await handleImport('./start-ci-run.js', __dirname)
+      ).startCiRunHandler(args)
     );
   },
 };

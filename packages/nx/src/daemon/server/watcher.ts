@@ -14,7 +14,7 @@ export type FileWatcherCallback = (
 ) => Promise<void>;
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
-  const { Watcher } = await handleImport('../../native/index.js');
+  const { Watcher } = await handleImport('../../native/index.js', __dirname);
 
   const watcher = new Watcher(workspaceRoot);
   watcher.watch((err, events) => {
@@ -44,7 +44,7 @@ export async function watchOutputFiles(
   server: Server,
   cb: FileWatcherCallback
 ) {
-  const { Watcher } = await handleImport('../../native/index.js');
+  const { Watcher } = await handleImport('../../native/index.js', __dirname);
 
   const relativeServerProcess = normalizePath(
     relative(workspaceRoot, serverProcessJsonPath)
