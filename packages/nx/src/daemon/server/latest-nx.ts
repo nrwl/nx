@@ -25,16 +25,19 @@ export async function getLatestNxTmpPath(): Promise<string> {
   }
 
   installPromise = (async () => {
-    serverLogger.log('[LATEST-NX]: Pulling latest Nx...');
-    const result = await installPackageToTmpAsync('nx', 'latest');
-    latestNxTmpPath = result.tempDir;
-    cleanupFn = result.cleanup;
-    installPromise = null;
-    serverLogger.log(
-      '[LATEST-NX]: Successfully pulled latest Nx to',
-      latestNxTmpPath
-    );
-    return latestNxTmpPath;
+    try {
+      serverLogger.log('[LATEST-NX]: Pulling latest Nx...');
+      const result = await installPackageToTmpAsync('nx', 'latest');
+      latestNxTmpPath = result.tempDir;
+      cleanupFn = result.cleanup;
+      serverLogger.log(
+        '[LATEST-NX]: Successfully pulled latest Nx to',
+        latestNxTmpPath
+      );
+      return latestNxTmpPath;
+    } finally {
+      installPromise = null;
+    }
   })();
   return installPromise;
 }
