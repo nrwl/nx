@@ -6,11 +6,11 @@ import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
+import { getLeafTasks } from '../task-graph-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as figures from 'figures';
 import * as pc from 'picocolors';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
-import { getLeafTasks } from '../task-graph-utils';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -50,6 +50,7 @@ export function getTuiTerminalSummaryLifeCycle({
   const failedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
   const stoppedTasks = new Set<string>();
+  const displayStoppedTasks = new Set<string>();
 
   // Chunks accumulated progressively during task execution
   const taskOutputChunks: Record<string, string[]> = {};
@@ -89,7 +90,7 @@ export function getTuiTerminalSummaryLifeCycle({
   };
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
-      stoppedTasks.add(taskId);
+      displayStoppedTasks.add(taskId);
       inProgressTasks.delete(taskId);
     }
   };
@@ -148,14 +149,9 @@ export function getTuiTerminalSummaryLifeCycle({
 
     const failure = totalSuccessfulTasks !== totalTasks;
     const cancelled =
-      // Some tasks were in progress...
+      stoppedTasks.size > 0 ||
       inProgressTasks.size > 0 ||
-      // or some tasks had not started yet
-      totalTasks !== tasks.length ||
-      // the run had a continous task as a leaf...
-      // this is needed because continous tasks get marked as stopped when the process is interrupted
-      [...getLeafTasks(taskGraph)].filter((t) => taskGraph.tasks[t].continuous)
-        .length > 0;
+      [...getLeafTasks(taskGraph)].some((t) => taskGraph.tasks[t]?.continuous);
 
     if (isRunOne) {
       printRunOneSummary({
@@ -328,8 +324,8 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = getTerminalOutput(taskId);
-      // Check stopped tasks first (before other status checks)
-      if (stoppedTasks.has(taskId)) {
+      // Check stopped/display-stopped tasks first (before other status checks)
+      if (displayStoppedTasks.has(taskId)) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         checklistLines.push(
@@ -476,12 +472,20 @@ export function getTuiTerminalSummaryLifeCycle({
       failureSummaryRows.push('');
 
       if (totalCompletedTasks > 0) {
+        // For display purposes, treat stopped tasks as in-progress
+        // (they were running when the process was interrupted)
+        const displayCompleted = totalCompletedTasks - stoppedTasks.size;
+        const displayInProgress = new Set([
+          ...inProgressTasks,
+          ...stoppedTasks,
+        ]);
+
         if (totalSuccessfulTasks > 0) {
           failureSummaryRows.push(
             output.dim(
               `${LEFT_PAD}${output.dim(
                 figures.tick
-              )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+              )}${SPACER}${totalSuccessfulTasks}${`/${displayCompleted}`} succeeded ${output.dim(
                 `[${totalCachedTasks} read from cache]`
               )}`
             ),
@@ -497,7 +501,7 @@ export function getTuiTerminalSummaryLifeCycle({
           failureSummaryRows.push(
             `${LEFT_PAD}${output.colors.red(
               figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
+            )}${SPACER}${totalFailedTasks}${`/${displayCompleted}`} targets failed, including the following:`,
             '',
             `${failedTasksForPrinting
               .map(
@@ -519,15 +523,15 @@ export function getTuiTerminalSummaryLifeCycle({
             );
           }
         }
-        if (totalCompletedTasks !== totalTasks) {
-          const remainingTasks = totalTasks - totalCompletedTasks;
-          if (inProgressTasks.size) {
+        if (displayCompleted !== totalTasks) {
+          const remainingTasks = totalTasks - displayCompleted;
+          if (displayInProgress.size) {
             failureSummaryRows.push(
               `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                inProgressTasks.size
+                displayInProgress.size
               }${`/${totalTasks}`} targets were in progress, including the following:`,
               '',
-              `${Array.from(inProgressTasks)
+              `${Array.from(displayInProgress)
                 .map(
                   (t) =>
                     `${EXTENDED_LEFT_PAD}${output.colors.red(
@@ -538,11 +542,11 @@ export function getTuiTerminalSummaryLifeCycle({
               ''
             );
           }
-          if (remainingTasks - inProgressTasks.size > 0) {
+          if (remainingTasks - displayInProgress.size > 0) {
             failureSummaryRows.push(
               output.dim(
                 `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                  remainingTasks - inProgressTasks.size
+                  remainingTasks - displayInProgress.size
                 }${`/${totalTasks}`} targets had not started.`
               ),
               ''
