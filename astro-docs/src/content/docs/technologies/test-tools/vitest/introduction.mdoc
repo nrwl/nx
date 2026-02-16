@@ -41,28 +41,46 @@ Use the configuration generator to set up a project with Vitest:
 nx g @nx/vitest:configuration --project=my-app
 ```
 
-The generator accepts framework-specific options to configure Vitest correctly for your project:
+The generator accepts framework-specific options. Pass the right flags for your project type:
+
+{% tabs syncKey="framework" %}
+{% tabitem label="React" %}
 
 ```shell
-# React project
 nx g @nx/vitest:configuration --project=my-react-lib --uiFramework=react
+```
 
-# Vue project
+Sets up Vitest with React JSX support and `jsdom` test environment.
+
+{% /tabitem %}
+{% tabitem label="Vue" %}
+
+```shell
 nx g @nx/vitest:configuration --project=my-vue-lib --uiFramework=vue
+```
 
-# Angular project
+Sets up Vitest with Vue SFC support and `jsdom` test environment.
+
+{% /tabitem %}
+{% tabitem label="Angular" %}
+
+```shell
 nx g @nx/vitest:configuration --project=my-angular-lib --uiFramework=angular
+```
 
-# Node or plain TypeScript project
+Configures Vitest for Angular with the appropriate test setup.
+
+{% /tabitem %}
+{% tabitem label="Node / TypeScript" %}
+
+```shell
 nx g @nx/vitest:configuration --project=my-node-lib --testEnvironment=node
 ```
 
-| Option             | Description                                                       | Default       |
-| ------------------ | ----------------------------------------------------------------- | ------------- |
-| `uiFramework`      | UI framework: `react`, `vue`, `angular`, or `none`                | auto-detected |
-| `testEnvironment`  | Test environment: `jsdom`, `node`, `happy-dom`, or `edge-runtime` | `jsdom`       |
-| `coverageProvider` | Coverage provider: `v8`, `istanbul`, or `custom`                  | `v8`          |
-| `compiler`         | Compiler to use: `babel` or `swc`                                 | `babel`       |
+Uses the `node` test environment instead of the default `jsdom`.
+
+{% /tabitem %}
+{% /tabs %}
 
 See the full [configuration generator reference](/docs/technologies/test-tools/vitest/generators#configuration) for all options.
 

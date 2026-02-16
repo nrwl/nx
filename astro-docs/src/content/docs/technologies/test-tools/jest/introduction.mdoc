@@ -41,26 +41,37 @@ nx g @nx/jest:configuration --project=my-app
 
 Replace `my-app` with your project name.
 
-The generator accepts framework-specific options to configure Jest correctly for your project:
+The generator accepts framework-specific options. Pass the right flags for your project type:
+
+{% tabs syncKey="framework" %}
+{% tabitem label="React" %}
 
 ```shell
-# React project (enables JSX/TSX transform)
 nx g @nx/jest:configuration --project=my-react-lib --supportTsx
+```
 
-# Angular project (configures jest-preset-angular)
+Enables the JSX/TSX transform so Jest can process React components.
+
+{% /tabitem %}
+{% tabitem label="Angular" %}
+
+```shell
 nx g @nx/jest:configuration --project=my-angular-lib --setupFile=angular
+```
 
-# Node or plain TypeScript project
+Configures `jest-preset-angular` and keeps Angular snapshot serializers enabled.
+
+{% /tabitem %}
+{% tabitem label="Node / TypeScript" %}
+
+```shell
 nx g @nx/jest:configuration --project=my-node-lib --testEnvironment=node
 ```
 
-| Option            | Description                                                    | Default |
-| ----------------- | -------------------------------------------------------------- | ------- |
-| `testEnvironment` | Test environment: `jsdom` (browser) or `node` (server)         | `jsdom` |
-| `supportTsx`      | Enable JSX/TSX support. Required for React projects.           | `false` |
-| `setupFile`       | Setup file preset: `none`, `angular`, or `web-components`      | `none`  |
-| `compiler`        | Compiler to use: `tsc`, `babel`, or `swc`                      | `tsc`   |
-| `skipSerializers` | Skip Angular snapshot serializers. Set to `false` for Angular. | `false` |
+Uses the `node` test environment instead of the default `jsdom`.
+
+{% /tabitem %}
+{% /tabs %}
 
 See the full [configuration generator reference](/docs/technologies/test-tools/jest/generators#configuration) for all options.
 
