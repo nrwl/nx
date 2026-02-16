@@ -211,7 +211,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   } else {
     require('../../adapter/compat');
     const observable = await (
-      await handleImport('../../adapter/ngcli-adapter.js')
+      await handleImport('../../adapter/ngcli-adapter.js', __dirname)
     ).scheduleTarget(
       root,
       {
@@ -224,7 +224,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
       isVerbose
     );
     const { eachValueFrom } = await handleImport(
-      '../../adapter/rxjs-for-await.js'
+      '../../adapter/rxjs-for-await.js',
+      __dirname
     );
     return eachValueFrom(observable as any);
   }

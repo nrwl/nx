@@ -45,7 +45,7 @@ export const yargsAffectedCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await handleImport('./affected.js')).affected(
+        return (await handleImport('./affected.js', __dirname)).affected(
           'affected',
           withOverrides(args)
         );
@@ -71,10 +71,13 @@ export const yargsAffectedTestCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await handleImport('./affected.js')).affected('affected', {
-          ...withOverrides(args),
-          target: 'test',
-        });
+        return (await handleImport('./affected.js', __dirname)).affected(
+          'affected',
+          {
+            ...withOverrides(args),
+            target: 'test',
+          }
+        );
       }
     );
     process.exit(exitCode);
@@ -97,10 +100,13 @@ export const yargsAffectedBuildCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await handleImport('./affected.js')).affected('affected', {
-          ...withOverrides(args),
-          target: 'build',
-        });
+        return (await handleImport('./affected.js', __dirname)).affected(
+          'affected',
+          {
+            ...withOverrides(args),
+            target: 'build',
+          }
+        );
       }
     );
     process.exit(exitCode);
@@ -123,10 +129,13 @@ export const yargsAffectedLintCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await handleImport('./affected.js')).affected('affected', {
-          ...withOverrides(args),
-          target: 'lint',
-        });
+        return (await handleImport('./affected.js', __dirname)).affected(
+          'affected',
+          {
+            ...withOverrides(args),
+            target: 'lint',
+          }
+        );
       }
     );
     process.exit(exitCode);
@@ -149,10 +158,13 @@ export const yargsAffectedE2ECommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await handleImport('./affected.js')).affected('affected', {
-          ...withOverrides(args),
-          target: 'e2e',
-        });
+        return (await handleImport('./affected.js', __dirname)).affected(
+          'affected',
+          {
+            ...withOverrides(args),
+            target: 'e2e',
+          }
+        );
       }
     );
     process.exit(exitCode);

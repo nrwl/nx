@@ -11,7 +11,7 @@ export const yargsMigrateCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
   handler: async () => {
-    await (await handleImport('./migrate.js')).runMigration();
+    await (await handleImport('./migrate.js', __dirname)).runMigration();
     process.exit(0);
   },
 };
@@ -23,7 +23,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
   handler: async (args) =>
     process.exit(
       await (
-        await handleImport('./migrate.js')
+        await handleImport('./migrate.js', __dirname)
       ).migrate(process.cwd(), args, process.argv.slice(3))
     ),
 };

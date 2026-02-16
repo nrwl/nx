@@ -67,7 +67,7 @@ export const yargsInitCommand: CommandModule = {
 async function isInitV2() {
   return (
     process.env['NX_ADD_PLUGINS'] !== 'false' &&
-    (await handleImport('../../config/nx-json.js')).readNxJson()
+    (await handleImport('../../config/nx-json.js', __dirname)).readNxJson()
       .useInferencePlugins !== false
   );
 }

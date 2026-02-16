@@ -1,4 +1,4 @@
-import { extname } from 'path';
+import { extname, resolve } from 'path';
 
 /**
  * Dynamically imports a module using CJS require().
@@ -6,15 +6,29 @@ import { extname } from 'path';
  *
  * Falls back to real import() for ESM-only packages that
  * throw ERR_REQUIRE_ESM.
+ *
+ * @param modulePath - The module specifier (relative, absolute, or package name)
+ * @param relativeTo - The directory to resolve relative paths against.
+ *   Pass `__dirname` from the call site when using relative paths like './foo.js'.
  */
-export async function handleImport<T = any>(modulePath: string): Promise<T> {
+export async function handleImport<T = any>(
+  modulePath: string,
+  relativeTo?: string
+): Promise<T> {
+  let resolvedPath = modulePath;
+  if (
+    relativeTo &&
+    (modulePath.startsWith('./') || modulePath.startsWith('../'))
+  ) {
+    resolvedPath = resolve(relativeTo, modulePath);
+  }
   const normalizedPath =
-    extname(modulePath) === '.js' ? modulePath.slice(0, -3) : modulePath;
+    extname(resolvedPath) === '.js' ? resolvedPath.slice(0, -3) : resolvedPath;
   try {
     return require(normalizedPath) as T;
   } catch (e: any) {
     if (e.code === 'ERR_REQUIRE_ESM') {
-      return import(modulePath) as Promise<T>;
+      return import(resolvedPath) as Promise<T>;
     }
     throw e;
   }

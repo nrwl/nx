@@ -15,7 +15,9 @@ export const yargsSyncCommand: CommandModule<
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
     process.exit(
-      await handleImport('./sync.js').then((m) => m.syncHandler(args))
+      await handleImport('./sync.js', __dirname).then((m) =>
+        m.syncHandler(args)
+      )
     );
   },
 };
@@ -30,7 +32,7 @@ export const yargsSyncCheckCommand: CommandModule<
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
     process.exit(
-      await handleImport('./sync.js').then((m) =>
+      await handleImport('./sync.js', __dirname).then((m) =>
         m.syncHandler({ ...args, check: true })
       )
     );

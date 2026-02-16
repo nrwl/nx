@@ -2055,7 +2055,10 @@ const getNgCompatLayer = (() => {
   let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await handleImport('../../adapter/ngcli-adapter.js');
+      _ngCliAdapter = await handleImport(
+        '../../adapter/ngcli-adapter.js',
+        __dirname
+      );
       require('../../adapter/compat');
     }
     return _ngCliAdapter;

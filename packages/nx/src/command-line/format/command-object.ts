@@ -9,7 +9,7 @@ export const yargsFormatCheckCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withFormatOptions(yargs), 'format:check'),
   handler: async (args) => {
-    await (await handleImport('./format.js')).format('check', args);
+    await (await handleImport('./format.js', __dirname)).format('check', args);
     process.exit(0);
   },
 };
@@ -21,7 +21,7 @@ export const yargsFormatWriteCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withFormatOptions(yargs), 'format:write'),
   handler: async (args) => {
-    await (await handleImport('./format.js')).format('write', args);
+    await (await handleImport('./format.js', __dirname)).format('write', args);
     process.exit(0);
   },
 };

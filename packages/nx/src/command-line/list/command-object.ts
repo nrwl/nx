@@ -16,7 +16,7 @@ export const yargsListCommand: CommandModule = {
         description: 'Output JSON.',
       }),
   handler: async (args: any) => {
-    await (await handleImport('./list.js')).listHandler(args);
+    await (await handleImport('./list.js', __dirname)).listHandler(args);
     process.exit(0);
   },
 };

@@ -61,7 +61,7 @@ export async function runOne(
 
   if (nxArgs.help) {
     await (
-      await handleImport('./run.js')
+      await handleImport('./run.js', __dirname)
     ).printTargetRunHelp(
       {
         ...opts,
