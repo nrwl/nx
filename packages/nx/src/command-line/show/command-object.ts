@@ -156,7 +156,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showProjectsHandler } = await handleImport('./projects.js');
+      const { showProjectsHandler } = await handleImport(
+        './projects.js',
+        __dirname
+      );
       await showProjectsHandler(args);
     });
     process.exit(exitCode);
@@ -213,7 +216,10 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showProjectHandler } = await handleImport('./project.js');
+      const { showProjectHandler } = await handleImport(
+        './project.js',
+        __dirname
+      );
       await showProjectHandler(args);
     });
     process.exit(exitCode);

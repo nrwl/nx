@@ -12,6 +12,8 @@ export const yargsLogoutCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await handleImport('./logout.js')).logoutHandler(args));
+    process.exit(
+      await (await handleImport('./logout.js', __dirname)).logoutHandler(args)
+    );
   },
 };

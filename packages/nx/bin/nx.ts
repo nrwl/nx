@@ -163,7 +163,7 @@ function determineNxVersions(
     : null;
   const GLOBAL_NX_VERSION: string | null = isLocalInstall
     ? null
-    : require('../package.json').version;
+    : require(require.resolve('nx/package.json')).version;
 
   globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
   return { LOCAL_NX_VERSION, GLOBAL_NX_VERSION };

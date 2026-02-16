@@ -15,7 +15,7 @@ export const yargsStopAllAgentsCommand: CommandModule = {
   handler: async (args: any) => {
     process.exit(
       await (
-        await handleImport('./stop-all-agents.js')
+        await handleImport('./stop-all-agents.js', __dirname)
       ).stopAllAgentsHandler(args)
     );
   },
