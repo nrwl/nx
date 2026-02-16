@@ -95,7 +95,8 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
 
 async function addBundler(options: NormalizedOptions) {
   const { addViteCommandsToPackageScripts } = await handleImport(
-    './add-vite-commands-to-package-scripts.js'
+    './add-vite-commands-to-package-scripts.js',
+    __dirname
   );
   addViteCommandsToPackageScripts(options.reactAppName, options.isStandalone);
   writeViteConfig(options.reactAppName, options.isStandalone, options.appIsJs);

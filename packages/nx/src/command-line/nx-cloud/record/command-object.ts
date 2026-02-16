@@ -15,6 +15,8 @@ export const yargsRecordCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await handleImport('./record.js')).recordHandler(args));
+    process.exit(
+      await (await handleImport('./record.js', __dirname)).recordHandler(args)
+    );
   },
 };
