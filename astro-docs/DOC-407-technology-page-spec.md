@@ -45,15 +45,16 @@ When in doubt, start on the hub page. Content can always be extracted to a subpa
 
 ## Expected User Journey and Answers
 
-Hub pages are expected to support a predictable user journey and resolve the most common questions quickly. This section is a narrative version of the journey table below and should be true for every technology page:
+Hub pages are expected to support a predictable user journey and resolve the most common questions quickly. This sequence should be true for every technology page:
 
-1. **Understand** what the tool is and why the Nx plugin helps (optional, improves DX).
-2. **Add to an existing workspace** and verify it worked.
-3. **Create new** (if applicable for the category).
-4. **Run daily tasks** with copy-pasteable commands.
-5. **Configure inference and targets** with real `nx.json` examples.
-6. **Run in CI efficiently** using affected + caching, plus tool-specific considerations.
-7. **Go deeper** with curated links.
+1. **Understand** what the plugin provides and whether you need it (requirements, features).
+2. **Add the plugin** to an existing workspace and verify it works.
+3. **Configure existing projects** to use the tool (configuration generators).
+4. **Create new projects** from scratch (if applicable for the category).
+5. **Run daily tasks** with copy-pasteable commands.
+6. **Configure inference and plugin options** — how the plugin reads existing config files, how to customize targets, how to exclude/include projects.
+7. **Run in CI efficiently** — affected + caching, plus tool-specific optimizations (batch mode, atomizer, worker limits).
+8. **Go deeper** with curated links to tutorials, recipes, and reference.
 
 ---
 
@@ -90,19 +91,19 @@ Following the AX principles from DOC-405: descriptive headings, short paragraphs
 
 Technology pages follow the same stage model as the Getting Started pages, adapted for a user who already has Nx:
 
-| Stage             | Content                                       | Depth                                     |
-| ----------------- | --------------------------------------------- | ----------------------------------------- |
-| **Setup**         | Install plugin, verify, first task            | Thorough — every step explicit            |
-| **Local Dev**     | Daily workflow, common tasks, generating code | Thorough — this is where users spend time |
-| **Configuration** | Plugin config, inferred tasks, customization  | Thorough — daily-driver reference content |
-| **CI & Scale**    | Affected, caching, performance, splitting     | Enough to get started, link for advanced  |
-| **Advanced**      | Custom executors, deployment, edge cases      | Link only — lives in Knowledge Base       |
+| Stage                | Content                                                            | Depth                                     |
+| -------------------- | ------------------------------------------------------------------ | ----------------------------------------- |
+| **Setup**            | Install plugin, verify, configure existing projects                | Thorough — every step explicit            |
+| **Daily Workflow**   | Generate, build, test, lint — the common tasks                     | Thorough — this is where users spend time |
+| **Configuration**    | Inference from existing config, plugin options, exclude/include    | Thorough — daily-driver reference content |
+| **CI**               | Affected, caching, tool-specific optimizations                     | Enough to get started, link for advanced  |
+| **Advanced**         | Custom executors, deployment, edge cases                           | Link only — lives in Knowledge Base       |
 
 ### 5. Consistent flow, flexible headings
 
 All pages follow the same information architecture, but headings adapt to the technology. A reader who's seen one hub page knows what to expect from another.
 
-**Rule:** The section order is fixed (Opening → Setup → Local Dev → Configuration → CI → AI Prompt → What's Next). The exact heading text adapts to the technology — "Running Tests" for Jest, "Using React with Nx" for React — but the position in the page does not change.
+**Rule:** The section order is fixed (Opening → Setup → Daily Workflow → Configuration → CI Considerations → What's Next). The exact heading text adapts to the technology — "Running Tests" for Jest, "Generate and Manage Libraries" for TypeScript — but the position in the page does not change.
 
 ---
 
@@ -152,28 +153,33 @@ Each technology falls into a category. The category shapes which user journeys a
 
 ### Universal Journeys (every hub page must address)
 
-| #   | Journey         | Question the user is asking                          | Maps to section |
-| --- | --------------- | ---------------------------------------------------- | --------------- |
-| 1   | Understand      | "What is this tool and what does the Nx plugin add?" | Opening         |
-| 2   | Add to existing | "How do I add this to my existing Nx workspace?"     | Setup           |
-| 3   | Create new      | "How do I start a new project with this?"            | Setup           |
-| 4   | Daily workflow  | "What are the common tasks I'll run?"                | Local Dev       |
-| 5   | Configure       | "How do I configure the plugin and the tool?"        | Configuration   |
-| 6   | Run in CI       | "How do I use this efficiently in CI?"               | CI & Scale      |
-| 7   | Go deeper       | "Where do I go for specific recipes and reference?"  | What's Next     |
+| #   | Journey                    | Question the user is asking                                        | Maps to section |
+| --- | -------------------------- | ------------------------------------------------------------------ | --------------- |
+| 1   | Understand                 | "What is this plugin and what does it give me?"                    | Opening         |
+| 2   | Requirements               | "What versions/tools do I need?"                                   | Opening / Setup |
+| 3   | Add to workspace           | "How do I add this to my existing Nx workspace?"                   | Setup           |
+| 4   | Configure existing project | "I have a project already — how do I add this tool to it?"         | Setup           |
+| 5   | Create new                 | "How do I start a new project with this?"                          | Setup           |
+| 6   | Daily workflow             | "What are the common tasks I'll run?"                              | Daily Workflow  |
+| 7   | Configure inference        | "How does the plugin work with my existing config files?"          | Configuration   |
+| 8   | Exclude/include            | "How do I opt specific projects in or out?"                        | Configuration   |
+| 9   | Run in CI                  | "What's specific to this tool in CI?"                              | CI              |
+| 10  | Go deeper                  | "Where do I go for specific recipes and reference?"                | What's Next     |
 
 ### Problems These Pages Must Answer
 
 Each hub page should make it easy to answer the following without searching elsewhere:
 
-1. Why would I use this plugin, and what does it add on top of Nx’s core features?
+1. What does this plugin give me beyond core Nx, and what are the requirements?
 2. How do I add it to an existing Nx workspace and verify it worked?
-3. How do I start a new project with this technology (if applicable)?
-4. What are the daily commands I will run?
-5. How does Nx infer tasks for this tool, and how do I customize those targets?
-6. What do I need to know about using this plugin (options, generators, CI considerations)?
-7. How do I run this efficiently in CI with affected + caching?
-8. Where do I go next for advanced workflows and references?
+3. I already have a project — how do I configure it to use this tool?
+4. How do I start a new project with this technology (if applicable)?
+5. What are the daily commands I will run?
+6. I already have config files (tsconfig, jest.config, etc.) — how does the plugin use them?
+7. How do I customize what the plugin does (plugin options, target names)?
+8. How do I exclude or include specific projects?
+9. What tool-specific CI optimizations should I know about (batch mode, atomizer, worker limits)?
+10. Where do I go next for advanced workflows and references?
 
 ### Category-Specific Journeys
 
@@ -232,14 +238,14 @@ Beyond the universal journeys, each category has additional questions. Writers s
 
 Not every section carries the same weight on every page. Use this matrix to calibrate how much to write:
 
-| Section           | Framework                   | Build Tool                           | Test Tool                       | Non-JS                         | Quality                  |
-| ----------------- | --------------------------- | ------------------------------------ | ------------------------------- | ------------------------------ | ------------------------ |
-| **Opening**       | Medium                      | Medium                               | Medium                          | Long (value prop)              | Medium                   |
-| **Setup**         | Medium                      | Medium                               | Medium                          | Long (prerequisites + nx init) | Medium                   |
-| **Local Dev**     | Long (generators + tasks)   | Medium (inferred tasks + conversion) | Long (all test modes)           | Medium (task mapping)          | Medium                   |
-| **Configuration** | Medium                      | Medium                               | Long (dual config, tool config) | Medium (target customization)  | Long (rules, boundaries) |
-| **CI & Scale**    | Medium (affected + caching) | Short (caching + link)               | Long (performance + splitting)  | Long (value proposition)       | Short                    |
-| **What's Next**   | 4-6 cards                   | 4 cards                              | 4-6 cards                       | 4 cards                        | 3-4 cards                |
+| Section              | Framework                   | Build Tool                           | Test Tool                       | Non-JS                         | Quality                  |
+| -------------------- | --------------------------- | ------------------------------------ | ------------------------------- | ------------------------------ | ------------------------ |
+| **Opening**          | Medium                      | Medium                               | Medium                          | Long (value prop)              | Medium                   |
+| **Setup**            | Medium                      | Medium (+ config generator)          | Medium (+ config generator)     | Long (prerequisites + nx init) | Medium                   |
+| **Daily Workflow**   | Long (generators + tasks)   | Medium (inferred tasks + conversion) | Long (all test modes)           | Medium (task mapping)          | Medium                   |
+| **Configuration**    | Medium                      | Medium                               | Long (dual config, include/exclude) | Medium (target customization)  | Long (rules, boundaries) |
+| **CI Considerations**| Medium (affected + caching) | Short (caching + link)               | Long (performance + splitting + atomizer) | Long (value proposition) | Short                    |
+| **What's Next**      | 4-6 cards                   | 4 cards                              | 4-6 cards                       | 4 cards                        | 3-4 cards                |
 
 **"Long"** = thorough coverage with multiple subsections, code examples, and explanation.
 **"Medium"** = cover the topic with one or two focused examples and brief explanation.
@@ -249,72 +255,94 @@ Not every section carries the same weight on every page. Use this matrix to cali
 
 ## Page Template
 
-All hub pages follow this section flow. Every section is required.
+All hub pages follow this section flow. Every section is required unless marked optional.
 
 ### Flow Overview
 
 ```
-1. Opening Paragraph     — What is this and what does the plugin add?
-2. Setup                 — Add to existing + Create new
-3. Local Development     — Daily workflow, common tasks
-4. Configuration         — Plugin config, inferred tasks, customization
-5. CI & Scale            — Performance tips, affected, splitting
-6. AI Prompt             — Copyable prompt for AI assistants
-7. What's Next           — Links to Knowledge Base, tutorials, reference
+1. Opening              — What it is, requirements, plugin features (with section links)
+2. Setup                — Add plugin, verify, create new, configure existing project
+3. Daily Workflow       — Generate, build, test, lint — the common tasks
+4. Configuration        — Inference from existing config, plugin options, exclude/include
+5. CI Considerations    — Affected, caching, tool-specific optimizations
+6. What's Next          — Tutorials, recipes, reference
 ```
+
+### Topics Every Plugin Page Must Address
+
+These are the core questions every hub page answers. They map to sections but aren't 1:1 — a topic may be a subsection, a paragraph, or a callout depending on the plugin.
+
+| Topic | Question | Where it lives |
+|---|---|---|
+| **Requirements** | "What versions/tools do I need?" | Opening or Setup (callout if brief, subsection if substantial) |
+| **Features / Why** | "What does this plugin give me beyond core Nx?" | Opening — feature list with links to in-page sections |
+| **Add and configure the plugin** | "How do I install it and verify it works?" | Setup |
+| **Configure for existing project** | "I already have a project — how do I add this tool to it?" | Setup (subsection after plugin install) |
+| **How existing config files work** | "I already have a tsconfig / jest.config / vite.config — what happens?" | Configuration — inference explanation |
+| **Plugin options** | "How do I customize what the plugin does?" | Configuration — `nx.json` plugin options |
+| **Exclude/include projects** | "How do I opt specific projects in or out?" | Configuration — explicit subsection |
+| **CI considerations** | "What's specific to this tool in CI?" | CI Considerations |
 
 ---
 
-### Section 1: Opening Paragraph
+### Section 1: Opening
 
-**Purpose:** Tell the reader what this technology is, why they’d use the Nx plugin, and what it provides. Not a sales pitch — a factual summary.
+**Purpose:** Tell the reader what this technology is, why they'd use the Nx plugin, and what it provides. Doubles as a mini table-of-contents by linking to in-page sections.
 
 **Rules:**
 
-1. First sentence: what the technology is (one sentence, link to the official site).
-2. Second sentence: why the Nx plugin helps — name the specific things (generators, inferred tasks, migrations). Link to in-page sections rather than external reference pages.
-3. Third sentence: clarify the plugin is optional. Nx features like caching, graph, and task orchestration work without the plugin. The plugin adds generators and conventions.
-4. Optional: a short bullet list (3-5 items) of key capabilities. Use this only when the plugin does many distinct things.
+1. First sentence: what the plugin is and what it provides. Name specific capabilities (generators, inferred tasks, sync generators) and link to the in-page sections that cover them.
+2. Second sentence: clarify the plugin is optional. Nx features like caching, graph, and task orchestration work without the plugin. The plugin simplifies setup and maintenance.
+3. **Requirements (if applicable):** If the plugin has version constraints (e.g., "requires TypeScript 5.0+", "requires Vitest 2.x+"), state them here or as a callout in Setup. Only include when the constraint is non-obvious — don't state that a TypeScript plugin needs TypeScript installed.
+4. **Feature preview:** List the key things the plugin provides, linking each to the relevant section on the page. This is the "why you'd want to add this plugin" pitch. Keep it factual — name the features, don't sell them. Examples: sync generators (project references), atomizer, task inference, caching integration, configuration generators.
 
 **Anti-patterns to avoid:**
 
 - Defining the technology for people who already know it ("TypeScript is a typed superset of JavaScript")
 - Linking to external reference pages in the opening (generators list, API docs) — link to in-page sections instead
 - Using vague language ("powerful tooling", "seamless integration")
+- Listing features without linking to where they're explained on the page
 
 ---
 
 ### Section 2: Setup
 
-**Purpose:** Get the plugin installed and a project running.
+**Purpose:** Get the plugin installed, verified, and configured for existing projects.
+
+This section answers three distinct questions in order:
+1. "How do I add the plugin to my workspace?" (plugin installation)
+2. "How do I start a new project from scratch?" (create new — secondary)
+3. "How do I add this tool to a project that already exists?" (configuration generators)
 
 **Rules:**
 
-1. "Add to existing workspace" always comes first.
-2. Always include the version sync aside (identical across all pages).
-3. Always include a verification step after installation using a copy-pasteable command (for example `nx show project my-app --web`) with a description of what to look for.
-4. "Create new" comes second. Adapt to category: `create-nx-workspace` for frameworks/languages, `nx g` for test/build tools, `nx init` for non-JS ecosystems.
-5. If a tutorial exists, call it out with a `{% aside type="tip" %}` after the create-new subsection.
+1. **"Add to existing workspace" always comes first.** `nx add @nx/[plugin]`.
+2. **Always include the version sync aside** (identical wording across all pages).
+3. **Always include a verification step** after installation. Use concrete, copy-pasteable commands that show the plugin is working (e.g., `nx report`, `nx show projects --with-target=build`, `nx show project <name>`). Describe what the user should expect to see.
+4. **"Create new" comes second.** Adapt to category: `create-nx-workspace` for frameworks/languages, `nx g` for test/build tools, `nx init` for non-JS ecosystems.
+5. **If a tutorial exists,** call it out with a `{% aside type="tip" %}` after the create-new subsection.
+6. **"Configure for existing project" is a distinct subsection.** This is where configuration generators live — `nx g @nx/jest:configuration --project=my-app`, `nx g @nx/js:setup-build`, `nx g @nx/vite:configuration --project=my-app`. This is NOT the same as installing the plugin. Installing adds the plugin to the workspace; configuration generators set up individual projects to use the tool.
 
 **Category adaptations:**
 
-- **Test/Build tools** add a subsection for adding the tool to a specific existing project (e.g., `nx g @nx/jest:configuration --project=my-app`). This is different from installing the plugin — it's configuring a specific project.
-- **Build tools** show minimal framework-specific generation examples in tabs, then link to the framework hub page for the full workflow. If the user’s goal is a new app, the framework hub page is the primary path.
-- **Non-JS ecosystems** lead with prerequisites (runtime versions, build tool requirements) and use `nx init` instead of `nx add`.
+- **Test/Build tools:** The "configure for existing project" subsection is especially important. These plugins are often added to projects that already exist but don't have the tool configured yet.
+- **Build tools:** Show minimal framework-specific examples in tabs, then link to the framework hub page. If the user's goal is a new app, the framework hub page is the primary path.
+- **Non-JS ecosystems:** Lead with prerequisites (runtime versions, build tool requirements) and use `nx init` instead of `nx add`.
+- **Consistency note:** Configuration generators should follow a consistent naming pattern across plugins. If a plugin uses a non-obvious name (e.g., `setup-build` instead of `configuration`), call it out explicitly.
 
 ---
 
-### Section 3: Local Development
+### Section 3: Daily Workflow
 
-**Purpose:** The daily workflow. This is the section users return to most frequently.
+**Purpose:** The tasks a developer runs regularly. This is the section users return to most frequently.
 
 **Rules:**
 
 1. Cover every task most users will run daily. For a framework, that's generate/serve/build/test/lint. For a test tool, that's run/watch/coverage/specific-file.
 2. Every command gets a brief explanation of what it does, not just the command itself.
-3. When the section shows build output, explain where it goes and how it's controlled (e.g., `outDir` in tsconfig). Note the relationship to Nx caching outputs.
-4. End with "Replace `my-app` with your project name" or equivalent.
-5. If the plugin has generators for scaffolding code (components, hooks, services), show the most common ones.
+3. When the section shows build output, explain where it goes and how it's controlled (e.g., `outDir` in tsconfig). Note the relationship to Nx caching — if the plugin reads output paths automatically, say so. If the user needs to keep target outputs in sync manually, explain that.
+4. If the plugin has generators for scaffolding code (components, hooks, services), show the most common ones.
+5. When a task can be added after initial generation (e.g., adding a build target via a generator), mention the relevant configuration generator and link back to Setup.
 
 **Category adaptations:**
 
@@ -327,60 +355,55 @@ All hub pages follow this section flow. Every section is required.
 
 ### Section 4: Configuration
 
-**Purpose:** How the plugin integrates with Nx and how to customize it. This is daily-driver reference content, not advanced setup.
+**Purpose:** How the plugin reads existing configuration, how to customize its behavior, and how to control which projects it applies to. This is daily-driver reference content.
+
+This section answers three distinct questions:
+1. "How does the plugin work with my existing config files?" (inference)
+2. "How do I customize what the plugin does?" (plugin options)
+3. "How do I include or exclude specific projects?" (scoping)
 
 **Rules:**
 
-1. **Explain how task inference works.** State what config files the plugin looks for and what tasks it creates. If the inference has conditions (e.g., "only adds a `build` task if `package.json` exports point to compiled output"), explain those conditions clearly with positive and negative examples.
+1. **Explain how inference works with existing config files.** State what config files the plugin looks for (e.g., `tsconfig.json`, `jest.config.ts`, `vite.config.ts`) and what tasks it creates from them. If inference has conditions (e.g., "only adds a `build` task if `package.json` exports point to compiled output"), explain those conditions with positive and negative examples.
 2. **Show the `nx.json` plugin options block.** This is the code block users will copy. Use real default values.
 3. **Present options in a table** with columns: Option, Description, Default. Verify options against the plugin source code — don't guess.
-4. **Show how to disable inference** for specific projects or specific tasks (e.g., setting a task to `false`, or using per-project opt-out flags).
-5. **Show how to view inferred tasks** — `nx show project <name> --web` and Nx Console.
+4. **Explain how to exclude/include projects.** This is a first-class subsection, not an afterthought. Cover:
+   - Plugin-level: `include`/`exclude` patterns in the `nx.json` plugins array
+   - Task-level: setting a task to `false` in plugin options to disable it workspace-wide
+   - Project-level: per-project opt-out flags (e.g., `nx.addTypecheckTarget: false` in tsconfig)
+5. **Show how to view inferred tasks** — `nx show project <name>` and Nx Console.
 6. **Link to the full generator/executor reference** for exhaustive option lists, rather than reproducing them here.
-7. **Include plugin-specific “what to know” callouts** that are common across users (for example: buildable vs publishable libs, convert-to-swc generator, or when to use project references). Keep these to the 80% case.
+7. **Include plugin-specific "what to know" callouts** that are common across users (for example: buildable vs publishable libs, convert-to-swc generator, or when to use project references). Keep these to the 80% case.
 
 **Category adaptations:**
 
-- **Test tools** may need dual-plugin configuration (unit tests vs E2E tests with separate `include`/`exclude` patterns). Show this as a subsection.
+- **Test tools** may need dual-plugin configuration (unit tests vs E2E tests with separate `include`/`exclude` patterns). Show this as a subsection — this is a common pattern that trips people up.
 - **Non-JS ecosystems** focus on target customization: renaming, disabling, adding `dependsOn`.
 - **Framework pages** are lighter here — focus on bundler/test runner defaults and how to change them.
 
 ---
 
-### Section 5: CI & Scale
+### Section 5: CI Considerations
 
-**Purpose:** How to use this technology efficiently in CI. Every technology has at least one CI-relevant consideration.
+**Purpose:** Tool-specific CI optimizations and configuration. Every technology has at least one CI-relevant consideration.
 
 **Rules:**
 
 1. Always mention `nx affected` — this is the universal CI optimization.
 2. Always mention remote caching with `nx connect`.
 3. Always link to the CI setup guide for complete configuration.
-4. Include a short “CI considerations” subsection with tool-specific flags or modes (batch mode, worker limits, single-thread) that prevent flakiness or improve performance.
-5. If the technology supports test splitting, explain the `ciTargetName` configuration.
+4. **Include tool-specific CI optimizations** as concrete subsections. Examples: TSC batch mode, Jest `--runInBand`, Vitest worker limits, test splitting via `ciTargetName`, atomizer configuration. These are the things that prevent flakiness or meaningfully improve CI performance for this specific tool.
+5. If the technology supports test splitting or atomization, explain the configuration (`ciTargetName`, atomizer setup) and link to the deep-dive guide.
 
 **Category adaptations:**
 
-- **Test tools** have the longest CI section: performance tuning, parallel execution, E2E test splitting with `ciTargetName`.
+- **Test tools** have the longest CI section: performance tuning, parallel execution, E2E test splitting with `ciTargetName`, atomizer.
 - **Non-JS ecosystems** use this section as a value proposition — explain what Nx adds on top of the existing build tool's CI story (caching, affected, distributed execution, graph).
 - **Build tools** keep this short — the CI story is more about the framework than the bundler. One paragraph on caching + affected is sufficient.
 
 ---
 
-### Section 6: AI Prompt
-
-**Purpose:** A copyable prompt for AI assistants that covers the most common task for this technology.
-
-**Rules:**
-
-1. Wrap in `{% aside type="tip" title="AI Prompt" %}`.
-2. Format the prompt as a blockquote (`>`).
-3. The prompt should reference specific commands and the plugin name. It should be self-contained — an AI reading just this prompt should be able to complete the task.
-4. Target the primary use case for the category: "add + generate + verify" for frameworks, "add + configure + run" for test tools, "convert project" for build tools, "init + add + explore" for non-JS.
-
----
-
-### Section 7: What's Next
+### Section 6: What's Next
 
 **Purpose:** Guided navigation to content beyond daily-driving — specific workflows, tutorials, migration guides, reference docs.
 
@@ -402,40 +425,48 @@ Apply to every technology hub page before considering it complete.
 
 ### Structure & Flow
 
-- [ ] Follows the section order: Opening → Setup → Local Dev → Configuration → CI → AI Prompt → What's Next
-- [ ] Opening paragraph answers "what is this and what does the plugin add?"
+- [ ] Follows the section order: Opening → Setup → Daily Workflow → Configuration → CI → What's Next
+- [ ] Opening previews plugin features with links to in-page sections
 - [ ] "Add to existing" comes before "Create new" in Setup
 - [ ] Short paragraphs (3-5 lines max)
 - [ ] Descriptive headings (not "Overview", "Usage", or bare tool names)
 
-### Plugin Framing
+### Opening & Plugin Framing
 
 - [ ] Does NOT imply the plugin is required to use the technology with Nx
-- [ ] Clearly states what the plugin adds (generators, executors, inferred tasks)
+- [ ] Clearly states what the plugin adds (generators, sync generators, inferred tasks, etc.)
 - [ ] Mentions that Nx features like caching and graph work without the plugin
+- [ ] Lists requirements/version constraints (if applicable)
+- [ ] Feature list links to in-page sections where each is explained
+
+### Setup
+
+- [ ] Verification step after plugin installation (concrete commands + expected output)
+- [ ] "Configure for existing project" subsection with configuration generator (if applicable)
+- [ ] Configuration generator includes all required args
 
 ### Commands & Actions
 
 - [ ] All commands are copy-pasteable (no pseudo-code in shell blocks)
-- [ ] Verification step after installation
 - [ ] Generator examples include all required args
-- [ ] Placeholder names (my-app, my-lib) have a note to replace them
+- [ ] Build output location explained with relationship to Nx caching outputs
 
 ### Configuration
 
-- [ ] Lists which config files trigger task inference
-- [ ] Shows the `nx.json` plugin configuration block with real values
+- [ ] Explains which existing config files trigger task inference
+- [ ] Shows the `nx.json` plugin options block with real values
 - [ ] Plugin options verified against source code
-- [ ] Explains key options in a table (Option, Description, Default)
-- [ ] Shows how to view inferred tasks
-- [ ] Shows how to disable inference per-project or per-task
+- [ ] Options presented in a table (Option, Description, Default)
+- [ ] **Exclude/include covered:** plugin-level (`include`/`exclude`), task-level (set to `false`), project-level (opt-out flags)
+- [ ] Shows how to view inferred tasks (`nx show project`)
 
-### CI & Scale
+### CI Considerations
 
 - [ ] Mentions `nx affected`
 - [ ] Mentions remote caching
 - [ ] Links to CI setup guide
-- [ ] Test tools: mentions E2E test splitting with `ciTargetName`
+- [ ] Tool-specific CI optimizations documented (batch mode, worker limits, atomizer, etc.)
+- [ ] Test tools: mentions E2E test splitting / atomizer with `ciTargetName`
 - [ ] Non-JS: explicitly states value Nx adds on top of existing build tool
 
 ### Navigation & Links
@@ -443,13 +474,12 @@ Apply to every technology hub page before considering it complete.
 - [ ] Opening links to in-page sections, not external reference pages
 - [ ] Every Nx feature mentioned links to its dedicated page
 - [ ] "What's Next" uses card grid with max 6 cards
+- [ ] Always includes generators/executors/migrations reference links
 - [ ] Related technologies are cross-linked
 - [ ] Links to tutorial (if one exists)
-- [ ] Links to full generators/executors reference from the relevant subsection
 
 ### AI-Specific
 
-- [ ] AI prompt callout present with a concrete, self-contained prompt
 - [ ] No critical information locked in videos or images
 - [ ] Factual accuracy — no outdated commands or deprecated options
 - [ ] Unambiguous: when multiple options exist, state a recommendation
