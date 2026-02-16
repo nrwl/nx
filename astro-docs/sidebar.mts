@@ -24,8 +24,6 @@ const learnGroups: SidebarItems = [
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
       { label: 'Installation', link: 'getting-started/installation' },
-      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
-      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
       {
         label: 'Start a New Project',
         link: 'getting-started/start-new-project',
@@ -34,6 +32,8 @@ const learnGroups: SidebarItems = [
         label: 'Add to Existing Project',
         link: 'getting-started/start-with-existing-project',
       },
+      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
+      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
       {
         label: 'Nx Cloud',
         link: 'getting-started/nx-cloud',
