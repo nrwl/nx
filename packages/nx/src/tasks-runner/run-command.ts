@@ -913,7 +913,14 @@ export function setEnvVarsBasedOnArgs(
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+  // Dynamic output styles only require forced streaming when the full TUI is
+  // active. If the TUI is disabled (e.g. single-task run-many fallback), the
+  // dynamic-legacy renderer should own the terminal output without interleaved
+  // task streaming.
+  if (
+    (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') &&
+    isTuiEnabled()
+  ) {
     process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {
