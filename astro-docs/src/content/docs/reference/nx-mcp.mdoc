@@ -7,10 +7,14 @@ sidebar:
 filter: 'type:References'
 ---
 
-The Nx MCP server is a [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that gives LLMs deep access to your monorepo's structure: project relationships, file mappings, runnable tasks, ownership info, tech stacks, Nx generators, and Nx documentation.
+The Nx MCP server is a [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that connects AI agents to systems they can't easily reach on their own: Nx Cloud CI pipelines, self-healing fixes, running processes, and up-to-date Nx documentation.
 
 {% aside type="tip" title="Quick Setup" %}
 To configure your Nx workspace for AI agents (MCP, skills, and more), run `npx nx configure-ai-agents`. See the [AI Integration guide](/docs/getting-started/ai-setup) for details.
+{% /aside %}
+
+{% aside type="note" title="MCP + Skills" %}
+The Nx MCP server works best alongside [agent skills](/docs/features/enhance-ai). Skills handle domain knowledge — workspace exploration, code generation, task execution — while the MCP server provides connectivity to Nx Cloud and running processes. For background on this approach, see our blog post on [why we deleted most of our MCP tools](/blog/why-we-deleted-most-of-our-mcp-tools).
 {% /aside %}
 
 For an overview of how Nx enhances AI assistants and powerful use cases, see the [Enhance Your LLM](/docs/features/enhance-ai) guide.
@@ -124,15 +128,16 @@ If you miss the notification, run the `Nx: Setup MCP Server` command from the co
 
 The `nx mcp` command (or `npx nx-mcp` for older versions) accepts the following options:
 
-| Option                  | Alias | Description                                                                                                       |
-| ----------------------- | ----- | ----------------------------------------------------------------------------------------------------------------- |
-| `[workspacePath]`       | `-w`  | Path to the Nx workspace root. Defaults to the current working directory if not provided.                         |
-| `--transport <type>`    |       | Transport protocol to use: `stdio` (default), `sse`, or `http`                                                    |
-| `--port <port>`         | `-p`  | Port to use for the HTTP/SSE server (default: 9921). Only valid with `--transport sse` or `--transport http`.     |
-| `--tools <patterns...>` | `-t`  | Filter which tools are enabled. Accepts glob patterns including negation (e.g., `"*"`, `"!nx_docs"`, `"cloud_*"`) |
-| `--disableTelemetry`    |       | Disable sending of telemetry data                                                                                 |
-| `--debugLogs`           |       | Enable debug logging                                                                                              |
-| `--help`                |       | Display help information                                                                                          |
+| Option                  | Alias | Description                                                                                                                         |
+| ----------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `[workspacePath]`       | `-w`  | Path to the Nx workspace root. Defaults to the current working directory if not provided.                                           |
+| `--transport <type>`    |       | Transport protocol to use: `stdio` (default), `sse`, or `http`                                                                      |
+| `--port <port>`         | `-p`  | Port to use for the HTTP/SSE server (default: 9921). Only valid with `--transport sse` or `--transport http`.                       |
+| `--tools <patterns...>` | `-t`  | Filter which tools are enabled. Accepts glob patterns including negation (e.g., `"*"`, `"!nx_docs"`, `"cloud_*"`)                   |
+| `--minimal`             |       | Hide workspace analysis tools (default: `true`). Use `--no-minimal` to expose all tools. See [Minimal Mode](#minimal-mode-default). |
+| `--disableTelemetry`    |       | Disable sending of telemetry data                                                                                                   |
+| `--debugLogs`           |       | Enable debug logging                                                                                                                |
+| `--help`                |       | Display help information                                                                                                            |
 
 ### HTTP Transport
 
@@ -200,25 +205,38 @@ npx nx-mcp@latest --tools "nx_workspace" "nx_project_details" "nx_docs"
 
 This is useful when you want to restrict the LLM's capabilities or reduce noise in the tool list.
 
+### Minimal Mode (Default)
+
+By default, the MCP server runs in **minimal mode** (`--minimal`), which hides workspace analysis and generator tools. These capabilities are now handled more efficiently by [agent skills](/docs/features/enhance-ai), which provide domain knowledge as incrementally-loaded instructions rather than tool-call-based data dumps. This reduces token usage and keeps the tool list focused on what MCP does best: connectivity to Nx Cloud and running processes.
+
+To restore all tools (e.g., for clients that don't support skills), pass `--no-minimal`:
+
+{% tabs syncKey="nx-version" %}
+{% tabitem label="Nx >= 21.4" %}
+
+```shell
+npx nx mcp --no-minimal
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 21.4" %}
+
+```shell
+npx nx-mcp@latest --no-minimal
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+When the Nx Console extension manages the MCP server in VS Code or Cursor, it automatically enables minimal mode if it detects that agent skills are installed in the workspace.
+
 ## Available Tools
 
-### Workspace Tools
+### Documentation Tools
 
-| Tool                   | Description                                                                                                                         |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `nx_workspace`         | Returns a readable representation of the project graph and nx.json configuration. Also returns any project graph errors if present. |
-| `nx_workspace_path`    | Returns the path to the Nx workspace root                                                                                           |
-| `nx_project_details`   | Returns complete project configuration in JSON format for a specific project, including targets, dependencies, and metadata         |
-| `nx_docs`              | Returns documentation sections relevant to user queries about Nx configuration and best practices                                   |
-| `nx_available_plugins` | Lists available Nx plugins from the core team and local workspace plugins                                                           |
-
-### Generator Tools
-
-| Tool                  | Description                                                                                               |
-| --------------------- | --------------------------------------------------------------------------------------------------------- |
-| `nx_generators`       | Returns a list of available code generators in your workspace                                             |
-| `nx_generator_schema` | Returns the detailed JSON schema for a specific Nx generator, including all available options             |
-| `nx_run_generator`    | Opens the Nx Console Generate UI with prefilled options (requires a running IDE instance with Nx Console) |
+| Tool      | Description                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| `nx_docs` | Returns documentation sections relevant to user queries about Nx configuration and best practices |
 
 ### Task Monitoring Tools
 
@@ -255,8 +273,29 @@ These tools provide analytics and insights into your CI/CD data:
 | `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
 | `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
 
+### Extended Tools (--no-minimal)
+
+The following tools are hidden by default in minimal mode. They're available when running with `--no-minimal`, which is useful for AI clients that don't support skills or instruction files.
+
+#### Workspace Tools
+
+| Tool                   | Description                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `nx_workspace`         | Returns a readable representation of the project graph and nx.json configuration. Also returns any project graph errors if present. |
+| `nx_workspace_path`    | Returns the path to the Nx workspace root                                                                                           |
+| `nx_project_details`   | Returns complete project configuration in JSON format for a specific project, including targets, dependencies, and metadata         |
+| `nx_available_plugins` | Lists available Nx plugins from the core team and local workspace plugins                                                           |
+
+#### Generator Tools
+
+| Tool                  | Description                                                                                               |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `nx_generators`       | Returns a list of available code generators in your workspace                                             |
+| `nx_generator_schema` | Returns the detailed JSON schema for a specific Nx generator, including all available options             |
+| `nx_run_generator`    | Opens the Nx Console Generate UI with prefilled options (requires a running IDE instance with Nx Console) |
+
 {% aside type="note" title="Tool Availability" %}
-When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
+When no workspace path is specified, only the `nx_docs` tool will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
 {% /aside %}
 
 ## Available Resources
@@ -269,48 +308,6 @@ When connected to an Nx Cloud-enabled workspace, the Nx MCP server automatically
 - Build timing and performance data
 
 ## Tool Usage Examples
-
-### Understanding Workspace Architecture
-
-Ask your AI assistant about your workspace structure:
-
-```text
-What is the structure of this workspace?
-How are the projects organized?
-```
-
-The `nx_workspace` tool provides:
-
-- All applications and libraries in your workspace
-- Project categorization through tags
-- Technology types (feature, UI, data-access)
-- Project ownership and team responsibilities
-
-### Getting Project Details
-
-To understand a specific project's configuration:
-
-```text
-Show me the details of the my-app project
-What targets are available for my-lib?
-```
-
-The `nx_project_details` tool returns:
-
-- Complete target configuration
-- Project dependencies
-- Source and output paths
-- Tags and metadata
-
-### Using Generators
-
-Ask your AI assistant to scaffold new code:
-
-```text
-Create a new React library in the packages/shared folder
-```
-
-The AI will use `nx_generators` to find available generators and `nx_generator_schema` to understand the options, then can invoke `nx_run_generator` to open the Generate UI with preset values.
 
 ### Accessing Documentation
 
@@ -352,3 +349,9 @@ The AI agent can:
 2. Receive failure context and self-healing suggestions
 3. Apply verified fixes via `update_self_healing_fix`
 4. Continue iterating until CI passes
+
+### Workspace Exploration and Code Generation
+
+For workspace exploration, code generation, and task execution, agents use [skills](/docs/features/enhance-ai) rather than MCP tools. Skills teach agents how to use the Nx CLI directly — running commands like `nx show projects`, `nx show project myapp`, and `nx generate` — which is more token-efficient than fetching large JSON payloads via MCP.
+
+If your AI client doesn't support skills, use `--no-minimal` to expose the full set of workspace and generator tools via MCP.
