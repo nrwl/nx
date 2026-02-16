@@ -56,7 +56,11 @@ export async function runOne(
     nxJson
   );
 
-  const { projects, projectName } = getProjects(projectGraph, opts.project);
+  const { projects, projectName } = getProjects(
+    projectGraph,
+    opts.project,
+    cwd
+  );
 
   if (nxArgs.help) {
     await (
@@ -105,7 +109,8 @@ export async function runOne(
 
 function getProjects(
   projectGraph: ProjectGraph,
-  projectName: string
+  projectName: string,
+  cwd?: string
 ): {
   projectName: string;
   projects: ProjectGraphProjectNode[];
@@ -120,7 +125,11 @@ function getProjects(
       },
     };
   } else {
-    const projects = findMatchingProjects([projectName], projectGraph.nodes);
+    const projects = findMatchingProjects(
+      [projectName],
+      projectGraph.nodes,
+      cwd ? { cwd, workspaceRoot } : undefined
+    );
     if (projects.length === 1) {
       const projectName = projects[0];
       const project = projectGraph.nodes[projectName];

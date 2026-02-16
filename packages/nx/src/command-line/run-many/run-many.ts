@@ -16,6 +16,7 @@ import { TargetDependencyConfig } from '../../config/workspace-json-project-json
 import { readNxJson } from '../../config/configuration';
 import { output } from '../../utils/output';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 
 export async function runMany(
@@ -87,6 +88,7 @@ export function projectsToRun(
   const selectedProjects: Record<string, ProjectGraphProjectNode> = {};
   const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.targets);
   const invalidProjects: string[] = [];
+  const cwdOpts = { workspaceRoot };
 
   // --all is default now, if --projects is provided, it'll override the --all
   if (nxArgs.all && nxArgs.projects.length === 0) {
@@ -96,7 +98,8 @@ export function projectsToRun(
   } else {
     const matchingProjects = findMatchingProjects(
       nxArgs.projects,
-      projectGraph.nodes
+      projectGraph.nodes,
+      cwdOpts
     );
     for (const project of matchingProjects) {
       if (!validProjects.has(project)) {
@@ -118,7 +121,8 @@ export function projectsToRun(
 
   const excludedProjects = findMatchingProjects(
     nxArgs.exclude,
-    selectedProjects
+    selectedProjects,
+    cwdOpts
   );
 
   for (const excludedProject of excludedProjects) {

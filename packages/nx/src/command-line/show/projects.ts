@@ -17,7 +17,11 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
+import {
+  FindMatchingProjectsOptions,
+  findMatchingProjects,
+} from '../../utils/find-matching-projects';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { ShowProjectsOptions } from './command-object';
 
 export async function showProjectsHandler(
@@ -50,9 +54,11 @@ export async function showProjectsHandler(
   });
   graph = filter(graph);
 
+  const cwdOpts = { workspaceRoot };
+
   // Apply projects filter and get resultant graph
   if (args.projects) {
-    graph.nodes = getGraphNodesMatchingPatterns(graph, args.projects);
+    graph.nodes = getGraphNodesMatchingPatterns(graph, args.projects, cwdOpts);
   }
 
   // Grab only the nodes with the specified target
@@ -71,7 +77,11 @@ export async function showProjectsHandler(
   const selectedProjects = new Set(Object.keys(graph.nodes));
 
   if (args.exclude) {
-    const excludedProjects = findMatchingProjects(nxArgs.exclude, graph.nodes);
+    const excludedProjects = findMatchingProjects(
+      nxArgs.exclude,
+      graph.nodes,
+      cwdOpts
+    );
     for (const excludedProject of excludedProjects) {
       selectedProjects.delete(excludedProject);
     }
@@ -94,10 +104,11 @@ export async function showProjectsHandler(
 
 function getGraphNodesMatchingPatterns(
   graph: ProjectGraph,
-  patterns: string[]
+  patterns: string[],
+  cwdOpts: FindMatchingProjectsOptions
 ): ProjectGraph['nodes'] {
   const nodes: Record<string, ProjectGraphProjectNode> = {};
-  const matches = findMatchingProjects(patterns, graph.nodes);
+  const matches = findMatchingProjects(patterns, graph.nodes, cwdOpts);
   for (const match of matches) {
     nodes[match] = graph.nodes[match];
   }

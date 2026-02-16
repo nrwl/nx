@@ -200,12 +200,14 @@ function getProjects(
   nxArgs: NxArgs
 ): ProjectGraphProjectNode[] {
   let selectedProjects = {};
+  const cwdOpts = { workspaceRoot };
 
   // get projects matched
   if (nxArgs.projects?.length) {
     const matchingProjects = findMatchingProjects(
       nxArgs.projects,
-      projectGraph.nodes
+      projectGraph.nodes,
+      cwdOpts
     );
     for (const project of matchingProjects) {
       selectedProjects[project] = projectGraph.nodes[project];
@@ -217,7 +219,8 @@ function getProjects(
 
   const excludedProjects = findMatchingProjects(
     nxArgs.exclude,
-    selectedProjects
+    selectedProjects,
+    cwdOpts
   );
   for (const excludedProject of excludedProjects) {
     delete selectedProjects[excludedProject];

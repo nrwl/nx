@@ -45,7 +45,9 @@ export async function showProjectHandler(
 
   let node = graph.nodes[projectName];
   if (!node) {
-    const projects = findMatchingProjects([projectName], graph.nodes);
+    const projects = findMatchingProjects([projectName], graph.nodes, {
+      workspaceRoot,
+    });
     if (projects.length === 1) {
       const matchedProjectName = projects[0];
       node = graph.nodes[matchedProjectName];

@@ -355,7 +355,9 @@ export async function generateGraph(
   if (args.exclude && args.exclude.length > 0) {
     try {
       // Use findMatchingProjects to expand patterns (supports globs, tags, directories, etc.)
-      excludePatterns = findMatchingProjects(args.exclude, prunedGraph.nodes);
+      excludePatterns = findMatchingProjects(args.exclude, prunedGraph.nodes, {
+        workspaceRoot,
+      });
 
       // If no projects matched any of the exclude patterns, show a warning
       if (excludePatterns.length === 0) {

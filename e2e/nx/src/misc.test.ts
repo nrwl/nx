@@ -30,7 +30,7 @@ import { join } from 'path';
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+      packages: ['@nx/web', '@nx/js', '@nx/angular', '@nx/next'],
     })
   );
 
@@ -65,6 +65,50 @@ describe('Nx Commands', () => {
         expect.arrayContaining([`${app1}-e2e`, `${app2}-e2e`])
       );
       expect(withTargets.length).toEqual(2);
+    });
+
+    it('should support cwd-relative patterns for project selection', () => {
+      const prefix = uniq('cwdrel');
+      const libA = `${prefix}-a`;
+      const libB = `${prefix}-b`;
+      const appC = uniq('cwdapp');
+
+      runCLI(`generate @nx/js:lib packages/${libA} --bundler=tsc`);
+      runCLI(`generate @nx/js:lib packages/${libB} --bundler=tsc`);
+      runCLI(`generate @nx/js:lib apps/${appC} --bundler=tsc`);
+
+      // From workspace root, use root-relative directory pattern
+      const fromRoot = JSON.parse(
+        runCLI(`show projects -p "packages/${libA}" --json`)
+      );
+      expect(fromRoot).toEqual([libA]);
+
+      // From packages/ subdirectory, use ./ relative pattern to match a single project
+      const projPath = tmpProjPath();
+      const fromPackages = JSON.parse(
+        runCLI(`show projects -p "./${libA}" --json`, {
+          cwd: join(projPath, 'packages'),
+        })
+      );
+      expect(fromPackages).toEqual([libA]);
+
+      // ./ glob pattern from subdirectory matching multiple projects
+      const globFromPackages = JSON.parse(
+        runCLI(`show projects -p "./${prefix}*" --json`, {
+          cwd: join(projPath, 'packages'),
+        })
+      );
+      expect(globFromPackages).toContain(libA);
+      expect(globFromPackages).toContain(libB);
+      expect(globFromPackages).not.toContain(appC);
+
+      // ../ pattern from a project subdirectory to reach a sibling directory
+      const fromLibA = JSON.parse(
+        runCLI(`show projects -p "../apps/${appC}" --json`, {
+          cwd: join(projPath, 'packages', libA),
+        })
+      );
+      expect(fromLibA).toEqual([appC]);
     });
 
     it('should show detailed project info', () => {

@@ -321,6 +321,73 @@ describe('findMatchingProjects', () => {
       '@test/test-e2e',
     ]);
   });
+
+  describe('cwd-relative patterns', () => {
+    const cwdOpts = (cwdRelative: string) => ({
+      cwd: `/root/${cwdRelative}`,
+      workspaceRoot: '/root',
+    });
+
+    it('should resolve ./ patterns relative to cwd', () => {
+      expect(
+        findMatchingProjects(['./*'], projectGraph, cwdOpts('lib'))
+      ).toEqual([
+        'test-project',
+        'a',
+        'b',
+        '@acme/foo',
+        '@acme/foo-e2e',
+        '@acme/bar',
+        'foo_bar1',
+      ]);
+    });
+
+    it('should resolve ./ glob patterns relative to cwd', () => {
+      expect(
+        findMatchingProjects(['./a'], projectGraph, cwdOpts('lib'))
+      ).toEqual(['a']);
+    });
+
+    it('should resolve ../ patterns relative to cwd', () => {
+      expect(
+        findMatchingProjects(['../apps/*'], projectGraph, cwdOpts('lib'))
+      ).toEqual(['c', '@test/test', '@test/test-e2e']);
+    });
+
+    it('should support negation with cwd-relative patterns', () => {
+      expect(
+        findMatchingProjects(['*', '!./*'], projectGraph, cwdOpts('apps'))
+      ).toEqual([
+        'test-project',
+        'a',
+        'b',
+        'nested',
+        '@acme/foo',
+        '@acme/foo-e2e',
+        '@acme/bar',
+        'foo_bar1',
+        '@acme/nested/foo',
+      ]);
+    });
+
+    it('should treat ./ patterns without opts as workspace-root-relative', () => {
+      expect(findMatchingProjects(['./lib/*'], projectGraph)).toEqual([
+        'test-project',
+        'a',
+        'b',
+        '@acme/foo',
+        '@acme/foo-e2e',
+        '@acme/bar',
+        'foo_bar1',
+      ]);
+    });
+
+    it('should not affect non-relative patterns when opts is provided', () => {
+      expect(
+        findMatchingProjects(['a', 'tag:ui'], projectGraph, cwdOpts('lib'))
+      ).toEqual(['a', 'b']);
+    });
+  });
 });
 
 const projects = [

@@ -1,6 +1,14 @@
 import { minimatch } from 'minimatch';
+import { join, normalize, relative } from 'path';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 import { isGlobPattern } from './globs';
+
+export interface FindMatchingProjectsOptions {
+  // The current working directory (absolute path). Defaults to process.cwd().
+  cwd?: string;
+  // The workspace root (absolute path)
+  workspaceRoot: string;
+}
 
 const validPatternTypes = [
   'name', // Pattern is based on the project's name
@@ -24,15 +32,26 @@ interface ProjectPattern {
  *
  * @param patterns A list of project names or globs to match against.
  * @param projects A map of {@link ProjectGraphProjectNode} by project name.
+ * @param opts Optional options for cwd-relative pattern resolution. When provided,
+ *   patterns starting with './' or '../' are resolved relative to opts.cwd
+ *   and matched against project root directories.
  * @returns
  */
 export function findMatchingProjects(
   patterns: string[] = [],
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, ProjectGraphProjectNode>,
+  opts?: FindMatchingProjectsOptions
 ): string[] {
   if (!patterns.length || patterns.filter((p) => p.length).length === 0) {
     return []; // Short circuit if called with no patterns
   }
+
+  const relativeCwd = opts
+    ? relative(opts.workspaceRoot, opts.cwd ?? process.cwd()).replace(
+        /\\/g,
+        '/'
+      ) || undefined
+    : undefined;
 
   const projectNames = Object.keys(projects);
 
@@ -48,11 +67,14 @@ export function findMatchingProjects(
     patterns.unshift('*');
   }
 
-  for (const stringPattern of patterns) {
+  for (let stringPattern of patterns) {
     // Do not waste time attempting to look up cross-workspace references which will never match
     if (!stringPattern.length || stringPattern.startsWith('nx-cloud:')) {
       continue;
     }
+
+    // Resolve cwd-relative patterns (starting with ./ or ../) to workspace-root-relative paths
+    stringPattern = resolveCwdRelativePattern(stringPattern, relativeCwd);
 
     const pattern = parseStringPattern(stringPattern, projects);
 
@@ -228,6 +250,27 @@ function addMatchingProjectsByTag(
       }
     }
   }
+}
+
+function isCwdRelativePattern(pattern: string): boolean {
+  return pattern.startsWith('./') || pattern.startsWith('../');
+}
+
+function resolveCwdRelativePattern(pattern: string, cwd?: string): string {
+  const isExclude = isExcludePattern(pattern);
+  const rawPattern = isExclude ? pattern.substring(1) : pattern;
+
+  if (!isCwdRelativePattern(rawPattern)) {
+    return pattern;
+  }
+
+  // Resolve relative to cwd (or workspace root if cwd is not provided)
+  const resolved = cwd
+    ? normalize(join(cwd, rawPattern)).replace(/\\/g, '/')
+    : normalize(rawPattern).replace(/\\/g, '/');
+
+  // Force directory-type matching by using the directory: prefix
+  return `${isExclude ? '!' : ''}directory:${resolved}`;
 }
 
 function isExcludePattern(pattern: string): boolean {
