@@ -1681,7 +1681,7 @@ importers:
     dependencies:
       '@nx/angular-rspack':
         specifier: workspace:*
-        version: file:packages/angular-rspack(72fd26552b1519a5fa63c9a75f55e8d4)
+        version: file:packages/angular-rspack(02c4892c89efc0dfb8e6dcbe7cf55f5f)
     devDependencies:
       '@rspack/cli':
         specifier: catalog:rspack
@@ -1707,7 +1707,7 @@ importers:
     dependencies:
       '@nx/angular-rspack':
         specifier: workspace:*
-        version: file:packages/angular-rspack(02c4892c89efc0dfb8e6dcbe7cf55f5f)
+        version: file:packages/angular-rspack(72fd26552b1519a5fa63c9a75f55e8d4)
     devDependencies:
       '@rspack/cli':
         specifier: catalog:rspack
