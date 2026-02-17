@@ -304,6 +304,16 @@ export function getTranspiler(
   let tsNodeOptions: TsConfigOptions | undefined;
   if (swcNodeInstalled && !preferTsNode) {
     _getTranspiler = getSwcTranspiler;
+  } else if (
+    !swcNodeInstalled &&
+    !!(process as any).features?.typescript &&
+    !preferTsNode
+  ) {
+    // When SWC is not available but Node natively supports TypeScript
+    // (Node 22.6+), skip registering any transpiler rather than falling
+    // back to ts-node. The ts-node fallback registers CommonJS require
+    // hooks which break ESM plugins with ERR_REQUIRE_ESM on Node 24.
+    _getTranspiler = undefined;
   } else if (tsNodeInstalled) {
     // We can fall back on ts-node if it's available
     _getTranspiler = getTsNodeTranspiler;
