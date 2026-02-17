@@ -12,7 +12,7 @@ env:
 jobs:
   main:
     docker:
-      - image: mcr.microsoft.com/dotnet/sdk:8.0
+      - image: mcr.microsoft.com/dotnet/sdk:10.0
     steps:
       - checkout
 
@@ -20,7 +20,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-dotnet" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: 'main'
@@ -70,12 +70,12 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-dotnet" --stop-agents-after="build"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '10.x'
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -99,7 +99,7 @@ env:
 jobs:
   main:
     docker:
-      - image: mcr.microsoft.com/dotnet/sdk:8.0
+      - image: mcr.microsoft.com/dotnet/sdk:10.0
     steps:
       - checkout
 
@@ -107,7 +107,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-dotnet" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: 'main'
@@ -157,12 +157,12 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-dotnet" --stop-agents-after="build"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '10.x'
 
       - uses: nrwl/nx-set-shas@v4
 
