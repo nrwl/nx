@@ -51,7 +51,7 @@ describe('Redirect rules configuration', () => {
   describe('Wildcard consolidation', () => {
     test('cli wildcard exists', () => {
       expect(redirectRules.cliUrls['/cli/:path*']).toEqual(
-        '/packages/nx/documents/:path*'
+        '/docs/reference/nx-commands'
       );
     });
 
