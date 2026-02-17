@@ -9,7 +9,6 @@ import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as pc from 'picocolors';
-import { handleQToQuit } from '../../utils/handle-q-to-quit';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -72,10 +71,6 @@ export async function createRunOneDynamicOutputRenderer({
   process.on('SIGTERM', () => clearRenderInterval());
   process.on('SIGHUP', () => clearRenderInterval());
 
-  const cleanupQToQuit = handleQToQuit(() =>
-    process.kill(process.pid, 'SIGINT')
-  );
-
   const lifeCycle = {} as Partial<LifeCycle>;
 
   const start = process.hrtime();
@@ -106,6 +101,7 @@ export async function createRunOneDynamicOutputRenderer({
   let renderDependentTargetsIntervalId: NodeJS.Timeout | undefined;
 
   const moveCursorToStartOfDependentTargetLines = () => {
+    readline.cursorTo(process.stdout, 0);
     readline.moveCursor(process.stdout, 0, -dependentTargetsNumLines);
   };
 
@@ -281,7 +277,6 @@ export async function createRunOneDynamicOutputRenderer({
 
   lifeCycle.endCommand = () => {
     clearRenderInterval();
-    cleanupQToQuit();
     const timeTakenText = prettyTime(process.hrtime(start));
 
     if (totalSuccessfulTasks === totalTasks) {

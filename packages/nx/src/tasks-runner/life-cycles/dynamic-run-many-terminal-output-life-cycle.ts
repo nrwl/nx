@@ -10,7 +10,6 @@ import { prettyTime } from './pretty-time';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as pc from 'picocolors';
-import { handleQToQuit } from '../../utils/handle-q-to-quit';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -60,10 +59,6 @@ export async function createRunManyDynamicOutputRenderer({
   process.on('SIGINT', () => clearRenderInterval());
   process.on('SIGTERM', () => clearRenderInterval());
   process.on('SIGHUP', () => clearRenderInterval());
-
-  const cleanupQToQuit = handleQToQuit(() =>
-    process.kill(process.pid, 'SIGINT')
-  );
 
   const lifeCycle = {} as Partial<LifeCycle>;
   const isVerbose = overrides.verbose === true;
@@ -332,7 +327,6 @@ export async function createRunManyDynamicOutputRenderer({
 
   lifeCycle.endCommand = () => {
     clearRenderInterval();
-    cleanupQToQuit();
     const timeTakenText = prettyTime(process.hrtime(start));
 
     moveCursorToStartOfPinnedFooter();

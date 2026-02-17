@@ -2,7 +2,6 @@ import { spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
-import { handleQToQuit } from '../../utils/handle-q-to-quit';
 
 export interface WatchArguments {
   projects?: string[];
@@ -248,8 +247,6 @@ export async function watch(args: WatchArguments) {
     }
   );
   args.verbose && output.logSingleLine('watch process waiting...');
-
-  handleQToQuit(() => process.exit(0));
 
   // Keep the process alive while watching for file changes
   // The file watcher callbacks will handle incoming events
