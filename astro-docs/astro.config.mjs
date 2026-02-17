@@ -7,6 +7,11 @@ import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
+import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
+
+// Always resolve NX_DEV_URL so downstream consumers (Footer, Header) pick it up.
+// For deploy previews this overrides any site-level env var to point to the matching preview.
+process.env.NX_DEV_URL = resolveNxDevUrl();
 
 const BASE = '/docs';
 

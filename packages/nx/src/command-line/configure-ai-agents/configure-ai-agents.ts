@@ -12,7 +12,9 @@ import {
 } from '../../ai/utils';
 import { installPackageToTmp } from '../../devkit-internals';
 import { output } from '../../utils/output';
+import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
@@ -28,6 +30,19 @@ export async function configureAiAgentsHandler(
     inner
   ) {
     return await configureAiAgentsHandlerImpl(args);
+  }
+
+  // Skip downloading latest if the current version is already the latest
+  try {
+    const latestVersion = await resolvePackageVersionUsingRegistry(
+      'nx',
+      'latest'
+    );
+    if (latestVersion === nxVersion) {
+      return await configureAiAgentsHandlerImpl(args);
+    }
+  } catch {
+    // If we can't check, proceed with download
   }
 
   let cleanup: () => void | undefined;
@@ -60,6 +75,19 @@ export async function configureAiAgentsHandler(
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
+  // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+  // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+  process.on('uncaughtException', (error) => {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error['code'] === 'ERR_USE_AFTER_CLOSE'
+    )
+      return;
+    throw error;
+  });
+
   const normalizedOptions = normalizeOptions(options);
 
   const {
