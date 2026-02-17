@@ -1,6 +1,6 @@
 ---
 title: Overview of the Nx Vite Plugin
-description: Use Vite with Nx for inferred dev/build/test tasks, generators, and CI-friendly workflows.
+description: Use Vite with Nx for inferred dev/build tasks, generators, and CI-friendly workflows.
 sidebar:
   label: Introduction
 filter: 'type:References'
@@ -8,7 +8,11 @@ filter: 'type:References'
 
 [Vite](https://vite.dev/) is a fast build tool and dev server for modern web apps.
 
-The `@nx/vite` plugin adds [inferred targets](#configuration), [project configuration generators](#setup), and optional Vitest test splitting for CI.
+The `@nx/vite` plugin adds [inferred targets](#configuration) and [project configuration generators](#setup).
+
+{% aside type="note" title="Vitest is now in @nx/vitest" %}
+Starting with Nx v22, Vitest support has moved to the dedicated [`@nx/vitest` plugin](/docs/technologies/test-tools/vitest/introduction). In Nx v21 and prior, `@nx/vite` contained what is now in `@nx/vitest`. If you are upgrading, see the [migration guide](/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite).
+{% /aside %}
 
 You can use Vite with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -31,12 +35,6 @@ Configure an existing project to use Vite:
 
 ```shell
 nx g @nx/vite:configuration --project=my-app
-```
-
-If you want to add Vitest later, generate the Vitest config:
-
-```shell
-nx g @nx/vite:vitest --project=my-app
 ```
 
 Verify inferred tasks in the project details view:
@@ -76,7 +74,6 @@ For the full framework workflows, see the [React introduction](/docs/technologie
 - `nx build my-app` creates a production build in `dist/` (controlled by `build.outDir` in `vite.config.*`) and registers the outputs for Nx caching.
 - `nx preview my-app` serves the production build using Vite preview (runs after `build`).
 - `nx serve-static my-app` serves the built assets from `dist/` for quick smoke tests.
-- `nx test my-app` runs Vitest when the project has `vitest.config.*` or a `test` block in `vite.config.*`.
 - `nx typecheck my-app` runs TypeScript typechecking when a `tsconfig*.json` exists in the project.
 
 Replace `my-app` with your project name.
@@ -85,7 +82,7 @@ Replace `my-app` with your project name.
 
 ### Configure Task Inference
 
-The `@nx/vite` plugin infers tasks by reading Vite and Vitest config files. Any of the following config files will be picked up:
+The `@nx/vite` plugin infers tasks by reading Vite config files. Any of the following config files will be picked up:
 
 - `vite.config.js`
 - `vite.config.ts`
@@ -93,12 +90,6 @@ The `@nx/vite` plugin infers tasks by reading Vite and Vitest config files. Any 
 - `vite.config.mts`
 - `vite.config.cjs`
 - `vite.config.cts`
-- `vitest.config.js`
-- `vitest.config.ts`
-- `vitest.config.mjs`
-- `vitest.config.mts`
-- `vitest.config.cjs`
-- `vitest.config.cts`
 
 Build targets are only created when the project is buildable. A project is treated as buildable when any of the following are true:
 
@@ -124,15 +115,12 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
       "options": {
         "buildTargetName": "build",
         "previewTargetName": "preview",
-        "testTargetName": "test",
         "serveTargetName": "serve",
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static",
         "typecheckTargetName": "typecheck",
         "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps",
-        "ciTargetName": "test-ci",
-        "ciGroupName": "Vitest (CI)"
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
@@ -141,19 +129,16 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 
 `serveTargetName` is deprecated; use `devTargetName` instead. `buildDepsTargetName` and `watchDepsTargetName` create targets that build or watch project dependencies.
 
-| Option                  | Description                                                    | Default                     |
-| ----------------------- | -------------------------------------------------------------- | --------------------------- |
-| `buildTargetName`       | Name of the Vite build target                                  | `build`                     |
-| `previewTargetName`     | Name of the Vite preview target                                | `preview`                   |
-| `testTargetName`        | Name of the Vitest target when tests are configured            | `test`                      |
-| `serveTargetName`       | Name of the deprecated Vite serve target                       | `serve`                     |
-| `devTargetName`         | Name of the Vite dev server target                             | `dev`                       |
-| `serveStaticTargetName` | Name of the static file server target                          | `serve-static`              |
-| `typecheckTargetName`   | Name of the typecheck target                                   | `typecheck`                 |
-| `buildDepsTargetName`   | Name of the build-deps target for dependency builds            | none                        |
-| `watchDepsTargetName`   | Name of the watch-deps target for dependency watches           | none                        |
-| `ciTargetName`          | Name of the atomized Vitest CI target (enables test splitting) | none                        |
-| `ciGroupName`           | Group name for atomized CI targets                             | derived from `ciTargetName` |
+| Option                  | Description                                          | Default        |
+| ----------------------- | ---------------------------------------------------- | -------------- |
+| `buildTargetName`       | Name of the Vite build target                        | `build`        |
+| `previewTargetName`     | Name of the Vite preview target                      | `preview`      |
+| `serveTargetName`       | Name of the deprecated Vite serve target             | `serve`        |
+| `devTargetName`         | Name of the Vite dev server target                   | `dev`          |
+| `serveStaticTargetName` | Name of the static file server target                | `serve-static` |
+| `typecheckTargetName`   | Name of the typecheck target                         | `typecheck`    |
+| `buildDepsTargetName`   | Name of the build-deps target for dependency builds  | none           |
+| `watchDepsTargetName`   | Name of the watch-deps target for dependency watches | none           |
 
 ### Disable or Scope Inference
 
@@ -171,7 +156,7 @@ To stop inference for a specific project, exclude its config file with `include`
 }
 ```
 
-To avoid specific targets, adjust the config files that trigger them. For example, remove the `test` block or `vitest.config.*` to stop `test`, remove `tsconfig*.json` to stop `typecheck`, or use library mode (`build.lib`) to skip `dev`, `preview`, and `serve-static` unless you set dev server options.
+To avoid specific targets, adjust the config files that trigger them. For example, remove `tsconfig*.json` to stop `typecheck`, or use library mode (`build.lib`) to skip `dev`, `preview`, and `serve-static` unless you set dev server options.
 
 ### View Inferred Tasks
 
@@ -185,15 +170,9 @@ nx show project my-app --web
 
 Use Nx to keep CI fast in large monorepos:
 
-- Run only affected Vite projects: `nx affected -t build,test,typecheck`.
+- Run only affected Vite projects: `nx affected -t build,typecheck`.
 - Enable remote caching with [Nx Cloud](/docs/guides/nx-cloud/setup-ci) using `nx connect`.
 - Follow the [CI setup guide](/docs/guides/nx-cloud/setup-ci) for a full pipeline.
-
-If you use Vitest with `@nx/vite`, set `ciTargetName` to enable test splitting by file for faster CI and better caching.
-
-### CI Considerations
-
-Use `nx affected -t test` with `ciTargetName` to split tests by file when Vitest is configured in CI.
 
 ## What's Next
 

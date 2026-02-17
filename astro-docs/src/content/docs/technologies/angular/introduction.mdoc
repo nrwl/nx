@@ -8,8 +8,8 @@ sidebar:
 filter: 'type:References'
 ---
 
-[Angular](https://angular.dev) is a framework for building web applications. Nx has first party support for Angular projects. If you're familar with the Angular CLI, `ng`, then Nx CLI will feel very familiar.
-The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx.
+[Angular](https://angular.dev) is a framework for building web applications. Nx has first party support for Angular projects. If you're familiar with the Angular CLI, `ng`, then Nx CLI will feel very familiar.
+The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for monorepos.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
 See the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) to know which Nx version supports a given Angular version.
@@ -74,8 +74,8 @@ By default, Nx configures ESLint for linting, Jest for unit tests. Read more of 
 There are also generators for setting up common items inside your projects, such as components and services:
 
 ```shell
-nx g @nx/angular:component libs/my-lib/src/lib/my-component --project=my-lib
-nx g @nx/angular:service libs/my-lib/src/lib/my-service --project=my-lib
+nx g @nx/angular:component libs/my-lib/src/lib/my-component
+nx g @nx/angular:service libs/my-lib/src/lib/my-service
 ```
 
 ```shell

@@ -1,6 +1,6 @@
 ---
 title: Next.js Plugin for Nx
-description: Create and manage Next.js applications in your Nx workspace with inferred build, dev, and start tasks, generators for apps, pages, and components, and optimized CI configuration.
+description: Create and manage Next.js applications in your Nx workspace with inferred build, dev, and start tasks, generators for apps and libraries, and optimized CI configuration.
 keywords: [nextjs, next, react]
 sidebar:
   label: 'Introduction'
@@ -8,7 +8,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-The Next.js plugin for Nx, `@nx/next`, automatically [infers `build`, `dev`, and `start` tasks](#how-nxnext-infers-tasks) from your Next.js configuration and provides [generators for creating applications, libraries, pages, and components](#develop-nextjs-applications).
+The Next.js plugin for Nx, `@nx/next`, automatically [infers `build`, `dev`, and `start` tasks](#how-nxnext-infers-tasks) from your Next.js configuration and provides [generators for creating applications and libraries](#develop-nextjs-applications).
 
 You don't need the plugin to use Next.js with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, code generators, and simplified configuration.
 
@@ -75,16 +75,6 @@ nx g @nx/next:lib libs/my-lib --publishable --importPath=@myorg/my-lib
 Read more about the options available for the [library generator](/docs/technologies/react/next/generators#library).
 
 ## Develop Next.js Applications
-
-### Generate Pages and Components
-
-```shell
-nx g @nx/next:page apps/my-app/pages/my-page
-
-nx g @nx/next:component apps/my-app/components/my-component
-```
-
-Read more about the options available for the [page generator](/docs/technologies/react/next/generators#page) and the [component generator](/docs/technologies/react/next/generators#component). Replace `my-app` with your project name.
 
 ### Serve for Development
 

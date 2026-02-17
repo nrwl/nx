@@ -28,15 +28,6 @@ You can use Maven with Nx without the plugin and still get [task caching](/docs/
 You can install Nx globally. Depending on your package manager, use one of the following commands:
 
 {% tabs syncKey="package-manager" %}
-{% tabitem label="npm" %}
-
-```shell
-npm install --global nx@latest
-```
-
-> You can use `pnpm`, `yarn`, or `bun` if you prefer as well.
-
-{% /tabitem %}
 {% tabitem label="Homebrew (macOS, Linux)" %}
 
 ```shell
@@ -58,6 +49,15 @@ sudo add-apt-repository ppa:nrwl/nx
 sudo apt update
 sudo apt install nx
 ```
+
+{% /tabitem %}
+{% tabitem label="npm" %}
+
+```shell
+npm install --global nx@latest
+```
+
+> You can use `pnpm`, `yarn`, or `bun` if you prefer as well.
 
 {% /tabitem %}
 {% /tabs %}
@@ -187,7 +187,7 @@ nx connect
 
 ### Batch Mode
 
-Batch mode runs multiple Gradle tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
+Batch mode runs multiple Maven tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
 
 ```shell
 NX_BATCH_MODE=true nx run-many -t build test

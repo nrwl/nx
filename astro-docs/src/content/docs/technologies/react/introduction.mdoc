@@ -1,6 +1,6 @@
 ---
 title: React Plugin for Nx
-description: Create and manage React applications and libraries in your Nx workspace with generators for apps, libraries, components, hooks, and support for Module Federation.
+description: Create and manage React applications and libraries in your Nx workspace with generators for apps, libraries, and support for Module Federation.
 keywords: [react]
 sidebar:
   label: 'Introduction'
@@ -8,7 +8,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-The React plugin for Nx, `@nx/react`, provides generators for [applications, libraries](#generate-react-applications-and-libraries), [components, and hooks](#generate-components-and-hooks), executors for [Module Federation](/docs/technologies/react/guides/module-federation-with-ssr), and [library build support](/docs/concepts/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain.
+The React plugin for Nx, `@nx/react`, provides generators for [applications and libraries](#generate-react-applications-and-libraries), executors for [Module Federation](/docs/technologies/react/guides/module-federation-with-ssr), and [library build support](/docs/concepts/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain.
 
 You don't need the plugin to use React with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin simplifies scaffolding and code generation.
 
@@ -69,7 +69,7 @@ To start the application in development mode, run `nx serve my-app`. Read more a
 
 The `--bundler` option selects the build tool for your application or buildable library. You can learn more about the specific bundler you scaffoled your project with on the bundler's plugin page:
 
-- [Vite](/docs/technologies/build-tools/vite/introduction)
+- [Vite](/docs/technologies/build-tools/vite/introduction) (Recommended)
 - [Webpack](/docs/technologies/build-tools/webpack/introduction)
 - [Rspack](/docs/technologies/build-tools/rspack/introduction)
 - [Rollup](/docs/technologies/build-tools/rollup/introduction)
@@ -87,27 +87,6 @@ nx g @nx/react:lib libs/my-lib --publishable --importPath=@myorg/my-lib
 
 The same [bundler options](#choose-a-bundler) apply when creating buildable libraries. Read more about the options available for the [library generator](/docs/technologies/react/generators#library).
 You can also read more about [buildable and publishable libraries](/docs/concepts/buildable-and-publishable-libraries).
-
-### Generate Components and Hooks
-
-Add a component to an existing project:
-
-```shell
-nx g @nx/react:component libs/my-lib/src/lib/my-component
-
-# Export the component from the library's public API
-nx g @nx/react:component libs/my-lib/src/lib/my-component --export
-```
-
-Read more about the options available for the [component generator](/docs/technologies/react/generators#component).
-
-Add a hook to an existing project:
-
-```shell
-nx g @nx/react:hook libs/my-lib/src/lib/use-my-hook
-```
-
-Read more about the options available for the [hook generator](/docs/technologies/react/generators#hook).
 
 ### Serve Applications
 

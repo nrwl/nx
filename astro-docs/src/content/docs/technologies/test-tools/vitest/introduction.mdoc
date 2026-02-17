@@ -224,11 +224,15 @@ Share test and e2e cache results across your team and CI with [remote caching](/
 nx connect
 ```
 
-### Task splitting with Atomizer
+### Task Splitting for Slow Tests
 
-If Vitest is running E2E tests, set `ciTargetName` to split tests by file for distributed CI runs. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
+For slow test suites (e.g. E2E or integration tests), set `ciTargetName` to split tests by file for distributed CI runs. Each test file becomes its own cacheable CI task with better caching and retries. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
 
-If you use `testMode: "watch"` locally, set `ciTargetName` and use `testMode: "run"` for CI to keep runs deterministic.
+If you use `testMode: "watch"` locally, use `testMode: "run"` for CI to keep runs deterministic.
+
+### Feature-Based Testing
+
+Organize tests by feature to get better cache hits and more targeted CI runs. See the [feature-based testing guide](/docs/guides/tips-n-tricks/feature-based-testing) for strategies on structuring tests in a monorepo.
 
 ## What's Next
 
@@ -236,6 +240,7 @@ If you use `testMode: "watch"` locally, set `ciTargetName` and use `testMode: "r
 {% linkcard title="Vitest Config Reference" description="Learn about Vitest configuration options and defaults." href="https://vitest.dev/config/" /%}
 {% linkcard title="Migrate from @nx/vite" description="Move Vitest tasks from the Vite plugin to @nx/vitest." href="/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite" /%}
 {% linkcard title="Split E2E Tasks" description="Distribute E2E tests by file with atomized tasks." href="/docs/features/ci-features/split-e2e-tasks" /%}
+{% linkcard title="Feature-Based Testing" description="Organize tests by feature for better caching and targeted CI." href="/docs/guides/tips-n-tricks/feature-based-testing" /%}
 {% linkcard title="Vitest Generators Reference" description="Reference for @nx/vitest generators." href="/docs/technologies/test-tools/vitest/generators" /%}
 {% linkcard title="Vitest Executors Reference" description="Reference for @nx/vitest executors." href="/docs/technologies/test-tools/vitest/executors" /%}
 {% /cardgrid %}

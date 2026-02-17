@@ -8,7 +8,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-The TypeScript plugin for Nx, `@nx/js`, provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-nxjstypescript-infers-tasks) for your projects using package manager workspaces and TypeScript project references. Maintaining TypeScript project references in a monorepo can be cumbersome, the `@nx/js` plugin comes with a [sync generator](/docs/concepts/sync-generators) to automatically upkeep these references.
+The TypeScript plugin for Nx, `@nx/js`, provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-the-typescript-plugin-infers-tasks) for your projects using package manager workspaces and TypeScript project references. Maintaining TypeScript project references in a monorepo can be cumbersome, the `@nx/js` plugin comes with a [sync generator](/docs/concepts/sync-generators) to automatically upkeep these references.
 
 You don't need the plugin to use TypeScript with Nx, any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin can help simplify setups and maintenance of TypeScript projects at scale.
 
@@ -51,7 +51,7 @@ Verify the plugin is setup:
 
 {% /steps %}
 
-If your TypeScript projects aren't showing up with the right targets, then [view read how `@nx/js` infers projects](#how-nxjstypescript-infers-tasks)
+If your TypeScript projects aren't showing up with the right targets, then [view read how `@nx/js` infers projects](#how-the-typescript-plugin-infers-tasks)
 
 ### Create a New TypeScript Monorepo
 

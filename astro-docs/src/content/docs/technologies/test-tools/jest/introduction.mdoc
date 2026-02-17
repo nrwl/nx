@@ -222,11 +222,19 @@ Share build and typecheck cache results across your team and CI with [remote cac
 nx connect
 ```
 
-### Performance with parallelization
+### Task Splitting for Slow Tests
+
+For slow test suites (e.g. E2E or integration tests), set `ciTargetName` to split tests by file for distributed CI runs. Each test file becomes its own cacheable CI task with better caching and retries. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
+
+### Feature-Based Testing
+
+Organize tests by feature to get better cache hits and more targeted CI runs. See the [feature-based testing guide](/docs/guides/tips-n-tricks/feature-based-testing) for strategies on structuring tests in a monorepo.
+
+### Performance with Parallelization
 
 Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] --runInBand` for the best performance.
 
-This is because each jest process creates a workers based on system resources, running multiple projects via nx and using jest workers will create too many process overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process. You can then leverage Nx parallelism to run multiple jest projects at once.
+This is because each jest process creates workers based on system resources, running multiple projects via Nx and using jest workers will create too many processes overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process. You can then leverage Nx parallelism to run multiple jest projects at once.
 
 ### Batch Mode
 
@@ -242,6 +250,7 @@ NX_BATCH_MODE=true nx run-many -t test
 {% linkcard title="Jest Configuration" description="Explore all Jest configuration options." href="https://jestjs.io/docs/configuration" /%}
 {% linkcard title="Snapshot Testing" description="Learn how Jest snapshot testing works and when to use it." href="https://jestjs.io/docs/snapshot-testing" /%}
 {% linkcard title="Split E2E Tasks" description="Distribute E2E tests across CI for better caching and retries." href="/docs/features/ci-features/split-e2e-tasks" /%}
+{% linkcard title="Feature-Based Testing" description="Organize tests by feature for better caching and targeted CI." href="/docs/guides/tips-n-tricks/feature-based-testing" /%}
 {% linkcard title="Jest Generators Reference" description="Full API reference for @nx/jest generators." href="/docs/technologies/test-tools/jest/generators" /%}
 {% linkcard title="Jest Executors Reference" description="Full API reference for @nx/jest executors." href="/docs/technologies/test-tools/jest/executors" /%}
 {% /cardgrid %}
