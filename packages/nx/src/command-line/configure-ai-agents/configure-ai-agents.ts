@@ -12,7 +12,9 @@ import {
 } from '../../ai/utils';
 import { installPackageToTmp } from '../../devkit-internals';
 import { output } from '../../utils/output';
+import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
@@ -28,6 +30,19 @@ export async function configureAiAgentsHandler(
     inner
   ) {
     return await configureAiAgentsHandlerImpl(args);
+  }
+
+  // Skip downloading latest if the current version is already the latest
+  try {
+    const latestVersion = await resolvePackageVersionUsingRegistry(
+      'nx',
+      'latest'
+    );
+    if (latestVersion === nxVersion) {
+      return await configureAiAgentsHandlerImpl(args);
+    }
+  } catch {
+    // If we can't check, proceed with download
   }
 
   let cleanup: () => void | undefined;
