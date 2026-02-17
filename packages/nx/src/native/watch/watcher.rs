@@ -295,9 +295,11 @@ impl Watcher {
                 .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
             *watched_path_set.lock() = path_set;
 
-            watch_exec.config.filterer(
-                watch_filterer::create_filter(&origin, &additional_globs, use_ignore).await?,
-            );
+            watch_exec.config.filterer(watch_filterer::create_filter(
+                &origin,
+                &additional_globs,
+                use_ignore,
+            )?);
             trace!("starting watch exec");
             watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
             Ok(())
