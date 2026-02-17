@@ -49,7 +49,7 @@ const diataxis = {
   '/features/integrate-with-editors': '/docs/getting-started/editor-setup',
   '/using-nx/mental-model': '/docs/concepts/mental-model',
   '/using-nx/caching': '/docs/concepts/how-caching-works',
-  '/using-nx/dte': '/features/distribute-task-execution',
+  '/using-nx/dte': '/docs/features/ci-features/distribute-task-execution',
   '/using-nx/affected': '/docs/features/ci-features/affected',
   '/using-nx/ci-overview': '/docs/guides/nx-cloud/setup-ci',
   '/using-nx/updating-nx': '/docs/features/automate-updating-dependencies',
@@ -74,9 +74,9 @@ const diataxis = {
   '/executors/run-commands-builder':
     '/docs/guides/tasks--caching/run-commands-executor',
   '/executors/creating-custom-builders': '/docs/extending-nx/local-executors',
-  '/generators/using-generators': '/features/use-code-generators',
+  '/generators/using-generators': '/docs/features/generate-code',
   '/generators/workspace-generators':
-    '/recipes/generators/workspace-generators',
+    '/docs/reference/deprecated/workspace-generators',
   '/generators/composing-generators': '/docs/extending-nx/composing-generators',
   '/generators/generator-options': '/docs/extending-nx',
   '/generators/creating-files': '/docs/extending-nx/creating-files',
@@ -96,13 +96,13 @@ const diataxis = {
   '/structure/project-graph-plugins':
     '/docs/extending-nx/project-graph-plugins',
   '/ci/monorepo-ci-azure': '/docs/guides/nx-cloud/setup-ci',
-  '/ci/monorepo-ci-circle-ci': '/nx-cloud/recipes/set-up/monorepo-ci-circle-ci',
-  '/ci/monorepo-ci-github-actions': '/recipes/ci/monorepo-ci-github-actions',
-  '/ci/monorepo-ci-jenkins': '/nx-cloud/recipes/set-up/monorepo-ci-jenkins',
-  '/ci/monorepo-ci-gitlab': '/nx-cloud/recipes/set-up/monorepo-ci-gitlab',
-  '/ci/monorepo-ci-bitbucket-pipelines':
-    '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
-  '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
+  '/ci/monorepo-ci-circle-ci': '/docs/guides/nx-cloud/setup-ci',
+  '/ci/monorepo-ci-github-actions': '/docs/guides/nx-cloud/setup-ci',
+  '/ci/monorepo-ci-jenkins': '/docs/guides/nx-cloud/setup-ci',
+  '/ci/monorepo-ci-gitlab': '/docs/guides/nx-cloud/setup-ci',
+  '/ci/monorepo-ci-bitbucket-pipelines': '/docs/guides/nx-cloud/setup-ci',
+  '/ci/distributed-builds':
+    '/docs/concepts/ci-concepts/parallelization-distribution', // 👀
   '/ci/setup-incremental-builds-angular':
     '/recipes/angular/setup-incremental-builds-angular',
   '/guides/turbo-and-nx': '/docs/guides/adopting-nx/from-turborepo',
@@ -156,12 +156,12 @@ const overviewUrls = {};
 const cliUrls = {
   // Exceptions: these don't follow the /cli/X -> /packages/nx/documents/X pattern
   '/cli/connect-to-nx-cloud': '/docs/features/ci-features',
-  '/cli/affected-dep-graph': '/deprecated/affected-graph',
-  '/cli/affected-apps': '/deprecated/print-affected',
-  '/cli/affected-libs': '/deprecated/print-affected',
-  '/cli/print-affected': '/deprecated/print-affected',
+  '/cli/affected-dep-graph': '/docs/reference/deprecated/affected-graph',
+  '/cli/affected-apps': '/docs/reference/deprecated/print-affected',
+  '/cli/affected-libs': '/docs/reference/deprecated/print-affected',
+  '/cli/print-affected': '/docs/reference/deprecated/print-affected',
   // Wildcard: all other /cli/* routes
-  '/cli/:path*': '/packages/nx/documents/:path*',
+  '/cli/:path*': '/docs/reference/nx-commands',
 };
 /**
  * Recipes
