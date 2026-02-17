@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -150,7 +150,10 @@ const VALID_AUTHORS_FOR_LATEST = [
   // If publishing locally, force all projects to not be private first
   if (options.local) {
     console.log(
-      chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+      styleText(
+        'dim',
+        `\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+      )
     );
     const projectGraph = await createProjectGraphAsync();
     for (const proj of Object.values(projectGraph.nodes)) {
@@ -223,8 +226,10 @@ const VALID_AUTHORS_FOR_LATEST = [
       version = options.version;
     }
 
-    console.log(chalk.green` > Published version: ` + version);
-    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+    console.log(styleText('green', ' > Published version: ') + version);
+    console.log(
+      styleText('dim', `   Use: npx create-nx-workspace@${version}\n`)
+    );
   }
 
   // TODO(colum): Remove when we have a better way to handle this

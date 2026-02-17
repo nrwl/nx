@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import {
@@ -448,14 +448,14 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
     changes.forEach((f) => {
       if (f.type === 'CREATE') {
         console.error(
-          `${pc.green('CREATE')} ${f.path}${
+          `${styleText('green', 'CREATE')} ${f.path}${
             isDryRun ? orange(' [dry-run]') : ''
           }`
         );
         printDiff('', f.content?.toString() || '');
       } else if (f.type === 'UPDATE') {
         console.error(
-          `${pc.white('UPDATE')} ${f.path}${
+          `${styleText('white', 'UPDATE')} ${f.path}${
             isDryRun ? orange(' [dry-run]') : ''
           }`
         );

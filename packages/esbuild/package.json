@@ -34,7 +34,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "tinyglobby": "catalog:",
-    "picocolors": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript"
   },

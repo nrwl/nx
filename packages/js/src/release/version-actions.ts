@@ -14,7 +14,7 @@ import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
-import chalk = require('chalk');
+import { styleText } from 'node:util';
 import { isMatchingDependencyRange, isValidRange } from './utils/semver';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
@@ -84,7 +84,7 @@ export default class JsVersionActions extends VersionActions {
     const tagArg = typeof metadata?.tag === 'string' ? metadata.tag : undefined;
 
     const warnFn = (message: string) => {
-      console.log(chalk.keyword('orange')(message));
+      console.log(styleText('yellow', message));
     };
     const { registry, tag, registryConfigKey } = await parseRegistryOptions(
       workspaceRoot,

@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import * as stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';
@@ -27,7 +27,10 @@ export function printHelp(
   logger.info(`
 ${output.applyNxPrefix(
   'cyan',
-  pc.bold(`${`${header + pc.cyan(positional)} ${pc.cyan('[options,...]')}`}`)
+  styleText(
+    'bold',
+    `${`${header + styleText('cyan', positional)} ${styleText('cyan', '[options,...]')}`}`
+  )
 )}
 
 ${generateOverviewOutput({
@@ -105,14 +108,14 @@ function generateGeneratorOverviewOutput({
   ui.div(
     ...[
       {
-        text: pc.bold('From:'),
+        text: styleText('bold', 'From:'),
         padding: [1, 0, 0, 0],
         width: overviewItemsLabelWidth,
       },
       {
         text:
           pluginName +
-          (installedVersion ? pc.dim(` (v${installedVersion})`) : ''),
+          (installedVersion ? styleText('dim', ` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
     ]
@@ -121,13 +124,15 @@ function generateGeneratorOverviewOutput({
   ui.div(
     ...[
       {
-        text: pc.bold('Name:'),
+        text: styleText('bold', 'Name:'),
         padding: [0, 0, 0, 0],
         width: overviewItemsLabelWidth,
       },
       {
         text: `${name}${
-          aliases.length ? pc.dim(` (aliases: ${aliases.join(', ')})`) : ''
+          aliases.length
+            ? styleText('dim', ` (aliases: ${aliases.join(', ')})`)
+            : ''
         }`,
         padding: [0, 0, 0, 2],
       },
@@ -162,14 +167,16 @@ function generateExecutorOverviewOutput({
   ui.div(
     ...[
       {
-        text: pc.bold('Executor:'),
+        text: styleText('bold', 'Executor:'),
         padding: [1, 0, 0, 0],
         width: overviewItemsLabelWidth,
       },
       {
         text:
           `${pluginName}:${name}` +
-          (pluginName.startsWith('@nx/') ? pc.dim(` (v${nxVersion})`) : ''),
+          (pluginName.startsWith('@nx/')
+            ? styleText('dim', ` (v${nxVersion})`)
+            : ''),
         padding: [1, 0, 0, 0],
       },
     ]
@@ -337,9 +344,10 @@ function generateLinkOutput({
     nxPackagePrefix.length
   )}/${type}/${name}`;
 
-  return `\n\n${pc.dim(
+  return `\n\n${styleText(
+    'dim',
     'Find more information and examples at:'
-  )} ${pc.bold(link)}`;
+  )} ${styleText('bold', link)}`;
 }
 
 /**

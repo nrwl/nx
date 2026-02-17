@@ -30,7 +30,6 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "create-nx-workspace": "workspace:*",
-    "picocolors": "catalog:",
     "enquirer": "catalog:",
     "tslib": "catalog:typescript",
     "yargs": "catalog:"

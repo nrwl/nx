@@ -3,11 +3,11 @@
  * - Error if `map.json` reference a markdown file that does not exist
  * - Error if a markdown file exists without reference in `map.json`
  */
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 import { readJsonSync } from 'fs-extra';
 import * as glob from 'glob';
 
-console.log(`${chalk.blue('i')} Documentation Map Check`);
+console.log(`${styleText('blue', 'i')} Documentation Map Check`);
 
 const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
@@ -57,20 +57,23 @@ let scriptError = false;
 
 if (!!readmeMissList.length) {
   console.error(
-    chalk.red(
+    styleText(
+      'red',
       "\n⚠️  Documentation files and 'map.json' file are out of sync!\n"
     )
   );
   console.log(readmeMissList.map((x) => x.concat('.md')).join('\n'));
   console.error(
-    chalk.red(
+    styleText(
+      'red',
       `\nSome documentation files exist without any reference in \'map.json\', make sure to add an entry.`
     )
   );
   scriptError = true;
 } else {
   console.log(
-    `${chalk.green('✓')} Markdown files are in sync with ${chalk.grey(
+    `${styleText('green', '✓')} Markdown files are in sync with ${styleText(
+      'gray',
       'docs/maps.json'
     )}.`
   );
@@ -78,21 +81,24 @@ if (!!readmeMissList.length) {
 
 if (!!mapMissList.length) {
   console.log(
-    `\n${chalk.red(
+    `\n${styleText(
+      'red',
       'ERROR'
     )} The 'map.json' file and the documentation files are out of sync!\n`
   );
   console.log(mapPathList);
   console.log(mapMissList.map((x) => x.concat('.md')).join('\n'));
   console.log(
-    `\n${chalk.red(
+    `\n${styleText(
+      'red',
       'ERROR'
     )} The \'map.json\' file is linking documentation files that do not exist.`
   );
   scriptError = true;
 } else {
   console.log(
-    `${chalk.green(
+    `${styleText(
+      'green',
       '✓'
     )} The 'map.json' file and the documentation files are in sync.`
   );

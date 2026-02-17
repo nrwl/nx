@@ -1,6 +1,6 @@
 import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
@@ -81,10 +81,10 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
     initial,
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
-    promptConfig.footer = () => chalk.dim(footer);
+    promptConfig.footer = () => styleText('dim', footer);
   }
   if (hint) {
-    promptConfig.hint = () => chalk.dim(hint);
+    promptConfig.hint = () => styleText('dim', hint);
   }
 
   return enquirer.prompt<{ NxCloud: NxCloud }>([promptConfig]).then((a) => {
@@ -165,7 +165,8 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
       message: agentDisplayMap[a],
     })),
     footer: () =>
-      chalk.dim(
+      styleText(
+        'dim',
         'Multiple selections possible. <Space> to select. <Enter> to confirm.'
       ),
   };

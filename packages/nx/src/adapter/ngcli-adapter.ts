@@ -18,7 +18,7 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { Stats } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
 
@@ -396,17 +396,17 @@ async function createRecorder(
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${pc.white('UPDATE')} ${eventPath}`
+        tags.oneLine`${styleText('white', 'UPDATE')} ${eventPath}`
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${pc.green('CREATE')} ${eventPath}`
+        tags.oneLine`${styleText('green', 'CREATE')} ${eventPath}`
       );
     } else if (event.kind === 'delete') {
-      record.loggingQueue.push(`${pc.yellow('DELETE')} ${eventPath}`);
+      record.loggingQueue.push(`${styleText('yellow', 'DELETE')} ${eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
+        `${styleText('blue', 'RENAME')} ${eventPath} => ${event.to}`
       );
     }
   };
@@ -1190,20 +1190,20 @@ let logger: logging.Logger;
 export const getLogger = (isVerbose = false): logging.Logger => {
   if (!logger) {
     logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: (s) => pc.bold(pc.yellow(s)),
+      warn: (s) => styleText(['bold', 'yellow'], s),
       error: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_ERROR} ${pc.bold(pc.red(s.slice(3)))}\n`;
+          return `\n${NX_ERROR} ${styleText(['bold', 'red'], s.slice(3))}\n`;
         }
 
-        return pc.bold(pc.red(s));
+        return styleText(['bold', 'red'], s);
       },
       info: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_PREFIX} ${pc.bold(s.slice(3))}\n`;
+          return `\n${NX_PREFIX} ${styleText('bold', s.slice(3))}\n`;
         }
 
-        return pc.white(s);
+        return styleText('white', s);
       },
     });
   }

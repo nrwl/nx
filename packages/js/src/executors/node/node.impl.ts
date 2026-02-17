@@ -1,4 +1,3 @@
-import * as chalk from 'chalk';
 import { ChildProcess, fork } from 'child_process';
 import {
   ExecutorContext,
@@ -25,6 +24,7 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
+import { styleText } from 'node:util';
 
 interface ActiveTask {
   id: string;
@@ -47,9 +47,10 @@ export async function* nodeExecutor(
 
   if (!project.data.targets[buildTarget.target]) {
     throw new Error(
-      `Cannot find build target ${chalk.bold(
+      `Cannot find build target ${styleText(
+        'bold',
         options.buildTarget
-      )} for project ${chalk.bold(context.projectName)}`
+      )} for project ${styleText('bold', context.projectName)}`
     );
   }
 
@@ -458,9 +459,10 @@ function getFileToRun(
     const fallbackFile = path.join('dist', project.data.root, 'main.js');
 
     logger.warn(
-      `Build option ${chalk.bold('outputFileName')} not set for ${chalk.bold(
+      `Build option ${styleText('bold', 'outputFileName')} not set for ${styleText(
+        'bold',
         project.name
-      )}. Using fallback value of ${chalk.bold(fallbackFile)}.`
+      )}. Using fallback value of ${styleText('bold', fallbackFile)}.`
     );
     return join(context.root, fallbackFile);
   }

@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { logger, Tree } from '@nx/devkit';
 import { NormalizedSchema, Schema } from '../schema';
 
@@ -8,7 +8,8 @@ export function showPossibleWarnings(
 ) {
   if (options.style === 'styled-jsx' && options.compiler === 'swc') {
     logger.warn(
-      `styled-jsx may not work with SWC. Try using ${pc.bold(
+      `styled-jsx may not work with SWC. Try using ${styleText(
+        'bold',
         'nx g @nx/react:app --compiler=babel'
       )} instead.`
     );

@@ -1,6 +1,6 @@
 import { AggregatedResult } from '@jest/reporters';
 import { pluralize, formatTime } from 'jest-util';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
 /**
  * Copied from the jest repo because these utility functions are not exposed through the package
@@ -50,9 +50,9 @@ const renderTime = (runTime: number, estimatedTime: number, width: number) => {
   // If we are more than one second over the estimated time, highlight it.
   const renderedTime =
     estimatedTime && runTime >= estimatedTime + 1
-      ? pc.bold(pc.yellow(formatTime(runTime, 0)))
+      ? styleText('bold', styleText('yellow', formatTime(runTime, 0)))
       : formatTime(runTime, 0);
-  let time = pc.bold(`Time:`) + `        ${renderedTime}`;
+  let time = styleText('bold', `Time:`) + `        ${renderedTime}`;
   if (runTime < estimatedTime) {
     time += `, estimated ${formatTime(estimatedTime, 0)}`;
   }
@@ -68,8 +68,8 @@ const renderTime = (runTime: number, estimatedTime: number, width: number) => {
     if (availableWidth >= 2) {
       time +=
         '\n' +
-        pc.green('█').repeat(length) +
-        pc.white('█').repeat(availableWidth - length);
+        styleText('green', '█').repeat(length) +
+        styleText('white', '█').repeat(availableWidth - length);
     }
   }
   return time;
@@ -120,12 +120,17 @@ export const getSummary = (
   const width = options?.width || 0;
 
   const suites =
-    pc.bold('Test Suites: ') +
-    (suitesFailed ? pc.bold(pc.red(`${suitesFailed} failed`)) + ', ' : '') +
-    (suitesPending
-      ? pc.bold(pc.yellow(`${suitesPending} skipped`)) + ', '
+    styleText('bold', 'Test Suites: ') +
+    (suitesFailed
+      ? styleText('bold', styleText('red', `${suitesFailed} failed`)) + ', '
       : '') +
-    (suitesPassed ? pc.bold(pc.green(`${suitesPassed} passed`)) + ', ' : '') +
+    (suitesPending
+      ? styleText('bold', styleText('yellow', `${suitesPending} skipped`)) +
+        ', '
+      : '') +
+    (suitesPassed
+      ? styleText('bold', styleText('green', `${suitesPassed} passed`)) + ', '
+      : '') +
     (suitesRun !== suitesTotal
       ? suitesRun + ' of ' + suitesTotal
       : suitesTotal) +
@@ -138,50 +143,71 @@ export const getSummary = (
   const updatedTestsTotal = testsTotal + numTotalTests;
 
   const tests =
-    pc.bold('Tests:       ') +
+    styleText('bold', 'Tests:       ') +
     (updatedTestsFailed > 0
-      ? pc.bold(pc.red(`${updatedTestsFailed} failed`)) + ', '
+      ? styleText('bold', styleText('red', `${updatedTestsFailed} failed`)) +
+        ', '
       : '') +
     (updatedTestsPending > 0
-      ? pc.bold(pc.yellow(`${updatedTestsPending} skipped`)) + ', '
+      ? styleText(
+          'bold',
+          styleText('yellow', `${updatedTestsPending} skipped`)
+        ) + ', '
       : '') +
     (updatedTestsTodo > 0
-      ? pc.bold(pc.magenta(`${updatedTestsTodo} todo`)) + ', '
+      ? styleText('bold', styleText('magenta', `${updatedTestsTodo} todo`)) +
+        ', '
       : '') +
     (updatedTestsPassed > 0
-      ? pc.bold(pc.green(`${updatedTestsPassed} passed`)) + ', '
+      ? styleText('bold', styleText('green', `${updatedTestsPassed} passed`)) +
+        ', '
       : '') +
     `${updatedTestsTotal} total`;
 
   const snapshots =
-    pc.bold('Snapshots:   ') +
+    styleText('bold', 'Snapshots:   ') +
     (snapshotsFailed
-      ? pc.bold(pc.red(`${snapshotsFailed} failed`)) + ', '
+      ? styleText('bold', styleText('red', `${snapshotsFailed} failed`)) + ', '
       : '') +
     (snapshotsOutdated && !snapshotsDidUpdate
-      ? pc.bold(pc.yellow(`${snapshotsOutdated} obsolete`)) + ', '
+      ? styleText(
+          'bold',
+          styleText('yellow', `${snapshotsOutdated} obsolete`)
+        ) + ', '
       : '') +
     (snapshotsOutdated && snapshotsDidUpdate
-      ? pc.bold(pc.green(`${snapshotsOutdated} removed`)) + ', '
+      ? styleText('bold', styleText('green', `${snapshotsOutdated} removed`)) +
+        ', '
       : '') +
     (snapshotsFilesRemoved && !snapshotsDidUpdate
-      ? pc.bold(
-          pc.yellow(pluralize('file', snapshotsFilesRemoved) + ' obsolete')
+      ? styleText(
+          'bold',
+          styleText(
+            'yellow',
+            pluralize('file', snapshotsFilesRemoved) + ' obsolete'
+          )
         ) + ', '
       : '') +
     (snapshotsFilesRemoved && snapshotsDidUpdate
-      ? pc.bold(
-          pc.green(pluralize('file', snapshotsFilesRemoved) + ' removed')
+      ? styleText(
+          'bold',
+          styleText(
+            'green',
+            pluralize('file', snapshotsFilesRemoved) + ' removed'
+          )
         ) + ', '
       : '') +
     (snapshotsUpdated
-      ? pc.bold(pc.green(`${snapshotsUpdated} updated`)) + ', '
+      ? styleText('bold', styleText('green', `${snapshotsUpdated} updated`)) +
+        ', '
       : '') +
     (snapshotsAdded
-      ? pc.bold(pc.green(`${snapshotsAdded} written`)) + ', '
+      ? styleText('bold', styleText('green', `${snapshotsAdded} written`)) +
+        ', '
       : '') +
     (snapshotsPassed
-      ? pc.bold(pc.green(`${snapshotsPassed} passed`)) + ', '
+      ? styleText('bold', styleText('green', `${snapshotsPassed} passed`)) +
+        ', '
       : '') +
     `${snapshotsTotal} total`;
 

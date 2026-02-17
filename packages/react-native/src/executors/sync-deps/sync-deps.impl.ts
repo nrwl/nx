@@ -1,5 +1,5 @@
 import { join } from 'path';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import {
   ExecutorContext,
   ProjectGraph,
@@ -126,15 +126,11 @@ export function displayNewlyAddedDepsMessage(
   deps: string[]
 ) {
   if (deps.length > 0) {
-    logger.info(`${pc.bold(
-      pc.cyan('info')
-    )} Added entries to 'package.json' for '${projectName}' (for autolink):
-  ${deps.map((d) => pc.bold(pc.cyan(`"${d}": "*"`))).join('\n  ')}`);
+    logger.info(`${styleText('bold', styleText('cyan', 'info'))} Added entries to 'package.json' for '${projectName}' (for autolink):
+  ${deps.map((d) => styleText('bold', styleText('cyan', `"${d}": "*"`))).join('\n  ')}`);
   } else {
     logger.info(
-      `${pc.bold(
-        pc.cyan('info')
-      )} Dependencies for '${projectName}' are up to date! No changes made.`
+      `${styleText('bold', styleText('cyan', 'info'))} Dependencies for '${projectName}' are up to date! No changes made.`
     );
   }
 }

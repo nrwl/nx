@@ -1,17 +1,26 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { output } from '../../../utils/output';
 
 const colors = [
-  { instance: pc.green, spinnerColor: 'green' },
-  { instance: pc.greenBright, spinnerColor: 'green' },
-  { instance: pc.red, spinnerColor: 'red' },
-  { instance: pc.redBright, spinnerColor: 'red' },
-  { instance: pc.cyan, spinnerColor: 'cyan' },
-  { instance: pc.cyanBright, spinnerColor: 'cyan' },
-  { instance: pc.yellow, spinnerColor: 'yellow' },
-  { instance: pc.yellowBright, spinnerColor: 'yellow' },
-  { instance: pc.magenta, spinnerColor: 'magenta' },
-  { instance: pc.magentaBright, spinnerColor: 'magenta' },
+  { instance: (s: string) => styleText('green', s), spinnerColor: 'green' },
+  {
+    instance: (s: string) => styleText('greenBright', s),
+    spinnerColor: 'green',
+  },
+  { instance: (s: string) => styleText('red', s), spinnerColor: 'red' },
+  { instance: (s: string) => styleText('redBright', s), spinnerColor: 'red' },
+  { instance: (s: string) => styleText('cyan', s), spinnerColor: 'cyan' },
+  { instance: (s: string) => styleText('cyanBright', s), spinnerColor: 'cyan' },
+  { instance: (s: string) => styleText('yellow', s), spinnerColor: 'yellow' },
+  {
+    instance: (s: string) => styleText('yellowBright', s),
+    spinnerColor: 'yellow',
+  },
+  { instance: (s: string) => styleText('magenta', s), spinnerColor: 'magenta' },
+  {
+    instance: (s: string) => styleText('magentaBright', s),
+    spinnerColor: 'magenta',
+  },
 ] as const;
 
 function getColor(projectName: string) {
@@ -41,12 +50,15 @@ export class ProjectLogger {
       return;
     }
     output.logSingleLine(
-      `Running release version for project: ${pc.bold(
+      `Running release version for project: ${styleText(
+        'bold',
         this.color.instance(this.projectName)
       )}`
     );
     this.logs.forEach((msg) => {
-      console.log(pc.bold(this.color.instance(this.projectName)) + ' ' + msg);
+      console.log(
+        styleText('bold', this.color.instance(this.projectName)) + ' ' + msg
+      );
     });
     this.logs = [];
   }

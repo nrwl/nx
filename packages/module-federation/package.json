@@ -33,7 +33,6 @@
     "@rspack/core": "catalog:rspack",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.5",
-    "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "webpack": "^5.101.3"
   },

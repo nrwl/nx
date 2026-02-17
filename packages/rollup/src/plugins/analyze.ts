@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { logger } from '@nx/devkit';
 
 const formatBytes = (bytes) => {
@@ -16,7 +16,9 @@ export function analyze() {
     renderChunk(source, chunk) {
       const sourceBytes = formatBytes(source.length);
       const fileName = chunk.fileName;
-      logger.info(`  ${pc.bold(fileName)} ${pc.cyan(sourceBytes)}`);
+      logger.info(
+        `  ${styleText('bold', fileName)} ${styleText('cyan', sourceBytes)}`
+      );
     },
   };
 }

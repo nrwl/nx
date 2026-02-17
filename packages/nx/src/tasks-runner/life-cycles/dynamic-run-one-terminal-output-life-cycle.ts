@@ -8,7 +8,7 @@ import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -158,12 +158,11 @@ export async function createRunOneDynamicOutputRenderer({
 
     if (totalFailedTasks > 0) {
       linesToRender.push(
-        pc.dim(
-          pc.red(
-            `${LEFT_PAD}${output.colors.red(
-              figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
-          )
+        styleText(
+          ['dim', 'red'],
+          `${LEFT_PAD}${output.colors.red(
+            figures.cross
+          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
         )
       );
     }
@@ -296,11 +295,14 @@ export async function createRunOneDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
+          `${EXTENDED_LEFT_PAD}${styleText(['dim', 'green'], 'With additional flags:')}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
+            styleText(
+              ['dim', 'green'],
+              formatFlags(EXTENDED_LEFT_PAD, flag, value)
+            )
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -340,11 +342,14 @@ export async function createRunOneDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
+          `${EXTENDED_LEFT_PAD}${styleText(['dim', 'red'], 'With additional flags:')}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
+            styleText(
+              ['dim', 'red'],
+              formatFlags(EXTENDED_LEFT_PAD, flag, value)
+            )
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }

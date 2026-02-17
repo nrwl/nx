@@ -51,7 +51,11 @@
           "error",
           {
             "name": "chalk",
-            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+            "message": "Please use native `styleText` in place of `chalk` for rendering terminal colors"
+          },
+          {
+            "name": "picocolors",
+            "message": "Please use native `styleText` in place of `picocolors` for rendering terminal colors"
           },
           {
             "name": "fs-extra",

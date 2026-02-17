@@ -4,7 +4,7 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 
 import { WebpackExecutorOptions } from '../webpack/schema';
@@ -62,7 +62,7 @@ export async function* ssrDevServerExecutor(
     if (nodeStarted && browserBuilt) {
       await waitUntilServerIsListening(options.port);
       console.log(
-        `[ ${pc.green('ready')} ] on http://localhost:${options.port}`
+        `[ ${styleText('green', 'ready')} ] on http://localhost:${options.port}`
       );
       yield {
         ...output,

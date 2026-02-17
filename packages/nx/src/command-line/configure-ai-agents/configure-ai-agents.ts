@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { claudeMcpJsonPath } from '../../ai/constants';
 import {
   Agent,
@@ -114,7 +114,8 @@ export async function configureAiAgentsHandlerImpl(
     output.log({
       title,
       bodyLines: [
-        pc.dim(
+        styleText(
+          'dim',
           'To manually configure the Nx MCP in your editor, install Nx Console (https://nx.dev/getting-started/editor-setup)'
         ),
       ],
@@ -251,7 +252,8 @@ export async function configureAiAgentsHandlerImpl(
           required: true,
           footer: function () {
             const focused = this.focused as AgentPromptChoice;
-            return pc.dim(
+            return styleText(
+              'dim',
               `  ${getAgentFooterDescription(focused.agentConfiguration)}`
             );
           },

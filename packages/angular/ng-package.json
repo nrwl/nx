@@ -12,7 +12,6 @@
     "@typescript-eslint/",
     "enquirer",
     "magic-string",
-    "picocolors",
     "picomatch",
     "semver",
     "webpack-merge"

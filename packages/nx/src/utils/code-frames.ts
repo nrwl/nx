@@ -1,5 +1,5 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-code-frame/src/index.js
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 
 type Location = {
   column: number;
@@ -15,9 +15,9 @@ type NodeLocation = {
  * Styles for code frame token types.
  */
 const defs = {
-  gutter: pc.gray,
-  marker: (text: string) => pc.red(pc.bold(text)),
-  message: (text: string) => pc.red(pc.bold(text)),
+  gutter: (text: string) => styleText('gray', text),
+  marker: (text: string) => styleText(['red', 'bold'], text),
+  message: (text: string) => styleText(['red', 'bold'], text),
 };
 
 /**
@@ -143,5 +143,5 @@ export function codeFrameColumns(
     })
     .join('\n');
 
-  return pc.reset(frame);
+  return styleText('reset', frame);
 }

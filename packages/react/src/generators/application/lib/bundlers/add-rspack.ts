@@ -6,7 +6,7 @@ import {
   addDependenciesToPackageJson,
   stripIndents,
 } from '@nx/devkit';
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { babelLoaderVersion, nxVersion } from '../../../../utils/versions';
 import { NormalizedSchema, Schema } from '../../schema';
 
@@ -29,9 +29,11 @@ export function handleStyledJsxForRspack(
   options: NormalizedSchema<Schema>
 ) {
   logger.warn(
-    `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
+    `${styleText('bold', 'styled-jsx')} is not supported by ${styleText(
+      'bold',
       'Rspack'
-    )}. We've added ${pc.bold(
+    )}. We've added ${styleText(
+      'bold',
       'babel-loader'
     )} to your project, but using babel will slow down your build.`
   );

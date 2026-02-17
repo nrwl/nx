@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -22,15 +22,31 @@ export interface CLISuccessMessageConfig {
   bodyLines?: string[];
 }
 
+const IS_COLOR_SUPPORTED =
+  !(!!process.env.NO_COLOR || process.argv.includes('--no-color')) &&
+  (!!process.env.FORCE_COLOR ||
+    process.argv.includes('--color') ||
+    process.platform === 'win32' ||
+    ((process.stdout || {}).isTTY && process.env.TERM !== 'dumb') ||
+    !!process.env.CI);
+
 /**
- * Automatically disable styling applied by chalk if CI=true
+ * Automatically disable styling when CI=true
  */
-if (process.env.CI === 'true') {
-  (chalk as any).level = 0;
+const noStyle = process.env.CI === 'true';
+
+/**
+ * Custom orange color using ANSI 256-color code 214.
+ * native styleText does not support keyword-based colors like chalk,
+ * so orange is implemented manually.
+ */
+function orange(text: string): string {
+  if (noStyle || !IS_COLOR_SUPPORTED) return String(text);
+  return `\x1b[38;5;214m${text}\x1b[39m`;
 }
 
 class CLIOutput {
-  private readonly NX_PREFIX = chalk.reset.inverse.bold.cyan(' NX ');
+  private readonly NX_PREFIX = styleText(['inverse', 'bold', 'cyan'], ' NX ');
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character
@@ -44,10 +60,10 @@ class CLIOutput {
    * implementation.
    */
   colors = {
-    gray: chalk.gray,
+    gray: (text: string) => styleText('gray', text),
   };
-  bold = chalk.bold;
-  underline = chalk.underline;
+  bold = (text) => styleText('bold', String(text));
+  underline = (text) => styleText('underline', String(text));
 
   private writeToStdOut(str: string) {
     process.stdout.write(str);
@@ -82,19 +98,19 @@ class CLIOutput {
   }
 
   addVerticalSeparator() {
-    this.writeToStdOut(`\n${chalk.gray(this.VERTICAL_SEPARATOR)}\n\n`);
+    this.writeToStdOut(`\n${styleText('gray', this.VERTICAL_SEPARATOR)}\n\n`);
   }
 
   addVerticalSeparatorWithoutNewLines() {
-    this.writeToStdOut(`${chalk.gray(this.VERTICAL_SEPARATOR)}\n`);
+    this.writeToStdOut(`${styleText('gray', this.VERTICAL_SEPARATOR)}\n`);
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.red(' ERROR '),
-      title: chalk.bold.red(title),
+      label: styleText(['inverse', 'bold', 'red'], ' ERROR '),
+      title: styleText(['bold', 'red'], title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -105,7 +121,8 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        `${chalk.grey(
+        `${styleText(
+          'gray',
           '  Learn more about this error: '
         )}https://errors.nx.dev/${slug}\n`
       );
@@ -118,8 +135,8 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.yellow(' WARNING '),
-      title: chalk.bold.yellow(title),
+      label: styleText(['inverse', 'bold', 'yellow'], ' WARNING '),
+      title: styleText(['bold', 'yellow'], title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -130,7 +147,8 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        `${chalk.grey(
+        `${styleText(
+          'gray',
           '  Learn more about this warning: '
         )}https://errors.nx.dev/${slug}\n`
       );
@@ -143,8 +161,8 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.keyword('orange')(' NOTE '),
-      title: chalk.bold.keyword('orange')(title),
+      label: styleText(['inverse', 'bold'], orange(' NOTE ')),
+      title: styleText('bold', orange(title)),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -156,8 +174,8 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.green(' SUCCESS '),
-      title: chalk.bold.green(title),
+      label: styleText(['inverse', 'bold', 'green'], ' SUCCESS '),
+      title: styleText(['bold', 'green'], title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -178,10 +196,10 @@ class CLIOutput {
   logCommand(message: string, isCached: boolean = false) {
     this.addNewline();
 
-    this.writeToStdOut(chalk.bold(`> ${message} `));
+    this.writeToStdOut(styleText('bold', `> ${message} `));
 
     if (isCached) {
-      this.writeToStdOut(chalk.bold.grey(`[retrieved from cache]`));
+      this.writeToStdOut(styleText(['bold', 'gray'], `[retrieved from cache]`));
     }
 
     this.addNewline();
@@ -191,7 +209,7 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      title: chalk.white(title),
+      title: styleText('white', title),
     });
 
     this.writeOptionalOutputBody(bodyLines);

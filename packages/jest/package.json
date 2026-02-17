@@ -45,7 +45,6 @@
     "jest-resolve": "catalog:jest",
     "jest-util": "catalog:jest",
     "minimatch": "catalog:",
-    "picocolors": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
     "tslib": "catalog:typescript",

@@ -1,23 +1,23 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-highlight/src/index.js
 import * as jsTokens from 'js-tokens';
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 import { isKeyword, isReservedWord } from './identifiers';
 
 /**
- * Chalk styles for token types.
+ * Style functions for token types.
  */
-function getDefs(chalk) {
+function getDefs() {
   return {
-    keyword: chalk.cyan,
-    capitalized: chalk.yellow,
-    jsx_tag: chalk.yellow,
-    punctuator: chalk.yellow,
+    keyword: (text: string) => styleText('cyan', text),
+    capitalized: (text: string) => styleText('yellow', text),
+    jsx_tag: (text: string) => styleText('yellow', text),
+    punctuator: (text: string) => styleText('yellow', text),
     // bracket:  intentionally omitted.
-    number: chalk.magenta,
-    string: chalk.green,
-    regex: chalk.magenta,
-    comment: chalk.grey,
-    invalid: chalk.white.bgRed.bold,
+    number: (text: string) => styleText('magenta', text),
+    string: (text: string) => styleText('green', text),
+    regex: (text: string) => styleText('magenta', text),
+    comment: (text: string) => styleText('gray', text),
+    invalid: (text: string) => styleText(['bgRed', 'white', 'bold'], text),
   };
 }
 
@@ -93,6 +93,6 @@ function highlightTokens(defs: Object, text: string) {
 }
 
 export function highlight(code: string): string {
-  const defs = getDefs(chalk);
+  const defs = getDefs();
   return highlightTokens(defs, code);
 }

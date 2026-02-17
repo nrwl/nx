@@ -1,4 +1,4 @@
-import * as pc from 'picocolors';
+import { styleText } from 'node:util';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { output } from '../output';
 import { getPackageManagerCommand } from '../package-manager';
@@ -32,7 +32,7 @@ export function listPlugins(
       capabilities.push('project-inference');
     }
     bodyLines.push(
-      `${pc.bold(p.name)} ${
+      `${styleText('bold', p.name)} ${
         capabilities.length >= 1 ? `(${capabilities.join()})` : ''
       }`
     );
@@ -55,7 +55,7 @@ export function listAlsoAvailableCorePlugins(
     output.log({
       title: `Also available:`,
       bodyLines: alsoAvailable.map((p) => {
-        return `${pc.bold(p.name)} (${p.capabilities})`;
+        return `${styleText('bold', p.name)} (${p.capabilities})`;
       }),
     });
   }
@@ -109,11 +109,12 @@ export async function listPluginCapabilities(
   const bodyLines = [];
 
   if (hasGenerators) {
-    bodyLines.push(pc.bold(pc.green('GENERATORS')));
+    bodyLines.push(styleText(['bold', 'green'], 'GENERATORS'));
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.generators).map(
-        (name) => `${pc.bold(name)} : ${plugin.generators[name].description}`
+        (name) =>
+          `${styleText('bold', name)} : ${plugin.generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -122,14 +123,14 @@ export async function listPluginCapabilities(
   }
 
   if (hasBuilders) {
-    bodyLines.push(pc.bold(pc.green('EXECUTORS/BUILDERS')));
+    bodyLines.push(styleText(['bold', 'green'], 'EXECUTORS/BUILDERS'));
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.executors).map((name) => {
         const definition = plugin.executors[name];
         return typeof definition === 'string'
-          ? pc.bold(name)
-          : `${pc.bold(name)} : ${definition.description}`;
+          ? styleText('bold', name)
+          : `${styleText('bold', name)} : ${definition.description}`;
       })
     );
   }

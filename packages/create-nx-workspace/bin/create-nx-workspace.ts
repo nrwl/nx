@@ -1,6 +1,6 @@
 import * as enquirer from 'enquirer';
 import * as yargs from 'yargs';
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 
 import {
   CreateWorkspaceOptions,
@@ -176,116 +176,161 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       withOptions(
         yargs
           .option('name', {
-            describe: chalk.dim`Workspace name (e.g. org name).`,
+            describe: styleText('dim', 'Workspace name (e.g. org name).'),
             type: 'string',
           })
           .option('preset', {
             // This describe is hard to auto-fix because of the loop in the code.
             // eslint-disable-next-line @nx/workspace/valid-command-object
-            describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
-              Preset
-            )
-              .map((p) => `"${p}"`)
-              .join(
-                ', '
-              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset.`,
+            describe: styleText(
+              'dim',
+              `Customizes the initial content of your workspace. Default presets include: [${Object.values(
+                Preset
+              )
+                .map((p) => `"${p}"`)
+                .join(
+                  ', '
+                )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset.`
+            ),
             type: 'string',
           })
           .option('interactive', {
-            describe: chalk.dim`Enable interactive mode with presets.`,
+            describe: styleText('dim', 'Enable interactive mode with presets.'),
             type: 'boolean',
             default: true,
           })
           .option('workspaceType', {
-            describe: chalk.dim`The type of workspace to create.`,
+            describe: styleText('dim', 'The type of workspace to create.'),
             choices: ['integrated', 'package-based', 'standalone'],
             type: 'string',
           })
           .option('appName', {
-            describe: chalk.dim`The name of the app when using a monorepo with certain stacks.`,
+            describe: styleText(
+              'dim',
+              'The name of the app when using a monorepo with certain stacks.'
+            ),
             type: 'string',
           })
           .option('style', {
-            describe: chalk.dim`Stylesheet type to be used with certain stacks.`,
+            describe: styleText(
+              'dim',
+              'Stylesheet type to be used with certain stacks.'
+            ),
             type: 'string',
           })
           .option('standaloneApi', {
-            describe: chalk.dim`Use Standalone Components if generating an Angular app.`,
+            describe: styleText(
+              'dim',
+              'Use Standalone Components if generating an Angular app.'
+            ),
             type: 'boolean',
             default: true,
           })
           .option('routing', {
-            describe: chalk.dim`Add a routing setup for an Angular or React app.`,
+            describe: styleText(
+              'dim',
+              'Add a routing setup for an Angular or React app.'
+            ),
             type: 'boolean',
             default: true,
           })
           .option('useReactRouter', {
-            describe: chalk.dim`Generate a Server-Side Rendered (SSR) React app using React Router.`,
+            describe: styleText(
+              'dim',
+              'Generate a Server-Side Rendered (SSR) React app using React Router.'
+            ),
             type: 'boolean',
           })
           .option('bundler', {
-            describe: chalk.dim`Bundler to be used to build the app.`,
+            describe: styleText('dim', 'Bundler to be used to build the app.'),
             type: 'string',
           })
           .option('workspaces', {
-            describe: chalk.dim`Use package manager workspaces.`,
+            describe: styleText('dim', 'Use package manager workspaces.'),
             type: 'boolean',
             default: true,
           })
           .option('useProjectJson', {
-            describe: chalk.dim`Use a 'project.json' file for the Nx configuration instead of a 'package.json' file. This defaults to 'true' when '--no-workspaces' is used. Otherwise, it defaults to 'false'.`,
+            describe: styleText(
+              'dim',
+              "Use a 'project.json' file for the Nx configuration instead of a 'package.json' file. This defaults to 'true' when '--no-workspaces' is used. Otherwise, it defaults to 'false'."
+            ),
             type: 'boolean',
           })
           .option('formatter', {
-            describe: chalk.dim`Code formatter to use.`,
+            describe: styleText('dim', 'Code formatter to use.'),
             type: 'string',
           })
           .option('framework', {
-            describe: chalk.dim`Framework option to be used with certain stacks.`,
+            describe: styleText(
+              'dim',
+              'Framework option to be used with certain stacks.'
+            ),
             type: 'string',
           })
           .option('docker', {
-            describe: chalk.dim`Generate a Dockerfile for the Node API.`,
+            describe: styleText(
+              'dim',
+              'Generate a Dockerfile for the Node API.'
+            ),
             type: 'boolean',
           })
           .option('nextAppDir', {
-            describe: chalk.dim`Enable the App Router for Next.js.`,
+            describe: styleText('dim', 'Enable the App Router for Next.js.'),
             type: 'boolean',
           })
           .option('nextSrcDir', {
-            describe: chalk.dim`Generate a 'src/' directory for Next.js.`,
+            describe: styleText(
+              'dim',
+              "Generate a 'src/' directory for Next.js."
+            ),
             type: 'boolean',
           })
           .option('e2eTestRunner', {
-            describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
+            describe: styleText(
+              'dim',
+              'Test runner to use for end to end (E2E) tests.'
+            ),
             choices: ['playwright', 'cypress', 'none'],
             type: 'string',
           })
           .option('unitTestRunner', {
-            describe: chalk.dim`Test runner to use for unit tests.`,
+            describe: styleText('dim', 'Test runner to use for unit tests.'),
             choices: ['jest', 'vitest', 'none'],
             type: 'string',
           })
           .option('ssr', {
-            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.`,
+            describe: styleText(
+              'dim',
+              'Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.'
+            ),
             type: 'boolean',
           })
           .option('prefix', {
-            describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
+            describe: styleText(
+              'dim',
+              'Prefix to use for Angular component and directive selectors.'
+            ),
             type: 'string',
           })
           .option('zoneless', {
-            describe: chalk.dim`Generate an application that does not use 'zone.js'.`,
+            describe: styleText(
+              'dim',
+              "Generate an application that does not use 'zone.js'."
+            ),
             type: 'boolean',
             default: true,
           })
           .option('aiAgents', {
-            describe: chalk.dim`List of AI agents to configure.`,
+            describe: styleText('dim', 'List of AI agents to configure.'),
             type: 'array',
             choices: [...supportedAgents],
           })
           .option('template', {
-            describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
+            describe: styleText(
+              'dim',
+              'GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template'
+            ),
             type: 'string',
           }),
         withNxCloud,
@@ -352,11 +397,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     },
     [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
   )
-  .help('help', chalk.dim`Show help`)
+  .help('help', styleText('dim', 'Show help'))
   .updateLocale(yargsDecorator)
   .version(
     'version',
-    chalk.dim`Show version`,
+    styleText('dim', 'Show version'),
     nxVersion
   ) as yargs.Argv<Arguments>;
 
@@ -364,28 +409,28 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
 // This keeps --help clean for human users
 if (isAiAgent()) {
   commandsObject
-    .example(chalk.green('AI AGENTS (RECOMMENDED):'), '')
+    .example(styleText('green', 'AI AGENTS (RECOMMENDED):'), '')
     .example(
       '  npx create-nx-workspace@latest myorg --template=nrwl/empty-template --nxCloud=yes --interactive=false',
       ''
     )
     .example('', '')
-    .example(chalk.green('AVAILABLE TEMPLATES:'), '')
+    .example(styleText('green', 'AVAILABLE TEMPLATES:'), '')
     .example('  --template=nrwl/empty-template       Empty monorepo', '')
     .example('  --template=nrwl/react-template       React fullstack', '')
     .example('  --template=nrwl/angular-template     Angular fullstack', '')
     .example('  --template=nrwl/typescript-template  NPM packages', '')
     .epilogue(
-      `${chalk.cyan('AI Agent Mode:')}
+      `${styleText('cyan', 'AI Agent Mode:')}
   Set CLAUDECODE=1 or OPENCODE=1 for JSON output and non-interactive mode.
   In AI mode: auto non-interactive, NDJSON progress output, structured results.
 
-${chalk.cyan('Documentation:')}
+${styleText('cyan', 'Documentation:')}
   https://nx.dev/getting-started/intro`
     );
 } else {
   commandsObject.epilogue(
-    `${chalk.cyan('Documentation:')}
+    `${styleText('cyan', 'Documentation:')}
   https://nx.dev/getting-started/intro`
   );
 }

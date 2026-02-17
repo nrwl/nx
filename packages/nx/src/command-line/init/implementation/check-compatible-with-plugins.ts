@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { bold } from 'picocolors';
+import { styleText } from 'node:util';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
@@ -130,7 +130,7 @@ export function updatePluginsInNxJson(
         title: `The following files were incompatible with ${plugin.plugin} and has been excluded for now:`,
         bodyLines: excludeFiles
           .map((file: { file: string; error?: any }) => {
-            const output = [`  - ${bold(file.file)}`];
+            const output = [`  - ${styleText('bold', file.file)}`];
             if (file.error?.message) {
               output.push(`    ${file.error.message}`);
             }

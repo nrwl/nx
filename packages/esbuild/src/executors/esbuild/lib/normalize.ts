@@ -4,11 +4,11 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as pc from 'picocolors';
 import type {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
+import { styleText } from 'node:util';
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
@@ -37,12 +37,16 @@ export function normalizeOptions(
 
   if (!options.bundle && options.thirdParty) {
     logger.info(
-      pc.yellow(
-        `Your build has conflicting options, ${pc.bold(
+      styleText(
+        'yellow',
+        `Your build has conflicting options, ${styleText(
+          'bold',
           'bundle:false'
-        )} and ${pc.bold(
+        )} and ${styleText(
+          'bold',
           'thirdParty:true'
-        )}. Your package.json dependencies might not be generated correctly so we added an update ${pc.bold(
+        )}. Your package.json dependencies might not be generated correctly so we added an update ${styleText(
+          'bold',
           'thirdParty:false'
         )}`
       )
@@ -62,12 +66,16 @@ export function normalizeOptions(
 
   if (options.skipTypeCheck && declaration) {
     logger.info(
-      pc.yellow(
-        `Your build has conflicting options, ${pc.bold(
+      styleText(
+        'yellow',
+        `Your build has conflicting options, ${styleText(
+          'bold',
           'skipTypeCheck:true'
-        )} and ${pc.bold(
+        )} and ${styleText(
+          'bold',
           'declaration:true'
-        )}. Your declarations won't be generated so we added an update ${pc.bold(
+        )}. Your declarations won't be generated so we added an update ${styleText(
+          'bold',
           'skipTypeCheck:false'
         )}`
       )
