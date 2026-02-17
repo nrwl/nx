@@ -1,4 +1,5 @@
 import { flatten } from 'flat';
+import { needsShellQuoting } from './shell-quoting';
 
 export function serializeOverridesIntoCommandLine(options: {
   [k: string]: any;
@@ -30,17 +31,10 @@ function serializeOption(key: string, value: any, unparsed: string[]) {
         unparsed
       );
     }
-  } else if (
-    typeof value === 'string' &&
-    stringShouldBeWrappedIntoQuotes(value)
-  ) {
+  } else if (typeof value === 'string' && needsShellQuoting(value)) {
     const sanitized = value.replace(/"/g, String.raw`\"`);
     unparsed.push(`--${key}="${sanitized}"`);
   } else if (value != null) {
     unparsed.push(`--${key}=${value}`);
   }
-}
-
-function stringShouldBeWrappedIntoQuotes(str: string) {
-  return str.includes(' ') || str.includes('{') || str.includes('"');
 }
