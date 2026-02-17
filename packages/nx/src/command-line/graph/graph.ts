@@ -773,7 +773,10 @@ async function startServer(
     }
   });
 
+  const cleanupQToQuit = handleQToQuit(() => handleTermination(0));
+
   const handleTermination = async (exitCode: number) => {
+    cleanupQToQuit();
     if (unregisterFileWatcher) {
       unregisterFileWatcher();
     }
@@ -781,8 +784,6 @@ async function startServer(
   };
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
-
-  handleQToQuit(() => handleTermination(0));
 
   // Find an available port starting from the requested port
   const availablePort = await findAvailablePort(port, host);
