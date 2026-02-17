@@ -56,7 +56,7 @@ Here, the agent has to complete various generation tasks in different repos - bo
 
 For scaffolding tasks where workspace consistency is important, our benchmarks show significantly more generator usage. With the additional instructions from our skills, agents actually run verification before returning to the user far more often and make sure that newly generated artifacts didn't break the rest of the workspace.
 
-While token usage for simple question answering has gone down across the board with the more token-efficient skill approach, agents tend to use more tokens with skills than before for these tasks. We believe this is worth the tradeoff - better results matter more than cheaper bad results - but we're actively iterating to bring token usage down. We only started collecting these numbers are after Anthropic introduced dynamic MCP tool loading - this further narrows the gap in token consumption. In MCP clients that don't support this, the token consumption from MCP tools will be significantly higher.
+While token usage for simple question answering has gone down across the board with the more token-efficient skill approach, agents tend to use more tokens with skills than before for these tasks. We believe this is worth the tradeoff - better results matter more than cheaper bad results - but we're actively iterating to bring token usage down. We only started collecting these numbers after Anthropic introduced dynamic MCP tool loading - this further narrows the gap in token consumption. In MCP clients that don't support this, the token consumption from MCP tools will be significantly higher.
 
 ## Where MCP Still Shines
 
