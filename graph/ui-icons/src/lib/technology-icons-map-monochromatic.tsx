@@ -5,8 +5,8 @@ import { EsbuildIcon } from './technologies/esbuild';
 import { EslintIcon } from './technologies/eslint';
 import { ExpoIcon } from './technologies/expo';
 import { ExpressIcon } from './technologies/express';
-import { GradleIcon } from './technologies/gradle';
 import { HTML5Icon } from './technologies/html5';
+import { JavaIcon } from './technologies/java';
 import { JavaScriptIcon } from './technologies/javascript';
 import { JestIcon } from './technologies/jest';
 import { NestJSIcon } from './technologies/nestjs';
@@ -46,9 +46,11 @@ export const MonochromaticTechnologyIconsMap: Record<
   expo: { icon: ExpoIcon },
   express: { icon: ExpressIcon },
   'F#': { icon: FSharpIcon },
-  gradle: { icon: GradleIcon },
+  gradle: { icon: JavaIcon },
+  java: { icon: JavaIcon },
   javascript: { icon: JavaScriptIcon },
   jest: { icon: JestIcon },
+  maven: { icon: JavaIcon },
   nest: { icon: NestJSIcon },
   next: { icon: NextJSIcon },
   node: { icon: NodeIcon },
