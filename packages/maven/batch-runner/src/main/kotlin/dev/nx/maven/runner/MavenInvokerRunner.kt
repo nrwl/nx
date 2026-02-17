@@ -85,10 +85,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
             val result = executeSingleTask(taskId, results)
 
-            // Record build state BEFORE emitting result.
+            // Record build state for all batch projects BEFORE emitting result.
             // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
             // must be written first to ensure the cached outputs include fresh build state.
-            recordBuildStateForTask(taskId)
+            recordBuildStatesForBatchProjects(taskId)
 
             // Emit result to stderr for streaming to Nx
             emitResult(taskId, result)
@@ -151,17 +151,29 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return results.toMap()
   }
 
+  /** All unique project selectors in the batch, computed once. */
+  private val allBatchProjectSelectors: Set<String> by lazy {
+    options.taskGraph?.tasks?.values
+      ?.map { it.target.project }
+      ?.toSet() ?: emptySet()
+  }
+
   /**
-   * Record build state for a single task's project.
-   * Called after task execution but before emitting the result to Nx,
+   * Record build state for all projects in the batch.
+   * Called after each task execution but before emitting the result to Nx,
    * ensuring nx-build-state.json is up-to-date when Nx caches the task's outputs.
+   *
+   * We record ALL batch projects (not just the current task's project) because
+   * a task in projectA can modify the Maven session state of projectB
+   * (e.g., adding source roots or classpath entries). The lastWrittenState cache
+   * in BuildStateRecorder ensures we only perform file I/O for projects whose
+   * state actually changed.
    */
-  private fun recordBuildStateForTask(taskId: String) {
+  private fun recordBuildStatesForBatchProjects(taskId: String) {
     try {
-      val projectSelector = options.taskGraph?.tasks?.get(taskId)?.target?.project ?: return
-      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(setOf(projectSelector))
+      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(allBatchProjectSelectors)
     } catch (e: Exception) {
-      log.error("Error recording build state for task $taskId: ${e.message}", e)
+      log.error("Error recording build states after task $taskId: ${e.message}", e)
     }
   }
 

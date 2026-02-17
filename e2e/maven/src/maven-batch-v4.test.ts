@@ -3,11 +3,9 @@ import {
   cleanupProject,
   newProject,
   runCLI,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
-import { rmSync } from 'fs';
 import { createMavenProject } from './utils/create-maven-project';
 
 describe('Maven 4 Batch Mode', () => {
@@ -51,10 +49,8 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
   });
 
   it('should install successfully after restoring cached package outputs', () => {
-    // Step 1: Delete target directories to simulate a clean CI checkout
-    for (const mod of ['app', 'lib', 'utils']) {
-      rmSync(tmpProjPath(`${mod}/target`), { recursive: true, force: true });
-    }
+    // Step 1: Clean target directories to simulate a clean CI checkout
+    runCLI('run-many -t clean');
 
     // Step 2: Run package in batch mode — cache hit restores outputs (including nx-build-state.json)
     runBatchCLI('run-many -t package');

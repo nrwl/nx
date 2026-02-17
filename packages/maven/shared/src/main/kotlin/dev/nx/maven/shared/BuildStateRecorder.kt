@@ -118,10 +118,10 @@ object BuildStateRecorder {
             pomFile = pomFile
         )
 
-        // Skip write if state is identical to last write and file still exists on disk
+        // Skip write if state is identical to what was last written
         val outputFile = File(project.build.directory, BUILD_STATE_FILE)
         val lastState = lastWrittenState[selector]
-        if (lastState != null && lastState == buildState && outputFile.exists()) {
+        if (lastState != null && lastState == buildState) {
             val duration = System.currentTimeMillis() - startTime
             log.debug("  Skipping write for $selector — state unchanged (took ${duration}ms)")
             return
