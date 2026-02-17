@@ -46,6 +46,7 @@ export enum UserCustomDimension {
   NxVersion = 'up.nx_version',
   PackageManager = 'up.package_manager',
   PackageManagerVersion = 'up.pkg_manager_version',
+  IsAgent = 'ep.is_ai_agent',
 }
 
 /**
@@ -61,7 +62,6 @@ export enum EventCustomDimension {
   GeneratorName = 'ep.generator_name',
   PackageName = 'ep.package_name',
   PackageVersion = 'ep.package_version',
-  AdditionalArguments = 'ep.additional_arguments',
 }
 
 /**
