@@ -59,21 +59,21 @@ If your TypeScript projects aren't showing up with the right targets, then [view
 {% tabitem label="npm" %}
 
 ```shell
-npx create-nx-workspace my-org --preset=ts
+npx create-nx-workspace my-org --template nrwl/typescript-template
 ```
 
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
 ```shell
-yarn create nx-workspace my-org --preset=ts
+yarn create nx-workspace my-org --template nrwl/typescript-template
 ```
 
 {% /tabitem %}
 {% tabitem label="pnpm" %}
 
 ```shell
-pnpm create nx-workspace my-org --preset=ts
+pnpm create nx-workspace my-org --template nrwl/typescript-template
 ```
 
 {% /tabitem %}
@@ -85,7 +85,7 @@ This creates a monorepo configured with [TypeScript Project References](https://
 For a guided walkthrough, follow the [TypeScript Packages Tutorial](/docs/getting-started/tutorials/typescript-packages-tutorial).
 {% /aside %}
 
-The `--preset=ts` uses the modern setup with workspaces and project references as of Nx 20.
+The `--template nrwl/typescript-template` uses the modern setup with workspaces and project references as of Nx 20.
 You can [migrate an existing workspace from path aliases ](/docs/technologies/typescript/guides/switch-to-workspaces-project-references) to the modern setup.
 
 If you want to keep using the older style of setups with `compilerOptions.paths`, use `create-nx-workspace --preset=apps`.
