@@ -9,6 +9,7 @@ import {
   UserCustomDimension,
 } from './parameter';
 import { logger } from '../utils/logger';
+import { isAiAgent } from '../native';
 
 const TRACKING_ID_PROD = 'G-83SJXKY605';
 
@@ -66,6 +67,7 @@ export class AnalyticsCollector {
       [UserCustomDimension.PackageManager]: packageManagerInfo.name,
       [UserCustomDimension.PackageManagerVersion]: packageManagerInfo.version,
       [UserCustomDimension.NxVersion]: nxVersion,
+      [UserCustomDimension.IsAgent]: isAiAgent(),
     };
   }
 
