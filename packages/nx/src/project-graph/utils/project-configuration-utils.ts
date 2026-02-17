@@ -582,6 +582,56 @@ function mergeCreateNodesResults(
   return { projectRootMap, externalNodes, rootMap, configurationSourceMaps };
 }
 
+/**
+ * Fast matcher for patterns without negations - uses short-circuit evaluation.
+ */
+function matchesSimplePatterns(file: string, patterns: string[]): boolean {
+  return patterns.some((pattern) => minimatch(file, pattern, { dot: true }));
+}
+
+/**
+ * Full matcher for patterns with negations - processes all patterns sequentially.
+ * Patterns starting with '!' are negation patterns that remove files from the match set.
+ * Patterns are processed in order, with later patterns overriding earlier ones.
+ */
+function matchesNegationPatterns(file: string, patterns: string[]): boolean {
+  // If first pattern is negation, start by matching everything
+  let isMatch = patterns[0].startsWith('!');
+
+  for (const pattern of patterns) {
+    const isNegation = pattern.startsWith('!');
+    const actualPattern = isNegation ? pattern.substring(1) : pattern;
+
+    if (minimatch(file, actualPattern, { dot: true })) {
+      // Last matching pattern wins
+      isMatch = !isNegation;
+    }
+  }
+
+  return isMatch;
+}
+
+/**
+ * Creates a matcher function for the given patterns.
+ * @param patterns Array of glob patterns (can include negation patterns starting with '!')
+ * @param emptyValue Value to return when patterns array is empty
+ * @returns A function that checks if a file matches the patterns
+ */
+function createMatcher(
+  patterns: string[],
+  emptyValue: boolean
+): (file: string) => boolean {
+  if (!patterns || patterns.length === 0) {
+    return () => emptyValue;
+  }
+
+  const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
+
+  return hasNegationPattern
+    ? (file: string) => matchesNegationPatterns(file, patterns)
+    : (file: string) => matchesSimplePatterns(file, patterns);
+}
+
 export function findMatchingConfigFiles(
   projectFiles: string[],
   pattern: string,
@@ -590,29 +640,25 @@ export function findMatchingConfigFiles(
 ): string[] {
   const matchingConfigFiles: string[] = [];
 
+  // Create matchers once, outside the loop
+  // Empty include means include everything, empty exclude means exclude nothing
+  const includes = createMatcher(include, true);
+  const excludes = createMatcher(exclude, false);
+
   for (const file of projectFiles) {
     if (minimatch(file, pattern, { dot: true })) {
-      if (include) {
-        const included = include.some((includedPattern) =>
-          minimatch(file, includedPattern, { dot: true })
-        );
-        if (!included) {
-          continue;
-        }
+      if (!includes(file)) {
+        continue;
       }
 
-      if (exclude) {
-        const excluded = exclude.some((excludedPattern) =>
-          minimatch(file, excludedPattern, { dot: true })
-        );
-        if (excluded) {
-          continue;
-        }
+      if (excludes(file)) {
+        continue;
       }
 
       matchingConfigFiles.push(file);
     }
   }
+
   return matchingConfigFiles;
 }
 

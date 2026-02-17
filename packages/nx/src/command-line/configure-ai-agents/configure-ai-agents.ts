@@ -1,23 +1,21 @@
 import { prompt } from 'enquirer';
-import { output } from '../../utils/output';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
-import * as chalk from 'chalk';
-
+import { existsSync, readFileSync } from 'node:fs';
+import { relative } from 'node:path';
+import * as pc from 'picocolors';
+import { claudeMcpJsonPath } from '../../ai/constants';
 import {
   Agent,
-  agentDisplayMap,
-  supportedAgents,
+  AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
-  AgentConfiguration,
+  supportedAgents,
 } from '../../ai/utils';
-import { claudeMcpJsonPath } from '../../ai/constants';
 import { installPackageToTmp } from '../../devkit-internals';
+import { output } from '../../utils/output';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
-import { relative } from 'path';
-import { existsSync, readFileSync } from 'fs';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -62,6 +60,19 @@ export async function configureAiAgentsHandler(
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
+  // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+  // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+  process.on('uncaughtException', (error) => {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error['code'] === 'ERR_USE_AFTER_CLOSE'
+    )
+      return;
+    throw error;
+  });
+
   const normalizedOptions = normalizeOptions(options);
 
   const {
@@ -88,7 +99,7 @@ export async function configureAiAgentsHandlerImpl(
     output.log({
       title,
       bodyLines: [
-        chalk.dim(
+        pc.dim(
           'To manually configure the Nx MCP in your editor, install Nx Console (https://nx.dev/getting-started/editor-setup)'
         ),
       ],
@@ -225,7 +236,7 @@ export async function configureAiAgentsHandlerImpl(
           required: true,
           footer: function () {
             const focused = this.focused as AgentPromptChoice;
-            return chalk.dim(
+            return pc.dim(
               `  ${getAgentFooterDescription(focused.agentConfiguration)}`
             );
           },

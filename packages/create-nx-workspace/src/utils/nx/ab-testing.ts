@@ -2,17 +2,17 @@ import { execSync } from 'node:child_process';
 import {
   existsSync,
   readFileSync,
-  writeFileSync,
   statSync,
   unlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
-// Flow variant controls both tracking and banner display (CLOUD-4147)
-// Variants: 0 = plain link, 1-3 = decorative banners
+// Flow variant controls both tracking and banner display (CLOUD-4235)
+// Variants: 0 = control, 1 = updated prompt, 2 = no prompt (auto-connect)
 const FLOW_VARIANT_CACHE_FILE = join(tmpdir(), 'nx-cnw-flow-variant');
 const FLOW_VARIANT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
@@ -33,7 +33,7 @@ function readCachedFlowVariant(): string | null {
       return null;
     }
     const value = readFileSync(FLOW_VARIANT_CACHE_FILE, 'utf-8').trim();
-    return ['0', '1', '2', '3'].includes(value) ? value : null;
+    return ['0', '1', '2'].includes(value) ? value : null;
   } catch {
     return null;
   }
@@ -49,10 +49,9 @@ function writeCachedFlowVariant(variant: string): void {
 
 function selectRandomVariant(): string {
   const rand = Math.random();
-  if (rand < 0.25) return '0';
-  if (rand < 0.5) return '1';
-  if (rand < 0.75) return '2';
-  return '3';
+  if (rand < 1 / 3) return '0';
+  if (rand < 2 / 3) return '1';
+  return '2';
 }
 
 /**
@@ -81,7 +80,8 @@ function getFlowVariantInternal(): string {
 }
 
 /**
- * Returns the flow variant for tracking (0 = preset, 1 = template).
+ * Returns the flow variant for tracking (0, 1, or 2).
+ * Returns '0' for docs generation to preserve deterministic output.
  */
 export function getFlowVariant(): string {
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
@@ -98,16 +98,14 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
 }
 
-/**
- * Returns whether the cloud prompt should be shown.
- * Now always returns true since we've locked in the prompt flow.
- */
 export function shouldShowCloudPrompt(): boolean {
-  return true;
+  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
+  // To re-enable A/B testing: return getFlowVariant() !== '2';
+  return false;
 }
 
 // ============================================================================
-// Banner Variant A/B Testing (CLOUD-4147)
+// Banner Variant A/B Testing (CLOUD-4235)
 // ============================================================================
 
 /**
@@ -137,11 +135,9 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
 
 /**
  * Get the banner variant for completion messages.
- * Uses NX_CNW_FLOW_VARIANT to determine which banner to show.
- * - Variant 0: Plain link (control) - always used for enterprise URLs
- * - Variant 1: "Try the full Nx platform" banner
- * - Variant 2: "Unlock 70% faster CI" banner
- * - Variant 3: "Reclaim your team's focus" banner
+ * Now locked to variant 2 (CLOUD-4255).
+ * - Variant 0: Plain link - used for enterprise URLs and docs generation
+ * - Variant 2: "Enable remote caching and automatic fixes" banner
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
@@ -151,8 +147,13 @@ export function getBannerVariant(cloudUrl?: string): BannerVariant {
     return '0';
   }
 
-  // Use the flow variant (which handles docs generation, env var, and caching)
-  return getFlowVariant() as BannerVariant;
+  // Docs generation uses variant 0 for deterministic output
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    return '0';
+  }
+
+  // Standard URLs get variant 2 banner
+  return '2';
 }
 
 export const NxCloudChoices = [
@@ -190,7 +191,7 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
-   * Locked to "full platform" messaging (CLOUD-4147)
+   * Locked to "full platform" messaging (CLOUD-4235)
    */
   setupNxCloud: [
     {
@@ -326,12 +327,12 @@ function getCloudUrl(): string {
  */
 export interface RecordStatMetaStart {
   type: 'start';
-  [key: string]: string;
+  [key: string]: string | boolean;
 }
 
 export interface RecordStatMetaComplete {
   type: 'complete';
-  [key: string]: string;
+  [key: string]: string | boolean;
 }
 
 export interface RecordStatMetaError {
@@ -340,12 +341,13 @@ export interface RecordStatMetaError {
   flowVariant: string;
   errorMessage: string;
   errorFile: string;
-  [key: string]: string;
+  [key: string]: string | boolean;
 }
 
 export interface RecordStatMetaCancel {
   type: 'cancel';
   flowVariant?: string;
+  aiAgent?: boolean;
 }
 
 export interface RecordStatMetaPrecreate {
@@ -356,6 +358,7 @@ export interface RecordStatMetaPrecreate {
   nodeVersion: string;
   packageManager: string;
   ghAvailable?: string;
+  aiAgent?: boolean;
 }
 
 export type RecordStatMeta =

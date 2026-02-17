@@ -45,27 +45,9 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Locked to "full platform" messaging (CLOUD-4147)
-  // Flow variant only affects completion banners, not this prompt
-  const promptConfig = {
-    name: 'nxCloud',
-    message: 'Try the full Nx platform?',
-    type: 'autocomplete',
-    choices: [
-      { value: 'yes', name: 'Yes' },
-      { value: 'skip', name: 'Skip' },
-    ],
-    initial: 0,
-    footer: () =>
-      chalk.dim(
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud'
-      ),
-  };
-
-  const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
-    promptConfig as any, // types in enquirer are not up to date
-  ]);
-  return result.nxCloud;
+  // Auto-select GitHub flow for deferred connection (variant 2 locked in - CLOUD-4255)
+  // Note: skipCloudConnect=true prevents actual connection, but we still get the banner
+  return 'github';
 }
 
 export async function determineIfGitHubWillBeUsed(

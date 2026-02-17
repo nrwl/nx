@@ -1,9 +1,9 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
-import { output } from '../../../../utils/output';
+import { orange, output } from '../../../../utils/output';
 import { joinPathFragments } from '../../../../utils/path';
 import type { PostGitTask } from '../../changelog';
 import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config';
@@ -263,15 +263,11 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     const logTitle = `https://${githubRepoData.hostname}/${githubRepoData.slug}/releases/tag/${gitTag}`;
     if (existingRelease) {
       console.error(
-        `${chalk.white('UPDATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.white('UPDATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     } else {
       console.error(
-        `${chalk.green('CREATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.green('CREATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     }
   }
@@ -314,14 +310,14 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             '\n'
         );
       });

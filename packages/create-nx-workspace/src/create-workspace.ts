@@ -31,6 +31,7 @@ import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
 } from './utils/package-manager';
+import { isAiAgent, logProgress } from './utils/ai/ai-output';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -44,7 +45,7 @@ export function getInterruptedWorkspaceState(): {
 }
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
-  preset: string,
+  preset: string | undefined,
   options: T,
   rawArgs?: T
 ) {
@@ -76,10 +77,16 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     const workingDir = process.cwd().replace(/\\/g, '/');
     directory = join(workingDir, name);
 
-    const ora = require('ora');
-    const workspaceSetupSpinner = ora(
-      `Creating workspace from template`
-    ).start();
+    const aiMode = isAiAgent();
+
+    // Use spinner for human mode, progress logs for AI mode
+    let workspaceSetupSpinner: any;
+    if (aiMode) {
+      logProgress('cloning', `Cloning template ${options.template}...`);
+    } else {
+      const ora = require('ora');
+      workspaceSetupSpinner = ora(`Creating workspace from template`).start();
+    }
 
     try {
       await cloneTemplate(templateUrl, name);
@@ -94,6 +101,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       generatePackageManagerFiles(directory, packageManager);
 
       // Install dependencies with the user's package manager
+      if (aiMode) {
+        logProgress(
+          'installing',
+          `Installing dependencies with ${packageManager}...`
+        );
+      }
+
       const pmc = getPackageManagerCommand(packageManager);
       if (pmc.preInstall) {
         await execAndWait(pmc.preInstall, directory);
@@ -103,11 +117,20 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       // Mark workspace as ready for SIGINT handler
       workspaceDirectory = directory;
 
-      workspaceSetupSpinner.succeed(
-        `Successfully created the workspace: ${directory}`
-      );
+      if (aiMode) {
+        logProgress(
+          'configuring',
+          `Successfully created the workspace: ${directory}`
+        );
+      } else {
+        workspaceSetupSpinner.succeed(
+          `Successfully created the workspace: ${directory}`
+        );
+      }
     } catch (e) {
-      workspaceSetupSpinner.fail();
+      if (!aiMode) {
+        workspaceSetupSpinner.fail();
+      }
       throw e;
     }
 
@@ -122,6 +145,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   } else {
     // Preset flow - existing behavior
+    if (!preset) {
+      throw new Error(
+        'Preset is required when not using a template. Please provide --preset or --template.'
+      );
+    }
     const tmpDir = await createSandbox(packageManager);
     const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
 
@@ -161,6 +189,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let pushedToVcs = VcsPushStatus.SkippedGit;
 
   if (!skipGit) {
+    const aiMode = isAiAgent();
+    if (aiMode) {
+      logProgress('initializing', 'Initializing git repository...');
+    }
+
     try {
       await initializeGitRepo(directory, { defaultBase, commit });
 
@@ -181,10 +214,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       }
     } catch (e) {
       if (e instanceof Error) {
-        output.error({
-          title: 'Could not initialize git repository',
-          bodyLines: mapErrorToBodyLines(e),
-        });
+        if (!aiMode) {
+          output.error({
+            title: 'Could not initialize git repository',
+            bodyLines: mapErrorToBodyLines(e),
+          });
+        }
+        // In AI mode, error will be handled by the caller
       } else {
         console.error(e);
       }
@@ -196,6 +232,10 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let nxCloudInfo: string | undefined;
 
   if (nxCloud !== 'skip') {
+    const aiModeForCloud = isAiAgent();
+    if (aiModeForCloud) {
+      logProgress('configuring', 'Configuring Nx Cloud...');
+    }
     // For variant 1 (skipCloudConnect=true): Skip readNxCloudToken() entirely
     // - We didn't call connectToNxCloudForTemplate(), so no token exists
     // - The spinner message "Checking Nx Cloud setup" would be misleading

@@ -1,7 +1,6 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { EOL } from 'os';
 import * as readline from 'readline';
-import { isCI } from './is-ci';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
 const GH_GROUP_PREFIX = '::group::';
@@ -30,17 +29,32 @@ export interface CLISuccessMessageConfig {
 }
 
 /**
- * Automatically disable styling applied by chalk if CI=true
+ * Custom orange color using ANSI 256-color code 214.
+ * picocolors does not support keyword-based colors like chalk,
+ * so orange is implemented manually.
  */
-const forceColor =
-  process.env.FORCE_COLOR === '' || process.env.FORCE_COLOR === 'true';
-if (isCI() && !forceColor) {
-  (chalk as any).level = 0;
+export function orange(text: string): string {
+  return pc.isColorSupported ? `\x1b[38;5;214m${text}\x1b[39m` : String(text);
 }
+
+/**
+ * Map of color names to picocolors functions, used for dynamic color access.
+ */
+const pcColors: Record<string, (text: string) => string> = {
+  cyan: pc.cyan,
+  red: pc.red,
+  yellow: pc.yellow,
+  green: pc.green,
+  gray: pc.gray,
+  white: pc.white,
+  blue: pc.blue,
+  magenta: pc.magenta,
+  orange,
+};
 
 class CLIOutput {
   cliName = 'NX';
-  formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
+  formatCommand = (taskId: string) => `${pc.dim('nx run')} ${taskId}`;
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -60,27 +74,33 @@ class CLIOutput {
    * implementation.
    */
   colors = {
-    gray: chalk.gray,
-    green: chalk.green,
-    red: chalk.red,
-    cyan: chalk.cyan,
-    white: chalk.white,
+    gray: pc.gray,
+    green: pc.green,
+    red: pc.red,
+    cyan: pc.cyan,
+    white: pc.white,
+    orange,
   };
-  bold = chalk.bold;
-  underline = chalk.underline;
-  dim = chalk.dim;
+  bold = pc.bold;
+  underline = pc.underline;
+  dim = pc.dim;
 
   private writeToStdOut(str: string) {
     process.stdout.write(str);
   }
 
   overwriteLine(lineText: string = '') {
+    // Ensure we always start writing from column 0.
+    readline.cursorTo(process.stdout, 0);
     // this replaces the existing text up to the new line length
     process.stdout.write(lineText);
     // clear whatever text might be left to the right of the cursor (happens
     // when existing text was longer than new one)
     readline.clearLine(process.stdout, 1);
-    process.stdout.write(EOL);
+    // Move to the next line and re-anchor to column 0 without relying on
+    // terminal newline translation behavior.
+    process.stdout.write('\n');
+    readline.cursorTo(process.stdout, 0);
   }
 
   private writeOutputTitle({
@@ -102,12 +122,8 @@ class CLIOutput {
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {
-    let nxPrefix = '';
-    if (chalk[color]) {
-      nxPrefix = chalk.reset.inverse.bold[color](` ${this.cliName} `);
-    } else {
-      nxPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
-    }
+    const colorFn = pcColors[color] || ((t: string) => t);
+    const nxPrefix = pc.inverse(pc.bold(colorFn(` ${this.cliName} `)));
     return `${nxPrefix}  ${text}`;
   }
 
@@ -130,7 +146,8 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: string): string {
-    return chalk.dim[color](this.VERTICAL_SEPARATOR);
+    const colorFn = pcColors[color] || ((t: string) => t);
+    return pc.dim(colorFn(this.VERTICAL_SEPARATOR));
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
@@ -138,7 +155,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'red',
-      title: chalk.red(title),
+      title: pc.red(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -149,7 +166,7 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        `${chalk.grey(
+        `${pc.gray(
           '  Learn more about this error: '
         )}https://errors.nx.dev/${slug}${EOL}`
       );
@@ -163,7 +180,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'yellow',
-      title: chalk.yellow(title),
+      title: pc.yellow(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -174,7 +191,7 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        `${chalk.grey(
+        `${pc.gray(
           '  Learn more about this warning: '
         )}https://errors.nx.dev/${slug}${EOL}`
       );
@@ -188,7 +205,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'orange',
-      title: chalk.keyword('orange')(title),
+      title: orange(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -201,7 +218,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'green',
-      title: chalk.green(title),
+      title: pc.green(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -260,7 +277,7 @@ class CLIOutput {
     taskStatus: TaskStatus
   ): string {
     const commandOutput =
-      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
+      pc.dim('> ') + this.formatCommand(this.normalizeMessage(message));
     return this.addTaskStatus(taskStatus, commandOutput);
   }
 
@@ -300,11 +317,11 @@ class CLIOutput {
     commandOutput: string
   ) {
     if (taskStatus === 'local-cache') {
-      return `${commandOutput}  ${chalk.dim('[local cache]')}`;
+      return `${commandOutput}  ${pc.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {
-      return `${commandOutput}  ${chalk.dim('[remote cache]')}`;
+      return `${commandOutput}  ${pc.dim('[remote cache]')}`;
     } else if (taskStatus === 'local-cache-kept-existing') {
-      return `${commandOutput}  ${chalk.dim(
+      return `${commandOutput}  ${pc.dim(
         '[existing outputs match the cache, left as is]'
       )}`;
     } else {
@@ -315,9 +332,10 @@ class CLIOutput {
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
+    const colorFn = color ? pcColors[color] : undefined;
     this.writeOutputTitle({
       color: 'cyan',
-      title: color ? chalk[color](title) : title,
+      title: colorFn ? colorFn(title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);

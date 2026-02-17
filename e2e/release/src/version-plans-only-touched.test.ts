@@ -30,7 +30,7 @@ expect.addSnapshotSerializer({
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // Filter out plugin worker verbose logs
-        .replaceAll(/\[plugin-(pool|worker)\].*\n/g, '')
+        .replaceAll(/\[(isolated-plugin|plugin-worker)\].*\n/g, '')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())

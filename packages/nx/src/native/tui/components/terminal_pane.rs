@@ -419,35 +419,23 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
     type State = TerminalPaneState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        // Add bounds checking to prevent panic when terminal is too narrow
-        // Safety check: ensure area is at least 5x5 to render anything properly
-        if area.width < 5 || area.height < 5 {
-            // Just render a minimal indicator instead of a full pane
-            let safe_area = Rect {
-                x: area.x,
-                y: area.y,
-                width: area.width.min(buf.area().width.saturating_sub(area.x)),
-                height: area.height.min(buf.area().height.saturating_sub(area.y)),
-            };
-
-            if safe_area.width > 0 && safe_area.height > 0 {
-                // Only attempt to render if we have a valid area
-                let text = "...";
-                let paragraph = Paragraph::new(text)
-                    .style(Style::default().fg(THEME.secondary_fg))
-                    .alignment(Alignment::Center);
-                Widget::render(paragraph, safe_area, buf);
-            }
+        // Clamp to the buffer to avoid rendering outside bounds
+        let safe_area = area.intersection(*buf.area());
+        if safe_area.width == 0 || safe_area.height == 0 {
             return;
         }
 
-        // Ensure the area doesn't extend beyond buffer boundaries
-        let safe_area = Rect {
-            x: area.x,
-            y: area.y,
-            width: area.width.min(buf.area().width.saturating_sub(area.x)),
-            height: area.height.min(buf.area().height.saturating_sub(area.y)),
-        };
+        // Add bounds checking to prevent panic when terminal is too narrow
+        // Safety check: ensure area is at least 5x5 to render anything properly
+        if safe_area.width < 5 || safe_area.height < 5 {
+            // Just render a minimal indicator instead of a full pane
+            let text = "...";
+            let paragraph = Paragraph::new(text)
+                .style(Style::default().fg(THEME.secondary_fg))
+                .alignment(Alignment::Center);
+            Widget::render(paragraph, safe_area, buf);
+            return;
+        }
 
         let base_style = self.get_base_style(state.task_status);
         let border_style = if state.is_focused {

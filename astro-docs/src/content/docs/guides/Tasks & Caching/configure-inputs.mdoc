@@ -443,6 +443,37 @@ With the above named inputs, Nx will behave in the following way:
 - When only test files are changed, Nx will restore previous compilation results from the cache and re-run the tests for the projects containing the test files
 - When any production files are changed, Nx will re-run the tests for the project as well as any projects which depend on it
 
+### Specifying Dependency File Patterns Directly
+
+Instead of defining a named input and referencing it with `^`, you can directly specify file patterns to consider from dependency projects using the `^{projectRoot}` syntax:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "inputs": [
+        "production",
+        "^{projectRoot}/src/**/*.ts", // Only consider .ts source files from dependencies
+      ],
+    },
+  },
+}
+```
+
+This is useful when you want fine-grained control over which files from dependencies affect a task's cache without creating a named input. For example, a `build` task might only need to consider `.ts` files from its dependencies rather than all production files.
+
+You can also use the object format with the `dependencies` property:
+
+```jsonc
+{
+  "inputs": [
+    "production",
+    { "fileset": "{projectRoot}/src/**/*.ts", "dependencies": true },
+  ],
+}
+```
+
 ### Consider the Version of a Language for all Tasks
 
 Many times, the version of the programming language being used will affect the behavior of all tasks for the workspace.

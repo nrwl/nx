@@ -6,6 +6,7 @@ tags: ['nx', 'self-healing']
 cover_image: /blog/images/articles/local-to-ci-autonomous-agents.avif
 youtubeUrl: https://youtu.be/LaZroK4b-zQ
 description: 'Learn how Nx bridges the gap between local AI agents and CI, enabling fully autonomous development workflows with the ci-monitor skill and Self-Healing CI.'
+pinned: true
 ---
 
 If 2025 was the year of agents, **2026 is the year of autonomous workflows**. We started with AI Chats (copy and pasting), moved to agentic tools like Claude Code and Cursor (edit files, run commands, but still babysitting), and are now heading toward agents that perform large chunks of work completely autonomously.
