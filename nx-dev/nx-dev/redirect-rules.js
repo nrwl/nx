@@ -1067,15 +1067,10 @@ const commandRedirects = {
 
 const canonicalSiteRedirects = {
   '/blog/': '/blog',
-  '/blog': '/blog',
-  '/nx-cloud': '/nx-cloud',
-  '/community': '/community',
   '/technologies/java/gradle/introduction':
     '/docs/technologies/java/gradle/introduction',
   '/technologies/java/maven/introduction':
     '/docs/technologies/java/maven/introduction',
-  '/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs':
-    '/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs',
 };
 
 // We got rid of `/recipes` URLs, so we need to redirect them to new /technologies or /reference URLs.
