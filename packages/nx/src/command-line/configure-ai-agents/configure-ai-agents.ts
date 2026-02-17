@@ -67,10 +67,7 @@ export async function configureAiAgentsHandler(
     );
 
     const module = await handleImport(modulePath);
-    await module.configureAiAgentsHandler(
-      args,
-      true
-    );
+    await module.configureAiAgentsHandler(args, true);
     cleanup();
   } catch (error) {
     if (cleanup) {
