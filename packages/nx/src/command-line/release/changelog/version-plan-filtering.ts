@@ -133,6 +133,8 @@ export async function resolveChangelogFromSHA({
   strictPreid,
   useAutomaticFromRef,
   resolveRepositoryTags,
+  projectName,
+  verbose,
 }: {
   fromRef?: string;
   tagPattern: string;
@@ -143,7 +145,13 @@ export async function resolveChangelogFromSHA({
   strictPreid: boolean;
   useAutomaticFromRef: boolean;
   resolveRepositoryTags: RepoGitTags['resolveTags'];
+  /** Optional project name for contextual logging when resolving per-project tags */
+  projectName?: string;
+  /** Whether to output verbose/debug logging */
+  verbose?: boolean;
 }): Promise<string | null> {
+  const logContext = projectName ? ` for project "${projectName}"` : '';
+
   // If user provided a from ref, resolve it to a SHA
   if (fromRef) {
     return await getCommitHash(fromRef);
@@ -161,8 +169,20 @@ export async function resolveChangelogFromSHA({
     }
   );
   if (latestTag?.tag) {
+    if (verbose) {
+      console.log(
+        `Resolved changelog from SHA${logContext} via tag: ${latestTag.tag}`
+      );
+    }
     return await getCommitHash(latestTag.tag);
   }
+
+  if (verbose) {
+    console.log(
+      `No matching git tag found${logContext} for pattern "${tagPattern}"`
+    );
+  }
+
   // Finally, if automatic from ref is enabled, use the first commit as a fallback
   if (useAutomaticFromRef) {
     return await getFirstGitCommit();

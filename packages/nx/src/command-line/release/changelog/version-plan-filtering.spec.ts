@@ -6,6 +6,7 @@ import {
   extractPreidFromVersion,
   extractProjectsPreidFromVersionData,
   filterVersionPlansByCommitRange,
+  resolveChangelogFromSHA,
   resolveWorkspaceChangelogFromSHA,
 } from './version-plan-filtering';
 
@@ -452,6 +453,81 @@ describe('version-plan-filtering', () => {
         'project-b': 'pre-release',
         'project-c': undefined, // numeric preids return undefined
       });
+    });
+  });
+
+  describe('resolveChangelogFromSHA', () => {
+    it('should return null when no tag exists for a project and automaticFromRef is disabled', async () => {
+      // This simulates the scenario from issue #34438: a dependent project
+      // that has never been released would have no matching git tag.
+      mockGetLatestGitTagForPattern.mockResolvedValue(null);
+
+      const result = await resolveChangelogFromSHA({
+        tagPattern: '{projectName}@{version}',
+        tagPatternValues: {
+          projectName: 'icons',
+          releaseGroupName: '__default__',
+        },
+        checkAllBranchesWhen: false,
+        requireSemver: true,
+        strictPreid: false,
+        useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
+        projectName: 'icons',
+      });
+
+      // Should return null, NOT throw
+      expect(result).toBeNull();
+      expect(mockGetLatestGitTagForPattern).toHaveBeenCalled();
+    });
+
+    it('should log verbose output with project name when verbose is enabled', async () => {
+      const consoleSpy = jest
+        .spyOn(console, 'log')
+        .mockImplementation(() => {});
+      mockGetLatestGitTagForPattern.mockResolvedValue(null);
+
+      await resolveChangelogFromSHA({
+        tagPattern: '{projectName}@{version}',
+        tagPatternValues: {
+          projectName: 'icons',
+          releaseGroupName: '__default__',
+        },
+        checkAllBranchesWhen: false,
+        requireSemver: true,
+        strictPreid: false,
+        useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
+        projectName: 'icons',
+        verbose: true,
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('icons'));
+      consoleSpy.mockRestore();
+    });
+
+    it('should resolve successfully when a tag exists for the project', async () => {
+      mockGetLatestGitTagForPattern.mockResolvedValue({
+        tag: 'utils@1.0.0',
+      });
+      mockGetCommitHash.mockResolvedValue('abc123');
+
+      const result = await resolveChangelogFromSHA({
+        tagPattern: '{projectName}@{version}',
+        tagPatternValues: {
+          projectName: 'utils',
+          releaseGroupName: '__default__',
+        },
+        checkAllBranchesWhen: false,
+        requireSemver: true,
+        strictPreid: false,
+        useAutomaticFromRef: false,
+        resolveRepositoryTags: mockResolveRepositoryTags,
+        projectName: 'utils',
+      });
+
+      expect(result).toBe('abc123');
+      expect(mockGetCommitHash).toHaveBeenCalledWith('utils@1.0.0');
     });
   });
 });
