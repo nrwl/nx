@@ -818,7 +818,7 @@ describe('migrate', () => {
     );
 
     updateFile(
-      './node_modules/nx/src/command-line/migrate/migrate.js',
+      './node_modules/nx/dist/src/command-line/migrate/migrate.js',
       (content) => {
         const start = content.indexOf('// testing-fetch-start');
         const end = content.indexOf('// testing-fetch-end');
@@ -1431,8 +1431,11 @@ describe('global installation', () => {
     });
 
     it('should invoke Nx commands from local repo', () => {
-      const nxJsContents = readFile('node_modules/nx/bin/nx.js');
-      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+      const nxJsContents = readFile('node_modules/nx/dist/bin/nx.js');
+      updateFile(
+        'node_modules/nx/dist/bin/nx.js',
+        `console.log('local install');`
+      );
       let output: string;
       expect(() => {
         output = runCommand(`nx show projects`);
