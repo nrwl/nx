@@ -7,7 +7,10 @@ import { PluginConfiguration } from '../../../config/nx-json';
 
 import { logger } from '../../../utils/logger';
 
-import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
+import {
+  getPluginOsSocketPath,
+  cleanupStaleSocketFile,
+} from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
@@ -458,6 +461,11 @@ async function startPluginWorker(name: string) {
     [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
   );
 
+  // Proactively clean up any stale socket file at this path before spawning.
+  // While the path includes performance.now() making collisions unlikely,
+  // this provides defense-in-depth against stale files from crashed processes.
+  cleanupStaleSocketFile(ipcPath);
+
   const worker = spawn(
     process.execPath,
     [
@@ -510,11 +518,41 @@ async function startPluginWorker(name: string) {
     worker: ChildProcess;
     socket: Socket;
   }>((resolve, reject) => {
+    // Monitor worker health during connection phase. If the worker exits
+    // before we establish a connection (e.g. due to a listen error or crash),
+    // reject immediately instead of continuing to poll a dead process for
+    // up to 100 seconds. This is a key fix for the intermittent startup
+    // failure — without it, a crashed worker results in a long, confusing
+    // timeout instead of a fast, actionable error.
+    let workerExited = false;
+    let workerExitCode: number | null = null;
+    const earlyExitHandler = (code: number | null) => {
+      workerExited = true;
+      workerExitCode = code;
+    };
+    worker.once('exit', earlyExitHandler);
+
     const id = setInterval(async () => {
+      // If the worker has already exited, stop polling immediately.
+      // This prevents the host from wasting time connecting to a socket
+      // that will never exist.
+      if (workerExited) {
+        clearInterval(id);
+        worker.off('exit', earlyExitHandler);
+        reject(
+          new Error(
+            `Plugin worker for "${name}" exited with code ${workerExitCode} before the host could connect. ` +
+              'This may indicate the worker failed to start its socket server. Check for errors above.'
+          )
+        );
+        return;
+      }
+
       const socket = await isServerAvailable(ipcPath);
       if (socket) {
         socket.unref();
         clearInterval(id);
+        worker.off('exit', earlyExitHandler);
         logger.verbose(
           `[plugin-pool] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
         );
@@ -526,6 +564,7 @@ async function startPluginWorker(name: string) {
         // daemon fails to start, the process probably exited
         // we print the logs and exit the client
         clearInterval(id);
+        worker.off('exit', earlyExitHandler);
         reject(new Error(`Failed to start plugin worker for plugin ${name}`));
       } else {
         attempts++;

@@ -10,6 +10,7 @@ import { consumeMessage, isPluginWorkerMessage } from './messaging';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
+import { cleanupStaleSocketFile } from '../../../daemon/socket-utils';
 
 type Environment = Pick<
   NodeJS.ProcessEnv,
@@ -36,12 +37,11 @@ let plugin: LoadedNxPlugin;
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
 
-let connectErrorTimeout = setErrorTimeout(
-  5000,
-  `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within 5 seconds. ` +
-    'Plugin workers expect to receive a socket connection from the parent process shortly after being started. ' +
-    'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
-);
+// The connection timeout is intentionally NOT started here.
+// It is deferred to the server 'listening' callback below, so that
+// the full timeout window is available for the host to connect after
+// the server is actually ready to accept connections.
+let connectErrorTimeout: { clear: () => void } | undefined;
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
@@ -52,8 +52,8 @@ const server = createServer((socket) => {
   // after the worker connected but before the worker was
   // instructed to load the plugin.
   let loadErrorTimeout = setErrorTimeout(
-    10_000,
-    `Plugin Worker for ${expectedPluginName} is exiting as it did not receive a load message within 10 seconds of connecting. ` +
+    30_000,
+    `Plugin Worker for ${expectedPluginName} is exiting as it did not receive a load message within 30 seconds of connecting. ` +
       'This likely indicates that the host process was terminated before the worker could be instructed to load the plugin. ' +
       'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
   );
@@ -236,10 +236,37 @@ const server = createServer((socket) => {
   });
 });
 
-server.listen(socketPath);
-logger.verbose(
-  `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
-);
+// Clean up any stale socket file from a previously crashed worker
+// before attempting to listen. Without this, server.listen() would
+// fail with EADDRINUSE and the worker would never become connectable,
+// which is one cause of the intermittent "not connected within N seconds" error.
+cleanupStaleSocketFile(socketPath);
+
+server.listen(socketPath, () => {
+  // Connection timeout starts AFTER the server is confirmed listening.
+  // Previously, the timeout started at script load time, before imports
+  // and server setup completed. This meant the timeout window was reduced
+  // by however long code loading took (often 2-4 seconds), leaving very
+  // little time for the host to connect — especially on Windows or under
+  // heavy load. Now, the full 30-second window is available.
+  connectErrorTimeout = setErrorTimeout(
+    30_000,
+    `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within 30 seconds. ` +
+      'Plugin workers expect to receive a socket connection from the parent process shortly after being started. ' +
+      'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
+  );
+  logger.verbose(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
+  );
+});
+
+// Handle server listen errors (e.g. EADDRINUSE from stale sockets)
+server.on('error', (err) => {
+  console.error(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
+  );
+  process.exit(1);
+});
 
 function setErrorTimeout(
   timeoutMs: number,

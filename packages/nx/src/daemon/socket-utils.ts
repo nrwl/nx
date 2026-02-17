@@ -1,4 +1,4 @@
-import { unlinkSync } from 'fs';
+import { existsSync, unlinkSync } from 'fs';
 import { platform, tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { getDaemonSocketDir, getSocketDir } from './tmp-dir';
@@ -56,6 +56,33 @@ export function killSocketOrPath(): void {
   try {
     unlinkSync(getFullOsSocketPath());
   } catch {}
+}
+
+/**
+ * Safely removes a stale plugin socket file if it exists.
+ *
+ * Plugin workers create Unix domain socket files (or named pipes on Windows)
+ * to communicate with the host process. If a worker crashes without cleaning
+ * up its socket file, the next worker assigned the same path would fail with
+ * EADDRINUSE when calling server.listen(). This is one root cause of the
+ * intermittent "plugin worker was not connected to within N seconds" error,
+ * because the worker silently fails to listen and the host never connects.
+ *
+ * Calling `nx reset` clears these stale files, which is why it temporarily
+ * resolves the issue. This function provides a programmatic equivalent.
+ *
+ * On Windows named pipes (\\.\pipe\...), unlinkSync is a no-op since the OS
+ * manages pipe lifecycle. The existsSync guard prevents unnecessary errors.
+ */
+export function cleanupStaleSocketFile(socketPath: string): void {
+  try {
+    if (!isWindows && existsSync(socketPath)) {
+      unlinkSync(socketPath);
+    }
+  } catch {
+    // Ignore errors — if the file can't be removed, server.listen()
+    // will surface the real error (EADDRINUSE, EACCES, etc.)
+  }
 }
 
 // Prepare a serialized project graph result for sending over IPC from the server to the client
