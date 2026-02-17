@@ -370,7 +370,8 @@ export function createAPI(
       preid: string | undefined,
       checkAllBranchesWhen: CheckAllBranchesWhen,
       requireSemver: boolean,
-      strictPreid: boolean
+      strictPreid: boolean,
+      projectName?: string
     ): Promise<string | null> => {
       if (fromSHACache.has(cacheKey)) {
         return fromSHACache.get(cacheKey);
@@ -386,6 +387,8 @@ export function createAPI(
         requireSemver,
         strictPreid,
         useAutomaticFromRef,
+        projectName,
+        verbose: args.verbose,
       });
       fromSHACache.set(cacheKey, sha);
       return sha;
@@ -450,24 +453,28 @@ export function createAPI(
         continue;
       }
 
-      const projects = args.projects?.length
-        ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group, plus any dependents
-          Array.from(
-            releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
-          ).flatMap((project) => {
-            return [
-              project,
-              ...(projectsVersionData[project]?.dependentProjects.map(
-                (dep) => dep.source
-              ) || []),
-            ];
-          })
-        : // Otherwise, we use the full list of projects within the release group
-          releaseGroup.projects;
+      const projects = releaseGraph.getProjectsForChangelog(
+        releaseGroup,
+        projectsVersionData,
+        !!args.projects?.length
+      );
       const projectNodes = projects.map((name) => projectGraph.nodes[name]);
 
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
+          // Skip projects that have no version data or were not actually versioned.
+          // This is critical for independent releases: dependent projects that were
+          // not explicitly targeted should not have git tags resolved or changelog
+          // entries generated. Without this guard, attempting to resolve a git tag
+          // for a never-released dependent would throw a fatal error.
+          if (
+            !projectsVersionData[project.name] ||
+            (projectsVersionData[project.name].newVersion === null &&
+              !projectsVersionData[project.name].dockerVersion)
+          ) {
+            continue;
+          }
+
           let changes: ChangelogChange[] | null = null;
 
           if (releaseGroup.resolvedVersionPlans) {
@@ -487,7 +494,8 @@ export function createAPI(
               projectsPreid[project.name],
               releaseGroup.releaseTag.checkAllBranchesWhen,
               releaseGroup.releaseTag.requireSemver,
-              releaseGroup.releaseTag.strictPreid
+              releaseGroup.releaseTag.strictPreid,
+              project.name
             );
 
             let commits: GitCommit[];
@@ -513,7 +521,7 @@ export function createAPI(
 
             if (!fromRef && !commits) {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag for project "${project.name}". If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
 

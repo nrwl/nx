@@ -31,7 +31,11 @@ import {
   sanitizeProjectNameForGitTag,
 } from './git';
 import { RepoGitTags } from './repository-git-tags';
-import { shouldSkipVersionActions, type VersionDataEntry } from './shared';
+import {
+  shouldSkipVersionActions,
+  type VersionData,
+  type VersionDataEntry,
+} from './shared';
 
 /**
  * Final configuration for a project after applying release group and project level overrides
@@ -778,6 +782,46 @@ export class ReleaseGraph {
         dependentProjectsData
       );
     }
+  }
+
+  /**
+   * Returns the list of project names that should be processed for changelog
+   * generation within a given release group, respecting the projectsRelationship.
+   *
+   * For independent release groups, only the explicitly filtered projects are
+   * returned — dependent projects are excluded because they are versioned
+   * independently and should not have their git tags resolved or changelog
+   * entries generated as part of another project's release.
+   *
+   * For fixed release groups, the filtered projects plus their dependents are
+   * returned, since the entire group is versioned and released as a unit.
+   */
+  getProjectsForChangelog(
+    releaseGroup: ReleaseGroupWithName,
+    projectsVersionData: VersionData,
+    hasProjectFilter: boolean
+  ): string[] {
+    if (!hasProjectFilter) {
+      return releaseGroup.projects;
+    }
+
+    const filteredProjects = Array.from(
+      this.releaseGroupToFilteredProjects.get(releaseGroup) ?? []
+    );
+
+    if (releaseGroup.projectsRelationship === 'independent') {
+      return filteredProjects;
+    }
+
+    // For fixed groups, include dependents
+    return filteredProjects.flatMap((project) => {
+      return [
+        project,
+        ...(projectsVersionData[project]?.dependentProjects.map(
+          (dep) => dep.source
+        ) || []),
+      ];
+    });
   }
 
   /**

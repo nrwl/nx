@@ -1083,4 +1083,182 @@ describe('ReleaseGraph', () => {
       `);
     });
   });
+
+  describe('getProjectsForChangelog', () => {
+    it('should exclude dependent projects for independent release groups when filtering', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - utils@1.0.0 [js]
+            - icons@1.0.0 [js]
+              -> depends on utils
+            - components@1.0.0 [js]
+              -> depends on utils
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion,
+          {
+            projects: ['utils'],
+          }
+        );
+
+      const graph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+
+      const releaseGroup = graph.releaseGroups[0];
+      const versionData = {
+        utils: {
+          newVersion: '1.1.0',
+          currentVersion: '1.0.0',
+          dependentProjects: [
+            {
+              source: 'icons',
+              target: 'utils',
+              type: 'static' as const,
+              dependencyCollection: 'dependencies' as const,
+              rawVersionSpec: '1.0.0',
+            },
+            {
+              source: 'components',
+              target: 'utils',
+              type: 'static' as const,
+              dependencyCollection: 'dependencies' as const,
+              rawVersionSpec: '1.0.0',
+            },
+          ],
+        },
+      };
+
+      const projects = graph.getProjectsForChangelog(
+        releaseGroup,
+        versionData,
+        true
+      );
+
+      // Only utils should be included — icons and components are dependents
+      // that should NOT have git tags resolved in an independent release
+      expect(projects).toEqual(['utils']);
+      expect(projects).not.toContain('icons');
+      expect(projects).not.toContain('components');
+    });
+
+    it('should include dependent projects for fixed release groups when filtering', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "fixed" }):
+            - utils@1.0.0 [js]
+            - icons@1.0.0 [js]
+              -> depends on utils
+            - components@1.0.0 [js]
+              -> depends on utils
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const graph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters: {},
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+
+      const releaseGroup = graph.releaseGroups[0];
+      const versionData = {
+        utils: {
+          newVersion: '1.1.0',
+          currentVersion: '1.0.0',
+          dependentProjects: [
+            {
+              source: 'icons',
+              target: 'utils',
+              type: 'static' as const,
+              dependencyCollection: 'dependencies' as const,
+              rawVersionSpec: '1.0.0',
+            },
+            {
+              source: 'components',
+              target: 'utils',
+              type: 'static' as const,
+              dependencyCollection: 'dependencies' as const,
+              rawVersionSpec: '1.0.0',
+            },
+          ],
+        },
+      };
+
+      // No project filter
+      const projects = graph.getProjectsForChangelog(
+        releaseGroup,
+        versionData,
+        false
+      );
+
+      // Without a filter, all group projects should be returned
+      expect(projects).toEqual(['utils', 'icons', 'components']);
+    });
+
+    it('should return all group projects when there is no project filter', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - utils@1.0.0 [js]
+            - icons@1.0.0 [js]
+              -> depends on utils
+            - components@1.0.0 [js]
+              -> depends on utils
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const graph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters: {},
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+
+      const releaseGroup = graph.releaseGroups[0];
+
+      const projects = graph.getProjectsForChangelog(releaseGroup, {}, false);
+
+      // No filter, so all projects in the group are returned
+      expect(projects).toEqual(
+        expect.arrayContaining(['utils', 'icons', 'components'])
+      );
+      expect(projects.length).toBe(3);
+    });
+  });
 });
