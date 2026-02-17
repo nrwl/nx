@@ -64,7 +64,25 @@ Files listed in `.gitignore` are automatically excluded from inputs. Nx will not
 {% /aside %}
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
-Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself.
+Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself. This allows you to specify exactly which files from dependency projects should be considered as inputs.
+
+```jsonc
+{
+  "inputs": [
+    "{projectRoot}/**/*.ts", // .ts files in the current project
+    "^{projectRoot}/**/*.ts", // .ts files in all dependency projects
+    "^{workspaceRoot}/tools/**/*", // workspace-level files, applied per dependency
+  ],
+}
+```
+
+You can also use the object format with the `dependencies` property to achieve the same result:
+
+```jsonc
+{
+  "inputs": [{ "fileset": "{projectRoot}/**/*.ts", "dependencies": true }],
+}
+```
 
 By default, Nx will use all files in a project as well as all files in the project's dependencies when computing a hash for tasks belonging to the project.
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
@@ -205,6 +223,16 @@ You can reference named inputs from specific projects or from project dependenci
 ```
 
 The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
+
+{% aside type="note" title="^ with filesets vs named inputs" %}
+The `^` prefix behaves differently depending on what follows it:
+
+- `^{projectRoot}/**/*.ts` — treated as a **dependency fileset**, hashing matching files in each dependency project
+- `^{workspaceRoot}/tools/**/*` — treated as a **dependency fileset** with workspace-level files
+- `^production` — treated as a **named input reference**, resolving the `production` named input for each dependency project
+
+In short, if the value after `^` starts with `{projectRoot}` or `{workspaceRoot}`, it is a fileset applied to dependencies. Otherwise, it is interpreted as a named input reference.
+{% /aside %}
 
 ## Named Inputs
 
