@@ -3,6 +3,7 @@ import {
   getTechnologyKBItems,
   getTechnologyAPIItems,
 } from './src/plugins/utils/plugin-mappings';
+import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url';
 
 type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 
@@ -1159,7 +1160,7 @@ const referenceGroups: SidebarItems = [
       },
       {
         label: 'Changelog',
-        link: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
+        link: `${resolveNxDevUrl()}/changelog`,
       },
       {
         label: 'Deprecations',
