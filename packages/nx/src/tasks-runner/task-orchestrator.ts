@@ -47,6 +47,7 @@ import {
   shouldStreamOutput,
 } from './utils';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
+import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -209,7 +210,7 @@ export class TaskOrchestrator {
             runningTask.onExit((code) => {
               if (!this.tuiEnabled) {
                 if (code > 128) {
-                  process.exit(code);
+                  exitAndFlushAnalytics(code);
                 }
               }
               res();

@@ -59,6 +59,8 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface GraphError {
   message: string;
@@ -258,11 +260,12 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
+  reportCommandRunEvent('graph', undefined, args);
   if (args.view === 'project-details' && !args.focus) {
     output.error({
       title: `The project details view requires the --focus option.`,
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
   if (args.view === 'project-details' && (args.targets || args.affected)) {
     output.error({
@@ -273,7 +276,7 @@ export async function generateGraph(
         }`,
       ],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   let rawGraph: ProjectGraph;
@@ -319,7 +322,7 @@ export async function generateGraph(
         title: `Project to focus does not exist.`,
         bodyLines: [`You provided --focus=${args.focus}`],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
 
@@ -369,7 +372,7 @@ export async function generateGraph(
         title: `Invalid exclude pattern:`,
         bodyLines: [e.message],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
 
@@ -395,7 +398,7 @@ export async function generateGraph(
     );
     await output.drain();
     await new Promise((res) => setImmediate(res));
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 
   if (args.file) {
@@ -477,10 +480,10 @@ export async function generateGraph(
         title: `Please specify a filename with either .json or .html extension.`,
         bodyLines: [`You provided --file=${args.file}`],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
     await new Promise((res) => setImmediate(res));
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   } else {
     const environmentJs = buildEnvironmentJs(
       excludePatterns,
@@ -509,7 +512,7 @@ export async function generateGraph(
         title: 'Failed to start graph server',
         bodyLines: [err.message],
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
 
     // setting up `?graph=serialized-graph-state`
@@ -776,7 +779,7 @@ async function startServer(
     if (unregisterFileWatcher) {
       unregisterFileWatcher();
     }
-    process.exit(exitCode);
+    exitAndFlushAnalytics(exitCode);
   };
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
@@ -844,12 +847,12 @@ function createProjectGraphListener() {
         output.error({
           title: `Failed to reconnect to daemon after multiple attempts`,
         });
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       } else if (error instanceof VersionMismatchError) {
         output.error({
           title: 'Nx version changed. Please restart your command.',
         });
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       } else if (error) {
         output.error({
           title: `Watch error: ${error?.message ?? 'Unknown'}`,
