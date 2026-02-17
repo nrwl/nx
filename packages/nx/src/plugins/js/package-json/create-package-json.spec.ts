@@ -665,6 +665,7 @@ describe('createPackageJson', () => {
     });
 
     it('should add packageManager if missing', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
@@ -697,7 +698,9 @@ describe('createPackageJson', () => {
         })
       ).toEqual({
         dependencies: {
+          '@nx/devkit': '~16.0.0',
           random: '1.0.0',
+          tslib: '~2.4.0',
           typescript: '^4.8.4',
         },
         name: 'other-name',
@@ -740,6 +743,7 @@ describe('createPackageJson', () => {
     });
 
     it('should replace packageManager if not in sync with root and show warning', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
@@ -750,7 +754,7 @@ describe('createPackageJson', () => {
           }
         })
       );
-      const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
+      const consoleWarnSpy = jest.spyOn(process.stderr, 'write');
       spies.push(consoleWarnSpy);
       spies.push(
         jest
