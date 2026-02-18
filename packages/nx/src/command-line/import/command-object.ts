@@ -1,7 +1,6 @@
 import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',
@@ -41,13 +40,35 @@ export const yargsImportCommand: CommandModule = {
             description: 'Interactive mode.',
             default: true,
           })
+          .option('plugins', {
+            type: 'string',
+            description:
+              'Plugins to install after import: "skip" for none, "all" for all detected, or comma-separated list (e.g., @nx/vite,@nx/jest).',
+          })
       ),
       'import'
     ),
   handler: async (args) => {
-    const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      return (await import('./import')).importHandler(args as any);
-    });
-    process.exit(exitCode);
+    try {
+      await (await import('./import')).importHandler(args as any);
+      process.exit(0);
+    } catch (error) {
+      if ((await import('../../native')).isAiAgent()) {
+        const {
+          buildImportErrorResult,
+          determineImportErrorCode,
+          writeErrorLog,
+        } = await import('./utils/ai-output');
+        const { writeAiOutput } = await import('../ai/ai-output');
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorCode = determineImportErrorCode(error);
+        const errorLogPath = writeErrorLog(error, 'nx-import');
+        writeAiOutput(
+          buildImportErrorResult(errorMessage, errorCode, errorLogPath)
+        );
+      }
+      process.exit(1);
+    }
   },
 };

@@ -62,6 +62,7 @@ export interface ImportOptions {
 
   verbose: boolean;
   interactive: boolean;
+  plugins?: string; // 'skip' | 'all' | comma-separated list
 }
 
 export async function importHandler(options: ImportOptions) {
