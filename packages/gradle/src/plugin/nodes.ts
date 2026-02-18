@@ -2,16 +2,17 @@ import {
   CreateNodesV2,
   CreateNodesContextV2,
   ProjectConfiguration,
-  readJsonFile,
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
+import {
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -28,10 +29,6 @@ import {
 } from './utils/gradle-plugin-options';
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
-
-function readProjectsCache(cachePath: string): GradleTargets {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
 
 /**
  * Strips nxConfig from project and all targets, returning only Gradle-detected configuration.
@@ -111,10 +108,6 @@ function extractNxConfigOnly(
   return result;
 }
 
-export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
-  safeWritePluginCache(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
@@ -125,7 +118,9 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const projectsCache = readProjectsCache(cachePath);
+    const pluginCache =
+      readPluginCache<Partial<ProjectConfiguration>>(cachePath);
+    const projectsCache = pluginCache.data;
 
     await populateProjectGraph(
       context.workspaceRoot,
@@ -195,7 +190,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 
       return results;
     } finally {
-      writeTargetsToCache(cachePath, projectsCache);
+      safeWritePluginCache(cachePath, pluginCache);
     }
   },
 ];
