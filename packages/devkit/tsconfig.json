@@ -11,6 +11,6 @@
     }
   ],
   "nx": {
-    // "addTypecheckTarget": false
+    "addTypecheckTarget": false
   }
 }

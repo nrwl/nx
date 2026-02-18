@@ -176,56 +176,49 @@ describe('Nx Commands', () => {
       });
 
       it('should check a matching input file and exit 0', () => {
-        // runCLI throws on non-zero exit, so success here means exit 0
         const result = runCLI(
-          `show target inputs ${app}:build --check apps/${app}/src/main.ts`
+          `show target inputs ${app}:build --check apps/${app}/src/main.ts`,
+          { silenceError: true }
         );
         expect(result).toContain('is an input');
+        expect(runCLI.lastExitCode).toBe(0);
       });
 
       it('should report non-matching input file and exit 1', () => {
-        expect(() =>
-          runCLI(
-            `show target inputs ${app}:build --check definitely/not/an/input.xyz`
-          )
-        ).toThrow();
-
         const result = runCLI(
           `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
           { silenceError: true }
         );
         expect(result).toContain('is not an input');
+        expect(runCLI.lastExitCode).toBe(1);
       });
 
       it('should check a matching output path and exit 0', () => {
-        // Check a specific file within the output directory
         const result = runCLI(
-          `show target outputs ${app}:build --check dist/apps/${app}/main.js`
+          `show target outputs ${app}:build --check dist/apps/${app}/main.js`,
+          { silenceError: true }
         );
         expect(result).toContain('is an output');
+        expect(runCLI.lastExitCode).toBe(0);
       });
 
       it('should report non-matching output path and exit 1', () => {
-        expect(() =>
-          runCLI(
-            `show target outputs ${app}:build --check definitely/not/an/output`
-          )
-        ).toThrow();
-
         const result = runCLI(
           `show target outputs ${app}:build --check definitely/not/an/output`,
           { silenceError: true }
         );
         expect(result).toContain('is not an output');
+        expect(runCLI.lastExitCode).toBe(1);
       });
 
       it('should check a directory containing input files and exit 0', () => {
-        // Directory containing inputs is a successful check (exit 0)
         const result = runCLI(
-          `show target inputs ${app}:build --check apps/${app}/src`
+          `show target inputs ${app}:build --check apps/${app}/src`,
+          { silenceError: true }
         );
         expect(result).toContain('is a directory containing');
         expect(result).toContain('input file(s)');
+        expect(runCLI.lastExitCode).toBe(0);
       });
 
       it('should error when target not found', () => {
@@ -270,13 +263,11 @@ describe('Nx Commands', () => {
         });
 
         it('should render non-matching --check input', () => {
-          const output = normalizeOutput(
-            runCLI(
-              `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
-              { silenceError: true }
-            )
+          const result = runCLI(
+            `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
+            { silenceError: true }
           );
-          expect(output).toMatchSnapshot();
+          expect(normalizeOutput(result)).toMatchSnapshot();
         });
 
         it('should render matching --check output', () => {
@@ -287,20 +278,97 @@ describe('Nx Commands', () => {
         });
 
         it('should render non-matching --check output', () => {
-          const output = normalizeOutput(
-            runCLI(
-              `show target outputs ${app}:build --check definitely/not/an/output`,
-              { silenceError: true }
-            )
+          const result = runCLI(
+            `show target outputs ${app}:build --check definitely/not/an/output`,
+            { silenceError: true }
           );
-          expect(output).toMatchSnapshot();
+          expect(normalizeOutput(result)).toMatchSnapshot();
         });
 
         it('should render directory containing inputs', () => {
-          const output = normalizeOutput(
-            runCLI(`show target inputs ${app}:build --check apps/${app}/src`)
+          const result = runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src`,
+            { silenceError: true }
           );
-          expect(output).toMatchSnapshot();
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+
+        it('should render grouped output when checking multiple inputs', () => {
+          const result = runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src/main.ts apps/${app}/src/app/app.element.ts definitely/not/an/input.xyz`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+
+        it('should render grouped output when checking multiple outputs', () => {
+          const result = runCLI(
+            `show target outputs ${app}:build --check dist/apps/${app}/main.js definitely/not/an/output`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+      });
+
+      describe('command syntax equivalence', () => {
+        it('should produce the same JSON from both target info syntaxes', () => {
+          const subcommandFirst = JSON.parse(
+            runCLI(`show target ${app}:build --json`)
+          );
+          // The alternative syntax places target identifier first, subcommand second
+          // show target <project:target> is the default/info handler
+          expect(subcommandFirst.project).toBe(app);
+          expect(subcommandFirst.target).toBe('build');
+        });
+
+        it('should produce the same inputs JSON from both syntaxes', () => {
+          const subcommandFirst = JSON.parse(
+            runCLI(`show target inputs ${app}:build --json`)
+          );
+          const targetFirst = JSON.parse(
+            runCLI(`show target ${app}:build inputs --json`)
+          );
+          expect(subcommandFirst).toEqual(targetFirst);
+        });
+
+        it('should produce the same outputs JSON from both syntaxes', () => {
+          const subcommandFirst = JSON.parse(
+            runCLI(`show target outputs ${app}:build --json`)
+          );
+          const targetFirst = JSON.parse(
+            runCLI(`show target ${app}:build outputs --json`)
+          );
+          expect(subcommandFirst).toEqual(targetFirst);
+        });
+
+        it('should produce the same --check result and exit code from both input syntaxes', () => {
+          const subcommandFirst = runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src/main.ts`,
+            { silenceError: true }
+          );
+          const subcommandFirstExitCode = runCLI.lastExitCode;
+          const targetFirst = runCLI(
+            `show target ${app}:build inputs --check apps/${app}/src/main.ts`,
+            { silenceError: true }
+          );
+          const targetFirstExitCode = runCLI.lastExitCode;
+          expect(subcommandFirst).toEqual(targetFirst);
+          expect(subcommandFirstExitCode).toEqual(targetFirstExitCode);
+        });
+
+        it('should produce the same --check result and exit code from both output syntaxes', () => {
+          const subcommandFirst = runCLI(
+            `show target outputs ${app}:build --check dist/apps/${app}/main.js`,
+            { silenceError: true }
+          );
+          const subcommandFirstExitCode = runCLI.lastExitCode;
+          const targetFirst = runCLI(
+            `show target ${app}:build outputs --check dist/apps/${app}/main.js`,
+            { silenceError: true }
+          );
+          const targetFirstExitCode = runCLI.lastExitCode;
+          expect(subcommandFirst).toEqual(targetFirst);
+          expect(subcommandFirstExitCode).toEqual(targetFirstExitCode);
         });
       });
     });

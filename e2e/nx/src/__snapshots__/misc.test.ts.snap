@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`Nx Commands show show target human-readable output should render grouped output when checking multiple inputs 1`] = `
+"
+✓ These arguments were inputs for <APP>:build:
+  apps/<APP>/src/main.ts
+  apps/<APP>/src/app/app.element.ts
+
+✗ These arguments were not inputs for <APP>:build:
+  definitely/not/an/input.xyz
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render grouped output when checking multiple outputs 1`] = `
+"
+✓ These arguments were outputs of <APP>:build:
+  dist/apps/<APP>/main.js
+
+✗ These arguments were not outputs of <APP>:build:
+  definitely/not/an/output
+"
+`;
+
 exports[`Nx Commands show show target human-readable output should render directory containing inputs 1`] = `
 "~ apps/<APP>/src is a directory containing 7 input file(s) for <APP>:build
   apps/<APP>/src/app/app.element.css
@@ -40,22 +61,3 @@ Configured outputs:
 "
 `;
 
-exports[`Nx Commands show show target human-readable output should render target info 1`] = `
-"Target: <APP>:build
-Executor: nx:run-commands
-Command: webpack-cli build
-Options:
-  cwd: "apps/<APP>"
-  args: ["--node-env=production"]
-  command: "webpack-cli build"
-Inputs:
-  - production
-  - ^production
-  - {"externalDependencies":["webpack-cli"]}
-Outputs:
-  - {workspaceRoot}/dist/apps/<APP>
-Configurations: production
-Cache: true
-Parallelism: true
-"
-`;

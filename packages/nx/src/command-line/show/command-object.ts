@@ -273,7 +273,7 @@ const showTargetInfoCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> =
         }
         await showTargetInfoHandler(args);
       });
-      process.exit(exitCode);
+      process.exit(process.exitCode || exitCode);
     },
   };
 

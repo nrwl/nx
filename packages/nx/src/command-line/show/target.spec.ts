@@ -181,7 +181,7 @@ describe('show target', () => {
       target: 'build',
       executor: '@nx/web:build',
       options: { outputPath: 'dist/apps/my-app' },
-      inputs: ['default', '^default'],
+      inputs: [{ fileset: '{projectRoot}/**/*' }, '^default'],
       outputs: ['{options.outputPath}'],
       configurations: ['production'],
       defaultConfiguration: 'production',
@@ -911,7 +911,7 @@ describe('show target', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('should check multiple input paths in a single invocation', async () => {
+  it('should render grouped output when checking multiple input paths', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -943,22 +943,21 @@ describe('show target', () => {
       check: ['apps/my-app/src/main.ts', 'CI', 'apps/my-app/README.md'],
     });
 
-    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
-    expect(calls).toHaveLength(3);
-    // First: matching file
-    expect(calls[0]).toContain('apps/my-app/src/main.ts');
-    expect(calls[0]).toContain('is an input');
-    // Second: matching env var
-    expect(calls[1]).toContain('CI');
-    expect(calls[1]).toContain('is an input');
-    // Third: non-match
-    expect(calls[2]).toContain('apps/my-app/README.md');
-    expect(calls[2]).toContain('not');
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    // Matched items grouped together
+    expect(allLogged).toContain('were inputs');
+    expect(allLogged).toContain('apps/my-app/src/main.ts');
+    expect(allLogged).toContain('CI');
+    // Unmatched items grouped together
+    expect(allLogged).toContain('not');
+    expect(allLogged).toContain('apps/my-app/README.md');
     // exitCode should be 1 because at least one path didn't match
     expect(process.exitCode).toBe(1);
   });
 
-  it('should check multiple output paths in a single invocation', async () => {
+  it('should render grouped output when checking multiple output paths', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
         {
@@ -980,14 +979,15 @@ describe('show target', () => {
       check: ['apps/my-app/dist/main.js', 'libs/other/file.js'],
     });
 
-    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
-    expect(calls).toHaveLength(2);
-    // First: matching output
-    expect(calls[0]).toContain('apps/my-app/dist/main.js');
-    expect(calls[0]).toContain('is an output');
-    // Second: non-match
-    expect(calls[1]).toContain('libs/other/file.js');
-    expect(calls[1]).toContain('not');
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    // Matched items grouped together
+    expect(allLogged).toContain('were outputs');
+    expect(allLogged).toContain('apps/my-app/dist/main.js');
+    // Unmatched items grouped together
+    expect(allLogged).toContain('not');
+    expect(allLogged).toContain('libs/other/file.js');
     // exitCode should be 1 because at least one path didn't match
     expect(process.exitCode).toBe(1);
   });
@@ -1024,10 +1024,60 @@ describe('show target', () => {
       check: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
     });
 
-    const calls = (console.log as jest.Mock).mock.calls.map((c) => c[0]);
-    expect(calls).toHaveLength(2);
-    expect(calls[0]).toContain('is an input');
-    expect(calls[1]).toContain('is an input');
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    expect(allLogged).toContain('were inputs');
+    expect(allLogged).toContain('apps/my-app/src/main.ts');
+    expect(allLogged).toContain('apps/my-app/src/app.ts');
+    expect(allLogged).not.toContain('not');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('should deduplicate folder entries when child files are also in check list', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              inputs: ['{projectRoot}/**/*.ts'],
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    mockHashInputs = {
+      'my-app:build': {
+        files: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
+    };
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: [
+        'apps/my-app/src',
+        'apps/my-app/src/main.ts',
+        'apps/my-app/src/app.ts',
+      ],
+    });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    // The folder should have been removed since its children are present
+    expect(allLogged).toContain('apps/my-app/src/main.ts');
+    expect(allLogged).toContain('apps/my-app/src/app.ts');
+    // Should not contain 'directory containing' since the folder was deduplicated
+    expect(allLogged).not.toContain('directory containing');
     expect(process.exitCode).toBe(0);
   });
 });

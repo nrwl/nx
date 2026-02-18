@@ -3,12 +3,16 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { readNxJson } from '../../config/configuration';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
-import type { TargetConfiguration } from '../../config/workspace-json-project-json';
+import type {
+  InputDefinition,
+  TargetConfiguration,
+} from '../../config/workspace-json-project-json';
 import type { HashInputs } from '../../native';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { getNamedInputs } from '../../hasher/task-hasher';
 import {
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
@@ -91,14 +95,20 @@ export async function showTargetInputsHandler(
   );
 
   if (args.check !== undefined) {
-    for (const input of args.check) {
-      const data = resolveCheckFromInputs(
-        input,
-        projectName,
-        targetName,
-        hashInputs
-      );
-      renderCheckInput(data);
+    const checkItems = deduplicateFolderEntries(args.check);
+    const results = checkItems.map((input) =>
+      resolveCheckFromInputs(input, projectName, targetName, hashInputs)
+    );
+
+    if (results.length >= 2) {
+      renderBatchCheckInputs(results, projectName, targetName);
+    } else {
+      for (const data of results) {
+        renderCheckInput(data);
+      }
+    }
+
+    for (const data of results) {
       process.exitCode ||=
         data.isInput || data.containedInputFiles.length ? 0 : 1;
     }
@@ -145,9 +155,20 @@ export async function showTargetOutputsHandler(
   );
 
   if (args.check !== undefined) {
-    for (const output of args.check) {
-      const data = resolveCheckOutputData(output, outputsData);
-      renderCheckOutput(data);
+    const checkItems = deduplicateFolderEntries(args.check);
+    const results = checkItems.map((output) =>
+      resolveCheckOutputData(output, outputsData)
+    );
+
+    if (results.length >= 2) {
+      renderBatchCheckOutputs(results, outputsData.project, outputsData.target);
+    } else {
+      for (const data of results) {
+        renderCheckOutput(data);
+      }
+    }
+
+    for (const data of results) {
       process.exitCode ||=
         data.matchedOutput ||
         data.containedOutputPaths.length ||
@@ -334,7 +355,9 @@ function resolveTargetInfoData(
         ? targetConfig.configurations?.[configuration]
         : undefined),
     },
-    ...(targetConfig.inputs ? { inputs: targetConfig.inputs } : {}),
+    ...(targetConfig.inputs
+      ? { inputs: expandInputsForDisplay(targetConfig.inputs, node, nxJson) }
+      : {}),
     ...(targetConfig.outputs
       ? { outputs: targetConfig.outputs as string[] }
       : {}),
@@ -708,11 +731,9 @@ function renderOutputs(
   if (data.outputPaths.length > 0) {
     printList('Configured outputs', data.outputPaths);
   }
-  const extraExpanded = data.expandedOutputs.filter(
-    (o) => !data.outputPaths.includes(o)
-  );
-  if (extraExpanded.length > 0) {
-    printList('Expanded outputs', extraExpanded);
+
+  if (data.expandedOutputs.length > 0) {
+    printList('Resolved outputs', data.expandedOutputs);
   }
   if (data.unresolvedOutputs.length > 0) {
     printList(
@@ -765,6 +786,161 @@ function renderCheckOutput(data: ReturnType<typeof resolveCheckOutputData>) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Expands named inputs (e.g. "production", "default") to their definitions
+ * so the user can see what each named input resolves to. Inputs prefixed
+ * with "^" (dependency inputs) are kept as-is since they reference inputs
+ * from dependent projects. Object-type inputs pass through unchanged.
+ */
+function expandInputsForDisplay(
+  inputs: (InputDefinition | string)[],
+  node: ProjectGraph['nodes'][string],
+  nxJson: NxJsonConfiguration
+): (InputDefinition | string)[] {
+  const namedInputs = getNamedInputs(nxJson, node);
+  const result: (InputDefinition | string)[] = [];
+
+  for (const input of inputs) {
+    if (typeof input === 'string') {
+      if (input.startsWith('^')) {
+        // Dependency input — keep as-is
+        result.push(input);
+      } else if (namedInputs[input]) {
+        // Named input — expand inline
+        result.push(...namedInputs[input]);
+      } else {
+        result.push(input);
+      }
+    } else if ('input' in input) {
+      // Object with { input: "namedInput" } — expand the reference
+      const name = input.input;
+      if (!name.startsWith('^') && namedInputs[name]) {
+        result.push(...namedInputs[name]);
+      } else {
+        result.push(input);
+      }
+    } else {
+      result.push(input);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * When shell glob expansion is used, both directories and files within
+ * those directories may appear. Remove any directory entry whose children
+ * are already present in the list.
+ */
+function deduplicateFolderEntries(items: string[]): string[] {
+  const normalized = items.map((item) => ({
+    original: item,
+    path: normalizePath(item),
+  }));
+
+  return normalized
+    .filter(({ path }) => {
+      const dirPrefix = path.endsWith('/') ? path : path + '/';
+      const hasChildInList = normalized.some(
+        (other) => other.path !== path && other.path.startsWith(dirPrefix)
+      );
+      return !hasChildInList;
+    })
+    .map(({ original }) => original);
+}
+
+function renderBatchCheckInputs(
+  results: ReturnType<typeof resolveCheckFromInputs>[],
+  projectName: string,
+  targetName: string
+) {
+  const matched: string[] = [];
+  const directories: { value: string; count: number }[] = [];
+  const unmatched: string[] = [];
+
+  for (const data of results) {
+    if (data.isInput) {
+      matched.push(data.value);
+    } else if (data.containedInputFiles.length > 0) {
+      directories.push({
+        value: data.file,
+        count: data.containedInputFiles.length,
+      });
+    } else {
+      unmatched.push(data.value);
+    }
+  }
+
+  const c = pc();
+  const label = `${c.cyan(projectName)}:${c.green(targetName)}`;
+
+  if (matched.length > 0 || directories.length > 0) {
+    console.log(`\n${c.green('✓')} These arguments were inputs for ${label}:`);
+    for (const v of matched) console.log(`  ${v}`);
+    for (const d of directories) {
+      console.log(`  ${d.value} (directory containing ${d.count} input files)`);
+    }
+  }
+
+  if (unmatched.length > 0) {
+    console.log(
+      `\n${c.red('✗')} These arguments were ${c.red(
+        'not'
+      )} inputs for ${label}:`
+    );
+    for (const v of unmatched) console.log(`  ${v}`);
+  }
+}
+
+function renderBatchCheckOutputs(
+  results: ReturnType<typeof resolveCheckOutputData>[],
+  projectName: string,
+  targetName: string
+) {
+  const matched: string[] = [];
+  const directories: { value: string; count: number }[] = [];
+  const unmatched: string[] = [];
+
+  for (const data of results) {
+    if (data.matchedOutput) {
+      matched.push(data.value);
+    } else if (
+      data.containedOutputPaths.length > 0 ||
+      data.containedExpandedOutputs.length > 0
+    ) {
+      const uniqueCount = new Set([
+        ...data.containedOutputPaths,
+        ...data.containedExpandedOutputs,
+      ]).size;
+      directories.push({ value: data.file, count: uniqueCount });
+    } else {
+      unmatched.push(data.value);
+    }
+  }
+
+  const c = pc();
+  const label = `${c.cyan(projectName)}:${c.green(targetName)}`;
+
+  if (matched.length > 0 || directories.length > 0) {
+    console.log(`\n${c.green('✓')} These arguments were outputs of ${label}:`);
+    for (const v of matched) console.log(`  ${v}`);
+    for (const d of directories) {
+      console.log(
+        `  ${d.value} (directory containing ${d.count} output paths)`
+      );
+    }
+  }
+
+  if (unmatched.length > 0) {
+    console.log(
+      `\n${c.red('✗')} These arguments were ${c.red(
+        'not'
+      )} outputs of ${label}:`
+    );
+    for (const v of unmatched) console.log(`  ${v}`);
+  }
+}
 
 function resolveDependencyProjects(
   dep: { target: string; dependencies?: boolean; projects?: string[] },
