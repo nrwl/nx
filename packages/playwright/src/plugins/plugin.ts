@@ -7,7 +7,6 @@ import {
   joinPathFragments,
   normalizePath,
   type ProjectConfiguration,
-  readJsonFile,
   type TargetConfiguration,
   type TargetDependencyConfig,
 } from '@nx/devkit';
@@ -21,7 +20,10 @@ import { readdirSync } from 'node:fs';
 import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
+import {
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
@@ -40,25 +42,6 @@ interface NormalizedOptions {
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, PlaywrightTargets> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, PlaywrightTargets>
-) {
-  safeWritePluginCache(cachePath, results);
-}
-
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
 export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
   playwrightConfigGlob,
@@ -68,7 +51,8 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
       workspaceDataDirectory,
       `playwright-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const pluginCache = readPluginCache<PlaywrightTargets>(cachePath);
+    const targetsCache = pluginCache.data;
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -78,7 +62,7 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      safeWritePluginCache(cachePath, pluginCache);
     }
   },
 ];
