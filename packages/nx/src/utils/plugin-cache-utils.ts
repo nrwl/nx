@@ -78,6 +78,9 @@ export class PluginCache<T> {
         ownKeys: (target) => {
           return Reflect.ownKeys(target);
         },
+        getOwnPropertyDescriptor: (target, prop) => {
+          return Reflect.getOwnPropertyDescriptor(target, prop);
+        },
       });
     }
     return this._proxy;

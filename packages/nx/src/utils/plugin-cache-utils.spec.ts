@@ -70,6 +70,24 @@ describe('plugin-cache-utils', () => {
       expect('c' in cache.data).toBe(false);
     });
 
+    it('should support nullish coalescing assignment (??=) operator', () => {
+      const cache = new PluginCache<string>({}, []);
+
+      // First assignment - key doesn't exist
+      cache.data['key1'] ??= 'value1';
+      expect(cache.data['key1']).toBe('value1');
+      expect(cache.toSerializable().accessOrder).toEqual(['key1']);
+
+      // Second assignment - key exists, shouldn't reassign
+      cache.data['key1'] ??= 'value2';
+      expect(cache.data['key1']).toBe('value1'); // unchanged
+
+      // Third assignment - another new key
+      cache.data['key2'] ??= 'value2';
+      expect(cache.data['key2']).toBe('value2');
+      expect(cache.toSerializable().accessOrder).toContain('key2');
+    });
+
     it('should evict oldest 50% from front of accessOrder', () => {
       const cache = new PluginCache<string>(
         { old1: 'a', old2: 'b', new1: 'c', new2: 'd' },
