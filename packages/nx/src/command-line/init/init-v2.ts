@@ -1,5 +1,4 @@
 import { existsSync } from 'fs';
-import { join } from 'path';
 
 import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
@@ -33,7 +32,8 @@ import { addNxToCraRepo } from './implementation/react';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
 import { isAiAgent } from '../../native';
-import { supportedAgents, Agent } from '../../ai/utils';
+import { Agent } from '../../ai/utils';
+import { detectAiAgent } from '../../ai/detect-ai-agent';
 import {
   logProgress,
   writeAiOutput,
@@ -114,7 +114,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 
     // Auto-detect and set the current AI agent for setup
     if (options.aiAgents === undefined) {
-      const detectedAgent = detectCurrentAiAgent();
+      const detectedAgent = detectAiAgent();
       if (detectedAgent) {
         options.aiAgents = [detectedAgent];
       }
@@ -652,42 +652,4 @@ export async function detectPlugins(
     ]).then((r) => r.updatePackageScripts === 'Yes'));
 
   return { plugins: pluginsToInstall, updatePackageScripts };
-}
-
-/**
- * Detect the current AI agent from environment variables.
- * Returns the agent name if detected and supported, null otherwise.
- *
- * Maps environment variable detection to supported agent names:
- * - CLAUDECODE → 'claude'
- * - OPENCODE → 'opencode'
- * - CURSOR_TRACE_ID + PAGER + COMPOSER_NO_INTERACTION → 'cursor'
- *
- * Note: replit (REPL_ID) is detected by isAiAgent() but not in supportedAgents,
- * so it returns null.
- */
-function detectCurrentAiAgent(): Agent | null {
-  // Check Claude Code (CLAUDECODE env var)
-  if (process.env.CLAUDECODE) {
-    return supportedAgents.includes('claude') ? 'claude' : null;
-  }
-
-  // Check OpenCode (OPENCODE env var)
-  if (process.env.OPENCODE) {
-    return supportedAgents.includes('opencode') ? 'opencode' : null;
-  }
-
-  // Check Cursor (requires all three env vars)
-  if (
-    process.env.PAGER === 'head -n 10000 | cat' &&
-    process.env.CURSOR_TRACE_ID &&
-    process.env.COMPOSER_NO_INTERACTION
-  ) {
-    return supportedAgents.includes('cursor') ? 'cursor' : null;
-  }
-
-  // Note: replit (REPL_ID) is detected by isAiAgent() but not in supportedAgents
-  // so we don't return it here
-
-  return null;
 }

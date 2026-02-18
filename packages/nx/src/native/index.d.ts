@@ -227,6 +227,13 @@ export interface DepsOutputsInput {
   transitive?: boolean
 }
 
+/**
+ * Detects which AI agent is running and returns its name.
+ * Returns None if no agent is detected.
+ * Filtering against supported agents should be done on the TypeScript side.
+ */
+export declare export declare function detectAiAgent(): string | null
+
 export interface EnvironmentInput {
   env: string
 }
