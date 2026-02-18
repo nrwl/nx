@@ -1,5 +1,6 @@
 import { join } from 'path';
-import { readJsonFile, writeJsonFile } from '@nx/devkit';
+import { readJsonFile } from '@nx/devkit';
+import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { MavenAnalysisData } from './types';
 
 /**
@@ -24,7 +25,7 @@ export function writeMavenCache(
   cachePath: string,
   cache: Record<string, MavenAnalysisData>
 ): void {
-  writeJsonFile(cachePath, cache);
+  safeWritePluginCache(cachePath, cache);
 }
 
 /**
