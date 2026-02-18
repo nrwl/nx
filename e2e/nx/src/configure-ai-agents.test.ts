@@ -363,5 +363,4 @@ describe('configure-ai-agents', () => {
       runCLI('configure-ai-agents --agents claude --no-interactive');
     });
   });
-
 });

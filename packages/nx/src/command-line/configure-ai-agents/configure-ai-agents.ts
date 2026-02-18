@@ -3,8 +3,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import * as pc from 'picocolors';
 import { claudeMcpJsonPath } from '../../ai/constants';
+import { detectAiAgent } from '../../ai/detect-ai-agent';
 import {
   Agent,
+  agentDisplayMap,
   AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
@@ -208,6 +210,104 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   }
+
+  // AI agent auto-mode: when an AI agent is detected and --agents is not
+  // explicitly passed, skip the interactive prompt. Auto-configure the
+  // detected agent (if needed) and any outdated agents. Report remaining
+  // non-configured agents with a suggested command.
+  const detectedAgent = detectAiAgent();
+  const agentsExplicitlyPassed = options.agents !== undefined;
+
+  // DEBUG
+  console.error(`[DEBUG] detectedAgent=${detectedAgent}, agentsExplicitlyPassed=${agentsExplicitlyPassed}, interactive=${options.interactive}, options.agents=${JSON.stringify(options.agents)}`);
+  console.error(`[DEBUG] nonConfigured=${nonConfiguredAgents.map(a=>a.name)}, partial=${partiallyConfiguredAgents.map(a=>a.name)}, fully=${fullyConfiguredAgents.map(a=>a.name)}, disabled=${disabledAgents.map(a=>a.name)}`);
+
+  if (
+    detectedAgent &&
+    !agentsExplicitlyPassed &&
+    options.interactive !== false
+  ) {
+    const agentsToAutoConfig: Agent[] = [];
+
+    // Detected agent needs configuring if it's non-configured, partial, or outdated
+    const detectedIsNonConfigured = nonConfiguredAgents.some(
+      (a) => a.name === detectedAgent
+    );
+    const detectedIsPartial = partiallyConfiguredAgents.some(
+      (a) => a.name === detectedAgent
+    );
+    const detectedIsOutdated = fullyConfiguredAgents.some(
+      (a) => a.name === detectedAgent && a.outdated
+    );
+
+    if (detectedIsNonConfigured || detectedIsPartial || detectedIsOutdated) {
+      agentsToAutoConfig.push(detectedAgent);
+    }
+
+    // Also auto-configure any other outdated agents
+    for (const a of fullyConfiguredAgents) {
+      if (a.outdated && a.name !== detectedAgent) {
+        agentsToAutoConfig.push(a.name);
+      }
+    }
+
+    if (agentsToAutoConfig.length > 0) {
+      const configSpinner = ora(`Configuring agent(s)...`).start();
+      try {
+        await configureAgents(agentsToAutoConfig, workspaceRoot, false);
+        configSpinner.stop();
+
+        const allConfigs = [
+          ...nonConfiguredAgents,
+          ...partiallyConfiguredAgents,
+          ...fullyConfiguredAgents,
+        ];
+        output.success({
+          title: 'AI agents configured successfully',
+          bodyLines: agentsToAutoConfig.map((name) => {
+            const config = allConfigs.find((a) => a.name === name);
+            return config
+              ? `${config.displayName}: ${getAgentConfiguredDescription(config)}`
+              : `- ${name}`;
+          }),
+        });
+      } catch (e) {
+        configSpinner.fail('Failed to configure AI agents');
+        output.error({
+          title: 'Error details:',
+          bodyLines: [e.message],
+        });
+        process.exit(1);
+      }
+    } else {
+      // Detected agent is fully configured and up to date, no outdated agents
+      output.success({
+        title: `${
+          agentDisplayMap[detectedAgent] ?? detectedAgent
+        } configuration is up to date`,
+      });
+    }
+
+    // Report non-configured agents (that weren't just auto-configured)
+    const stillNonConfigured = nonConfiguredAgents.filter(
+      (a) => !agentsToAutoConfig.includes(a.name)
+    );
+
+    if (stillNonConfigured.length > 0) {
+      const agentNames = stillNonConfigured.map((a) => a.name);
+      output.log({
+        title: 'The following agents are not yet configured:',
+        bodyLines: [
+          ...stillNonConfigured.map((a) => `- ${a.displayName}`),
+          '',
+          `Run: nx configure-ai-agents --agents ${agentNames.join(' ')}`,
+        ],
+      });
+    }
+
+    return;
+  }
+
   const allAgentChoices: AgentPromptChoice[] = [];
   const preselectedIndices: number[] = [];
   let currentIndex = 0;
