@@ -119,6 +119,37 @@ describe('Nx Import - AI Agent Mode', () => {
     });
   });
 
+  describe('default plugin detection (no --plugins flag)', () => {
+    it('should detect plugins and complete without --plugins flag', () => {
+      const repoPath = createSimpleRepo(
+        tempImportE2ERoot,
+        'default-plugins-test'
+      );
+      const output = runCLI(
+        `import ${repoPath} projects/default-plugins --ref main --source .`,
+        { verbose: true, env: agentEnv }
+      );
+      const messages = parseNdjsonOutput(output);
+
+      expect(
+        findMessage(messages, (m) => m.stage === 'detecting-plugins')
+      ).toBeDefined();
+
+      const success = findMessage(
+        messages,
+        (m) => m.stage === 'complete' && m.success === true
+      );
+      expect(success).toBeDefined();
+      expect(success.result.destination).toBe('projects/default-plugins');
+      expect(Array.isArray(success.result.pluginsInstalled)).toBe(true);
+
+      checkFilesExist(
+        'projects/default-plugins/README.md',
+        'projects/default-plugins/package.json'
+      );
+    });
+  });
+
   describe('import subdirectory', () => {
     it('should import a subdirectory with correct paths in output', () => {
       const repoPath = createMultiPackageRepo(tempImportE2ERoot);
