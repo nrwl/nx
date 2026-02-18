@@ -170,6 +170,22 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
+      // Remove AI agent detection env vars to prevent the test runner's
+      // environment (e.g., running inside Claude Code) from leaking into
+      // e2e test subprocesses. Tests that need these pass them explicitly.
+      const aiAgentEnvVars = [
+        'CLAUDECODE',
+        'CLAUDE_CODE',
+        'OPENCODE',
+        'GEMINI_CLI',
+        'CURSOR_TRACE_ID',
+        'COMPOSER_NO_INTERACTION',
+        'REPL_ID',
+      ];
+      if (aiAgentEnvVars.includes(key)) {
+        return false;
+      }
+
       return true;
     })
   );

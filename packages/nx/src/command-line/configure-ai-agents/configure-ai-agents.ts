@@ -218,10 +218,6 @@ export async function configureAiAgentsHandlerImpl(
   const detectedAgent = detectAiAgent();
   const agentsExplicitlyPassed = options.agents !== undefined;
 
-  // DEBUG
-  console.error(`[DEBUG] detectedAgent=${detectedAgent}, agentsExplicitlyPassed=${agentsExplicitlyPassed}, interactive=${options.interactive}, options.agents=${JSON.stringify(options.agents)}`);
-  console.error(`[DEBUG] nonConfigured=${nonConfiguredAgents.map(a=>a.name)}, partial=${partiallyConfiguredAgents.map(a=>a.name)}, fully=${fullyConfiguredAgents.map(a=>a.name)}, disabled=${disabledAgents.map(a=>a.name)}`);
-
   if (
     detectedAgent &&
     !agentsExplicitlyPassed &&

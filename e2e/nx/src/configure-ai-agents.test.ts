@@ -201,7 +201,6 @@ describe('configure-ai-agents', () => {
       // Start clean: remove all agent configs
       removeFile('CLAUDE.md');
       removeFile('.claude');
-      removeFile('GEMINI.md');
       removeFile('.gemini');
     });
 
@@ -247,10 +246,10 @@ describe('configure-ai-agents', () => {
     it('should update other outdated agents alongside the detected agent', () => {
       // Configure gemini fully first
       runCLI('configure-ai-agents --agents gemini --no-interactive');
-      expect(readFile('GEMINI.md')).toBeTruthy();
+      expect(readFile('AGENTS.md')).toBeTruthy();
 
       // Make gemini outdated
-      updateFile('GEMINI.md', (content: string) =>
+      updateFile('AGENTS.md', (content: string) =>
         content.replace('nx_docs', 'nx_docs_outdated')
       );
 
@@ -260,13 +259,13 @@ describe('configure-ai-agents', () => {
       });
 
       // Gemini should have been updated because it was outdated
-      expect(readFile('GEMINI.md')).not.toContain('nx_docs_outdated');
+      expect(readFile('AGENTS.md')).not.toContain('nx_docs_outdated');
       expect(output).toContain('configured successfully');
     });
 
     it('should list non-configured agents with a suggested command', () => {
       // Remove gemini config to make it non-configured
-      removeFile('GEMINI.md');
+      // Note: .gemini removal is sufficient — without settings.json, gemini is non-configured
       removeFile('.gemini');
 
       const output = runCLI('configure-ai-agents', {
@@ -284,7 +283,6 @@ describe('configure-ai-agents', () => {
       // Clean up both agents
       removeFile('CLAUDE.md');
       removeFile('.claude');
-      removeFile('GEMINI.md');
       removeFile('.gemini');
 
       // Explicitly pass --agents gemini — should ONLY configure gemini,
@@ -294,7 +292,7 @@ describe('configure-ai-agents', () => {
       });
 
       // Gemini should be configured because it was explicitly requested
-      expect(readFile('GEMINI.md')).toContain('# General Guidelines');
+      expect(readFile('AGENTS.md')).toContain('# General Guidelines');
 
       // Claude should NOT be configured — --agents overrides detection
       expect(() => readFile('CLAUDE.md')).toThrow();
@@ -328,7 +326,7 @@ describe('configure-ai-agents', () => {
       runCLI('configure-ai-agents --agents gemini --no-interactive');
 
       // Make gemini outdated while claude stays up-to-date
-      updateFile('GEMINI.md', (content: string) =>
+      updateFile('AGENTS.md', (content: string) =>
         content.replace('nx_docs', 'nx_docs_outdated')
       );
 
