@@ -211,56 +211,62 @@ export async function configureAiAgentsHandlerImpl(
     }
   }
 
-  // AI agent auto-mode: when an AI agent is detected and --agents is not
-  // explicitly passed, skip the interactive prompt. Auto-configure the
-  // detected agent (if needed) and any outdated agents. Report remaining
-  // non-configured agents with a suggested command.
+  // Automatic mode (no explicit --agents): update outdated agents and report
+  // non-configured ones. When an AI agent is detected, also configure the
+  // detected agent itself (even if non-configured or partial).
   const detectedAgent = detectAiAgent();
   const agentsExplicitlyPassed = options.agents !== undefined;
+  const isAutoMode =
+    !agentsExplicitlyPassed && (options.interactive === false || detectedAgent);
 
-  if (
-    detectedAgent &&
-    !agentsExplicitlyPassed &&
-    options.interactive !== false
-  ) {
-    const agentsToAutoConfig: Agent[] = [];
+  if (isAutoMode) {
+    const agentsToConfig: Agent[] = [];
+    const allConfigs = [
+      ...nonConfiguredAgents,
+      ...partiallyConfiguredAgents,
+      ...fullyConfiguredAgents,
+    ];
 
-    // Detected agent needs configuring if it's non-configured, partial, or outdated
-    const detectedIsNonConfigured = nonConfiguredAgents.some(
-      (a) => a.name === detectedAgent
-    );
-    const detectedIsPartial = partiallyConfiguredAgents.some(
-      (a) => a.name === detectedAgent
-    );
-    const detectedIsOutdated = fullyConfiguredAgents.some(
-      (a) => a.name === detectedAgent && a.outdated
-    );
+    // When an AI agent is detected, configure it if it needs it
+    if (detectedAgent) {
+      const detectedNeedsConfig =
+        nonConfiguredAgents.some((a) => a.name === detectedAgent) ||
+        partiallyConfiguredAgents.some((a) => a.name === detectedAgent) ||
+        fullyConfiguredAgents.some(
+          (a) => a.name === detectedAgent && a.outdated
+        );
 
-    if (detectedIsNonConfigured || detectedIsPartial || detectedIsOutdated) {
-      agentsToAutoConfig.push(detectedAgent);
-    }
-
-    // Also auto-configure any other outdated agents
-    for (const a of fullyConfiguredAgents) {
-      if (a.outdated && a.name !== detectedAgent) {
-        agentsToAutoConfig.push(a.name);
+      if (detectedNeedsConfig) {
+        agentsToConfig.push(detectedAgent);
       }
     }
 
-    if (agentsToAutoConfig.length > 0) {
+    // Update any other outdated agents
+    for (const a of fullyConfiguredAgents) {
+      if (a.outdated && !agentsToConfig.includes(a.name)) {
+        agentsToConfig.push(a.name);
+      }
+    }
+
+    const stillNonConfigured = nonConfiguredAgents.filter(
+      (a) => !agentsToConfig.includes(a.name)
+    );
+
+    const nothingToDoMessage = detectedAgent
+      ? `${
+          agentDisplayMap[detectedAgent] ?? detectedAgent
+        } configuration is up to date`
+      : 'All configured AI agents are up to date';
+
+    if (agentsToConfig.length > 0) {
       const configSpinner = ora(`Configuring agent(s)...`).start();
       try {
-        await configureAgents(agentsToAutoConfig, workspaceRoot, false);
+        await configureAgents(agentsToConfig, workspaceRoot, false);
         configSpinner.stop();
 
-        const allConfigs = [
-          ...nonConfiguredAgents,
-          ...partiallyConfiguredAgents,
-          ...fullyConfiguredAgents,
-        ];
         output.success({
           title: 'AI agents configured successfully',
-          bodyLines: agentsToAutoConfig.map((name) => {
+          bodyLines: agentsToConfig.map((name) => {
             const config = allConfigs.find((a) => a.name === name);
             return config
               ? `${config.displayName}: ${getAgentConfiguredDescription(config)}`
@@ -276,18 +282,10 @@ export async function configureAiAgentsHandlerImpl(
         process.exit(1);
       }
     } else {
-      // Detected agent is fully configured and up to date, no outdated agents
       output.success({
-        title: `${
-          agentDisplayMap[detectedAgent] ?? detectedAgent
-        } configuration is up to date`,
+        title: nothingToDoMessage,
       });
     }
-
-    // Report non-configured agents (that weren't just auto-configured)
-    const stillNonConfigured = nonConfiguredAgents.filter(
-      (a) => !agentsToAutoConfig.includes(a.name)
-    );
 
     if (stillNonConfigured.length > 0) {
       const agentNames = stillNonConfigured.map((a) => a.name);
@@ -304,6 +302,7 @@ export async function configureAiAgentsHandlerImpl(
     return;
   }
 
+  // Interactive mode (or non-interactive with explicit --agents)
   const allAgentChoices: AgentPromptChoice[] = [];
   const preselectedIndices: number[] = [];
   let currentIndex = 0;
@@ -364,7 +363,7 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   } else {
-    // in non-interactive mode, configure all
+    // non-interactive with explicit --agents: configure all requested
     selectedAgents = allAgentChoices.map((a) => a.name);
   }
 

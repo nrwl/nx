@@ -191,6 +191,75 @@ describe('configure-ai-agents', () => {
     });
   });
 
+  describe('--no-interactive without --agents (AI agent-like mode)', () => {
+    // Without explicit --agents, --no-interactive should behave like AI agent
+    // mode: update outdated agents only, report non-configured ones.
+
+    beforeAll(() => {
+      // Start clean: remove all agent configs
+      removeFile('CLAUDE.md');
+      removeFile('.claude');
+      removeFile('.gemini');
+      removeFile('AGENTS.md');
+      removeFile('opencode.json');
+      removeFile('.opencode');
+      removeFile('.codex');
+    });
+
+    it('should report all agents as not yet configured on a clean workspace', () => {
+      const output = runCLI('configure-ai-agents --no-interactive');
+
+      // Nothing should have been configured
+      expect(() => readFile('CLAUDE.md')).toThrow();
+
+      // Should report non-configured agents
+      expect(output).toContain('not yet configured');
+      expect(output).toContain('configure-ai-agents --agents');
+    });
+
+    it('should update outdated agents and report non-configured ones', () => {
+      // Configure claude first
+      runCLI('configure-ai-agents --agents claude --no-interactive');
+      expect(readFile('CLAUDE.md')).toContain('# General Guidelines');
+
+      // Make it outdated
+      updateFile('CLAUDE.md', (content: string) =>
+        content.replace('nx_docs', 'nx_docs_outdated')
+      );
+
+      const output = runCLI('configure-ai-agents --no-interactive');
+
+      // Should have updated the outdated claude config
+      expect(readFile('CLAUDE.md')).not.toContain('nx_docs_outdated');
+      expect(output).toContain('configured successfully');
+
+      // Should report non-configured agents
+      expect(output).toContain('not yet configured');
+    });
+
+    it('should report up-to-date when all configured agents are current', () => {
+      // Claude is already fully configured from previous test
+      const output = runCLI('configure-ai-agents --no-interactive');
+
+      expect(output).toContain('up to date');
+    });
+
+    it('should not configure partially configured agents', () => {
+      // Remove the rules file to make claude partially configured
+      removeFile('CLAUDE.md');
+
+      const output = runCLI('configure-ai-agents --no-interactive');
+
+      // Should NOT have restored the missing rules file — partial agents
+      // are not auto-configured (same as AI agent mode for non-detected agents)
+      expect(() => readFile('CLAUDE.md')).toThrow();
+      expect(output).toContain('up to date');
+
+      // Restore for subsequent tests
+      runCLI('configure-ai-agents --agents claude --no-interactive');
+    });
+  });
+
   describe('when running from a detected AI agent', () => {
     // Simulate Claude Code detection via CLAUDECODE env var.
     // No --no-interactive flag, no --agents flag: the command auto-detects
