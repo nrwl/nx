@@ -117,23 +117,23 @@ export type ImportAiOutputMessage =
 
 const AVAILABLE_OPTIONS: Record<string, ImportOptionInfo> = {
   sourceRepository: {
-    description: 'URL or path of the repository to import',
+    description: 'URL or path of the repository to import.',
     flag: '--sourceRepository',
     required: true,
   },
   ref: {
-    description: 'Branch to import from the source repository',
+    description: 'Branch to import from the source repository.',
     flag: '--ref',
     required: true,
   },
   source: {
     description:
-      'Directory within the source repo to import (blank = entire repo)',
+      'Directory within the source repo to import (blank = entire repo).',
     flag: '--source',
     required: false,
   },
   destination: {
-    description: 'Target directory in this workspace to import into',
+    description: 'Target directory in this workspace to import into.',
     flag: '--destination',
     required: true,
   },
