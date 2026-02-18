@@ -75,7 +75,7 @@ impl NxTaskHistory {
         self.db
             .prepare(
                 "SELECT hash from task_history
-                    WHERE hash IN rarray(?1)
+                    WHERE hash IN rarray(?1) AND status != 'stopped'
                     GROUP BY hash
                     HAVING COUNT(DISTINCT code) > 1
                 ",
