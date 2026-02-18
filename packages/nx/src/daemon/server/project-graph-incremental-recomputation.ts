@@ -66,8 +66,10 @@ export let fileMapWithFiles:
 export let currentProjectFileMapCache: FileMapCache | undefined;
 export let currentProjectGraph: ProjectGraph | undefined;
 
-const collectedUpdatedFiles = new Set<string>();
-const collectedDeletedFiles = new Set<string>();
+// Maps file path to a version counter that increments on each modification.
+// This lets us detect mid-flight re-modifications when clearing processed files.
+const collectedUpdatedFiles = new Map<string, number>();
+const collectedDeletedFiles = new Map<string, number>();
 const projectGraphRecomputationListeners = new Set<
   (
     projectGraph: ProjectGraph,
@@ -79,6 +81,8 @@ let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
+let fileChangeCounter = 0;
+let recomputationGeneration = 0;
 
 export async function getCachedSerializedProjectGraphPromise(): Promise<SerializedProjectGraph> {
   try {
@@ -167,14 +171,15 @@ export function addUpdatedAndDeletedFiles(
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
+  ++fileChangeCounter;
   for (let f of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(f);
-    collectedUpdatedFiles.add(f);
+    collectedUpdatedFiles.set(f, fileChangeCounter);
   }
 
   for (let f of deletedFiles) {
     collectedUpdatedFiles.delete(f);
-    collectedDeletedFiles.add(f);
+    collectedDeletedFiles.set(f, fileChangeCounter);
   }
 
   // Notify file change listeners immediately when files change
@@ -272,9 +277,6 @@ async function processCollectedUpdatedAndDeletedFiles(
         );
       }
     }
-
-    collectedUpdatedFiles.clear();
-    collectedDeletedFiles.clear();
   } catch (e) {
     // this is expected
     // for instance, project.json can be incorrect or a file we are trying to has
@@ -294,10 +296,17 @@ async function processCollectedUpdatedAndDeletedFiles(
 async function processFilesAndCreateAndSerializeProjectGraph(
   plugins: LoadedNxPlugin[]
 ): Promise<SerializedProjectGraph> {
+  const myGeneration = ++recomputationGeneration;
+
+  // Helper to check if this recomputation is stale (a newer one has started)
+  const isStale = () => myGeneration !== recomputationGeneration;
+
   try {
     performance.mark('hash-watched-changes-start');
-    const updatedFiles = [...collectedUpdatedFiles.values()];
-    const deletedFiles = [...collectedDeletedFiles.values()];
+    const updatedFilesSnapshot = new Map(collectedUpdatedFiles);
+    const deletedFilesSnapshot = new Map(collectedDeletedFiles);
+    const updatedFiles = [...updatedFilesSnapshot.keys()];
+    const deletedFiles = [...deletedFilesSnapshot.keys()];
     let updatedFileHashes = updateFilesInContext(
       workspaceRoot,
       updatedFiles,
@@ -312,8 +321,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     serverLogger.requestLog(
       `Updated workspace context based on watched changes, recomputing project graph...`
     );
-    serverLogger.requestLog([...updatedFiles.values()]);
-    serverLogger.requestLog([...deletedFiles]);
+    serverLogger.requestLog(updatedFiles);
+    serverLogger.requestLog(deletedFiles);
     const nxJson = readNxJson(workspaceRoot);
     global.NX_GRAPH_CREATION = true;
 
@@ -334,11 +343,36 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         throw e;
       }
     }
+
+    // Early exit if a newer recomputation has started - chain to the newer one
+    if (isStale()) {
+      return cachedSerializedProjectGraphPromise;
+    }
+
     await processCollectedUpdatedAndDeletedFiles(
       projectConfigurationsResult,
       updatedFileHashes,
       deletedFiles
     );
+
+    // Only remove files whose version matches the snapshot — if the version
+    // is higher, the file was modified again mid-flight and needs reprocessing.
+    for (const [f, version] of updatedFilesSnapshot) {
+      if (collectedUpdatedFiles.get(f) === version) {
+        collectedUpdatedFiles.delete(f);
+      }
+    }
+    for (const [f, version] of deletedFilesSnapshot) {
+      if (collectedDeletedFiles.get(f) === version) {
+        collectedDeletedFiles.delete(f);
+      }
+    }
+
+    // Early exit if a newer recomputation has started - chain to the newer one
+    if (isStale()) {
+      return cachedSerializedProjectGraphPromise;
+    }
+
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
 
     delete global.NX_GRAPH_CREATION;
