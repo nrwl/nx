@@ -257,7 +257,7 @@ class CLIOutput {
   }
 
   logRawLine(message: string) {
-    this.writeToStdOut(`${message}${EOL}`);
+    this.writeToStream(`${message}${EOL}`);
     this.addNewline();
   }
 
