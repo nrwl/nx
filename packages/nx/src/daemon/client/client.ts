@@ -83,6 +83,13 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+  type ConfigureAiAgentsStatusResponse,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -960,6 +967,20 @@ export class DaemonClient {
     const message: HandleSetNxConsolePreferenceAndInstallMessage = {
       type: SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
       preference,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getConfigureAiAgentsStatus(): Promise<ConfigureAiAgentsStatusResponse> {
+    const message: HandleGetConfigureAiAgentsStatusMessage = {
+      type: GET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  resetConfigureAiAgentsStatus(): Promise<{ success: boolean }> {
+    const message: HandleResetConfigureAiAgentsStatusMessage = {
+      type: RESET_CONFIGURE_AI_AGENTS_STATUS,
     };
     return this.sendToDaemonViaQueue(message);
   }

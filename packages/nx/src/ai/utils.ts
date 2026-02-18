@@ -154,16 +154,18 @@ async function getAgentConfiguration(
     }
     case 'copilot': {
       const rulesPath = agentsMdPath(workspaceRoot);
-      const hasInstalledVSCode = isEditorInstalled(SupportedEditor.VSCode);
-      const hasInstalledVSCodeInsiders = isEditorInstalled(
+      const hasInstalledVSCode = await isEditorInstalled(
+        SupportedEditor.VSCode
+      );
+      const hasInstalledVSCodeInsiders = await isEditorInstalled(
         SupportedEditor.VSCodeInsiders
       );
       const hasInstalledNxConsoleForVSCode =
         hasInstalledVSCode &&
-        !canInstallNxConsoleForEditor(SupportedEditor.VSCode);
+        !(await canInstallNxConsoleForEditor(SupportedEditor.VSCode));
       const hasInstalledNxConsoleForVSCodeInsiders =
         hasInstalledVSCodeInsiders &&
-        !canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+        !(await canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders));
 
       const agentsMdExists = existsSync(rulesPath);
 
@@ -180,10 +182,12 @@ async function getAgentConfiguration(
     }
     case 'cursor': {
       const rulesPath = agentsMdPath(workspaceRoot);
-      const hasInstalledCursor = isEditorInstalled(SupportedEditor.Cursor);
-      const hasInstalledNxConsole = !canInstallNxConsoleForEditor(
+      const hasInstalledCursor = await isEditorInstalled(
         SupportedEditor.Cursor
       );
+      const hasInstalledNxConsole = !(await canInstallNxConsoleForEditor(
+        SupportedEditor.Cursor
+      ));
       const agentsMdExists = existsSync(rulesPath);
 
       agentConfiguration = {

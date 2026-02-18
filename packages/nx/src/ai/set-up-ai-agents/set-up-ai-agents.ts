@@ -320,11 +320,11 @@ export async function setupAiAgentsGeneratorImpl(
     if (hasAgent('copilot')) {
       try {
         if (
-          isEditorInstalled(SupportedEditor.VSCode) &&
-          canInstallNxConsoleForEditor(SupportedEditor.VSCode)
+          (await isEditorInstalled(SupportedEditor.VSCode)) &&
+          (await canInstallNxConsoleForEditor(SupportedEditor.VSCode))
         ) {
           if (!check) {
-            installNxConsoleForEditor(SupportedEditor.VSCode);
+            await installNxConsoleForEditor(SupportedEditor.VSCode);
           }
           messages.push({
             title: `Installed Nx Console for VSCode`,
@@ -338,11 +338,11 @@ export async function setupAiAgentsGeneratorImpl(
       }
       try {
         if (
-          isEditorInstalled(SupportedEditor.VSCodeInsiders) &&
-          canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders)
+          (await isEditorInstalled(SupportedEditor.VSCodeInsiders)) &&
+          (await canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders))
         ) {
           if (!check) {
-            installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+            await installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
           }
           messages.push({
             title: `Installed Nx Console for VSCode Insiders`,
@@ -358,11 +358,11 @@ export async function setupAiAgentsGeneratorImpl(
     if (hasAgent('cursor')) {
       try {
         if (
-          isEditorInstalled(SupportedEditor.Cursor) &&
-          canInstallNxConsoleForEditor(SupportedEditor.Cursor)
+          (await isEditorInstalled(SupportedEditor.Cursor)) &&
+          (await canInstallNxConsoleForEditor(SupportedEditor.Cursor))
         ) {
           if (!check) {
-            installNxConsoleForEditor(SupportedEditor.Cursor);
+            await installNxConsoleForEditor(SupportedEditor.Cursor);
           }
           messages.push({
             title: `Installed Nx Console for Cursor`,

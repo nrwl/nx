@@ -552,6 +552,8 @@ export async function runCommandForTasks(
       printSummary();
     }
 
+    await printConfigureAiAgentsDisclaimer();
+
     await printNxKey();
 
     return {
@@ -561,6 +563,24 @@ export async function runCommandForTasks(
   } catch (e) {
     restoreTerminal?.();
     throw e;
+  }
+}
+
+async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+  try {
+    if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
+      return;
+    }
+    const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
+    if (outdatedAgents.length > 0) {
+      output.logRawLine(
+        output.dim(
+          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+        )
+      );
+    }
+  } catch {
+    // Silently ignore errors
   }
 }
 
