@@ -93,7 +93,14 @@ export class TaskOrchestrator {
   private resolveStopPromise: (() => void) | null = null;
   private stopRequested = false;
 
-  private runningContinuousTasks = new Map<string, RunningTask>();
+  private runningContinuousTasks = new Map<
+    string,
+    {
+      runningTask: RunningTask;
+      groupId: number;
+      ownsRunningTasksService: boolean;
+    }
+  >();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
   private runningDiscreteTasks = new Map<string, RunningTask>();
   private stoppingContinuousTasks = new Map<
@@ -101,7 +108,7 @@ export class TaskOrchestrator {
     'interrupted' | 'fulfilled'
   >();
   private stoppingDiscreteTasks = new Set<string>();
-  private taskExitHandled = new Map<string, Promise<void>>();
+  private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private _cleanupDone = false;
 
   private batchTaskResultsStreamed = new Set<string>();
@@ -605,7 +612,7 @@ export class TaskOrchestrator {
       const discreteExitHandled = new Promise<void>(
         (r) => (resolveDiscreteExit = r)
       );
-      this.taskExitHandled.set(task.id, discreteExitHandled);
+      this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
       const childProcess = await this.runTask(
         task,
@@ -631,7 +638,7 @@ export class TaskOrchestrator {
       await this.postRunSteps(results, doNotSkipCache, { groupId });
     } finally {
       if (resolveDiscreteExit) {
-        this.taskExitHandled.delete(task.id);
+        this.discreteTaskExitHandled.delete(task.id);
         resolveDiscreteExit();
       }
     }
@@ -847,7 +854,11 @@ export class TaskOrchestrator {
         task.id
       );
 
-      this.runningContinuousTasks.set(task.id, runningTask);
+      this.runningContinuousTasks.set(task.id, {
+        runningTask,
+        groupId,
+        ownsRunningTasksService: false,
+      });
       this.registerContinuousTaskExitHandler(runningTask, task, groupId, false);
 
       // task is already running by another process, we schedule the next tasks
@@ -896,7 +907,11 @@ export class TaskOrchestrator {
       pipeOutput
     );
     this.runningTasksService.addRunningTask(task.id);
-    this.runningContinuousTasks.set(task.id, childProcess);
+    this.runningContinuousTasks.set(task.id, {
+      runningTask: childProcess,
+      groupId,
+      ownsRunningTasksService: true,
+    });
     this.registerContinuousTaskExitHandler(childProcess, task, groupId, true);
     await this.scheduleNextTasksAndReleaseThreads();
 
@@ -1171,45 +1186,41 @@ export class TaskOrchestrator {
     groupId: number,
     ownsRunningTasksService: boolean
   ) {
-    let resolveExitHandled: () => void;
-    const exitHandled = new Promise<void>((r) => (resolveExitHandled = r));
-    this.taskExitHandled.set(task.id, exitHandled);
-
     runningTask.onExit(async (code) => {
-      try {
-        if (this.runningContinuousTasks.delete(task.id)) {
-          if (ownsRunningTasksService) {
-            this.runningTasksService.removeRunningTask(task.id);
-          }
-        }
+      // If cleanup already completed this task, nothing left to do
+      if (this.completedTasks[task.id] !== undefined) {
+        return;
+      }
 
-        task.endTime = Date.now();
-        const stoppingReason = this.stoppingContinuousTasks.get(task.id);
-        this.stoppingContinuousTasks.delete(task.id);
-        if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
-          if (stoppingReason === 'fulfilled') {
-            await this.complete(
-              [
-                {
-                  task,
-                  status: 'success',
-                  displayStatus: NativeTaskStatus.Stopped,
-                },
-              ],
-              groupId
-            );
-          } else {
-            await this.complete([{ task, status: 'stopped' }], groupId);
-          }
-        } else {
-          console.error(
-            `Task "${task.id}" is continuous but exited with code ${code}`
-          );
-          await this.complete([{ task, status: 'failure' }], groupId);
+      if (this.runningContinuousTasks.delete(task.id)) {
+        if (ownsRunningTasksService) {
+          this.runningTasksService.removeRunningTask(task.id);
         }
-      } finally {
-        resolveExitHandled();
-        this.taskExitHandled.delete(task.id);
+      }
+
+      task.endTime = Date.now();
+      const stoppingReason = this.stoppingContinuousTasks.get(task.id);
+      this.stoppingContinuousTasks.delete(task.id);
+      if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+        if (stoppingReason === 'fulfilled') {
+          await this.complete(
+            [
+              {
+                task,
+                status: 'success',
+                displayStatus: NativeTaskStatus.Stopped,
+              },
+            ],
+            groupId
+          );
+        } else {
+          await this.complete([{ task, status: 'stopped' }], groupId);
+        }
+      } else {
+        console.error(
+          `Task "${task.id}" is continuous but exited with code ${code}`
+        );
+        await this.complete([{ task, status: 'failure' }], groupId);
       }
     });
   }
@@ -1231,14 +1242,49 @@ export class TaskOrchestrator {
       this.stoppingDiscreteTasks.add(taskId);
     }
 
-    // Capture exit promises BEFORE killing (map may be modified during kills)
-    const exitPromises = Array.from(this.taskExitHandled.values());
+    // Snapshot continuous tasks before clearing the map.
+    // We clear first because complete() -> cleanUpUnneededContinuousTasks()
+    // iterates runningContinuousTasks and would re-kill already-stopping tasks.
+    const continuousSnapshot = Array.from(
+      this.runningContinuousTasks.entries()
+    );
+    this.runningContinuousTasks.clear();
 
+    // Complete continuous tasks directly — don't rely on onExit which may hang
+    // when grandchild processes keep the pty slave fd open.
+    for (const [
+      taskId,
+      { groupId, ownsRunningTasksService },
+    ] of continuousSnapshot) {
+      this.stoppingContinuousTasks.delete(taskId);
+      const task = this.taskGraph.tasks[taskId];
+      if (!task || this.completedTasks[taskId] !== undefined) continue;
+      if (ownsRunningTasksService) {
+        this.runningTasksService.removeRunningTask(taskId);
+      }
+      task.endTime = Date.now();
+      if (reason === 'fulfilled') {
+        await this.complete(
+          [
+            {
+              task,
+              status: 'success',
+              displayStatus: NativeTaskStatus.Stopped,
+            },
+          ],
+          groupId
+        );
+      } else {
+        await this.complete([{ task, status: 'stopped' }], groupId);
+      }
+    }
+
+    // Kill all processes
     this.forkedProcessTaskRunner.cleanup();
     await Promise.all([
-      ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
+      ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
-          await t.kill();
+          await runningTask.kill();
         } catch (e) {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         }
@@ -1250,11 +1296,12 @@ export class TaskOrchestrator {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         }
       }),
-      // Discrete tasks are killed via forkedProcessTaskRunner.cleanup() above
     ]);
 
-    // Wait for all exit handlers to complete their work
-    await Promise.all(exitPromises);
+    // Discrete exit promises resolve promptly (process kill → getResults →
+    // postRunSteps → resolve). Await them so lifecycle endTasks() completes
+    // before run() returns and endCommand() is called.
+    await Promise.all(this.discreteTaskExitHandled.values());
   }
 
   private setupSignalHandlers() {
@@ -1302,12 +1349,12 @@ export class TaskOrchestrator {
 
     for (const taskId of this.runningContinuousTasks.keys()) {
       if (!neededContinuousTasks.has(taskId)) {
-        const runningTask = this.runningContinuousTasks.get(taskId);
-        if (runningTask) {
+        const entry = this.runningContinuousTasks.get(taskId);
+        if (entry) {
           // Mark as intentional kill before calling kill()
           // onExit will see this and use success/Stopped
           this.stoppingContinuousTasks.set(taskId, 'fulfilled');
-          runningTask.kill();
+          entry.runningTask.kill();
         }
       }
     }
