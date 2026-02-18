@@ -48,6 +48,8 @@ export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
 export {
+  PluginCache,
+  readPluginCache,
   safeWritePluginCache,
   safeWriteCache,
 } from './utils/plugin-cache-utils';
