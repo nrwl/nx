@@ -1,6 +1,5 @@
 import {
   buildImportNeedsOptionsResult,
-  buildImportNeedsPluginsResult,
   buildImportSuccessResult,
   buildImportErrorResult,
   determineImportErrorCode,
@@ -31,20 +30,6 @@ describe('import ai-output', () => {
         'https://github.com/org/repo'
       );
       expect(result.exampleCommand).toContain('https://github.com/org/repo');
-    });
-  });
-
-  describe('buildImportNeedsPluginsResult', () => {
-    it('should list detected plugins with options', () => {
-      const result = buildImportNeedsPluginsResult(
-        [{ name: '@nx/vite', reason: 'Found vite' }],
-        'nx import repo dest --ref main'
-      );
-      expect(result.inputType).toBe('plugins');
-      expect(result.detectedPlugins).toHaveLength(1);
-      expect(result.options).toContain('--plugins=skip');
-      expect(result.options).toContain('--plugins=all');
-      expect(result.options).toContain('--plugins=@nx/vite');
     });
   });
 

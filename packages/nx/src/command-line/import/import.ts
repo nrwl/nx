@@ -40,13 +40,11 @@ import {
   logProgress,
   writeAiOutput,
   buildImportNeedsOptionsResult,
-  buildImportNeedsPluginsResult,
   buildImportSuccessResult,
   buildImportErrorResult,
   determineImportErrorCode,
   type ImportWarning,
 } from './utils/ai-output';
-import type { DetectedPlugin } from '../ai/ai-output';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -345,22 +343,13 @@ export async function importHandler(options: ImportOptions) {
       const detected = await detectPlugins(nxJson, packageJson, false, true);
       const detectedPluginNames = detected.plugins;
 
-      if (parsedPlugins === 'all') {
+      if (parsedPlugins === 'all' || parsedPlugins === undefined) {
+        // Default to installing all detected plugins in agent mode
         plugins = detectedPluginNames;
         updatePackageScripts = detected.updatePackageScripts;
       } else if (Array.isArray(parsedPlugins)) {
         plugins = parsedPlugins;
         updatePackageScripts = true;
-      } else if (detectedPluginNames.length > 0) {
-        // No --plugins flag and plugins detected — return needs_input
-        const detectedPluginsInfo: DetectedPlugin[] = detectedPluginNames.map(
-          (name) => ({ name, reason: 'Detected in imported code' })
-        );
-        const importCmd = `nx import ${sourceRepository} ${destination} --ref ${ref}${source ? ` --source ${source}` : ''}`;
-        writeAiOutput(
-          buildImportNeedsPluginsResult(detectedPluginsInfo, importCmd)
-        );
-        process.exit(0);
       } else {
         plugins = [];
         updatePackageScripts = false;

@@ -8,7 +8,6 @@ import {
   writeAiOutput,
   logProgress,
   writeErrorLog,
-  type DetectedPlugin,
   type NextStep,
   type UserNextSteps,
   type PluginWarning,
@@ -58,18 +57,6 @@ export interface ImportNeedsOptionsResult {
   exampleCommand: string;
 }
 
-export interface ImportNeedsPluginsResult {
-  stage: 'needs_input';
-  success: false;
-  inputType: 'plugins';
-  message: string;
-  detectedPlugins: DetectedPlugin[];
-  options: string[];
-  recommendedOption: string;
-  recommendedReason: string;
-  exampleCommand: string;
-}
-
 export interface ImportSuccessResult {
   stage: 'complete';
   success: true;
@@ -111,7 +98,6 @@ export interface ImportErrorResult {
 export type ImportAiOutputMessage =
   | { stage: ImportProgressStage; message: string }
   | ImportNeedsOptionsResult
-  | ImportNeedsPluginsResult
   | ImportSuccessResult
   | ImportErrorResult;
 
@@ -152,25 +138,6 @@ export function buildImportNeedsOptionsResult(
     missingFields,
     availableOptions: AVAILABLE_OPTIONS,
     exampleCommand: `nx import ${exampleRepo} --ref=main --source=apps/my-app --destination=apps/my-app`,
-  };
-}
-
-export function buildImportNeedsPluginsResult(
-  detectedPlugins: DetectedPlugin[],
-  importCommand: string
-): ImportNeedsPluginsResult {
-  const pluginList = detectedPlugins.map((p) => p.name).join(',');
-  return {
-    stage: 'needs_input',
-    success: false,
-    inputType: 'plugins',
-    message:
-      'Plugin selection required. Ask the user which plugins to install, then run again with --plugins flag.',
-    detectedPlugins,
-    options: ['--plugins=skip', '--plugins=all', `--plugins=${pluginList}`],
-    recommendedOption: '--plugins=skip',
-    recommendedReason: 'Plugins can be added later with nx add.',
-    exampleCommand: `${importCommand} --plugins=all`,
   };
 }
 
