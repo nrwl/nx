@@ -1,144 +1,151 @@
 ---
 title: React Plugin for Nx
-description: Learn how to use the @nx/react plugin to create and manage React applications and libraries in your Nx workspace, including components, hooks, and more.
+description: Create and manage React applications and libraries in your Nx workspace with generators for apps, libraries, and support for Module Federation.
 keywords: [react]
 sidebar:
   label: 'Introduction'
+  order: 1
 filter: 'type:References'
 ---
 
-The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
-It provides:
+The React plugin for Nx, `@nx/react`, provides generators for [applications and libraries](#generate-react-applications-and-libraries), executors for [Module Federation](/docs/technologies/react/guides/module-federation-with-ssr), and [library build support](/docs/concepts/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain.
 
-- Integration with libraries such as Jest, Cypress, and Storybook.
-- Generators for applications, libraries, components, hooks, and more.
-- Library build support for publishing packages to npm or other registries.
-- Utilities for automatic workspace refactoring.
+You don't need the plugin to use React with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin simplifies scaffolding and code generation.
+
+{% aside type="tip" title="Using a React Meta-Framework?" %}
+If you're building with **Next.js** or **Remix**, use their dedicated plugins which include inferred task support. See the [Next.js plugin](/docs/technologies/react/next/introduction) or [Remix plugin](/docs/technologies/react/remix/introduction) hub pages. For **React Router** in framework mode, see the [React Router guide](/docs/technologies/react/guides/react-router).
+{% /aside %}
 
 ## Setting Up @nx/react
 
-### Generating a new Workspace
-
-To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
-
-{% aside type="note" title="React Tutorial" %}
-For a full tutorial experience, follow the [React Monorepo Tutorial](/docs/getting-started/tutorials/react-monorepo-tutorial)
-{% /aside %}
-
-### Installation
+### Add to an Existing Nx Workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/react` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
-
-In any Nx workspace, you can install `@nx/react` by running the following command:
 
 ```shell
 nx add @nx/react
 ```
 
-This will install the correct version of `@nx/react`.
+### Verification
 
-## Using the @nx/react Plugin
+{% steps %}
 
-### Creating Applications and Libraries
+1. Check that `@nx/react` is listed:
 
-You can add a new application with the following:
+   ```shell
+   nx report
+   ```
 
-```shell
-nx g @nx/react:app apps/my-new-app
-```
+2. Verify generators are available:
 
-To start the application in development mode, run `nx serve my-new-app`.
+   ```shell
+   nx list @nx/react
+   ```
 
-And add a new library as follows:
+{% /steps %}
 
-```shell
-nx g @nx/react:lib libs/my-new-lib
-
-# If you want the library to be buildable or publishable to npm
-nx g @nx/react:lib libs/my-new-lib --bundler=vite
-nx g @nx/react:lib libs/my-new-lib --bundler=rollup
-nx g @nx/react:lib libs/my-new-lib \
---publishable \
---importPath=@myorg/my-new-lib
-```
-
-Read more about [building and publishing libraries here](/docs/concepts/buildable-and-publishable-libraries).
-
-### Creating Components
-
-Adding a component to an existing project can be done with:
+### Create a New Workspace
 
 ```shell
-nx g @nx/react:component libs/my-new-lib/src/lib/my-new-component
-
-# Note: If you want to export the component
-# from the library use  --export
-nx g @nx/react:component libs/my-new-lib/src/lib/my-new-component --export
+npx create-nx-workspace@latest --template=nrwl/react-template
 ```
 
-Replace `my-new-app` and `my-new-lib` with the name of your projects.
+{% aside type="tip" title="Tutorial" %}
+For a guided walkthrough, follow the [React Monorepo Tutorial](/docs/getting-started/tutorials/react-monorepo-tutorial).
+{% /aside %}
 
-### Creating Hooks
-
-If you want to add a new hook, run the following
+### Generate a New Application
 
 ```shell
-nx g @nx/react:hook libs/my-new-lib/src/lib/my-new-hook
+nx g @nx/react:app apps/my-app
 ```
 
-Replace `my-new-lib` with the name of your project.
+To start the application in development mode, run `nx serve my-app`. Read more about the options available for the [application generator](/docs/technologies/react/generators#application).
 
-## Using React
+#### Choose a Bundler
 
-### Testing Projects
+The `--bundler` option selects the build tool for your application or buildable library. You can learn more about the specific bundler you scaffolded your project with on the bundler's plugin page:
 
-You can run unit tests with:
+- [Vite](/docs/technologies/build-tools/vite/introduction) (Recommended)
+- [Webpack](/docs/technologies/build-tools/webpack/introduction)
+- [Rspack](/docs/technologies/build-tools/rspack/introduction)
+- [Rollup](/docs/technologies/build-tools/rollup/introduction)
+
+### Generate a New Library
 
 ```shell
-nx test my-new-app
-nx test my-new-lib
+nx g @nx/react:lib libs/my-lib
+
+# With a bundler for buildable/publishable libraries
+nx g @nx/react:lib libs/my-lib --bundler=vite
+nx g @nx/react:lib libs/my-lib --bundler=rollup
+nx g @nx/react:lib libs/my-lib --publishable --importPath=@myorg/my-lib
 ```
 
-Replace `my-new-app` with the name or your project. This command works for both applications and libraries.
+The same [bundler options](#choose-a-bundler) apply when creating buildable libraries. Read more about the options available for the [library generator](/docs/technologies/react/generators#library).
+You can also read more about [buildable and publishable libraries](/docs/concepts/buildable-and-publishable-libraries).
 
-You can also run E2E tests for applications:
+### Serve Applications
 
 ```shell
-nx e2e my-new-app-e2e
+nx serve my-app
 ```
 
-Replace `my-new-app-e2e` with the name or your project with `-e2e` appended.
+This starts the development server with hot module replacement so you can iterate on your application locally.
 
-### Building Projects
-
-React applications can be build with:
+### Build Projects
 
 ```shell
-nx build my-new-app
+nx build my-app
+nx build my-lib
 ```
 
-And if you generated a library with `--bundler` specified, then you can build a library as well:
+Build output goes to the `dist` folder by default. You can customize the output folder by setting `outputPath` in the [project's configuration file](/docs/reference/project-configuration).
+
+Nx [caches build results](/docs/features/cache-task-results) automatically. Subsequent builds of unchanged projects restore from cache.
+
+### View Project Configuration
+
+To see the full configuration for a project:
 
 ```shell
-nx build my-new-lib
+nx show project my-app
 ```
 
-The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the
-project's `project.json` file.
+Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-The application in `dist` is deployable, and you can try it out locally with:
+For full generator and executor option lists, see the [generators reference](/docs/technologies/react/generators) and [executors reference](/docs/technologies/react/executors).
+
+## CI Considerations
+
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+
+### Build and Test Only What Changed
 
 ```shell
-npx http-server dist/apps/my-new-app
+nx affected -t build test lint
 ```
 
-The library in `dist` is publishable to npm or a private registry.
+This uses the [project graph](/docs/features/explore-graph) to determine which projects are [affected](/docs/features/ci-features/affected) by your changes and only runs tasks for those.
 
-## More Documentation
+### Remote Caching
 
-- [React Monorepo Tutorial](/docs/getting-started/tutorials/react-monorepo-tutorial)
-- [Using Cypress](/docs/technologies/test-tools/cypress/introduction)
-- [Using Jest](/docs/technologies/test-tools/jest/introduction)
-- [Using Storybook](/docs/technologies/test-tools/storybook/guides/overview-react)
+Share build and test cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
+
+```shell
+nx connect
+```
+
+## What's Next
+
+{% cardgrid %}
+{% linkcard title="React Monorepo Tutorial" description="Build a React monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/react-monorepo-tutorial" /%}
+{% linkcard title="React Router Guide" description="Set up React Router in framework mode with Nx." href="/docs/technologies/react/guides/react-router" /%}
+{% linkcard title="Module Federation with SSR" description="Configure Module Federation with server-side rendering." href="/docs/technologies/react/guides/module-federation-with-ssr" /%}
+{% linkcard title="Next.js Plugin" description="Use Nx with Next.js for inferred tasks and generators." href="/docs/technologies/react/next/introduction" /%}
+{% linkcard title="Generators Reference" description="Full API reference for @nx/react generators." href="/docs/technologies/react/generators" /%}
+{% linkcard title="Executors Reference" description="Full API reference for @nx/react executors." href="/docs/technologies/react/executors" /%}
+{% /cardgrid %}
