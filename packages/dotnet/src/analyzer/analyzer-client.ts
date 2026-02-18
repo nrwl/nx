@@ -1,16 +1,12 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import {
-  logger,
-  workspaceRoot,
-  ProjectConfiguration,
-  writeJsonFile,
-} from '@nx/devkit';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
 
 export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration
@@ -52,19 +48,7 @@ function writeAnalyzerCache(
 ): void {
   analyzerCaches.set(optionsHash, cache);
   const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  const cacheDir = dirname(cacheFilePath);
-  if (!existsSync(cacheDir)) {
-    mkdirSync(cacheDir, { recursive: true });
-  }
-  try {
-    writeJsonFile(cacheFilePath, cache);
-  } catch (error) {
-    logger.warn(
-      `Failed to write .NET analyzer cache to ${cacheFilePath}: ${
-        (error as Error).message
-      }`
-    );
-  }
+  safeWritePluginCache(cacheFilePath, cache);
 }
 
 /**
