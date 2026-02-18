@@ -1,12 +1,12 @@
 import {
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
   existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   PluginCache,
   readPluginCache,
@@ -22,103 +22,127 @@ describe('plugin-cache-utils', () => {
   });
 
   describe('PluginCache', () => {
-    it('should track access timestamps on get', () => {
-      const cache = new PluginCache<string>({ a: '1', b: '2' }, {});
-      const before = Date.now();
-      const _val = cache.data['a'];
-      const after = Date.now();
+    it('should move key to end of accessOrder on get', () => {
+      const cache = new PluginCache<string>({ a: '1', b: '2', c: '3' }, [
+        'a',
+        'b',
+        'c',
+      ]);
+
+      let _ = cache.data['a']; // access 'a', moves to end
 
       const serialized = cache.toSerializable();
-      expect(serialized.accessedAt['a']).toBeGreaterThanOrEqual(before);
-      expect(serialized.accessedAt['a']).toBeLessThanOrEqual(after);
-      // 'b' was not accessed
-      expect(serialized.accessedAt['b']).toBeUndefined();
+      expect(serialized.accessOrder).toEqual(['b', 'c', 'a']);
     });
 
-    it('should track access timestamps on set', () => {
-      const cache = new PluginCache<string>();
-      const before = Date.now();
+    it('should add key to end of accessOrder on set', () => {
+      const cache = new PluginCache<string>({}, []);
       cache.data['x'] = 'hello';
-      const after = Date.now();
+      cache.data['y'] = 'world';
 
       const serialized = cache.toSerializable();
       expect(serialized.entries['x']).toBe('hello');
-      expect(serialized.accessedAt['x']).toBeGreaterThanOrEqual(before);
-      expect(serialized.accessedAt['x']).toBeLessThanOrEqual(after);
+      expect(serialized.entries['y']).toBe('world');
+      expect(serialized.accessOrder).toEqual(['x', 'y']);
     });
 
-    it('should clean up accessedAt on delete', () => {
-      const cache = new PluginCache<string>({ a: '1' }, { a: 100 });
+    it('should move existing key to end on set', () => {
+      const cache = new PluginCache<string>({ a: '1', b: '2' }, ['a', 'b']);
+      cache.data['a'] = 'updated'; // re-set 'a', moves to end
+
+      const serialized = cache.toSerializable();
+      expect(serialized.accessOrder).toEqual(['b', 'a']);
+    });
+
+    it('should remove key from accessOrder on delete', () => {
+      const cache = new PluginCache<string>({ a: '1', b: '2' }, ['a', 'b']);
       delete cache.data['a'];
 
       const serialized = cache.toSerializable();
       expect(serialized.entries['a']).toBeUndefined();
-      expect(serialized.accessedAt['a']).toBeUndefined();
+      expect(serialized.accessOrder).toEqual(['b']);
     });
 
     it('should support Object.keys and in operator', () => {
-      const cache = new PluginCache<string>({ a: '1', b: '2' }, {});
+      const cache = new PluginCache<string>({ a: '1', b: '2' }, ['a', 'b']);
       expect(Object.keys(cache.data)).toEqual(['a', 'b']);
       expect('a' in cache.data).toBe(true);
       expect('c' in cache.data).toBe(false);
     });
 
-    it('should evict oldest 50% by accessedAt timestamp', () => {
+    it('should evict oldest 50% from front of accessOrder', () => {
       const cache = new PluginCache<string>(
         { old1: 'a', old2: 'b', new1: 'c', new2: 'd' },
-        { old1: 100, old2: 200, new1: 300, new2: 400 }
+        ['old1', 'old2', 'new1', 'new2']
       );
 
       const evicted = cache.evictOldestHalf();
       const serialized = evicted.toSerializable();
 
-      expect(Object.keys(serialized.entries)).toEqual(['new1', 'new2']);
-      expect(serialized.entries['new1']).toBe('c');
-      expect(serialized.entries['new2']).toBe('d');
-      expect(serialized.accessedAt['new1']).toBe(300);
-      expect(serialized.accessedAt['new2']).toBe(400);
+      expect(serialized.accessOrder).toEqual(['new1', 'new2']);
+      expect(serialized.entries).toEqual({ new1: 'c', new2: 'd' });
     });
 
-    it('should treat missing accessedAt as 0 during eviction', () => {
-      const cache = new PluginCache<string>(
-        { stale: 'a', fresh: 'b' },
-        { fresh: 999 }
-        // 'stale' has no accessedAt — treated as 0
-      );
+    it('should evict majority when odd count', () => {
+      const cache = new PluginCache<string>({ a: '1', b: '2', c: '3' }, [
+        'a',
+        'b',
+        'c',
+      ]);
 
       const evicted = cache.evictOldestHalf();
       const serialized = evicted.toSerializable();
 
-      expect(Object.keys(serialized.entries)).toEqual(['fresh']);
+      // ceil(3/2) = 2 evicted, 1 remains
+      expect(serialized.accessOrder).toEqual(['c']);
+      expect(serialized.entries).toEqual({ c: '3' });
     });
   });
 
   describe('readPluginCache', () => {
-    it('should read new format with entries and accessedAt', () => {
+    it('should read current format with entries and accessOrder', () => {
       const cachePath = join(tempDir, 'cache.json');
       writeFileSync(
         cachePath,
         JSON.stringify({
-          entries: { a: '1' },
-          accessedAt: { a: 500 },
+          entries: { a: '1', b: '2' },
+          accessOrder: ['b', 'a'],
         })
       );
 
       const cache = readPluginCache<string>(cachePath);
       expect(cache.data['a']).toBe('1');
+      expect(cache.toSerializable().accessOrder).toContain('a');
+      expect(cache.toSerializable().accessOrder).toContain('b');
     });
 
-    it('should migrate old format (plain Record) with accessedAt = 0', () => {
-      const cachePath = join(tempDir, 'old-cache.json');
+    it('should migrate previous timestamp format', () => {
+      const cachePath = join(tempDir, 'old-ts-cache.json');
+      writeFileSync(
+        cachePath,
+        JSON.stringify({
+          entries: { stale: '1', fresh: '2' },
+          accessedAt: { stale: 100, fresh: 999 },
+        })
+      );
+
+      const cache = readPluginCache<string>(cachePath);
+      const serialized = cache.toSerializable();
+
+      // Should be sorted by accessedAt: stale (100) before fresh (999)
+      expect(serialized.accessOrder).toEqual(['stale', 'fresh']);
+      expect(serialized.entries).toEqual({ stale: '1', fresh: '2' });
+    });
+
+    it('should migrate legacy plain Record format', () => {
+      const cachePath = join(tempDir, 'legacy-cache.json');
       writeFileSync(cachePath, JSON.stringify({ a: '1', b: '2' }));
 
       const cache = readPluginCache<string>(cachePath);
       const serialized = cache.toSerializable();
 
-      expect(serialized.entries['a']).toBe('1');
-      expect(serialized.entries['b']).toBe('2');
-      expect(serialized.accessedAt['a']).toBe(0);
-      expect(serialized.accessedAt['b']).toBe(0);
+      expect(serialized.entries).toEqual({ a: '1', b: '2' });
+      expect(serialized.accessOrder).toEqual(['a', 'b']);
     });
 
     it('should return empty cache if file does not exist', () => {
@@ -136,54 +160,61 @@ describe('plugin-cache-utils', () => {
   });
 
   describe('safeWritePluginCache', () => {
-    it('should write cache in new format with entries and accessedAt', () => {
+    it('should write cache with entries and accessOrder', () => {
       const cachePath = join(tempDir, 'plugin-cache.json');
-      const cache = new PluginCache<string>({ a: '1' }, { a: 100 });
+      const cache = new PluginCache<string>({ a: '1' }, ['a']);
 
       safeWritePluginCache(cachePath, cache);
 
       const written = JSON.parse(readFileSync(cachePath, 'utf-8'));
       expect(written.entries).toEqual({ a: '1' });
-      expect(written.accessedAt).toEqual({ a: 100 });
+      expect(written.accessOrder).toEqual(['a']);
     });
 
     it('should evict oldest 50% on first failure and retry', () => {
       const cachePath = join(tempDir, 'plugin-cache.json');
 
       const entries: Record<string, any> = {};
-      const accessedAt: Record<string, number> = {};
+      const accessOrder: string[] = [];
       for (let i = 0; i < 10; i++) {
         entries[`key${i}`] = `value${i}`;
-        accessedAt[`key${i}`] = i * 100; // key0=0, key1=100, ..., key9=900
+        accessOrder.push(`key${i}`);
       }
       // Add circular ref in oldest entry to force first write to fail
       const circular: any = { self: null };
       circular.self = circular;
       entries['key0'] = circular;
 
-      const cache = new PluginCache(entries, accessedAt);
+      const cache = new PluginCache(entries, accessOrder);
       safeWritePluginCache(cachePath, cache);
 
-      // After eviction of oldest 50% (key0-key4), remaining keys should be writable
+      // key0-key4 evicted (front of queue), key5-key9 remain
       const written = JSON.parse(readFileSync(cachePath, 'utf-8'));
       expect(Object.keys(written.entries).length).toBe(5);
       expect(written.entries['key5']).toBe('value5');
       expect(written.entries['key9']).toBe('value9');
       expect(written.entries['key0']).toBeUndefined();
+      expect(written.accessOrder).toEqual([
+        'key5',
+        'key6',
+        'key7',
+        'key8',
+        'key9',
+      ]);
     });
 
     it('should wipe cache file on total failure', () => {
       const cachePath = join(tempDir, 'plugin-cache.json');
       const entries: Record<string, any> = {};
-      const accessedAt: Record<string, number> = {};
+      const accessOrder: string[] = [];
       for (let i = 0; i < 4; i++) {
         const circular: any = { self: null };
         circular.self = circular;
         entries[`key${i}`] = circular;
-        accessedAt[`key${i}`] = i * 100;
+        accessOrder.push(`key${i}`);
       }
 
-      const cache = new PluginCache(entries, accessedAt);
+      const cache = new PluginCache(entries, accessOrder);
       safeWritePluginCache(cachePath, cache);
 
       expect(existsSync(cachePath)).toBe(false);
@@ -192,7 +223,7 @@ describe('plugin-cache-utils', () => {
     it('should write hash file only after successful cache write', () => {
       const cachePath = join(tempDir, 'plugin-cache.json');
       const hashPath = join(tempDir, 'plugin-cache.hash');
-      const cache = new PluginCache<string>({ a: '1' }, { a: 100 });
+      const cache = new PluginCache<string>({ a: '1' }, ['a']);
 
       safeWritePluginCache(cachePath, cache, {
         hashPath,
@@ -207,15 +238,15 @@ describe('plugin-cache-utils', () => {
       const hashPath = join(tempDir, 'plugin-cache.hash');
 
       const entries: Record<string, any> = {};
-      const accessedAt: Record<string, number> = {};
+      const accessOrder: string[] = [];
       for (let i = 0; i < 4; i++) {
         const circular: any = { self: null };
         circular.self = circular;
         entries[`key${i}`] = circular;
-        accessedAt[`key${i}`] = i;
+        accessOrder.push(`key${i}`);
       }
 
-      const cache = new PluginCache(entries, accessedAt);
+      const cache = new PluginCache(entries, accessOrder);
       safeWritePluginCache(cachePath, cache, {
         hashPath,
         hash: 'abc123',

@@ -13,51 +13,62 @@ import { logger } from './logger';
  */
 interface PluginCacheData<T> {
   entries: Record<string, T>;
-  accessedAt: Record<string, number>;
+  accessOrder: string[];
 }
 
 /**
- * A plugin cache that tracks access timestamps for LRU eviction.
+ * A plugin cache that tracks access order for LRU eviction.
  *
  * The `data` property returns a Proxy-backed object that transparently
- * records `Date.now()` on every `get` and `set`, so plugins can keep
- * using `cache.data[hash]` syntax unchanged.
+ * moves keys to the end of an access-order queue on every `get` and `set`,
+ * so plugins can keep using `cache.data[hash]` syntax unchanged.
+ *
+ * Eviction simply splices the first half of the queue — the least recently
+ * used keys.
  */
 export class PluginCache<T> {
   private entries: Record<string, T>;
-  private accessedAt: Record<string, number>;
+  private accessOrder: string[];
   private _proxy: Record<string, T> | null = null;
 
-  constructor(
-    entries: Record<string, T> = {},
-    accessedAt: Record<string, number> = {}
-  ) {
+  constructor(entries: Record<string, T> = {}, accessOrder: string[] = []) {
     this.entries = entries;
-    this.accessedAt = accessedAt;
+    this.accessOrder = accessOrder;
+  }
+
+  private touch(key: string): void {
+    const idx = this.accessOrder.indexOf(key);
+    if (idx !== -1) {
+      this.accessOrder.splice(idx, 1);
+    }
+    this.accessOrder.push(key);
   }
 
   /**
    * Proxy-backed record. Property access and assignment both
-   * update the LRU timestamp for the accessed key.
+   * move the key to the end of the access-order queue (most recent).
    */
   get data(): Record<string, T> {
     if (!this._proxy) {
       this._proxy = new Proxy(this.entries, {
         get: (target, prop, receiver) => {
           if (typeof prop === 'string' && prop in target) {
-            this.accessedAt[prop] = Date.now();
+            this.touch(prop);
           }
           return Reflect.get(target, prop, receiver);
         },
         set: (target, prop, value, receiver) => {
           if (typeof prop === 'string') {
-            this.accessedAt[prop] = Date.now();
+            this.touch(prop);
           }
           return Reflect.set(target, prop, value, receiver);
         },
         deleteProperty: (target, prop) => {
           if (typeof prop === 'string') {
-            delete this.accessedAt[prop];
+            const idx = this.accessOrder.indexOf(prop);
+            if (idx !== -1) {
+              this.accessOrder.splice(idx, 1);
+            }
           }
           return Reflect.deleteProperty(target, prop);
         },
@@ -73,46 +84,39 @@ export class PluginCache<T> {
   }
 
   /**
-   * Returns the serializable cache data (entries + accessedAt).
+   * Returns the serializable cache data (entries + accessOrder).
    */
   toSerializable(): PluginCacheData<T> {
     return {
       entries: this.entries,
-      accessedAt: this.accessedAt,
+      accessOrder: this.accessOrder,
     };
   }
 
   /**
-   * Returns a new PluginCache with the oldest 50% of entries removed
-   * (by accessedAt timestamp).
+   * Evicts the oldest 50% of entries (front of the access-order queue)
+   * and returns a new PluginCache with the remaining entries.
    */
   evictOldestHalf(): PluginCache<T> {
-    const keys = Object.keys(this.entries);
-    if (keys.length === 0) return new PluginCache<T>();
+    if (this.accessOrder.length === 0) return new PluginCache<T>();
 
-    // Sort by accessedAt ascending (oldest first)
-    const sorted = keys.sort(
-      (a, b) => (this.accessedAt[a] ?? 0) - (this.accessedAt[b] ?? 0)
+    const toDelete = this.accessOrder.splice(
+      0,
+      Math.ceil(this.accessOrder.length / 2)
     );
-    const keepFrom = Math.ceil(sorted.length / 2);
-
-    const newEntries: Record<string, T> = {};
-    const newAccessedAt: Record<string, number> = {};
-    for (let i = keepFrom; i < sorted.length; i++) {
-      const key = sorted[i];
-      newEntries[key] = this.entries[key];
-      newAccessedAt[key] = this.accessedAt[key] ?? 0;
+    for (const key of toDelete) {
+      delete this.entries[key];
     }
-    return new PluginCache<T>(newEntries, newAccessedAt);
+    return new PluginCache<T>(this.entries, this.accessOrder);
   }
 }
 
 /**
  * Reads a plugin cache from disk, returning a PluginCache instance.
  *
- * Backward compatible: if the file contains a plain Record<string, T>
- * (old format without accessedAt), all entries get accessedAt = 0 so
- * they are first to be evicted.
+ * Backward compatible:
+ * - Old format (plain Record<string, T>): all keys go into accessOrder as-is
+ * - Previous timestamp format ({ entries, accessedAt }): keys sorted by timestamp
  */
 export function readPluginCache<T>(cachePath: string): PluginCache<T> {
   try {
@@ -124,23 +128,33 @@ export function readPluginCache<T>(cachePath: string): PluginCache<T> {
     }
     const raw = JSON.parse(readFileSync(cachePath, 'utf-8'));
 
-    // New format: { entries, accessedAt }
+    // Current format: { entries, accessOrder }
+    if (
+      raw &&
+      typeof raw === 'object' &&
+      'entries' in raw &&
+      'accessOrder' in raw &&
+      Array.isArray(raw.accessOrder)
+    ) {
+      return new PluginCache<T>(raw.entries, raw.accessOrder);
+    }
+
+    // Previous timestamp format: { entries, accessedAt }
     if (
       raw &&
       typeof raw === 'object' &&
       'entries' in raw &&
       'accessedAt' in raw
     ) {
-      return new PluginCache<T>(raw.entries, raw.accessedAt);
+      const accessOrder = Object.keys(raw.entries).sort(
+        (a, b) => (raw.accessedAt[a] ?? 0) - (raw.accessedAt[b] ?? 0)
+      );
+      return new PluginCache<T>(raw.entries, accessOrder);
     }
 
-    // Old format: plain Record<string, T> — migrate with accessedAt = 0
+    // Legacy format: plain Record<string, T>
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-      const accessedAt: Record<string, number> = {};
-      for (const key of Object.keys(raw)) {
-        accessedAt[key] = 0;
-      }
-      return new PluginCache<T>(raw, accessedAt);
+      return new PluginCache<T>(raw, Object.keys(raw));
     }
 
     return new PluginCache<T>();
@@ -161,7 +175,7 @@ export interface SafeWritePluginCacheOptions {
  *
  * Strategy:
  * 1. Attempt to serialize and write the full cache
- * 2. On failure: evict oldest 50% by accessedAt timestamp, retry
+ * 2. On failure: evict oldest 50% (front of access queue), retry
  * 3. On second failure: wipe cache file, log warning, return without throwing
  *
  * If `hashPath` and `hash` are provided in options, the hash file is written
