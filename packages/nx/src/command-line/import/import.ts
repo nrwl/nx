@@ -35,6 +35,18 @@ import {
   checkCompatibleWithPlugins,
   updatePluginsInNxJson,
 } from '../init/implementation/check-compatible-with-plugins';
+import { isAiAgent } from '../../native';
+import {
+  logProgress,
+  writeAiOutput,
+  buildImportNeedsOptionsResult,
+  buildImportNeedsPluginsResult,
+  buildImportSuccessResult,
+  buildImportErrorResult,
+  determineImportErrorCode,
+  type ImportWarning,
+} from './utils/ai-output';
+import type { DetectedPlugin } from '../ai/ai-output';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -68,6 +80,24 @@ export interface ImportOptions {
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
+  const aiMode = isAiAgent();
+  if (aiMode) {
+    options.interactive = false;
+    logProgress('starting', 'Importing repository...');
+
+    // Check for missing required arguments — report all at once
+    const missingFields: string[] = [];
+    if (!sourceRepository) missingFields.push('sourceRepository');
+    if (!ref) missingFields.push('ref');
+    if (!destination) missingFields.push('destination');
+
+    if (missingFields.length > 0) {
+      writeAiOutput(
+        buildImportNeedsOptionsResult(missingFields, sourceRepository)
+      );
+      process.exit(0);
+    }
+  }
   const destinationGitClient = new GitRepository(process.cwd());
 
   if (await destinationGitClient.hasUncommittedChanges()) {
@@ -76,18 +106,20 @@ export async function importHandler(options: ImportOptions) {
     );
   }
 
-  output.log({
-    title:
-      'Nx will walk you through the process of importing code from the source repository into this repository:',
-    bodyLines: [
-      `1. Nx will clone the source repository into a temporary directory`,
-      `2. The project code from the sourceDirectory will be moved to the destinationDirectory on a temporary branch in this repository`,
-      `3. The temporary branch will be merged into the current branch in this repository`,
-      `4. Nx will recommend plugins to integrate any new tools used in the imported code`,
-      '',
-      `Git history will be preserved during this process as long as you MERGE these changes. Do NOT squash and do NOT rebase the changes when merging branches.  If you would like to UNDO these changes, run "git reset HEAD~1 --hard"`,
-    ],
-  });
+  if (!aiMode) {
+    output.log({
+      title:
+        'Nx will walk you through the process of importing code from the source repository into this repository:',
+      bodyLines: [
+        `1. Nx will clone the source repository into a temporary directory`,
+        `2. The project code from the sourceDirectory will be moved to the destinationDirectory on a temporary branch in this repository`,
+        `3. The temporary branch will be merged into the current branch in this repository`,
+        `4. Nx will recommend plugins to integrate any new tools used in the imported code`,
+        '',
+        `Git history will be preserved during this process as long as you MERGE these changes. Do NOT squash and do NOT rebase the changes when merging branches.  If you would like to UNDO these changes, run "git reset HEAD~1 --hard"`,
+      ],
+    });
+  }
 
   const tempImportDirectory = join(tmpdir, 'nx-import');
 
@@ -115,9 +147,17 @@ export async function importHandler(options: ImportOptions) {
   }
 
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
-  const spinner = createSpinner(
-    `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
-  ).start();
+  let spinner: any;
+  if (aiMode) {
+    logProgress(
+      'cloning',
+      `Cloning ${sourceRepository} into ${sourceTempRepoPath}...`
+    );
+  } else {
+    spinner = createSpinner(
+      `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
+    ).start();
+  }
   try {
     await rm(tempImportDirectory, { recursive: true });
   } catch {}
@@ -134,14 +174,18 @@ export async function importHandler(options: ImportOptions) {
       }
     );
   } catch (e) {
-    spinner.fail(
-      `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
-    );
+    if (!aiMode) {
+      spinner.fail(
+        `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
+      );
+    }
     let errorMessage = `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${e.message}`;
 
     throw new Error(errorMessage);
   }
-  spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
+  if (!aiMode) {
+    spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
+  }
 
   // Detecting the package manager before preparing the source repo for import.
   const sourcePackageManager = detectPackageManager(sourceGitClient.root);
@@ -206,16 +250,20 @@ export async function importHandler(options: ImportOptions) {
   const tempImportBranch = getTempImportBranch(ref);
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
-  spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
-  spinner.start(
-    `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
-  );
+  if (!aiMode) {
+    spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
+    spinner.start(
+      `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
+    );
+  }
   await sourceGitClient.checkout(tempImportBranch, {
     new: true,
     base: `${importRemoteName}/${ref}`,
   });
 
-  spinner.succeed(`Created a ${tempImportBranch} branch based on ${ref}`);
+  if (!aiMode) {
+    spinner.succeed(`Created a ${tempImportBranch} branch based on ${ref}`);
+  }
 
   try {
     await stat(absSource);
@@ -232,6 +280,9 @@ export async function importHandler(options: ImportOptions) {
     destinationGitClient.root,
     absDestination
   );
+  if (aiMode) {
+    logProgress('filtering', 'Filtering git history...');
+  }
   await prepareSourceRepo(
     sourceGitClient,
     ref,
@@ -247,6 +298,9 @@ export async function importHandler(options: ImportOptions) {
     importRemoteName
   );
 
+  if (aiMode) {
+    logProgress('merging', 'Merging into workspace...');
+  }
   await mergeRemoteSource(
     destinationGitClient,
     sourceRepository,
@@ -256,10 +310,14 @@ export async function importHandler(options: ImportOptions) {
     ref
   );
 
-  spinner.start('Cleaning up temporary files and remotes');
+  if (!aiMode) {
+    spinner.start('Cleaning up temporary files and remotes');
+  }
   await rm(tempImportDirectory, { recursive: true });
   await destinationGitClient.deleteGitRemote(importRemoteName);
-  spinner.succeed('Cleaned up temporary files and remotes');
+  if (!aiMode) {
+    spinner.succeed('Cleaned up temporary files and remotes');
+  }
 
   const pmc = getPackageManagerCommand();
   const nxJson = readNxJson(workspaceRoot);
@@ -272,14 +330,54 @@ export async function importHandler(options: ImportOptions) {
   } catch {
     packageJson = null;
   }
-  const { plugins, updatePackageScripts } = await detectPlugins(
-    nxJson,
-    packageJson,
-    options.interactive,
-    true
-  );
+  let plugins: string[];
+  let updatePackageScripts: boolean;
 
-  if (packageManager !== sourcePackageManager) {
+  if (aiMode) {
+    logProgress('detecting-plugins', 'Checking for recommended plugins...');
+
+    const parsedPlugins = parsePluginsFlag(options.plugins);
+
+    if (parsedPlugins === 'skip') {
+      plugins = [];
+      updatePackageScripts = false;
+    } else {
+      const detected = await detectPlugins(nxJson, packageJson, false, true);
+      const detectedPluginNames = detected.plugins;
+
+      if (parsedPlugins === 'all') {
+        plugins = detectedPluginNames;
+        updatePackageScripts = detected.updatePackageScripts;
+      } else if (Array.isArray(parsedPlugins)) {
+        plugins = parsedPlugins;
+        updatePackageScripts = true;
+      } else if (detectedPluginNames.length > 0) {
+        // No --plugins flag and plugins detected — return needs_input
+        const detectedPluginsInfo: DetectedPlugin[] = detectedPluginNames.map(
+          (name) => ({ name, reason: 'Detected in imported code' })
+        );
+        const importCmd = `nx import ${sourceRepository} ${destination} --ref ${ref}${source ? ` --source ${source}` : ''}`;
+        writeAiOutput(
+          buildImportNeedsPluginsResult(detectedPluginsInfo, importCmd)
+        );
+        process.exit(0);
+      } else {
+        plugins = [];
+        updatePackageScripts = false;
+      }
+    }
+  } else {
+    const detected = await detectPlugins(
+      nxJson,
+      packageJson,
+      options.interactive,
+      true
+    );
+    plugins = detected.plugins;
+    updatePackageScripts = detected.updatePackageScripts;
+  }
+
+  if (!aiMode && packageManager !== sourcePackageManager) {
     output.warn({
       title: `Mismatched package managers`,
       bodyLines: [
@@ -328,7 +426,7 @@ export async function importHandler(options: ImportOptions) {
 
   console.log(await destinationGitClient.showStat());
 
-  if (installed === false) {
+  if (!aiMode && installed === false) {
     const pmc = getPackageManagerCommand(packageManager);
     output.warn({
       title: `The import was successful, but the install failed`,
@@ -354,7 +452,7 @@ export async function importHandler(options: ImportOptions) {
     }
   }
 
-  if (source != destination) {
+  if (!aiMode && source != destination) {
     output.warn({
       title: `Check configuration files`,
       bodyLines: [
@@ -369,7 +467,7 @@ export async function importHandler(options: ImportOptions) {
 
   // When only a subdirectory is imported, there might be devDependencies in the root package.json file
   // that needs to be ported over as well.
-  if (ref) {
+  if (!aiMode && ref) {
     output.log({
       title: `Check root dependencies`,
       bodyLines: [
@@ -379,15 +477,61 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
-  output.log({
-    title: `Merging these changes into ${getBaseRef(nxJson)}`,
-    bodyLines: [
-      `MERGE these changes when merging these changes.`,
-      `Do NOT squash these commits when merging these changes.`,
-      `If you rebase, make sure to use "--rebase-merges" to preserve merge commits.`,
-      `To UNDO these changes, run "git reset HEAD~1 --hard"`,
-    ],
-  });
+  if (!aiMode) {
+    output.log({
+      title: `Merging these changes into ${getBaseRef(nxJson)}`,
+      bodyLines: [
+        `MERGE these changes when merging these changes.`,
+        `Do NOT squash these commits when merging these changes.`,
+        `If you rebase, make sure to use "--rebase-merges" to preserve merge commits.`,
+        `To UNDO these changes, run "git reset HEAD~1 --hard"`,
+      ],
+    });
+  }
+
+  if (aiMode) {
+    const warnings: ImportWarning[] = [];
+
+    if (packageManager !== sourcePackageManager) {
+      warnings.push({
+        type: 'package_manager_mismatch',
+        message: `Source uses ${sourcePackageManager}, workspace uses ${packageManager}`,
+        hint: 'Check for package.json feature discrepancies',
+      });
+    }
+    if (source !== destination) {
+      warnings.push({
+        type: 'config_path_mismatch',
+        message: `Source directory (${source}) differs from destination (${destination})`,
+        hint: 'Update relative paths in configuration files (tsconfig.json, project.json, etc.)',
+      });
+    }
+    if (ref) {
+      warnings.push({
+        type: 'missing_root_deps',
+        message: 'Root dependencies and devDependencies are not imported',
+        hint: 'Manually add required dependencies from the source repository',
+      });
+    }
+    if (!installed) {
+      warnings.push({
+        type: 'install_failed',
+        message: 'Package installation failed after import',
+        hint: `Run "${pmc.install}" manually to resolve`,
+      });
+    }
+
+    writeAiOutput(
+      buildImportSuccessResult({
+        sourceRepository,
+        ref,
+        source: source || '.',
+        destination,
+        pluginsInstalled: plugins.filter(() => installed),
+        warnings: warnings.length > 0 ? warnings : undefined,
+      })
+    );
+  }
 }
 
 async function assertDestinationEmpty(
@@ -472,6 +616,24 @@ async function runPluginsInstall(
     });
   }
   return installed;
+}
+
+function parsePluginsFlag(
+  value: string | undefined
+): 'skip' | 'all' | string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === 'skip') {
+    return 'skip';
+  }
+  if (value === 'all') {
+    return 'all';
+  }
+  return value
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 /*
