@@ -244,6 +244,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    sidebar_group_cards: {
+      render: component('./src/components/markdoc/SidebarGroupCards.astro'),
+      attributes: {
+        group: {
+          type: 'String',
+          required: true,
+        },
+      },
+    },
     metrics: {
       render: component('./src/components/markdoc/Metrics.astro'),
       attributes: {
