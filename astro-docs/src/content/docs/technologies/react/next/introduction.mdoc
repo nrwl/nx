@@ -1,77 +1,141 @@
 ---
-title: Overview of the Nx Next.js Plugin
-description: The Nx Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. This page also explains how to configure Next.js on your Nx workspace.
+title: Next.js Plugin for Nx
+description: Create and manage Next.js applications in your Nx workspace with inferred build, dev, and start tasks, generators for apps and libraries, and optimized CI configuration.
+keywords: [nextjs, next, react]
 sidebar:
   label: 'Introduction'
+  order: 1
 filter: 'type:References'
 ---
 
-When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
+The Next.js plugin for Nx, `@nx/next`, automatically [infers `build`, `dev`, and `start` tasks](#how-nxnext-infers-tasks) from your Next.js configuration and provides [generators for creating applications and libraries](#develop-nextjs-applications).
 
-The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:
+You don't need the plugin to use Next.js with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, code generators, and simplified configuration.
 
-- Scaffolding for creating, building, serving, linting, and testing Next.js applications.
-- Integration with building, serving, and exporting a Next.js application.
-- Integration with React libraries within the workspace.
+## Setting Up @nx/next
 
-## Setting up @nx/next
-
-To create a new Nx workspace with Next.js, run:
-
-```shell
-npx create-nx-workspace@latest --preset=next
-```
-
-### Installation
+### Add to an Existing Nx Workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
-
-In any workspace, you can install `@nx/next` by running the following command:
-
-{% tabs %}
-{% tabitem label="Nx 18+" %}
 
 ```shell
 nx add @nx/next
 ```
 
-This will install the correct version of `@nx/next`.
+Verify the plugin is setup:
 
-{% /tabitem %}
+{% steps %}
 
-{% tabitem label="Nx < 18" %}
+1. Check for `@nx/next` listed as a plugin:
 
-Install the `@nx/next` package with your package manager.
+   ```shell
+   nx report
+   ```
+
+2. Ensure inferred project targets are working:
+
+   ```shell
+   nx show projects --with-target=build
+   ```
+
+3. Inspect a specific project configuration:
+
+   ```shell
+   nx show project my-next-app
+   ```
+
+{% /steps %}
+
+### Create a New Workspace
 
 ```shell
-npm add -D @nx/next
+npx create-nx-workspace@latest --preset=next
 ```
 
-{% /tabitem %}
-{% /tabs %}
+### Generate a New Application
+
+```shell
+nx g @nx/next:app apps/my-app
+```
+
+To start the application in development mode, run `nx dev my-app`. Read more about the options available for the [application generator](/docs/technologies/react/next/generators#application).
+
+### Generate a Library
+
+```shell
+nx g @nx/next:lib libs/my-lib
+
+# For a publishable library
+nx g @nx/next:lib libs/my-lib --publishable --importPath=@myorg/my-lib
+```
+
+Read more about the options available for the [library generator](/docs/technologies/react/next/generators#library).
+
+## Develop Next.js Applications
+
+### Serve for Development
+
+```shell
+nx dev my-app
+```
+
+Starts the Next.js development server at http://localhost:3000 by default.
+
+### Build for Production
+
+```shell
+nx build my-app
+```
+
+The output goes to the `.next` folder inside your app's project directory by default. Customize the output directory with `distDir` in your `next.config.js`:
+
+```javascript
+// apps/my-app/next.config.js
+const nextConfig = {
+  distDir: 'dist',
+};
+
+module.exports = nextConfig;
+```
+
+### Start Production Server
+
+```shell
+nx start my-app
+```
+
+Serves the production build. Depends on `build` completing first.
+
+### Use Libraries in Your Application
+
+```typescript
+// apps/my-app/pages/index.tsx
+import { MyComponent } from '@myorg/my-lib';
+
+export default function Index() {
+  return <MyComponent />;
+}
+```
+
+There is no need to build the library prior to using it. When you update your library, the Next.js application automatically picks up the changes.
+
+## Configure @nx/next
 
 ### How @nx/next Infers Tasks
 
-{% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
-{% /aside %}
-
-The `@nx/next` plugin will create tasks for any project that has a Next.js configuration file preset. Any of the following files will be recognized as a Next.js configuration file:
+The `@nx/next` plugin creates tasks for any project that has a Next.js configuration file. Any of the following files are recognized:
 
 - `next.config.js`
 - `next.config.cjs`
 - `next.config.mjs`
 - `next.config.ts`
 
-### View Inferred Tasks
+### Plugin Options
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project <project-name> --web` in your command line.
-
-### @nx/next Configuration
-
-The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
+Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
 
 ```json
 // nx.json
@@ -90,276 +154,77 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName` option controls the name of Next.js' compilation task which compiles the application for production deployment. The default name is `build`.
-- The `devTargetName` option controls the name of Next.js' development serve task which starts the application in development mode. The default name is `dev`.
-- The `startTargetName` option controls the name of Next.js' production serve task which starts the application in production mode. The default name is `start`.
-- The `serveStaticTargetName` option controls the name of Next.js' static export task which exports the application to static HTML files. The default name is `serve-static`.
-
-## Using @nx/next
-
-### Creating Applications
-
-You can add a new application with the following:
-
-```shell
-nx g @nx/next:app apps/my-new-app
-```
-
-### Generating Libraries
-
-Nx allows you to create libraries with just one command. Some reasons you might want to create a library include:
-
-- Share code between applications
-- Publish a package to be used outside the monorepo
-- Better visualize the architecture using `nx graph`
-
-To generate a new library run:
-
-```shell
-nx g @nx/next:lib libs/my-new-lib
-```
-
-### Generating Pages and Components
-
-Nx also provides commands to quickly generate new pages and components for your application.
-
-```shell
-nx g @nx/next:page apps/my-new-app/pages/my-new-page
-
-nx g @nx/next:component apps/my-new-app/components/my-new-component
-```
-
-Above commands will add a new page `my-new-page` and a component `my-new-component` to `my-new-app` project respectively in the specified directories.
-
-Nx generates components with tests by default. For pages, you can pass the `--withTests` option to generate tests under the `specs` folder.
-
-## Using Next.js
-
-### Serving Next.js Applications
-
-{% tabs %}
-
-{% tabitem label="Using inferred tasks" %}
-
-You can serve a Next.js application `my-new-app` for development:
-
-```shell
-nx dev my-new-app
-```
-
-To serve a Next.js application for production:
-
-```shell
-nx start my-new-app
-```
-
-This will start the server at <http://localhost:3000> by default.
-
-{% /tabitem %}
-{% tabitem label="Using the @nx/next:server executor" %}
-
-You can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at <http://localhost:4200>.
-
-To serve a Next.js application for production, add the `--prod` flag to the serve command:
-
-```shell
-nx serve my-new-app --prod
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-### Using an Nx Library in your Application
-
-You can import a library called `my-new-lib` in your application as follows.
-
-```typescript {% meta="{1,5-7}" %}
-// apps/my-next-app/pages/index.tsx
-import { MyNewLib } from '@<your nx workspace name>/my-new-lib';
-
-export function Index() {
-  return (
-    <MyNewLib>
-      <p>The main content</p>
-    </MyNewLib>
-  );
-}
-
-export default Index;
-```
-
-There is no need to build the library prior to using it. When you update your library, the Next.js application will automatically pick up the changes.
-
-### Publishable libraries
-
-For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
-
-```shell
-nx g @nx/next:lib libs/my-new-lib --publishable --importPath=@happynrwl/ui-components
-```
-
-### Testing Projects
-
-You can run unit tests with:
-
-```shell
-nx test my-new-app
-nx test my-new-lib
-```
-
-Replace `my-new-app` and `my-new-lib` with the name or the project you want to test. This command works for both applications and libraries.
-
-You can also run E2E tests for applications:
-
-```shell
-nx e2e my-new-app-e2e
-```
-
-Replace `my-new-app-e2e` with the name or your project with -e2e appended.
-
-### Linting Projects
-
-You can lint projects with:
-
-```shell
-nx lint my-new-app
-nx lint my-new-lib
-```
-
-Replace `my-new-app` and `my-new-lib` with the name or the project you want to test. This command works for both applications and libraries.
-
-### Building Projects
-
-Next.js applications can be build with:
-
-```shell
-nx build my-new-app
-```
-
-And if you generated a library with `--bundler`, then you can build a library as well:
-
-```shell
-nx build my-new-lib
-```
-
-After running a build, the output will be in the `.next` folder inside your app's project directory by default. The output directory can be changed through configuration.
-
-{% tabs %}
-
-{% tabitem label="@nx/next/plugin and next.config.js" %}
-
-You can customize the output folder path by updating the Next.js config. For example, you can set a custom `distDir` in `next.config.js`:
-
-```javascript {% meta="{2}" %}
-// apps/my-next-app/next.config.js
-const nextConfig = {
-  distDir: 'dist',
-};
-
-module.exports = nextConfig;
-```
-
-Note: This approach works best if you have `@nx/next/plugin` installed in your `nx.json`. You can add it with `nx add @nx/next`.
-
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/next:build executor" %}
-
-{% aside type="note" title="Legacy Configuration" %}
-This approach is for projects not using the `@nx/next/plugin` in `nx.json`. If you have the plugin configured, it will automatically infer tasks from your Next.js configuration. See the [Inferred Tasks concept page](/docs/concepts/inferred-tasks) for more details.
-{% /aside %}
-
-You can customize the output folder by setting `outputPath` in the project's `project.json` file
-
-```json {% meta="{9}" %}
-// apps/my-next-app/project.json
+| Option                  | Description                          | Default        |
+| ----------------------- | ------------------------------------ | -------------- |
+| `buildTargetName`       | Name of the production build task    | `build`        |
+| `devTargetName`         | Name of the development server task  | `dev`          |
+| `startTargetName`       | Name of the production server task   | `start`        |
+| `serveStaticTargetName` | Name of the static export serve task | `serve-static` |
+
+### Exclude or Include Specific Projects
+
+Use `include`/`exclude` glob patterns in the plugin configuration to scope which projects the plugin applies to:
+
+```json
+// nx.json
 {
-  "root": "apps/my-next-app",
-  "sourceRoot": "apps/my-next-app/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
+  "plugins": [
+    {
+      "plugin": "@nx/next/plugin",
+      "include": ["apps/**/*"],
+      "exclude": ["apps/legacy-app/**/*"],
       "options": {
-        "outputPath": "dist/my-next-app"
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "serveStaticTargetName": "serve-static"
       }
     }
-  }
+  ]
 }
 ```
 
-Note that the `sourceRoot` property may not exist for all Next.js applications, as it depends on your project structure.
+### View Inferred Tasks
 
-{% /tabitem %}
-{% /tabs %}
-
-The library in `dist` is publishable to npm or a private registry.
-
-### Static HTML Export
-
-Next.js applications can be statically exported by changing the output inside your Next.js configuration file.
-
-```js {% meta="{5}" %}
-// apps/my-next-app/next.config.js
-const nextConfig = {
-  nx: {
-    svgr: false,
-  },
-  output: 'export',
-};
-```
-
-After setting the output to `export`, you can run the `build` command to generate the static HTML files.
+To see what tasks Nx inferred for a project:
 
 ```shell
-nx build my-next-app
+nx show project my-app
 ```
 
-You can then check your project folder for the `out` folder which contains the static HTML files.
+Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-{% filetree %}
+## CI Considerations
 
-- index.d.ts
-- jest.config.ts
-- next-env.d.ts
-- next.config.js
-- out/
-- project.json
-- public/
-- specs/
-- src/
-- tsconfig.json
-- tsconfig.spec.json
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-{% /filetree %}
-
-#### E2E testing
-
-You can perform end-to-end (E2E) testing on static HTML files using a test runner like Cypress. When you create a Next.js application, Nx automatically creates a `serve-static` target. This target is designed to serve the static HTML files produced by the build command.
-
-This feature is particularly useful for testing in continuous integration (CI) pipelines, where resources may be constrained. Unlike the `dev` and `start` targets, `serve-static` does not require a Next.js server to operate, making it more efficient and faster by eliminating background processes, such as file change monitoring.
-
-To utilize the `serve-static` target for testing, run the following command:
+### Build and Test Only What Changed
 
 ```shell
-nx serve-static my-next-app-e2e
+nx affected -t build test lint
 ```
 
-This command performs several actions:
+This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those. Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-1. It will build the Next.js application and generate the static HTML files.
-2. It will serve the static HTML files using a simple HTTP server.
-3. It will run the Cypress tests against the served static HTML files.
+### Remote Caching
 
-### Deploying Next.js Applications
+Share build cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
-Once you are ready to deploy your Next.js application, you have absolute freedom to choose any hosting provider that fits your needs.
+```shell
+nx connect
+```
 
-You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/docs/technologies/react/guides/deploy-nextjs-to-vercel).
+### Static HTML Export for E2E Testing
 
-## More Documentation
+Next.js applications support [static HTML export](https://nextjs.org/docs/app/building-your-application/deploying/static-exports) by setting `output: 'export'` in `next.config.js`. The `serve-static` target serves these static files for E2E testing in CI, without requiring a Next.js server.
 
-Here are other resources that you may find useful to learn more about Next.js and Nx.
+## What's Next
 
-- **Blog post:** [Building a blog with Next.js and Nx Series](https://blog.nrwl.io/create-a-next-js-web-app-with-nx-bcf2ab54613) by Juri Strumpflohner
-- **Video tutorial:** [Typescript NX Monorepo with NextJS and Express](https://www.youtube.com/watch?v=WOfL5q2HznI) by Jack Herrington
+{% cardgrid %}
+{% linkcard title="Deploy Next.js to Vercel" description="Deploy your Next.js application to Vercel with Nx." href="/docs/technologies/react/guides/deploy-nextjs-to-vercel" /%}
+{% linkcard title="Next.js Config Setup" description="Configure Next.js settings for your Nx workspace." href="/docs/technologies/react/next/guides/next-config-setup" /%}
+{% linkcard title="React Monorepo Tutorial" description="Build a React monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/react-monorepo-tutorial" /%}
+{% linkcard title="Generators Reference" description="Full API reference for @nx/next generators." href="/docs/technologies/react/next/generators" /%}
+{% linkcard title="Executors Reference" description="Full API reference for @nx/next executors." href="/docs/technologies/react/next/executors" /%}
+{% linkcard title="Migrations Reference" description="Full reference for @nx/next migrations." href="/docs/technologies/react/next/migrations" /%}
+{% /cardgrid %}
