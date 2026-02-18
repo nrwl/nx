@@ -137,7 +137,7 @@ export async function* esbuildExecutor(
                         build.onEnd(async (result: esbuild.BuildResult) => {
                           if (
                             !options.skipTypeCheck ||
-                            options.isTsSolutionSetup
+                            (options.isTsSolutionSetup && options.declaration)
                           ) {
                             const { errors } = await runTypeCheck(
                               options,
@@ -192,7 +192,7 @@ export async function* esbuildExecutor(
     );
   } else {
     // Run type-checks first and bail if they don't pass.
-    if (!options.skipTypeCheck || options.isTsSolutionSetup) {
+    if (!options.skipTypeCheck || (options.isTsSolutionSetup && options.declaration)) {
       const { errors } = await runTypeCheck(options, context);
       if (errors.length > 0) {
         yield { success: false };
