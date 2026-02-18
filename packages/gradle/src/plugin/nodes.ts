@@ -3,7 +3,6 @@ import {
   CreateNodesContextV2,
   ProjectConfiguration,
   readJsonFile,
-  writeJsonFile,
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
@@ -12,6 +11,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
 
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -112,7 +112,7 @@ function extractNxConfigOnly(
 }
 
 export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
-  writeJsonFile(cachePath, results);
+  safeWritePluginCache(cachePath, results);
 }
 
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
