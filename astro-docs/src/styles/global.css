@@ -170,6 +170,18 @@ pre {
     border-radius: var(--radius-lg);
   }
 
+  /* Search dialog: widen modal and force single-column results layout
+     to prevent layout shift between 1-col and 2-col at different zoom levels */
+  @media (min-width: 50rem) {
+    site-search dialog {
+      max-width: 48rem;
+    }
+  }
+
+  site-search .pagefind-ui__drawer {
+    flex-direction: column;
+  }
+
   /* Buttons */
   button,
   .button,
