@@ -189,6 +189,11 @@ export async function importHandler(options: ImportOptions) {
   const sourcePackageManager = detectPackageManager(sourceGitClient.root);
 
   if (!ref) {
+    if (aiMode) {
+      throw new Error(
+        'The --ref option is required when running in agent mode.'
+      );
+    }
     const branchChoices = await sourceGitClient.listBranches();
     ref = (
       await prompt<{ ref: string }>([
@@ -208,18 +213,28 @@ export async function importHandler(options: ImportOptions) {
   }
 
   if (!source) {
-    source = (
-      await prompt<{ source: string }>([
-        {
-          type: 'input',
-          name: 'source',
-          message: `Which directory do you want to import into this workspace? (leave blank to import the entire repository)`,
-        },
-      ])
-    ).source;
+    if (aiMode) {
+      // Default to importing the entire repository in agent mode
+      source = '.';
+    } else {
+      source = (
+        await prompt<{ source: string }>([
+          {
+            type: 'input',
+            name: 'source',
+            message: `Which directory do you want to import into this workspace? (leave blank to import the entire repository)`,
+          },
+        ])
+      ).source;
+    }
   }
 
   if (!destination) {
+    if (aiMode) {
+      throw new Error(
+        'The --destination option is required when running in agent mode.'
+      );
+    }
     destination = (
       await prompt<{ destination: string }>([
         {
