@@ -8,7 +8,8 @@ import {
 import { workspaceDataDirectory } from '../src/utils/cache-directory';
 import { join } from 'path';
 import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
-import { readJsonFile, writeJsonFile } from '../src/utils/fileutils';
+import { readJsonFile } from '../src/utils/fileutils';
+import { safeWritePluginCache } from '../src/utils/plugin-cache-utils';
 
 export type PackageJsonConfigurationCache = {
   [hash: string]: ProjectConfiguration;
@@ -25,7 +26,7 @@ export function readPackageJsonConfigurationCache() {
 }
 
 function writeCache(cache: PackageJsonConfigurationCache) {
-  writeJsonFile(cachePath, cache);
+  safeWritePluginCache(cachePath, cache);
 }
 
 const plugin: NxPluginV2 = {
