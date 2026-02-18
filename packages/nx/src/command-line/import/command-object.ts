@@ -1,4 +1,12 @@
 import { CommandModule } from 'yargs';
+import { isAiAgent } from '../../native';
+import { handleErrors } from '../../utils/handle-errors';
+import { writeAiOutput } from '../ai/ai-output';
+import {
+  buildImportErrorResult,
+  determineImportErrorCode,
+  writeErrorLog,
+} from './utils/ai-output';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 
@@ -49,26 +57,22 @@ export const yargsImportCommand: CommandModule = {
       'import'
     ),
   handler: async (args) => {
-    try {
-      await (await import('./import')).importHandler(args as any);
-      process.exit(0);
-    } catch (error) {
-      if ((await import('../../native')).isAiAgent()) {
-        const {
-          buildImportErrorResult,
-          determineImportErrorCode,
-          writeErrorLog,
-        } = await import('./utils/ai-output');
-        const { writeAiOutput } = await import('../ai/ai-output');
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        const errorCode = determineImportErrorCode(error);
-        const errorLogPath = writeErrorLog(error, 'nx-import');
-        writeAiOutput(
-          buildImportErrorResult(errorMessage, errorCode, errorLogPath)
-        );
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      try {
+        return await (await import('./import')).importHandler(args as any);
+      } catch (error) {
+        if (isAiAgent()) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          const errorCode = determineImportErrorCode(error);
+          const errorLogPath = writeErrorLog(error, 'nx-import');
+          writeAiOutput(
+            buildImportErrorResult(errorMessage, errorCode, errorLogPath)
+          );
+        }
+        throw error;
       }
-      process.exit(1);
-    }
+    });
+    process.exit(exitCode);
   },
 };
