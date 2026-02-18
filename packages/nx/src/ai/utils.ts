@@ -202,9 +202,10 @@ async function getAgentConfiguration(
     case 'codex': {
       const rulesPath = agentsMdPath(workspaceRoot);
       const agentsMdExists = existsSync(rulesPath);
+      const mcpPath = codexConfigTomlPath(workspaceRoot);
       let mcpConfigured: boolean;
-      if (existsSync(codexConfigTomlPath)) {
-        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
+      if (existsSync(mcpPath)) {
+        const tomlContents = readFileSync(mcpPath, 'utf-8');
         mcpConfigured = tomlContents.includes(nxMcpTomlHeader);
       } else {
         mcpConfigured = false;
@@ -214,7 +215,7 @@ async function getAgentConfiguration(
         mcp: mcpConfigured,
         rules: agentsMdExists,
         rulesPath,
-        mcpPath: codexConfigTomlPath,
+        mcpPath,
       };
       break;
     }

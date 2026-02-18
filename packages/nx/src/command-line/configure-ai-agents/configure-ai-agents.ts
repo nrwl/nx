@@ -357,7 +357,7 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
     case 'opencode':
       return `Configures MCP server. Adds skills and agents. Updates ${rulesFile}.`;
     case 'codex':
-      return `Configures MCP server. Updates ${rulesFile}.`;
+      return `Configures MCP server. Adds skills. Updates ${rulesFile}.`;
     default:
       return '';
   }
@@ -381,7 +381,7 @@ function getAgentConfiguredDescription(agent: AgentConfiguration): string {
     case 'opencode':
       return `MCP + skills + ${rulesFile}`;
     case 'codex':
-      return `MCP + ${rulesFile}`;
+      return `MCP + skills + ${rulesFile}`;
     default:
       return '';
   }

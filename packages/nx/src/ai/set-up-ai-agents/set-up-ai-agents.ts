@@ -1,11 +1,4 @@
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'fs';
-import { homedir } from 'os';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -31,7 +24,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import {
   agentsMdPath,
   claudeMcpJsonPath,
-  codexConfigTomlPath,
   geminiMdPath,
   opencodeMcpPath,
 } from '../constants';
@@ -222,6 +214,19 @@ export async function setupAiAgentsGeneratorImpl(
     );
   }
 
+  if (hasAgent('codex')) {
+    const codexTomlPath = join(options.directory, '.codex', 'config.toml');
+    const tomlConfig = getNxMcpTomlConfig(nxVersion);
+    if (!tree.exists(codexTomlPath)) {
+      tree.write(codexTomlPath, tomlConfig);
+    } else {
+      const existing = tree.read(codexTomlPath, 'utf-8');
+      if (!existing.includes(nxMcpTomlHeader)) {
+        tree.write(codexTomlPath, existing + '\n' + tomlConfig);
+      }
+    }
+  }
+
   if (hasAgent('gemini')) {
     const geminiSettingsPath = join(
       options.directory,
@@ -272,7 +277,7 @@ export async function setupAiAgentsGeneratorImpl(
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      { agent: 'codex', src: 'generated/.codex', dest: '.codex' },
+      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
       { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
     ];
 
@@ -292,31 +297,6 @@ export async function setupAiAgentsGeneratorImpl(
   return async (check: boolean = false) => {
     const messages: CLINoteMessageConfig[] = [];
     const errors: CLIErrorMessageConfig[] = [];
-    if (hasAgent('codex')) {
-      if (existsSync(codexConfigTomlPath)) {
-        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
-        if (!tomlContents.includes(nxMcpTomlHeader)) {
-          if (!check) {
-            appendFileSync(
-              codexConfigTomlPath,
-              `\n${getNxMcpTomlConfig(nxVersion)}`
-            );
-          }
-          messages.push({
-            title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
-          });
-        }
-      } else {
-        if (!check) {
-          mkdirSync(join(homedir(), '.codex'), { recursive: true });
-          writeFileSync(codexConfigTomlPath, getNxMcpTomlConfig(nxVersion));
-        }
-        messages.push({
-          title: `Created ${codexConfigTomlPath} with nx-mcp server`,
-        });
-      }
-    }
-
     if (hasAgent('copilot')) {
       try {
         if (
