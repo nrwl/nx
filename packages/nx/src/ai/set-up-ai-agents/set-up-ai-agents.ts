@@ -171,6 +171,7 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.extraKnownMarketplaces,
         'nx-claude-plugins': {
           source: {
+            ...json.extraKnownMarketplaces?.['nx-claude-plugins']?.source,
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
           },
