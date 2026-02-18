@@ -41,6 +41,7 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
     const optionsHash = hashObject(opts);
     const cachePath = getCachePath(context.workspaceRoot, optionsHash);
     const mavenCache = readMavenCache(cachePath);
+    const mavenCacheData = mavenCache.data;
 
     // Calculate hashes for all pom.xml directories
     const projectRoots = configFiles.map((file) => dirname(file));
@@ -54,7 +55,7 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
 
     try {
       // Try to get cached data first (skip cache if in verbose mode)
-      let mavenData = isVerbose ? null : mavenCache[hash];
+      let mavenData = isVerbose ? null : mavenCacheData[hash];
 
       // If no cached data or cache is stale, run fresh Maven analysis
       if (!mavenData) {
@@ -63,7 +64,7 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
           verbose: isVerbose,
         });
         // Cache the results with the hash
-        mavenCache[hash] = mavenData;
+        mavenCacheData[hash] = mavenData;
       }
 
       // Store in module-level variable for createDependencies to use

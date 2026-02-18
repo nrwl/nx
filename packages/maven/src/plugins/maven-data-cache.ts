@@ -1,6 +1,9 @@
 import { join } from 'path';
-import { readJsonFile } from '@nx/devkit';
-import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
+import {
+  PluginCache,
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 import { MavenAnalysisData } from './types';
 
 /**
@@ -8,14 +11,8 @@ import { MavenAnalysisData } from './types';
  */
 export function readMavenCache(
   cachePath: string
-): Record<string, MavenAnalysisData> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
+): PluginCache<MavenAnalysisData> {
+  return readPluginCache<MavenAnalysisData>(cachePath);
 }
 
 /**
@@ -23,7 +20,7 @@ export function readMavenCache(
  */
 export function writeMavenCache(
   cachePath: string,
-  cache: Record<string, MavenAnalysisData>
+  cache: PluginCache<MavenAnalysisData>
 ): void {
   safeWritePluginCache(cachePath, cache);
 }
