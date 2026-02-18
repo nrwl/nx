@@ -10,7 +10,6 @@ import {
   readJsonFile,
   type TargetConfiguration,
   type TargetDependencyConfig,
-  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -22,6 +21,7 @@ import { readdirSync } from 'node:fs';
 import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
@@ -56,7 +56,7 @@ function writeTargetsToCache(
   cachePath: string,
   results: Record<string, PlaywrightTargets>
 ) {
-  writeJsonFile(cachePath, results);
+  safeWritePluginCache(cachePath, results);
 }
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';

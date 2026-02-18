@@ -10,7 +10,6 @@ import {
   type ProjectConfiguration,
   readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -19,6 +18,7 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { safeWritePluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname, join, relative } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -42,7 +42,7 @@ function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
 }
 
 function writeTargetsToCache(cachePath: string, results: CypressTargets) {
-  writeJsonFile(cachePath, results);
+  safeWritePluginCache(cachePath, results);
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
