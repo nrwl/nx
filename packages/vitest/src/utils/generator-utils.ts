@@ -98,13 +98,16 @@ export function createOrEditViteConfig(
   tree: Tree,
   options: ViteConfigFileOptions,
   onlyVitest: boolean,
-  projectAlreadyHasViteTargets?: TargetFlags,
-  vitestFileName?: boolean
+  extraOptions: {
+    projectAlreadyHasViteTargets?: TargetFlags;
+    skipPackageJson?: boolean;
+    vitestFileName?: boolean;
+  } = {}
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
   const extension = options.useEsmExtension ? 'mts' : 'ts';
-  const viteConfigPath = vitestFileName
+  const viteConfigPath = extraOptions.vitestFileName
     ? `${projectRoot}/vitest.config.${extension}`
     : `${projectRoot}/vite.config.${extension}`;
 
@@ -112,13 +115,13 @@ export function createOrEditViteConfig(
   const buildOutDir = isTsSolutionSetup
     ? './dist'
     : projectRoot === '.'
-    ? `./dist/${options.project}`
-    : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
+      ? `./dist/${options.project}`
+      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
 
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
-    ? `  // Configuration for building your library.
+      ? `  // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '${buildOutDir}',
@@ -141,7 +144,7 @@ export function createOrEditViteConfig(
       external: [${options.rollupOptionsExternal ?? ''}]
     },
   },`
-    : `  build: {
+      : `  build: {
     outDir: '${buildOutDir}',
     emptyOutDir: true,
     reportCompressedSize: true,
@@ -166,7 +169,9 @@ export function createOrEditViteConfig(
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
     );
     plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
-    addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
+    if (!extraOptions.skipPackageJson) {
+      addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
+    }
   }
 
   if (!onlyVitest && options.includeLib) {
@@ -180,8 +185,8 @@ export function createOrEditViteConfig(
   const reportsDirectory = isTsSolutionSetup
     ? './test-output/vitest/coverage'
     : projectRoot === '.'
-    ? `./coverage/${options.project}`
-    : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
+      ? `./coverage/${options.project}`
+      : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
   const testOption = options.includeVitest
     ? `  test: {
@@ -217,8 +222,8 @@ ${
   const devServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `  server:{
+      ? ''
+      : `  server:{
     port: ${options.port ?? 4200},
     host: 'localhost',
   },`;
@@ -226,8 +231,8 @@ ${
   const previewServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `  preview:{
+      ? ''
+      : `  preview:{
     port: ${options.previewPort ?? 4300},
     host: 'localhost',
   },`;
@@ -239,7 +244,7 @@ ${
   // },`
     : `  // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
@@ -263,12 +268,27 @@ ${
       cacheDir,
       projectRoot,
       offsetFromRoot(projectRoot),
-      projectAlreadyHasViteTargets
+      extraOptions.projectAlreadyHasViteTargets
     );
     return;
   }
 
-  const viteConfigContent = `/// <reference types='vitest' />
+  // When using vitest.config, use vitest/config import and skip vite-specific options
+  const viteConfigContent = extraOptions.vitestFileName
+    ? `import { defineConfig } from 'vitest/config';
+${imports.join(';\n')}${imports.length ? ';' : ''}
+
+export default defineConfig(() => ({
+  root: __dirname,
+  ${printOptions(
+    cacheDir,
+    plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
+    defineOption,
+    testOption
+  )}
+}));
+`.replace(/\s+(?=(\n|$))/gm, '\n')
+    : `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 

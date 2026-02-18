@@ -52,10 +52,7 @@ interface WithNxOptions {
   mainFields?: string[];
 }
 
-export async function withNxMetro(
-  userConfig: MetroConfig,
-  opts: WithNxOptions = {}
-) {
+export function withNxMetro(userConfig: MetroConfig, opts: WithNxOptions = {}) {
   const extensions = ['', 'ts', 'tsx', 'js', 'jsx', 'json'];
   if (opts.debug) process.env.NX_REACT_NATIVE_DEBUG = 'true';
   if (opts.extensions) extensions.push(...opts.extensions);
@@ -77,6 +74,9 @@ export async function withNxMetro(
   );
 
   const nxConfig: MetroConfig = {
+    // Set projectRoot to workspaceRoot to ensure originModulePath is
+    // workspace-relative. This is required for Expo SDK 54+ compatibility.
+    projectRoot: workspaceRoot,
     resolver: {
       resolveRequest: getResolveRequest(
         extensions,

@@ -14,4 +14,8 @@ module.exports = {
   maxWorkers: 1,
   testEnvironment: 'node',
   setupFiles: ['../../scripts/unit-test-setup.js'],
+  moduleNameMapper: {
+    // Mock ora to avoid ESM issues - ora@9+ is ESM-only and breaks Jest
+    '^ora$': '<rootDir>/../../scripts/jest-mocks/ora.js',
+  },
 };

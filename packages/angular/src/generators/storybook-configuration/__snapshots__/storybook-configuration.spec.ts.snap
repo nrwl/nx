@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
@@ -109,7 +109,7 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
   "test-ui-lib/.storybook/main.ts",
   "test-ui-lib/.storybook/preview.ts",
   "test-ui-lib/.storybook/tsconfig.json",
-  "test-ui-lib/jest.config.ts",
+  "test-ui-lib/jest.config.cts",
   "test-ui-lib/package.json",
   "test-ui-lib/project.json",
   "test-ui-lib/README.md",
@@ -220,7 +220,7 @@ exports[`StorybookConfiguration generator should generate the right files 1`] = 
   "test-ui-lib/.storybook/main.ts",
   "test-ui-lib/.storybook/preview.ts",
   "test-ui-lib/.storybook/tsconfig.json",
-  "test-ui-lib/jest.config.ts",
+  "test-ui-lib/jest.config.cts",
   "test-ui-lib/package.json",
   "test-ui-lib/project.json",
   "test-ui-lib/README.md",

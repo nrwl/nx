@@ -1,21 +1,22 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
-import {
-  calculateFileChanges,
-  Change,
-  DeletedFileChange,
-  WholeFileChange,
-} from '../../../project-graph/file-utils';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
-import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { GitCommit, gitAdd, gitCommit } from './git';
 import { NxReleaseConfig } from '../config/config';
+import type { ReleaseGroupWithName } from '../config/filter-release-groups';
+import {
+  gitAdd,
+  GitCommit,
+  gitCommit,
+  sanitizeProjectNameForGitTag,
+} from './git';
+import { ReleaseGraph } from './release-graph';
 
-export const noDiffInChangelogMessage = chalk.yellow(
+export const noDiffInChangelogMessage = pc.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
 );
 
@@ -65,15 +66,20 @@ export class ReleaseVersion {
     version, // short form version string with no prefixes or patterns, e.g. 1.0.0
     releaseTagPattern, // full pattern to interpolate, e.g. "v{version}" or "{projectName}@{version}"
     projectName, // optional project name to interpolate into the releaseTagPattern
+    releaseGroupName, // optional release group name to interpolate into the releaseTagPattern
   }: {
     version: string;
     releaseTagPattern: string;
     projectName?: string;
+    releaseGroupName?: string;
   }) {
     this.rawVersion = version;
     this.gitTag = interpolate(releaseTagPattern, {
       version,
-      projectName,
+      projectName: projectName
+        ? sanitizeProjectNameForGitTag(projectName)
+        : projectName,
+      releaseGroupName,
     });
     this.isPrerelease = isPrerelease(version);
   }
@@ -142,6 +148,7 @@ export function createCommitMessageValues(
     const releaseVersion = new ReleaseVersion({
       version: projectVersionData.newVersion,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
+      releaseGroupName: releaseGroup.name,
     });
     commitMessageValues[0] = interpolate(commitMessageValues[0], {
       version: releaseVersion.rawVersion,
@@ -169,6 +176,7 @@ export function createCommitMessageValues(
         version: projectVersionData.newVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
         projectName: releaseGroupProjectNames[0],
+        releaseGroupName: releaseGroup.name,
       });
       commitMessageValues[0] = interpolate(commitMessageValues[0], {
         version: releaseVersion.rawVersion,
@@ -205,6 +213,7 @@ export function createCommitMessageValues(
             version: projectVersionData.newVersion,
             releaseTagPattern: releaseGroup.releaseTag.pattern,
             projectName: project,
+            releaseGroupName: releaseGroup.name,
           });
           commitMessageValues.push(
             `- project: ${project} ${releaseVersion.rawVersion}`
@@ -220,6 +229,7 @@ export function createCommitMessageValues(
       const releaseVersion = new ReleaseVersion({
         version: projectVersionData.newVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
+        releaseGroupName: releaseGroup.name,
       });
       commitMessageValues.push(
         `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
@@ -288,7 +298,8 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
                 })
               );
             }
@@ -296,7 +307,8 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
                 })
               );
             }
@@ -307,7 +319,8 @@ export function createGitTagValues(
                 version: preferDockerVersion
                   ? projectVersionData.dockerVersion
                   : projectVersionData.newVersion,
-                projectName: project,
+                projectName: sanitizeProjectNameForGitTag(project),
+                releaseGroupName: releaseGroup.name,
               })
             );
           }
@@ -419,7 +432,8 @@ export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
   projects: string[],
-  nxReleaseConfig: NxReleaseConfig
+  nxReleaseConfig: NxReleaseConfig,
+  releaseGraph: ReleaseGraph
 ): // Map of projectName to GitCommit[]
 Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
@@ -434,14 +448,13 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
       continue;
     }
 
-    // Convert affectedFiles to FileChange[] format with proper diff computation
-    const touchedFiles = calculateFileChanges(commit.affectedFiles, {
-      base: `${commit.shortHash}^`,
-      head: commit.shortHash,
-    } as NxArgs);
-
-    // Use the same affected detection logic as `nx affected`
-    const affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    // Try to get the graph associated with the commit shortHash
+    // if not available, calculate it and store it in the cache
+    let affectedGraph =
+      await releaseGraph.resolveAffectedFilesPerCommitInProjectGraph(
+        commit,
+        projectGraph
+      );
 
     for (const projectName of Object.keys(affectedGraph.nodes)) {
       if (projectSet.has(projectName)) {

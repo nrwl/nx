@@ -102,7 +102,8 @@ class ProcessTaskUtilsTest {
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = gitIgnoreClassifier)
+            gitIgnoreClassifier = gitIgnoreClassifier,
+            project = project)
 
     assertEquals(true, result["cache"])
     assertEquals(result["executor"], "@nx/gradle:gradle")
@@ -497,7 +498,8 @@ class ProcessTaskUtilsTest {
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = gitIgnoreClassifier)
+            gitIgnoreClassifier = gitIgnoreClassifier,
+            project = project)
 
     assertNotNull(result)
 
@@ -521,5 +523,156 @@ class ProcessTaskUtilsTest {
         inputs.any {
           it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
         })
+  }
+
+  @Nested
+  inner class ProviderBasedDependenciesTests {
+
+    @Test
+    fun `returns empty set when task has no dependencies`() {
+      val task = project.tasks.register("standalone").get()
+      assertTrue(findProviderBasedDependencies(task).isEmpty())
+    }
+
+    @Test
+    fun `identifies TaskProvider dependencies`() {
+      val producerProvider = project.tasks.register("producer")
+      val consumerProvider = project.tasks.register("consumer")
+      consumerProvider.configure { it.dependsOn(producerProvider) }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertTrue(result.any { it.contains("producer") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies ProviderInternal from task output files`() {
+      val producerProvider =
+          project.tasks.register("producer") { task ->
+            task.outputs.file(
+                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
+          }
+      val consumerProvider = project.tasks.register("consumer")
+      consumerProvider.configure { it.dependsOn(producerProvider.map { p -> p.outputs.files }) }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertTrue(result.any { it.contains("producer") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies ProviderInternal from task output directory`() {
+      val compileProvider =
+          project.tasks.register("compile") { task ->
+            task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
+          }
+      val jarProvider = project.tasks.register("jar")
+      jarProvider.configure { it.dependsOn(compileProvider.map { p -> p.outputs.files }) }
+
+      val result = findProviderBasedDependencies(jarProvider.get())
+
+      assertTrue(result.any { it.contains("compile") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies multiple TaskProvider dependencies`() {
+      val provider1 = project.tasks.register("task1")
+      val provider2 = project.tasks.register("task2")
+      val provider3 = project.tasks.register("task3")
+
+      val consumerProvider = project.tasks.register("consumer")
+      consumerProvider.configure { task ->
+        task.dependsOn(provider1)
+        task.dependsOn(provider2)
+        task.dependsOn(provider3)
+      }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertEquals(3, result.size)
+      assertTrue(result.any { it.contains("task1") }, "Found: $result")
+      assertTrue(result.any { it.contains("task2") }, "Found: $result")
+      assertTrue(result.any { it.contains("task3") }, "Found: $result")
+    }
+  }
+
+  @Nested
+  inner class SubprojectNamingTests {
+
+    @Test
+    fun `getNxProjectName returns correct name for root and subprojects`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val childDir = java.io.File(appDir, "child").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val childProject =
+            ProjectBuilder.builder()
+                .withParent(appProject)
+                .withProjectDir(childDir)
+                .withName("child")
+                .build()
+
+        assertEquals("root", getNxProjectName(rootProject))
+        assertEquals(":app", getNxProjectName(appProject))
+        assertEquals(":app:child", getNxProjectName(childProject))
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getDependsOnForTask uses buildTreePath for cross-subproject dependencies`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val libDir = java.io.File(rootDir, "lib").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val libProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(libDir)
+                .withName("lib")
+                .build()
+
+        java.io.File(appDir, "build.gradle").writeText("// app")
+        java.io.File(libDir, "build.gradle").writeText("// lib")
+
+        val libTask = libProject.tasks.register("compileJava").get()
+        val appTask = appProject.tasks.register("build").get().apply { dependsOn(libTask) }
+
+        val dependencies = mutableSetOf<Dependency>()
+        val dependsOn = getDependsOnForTask(null, appTask, dependencies)
+
+        assertNotNull(dependsOn)
+        assertTrue(
+            dependsOn!!.contains(":lib:compileJava"),
+            "Expected ':lib:compileJava' but got $dependsOn")
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
   }
 }

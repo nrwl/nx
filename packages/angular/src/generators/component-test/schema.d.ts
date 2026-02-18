@@ -9,4 +9,5 @@ export interface ComponentTestSchema {
   // something.component
   componentFileName: string;
   skipFormat?: boolean;
+  skipPackageJson?: boolean;
 }

@@ -16,7 +16,7 @@ import {
 } from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
 import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function Enterprise(): ReactElement {
   const router = useRouter();
@@ -29,19 +29,19 @@ export function Enterprise(): ReactElement {
       title: 'Contact Us',
       children: <span>Contact</span>,
       onClick: () =>
-        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
+        sendCustomEventViaGtm('contact-click', 'header-cta', 'page-header'),
     },
   ];
 
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/enterprise/trial',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       title: 'Request a free trial',
       children: 'Request a free trial',
       onClick: () =>
-        sendCustomEvent(
+        sendCustomEventViaGtm(
           'request-trial-click',
           'scrolling-header-cta',
           'enterprise'
@@ -64,7 +64,7 @@ export function Enterprise(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

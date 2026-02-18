@@ -38,7 +38,7 @@ export interface RemoteReleaseResult {
  * Abstract base class for remote release clients
  */
 export abstract class RemoteReleaseClient<
-  RemoteRelease extends Record<string, any>
+  RemoteRelease extends Record<string, any>,
 > {
   /**
    * Used in user-facing messaging
@@ -138,8 +138,8 @@ export abstract class RemoteReleaseClient<
         ? 'body' in existingRelease
           ? existingRelease.body
           : 'description' in existingRelease
-          ? existingRelease.description
-          : ''
+            ? existingRelease.description
+            : ''
         : '',
       changelogContents
     );

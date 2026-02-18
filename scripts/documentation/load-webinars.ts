@@ -111,7 +111,7 @@ const propertyParsers = {
       .join('');
   },
   select: (prop: SelectProperty): string => {
-    return prop.select.name;
+    return prop.select?.name;
   },
   title: (prop: TitleProperty): string => {
     return propertyParsers.rich_text({
@@ -136,112 +136,115 @@ async function main() {
   const response = await notion.databases.query({
     database_id: '17c69f3c238780eb8ef6df32ce48f919',
   });
-  response.results.forEach(async (entry: any) => {
-    const webinar: WebinarResponse = entry.properties;
-    const processedWebinar = Object.fromEntries(
-      Object.entries(webinar).map(([key, val]) => {
-        return [key, propertyParsers[val.type](val)];
-      })
-    );
+  response.results
+    .filter((entry) => entry['Status']?.select !== null)
+    .forEach(async (entry: any) => {
+      const webinar: WebinarResponse = entry.properties;
 
-    let cover_image = '';
-    const imageFiles = webinar['Webinar Card Image'].files;
-    function ensureDirectoryExistence(filePath) {
-      var directory = dirname(filePath);
-      if (existsSync(directory)) {
-        return true;
+      const processedWebinar = Object.fromEntries(
+        Object.entries(webinar).map(([key, val]) => {
+          return [key, propertyParsers[val.type](val)];
+        })
+      );
+
+      let cover_image = '';
+      const imageFiles = webinar['Webinar Card Image'].files;
+      function ensureDirectoryExistence(filePath) {
+        var directory = dirname(filePath);
+        if (existsSync(directory)) {
+          return true;
+        }
+        ensureDirectoryExistence(directory);
+        mkdirSync(directory);
       }
-      ensureDirectoryExistence(directory);
-      mkdirSync(directory);
-    }
-    async function download(url: string, path: string) {
-      return new Promise(async (onSuccess) => {
-        get(url, async (res) => {
-          ensureDirectoryExistence(path);
-          const fileWriteStream = createWriteStream(path, {
-            autoClose: true,
-            flags: 'w',
+      async function download(url: string, path: string) {
+        return new Promise(async (onSuccess) => {
+          get(url, async (res) => {
+            ensureDirectoryExistence(path);
+            const fileWriteStream = createWriteStream(path, {
+              autoClose: true,
+              flags: 'w',
+            });
+            await pipeline(res, fileWriteStream);
+            onSuccess('success');
           });
-          await pipeline(res, fileWriteStream);
-          onSuccess('success');
         });
-      });
-    }
-    if (imageFiles.length > 0) {
-      const imageFilePath =
-        BLOG_ROOT +
-        `/images/${webinar.Date.date.start}/${imageFiles[0].name.replaceAll(
-          ' ',
-          '-'
-        )}`;
-      if (!existsSync(imageFilePath)) {
-        download(imageFiles[0].file.url, imageFilePath);
-        console.log('Downloaded image', imageFilePath);
       }
-      cover_image = `/blog/images/${
-        webinar.Date.date.start
-      }/${imageFiles[0].name.replaceAll(' ', '-')}`;
-      if (existsSync(imageFilePath.replace('.png', '.avif'))) {
-        cover_image = cover_image.replace('.png', '.avif');
+      if (imageFiles.length > 0) {
+        const imageFilePath =
+          BLOG_ROOT +
+          `/images/${webinar.Date.date.start}/${imageFiles[0].name.replaceAll(
+            ' ',
+            '-'
+          )}`;
+        if (!existsSync(imageFilePath)) {
+          download(imageFiles[0].file.url, imageFilePath);
+          console.log('Downloaded image', imageFilePath);
+        }
+        cover_image = `/blog/images/${
+          webinar.Date.date.start
+        }/${imageFiles[0].name.replaceAll(' ', '-')}`;
+        if (existsSync(imageFilePath.replace('.png', '.avif'))) {
+          cover_image = cover_image.replace('.png', '.avif');
+        }
       }
-    }
 
-    const webinarMarkdown = `---
+      const webinarMarkdown = `---
 title: "${processedWebinar.Title}"
 description: "${processedWebinar.Description}"
 date: ${processedWebinar['Publish Date'] || processedWebinar.Date}
 slug: '${slugify(processedWebinar.Title)}'
 authors: [${processedWebinar['Speaker(s)']
-      .replace(', and ', ', ')
-      .replace(' and ', ', ')
-      .split(', ')
-      .map((author) => `'${author}'`)
-      .join(', ')}]
+        .replace(', and ', ', ')
+        .replace(' and ', ', ')
+        .split(', ')
+        .map((author) => `'${author}'`)
+        .join(', ')}]
 tags: [webinar]${
-      cover_image
-        ? `
+        cover_image
+          ? `
 cover_image: ${cover_image}`
-        : ''
-    }${
-      processedWebinar['Time']
-        ? `
+          : ''
+      }${
+        processedWebinar['Time']
+          ? `
 time: ${processedWebinar['Time']}`
-        : ''
-    }${
-      processedWebinar['Status']
-        ? `
+          : ''
+      }${
+        processedWebinar['Status']
+          ? `
 status: ${processedWebinar['Status']}`
-        : ''
-    }${
-      processedWebinar['Link to Landing Page']
-        ? `
+          : ''
+      }${
+        processedWebinar['Link to Landing Page']
+          ? `
 registrationUrl: ${
-            processedWebinar['YouTube Link'] &&
-            processedWebinar['Status'] === 'Past - Ungated'
-              ? processedWebinar['YouTube Link']
-              : processedWebinar['Link to Landing Page']
-          }`
-        : ''
-    }
+              processedWebinar['YouTube Link'] &&
+              processedWebinar['Status'] === 'Past - Ungated'
+                ? processedWebinar['YouTube Link']
+                : processedWebinar['Link to Landing Page']
+            }`
+          : ''
+      }
 ---${
-      processedWebinar.Time
-        ? `
+        processedWebinar.Time
+          ? `
 
 **${new Date(
-            processedWebinar.Date + ' ' + new Date().toTimeString()
-          ).toLocaleDateString('en-US', {
-            month: 'short',
-            day: '2-digit',
-            year: 'numeric',
-          })} - ${processedWebinar.Time}**`
-        : ''
-    }${
-      processedWebinar['Speaker(s)']
-        ? `
+              processedWebinar.Date + ' ' + new Date().toTimeString()
+            ).toLocaleDateString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              year: 'numeric',
+            })} - ${processedWebinar.Time}**`
+          : ''
+      }${
+        processedWebinar['Speaker(s)']
+          ? `
 
 Presented by ${processedWebinar['Speaker(s)']}`
-        : ''
-    }
+          : ''
+      }
 
 ${processedWebinar.Description}
 
@@ -250,27 +253,27 @@ ${
     ? `{% call-to-action title="Register today!" url="${processedWebinar['Link to Landing Page']}" description="Save your spot" /%}`
     : ``
 }${
-      processedWebinar.Status === 'Past - Gated' &&
-      processedWebinar['Link to Landing Page']
-        ? `{% call-to-action title="Download the recording" url="${processedWebinar['Link to Landing Page']}" description="Sign up to gain access" /%}`
-        : ''
-    }${
-      processedWebinar.Status === 'Past - Ungated' &&
-      processedWebinar['Link to Landing Page']
-        ? `{% call-to-action title="View the recording" url="${processedWebinar['YouTube Link']}" description="Watch on youtube" /%}`
-        : ''
-    }
+        processedWebinar.Status === 'Past - Gated' &&
+        processedWebinar['Link to Landing Page']
+          ? `{% call-to-action title="Download the recording" url="${processedWebinar['Link to Landing Page']}" description="Sign up to gain access" /%}`
+          : ''
+      }${
+        processedWebinar.Status === 'Past - Ungated' &&
+        processedWebinar['Link to Landing Page']
+          ? `{% call-to-action title="View the recording" url="${processedWebinar['YouTube Link']}" description="Watch on youtube" /%}`
+          : ''
+      }
 `;
 
-    writeFileSync(
-      BLOG_ROOT +
-        '/' +
-        processedWebinar.Date +
-        '-' +
-        slugify(processedWebinar.Title) +
-        '.md',
-      webinarMarkdown
-    );
-  });
+      writeFileSync(
+        BLOG_ROOT +
+          '/' +
+          processedWebinar.Date +
+          '-' +
+          slugify(processedWebinar.Title) +
+          '.md',
+        webinarMarkdown
+      );
+    });
 }
 main();

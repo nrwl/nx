@@ -1,6 +1,6 @@
 import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync, promises as fsp } from 'node:fs';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
@@ -9,6 +9,8 @@ import { output } from '../../utils/output';
 const createSpinner = require('ora');
 import { detectPlugins } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
+import { readJsonFile } from '../../utils/fileutils';
+import { PackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   addPackagePathToWorkspaces,
@@ -263,8 +265,15 @@ export async function importHandler(options: ImportOptions) {
 
   resetWorkspaceContext();
 
+  let packageJson: PackageJson | null;
+  try {
+    packageJson = readJsonFile<PackageJson>('package.json');
+  } catch {
+    packageJson = null;
+  }
   const { plugins, updatePackageScripts } = await detectPlugins(
     nxJson,
+    packageJson,
     options.interactive,
     true
   );
@@ -331,14 +340,14 @@ export async function importHandler(options: ImportOptions) {
         title: `Failed to install plugins`,
         bodyLines: [
           'The following plugins were not installed:',
-          ...plugins.map((p) => `- ${chalk.bold(p)}`),
+          ...plugins.map((p) => `- ${pc.bold(p)}`),
         ],
       });
       output.error({
         title: `To install the plugins manually`,
         bodyLines: [
           'You may need to run commands to install the plugins:',
-          ...plugins.map((p) => `- ${chalk.bold(pmc.exec + ' nx add ' + p)}`),
+          ...plugins.map((p) => `- ${pc.bold(pmc.exec + ' nx add ' + p)}`),
         ],
       });
     }
@@ -449,7 +458,7 @@ async function runPluginsInstall(
       title: `Install failed: ${e.message || 'Unknown error'}`,
       bodyLines: [
         'The following plugins were not installed:',
-        ...plugins.map((p) => `- ${chalk.bold(p)}`),
+        ...plugins.map((p) => `- ${pc.bold(p)}`),
         e.stack,
       ],
     });
@@ -457,7 +466,7 @@ async function runPluginsInstall(
       title: `To install the plugins manually`,
       bodyLines: [
         'You may need to run commands to install the plugins:',
-        ...plugins.map((p) => `- ${chalk.bold(pmc.exec + ' nx add ' + p)}`),
+        ...plugins.map((p) => `- ${pc.bold(pmc.exec + ' nx add ' + p)}`),
       ],
     });
   }
@@ -484,23 +493,23 @@ async function handleMissingWorkspacesEntry(
               `See: https://docs.npmjs.com/cli/using-npm/workspaces`,
             ]
           : pm === 'yarn'
-          ? [
-              `We recommend enabling Yarn workspaces to install dependencies for the imported project.`,
-              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
-              `See: https://yarnpkg.com/features/workspaces`,
-            ]
-          : pm === 'bun'
-          ? [
-              `We recommend enabling Bun workspaces to install dependencies for the imported project.`,
-              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
-              `See: https://bun.sh/docs/install/workspaces`,
-            ]
-          : [
-              `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
-              `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
-              chalk.bold(`packages:\n  - '${pkgPath}'`),
-              `See: https://pnpm.io/workspaces`,
-            ],
+            ? [
+                `We recommend enabling Yarn workspaces to install dependencies for the imported project.`,
+                `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+                `See: https://yarnpkg.com/features/workspaces`,
+              ]
+            : pm === 'bun'
+              ? [
+                  `We recommend enabling Bun workspaces to install dependencies for the imported project.`,
+                  `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+                  `See: https://bun.sh/docs/install/workspaces`,
+                ]
+              : [
+                  `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
+                  `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
+                  pc.bold(`packages:\n  - '${pkgPath}'`),
+                  `See: https://pnpm.io/workspaces`,
+                ],
     });
   } else {
     let workspaces: string[] = getPackageWorkspaces(pm, workspaceRoot);
@@ -516,16 +525,16 @@ async function handleMissingWorkspacesEntry(
       bodyLines:
         pm === 'npm' || pm === 'yarn' || pm === 'bun'
           ? [
-              `The imported project (${chalk.bold(
+              `The imported project (${pc.bold(
                 pkgPath
               )}) is missing the "workspaces" field in package.json.`,
-              `Added "${chalk.bold(pkgPath)}" to workspaces.`,
+              `Added "${pc.bold(pkgPath)}" to workspaces.`,
             ]
           : [
-              `The imported project (${chalk.bold(
+              `The imported project (${pc.bold(
                 pkgPath
               )}) is missing the "packages" field in pnpm-workspaces.yaml.`,
-              `Added "${chalk.bold(pkgPath)}" to packages.`,
+              `Added "${pc.bold(pkgPath)}" to packages.`,
             ],
     });
   }

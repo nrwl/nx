@@ -7,7 +7,9 @@ import {
   updateJson,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { join } from 'path';
+import { readCompilerOptionsFromTsConfig } from '../../utils/tsconfig-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 
@@ -29,15 +31,9 @@ export function setServerTsConfigOptionsForApplicationBuilder(
       return json;
     }
 
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
     const files = new Set(json.files ?? []);
     files.add(joinPathFragments('src', options.main));
-    if (angularMajorVersion >= 19) {
-      files.add(joinPathFragments('src', options.serverFileName));
-    } else {
-      files.add(joinPathFragments(options.serverFileName));
-    }
+    files.add(joinPathFragments('src', options.serverFileName));
     json.files = Array.from(files);
 
     return json;
@@ -61,10 +57,8 @@ export function generateTsConfigServerJsonForBrowserBuilder(
   let pathToFiles: string;
   if (angularMajorVersion >= 20) {
     pathToFiles = join(baseFilesPath, 'v20+', 'server-builder', 'root');
-  } else if (angularMajorVersion === 19) {
-    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
   } else {
-    pathToFiles = join(baseFilesPath, 'pre-v19', 'root');
+    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
   }
 
   generateFiles(tree, pathToFiles, project.root, {
@@ -74,10 +68,14 @@ export function generateTsConfigServerJsonForBrowserBuilder(
     tpl: '',
   });
 
+  const tsconfigServerPath = joinPathFragments(
+    project.root,
+    'tsconfig.server.json'
+  );
   updateJson(tree, joinPathFragments(project.root, 'tsconfig.json'), (json) => {
     json.references ??= [];
     json.references.push({
-      path: joinPathFragments(project.root, 'tsconfig.server.json'),
+      path: tsconfigServerPath,
     });
     return json;
   });
@@ -91,6 +89,34 @@ export function generateTsConfigServerJsonForBrowserBuilder(
         exclude.add('src/app/app.config.server.ts');
       }
       json.exclude = Array.from(exclude);
+      return json;
+    });
+  }
+  if (angularMajorVersion >= 21) {
+    // remove module and moduleResolution from tsconfig.server.json
+    updateJson(tree, tsconfigServerPath, (json) => {
+      delete json.compilerOptions.module;
+      delete json.compilerOptions.moduleResolution;
+      return json;
+    });
+
+    // read the parsed compiler options from tsconfig.server.json
+    const compilerOptions = readCompilerOptionsFromTsConfig(
+      tree,
+      tsconfigServerPath
+    );
+
+    const ts = ensureTypescript();
+    if (
+      compilerOptions.module === ts.ModuleKind.Preserve &&
+      compilerOptions.moduleResolution === ts.ModuleResolutionKind.Bundler
+    ) {
+      return;
+    }
+
+    updateJson(tree, tsconfigServerPath, (json) => {
+      json.compilerOptions.module = 'preserve';
+      json.compilerOptions.moduleResolution = 'bundler';
       return json;
     });
   }

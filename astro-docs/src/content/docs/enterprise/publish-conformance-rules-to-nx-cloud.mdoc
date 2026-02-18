@@ -35,10 +35,10 @@ We now have a valid implementation of a rule and we are ready to build it and pu
       "executor": "@nx/conformance:bundle-rules",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "{projectRoot}/dist"
-      }
-    }
-  }
+        "outputPath": "{projectRoot}/dist",
+      },
+    },
+  },
 }
 ```
 
@@ -67,14 +67,14 @@ Because publishing the rules is a relatively common operation, you can also wire
       "executor": "@nx/conformance:bundle-rules",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "{projectRoot}/dist"
-      }
+        "outputPath": "{projectRoot}/dist",
+      },
     },
     "publish": {
       "dependsOn": ["build"],
-      "command": "npx nx-cloud publish-conformance-rules {projectRoot}/dist"
-    }
-  }
+      "command": "npx nx-cloud publish-conformance-rules {projectRoot}/dist",
+    },
+  },
 }
 ```
 

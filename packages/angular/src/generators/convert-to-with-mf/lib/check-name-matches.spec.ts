@@ -1,4 +1,4 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast } from '@phenomnomnominal/tsquery';
 import { checkOutputNameMatchesProjectName } from './check-name-matches';
 describe('checkOutputNameMatchesProjectName', () => {
   it('should return true if the uniqueName matches the project name', () => {
@@ -9,10 +9,10 @@ describe('checkOutputNameMatchesProjectName', () => {
         }
     }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkOutputNameMatchesProjectName(ast, 'proj');
+    const result = checkOutputNameMatchesProjectName(sourceFile, 'proj');
 
     // ASSERT
     expect(result).toBeTruthy();
@@ -26,10 +26,10 @@ describe('checkOutputNameMatchesProjectName', () => {
         }
     }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkOutputNameMatchesProjectName(ast, 'proj');
+    const result = checkOutputNameMatchesProjectName(sourceFile, 'proj');
 
     // ASSERT
     expect(result).toBeFalsy();

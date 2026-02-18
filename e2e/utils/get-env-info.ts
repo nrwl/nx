@@ -27,11 +27,11 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
-    ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
-      existsSync(join(dir, 'pnpm-workspace.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'yarn'
+      : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+          existsSync(join(dir, 'pnpm-workspace.yaml'))
+        ? 'pnpm'
+        : 'npm';
 }
 
 export function isNotWindows() {

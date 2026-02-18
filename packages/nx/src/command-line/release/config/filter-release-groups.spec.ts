@@ -189,6 +189,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -226,6 +227,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -267,6 +269,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -306,6 +309,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -357,6 +361,7 @@ describe('filterReleaseGroups()', () => {
             logUnchangedProjects: undefined,
             versionActions: undefined,
             versionActionsOptions: undefined,
+            adjustSemverBumpsForZeroMajorVersion: undefined,
           },
           releaseTag: {
             pattern: '',
@@ -481,6 +486,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -522,6 +528,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -619,6 +626,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,
@@ -660,6 +668,7 @@ describe('filterReleaseGroups()', () => {
             },
             "resolvedVersionPlans": false,
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": undefined,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "currentVersionResolverMetadata": undefined,

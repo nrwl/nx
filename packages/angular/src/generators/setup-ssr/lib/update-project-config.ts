@@ -12,7 +12,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
@@ -59,27 +58,18 @@ export function updateProjectConfigForApplicationBuilder(
     }
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const sourceRoot = getProjectSourceRoot(project, tree);
 
   buildTarget.options ??= {};
   buildTarget.options.outputPath = outputPath;
   buildTarget.options.server = joinPathFragments(sourceRoot, options.main);
-
-  if (angularMajorVersion >= 19) {
-    buildTarget.options.ssr = {
-      entry: joinPathFragments(sourceRoot, options.serverFileName),
-    };
-    if (options.serverRouting) {
-      buildTarget.options.outputMode = 'server';
-    } else {
-      buildTarget.options.prerender = true;
-    }
+  buildTarget.options.ssr = {
+    entry: joinPathFragments(sourceRoot, options.serverFileName),
+  };
+  if (options.serverRouting) {
+    buildTarget.options.outputMode = 'server';
   } else {
     buildTarget.options.prerender = true;
-    buildTarget.options.ssr = {
-      entry: joinPathFragments(project.root, options.serverFileName),
-    };
   }
 
   updateProjectConfiguration(tree, options.project, project);
@@ -102,7 +92,6 @@ export function updateProjectConfigForBrowserBuilder(
     }
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const sourceRoot = getProjectSourceRoot(projectConfig, tree);
 
   projectConfig.targets.server = {
@@ -112,10 +101,7 @@ export function updateProjectConfigForBrowserBuilder(
       : '@nx/angular:webpack-server',
     options: {
       outputPath: joinPathFragments(baseOutputPath, 'server'),
-      main: joinPathFragments(
-        angularMajorVersion >= 19 ? sourceRoot : projectConfig.root,
-        options.serverFileName
-      ),
+      main: joinPathFragments(sourceRoot, options.serverFileName),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.server.json'),
       ...(buildTarget.options ? getServerOptions(buildTarget.options) : {}),
     },

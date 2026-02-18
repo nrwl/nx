@@ -42,6 +42,7 @@ public static partial class TargetBuilder
             [
                 "default",
                 $"^{productionInput}",
+                new { workingDirectory = "absolute" },
                 // new { externalDependencies = externalDeps }
             ],
             Outputs = [$"{outputPrefix}/{testResultsDir}"],

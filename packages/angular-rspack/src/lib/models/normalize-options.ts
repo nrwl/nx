@@ -97,11 +97,11 @@ export async function normalizeOptions(
   const normalizedSsr = !ssr
     ? false
     : typeof ssr === 'object'
-    ? {
-        entry: ssr.entry,
-        experimentalPlatform: 'node' as const, // @TODO: Add support for neutral platform
-      }
-    : ssr;
+      ? {
+          entry: ssr.entry,
+          experimentalPlatform: 'node' as const, // @TODO: Add support for neutral platform
+        }
+      : ssr;
 
   const normalizedOptimization = normalizeOptimization(optimization);
 
@@ -174,11 +174,11 @@ export async function normalizeOptions(
     ['polyfills', true],
     ...(globalStyles.filter((s) => s.initial).map((s) => [s.name, false]) as [
       string,
-      boolean
+      boolean,
     ][]),
     ...(globalScripts.filter((s) => s.initial).map((s) => [s.name, false]) as [
       string,
-      boolean
+      boolean,
     ][]),
     ['vendor', true],
     ['main', true],
@@ -277,6 +277,7 @@ export async function normalizeOptions(
     vendorChunk: options.vendorChunk ?? false,
     verbose: options.verbose ?? false,
     watch: options.watch ?? false,
+    watchOptions: options.watchOptions,
     zoneless,
   };
 }
@@ -313,8 +314,8 @@ export function normalizeOptimization(
         optimization.fonts === undefined
           ? true
           : typeof optimization.fonts === 'boolean'
-          ? optimization.fonts
-          : optimization.fonts.inline ?? true,
+            ? optimization.fonts
+            : (optimization.fonts.inline ?? true),
     },
     scripts: optimization.scripts ?? true,
     styles: {
@@ -322,14 +323,14 @@ export function normalizeOptimization(
         optimization.styles === undefined
           ? true
           : typeof optimization.styles === 'boolean'
-          ? optimization.styles
-          : optimization.styles.minify ?? true,
+            ? optimization.styles
+            : (optimization.styles.minify ?? true),
       inlineCritical:
         optimization.styles === undefined
           ? true
           : typeof optimization.styles === 'boolean'
-          ? optimization.styles
-          : optimization.styles.inlineCritical ?? true,
+            ? optimization.styles
+            : (optimization.styles.inlineCritical ?? true),
     },
   };
 }
@@ -397,7 +398,7 @@ function normalizeOutputPath(
     | undefined
 ): OutputPath {
   let base =
-    typeof outputPath === 'string' ? outputPath : outputPath?.base ?? 'dist';
+    typeof outputPath === 'string' ? outputPath : (outputPath?.base ?? 'dist');
   if (!base.startsWith(root)) {
     base = join(root, base);
   }

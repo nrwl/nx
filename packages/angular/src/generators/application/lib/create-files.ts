@@ -53,14 +53,12 @@ export async function createFiles(
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
     angularMajorVersion,
     rootOffset,
-    // Angular v19 or higher defaults to true, while lower versions default to false
-    setStandaloneFalse: angularMajorVersion >= 19,
-    setStandaloneTrue: angularMajorVersion < 19,
     provideGlobalErrorListener: angularMajorVersion >= 20,
     usePlatformBrowserDynamic: angularMajorVersion < 20,
     componentType: componentType ? names(componentType).className : '',
     componentFileSuffix,
     moduleTypeSeparator,
+    zoneless: options.zoneless,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'

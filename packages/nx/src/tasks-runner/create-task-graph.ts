@@ -518,11 +518,15 @@ export function getNonDummyDeps(
     if (cycles?.has(currentTask)) {
       return [];
     }
+    const deps = dependencies[currentTask] ?? [];
+    if (!Array.isArray(deps)) {
+      throw new Error(
+        `Expected dependencies of task ${currentTask} to be an array, but got ${typeof deps}`
+      );
+    }
     // if not a cycle, recursively get the non dummy dependencies
-    return (
-      dependencies[currentTask]?.flatMap((dep) =>
-        getNonDummyDeps(dep, dependencies, cycles, seen)
-      ) ?? []
+    return deps.flatMap((dep) =>
+      getNonDummyDeps(dep, dependencies, cycles, seen)
     );
   } else {
     return [currentTask];

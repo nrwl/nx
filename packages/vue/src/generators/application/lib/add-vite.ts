@@ -65,6 +65,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
     testEnvironment: 'jsdom',
     addPlugin: options.addPlugin,
     runtimeTsconfigFileName: 'tsconfig.app.json',
+    skipViteConfig: true,
   });
   tasks.push(vitestTask);
 
@@ -79,6 +80,8 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       plugins: ['vue()'],
       useEsmExtension: true,
     },
+    true,
+    undefined,
     true
   );
 

@@ -830,6 +830,7 @@ describe('app', () => {
                 '**/*.cjs',
                 '**/*.mjs',
               ],
+              // Override or add rules here
               rules: {
                 '@next/next/no-html-link-for-pages': ['error', './pages'],
               },

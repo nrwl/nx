@@ -48,7 +48,7 @@ export interface CreateNodesResult {
  */
 export type CreateNodesV2<T = unknown> = readonly [
   projectFilePattern: string,
-  createNodesFunction: CreateNodesFunctionV2<T>
+  createNodesFunction: CreateNodesFunctionV2<T>,
 ];
 
 /**

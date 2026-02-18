@@ -1,9 +1,20 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
+import {
+  ProjectGraph,
+  readJson,
+  readNxJson,
+  readProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import remote from './remote';
 import { getRootTsConfigPathInTree } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+  isUsingTsSolutionSetup: jest.fn(),
+}));
 
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
@@ -99,6 +110,10 @@ describe('remote generator', () => {
   });
 
   describe('bundler=webpack', () => {
+    beforeEach(() => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    });
+
     it('should create the remote with the correct config files', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
@@ -321,6 +336,52 @@ describe('remote generator', () => {
           bundler: 'webpack',
         })
       ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
+    });
+
+    it('should not set production webpack config when using TS Solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      const tree = createTreeWithEmptyWorkspace();
+
+      await remote(tree, {
+        directory: 'test',
+        devServerPort: 4201,
+        e2eTestRunner: 'none',
+        linter: 'none',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+        bundler: 'webpack',
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'test');
+      expect(
+        projectConfig.targets.build.configurations.production.webpackConfig
+      ).toBeUndefined();
+      expect(projectConfig.targets.build.dependsOn).toContain('typecheck');
+      expect(projectConfig.targets.serve.dependsOn).toContain('typecheck');
+    });
+
+    it('should set production webpack config when not using TS Solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+      const tree = createTreeWithEmptyWorkspace();
+
+      await remote(tree, {
+        directory: 'test',
+        devServerPort: 4201,
+        e2eTestRunner: 'none',
+        linter: 'none',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+        bundler: 'webpack',
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'test');
+      expect(
+        projectConfig.targets.build.configurations.production.webpackConfig
+      ).toBe('test/webpack.config.prod.js');
     });
   });
 });

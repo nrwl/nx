@@ -44,10 +44,17 @@ pub struct TaskGraph {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub enum CwdMode {
+    Absolute,
+    Relative,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
     Runtime(String),
     Environment(String),
+    Cwd(CwdMode),
     ProjectFileSet(String, Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -76,6 +83,15 @@ impl ToNapiValue for HashInstruction {
     }
 }
 
+impl fmt::Display for CwdMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            CwdMode::Absolute => write!(f, "absolute"),
+            CwdMode::Relative => write!(f, "relative"),
+        }
+    }
+}
+
 impl fmt::Display for HashInstruction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
@@ -90,6 +106,7 @@ impl fmt::Display for HashInstruction {
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
                 HashInstruction::Environment(env) => format!("env:{}", env),
+                HashInstruction::Cwd(mode) => format!("cwd:{}", mode),
                 HashInstruction::TaskOutput(task_output, dep_outputs) => {
                     let dep_outputs = dep_outputs.join(",");
                     format!("{task_output}:{dep_outputs}")

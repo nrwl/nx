@@ -42,10 +42,12 @@ export async function handleDockerVersion(
       const versionScheme =
         dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
           ? dockerVersionScheme
-          : await promptForNewVersion(
-              availableVersionSchemes,
-              projectGraphNode.name
-            );
+          : Object.keys(availableVersionSchemes).length === 1
+            ? Object.keys(availableVersionSchemes)[0]
+            : await promptForNewVersion(
+                availableVersionSchemes,
+                projectGraphNode.name
+              );
       newVersion = calculateNewVersion(
         projectGraphNode.name,
         versionScheme,

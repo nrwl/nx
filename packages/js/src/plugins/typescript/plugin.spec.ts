@@ -1,7 +1,7 @@
 import { detectPackageManager, type CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
-import { mkdirSync, rmdirSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -46,7 +46,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     tempFs.cleanup();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
-    rmdirSync('tmp/project-graph-cache', { recursive: true });
+    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });
 
   it('should handle missing lock file', async () => {
@@ -365,6 +365,314 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "description": "Runs type-checking for the project.",
                     "help": {
                       "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with custom compiler option (tsgo)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsgo --build --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with custom compiler option (tsgo) and verboseOutput', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          verboseOutput: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsgo --build --emitDeclarationOnly --verbose",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with custom compiler option (tsgo) and custom targetName', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          typecheck: {
+            targetName: 'type-check',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "type-check": {
+                  "cache": true,
+                  "command": "tsgo --build --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^type-check",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with explicit tsc compiler option', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsc',
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsc --build --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create both typecheck and build targets with custom compiler option (tsgo)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/package.json': `{ "main": "dist/index.js" }`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          build: {
+            configName: 'tsconfig.lib.json',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsgo --build --emitDeclarationOnly",
+                  "dependsOn": [
+                    "build",
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -2859,6 +3167,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "@nx/js:typescript-sync",
                   ],
                 },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
+                  "dependsOn": [
+                    "build-deps",
+                  ],
+                },
               },
             },
           },
@@ -3003,6 +3323,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "@nx/js:typescript-sync",
                   ],
                 },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
+                  "dependsOn": [
+                    "build-deps",
+                  ],
+                },
               },
             },
           },
@@ -3045,6 +3377,66 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
                       "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a build target with custom compiler option (tsgo)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/package.json': `{ "main": "dist/index.js" }`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          typecheck: false,
+          build: {
+            configName: 'tsconfig.lib.json',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
                       "example": {
                         "args": [
                           "--force",

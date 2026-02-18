@@ -90,10 +90,14 @@ export async function getCommonConfig(
     },
     watch: normalizedOptions.watch,
     watchOptions: {
+      // Default aggregateTimeout to batch rapid filesystem events (e.g., editor backup files)
+      aggregateTimeout: 50,
       poll: normalizedOptions.poll,
       followSymlinks: normalizedOptions.preserveSymlinks,
       ignored:
         normalizedOptions.poll === undefined ? undefined : '**/node_modules/**',
+      // User-provided watchOptions take precedence
+      ...normalizedOptions.watchOptions,
     },
     ignoreWarnings: [
       // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83

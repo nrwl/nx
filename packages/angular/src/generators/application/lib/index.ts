@@ -1,6 +1,7 @@
 export * from './add-e2e';
 export * from './add-linting';
 export * from './add-proxy-config';
+export * from './add-serve-static-target';
 export * from './add-unit-test-runner';
 export * from './create-files';
 export * from './create-project';
@@ -9,4 +10,4 @@ export * from './normalize-options';
 export * from './normalized-schema';
 export * from './set-generator-defaults';
 export * from './update-tsconfig-files';
-export * from './add-serve-static-target';
+export * from './validate-options';

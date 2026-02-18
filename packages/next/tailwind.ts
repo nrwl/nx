@@ -17,9 +17,11 @@ export function createGlobPatternsForDependencies(
    * This is a temporary workaround to support both TailwindCSS v4 and v3.
    * Once TailwindCSS v3 is no longer supported, this workaround can be removed.
    */
-  const tailwindVersion = require(require.resolve('tailwindcss/package.json', {
-    paths: [dirPath],
-  })).version;
+  const tailwindVersion = require(
+    require.resolve('tailwindcss/package.json', {
+      paths: [dirPath],
+    })
+  ).version;
 
   if (tailwindVersion && typeof tailwindVersion === 'string') {
     const majorVersion = parseInt(tailwindVersion.split('.')[0], 10);

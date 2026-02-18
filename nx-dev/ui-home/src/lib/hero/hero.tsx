@@ -3,7 +3,7 @@ import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 import { NxHeroVideo } from './nx-hero-video';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function Hero(): ReactElement {
   return (
@@ -33,18 +33,22 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            <Strong>Get to green PRs in half the time.</Strong> Nx optimizes
-            your builds, scales your CI, and fixes failed PRs. Built for
-            developers and AI agents.
+            <Strong>
+              The Monorepo Platform that amplifies both developers and AI
+              agents.
+            </Strong>
+            <br />
+            Nx optimizes your builds, scales your CI, and fixes failed PRs
+            automatically. <br /> Ship in half the time.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
               title="Get started with Nx & Nx Cloud"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent('get-started-click', 'hero', 'homepage')
+                sendCustomEventViaGtm('get-started-click', 'hero', 'homepage')
               }
             >
               Get started
@@ -55,7 +59,7 @@ export function Hero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent('documentation-click', 'hero', 'homepage')
+                sendCustomEventViaGtm('documentation-click', 'hero', 'homepage')
               }
             >
               Documentation

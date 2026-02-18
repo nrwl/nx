@@ -24,7 +24,6 @@ import { isDaemonEnabled } from '../../daemon/client/client';
  * the devkit-internals
  */
 export class LoadedNxPlugin {
-  index?: number;
   readonly name: string;
   readonly createNodes?: [
     filePattern: string,
@@ -35,7 +34,7 @@ export class LoadedNxPlugin {
       context: CreateNodesContextV2
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
-    >
+    >,
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
@@ -55,7 +54,11 @@ export class LoadedNxPlugin {
   readonly include?: string[];
   readonly exclude?: string[];
 
-  constructor(plugin: NxPluginV2, pluginDefinition: PluginConfiguration) {
+  constructor(
+    plugin: NxPluginV2,
+    pluginDefinition: PluginConfiguration,
+    public readonly index?: number
+  ) {
     this.name = plugin.name;
     if (typeof pluginDefinition !== 'string') {
       this.options = pluginDefinition.options;

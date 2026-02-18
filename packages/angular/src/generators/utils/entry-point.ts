@@ -10,7 +10,7 @@ export function locateLibraryEntryPointFromDirectory(
 ): string | null {
   const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
   let entryPointFile = tree.exists(ngPackageJsonPath)
-    ? readJson(tree, ngPackageJsonPath).lib?.entryFile ?? 'src/public_api.ts'
+    ? (readJson(tree, ngPackageJsonPath).lib?.entryFile ?? 'src/public_api.ts')
     : null;
 
   if (entryPointFile) {

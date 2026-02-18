@@ -73,7 +73,7 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
               ? undefined
               : `${options.appProjectSourceRoot}/index.html`,
           browser: `${options.appProjectSourceRoot}/main.ts`,
-          polyfills: ['zone.js'],
+          polyfills: options.zoneless ? undefined : ['zone.js'],
           tsConfig: joinPathFragments(
             options.appProjectRoot,
             'tsconfig.app.json'
@@ -117,15 +117,18 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
         },
         defaultConfiguration: 'development',
       },
-      'extract-i18n': {
-        executor:
-          angularMajorVersion >= 20
-            ? '@angular/build:extract-i18n'
-            : '@angular-devkit/build-angular:extract-i18n',
-        options: {
-          buildTarget: `${options.name}:build`,
-        },
-      },
+      'extract-i18n':
+        angularMajorVersion < 21
+          ? {
+              executor:
+                angularMajorVersion >= 20
+                  ? '@angular/build:extract-i18n'
+                  : '@angular-devkit/build-angular:extract-i18n',
+              options: {
+                buildTarget: `${options.name}:build`,
+              },
+            }
+          : undefined,
     },
   };
 
@@ -176,7 +179,7 @@ function createProjectForWebpack(tree: Tree, options: NormalizedSchema) {
           outputPath: options.outputPath,
           index: `${options.appProjectSourceRoot}/index.html`,
           main: `${options.appProjectSourceRoot}/main.ts`,
-          polyfills: ['zone.js'],
+          polyfills: options.zoneless ? undefined : ['zone.js'],
           tsConfig: joinPathFragments(
             options.appProjectRoot,
             'tsconfig.app.json'

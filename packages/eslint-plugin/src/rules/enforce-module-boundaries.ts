@@ -63,7 +63,7 @@ export type Options = [
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
-  }
+  },
 ];
 export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'

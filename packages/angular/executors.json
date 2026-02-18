@@ -39,6 +39,11 @@
       "implementation": "./src/executors/extract-i18n/extract-i18n.impl",
       "schema": "./src/executors/extract-i18n/schema.json",
       "description": "Extracts i18n messages from source code."
+    },
+    "unit-test": {
+      "implementation": "./src/executors/unit-test/unit-test.impl",
+      "schema": "./src/executors/unit-test/schema.json",
+      "description": "Run application unit tests. _Note: this is only supported in Angular versions >= 21.0.0_."
     }
   },
   "builders": {

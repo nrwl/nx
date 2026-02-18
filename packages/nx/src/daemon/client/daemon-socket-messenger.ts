@@ -5,16 +5,29 @@ import {
   MESSAGE_END_SEQ,
 } from '../../utils/consume-messages-from-socket';
 import { serialize } from '../socket-utils';
+import { clientLogger } from '../logger';
 
 export interface Message extends Record<string, any> {
   type: string;
   data?: any;
 }
 
+export class VersionMismatchError extends Error {
+  constructor() {
+    super('Version mismatch with daemon server');
+    this.name = 'VersionMismatchError';
+    Object.setPrototypeOf(this, VersionMismatchError.prototype);
+  }
+}
+
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
-  async sendMessage(messageToDaemon: Message, force?: 'v8' | 'json') {
+  sendMessage(messageToDaemon: Message, force?: 'v8' | 'json') {
+    if (!this.socket) {
+      throw new Error('Socket not initialized.');
+    }
+    clientLogger.log('[Messenger] Sending message type:', messageToDaemon.type);
     performance.mark(
       'daemon-message-serialization-start-' + messageToDaemon.type
     );
@@ -30,27 +43,40 @@ export class DaemonSocketMessenger {
     this.socket.write(serialized);
     // send EOT to indicate that the message has been fully written
     this.socket.write(MESSAGE_END_SEQ);
+    clientLogger.log('[Messenger] Message sent');
   }
 
   listen(
     onData: (message: string) => void,
     onClose: () => void = () => {},
-    onError: (err: Error) => void = (err) => {}
-  ) {
+    onError: (err: Error) => void = () => {}
+  ): DaemonSocketMessenger {
+    clientLogger.log('[Messenger] Setting up socket listeners');
+
+    this.socket.on('close', onClose);
+    this.socket.on('error', (err) => {
+      clientLogger.log('[Messenger] Socket error:', err.message);
+      onError(err);
+    });
+
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (message) => {
+        clientLogger.log(
+          '[Messenger] Received message, length:',
+          message.length
+        );
         onData(message);
       })
     );
 
-    this.socket.on('close', onClose);
-    this.socket.on('error', onError);
-
+    clientLogger.log('[Messenger] listen() complete');
     return this;
   }
 
   close() {
-    this.socket.destroy();
+    if (this.socket) {
+      this.socket.destroy();
+    }
   }
 }

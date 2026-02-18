@@ -14,7 +14,7 @@ To skip caching for a specific task, use the `--skip-nx-cache` flag. This can be
 npx nx build --skip-nx-cache
 ```
 
-This will avoid using any local or remote cache.
+This will avoid using any local or remote cache. If using Nx Cloud, the run will not be recorded either.
 
 ## Skip Remote Caching from Nx Cloud
 
@@ -24,7 +24,7 @@ To skip remote caching provided by Nx Cloud, use the `--no-cloud` flag. This ens
 npx nx build --no-cloud
 ```
 
-It will **still use the local cache if available**.
+It will **still use the local cache if available**. If using Nx Cloud the run will not be recorded either.
 
 ## Reset
 

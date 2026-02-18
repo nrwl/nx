@@ -99,12 +99,11 @@ function addRemoteToStaticHost(
   }
 
   const hostMFConfig = tree.read(hostMFConfigPath, 'utf-8');
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const webpackAst = tsquery.ast(hostMFConfig);
-  const mfRemotesNode = tsquery(
+  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const webpackAst = ast(hostMFConfig);
+  const mfRemotesNode = query(
     webpackAst,
-    'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=remotes]) > ArrayLiteralExpression',
-    { visitAllChildren: true }
+    'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=remotes]) > ArrayLiteralExpression'
   )[0] as ArrayLiteralExpression;
 
   const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;

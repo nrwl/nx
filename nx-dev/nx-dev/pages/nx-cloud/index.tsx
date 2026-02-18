@@ -8,6 +8,7 @@ import {
   CustomerMetrics,
   Faq,
   Features,
+  FeaturesCallToAction,
   GetStarted,
   NxCloudHero,
   Pricing,
@@ -21,7 +22,7 @@ export function NxCloud(): ReactElement {
     <>
       <NextSeo
         title="Get to green PRs, automatically."
-        description="Nx Cloud is the only platform that is smart, scalable, and self-healing so your CI isn’t your bottleneck."
+        description="Nx Cloud is the only monorepo platform that is smart, scalable, and self-healing so your CI isn’t your bottleneck."
         openGraph={{
           url: 'https://nx.dev/nx-cloud',
           title: 'Get to green PRs, automatically.',
@@ -32,7 +33,7 @@ export function NxCloud(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -54,7 +55,7 @@ export function NxCloud(): ReactElement {
           <Features />
         </div>
         <div className="mt-32 lg:mt-56">
-          <CustomerMetrics />
+          <FeaturesCallToAction />
         </div>
         <div className="mt-32 lg:mt-56">
           <GetStarted />
@@ -64,6 +65,9 @@ export function NxCloud(): ReactElement {
         </div>
         <div className="mt-32 lg:mt-56">
           <Pricing />
+        </div>
+        <div className="mt-32 lg:mt-56">
+          <CustomerMetrics />
         </div>
         <div className="mt-32 lg:mt-56">
           <Faq />

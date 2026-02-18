@@ -13,7 +13,6 @@ These instructions guide you through migrating an Nx workspace containing multip
    ```
 
 2. **Locate all Vitest configuration files**:
-
    - Search for `vitest.config.{ts,js,mjs}`
    - Search for `vitest.workspace.{ts,js,mjs}`
    - Check `project.json` files for inline Vitest configuration
@@ -702,6 +701,14 @@ nx show project PROJECT_NAME --web
 # Clear Nx cache if needed
 nx reset
 ```
+
+## Guard Rails
+
+DO NOT
+
+- Force tests to pass by removing test logic and replacing it with `expect(true).toBe(true)`
+- Remove assertions
+- Add additional mocks that force tests to pass
 
 ---
 

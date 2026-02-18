@@ -93,18 +93,19 @@ function getStringValue(value: any): string | null {
 function findPluginConfig(
   pluginsTable: any,
   pluginName: string
-): { keyValue: any; format: 'simple' | 'object' } | null {
+): { keyValue: any; format: 'simple' | 'object'; alias: string } | null {
   if (!pluginsTable.body) return null;
 
   for (const item of pluginsTable.body) {
     if (item.type === 'TOMLKeyValue') {
       const value = item.value;
+      const alias = getKeyName(item.key);
 
       if (value.type === 'TOMLValue' && value.kind === 'string') {
         // Simple format: plugin = "id:version"
         const stringValue = value.value;
         if (stringValue.startsWith(`${pluginName}:`)) {
-          return { keyValue: item, format: 'simple' };
+          return { keyValue: item, format: 'simple', alias };
         }
       } else if (value.type === 'TOMLInlineTable') {
         // Object format: { id = "plugin.name", version = "1.0.0" }
@@ -112,7 +113,7 @@ function findPluginConfig(
         if (idKeyValue) {
           const idValue = getStringValue(idKeyValue.value);
           if (idValue === pluginName) {
-            return { keyValue: item, format: 'object' };
+            return { keyValue: item, format: 'object', alias };
           }
         }
       }
@@ -286,6 +287,34 @@ export function updatePluginVersionInCatalogAst(
     }
 
     return reconstructTomlWithUpdates(sourceText, updates);
+  } catch (error) {
+    console.error('Error parsing TOML with AST:', error);
+    return null;
+  }
+}
+
+/**
+ * Gets the plugin alias from a version catalog for a given plugin ID
+ * Returns the alias name (e.g., "nxProjectGraph") if found, null otherwise
+ */
+export function getPluginAliasFromCatalogAst(
+  sourceText: string,
+  pluginName: string
+): string | null {
+  try {
+    const ast = parseTOML(sourceText);
+
+    const pluginsTable = findPluginsTable(ast);
+    if (!pluginsTable) {
+      return null;
+    }
+
+    const pluginConfig = findPluginConfig(pluginsTable, pluginName);
+    if (!pluginConfig) {
+      return null;
+    }
+
+    return pluginConfig.alias;
   } catch (error) {
     console.error('Error parsing TOML with AST:', error);
     return null;

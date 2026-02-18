@@ -595,6 +595,80 @@ describe('TargetProjectLocator', () => {
 
       expect(result).toEqual('child-pm-workspaces');
     });
+
+    it('should convert relative file paths to absolute paths before TypeScript module resolution', () => {
+      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
+      const resolveModuleByImportSpy = jest
+        .spyOn(typescriptModule, 'resolveModuleByImport')
+        .mockReturnValue('/root/libs/proj/some-module.ts');
+
+      // Create a simple locator to test TypeScript resolution path
+      const simpleProjects: Record<string, ProjectGraphProjectNode> = {
+        proj: {
+          name: 'proj',
+          type: 'lib',
+          data: { root: 'libs/proj' },
+        },
+      };
+
+      const testLocator = new TargetProjectLocator(
+        simpleProjects,
+        {},
+        new Map()
+      );
+
+      // Test with a relative path - the method should convert it to absolute
+      // We use a unique package name that won't be found via npm resolution
+      (testLocator as any).resolveImportWithTypescript(
+        'package-that-is-installed-in-workspace-root',
+        'libs/proj/index.ts'
+      );
+
+      // Verify that resolveModuleByImport was called with an absolute path
+      // We only care that the second parameter (filePath) was converted to absolute
+      expect(resolveModuleByImportSpy).toHaveBeenCalled();
+      const [[importExpr, filePath]] = resolveModuleByImportSpy.mock.calls;
+      expect(importExpr).toBe('package-that-is-installed-in-workspace-root');
+      expect(filePath).toBe('/root/libs/proj/index.ts'); // relative path should be converted to absolute
+
+      resolveModuleByImportSpy.mockRestore();
+    });
+
+    it('should keep absolute file paths as-is for TypeScript module resolution', () => {
+      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
+      const resolveModuleByImportSpy = jest
+        .spyOn(typescriptModule, 'resolveModuleByImport')
+        .mockReturnValue('/root/libs/proj/some-module.ts');
+
+      const simpleProjects: Record<string, ProjectGraphProjectNode> = {
+        proj: {
+          name: 'proj',
+          type: 'lib',
+          data: { root: 'libs/proj' },
+        },
+      };
+
+      const testLocator = new TargetProjectLocator(
+        simpleProjects,
+        {},
+        new Map()
+      );
+
+      // Test with an absolute path - it should remain absolute
+      (testLocator as any).resolveImportWithTypescript(
+        'package-that-is-installed-in-workspace-root',
+        '/root/libs/proj/index.ts'
+      );
+
+      // Verify that resolveModuleByImport was called with the same absolute path
+      // We only care that the second parameter (filePath) remained absolute
+      expect(resolveModuleByImportSpy).toHaveBeenCalled();
+      const [[importExpr, filePath]] = resolveModuleByImportSpy.mock.calls;
+      expect(importExpr).toBe('package-that-is-installed-in-workspace-root');
+      expect(filePath).toBe('/root/libs/proj/index.ts');
+
+      resolveModuleByImportSpy.mockRestore();
+    });
   });
 
   describe('findTargetProjectWithImport (without tsconfig.json)', () => {

@@ -17,9 +17,6 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
-      "path": "../vitest/tsconfig.lib.json"
-    },
-    {
       "path": "../rollup/tsconfig.lib.json"
     },
     {
@@ -41,7 +38,13 @@
       "path": "../nx/tsconfig.lib.json"
     },
     {
+      "path": "../storybook/tsconfig.lib.json"
+    },
+    {
       "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../vitest/tsconfig.lib.json"
     },
     {
       "path": "../rsbuild/tsconfig.lib.json"

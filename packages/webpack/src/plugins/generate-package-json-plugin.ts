@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
 import {
   createLockFile,
@@ -10,6 +11,7 @@ import {
 import {
   detectPackageManager,
   type ProjectGraph,
+  readJsonFile,
   serializeJson,
 } from '@nx/devkit';
 
@@ -25,8 +27,22 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
       projectName: string;
       targetName: string;
       projectGraph: ProjectGraph;
+      runtimeDependencies?: string[];
     }
   ) {}
+
+  private resolveRuntimeDependencies(): Record<string, string> {
+    const runtimeDependencies: Record<string, string> = {};
+    if (this.options.runtimeDependencies) {
+      for (const dep of this.options.runtimeDependencies) {
+        const depPkgJson = require.resolve(`${dep}/package.json`);
+        if (!fs.existsSync(depPkgJson)) continue;
+        const { name, version } = readJsonFile(depPkgJson);
+        runtimeDependencies[name] = version;
+      }
+    }
+    return runtimeDependencies;
+  }
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
@@ -57,6 +73,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               target: HelperDependency.tsc,
             });
           }
+          const runtimeDependencies = this.resolveRuntimeDependencies();
 
           const packageJson = createPackageJson(
             this.options.projectName,
@@ -70,6 +87,11 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
+
+          packageJson.dependencies = {
+            ...packageJson.dependencies,
+            ...runtimeDependencies,
+          };
 
           compilation.emitAsset(
             'package.json',

@@ -1,11 +1,28 @@
 import { Argv, CommandModule } from 'yargs';
 import { parseCSV } from '../yargs-utils/shared-options';
+import { isAiAgent } from '../../native';
+import {
+  writeAiOutput,
+  buildErrorResult,
+  writeErrorLog,
+  determineErrorCode,
+} from './utils/ai-output';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
   describe:
     'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.',
-  builder: (yargs) => withInitOptions(yargs),
+  builder: async (yargs: Argv) => {
+    // Check for --help flag directly since async builder doesn't receive helpOrVersionSet reliably
+    const wantsHelp =
+      process.argv.includes('--help') || process.argv.includes('-h');
+    if (wantsHelp) {
+      const y = await withInitOptions(yargs);
+      y.showHelp();
+      process.exit(0);
+    }
+    return withInitOptions(yargs);
+  },
   handler: async (args: any) => {
     // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
     // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
@@ -28,9 +45,19 @@ export const yargsInitCommand: CommandModule = {
         await require('./init-v1').initHandler(args);
       }
       process.exit(0);
-    } catch {
-      // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
-      process.stdout.write('\x1b[?25h');
+    } catch (error) {
+      // Output structured error for AI agents
+      if (isAiAgent()) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorCode = determineErrorCode(error);
+        const errorLogPath = writeErrorLog(error);
+        writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
+      } else {
+        // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
+        // Skip for AI agents to avoid corrupting NDJSON output
+        process.stdout.write('\x1b[?25h');
+      }
       process.exit(1);
     }
   },
@@ -73,7 +100,18 @@ async function withInitOptions(yargs: Argv) {
         type: 'array',
         string: true,
         description: 'List of AI agents to set up.',
-        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini'],
+        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini', 'opencode'],
+      })
+      .option('plugins', {
+        type: 'string',
+        description:
+          'Plugins to install: "skip" for none, "all" for all detected, or comma-separated list (e.g., @nx/vite,@nx/jest).',
+      })
+      .option('cacheable', {
+        type: 'string',
+        description:
+          'Comma-separated list of cacheable operations (e.g., build,test,lint).',
+        coerce: parseCSV,
       });
   } else {
     return yargs

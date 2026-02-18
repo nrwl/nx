@@ -1,5 +1,5 @@
 use napi::Either;
-use napi::bindgen_prelude::Either7;
+use napi::bindgen_prelude::Either8;
 
 #[napi(object)]
 pub struct InputsInput {
@@ -11,6 +11,7 @@ pub struct InputsInput {
 #[napi(object)]
 pub struct FileSetInput {
     pub fileset: String,
+    pub dependencies: Option<bool>,
 }
 
 #[napi(object)]
@@ -34,7 +35,12 @@ pub struct DepsOutputsInput {
     pub transitive: Option<bool>,
 }
 
-pub(crate) type JsInputs = Either7<
+#[napi(object)]
+pub struct WorkingDirectoryInput {
+    pub working_directory: String,
+}
+
+pub(crate) type JsInputs = Either8<
     InputsInput,
     String,
     FileSetInput,
@@ -42,12 +48,13 @@ pub(crate) type JsInputs = Either7<
     EnvironmentInput,
     ExternalDependenciesInput,
     DepsOutputsInput,
+    WorkingDirectoryInput,
 >;
 
 impl<'a> From<&'a JsInputs> for Input<'a> {
     fn from(value: &'a JsInputs) -> Self {
         match value {
-            Either7::A(inputs) => {
+            Either8::A(inputs) => {
                 if let Some(projects) = &inputs.projects {
                     Input::Projects {
                         input: &inputs.input,
@@ -63,26 +70,41 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                     }
                 }
             }
-            Either7::B(string) => {
-                if let Some(input) = string.strip_prefix('^') {
-                    Input::Inputs {
-                        input,
-                        dependencies: true,
+            Either8::B(string) => {
+                if let Some(rest) = string.strip_prefix('^') {
+                    // Check if this is a dependency fileset (starts with {projectRoot} or {workspaceRoot})
+                    if rest.starts_with("{projectRoot}") || rest.starts_with("{workspaceRoot}") {
+                        Input::FileSet {
+                            fileset: rest,
+                            dependencies: true,
+                        }
+                    } else {
+                        // This is a named input reference (existing behavior)
+                        Input::Inputs {
+                            input: rest,
+                            dependencies: true,
+                        }
                     }
                 } else {
                     Input::String(string)
                 }
             }
-            Either7::C(file_set) => Input::FileSet(&file_set.fileset),
-            Either7::D(runtime) => Input::Runtime(&runtime.runtime),
-            Either7::E(environment) => Input::Environment(&environment.env),
-            Either7::F(external_dependencies) => {
+            Either8::C(file_set) => Input::FileSet {
+                fileset: &file_set.fileset,
+                dependencies: file_set.dependencies.unwrap_or(false),
+            },
+            Either8::D(runtime) => Input::Runtime(&runtime.runtime),
+            Either8::E(environment) => Input::Environment(&environment.env),
+            Either8::F(external_dependencies) => {
                 Input::ExternalDependency(&external_dependencies.external_dependencies)
             }
-            Either7::G(deps_outputs) => Input::DepsOutputs {
+            Either8::G(deps_outputs) => Input::DepsOutputs {
                 transitive: deps_outputs.transitive.unwrap_or(false),
                 dependent_tasks_output_files: &deps_outputs.dependent_tasks_output_files,
             },
+            Either8::H(working_directory) => {
+                Input::WorkingDirectory(&working_directory.working_directory)
+            }
         }
     }
 }
@@ -94,7 +116,10 @@ pub(crate) enum Input<'a> {
         dependencies: bool,
     },
     String(&'a str),
-    FileSet(&'a str),
+    FileSet {
+        fileset: &'a str,
+        dependencies: bool,
+    },
     Runtime(&'a str),
     Environment(&'a str),
     ExternalDependency(&'a [String]),
@@ -106,4 +131,5 @@ pub(crate) enum Input<'a> {
         projects: Vec<&'a str>,
         input: &'a str,
     },
+    WorkingDirectory(&'a str),
 }

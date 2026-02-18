@@ -1,14 +1,28 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import Script from 'next/script';
-import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-// import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
+import { GlobalSearchHandler, WebinarNotifier } from '@nx/nx-dev-ui-common';
+import bannerCollection from '../lib/banner.json';
 import '../styles/main.css';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 
 // Metadata for the entire site
 export const metadata: Metadata = {
+  // Resolve relative URLs in metadata (e.g., OG images) to the correct deployment URL
+  // - Vercel: Use VERCEL_URL for preview deployments
+  // - Netlify: Use CONTEXT to determine environment:
+  //   - deploy-preview/branch-deploy: Use DEPLOY_PRIME_URL for PR preview URLs
+  //   - production: Use URL for canonical production URL (nx.dev)
+  metadataBase: new URL(
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.CONTEXT === 'deploy-preview' ||
+          process.env.CONTEXT === 'branch-deploy'
+        ? process.env.DEPLOY_PRIME_URL ||
+          process.env.DEPLOY_URL ||
+          'https://nx.dev'
+        : process.env.URL || 'https://nx.dev'
+  ),
   appleWebApp: { title: 'Nx' },
   applicationName: 'Nx',
   icons: [
@@ -69,22 +83,9 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const gaMeasurementId = 'UA-88380372-10';
   const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
-      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
-        <Script
-          id="Cookiebot"
-          src="https://consent.cookiebot.com/uc.js"
-          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
-          data-blockingmode="auto"
-          type="text/javascript"
-          strategy="beforeInteractive"
-        />
-      ) : null}
-      <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
           name="msapplication-TileColor"
@@ -118,14 +119,31 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+      <body className="h-full bg-white text-zinc-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:selection:bg-blue-500">
+        <GlobalSearchHandler />
         {children}
-        {/* <LiveStreamNotifier /> */}
+        {bannerCollection.map((bannerConfig) => {
+          // Check if banner is active
+          const isActive =
+            bannerConfig.activeUntil &&
+            new Date() < new Date(bannerConfig.activeUntil);
+          if (!isActive) return null;
+          return (
+            <WebinarNotifier
+              key={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+              id={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
+              title={bannerConfig.title}
+              description={bannerConfig.description}
+              primaryCtaUrl={bannerConfig.primaryCtaUrl}
+              primaryCtaText={bannerConfig.primaryCtaText}
+              secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
+              secondaryCtaText={bannerConfig.secondaryCtaText}
+              activeUntil={bannerConfig.activeUntil}
+            />
+          );
+        })}
         <FrontendObservability />
-        <GlobalScripts
-          gaMeasurementId={gaMeasurementId}
-          gtmMeasurementId={gtmMeasurementId}
-        />
+        <GlobalScripts gtmMeasurementId={gtmMeasurementId} />
       </body>
     </html>
   );

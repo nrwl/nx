@@ -45,6 +45,7 @@ import {
 } from './util';
 
 export interface TscPluginOptions {
+  compiler?: 'tsc' | 'tsgo';
   typecheck?:
     | boolean
     | {
@@ -63,6 +64,7 @@ export interface TscPluginOptions {
 }
 
 interface NormalizedPluginOptions {
+  compiler: 'tsc' | 'tsgo';
   typecheck:
     | false
     | {
@@ -493,8 +495,9 @@ function buildTscTargets(
       config.project
     );
     const targetName = options.typecheck.targetName;
+    const compiler = options.compiler;
     if (!targets[targetName]) {
-      let command = `tsc --build --emitDeclarationOnly${
+      let command = `${compiler} --build --emitDeclarationOnly${
         options.verboseOutput ? ' --verbose' : ''
       }`;
       if (
@@ -557,7 +560,7 @@ function buildTscTargets(
           technologies: ['typescript'],
           description: 'Runs type-checking for the project.',
           help: {
-            command: `${pmc.exec} tsc --build --help`,
+            command: `${pmc.exec} ${compiler} --build --help`,
             example: {
               args: ['--force'],
             },
@@ -584,10 +587,11 @@ function buildTscTargets(
       config.project
     );
     const targetName = options.build.targetName;
+    const compiler = options.compiler;
 
     targets[targetName] = {
       dependsOn: [`^${targetName}`],
-      command: `tsc --build ${options.build.configName}${
+      command: `${compiler} --build ${options.build.configName}${
         options.verboseOutput ? ' --verbose' : ''
       }`,
       options: { cwd: config.project.root },
@@ -612,7 +616,7 @@ function buildTscTargets(
         technologies: ['typescript'],
         description: 'Builds the project with `tsc`.',
         help: {
-          command: `${pmc.exec} tsc --build --help`,
+          command: `${pmc.exec} ${compiler} --build --help`,
           example: {
             args: ['--force'],
           },
@@ -1364,6 +1368,9 @@ function readTsConfig(
 function normalizePluginOptions(
   pluginOptions: TscPluginOptions = {}
 ): NormalizedPluginOptions {
+  const defaultCompiler = 'tsc';
+  const compiler = pluginOptions.compiler ?? defaultCompiler;
+
   const defaultTypecheckTargetName = 'typecheck';
   let typecheck: NormalizedPluginOptions['typecheck'] = {
     targetName: defaultTypecheckTargetName,
@@ -1403,6 +1410,7 @@ function normalizePluginOptions(
   }
 
   return {
+    compiler,
     typecheck,
     build,
     verboseOutput: pluginOptions.verboseOutput ?? false,

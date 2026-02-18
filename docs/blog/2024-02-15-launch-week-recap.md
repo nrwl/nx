@@ -7,7 +7,7 @@ tags: [nx, nx-cloud, releases, changelog]
 description: 'Explore the major announcements from Launch Nx Week, including Nx 18.0, Project Crystal, Nuxt plugin, Nx Agents, and Tusky AI integration.'
 ---
 
-We just finished wrapping up [Launch Nx Week](/launch-nx), which ran from February 5–9, including a full conference on Thursday!
+We just finished wrapping up [Launch Nx Week](/blog/launch-nx-week-recap), which ran from February 5–9, including a full conference on Thursday!
 
 In this article, we're going to recap all the things launched during Launch Nx Conf, as well as all the talks given during the conference! Here's a set of links so you can fast-forward to the stuff you're most interested in if you want!
 

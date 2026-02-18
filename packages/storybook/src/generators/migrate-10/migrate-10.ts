@@ -31,10 +31,10 @@ export async function migrate10Generator(tree: Tree, schema: Schema) {
   }
 
   const contents = readFileSync(pathToAiInstructions);
-  tree.write('ai-migrations/MIGRATE_STORYBOOK_10.md', contents);
+  tree.write('tools/ai-migrations/MIGRATE_STORYBOOK_10.md', contents);
 
   logger.log(`Storybook 10 requires Storybook Configs to use ESM.
-We created 'ai-migrations/MIGRATE_STORYBOOK_10.md' with instructions for an AI Agent to convert CJS Storybook Configs to ESM in your workspace.`);
+We created 'tools/ai-migrations/MIGRATE_STORYBOOK_10.md' with instructions for an AI Agent to convert CJS Storybook Configs to ESM in your workspace.`);
 
   await formatFiles(tree);
 }

@@ -40,6 +40,7 @@ impl NxCache {
         workspace_root: String,
         cache_path: String,
         db_connection: External<NxDbConnection>,
+        // TODO: this is unused by Nx but still required by Nx Cloud
         link_task_details: Option<bool>,
         max_cache_size: Option<i64>,
     ) -> anyhow::Result<Self> {
@@ -67,23 +68,23 @@ impl NxCache {
     fn setup(&self) -> anyhow::Result<()> {
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
-                    hash    TEXT PRIMARY KEY NOT NULL,
-                    code   INTEGER NOT NULL,
-                    size   INTEGER NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (hash) REFERENCES task_details (hash)
-              );
+                hash    TEXT PRIMARY KEY NOT NULL,
+                code   INTEGER NOT NULL,
+                size   INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (hash) REFERENCES task_details (hash)
+            );
             "
         } else {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
-                    hash    TEXT PRIMARY KEY NOT NULL,
-                    code   INTEGER NOT NULL,
-                    size   INTEGER NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                "
+                hash    TEXT PRIMARY KEY NOT NULL,
+                code   INTEGER NOT NULL,
+                size   INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            "
         };
 
         self.db.execute(query, []).map_err(anyhow::Error::from)?;
@@ -135,7 +136,7 @@ impl NxCache {
         terminal_output: String,
         outputs: Vec<String>,
         code: i16,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<Vec<String>> {
         let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
@@ -185,7 +186,7 @@ impl NxCache {
 
         self.record_to_cache(hash.clone(), code, total_size)?;
         debug!("PUT {} {:?}", &hash, start.elapsed());
-        Ok(())
+        Ok(expanded_outputs)
     }
 
     #[napi]

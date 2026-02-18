@@ -40,11 +40,16 @@ impl AutoExit {
 
 pub struct TuiConfig {
     pub auto_exit: AutoExit,
+    pub suppress_hints: bool,
 }
 
 impl TuiConfig {
     /// Creates a new TuiConfig from nx.json config properties and CLI args
-    pub fn new(auto_exit: Option<AutoExit>, cli_args: &TuiCliArgs) -> Self {
+    pub fn new(
+        auto_exit: Option<AutoExit>,
+        suppress_hints: Option<bool>,
+        cli_args: &TuiCliArgs,
+    ) -> Self {
         // Default to 3-second countdown if nothing is specified
         let final_auto_exit = match auto_exit {
             Some(config) => config,
@@ -57,6 +62,7 @@ impl TuiConfig {
         };
         Self {
             auto_exit: final_auto_exit,
+            suppress_hints: suppress_hints.unwrap_or(false),
         }
     }
 }

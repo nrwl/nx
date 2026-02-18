@@ -214,9 +214,9 @@ export function createStorybookTsconfigFile(
       outDir: useTsSolution
         ? 'out-tsc/storybook'
         : uiFramework === '@storybook/react-webpack5' ||
-          uiFramework === '@storybook/react-vite'
-        ? ''
-        : undefined,
+            uiFramework === '@storybook/react-vite'
+          ? ''
+          : undefined,
       module:
         storybookMajorVersion === 10 || useTsSolution ? 'esnext' : undefined,
       moduleResolution:
@@ -663,8 +663,8 @@ export function getTsConfigPath(
     path?.length > 0
       ? path
       : getProjectType(tree, root, projectType) === 'application'
-      ? 'tsconfig.app.json'
-      : 'tsconfig.lib.json'
+        ? 'tsconfig.app.json'
+        : 'tsconfig.lib.json'
   );
 }
 

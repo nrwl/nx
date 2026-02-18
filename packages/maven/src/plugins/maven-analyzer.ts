@@ -4,44 +4,7 @@ import { spawn } from 'child_process';
 import { logger, readJsonFile } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
-
-/**
- * Detect Maven executable: mvnd > mvnw > mvn
- */
-function detectMavenExecutable(workspaceRoot: string): string {
-  logger.verbose(
-    `[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`
-  );
-
-  // First priority: Check for Maven Daemon
-  try {
-    const { execSync } = require('child_process');
-    execSync('mvnd --version', { stdio: 'pipe' });
-    logger.verbose(`[Maven Analyzer] Found Maven Daemon, using: mvnd`);
-    return 'mvnd';
-  } catch (error) {
-    logger.verbose(`[Maven Analyzer] Maven Daemon not available`);
-  }
-
-  // Second priority: Check for Maven wrapper
-  if (process.platform === 'win32') {
-    const wrapperPath = join(workspaceRoot, 'mvnw.cmd');
-    if (existsSync(wrapperPath)) {
-      logger.verbose(`[Maven Analyzer] Found Maven wrapper, using: mvnw.cmd`);
-      return 'mvnw.cmd';
-    }
-  } else {
-    const wrapperPath = join(workspaceRoot, 'mvnw');
-    if (existsSync(wrapperPath)) {
-      logger.verbose(`[Maven Analyzer] Found Maven wrapper, using: ./mvnw`);
-      return './mvnw';
-    }
-  }
-
-  // Fallback: Use regular Maven
-  logger.verbose(`[Maven Analyzer] Using fallback: mvn`);
-  return 'mvn';
-}
+import { detectMavenExecutable } from '../utils/detect-maven-executable';
 
 /**
  * Run Maven analysis using our Kotlin analyzer plugin

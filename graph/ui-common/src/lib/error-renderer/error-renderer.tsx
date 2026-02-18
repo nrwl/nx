@@ -8,7 +8,7 @@ export function ErrorRenderer({ errors }: { errors: GraphError[] }) {
         const errorHeading =
           error.pluginName && error.name
             ? `${error.name} - ${error.pluginName}`
-            : error.name ?? error.message;
+            : (error.name ?? error.message);
         const fileSpecifier =
           isCauseWithLocation(error.cause) && error.cause.errors.length === 1
             ? `${error.fileName}:${error.cause.errors[0].location.line}:${error.cause.errors[0].location.column}`

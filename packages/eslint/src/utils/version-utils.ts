@@ -1,8 +1,4 @@
-import {
-  getDependencyVersionFromPackageJson,
-  readJsonFile,
-  type Tree,
-} from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 import { lt } from 'semver';
@@ -29,10 +25,8 @@ export function getInstalledPackageVersion(
       pkgName
     );
   } else {
-    const rootPackageJson = readJsonFile('package.json');
-    pkgVersionInRootPackageJson =
-      rootPackageJson.devDependencies?.[pkgName] ??
-      rootPackageJson.dependencies?.[pkgName];
+    // Use filesystem-based signature for pnpm catalog compatibility
+    pkgVersionInRootPackageJson = getDependencyVersionFromPackageJson(pkgName);
   }
 
   if (!pkgVersionInRootPackageJson) {

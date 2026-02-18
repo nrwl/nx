@@ -1,4 +1,4 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast } from '@phenomnomnominal/tsquery';
 import {
   isHostRemoteConfig,
   getRemotesFromHost,
@@ -18,10 +18,10 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = isHostRemoteConfig(ast);
+    const result = isHostRemoteConfig(sourceFile);
 
     // ASSERT
     expect(result).toEqual('host');
@@ -39,10 +39,10 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = isHostRemoteConfig(ast);
+    const result = isHostRemoteConfig(sourceFile);
 
     // ASSERT
     expect(result).toEqual('remote');
@@ -63,10 +63,10 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = isHostRemoteConfig(ast);
+    const result = isHostRemoteConfig(sourceFile);
 
     // ASSERT
     expect(result).toEqual('both');
@@ -81,10 +81,10 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = isHostRemoteConfig(ast);
+    const result = isHostRemoteConfig(sourceFile);
 
     // ASSERT
     expect(result).toBeFalsy();
@@ -102,10 +102,10 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = getRemotesFromHost(ast);
+    const result = getRemotesFromHost(sourceFile);
 
     // ASSERT
     expect(result).toEqual([['remote1', 'http://localhost:4201']]);
@@ -123,10 +123,10 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = getExposedModulesFromRemote(ast);
+    const result = getExposedModulesFromRemote(sourceFile);
 
     // ASSERT
     // this needs to be snapshot because prettier formats a literal string incorrectly, causing test failure

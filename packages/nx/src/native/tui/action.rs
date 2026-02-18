@@ -1,6 +1,10 @@
 use crate::native::tasks::types::{Task, TaskResult};
 
-use super::{app::Focus, components::tasks_list::TaskStatus};
+use super::{
+    app::Focus,
+    components::{task_selection_manager::SelectionEntry, tasks_list::TaskStatus},
+    lifecycle::{BatchInfo, TuiMode},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -17,8 +21,8 @@ pub enum Action {
     RemoveFilterChar,
     ScrollUp,
     ScrollDown,
-    PinTask(String, usize),
-    UnpinTask(String, usize),
+    PinSelection(SelectionEntry, usize),
+    UnpinSelection(usize),
     UnpinAllTasks,
     SortTasks,
     NextTask,
@@ -36,4 +40,9 @@ pub enum Action {
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
     EndCommand,
+    ShowHint(String),
+    SwitchMode(TuiMode),
+    StartBatch(String, BatchInfo),
+    ExpandBatch(String),
+    CollapseBatch(String),
 }

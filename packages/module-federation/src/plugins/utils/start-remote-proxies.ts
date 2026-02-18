@@ -1,15 +1,16 @@
-import { StaticRemoteConfig } from '../../utils';
+import { StaticRemoteConfig, isPortInUse } from '../../utils';
 import { existsSync, readFileSync } from 'fs';
 import { Express } from 'express';
 
-export function startRemoteProxies(
+export async function startRemoteProxies(
   staticRemotesConfig: Record<string, StaticRemoteConfig>,
   mappedLocationsOfRemotes: Record<string, string>,
   sslOptions?: {
     pathToCert: string;
     pathToKey: string;
   },
-  isServer?: boolean
+  isServer?: boolean,
+  host: string = '127.0.0.1'
 ) {
   const { createProxyMiddleware } = require('http-proxy-middleware');
   const express = require('express');
@@ -33,8 +34,22 @@ export function startRemoteProxies(
 
   const remotes = Object.keys(staticRemotesConfig);
   console.log(`NX Starting static remotes proxies...`);
+  let startedProxies = 0;
+  let skippedProxies = 0;
+
   for (const app of remotes) {
     const appConfig = staticRemotesConfig[app];
+
+    // Check if the port is already in use (another MF dev server may have already started a proxy)
+    const portInUse = await isPortInUse(appConfig.port, host);
+    if (portInUse) {
+      console.log(
+        `NX Skipping proxy for ${app} on port ${appConfig.port} - port already in use (likely served by another process)`
+      );
+      skippedProxies++;
+      continue;
+    }
+
     const expressProxy: Express = express();
     expressProxy.use(
       createProxyMiddleware({
@@ -57,6 +72,14 @@ export function startRemoteProxies(
       .listen(appConfig.port);
     process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
+    startedProxies++;
   }
-  console.info(`NX Static remotes proxies started successfully`);
+
+  if (skippedProxies > 0) {
+    console.info(
+      `NX Static remotes proxies: started ${startedProxies}, skipped ${skippedProxies} (already running)`
+    );
+  } else {
+    console.info(`NX Static remotes proxies started successfully`);
+  }
 }

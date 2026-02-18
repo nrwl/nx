@@ -1,5 +1,5 @@
 import { HandlerResult } from './server';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 
 export async function handleProcessInBackground(payload: {
@@ -9,9 +9,11 @@ export async function handleProcessInBackground(payload: {
 }): Promise<HandlerResult> {
   let fn;
   try {
-    fn = require(require.resolve(payload.requirePath, {
-      paths: getNxRequirePaths(),
-    })).default;
+    fn = require(
+      require.resolve(payload.requirePath, {
+        paths: getNxRequirePaths(),
+      })
+    ).default;
   } catch (e) {
     return {
       description: `Unable to require ${payload.requirePath}`,

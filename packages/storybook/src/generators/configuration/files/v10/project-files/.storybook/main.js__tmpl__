@@ -73,7 +73,7 @@ const config = {
   <% } %>
 };
 <% if(uiFramework !== '@storybook/angular') { %>
-function getAbsolutePath(value: string): any {
+function getAbsolutePath(value) {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
 }
 <% } %>

@@ -906,7 +906,7 @@ describe('lib', () => {
                   // Reading the SWC compilation config and remove the "exclude"
                   // for the test files to be compiled by SWC
                   const { exclude: _, ...swcJestConfig } = JSON.parse(
-                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8')
+                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
                   );
 
                   // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
@@ -2040,7 +2040,7 @@ describe('lib', () => {
       expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@swc/helpers": "~0.5.11",
+            "@swc/helpers": "~0.5.18",
           },
           "exports": {
             ".": {
@@ -2198,7 +2198,7 @@ describe('lib', () => {
 
                   // Reading the SWC compilation config for the spec files
                   const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
                   );
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
@@ -2272,7 +2272,7 @@ describe('lib', () => {
       ]);
     });
 
-    it('should exclude a non-buildable library from a plugin registration when it has a build target', async () => {
+    it('should not change the plugin registration for a non-buildable library when it has build options without skipBuildCheck', async () => {
       updateJson(tree, 'nx.json', (json) => {
         json.plugins ??= [];
         json.plugins.push({
@@ -2297,6 +2297,36 @@ describe('lib', () => {
           plugin: '@nx/js/typescript',
           options: {
             build: { targetName: 'build' },
+          },
+        },
+      ]);
+    });
+
+    it('should exclude a non-buildable library from a plugin registration when it has build options with skipBuildCheck', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins ??= [];
+        json.plugins.push({
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build', skipBuildCheck: true },
+          },
+        });
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'nx.json').plugins).toStrictEqual([
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build', skipBuildCheck: true },
           },
           exclude: ['packages/my-lib/*'],
         },

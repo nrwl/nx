@@ -40,7 +40,7 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { isTuiEnabled } from './is-tui-enabled';
+import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
   LifeCycle,
@@ -67,7 +67,7 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -94,7 +94,7 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
-  if (tasks.length === 1) {
+  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
     process.env.NX_TUI = 'false';
   }
 
@@ -248,6 +248,7 @@ async function getTerminalOutputLifeCycle(
             const trimmedChunk = chunk.toString().trim();
             if (trimmedChunk.length) {
               // Remove ANSI escape codes, the TUI will control the formatting
+              // NOTE: this shows any message from the Nx Cloud client, including errors
               appLifeCycle?.__setCloudMessage(
                 stripVTControlCharacters(trimmedChunk)
               );
@@ -295,6 +296,7 @@ async function getTerminalOutputLifeCycle(
         // Print the intercepted Nx Cloud logs
         for (const log of interceptedNxCloudLogs) {
           const logString = log.toString().trimStart();
+
           process.stdout.write(logString);
           if (logString) {
             process.stdout.write('\n');
@@ -306,13 +308,6 @@ async function getTerminalOutputLifeCycle(
         appLifeCycle.__init(() => {
           resolve();
         });
-      }).finally(() => {
-        restoreTerminal();
-        // Revert the patched methods
-        process.stdout.write = originalStdoutWrite;
-        process.stderr.write = originalStderrWrite;
-        console.log = originalConsoleLog;
-        console.error = originalConsoleError;
       });
     }
 
@@ -325,7 +320,7 @@ async function getTerminalOutputLifeCycle(
         console.error = originalConsoleError;
         restoreTerminal();
       },
-      printSummary,
+      printSummary: () => printSummary(),
       renderIsDone,
     };
   }
@@ -471,11 +466,12 @@ export async function runCommand(
       const exitCode = !completed
         ? signalToCode('SIGINT')
         : Object.values(taskResults).some(
-            (taskResult) =>
-              taskResult.status === 'failure' || taskResult.status === 'skipped'
-          )
-        ? 1
-        : 0;
+              (taskResult) =>
+                taskResult.status === 'failure' ||
+                taskResult.status === 'skipped'
+            )
+          ? 1
+          : 0;
 
       await runPostTasksExecution({
         id,
@@ -516,6 +512,7 @@ export async function runCommandForTasks(
     extraTargetDependencies,
     extraOptions
   );
+
   const tasks = Object.values(taskGraph.tasks);
 
   const initiatingTasks = tasks.filter(
@@ -549,11 +546,13 @@ export async function runCommandForTasks(
       initiatingTasks,
     });
 
-    await renderIsDone;
+    await renderIsDone.finally(() => restoreTerminal?.());
 
     if (printSummary) {
       printSummary();
     }
+
+    await printConfigureAiAgentsDisclaimer();
 
     await printNxKey();
 
@@ -562,10 +561,26 @@ export async function runCommandForTasks(
       completed: didCommandComplete(tasks, taskGraph, taskResults),
     };
   } catch (e) {
-    if (restoreTerminal) {
-      restoreTerminal();
-    }
+    restoreTerminal?.();
     throw e;
+  }
+}
+
+async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+  try {
+    if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
+      return;
+    }
+    const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
+    if (outdatedAgents.length > 0) {
+      output.logRawLine(
+        output.dim(
+          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+        )
+      );
+    }
+  } catch {
+    // Silently ignore errors
   }
 }
 
@@ -854,7 +869,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
         },
       ],
       footer: () =>
-        chalk.dim(
+        pc.dim(
           '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
         ),
     };
@@ -885,7 +900,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
         },
       ],
       footer: () =>
-        chalk.dim(
+        pc.dim(
           `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
         ),
     };
@@ -917,6 +932,11 @@ export function setEnvVarsBasedOnArgs(
   if (nxArgs.outputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
+  }
+  // Force streaming only when the TUI is active, so it can capture and
+  // render task output. Other output styles manage their own streaming.
+  if (isTuiEnabled()) {
+    process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';

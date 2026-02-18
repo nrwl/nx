@@ -21,6 +21,7 @@ export type BlogPostDataEntry = {
   ogImage?: string;
   ogImageType?: string;
   metrics?: Array<{ value: string; label: string }>;
+  hideCoverImage?: boolean;
 };
 
 export type BlogAuthor = {

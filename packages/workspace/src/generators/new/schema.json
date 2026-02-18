@@ -92,6 +92,10 @@
       "description": "The prefix to use for Angular component and directive selectors.",
       "type": "string"
     },
+    "zoneless": {
+      "description": "Generate an application that does not use 'zone.js'.",
+      "type": "boolean"
+    },
     "formatter": {
       "description": "The tool to use for code formatting.",
       "type": "string",

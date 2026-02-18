@@ -9,9 +9,8 @@ import {
   PackageManager,
 } from './utils/package-manager';
 import { execAndWait } from './utils/child-process-utils';
-import { output } from './utils/output';
 import { nxVersion } from './utils/nx/nx-version';
-import { mapErrorToBodyLines } from './utils/error-utils';
+import { CnwError } from './utils/error-utils';
 
 /**
  * Creates a temporary directory and installs Nx in it.
@@ -48,15 +47,11 @@ export async function createSandbox(packageManager: PackageManager) {
     installSpinner.succeed();
   } catch (e) {
     installSpinner.fail();
-    if (e instanceof Error) {
-      output.error({
-        title: `Failed to install dependencies`,
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
-    }
-    process.exit(1);
+    const message = e instanceof Error ? e.message : String(e);
+    throw new CnwError(
+      'SANDBOX_FAILED',
+      `Failed to install dependencies: ${message}`
+    );
   } finally {
     installSpinner.stop();
   }

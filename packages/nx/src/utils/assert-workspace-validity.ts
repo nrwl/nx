@@ -10,17 +10,20 @@ export function assertWorkspaceValidity(
   nxJson: NxJsonConfiguration
 ) {
   const projectNames = Object.keys(projects);
-  const projectGraphNodes = projectNames.reduce((graph, project) => {
-    const projectConfiguration = projects[project];
-    graph[project] = {
-      name: project,
-      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
-      data: {
-        ...projectConfiguration,
-      },
-    };
-    return graph;
-  }, {} as Record<string, ProjectGraphProjectNode>);
+  const projectGraphNodes = projectNames.reduce(
+    (graph, project) => {
+      const projectConfiguration = projects[project];
+      graph[project] = {
+        name: project,
+        type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+        data: {
+          ...projectConfiguration,
+        },
+      };
+      return graph;
+    },
+    {} as Record<string, ProjectGraphProjectNode>
+  );
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 

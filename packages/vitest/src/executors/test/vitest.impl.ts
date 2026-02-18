@@ -35,7 +35,7 @@ export async function* vitestExecutor(
   const cliFilters = options.testFiles ?? [];
 
   const ctx = await startVitest(
-    resolvedOptions['mode'] ?? 'test',
+    options.runMode ?? 'test',
     cliFilters,
     resolvedOptions
   );

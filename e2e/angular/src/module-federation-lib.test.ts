@@ -86,8 +86,10 @@ describe('Angular Module Federation - Federated Libraries', () => {
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests('cypress')) {
-      const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
-        output.includes('All specs passed!')
+      const e2eProcess = await runCommandUntil(
+        `e2e ${host}-e2e`,
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }
@@ -175,8 +177,10 @@ describe('Angular Module Federation - Federated Libraries', () => {
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests('cypress')) {
-      const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
-        output.includes('All specs passed!')
+      const e2eProcess = await runCommandUntil(
+        `e2e ${host}-e2e`,
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }

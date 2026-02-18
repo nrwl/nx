@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import * as stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';
@@ -9,7 +9,7 @@ import { readModulePackageJson } from './package-json';
 // cliui is the CLI layout engine developed by, and used within, yargs
 // the typings for cliui do not play nice with our tsconfig, it either
 // works in build or in test but not both.
-const cliui = require('cliui') as typeof import('cliui')['default'];
+const cliui = require('cliui') as (typeof import('cliui'))['default'];
 
 export function printHelp(
   header: string,
@@ -27,11 +27,7 @@ export function printHelp(
   logger.info(`
 ${output.applyNxPrefix(
   'cyan',
-  chalk.bold(
-    `${`${header + chalk.reset.cyan(positional)} ${chalk.reset.cyan(
-      '[options,...]'
-    )}`}`
-  )
+  pc.bold(`${`${header + pc.cyan(positional)} ${pc.cyan('[options,...]')}`}`)
 )}
 
 ${generateOverviewOutput({
@@ -109,14 +105,14 @@ function generateGeneratorOverviewOutput({
   ui.div(
     ...[
       {
-        text: chalk.bold('From:'),
+        text: pc.bold('From:'),
         padding: [1, 0, 0, 0],
         width: overviewItemsLabelWidth,
       },
       {
         text:
           pluginName +
-          (installedVersion ? chalk.dim(` (v${installedVersion})`) : ''),
+          (installedVersion ? pc.dim(` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
     ]
@@ -125,13 +121,13 @@ function generateGeneratorOverviewOutput({
   ui.div(
     ...[
       {
-        text: chalk.bold('Name:'),
+        text: pc.bold('Name:'),
         padding: [0, 0, 0, 0],
         width: overviewItemsLabelWidth,
       },
       {
         text: `${name}${
-          aliases.length ? chalk.dim(` (aliases: ${aliases.join(', ')})`) : ''
+          aliases.length ? pc.dim(` (aliases: ${aliases.join(', ')})`) : ''
         }`,
         padding: [0, 0, 0, 2],
       },
@@ -166,14 +162,14 @@ function generateExecutorOverviewOutput({
   ui.div(
     ...[
       {
-        text: chalk.bold('Executor:'),
+        text: pc.bold('Executor:'),
         padding: [1, 0, 0, 0],
         width: overviewItemsLabelWidth,
       },
       {
         text:
           `${pluginName}:${name}` +
-          (pluginName.startsWith('@nx/') ? chalk.dim(` (v${nxVersion})`) : ''),
+          (pluginName.startsWith('@nx/') ? pc.dim(` (v${nxVersion})`) : ''),
         padding: [1, 0, 0, 0],
       },
     ]
@@ -341,9 +337,9 @@ function generateLinkOutput({
     nxPackagePrefix.length
   )}/${type}/${name}`;
 
-  return `\n\n${chalk.dim(
+  return `\n\n${pc.dim(
     'Find more information and examples at:'
-  )} ${chalk.bold(link)}`;
+  )} ${pc.bold(link)}`;
 }
 
 /**
@@ -362,7 +358,7 @@ function compareByPriority(
 ): number {
   function getPriority([name, property]: [
     string,
-    Schema['properties'][0]
+    Schema['properties'][0],
   ]): number {
     if (schema.required?.includes(name)) {
       return 0;

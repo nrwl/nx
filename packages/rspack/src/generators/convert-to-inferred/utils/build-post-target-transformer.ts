@@ -3,7 +3,7 @@ import {
   processTargetOutputs,
   toProjectRelativePath,
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { RspackExecutorSchema } from '../../../executors/rspack/schema';
 import type { NxAppRspackPluginOptions } from '../../../plugins/utils/models';
@@ -159,7 +159,7 @@ function updateRspackConfig(
 
   const updateSources = () => {
     rspackConfigText = tree.read(rspackConfig, 'utf-8');
-    sourceFile = tsquery.ast(rspackConfigText);
+    sourceFile = ast(rspackConfigText);
   };
   updateSources();
 
@@ -189,7 +189,7 @@ function setOptionsInRspackConfig(
 
   const optionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=options]))';
-  const optionsVariable = tsquery<ts.VariableStatement>(
+  const optionsVariable = query<ts.VariableStatement>(
     sourceFile,
     optionsSelector
   )[0];
@@ -198,7 +198,7 @@ function setOptionsInRspackConfig(
   // `convert-config-to-rspack-plugin` generates
 
   let defaultOptionsObject: ts.ObjectLiteralExpression;
-  const optionsObject = tsquery<ts.ObjectLiteralExpression>(
+  const optionsObject = query<ts.ObjectLiteralExpression>(
     optionsVariable,
     'ObjectLiteralExpression'
   )[0];
@@ -313,7 +313,7 @@ function setOptionsInNxRspackPlugin(
 ): void {
   const nxAppRspackPluginSelector =
     'PropertyAssignment:has(Identifier[name=plugins]) NewExpression:has(Identifier[name=NxAppRspackPlugin])';
-  const nxAppRspackPlugin = tsquery<ts.NewExpression>(
+  const nxAppRspackPlugin = query<ts.NewExpression>(
     sourceFile,
     nxAppRspackPluginSelector
   )[0];
@@ -345,7 +345,7 @@ function setOptionsInLegacyNxPlugin(
 ): void {
   const legacyNxPluginSelector =
     'AwaitExpression CallExpression:has(Identifier[name=useLegacyNxPlugin])';
-  const legacyNxPlugin = tsquery<ts.CallExpression>(
+  const legacyNxPlugin = query<ts.CallExpression>(
     sourceFile,
     legacyNxPluginSelector
   )[0];

@@ -235,10 +235,10 @@ export default class JsVersionActions extends VersionActions {
           this.finalConfigForProject.preserveMatchingDependencyRanges === true
             ? dependencyTypes
             : this.finalConfigForProject.preserveMatchingDependencyRanges ===
-              false
-            ? []
-            : this.finalConfigForProject.preserveMatchingDependencyRanges ||
-              dependencyTypes;
+                false
+              ? []
+              : this.finalConfigForProject.preserveMatchingDependencyRanges ||
+                dependencyTypes;
 
         for (const depType of dependencyTypes) {
           if (json[depType]) {

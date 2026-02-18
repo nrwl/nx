@@ -2,11 +2,13 @@ import type { Express } from 'express';
 import { logger } from '@nx/devkit';
 import type { StaticRemotesConfig } from './parse-static-remotes-config';
 import { existsSync, readFileSync } from 'fs';
+import { isPortInUse } from './port-utils';
 
-export function startSsrRemoteProxies(
+export async function startSsrRemoteProxies(
   staticRemotesConfig: StaticRemotesConfig,
   mappedLocationsOfRemotes: Record<string, string>,
-  sslOptions?: { pathToCert: string; pathToKey: string }
+  sslOptions?: { pathToCert: string; pathToKey: string },
+  host: string = '127.0.0.1'
 ) {
   const { createProxyMiddleware } = require('http-proxy-middleware');
   const express = require('express');
@@ -31,7 +33,22 @@ export function startSsrRemoteProxies(
   const https = require('https');
 
   logger.info(`NX Starting static remotes proxies...`);
+  let startedProxies = 0;
+  let skippedProxies = 0;
+
   for (const app of staticRemotesConfig.remotes) {
+    const port = staticRemotesConfig.config[app].port;
+
+    // Check if the port is already in use (another MF dev server may have already started a proxy)
+    const portInUse = await isPortInUse(port, host);
+    if (portInUse) {
+      logger.info(
+        `NX Skipping proxy for ${app} on port ${port} - port already in use (likely served by another process)`
+      );
+      skippedProxies++;
+      continue;
+    }
+
     const expressProxy: Express = express();
     /**
      * SSR remotes have two output paths: one for the browser and one for the server.
@@ -57,9 +74,17 @@ export function startSsrRemoteProxies(
 
     const proxyServer = (sslCert ? https : http)
       .createServer({ cert: sslCert, key: sslKey }, expressProxy)
-      .listen(staticRemotesConfig.config[app].port);
+      .listen(port);
     process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
+    startedProxies++;
   }
-  logger.info(`Nx SSR Static remotes proxies started successfully`);
+
+  if (skippedProxies > 0) {
+    logger.info(
+      `NX SSR Static remotes proxies: started ${startedProxies}, skipped ${skippedProxies} (already running)`
+    );
+  } else {
+    logger.info(`Nx SSR Static remotes proxies started successfully`);
+  }
 }

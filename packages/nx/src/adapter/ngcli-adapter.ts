@@ -18,7 +18,7 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { Stats } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
 
@@ -100,7 +100,16 @@ export async function createBuilderContext(
   );
 
   const registry = new schema.CoreSchemaRegistry();
-  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  const isAngularBuild =
+    builderInfo.builderName.startsWith('@angular/build:') ||
+    ['@nx/angular:application', '@nx/angular:unit-test'].includes(
+      builderInfo.builderName
+    );
+  if (isAngularBuild) {
+    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
+  } else {
+    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  }
   registry.addSmartDefaultProvider('unparsed', () => {
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
@@ -214,19 +223,43 @@ export async function scheduleTarget(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
   );
-
-  const registry = new schema.CoreSchemaRegistry();
-  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  registry.addSmartDefaultProvider('unparsed', () => {
-    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
-    return [];
-  });
-
   const architectHost = await getWrappedWorkspaceNodeModulesArchitectHost(
     workspace,
     root,
     opts.projects
   );
+
+  const project = workspace.projects.get(opts.project);
+  if (!project) {
+    throw new Error(`Cannot find project '${opts.project}' in the workspace`);
+  }
+  if (!project.targets?.get(opts.target)) {
+    throw new Error(
+      `Cannot find target '${opts.target}' for project '${opts.project}'`
+    );
+  }
+  const builderName = project.targets.get(opts.target).builder;
+  if (!builderName) {
+    throw new Error(
+      `Cannot find the builder for the target '${opts.target}' of project '${opts.project}'`
+    );
+  }
+
+  const isAngularBuild =
+    builderName.startsWith('@angular/build:') ||
+    ['@nx/angular:application', '@nx/angular:unit-test'].includes(builderName);
+
+  const registry = new schema.CoreSchemaRegistry();
+  if (isAngularBuild) {
+    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
+  } else {
+    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  }
+  registry.addSmartDefaultProvider('unparsed', () => {
+    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
+    return [];
+  });
+
   const architect: Architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
     {
@@ -363,17 +396,17 @@ async function createRecorder(
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.white('UPDATE')} ${eventPath}`
+        tags.oneLine`${pc.white('UPDATE')} ${eventPath}`
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.green('CREATE')} ${eventPath}`
+        tags.oneLine`${pc.green('CREATE')} ${eventPath}`
       );
     } else if (event.kind === 'delete') {
-      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
+      record.loggingQueue.push(`${pc.yellow('DELETE')} ${eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`
+        `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
       );
     }
   };
@@ -617,7 +650,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     let modified = false;
 
     function updatePropertyIfDifferent<
-      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>
+      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>,
     >(property: T): void {
       if (typeof res[property] === 'string') {
         if (res[property] !== updated[property]) {
@@ -719,7 +752,10 @@ export function arrayBufferToString(buffer: any) {
  * the project configuration files.
  */
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
-  constructor(root: string, private readonly host: Tree) {
+  constructor(
+    root: string,
+    private readonly host: Tree
+  ) {
     super(root);
   }
 
@@ -1154,20 +1190,20 @@ let logger: logging.Logger;
 export const getLogger = (isVerbose = false): logging.Logger => {
   if (!logger) {
     logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: (s) => chalk.bold(chalk.yellow(s)),
+      warn: (s) => pc.bold(pc.yellow(s)),
       error: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.slice(3)))}\n`;
+          return `\n${NX_ERROR} ${pc.bold(pc.red(s.slice(3)))}\n`;
         }
 
-        return chalk.bold(chalk.red(s));
+        return pc.bold(pc.red(s));
       },
       info: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_PREFIX} ${chalk.bold(s.slice(3))}\n`;
+          return `\n${NX_PREFIX} ${pc.bold(s.slice(3))}\n`;
         }
 
-        return chalk.white(s);
+        return pc.white(s);
       },
     });
   }

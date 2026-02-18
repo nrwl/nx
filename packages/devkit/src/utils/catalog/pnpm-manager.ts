@@ -145,8 +145,8 @@ export class PnpmCatalogManager implements CatalogManager {
         const defaultCatalog = !!workspaceConfig.catalog
           ? 'catalog'
           : !workspaceConfig.catalogs?.default
-          ? 'catalogs.default'
-          : null;
+            ? 'catalogs.default'
+            : null;
 
         const suggestions = [
           'Define the catalog in pnpm-workspace.yaml under the "catalogs" key',

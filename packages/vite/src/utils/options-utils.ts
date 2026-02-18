@@ -59,12 +59,14 @@ export function getProjectTsConfigPath(
   )
     ? joinPathFragments(projectRoot, 'tsconfig.app.json')
     : existsSync(
-        joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.lib.json')
-      )
-    ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
-    : existsSync(joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.json'))
-    ? joinPathFragments(projectRoot, 'tsconfig.json')
-    : undefined;
+          joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.lib.json')
+        )
+      ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
+      : existsSync(
+            joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.json')
+          )
+        ? joinPathFragments(projectRoot, 'tsconfig.json')
+        : undefined;
 }
 
 /**

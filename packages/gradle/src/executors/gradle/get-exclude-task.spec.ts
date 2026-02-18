@@ -87,6 +87,33 @@ describe('getExcludeTasks', () => {
     const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
     expect(excludes).toEqual(new Set(['testApp1']));
   });
+
+  it('should not exclude tasks that are in includeDependsOnTasks', () => {
+    const targets = new Set<string>(['app1:test']);
+    const runningTaskIds = new Set<string>(['app1:test']);
+    const includeDependsOnTasks = new Set<string>(['lintApp1']);
+    const excludes = getExcludeTasks(
+      targets,
+      nodes,
+      runningTaskIds,
+      includeDependsOnTasks
+    );
+    // lintApp1 should not be excluded because it's in includeDependsOnTasks
+    expect(excludes).toEqual(new Set(['buildApp2']));
+  });
+
+  it('should not exclude any tasks if all are in includeDependsOnTasks', () => {
+    const targets = new Set<string>(['app1:test']);
+    const runningTaskIds = new Set<string>(['app1:test']);
+    const includeDependsOnTasks = new Set<string>(['lintApp1', 'buildApp2']);
+    const excludes = getExcludeTasks(
+      targets,
+      nodes,
+      runningTaskIds,
+      includeDependsOnTasks
+    );
+    expect(excludes).toEqual(new Set());
+  });
 });
 
 describe('getAllDependsOn', () => {

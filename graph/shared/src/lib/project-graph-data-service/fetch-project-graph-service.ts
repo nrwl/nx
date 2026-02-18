@@ -16,8 +16,12 @@ export class FetchProjectGraphService implements ProjectGraphService {
     return response.json();
   }
 
-  async getProjectGraph(url: string): Promise<ProjectGraphClientResponse> {
-    const request = new Request(url, { mode: 'no-cors' });
+  async getProjectGraph(
+    url: string,
+    requestFull = false
+  ): Promise<ProjectGraphClientResponse> {
+    const requestUrl = requestFull ? `${url}?full=true` : url;
+    const request = new Request(requestUrl, { mode: 'no-cors' });
 
     const response = await fetch(request);
 

@@ -14,13 +14,13 @@ data class MojoAnalysis(
   val outputs: Set<String>,
   val isCacheable: Boolean,
   val isContinuous: Boolean,
-  val isThreadSafe: Boolean,
 )
 
 class MojoAnalyzer(
   private val expressionResolver: MavenExpressionResolver,
   private val pathResolver: PathFormatter,
   private val gitIgnoreClassifier: GitIgnoreClassifier,
+  private val workspaceRoot: File,
 ) {
   private val log = LoggerFactory.getLogger(MojoAnalyzer::class.java)
 
@@ -29,7 +29,7 @@ class MojoAnalyzer(
   }
 
   /**
-   * Aggregates cacheability, thread-safety, and input/output metadata for a mojo.
+   * Aggregates cacheability and input/output metadata for a mojo.
    */
   fun analyzeMojo(
     pluginDescriptor: PluginDescriptor,
@@ -44,15 +44,13 @@ class MojoAnalyzer(
         return null
       }
 
-    val isThreadSafe = mojoDescriptor.isThreadSafe
-
     val isCacheable = isPluginCacheable(pluginDescriptor, mojoDescriptor)
 
     val isContinuous = isPluginContinuous(pluginDescriptor, mojoDescriptor)
 
     if (!isCacheable) {
       log.info("${pluginDescriptor.artifactId}:$goal is not cacheable")
-      return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isContinuous, isThreadSafe)
+      return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isContinuous)
     }
 
     val (inputs, dependentTaskOutputInputs) = getInputs(pluginDescriptor, mojoDescriptor, project)
@@ -64,7 +62,6 @@ class MojoAnalyzer(
       outputs,
       true,
       isContinuous,
-      isThreadSafe
     )
   }
 
@@ -133,6 +130,26 @@ class MojoAnalyzer(
           inputs.add(input)
         }
       }
+    }
+
+    // Always include pom.xml and in-workspace ancestor pom.xml files as inputs
+    val canonicalWorkspaceRoot = workspaceRoot.canonicalPath
+    val canonicalProjectRoot = project.basedir.canonicalPath
+    var currentProject: MavenProject? = project
+    while (currentProject != null) {
+      val pomFile = File(currentProject.basedir, "pom.xml")
+      val canonicalPomPath = pomFile.canonicalPath
+      if (pomFile.exists() && canonicalPomPath.startsWith(canonicalWorkspaceRoot)) {
+        val pomInput = if (canonicalPomPath.startsWith(canonicalProjectRoot)) {
+          // Within project directory - use {projectRoot}
+          pathResolver.formatInputPath(pomFile, projectRoot = project.basedir)
+        } else {
+          // Outside project directory - use {workspaceRoot}
+          pathResolver.toWorkspacePath(pomFile, workspaceRoot)
+        }
+        inputs.add(pomInput)
+      }
+      currentProject = currentProject.parent
     }
 
     return Pair(inputs, dependentTaskOutputInputs)

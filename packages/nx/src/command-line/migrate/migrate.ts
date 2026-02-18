@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
@@ -193,6 +193,10 @@ export class Migrator {
   private async createMigrateJson() {
     const migrations = await Promise.all(
       Object.keys(this.packageUpdates).map(async (packageName) => {
+        if (this.packageUpdates[packageName].ignoreMigrations) {
+          return [];
+        }
+
         const currentVersion = this.getPkgVersion(packageName);
         if (currentVersion === null) return [];
 
@@ -279,6 +283,7 @@ export class Migrator {
       this.addPackageUpdate(targetPackage, {
         version: target.version,
         addToPackageJson: target.addToPackageJson || false,
+        ...(target.ignoreMigrations && { ignoreMigrations: true }),
       });
       return [];
     }
@@ -308,13 +313,15 @@ export class Migrator {
     this.addPackageUpdate(targetPackage, {
       version: migrationConfig.version,
       addToPackageJson: target.addToPackageJson || false,
+      ...(target.ignoreMigrations && { ignoreMigrations: true }),
     });
 
     const { packageJsonUpdates, packageGroupOrder } =
       this.getPackageJsonUpdatesFromMigrationConfig(
         targetPackage,
         targetVersion,
-        migrationConfig
+        migrationConfig,
+        target.ignorePackageGroup
       );
 
     if (!Object.keys(packageJsonUpdates).length) {
@@ -359,7 +366,8 @@ export class Migrator {
   private getPackageJsonUpdatesFromMigrationConfig(
     packageName: string,
     targetVersion: string,
-    migrationConfig: ResolvedMigrationConfiguration
+    migrationConfig: ResolvedMigrationConfiguration,
+    ignorePackageGroup?: boolean
   ): {
     packageJsonUpdates: PackageJsonUpdates;
     packageGroupOrder: string[];
@@ -368,7 +376,8 @@ export class Migrator {
       this.getPackageJsonUpdatesFromPackageGroup(
         packageName,
         targetVersion,
-        migrationConfig
+        migrationConfig,
+        ignorePackageGroup
       );
 
     if (
@@ -398,12 +407,17 @@ export class Migrator {
   private getPackageJsonUpdatesFromPackageGroup(
     packageName: string,
     targetVersion: string,
-    migrationConfig: ResolvedMigrationConfiguration
+    migrationConfig: ResolvedMigrationConfiguration,
+    ignorePackageGroup?: boolean
   ) {
+    if (ignorePackageGroup) {
+      return [];
+    }
+
     const packageGroup: ArrayPackageGroup =
       packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')
         ? LEGACY_NRWL_PACKAGE_GROUP
-        : migrationConfig.packageGroup ?? [];
+        : (migrationConfig.packageGroup ?? []);
 
     let packageGroupOrder: string[] = [];
     if (packageGroup.length) {
@@ -480,6 +494,12 @@ export class Migrator {
                 ? packageUpdate.alwaysAddToPackageJson
                 : 'dependencies'
               : packageUpdate.addToPackageJson || false,
+            ...(packageUpdate.ignorePackageGroup && {
+              ignorePackageGroup: true,
+            }),
+            ...(packageUpdate.ignoreMigrations && {
+              ignoreMigrations: true,
+            }),
           };
         }
       }
@@ -640,7 +660,7 @@ export class Migrator {
     if (packageName.startsWith('@nx/')) {
       // @ts-expect-error -- enquirer types aren't correct, footer does exist
       promptConfig.footer = () =>
-        chalk.dim(
+        pc.dim(
           `  View migration details at https://nx.dev/nx-api/${packageName.replace(
             '@nx/',
             ''
@@ -1697,16 +1717,16 @@ export async function runNxOrAngularMigration(
       const committedSha = commitChanges(commitMessage, root);
 
       if (committedSha) {
-        logger.info(chalk.dim(`- Commit created for changes: ${committedSha}`));
+        logger.info(pc.dim(`- Commit created for changes: ${committedSha}`));
       } else {
         logger.info(
-          chalk.red(
+          pc.red(
             `- A commit could not be created/retrieved for an unknown reason`
           )
         );
       }
     } catch (e) {
-      logger.info(chalk.red(`- ${e.message}`));
+      logger.info(pc.red(`- ${e.message}`));
     }
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {

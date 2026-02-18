@@ -100,8 +100,8 @@ export async function* webpackExecutor(
     typeof options.optimization === 'boolean'
       ? options.optimization
       : options.optimization && options.optimization.scripts
-      ? options.optimization.scripts
-      : false;
+        ? options.optimization.scripts
+        : false;
 
   (process.env as any).NODE_ENV ||= isScriptOptimizeOn
     ? 'production'

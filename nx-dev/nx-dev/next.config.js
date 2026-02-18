@@ -2,8 +2,19 @@
 const { withNx } = require('@nx/next/plugins/with-nx');
 const redirectRules = require('./redirect-rules');
 
-if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
-  // If we're building for production throw error as each env must set this value.
+// For deploy previews, always point to the matching astro-docs preview
+// (overrides any site-level env var that would otherwise point to production).
+if (
+  !global.NX_GRAPH_CREATION &&
+  process.env.NETLIFY &&
+  process.env.CONTEXT === 'deploy-preview' &&
+  process.env.REVIEW_ID
+) {
+  process.env.NEXT_PUBLIC_ASTRO_URL = `https://deploy-preview-${process.env.REVIEW_ID}--nx-docs.netlify.app`;
+  console.log(
+    `[deploy-preview] NEXT_PUBLIC_ASTRO_URL overridden to: ${process.env.NEXT_PUBLIC_ASTRO_URL}`
+  );
+} else if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
   if (
     process.env.NODE_ENV === 'production' &&
     (process.env.VERCEL || process.env.NETLIFY)
@@ -11,9 +22,8 @@ if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
     throw new Error(
       `The NEXT_PUBLIC_ASTRO_URL environment variable is not set. Please set it to the URL of the Astro site.`
     );
-  }
-  // For dev, default to the canary docs.
-  else {
+  } else {
+    // For dev, default to the canary docs.
     process.env.NEXT_PUBLIC_ASTRO_URL = 'https://master--nx-docs.netlify.app';
   }
 }
@@ -23,9 +33,47 @@ module.exports = withNx({
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Limit static generation workers to reduce memory usage on CI (Netlify 8GB limit)
+  experimental: {
+    cpus: 1,
+    // Exclude large, unnecessary packages from the server function trace.
+    // We have to say under 250MB for Neltify
+    outputFileTracingExcludes: {
+      '*': [
+        // Native binaries - not needed at runtime for the website
+        'node_modules/@swc/core-linux-x64-musl/**',
+        'node_modules/@swc/core-linux-x64-gnu/**',
+        'node_modules/@swc/core-linux-arm64-musl/**',
+        'node_modules/@swc/core-linux-arm64-gnu/**',
+        'node_modules/@swc/core-linux-arm-gnueabihf/**',
+        'node_modules/@swc/core-win32-x64-msvc/**',
+        'node_modules/@swc/core-win32-arm64-msvc/**',
+        'node_modules/@swc/core-win32-ia32-msvc/**',
+        'node_modules/@swc/core-darwin-x64/**',
+        'node_modules/@swc/core-darwin-arm64/**',
+        'node_modules/@esbuild/**',
+        'node_modules/esbuild/**',
+        'node_modules/@nx/nx-darwin-arm64/**',
+        'node_modules/@nx/nx-darwin-x64/**',
+        'node_modules/@nx/nx-freebsd-x64/**',
+        'node_modules/@nx/nx-linux-arm-gnueabihf/**',
+        'node_modules/@nx/nx-linux-arm64-gnu/**',
+        'node_modules/@nx/nx-linux-arm64-musl/**',
+        'node_modules/@nx/nx-linux-x64-gnu/**',
+        'node_modules/@nx/nx-linux-x64-musl/**',
+        'node_modules/@nx/nx-win32-arm64-msvc/**',
+        'node_modules/@nx/nx-win32-x64-msvc/**',
+        // Build tools not needed at runtime
+        'node_modules/typescript/**',
+        'node_modules/webpack/**',
+        'node_modules/sass/**',
+      ],
+    },
+  },
   async rewrites() {
     // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
-    const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL;
+    // Remove trailing slash to prevent double slashes in rewrite destinations
+    const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL?.replace(/\/$/, '');
 
     if (!astroDocsUrl) {
       // Skip rewrites if env var is not set
@@ -44,6 +92,14 @@ module.exports = withNx({
       {
         source: '/.netlify/:path*',
         destination: `${astroDocsUrl}/.netlify/:path*`,
+      },
+      {
+        source: '/llms.txt',
+        destination: `${astroDocsUrl}/docs/llms.txt`,
+      },
+      {
+        source: '/llms-full.txt',
+        destination: `${astroDocsUrl}/docs/llms-full.txt`,
       },
     ];
 
@@ -88,7 +144,6 @@ module.exports = withNx({
     '@nx/nx-dev-ui-commands',
     '@nx/nx-dev-ui-community',
     '@nx/nx-dev-ui-company',
-    '@nx/nx-dev-ui-conference',
     '@nx/nx-dev-ui-contact',
     '@nx/nx-dev-ui-courses',
     '@nx/nx-dev-ui-customers',
@@ -145,5 +200,12 @@ module.exports = withNx({
     }
 
     return rules;
+  },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      // Disable source maps for smaller memory footprint
+      config.devtool = false;
+    }
+    return config;
   },
 });

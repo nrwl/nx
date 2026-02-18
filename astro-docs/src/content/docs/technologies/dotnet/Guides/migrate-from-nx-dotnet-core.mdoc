@@ -279,7 +279,6 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
 **Migration path:**
 
 1. **If you disabled inference to exclude certain projects:**
-
    - Use the `exclude` property in the plugin configuration:
      ```json
      // nx.json
@@ -294,7 +293,6 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
      ```
 
 2. **If you disabled inference to use explicit project.json files:**
-
    - The new plugin will still detect your projects via `.csproj` files
    - You can keep `project.json` files to customize targets, but they're optional
    - Consider removing them to use the automatically inferred targets

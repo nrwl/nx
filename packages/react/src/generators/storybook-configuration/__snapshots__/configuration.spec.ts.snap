@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`react:storybook-configuration should configure everything and install correct dependencies 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
@@ -61,11 +61,11 @@ import { expect } from 'storybook/test';
 
 export default {
   component: Test,
-  title: 'Test',
-};
+  title: 'Test',};
 
 export const Primary = {
-  args: {},
+  args: {
+  },
 };
 
 export const Heading: Story = {

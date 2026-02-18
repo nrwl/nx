@@ -2,9 +2,50 @@
 // Wildcards reduce individual redirects by using pattern matching
 // Original: 1073 entries, Consolidated: 710 entries
 const docsToAstroRedirects = {
+  // ========== EXCEPTIONS (must be before wildcards) ==========
+  // convert-to-inferred routes all go to the same destination
+  '/technologies/test-tools/cypress/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/test-tools/detox/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/eslint/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/react/expo/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/test-tools/jest/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/react/next/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/test-tools/playwright/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/react/react-native/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/react/remix/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/build-tools/rollup/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/build-tools/rspack/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/test-tools/storybook/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/build-tools/vite/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+  '/technologies/build-tools/webpack/api/generators/convert-to-inferred':
+    '/docs/guides/tasks--caching/convert-to-inferred',
+
   // ========== WILDCARD PATTERNS ==========
   // These wildcards replace many individual redirect rules
 
+  // devkit/documents exceptions (must be before wildcard)
+  '/reference/core-api/devkit/documents/README': '/docs/reference/devkit',
+  '/reference/core-api/devkit/documents/ngcli_adapter/README':
+    '/docs/reference/devkit/ngcli_adapter',
+  '/reference/core-api/devkit/documents/runTasksInSerial':
+    '/docs/reference/benchmarks/caching',
+  '/reference/core-api/devkit/documents/serializeJson':
+    '/docs/reference/benchmarks/caching',
+  '/reference/core-api/devkit/documents/stripIndents':
+    '/docs/reference/benchmarks/caching',
   '/reference/core-api/devkit/documents/:slug*':
     '/docs/reference/devkit/:slug*',
   '/reference/core-api/nx/documents/:slug*': '/docs/reference/nx-commands',
@@ -119,7 +160,6 @@ const docsToAstroRedirects = {
   '/ci/concepts/cache-security': '/docs/concepts/ci-concepts/cache-security',
   '/ci/concepts/heartbeat':
     '/docs/concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
-  '/ci/concepts/nx-cloud-ai': '/docs/concepts/ci-concepts/ai-features',
   '/ci/recipes/security/google-auth': '/docs/guides/nx-cloud/google-auth',
   '/ci/recipes/security/access-tokens': '/docs/guides/nx-cloud/access-tokens',
   '/ci/recipes/security/personal-access-tokens':
@@ -127,29 +167,13 @@ const docsToAstroRedirects = {
   '/ci/recipes/security/encryption': '/docs/guides/nx-cloud/encryption',
   '/ci/recipes/source-control-integration':
     '/docs/guides/nx-cloud/source-control-integration',
-  '/ci/recipes/source-control-integration/github':
-    '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/source-control-integration/bitbucket':
-    '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/source-control-integration/gitlab':
-    '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/source-control-integration/azure-devops':
+  '/ci/recipes/source-control-integration/:path*':
     '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/enterprise': '/docs/enterprise',
-  '/ci/recipes/enterprise/single-tenant/overview':
-    '/docs/enterprise/single-tenant/overview',
-  '/ci/recipes/enterprise/single-tenant/auth-github':
-    '/docs/enterprise/single-tenant/auth-github',
-  '/ci/recipes/enterprise/single-tenant/auth-gitlab':
-    '/docs/enterprise/single-tenant/auth-gitlab',
-  '/ci/recipes/enterprise/single-tenant/auth-bitbucket':
-    '/docs/enterprise/single-tenant/auth-bitbucket',
-  '/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center':
-    '/docs/enterprise/single-tenant/auth-bitbucket-data-center',
   '/ci/recipes/enterprise/single-tenant/auth-saml':
     '/docs/enterprise/single-tenant',
-  '/ci/recipes/enterprise/single-tenant/custom-github-app':
-    '/docs/enterprise/single-tenant/custom-github-app',
+  '/ci/recipes/enterprise/single-tenant/:path*':
+    '/docs/enterprise/single-tenant/:path*',
   '/ci/recipes/enterprise/conformance': '/docs/enterprise/conformance',
   '/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud':
     '/docs/enterprise/configure-conformance-rules-in-nx-cloud',
@@ -180,36 +204,8 @@ const docsToAstroRedirects = {
   '/ci/reference/credits-pricing': '/docs/reference/nx-cloud/credits-pricing',
   '/ci/reference/release-notes': '/docs/reference/nx-cloud/release-notes',
   '/concepts': '/docs/concepts',
-  '/concepts/mental-model': '/docs/concepts/mental-model',
-  '/concepts/how-caching-works': '/docs/concepts/how-caching-works',
-  '/concepts/task-pipeline-configuration':
-    '/docs/concepts/task-pipeline-configuration',
-  '/concepts/nx-plugins': '/docs/concepts/nx-plugins',
-  '/concepts/inferred-tasks': '/docs/concepts/inferred-tasks',
-  '/concepts/types-of-configuration': '/docs/concepts/types-of-configuration',
-  '/concepts/executors-and-configurations':
-    '/docs/concepts/executors-and-configurations',
-  '/concepts/common-tasks': '/docs/concepts/common-tasks',
-  '/concepts/sync-generators': '/docs/concepts/sync-generators',
-  '/concepts/typescript-project-linking':
-    '/docs/concepts/typescript-project-linking',
-  '/concepts/buildable-and-publishable-libraries':
-    '/docs/concepts/buildable-and-publishable-libraries',
-  '/concepts/decisions': '/docs/concepts/decisions',
-  '/concepts/decisions/overview': '/docs/concepts/decisions/overview',
-  '/concepts/decisions/why-monorepos': '/docs/concepts/decisions/why-monorepos',
-  '/concepts/decisions/dependency-management':
-    '/docs/concepts/decisions/dependency-management',
-  '/concepts/decisions/code-ownership':
-    '/docs/concepts/decisions/code-ownership',
-  '/concepts/decisions/project-size': '/docs/concepts/decisions/project-size',
-  '/concepts/decisions/project-dependency-rules':
-    '/docs/concepts/decisions/project-dependency-rules',
-  '/concepts/decisions/folder-structure':
-    '/docs/concepts/decisions/folder-structure',
-  '/concepts/nx-daemon': '/docs/concepts/nx-daemon',
-  '/extending-nx': '/docs/extending-nx',
-  '/extending-nx/intro': '/docs/extending-nx/intro',
+  '/concepts/:path*': '/docs/concepts/:path*',
+  // /extending-nx exceptions (don't follow simple prepend pattern)
   '/extending-nx/intro/getting-started': '/docs/extending-nx/intro',
   '/extending-nx/api/nx-devkit/overview': '/docs/extending-nx',
   '/extending-nx/api/plugin/overview': '/docs/extending-nx',
@@ -218,46 +214,21 @@ const docsToAstroRedirects = {
     '/docs/extending-nx/organization-specific-plugin',
   '/extending-nx/tutorials/tooling-plugin': '/docs/extending-nx/tooling-plugin',
   '/extending-nx/recipes': '/docs/extending-nx',
-  '/extending-nx/recipes/local-generators':
-    '/docs/extending-nx/local-generators',
-  '/extending-nx/recipes/composing-generators':
-    '/docs/extending-nx/composing-generators',
   '/extending-nx/recipes/generator-options': '/docs/extending-nx',
-  '/extending-nx/recipes/creating-files': '/docs/extending-nx/creating-files',
-  '/extending-nx/recipes/modifying-files': '/docs/extending-nx/modifying-files',
-  '/extending-nx/recipes/create-sync-generator':
-    '/docs/extending-nx/create-sync-generator',
-  '/extending-nx/recipes/migration-generators':
-    '/docs/extending-nx/migration-generators',
-  '/extending-nx/recipes/local-executors': '/docs/extending-nx/local-executors',
-  '/extending-nx/recipes/compose-executors':
-    '/docs/extending-nx/compose-executors',
-  '/extending-nx/recipes/create-preset': '/docs/extending-nx/create-preset',
-  '/extending-nx/recipes/create-install-package':
-    '/docs/extending-nx/create-install-package',
-  '/extending-nx/recipes/project-graph-plugins':
-    '/docs/extending-nx/project-graph-plugins',
-  '/extending-nx/recipes/publish-plugin': '/docs/extending-nx/publish-plugin',
-  '/extending-nx/recipes/task-running-lifecycle':
-    '/docs/extending-nx/task-running-lifecycle',
   '/extending-nx/api': '/docs/extending-nx',
   '/extending-nx/api/nx-devkit': '/docs/extending-nx',
   '/extending-nx/api/nx-devkit/ngcli-adapter': '/docs/extending-nx',
   '/extending-nx/api/plugin': '/docs/extending-nx',
-  '/features': '/docs/features',
-  '/features/run-tasks': '/docs/features/run-tasks',
-  '/features/cache-task-results': '/docs/features/cache-task-results',
+  // /extending-nx wildcard (covers simple /docs prepend cases)
+  '/extending-nx': '/docs/extending-nx',
+  '/extending-nx/:path*': '/docs/extending-nx/:path*',
+  // /features exceptions (non-standard mappings)
   '/features/enhance-AI': '/docs/features/enhance-ai',
-  '/features/explore-graph': '/docs/features/explore-graph',
-  '/features/generate-code': '/docs/features/generate-code',
-  '/features/automate-updating-dependencies':
-    '/docs/features/automate-updating-dependencies',
-  '/features/enforce-module-boundaries':
-    '/docs/features/enforce-module-boundaries',
-  '/features/manage-releases': '/docs/features/manage-releases',
-  '/features/ci-features': '/docs/features/ci-features',
   '/features/maintain-ts-monorepos':
     '/docs/features/maintain-typescript-monorepos',
+  // /features wildcard
+  '/features': '/docs/features',
+  '/features/:path*': '/docs/features/:path*',
   '/getting-started': '/docs/getting-started/intro',
   '/getting-started/intro': '/docs/getting-started/intro',
   '/getting-started/installation': '/docs/getting-started/installation',
@@ -322,92 +293,14 @@ const docsToAstroRedirects = {
     '/docs/guides/tasks--caching/convert-to-inferred',
   '/recipes/running-tasks/self-hosted-caching':
     '/docs/guides/tasks--caching/self-hosted-caching',
-  '/recipes/adopting-nx/adding-to-monorepo':
-    '/docs/guides/adopting-nx/adding-to-monorepo',
-  '/recipes/adopting-nx/from-turborepo':
-    '/docs/guides/adopting-nx/from-turborepo',
-  '/recipes/adopting-nx/adding-to-existing-project':
-    '/docs/guides/adopting-nx/adding-to-existing-project',
-  '/recipes/adopting-nx/import-project':
-    '/docs/guides/adopting-nx/import-project',
-  '/recipes/adopting-nx/preserving-git-histories':
-    '/docs/guides/adopting-nx/preserving-git-histories',
-  '/recipes/adopting-nx/manual': '/docs/guides/adopting-nx/manual',
-  '/recipes/nx-release/release-npm-packages':
-    '/docs/guides/nx-release/release-npm-packages',
-  '/recipes/nx-release/release-docker-images':
-    '/docs/guides/nx-release/release-docker-images',
-  '/recipes/nx-release/publish-rust-crates':
-    '/docs/guides/nx-release/publish-rust-crates',
-  '/recipes/nx-release/release-projects-independently':
-    '/docs/guides/nx-release/release-projects-independently',
-  '/recipes/nx-release/updating-version-references':
-    '/docs/guides/nx-release/updating-version-references',
-  '/recipes/nx-release/automatically-version-with-conventional-commits':
-    '/docs/guides/nx-release/automatically-version-with-conventional-commits',
-  '/recipes/nx-release/customize-conventional-commit-types':
-    '/docs/guides/nx-release/customize-conventional-commit-types',
-  '/recipes/nx-release/file-based-versioning-version-plans':
-    '/docs/guides/nx-release/file-based-versioning-version-plans',
-  '/recipes/nx-release/configure-custom-registries':
-    '/docs/guides/nx-release/configure-custom-registries',
-  '/recipes/nx-release/publish-in-ci-cd':
-    '/docs/guides/nx-release/publish-in-ci-cd',
-  '/recipes/nx-release/automate-github-releases':
-    '/docs/guides/nx-release/automate-github-releases',
-  '/recipes/nx-release/automate-gitlab-releases':
-    '/docs/guides/nx-release/automate-gitlab-releases',
-  '/recipes/nx-release/update-local-registry-setup':
-    '/docs/guides/nx-release/update-local-registry-setup',
-  '/recipes/nx-release/configure-changelog-format':
-    '/docs/guides/nx-release/configure-changelog-format',
-  '/recipes/nx-release/build-before-versioning':
-    '/docs/guides/nx-release/build-before-versioning',
-  '/recipes/nx-release/configuration-version-prefix':
-    '/docs/guides/nx-release/configuration-version-prefix',
-  '/recipes/nx-console/console-telemetry':
-    '/docs/guides/nx-console/console-telemetry',
-  '/recipes/nx-console/console-project-details':
-    '/docs/guides/nx-console/console-project-details',
-  '/recipes/nx-console/console-generate-command':
-    '/docs/guides/nx-console/console-generate-command',
-  '/recipes/nx-console/console-run-command':
-    '/docs/guides/nx-console/console-run-command',
-  '/recipes/nx-console/console-nx-cloud':
-    '/docs/guides/nx-console/console-nx-cloud',
-  '/recipes/nx-console/console-migrate-ui':
-    '/docs/guides/nx-console/console-migrate-ui',
-  '/recipes/nx-console/console-troubleshooting':
-    '/docs/guides/nx-console/console-troubleshooting',
+  '/recipes/adopting-nx/:path*': '/docs/guides/adopting-nx/:path*',
+  '/recipes/nx-release/:path*': '/docs/guides/nx-release/:path*',
+  '/recipes/nx-console/:path*': '/docs/guides/nx-console/:path*',
   '/recipes/enforce-module-boundaries':
     '/docs/features/enforce-module-boundaries',
-  '/recipes/enforce-module-boundaries/ban-dependencies-with-tags':
-    '/docs/guides/enforce-module-boundaries/ban-dependencies-with-tags',
-  '/recipes/enforce-module-boundaries/tag-multiple-dimensions':
-    '/docs/guides/enforce-module-boundaries/tag-multiple-dimensions',
-  '/recipes/enforce-module-boundaries/ban-external-imports':
-    '/docs/guides/enforce-module-boundaries/ban-external-imports',
-  '/recipes/enforce-module-boundaries/tags-allow-list':
-    '/docs/guides/enforce-module-boundaries/tags-allow-list',
-  '/recipes/tips-n-tricks/standalone-to-monorepo':
-    '/docs/guides/tips-n-tricks/standalone-to-monorepo',
-  '/recipes/tips-n-tricks/keep-nx-versions-in-sync':
-    '/docs/guides/tips-n-tricks/keep-nx-versions-in-sync',
-  '/recipes/tips-n-tricks/define-environment-variables':
-    '/docs/guides/tips-n-tricks/define-environment-variables',
-  '/recipes/tips-n-tricks/browser-support':
-    '/docs/guides/tips-n-tricks/browser-support',
-  '/recipes/tips-n-tricks/include-assets-in-build':
-    '/docs/guides/tips-n-tricks/include-assets-in-build',
-  '/recipes/tips-n-tricks/include-all-packagejson':
-    '/docs/guides/tips-n-tricks/include-all-packagejson',
-  '/recipes/tips-n-tricks/identify-dependencies-between-folders':
-    '/docs/guides/tips-n-tricks/identify-dependencies-between-folders',
-  '/recipes/tips-n-tricks/analyze-source-files':
-    '/docs/guides/tips-n-tricks/analyze-source-files',
-  '/recipes/tips-n-tricks/advanced-update':
-    '/docs/guides/tips-n-tricks/advanced-update',
-  '/recipes/tips-n-tricks/yarn-pnp': '/docs/guides/tips-n-tricks/yarn-pnp',
+  '/recipes/enforce-module-boundaries/:path*':
+    '/docs/guides/enforce-module-boundaries/:path*',
+  '/recipes/tips-n-tricks/:path*': '/docs/guides/tips-n-tricks/:path*',
   '/recipes/adopting-nx': '/docs/guides/adopting-nx',
   '/recipes/nx-release': '/docs/guides/nx-release',
   '/recipes/nx-console': '/docs/guides/nx-console',
@@ -454,95 +347,54 @@ const docsToAstroRedirects = {
   '/reference/core-api/conformance/executors':
     '/docs/reference/conformance/executors',
   '/reference/core-api/owners/generators': '/docs/reference/owners/generators',
+  '/reference/core-api/owners/generators/:path*':
+    '/docs/reference/owners/generators',
   '/reference/core-api/shared-fs-cache/generators':
     '/docs/reference/remote-cache-plugins/shared-fs-cache/generators',
   '/reference/core-api': '/docs/reference',
-  '/reference/core-api/nx': '/reference/nx',
-  '/reference/core-api/workspace': '/reference/workspace',
-  '/reference/core-api/plugin': '/reference/plugin',
-  '/reference/core-api/web': '/reference/web',
+  '/reference/core-api/nx': '/docs/reference/nx',
+  '/reference/core-api/workspace': '/docs/reference/workspace',
+  '/reference/core-api/plugin': '/docs/reference/plugin',
+  '/reference/core-api/web': '/docs/reference/web',
   '/reference/core-api/create-nx-workspace':
     '/docs/reference/create-nx-workspace',
   '/reference/core-api/devkit/documents': '/docs/reference/devkit',
   '/reference/core-api/devkit': '/docs/reference/devkit',
-  '/reference/core-api/devkit/documents/README': '/docs/reference/devkit',
-  '/reference/core-api/devkit/documents/ngcli_adapter/README':
-    '/docs/reference/devkit/ngcli_adapter',
-  '/reference/core-api/devkit/documents/runTasksInSerial':
-    '/docs/reference/benchmarks/caching',
-  '/reference/core-api/devkit/documents/serializeJson':
-    '/docs/reference/benchmarks/caching',
-  '/reference/core-api/devkit/documents/stripIndents':
-    '/docs/reference/benchmarks/caching',
   '/reference/core-api/devkit/executors': '/docs/reference/devkit',
   '/reference/core-api/devkit/generators': '/docs/reference/devkit',
   '/reference/core-api/devkit/migrations': '/docs/reference/devkit',
   '/reference/core-api/nx/documents': '/docs/reference/nx-commands',
   '/reference/core-api/nx/documents/create-nx-workspace':
     'https://canary.nx.dev/docs/reference/create-nx-workspace',
-  '/reference/core-api/nx/executors': '/reference/nx/executors',
-  '/reference/core-api/nx/executors/noop': '/reference/nx/executors',
-  '/reference/core-api/nx/executors/run-commands': '/reference/nx/executors',
-  '/reference/core-api/nx/executors/run-script': '/reference/nx/executors',
-  '/reference/core-api/nx/generators': '/reference/nx/generators',
+  '/reference/core-api/nx/executors': '/docs/reference/nx/executors',
+  '/reference/core-api/nx/executors/:path*': '/docs/reference/nx/executors',
+  '/reference/core-api/nx/generators': '/docs/reference/nx/generators',
   '/reference/core-api/nx/generators/connect-to-nx-cloud':
-    '/reference/nx/generators',
-  '/reference/core-api/nx/migrations': '/reference/nx/migrations',
+    '/docs/reference/nx/generators',
+  '/reference/core-api/nx/migrations': '/docs/reference/nx/migrations',
   '/reference/core-api/plugin/executors': '/reference/plugin/executors',
-  '/reference/core-api/plugin/generators': '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/plugin':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/create-package':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/e2e-project':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/migration':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/generator':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/executor':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/plugin-lint-checks':
-    '/reference/plugin/generators',
-  '/reference/core-api/plugin/generators/preset':
-    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators': '/docs/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/:path*':
+    '/docs/reference/plugin/generators',
   '/reference/core-api/plugin/migrations': '/reference/plugin/migrations',
-  '/reference/core-api/web/executors': '/reference/web/executors',
-  '/reference/core-api/web/executors/file-server': '/reference/web/executors',
-  '/reference/core-api/web/generators': '/reference/web/generators',
-  '/reference/core-api/web/generators/init': '/reference/web/generators',
-  '/reference/core-api/web/generators/application': '/reference/web/generators',
-  '/reference/core-api/web/generators/static-config':
-    '/reference/web/generators',
+  '/reference/core-api/web/executors': '/docs/reference/web/executors',
+  '/reference/core-api/web/executors/file-server':
+    '/docs/reference/web/executors',
+  '/reference/core-api/web/generators': '/docs/reference/web/generators',
+  '/reference/core-api/web/generators/:path*': '/docs/reference/web/generators',
   '/reference/core-api/web/migrations': '/reference/web/migrations',
-  '/reference/core-api/workspace/documents': '/reference/workspace',
+  '/reference/core-api/workspace/documents': '/docs/reference/workspace',
   '/reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix':
     '/docs/reference/nodejs-typescript-compatibility',
   '/reference/core-api/workspace/executors': '/reference/workspace/executors',
   '/reference/core-api/workspace/executors/counter':
     '/reference/workspace/executors',
-  '/reference/core-api/workspace/generators': '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/preset':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/move':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/remove':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/convert-to-monorepo':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/new':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/run-commands':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/fix-configuration':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/npm-package':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/ci-workflow':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/generators/infer-targets':
-    '/reference/workspace/generators',
-  '/reference/core-api/workspace/migrations': '/reference/workspace/migrations',
+  '/reference/core-api/workspace/generators':
+    '/docs/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/:path*':
+    '/docs/reference/workspace/generators',
+  '/reference/core-api/workspace/migrations':
+    '/docs/reference/workspace/migrations',
   '/reference/core-api/azure-cache/executors':
     '/docs/reference/remote-cache-plugins/azure-cache/overview',
   '/reference/core-api/azure-cache/generators':
@@ -553,17 +405,11 @@ const docsToAstroRedirects = {
     '/docs/reference/conformance/overview',
   '/reference/core-api/conformance/generators':
     '/docs/reference/conformance/generators',
-  '/reference/core-api/conformance/generators/create-rule':
-    '/docs/reference/conformance/generators',
-  '/reference/core-api/conformance/generators/preset':
+  '/reference/core-api/conformance/generators/:path*':
     '/docs/reference/conformance/generators',
   '/reference/core-api/conformance/migrations':
     '/docs/reference/conformance/overview',
   '/reference/core-api/owners/executors': '/docs/reference/owners/overview',
-  '/reference/core-api/owners/generators/init':
-    '/docs/reference/owners/generators',
-  '/reference/core-api/owners/generators/sync-codeowners-file':
-    '/docs/reference/owners/generators',
   '/reference/core-api/owners/migrations': '/docs/reference/owners/overview',
   '/reference/core-api/gcs-cache/executors':
     '/docs/reference/remote-cache-plugins/gcs-cache',
@@ -583,6 +429,7 @@ const docsToAstroRedirects = {
     '/docs/reference/remote-cache-plugins/shared-fs-cache/generators',
   '/reference/core-api/shared-fs-cache/migrations':
     '/docs/reference/remote-cache-plugins/shared-fs-cache/overview',
+  // /showcase exceptions (benchmarks go to /docs/reference/benchmarks)
   '/showcase/benchmarks/tsc-batch-mode':
     '/docs/reference/benchmarks/tsc-batch-mode',
   '/showcase/benchmarks/caching': '/docs/reference/benchmarks/caching',
@@ -693,42 +540,14 @@ const docsToAstroRedirects = {
   '/technologies/test-tools/detox': '/docs/technologies/test-tools/detox',
   '/technologies/test-tools/detox/introduction':
     '/docs/technologies/test-tools/detox/introduction',
-  '/technologies/typescript/recipes/switch-to-workspaces-project-references':
-    '/docs/technologies/typescript/guides/switch-to-workspaces-project-references',
-  '/technologies/typescript/recipes/enable-tsc-batch-mode':
-    '/docs/technologies/typescript/guides/enable-tsc-batch-mode',
-  '/technologies/typescript/recipes/define-secondary-entrypoints':
-    '/docs/technologies/typescript/guides/define-secondary-entrypoints',
-  '/technologies/typescript/recipes/compile-multiple-formats':
-    '/docs/technologies/typescript/guides/compile-multiple-formats',
-  '/technologies/typescript/recipes/js-and-ts':
-    '/docs/technologies/typescript/guides/js-and-ts',
-  '/technologies/angular/recipes/use-environment-variables-in-angular':
-    '/docs/technologies/angular/guides/use-environment-variables-in-angular',
-  '/technologies/angular/recipes/using-tailwind-css-with-angular-projects':
-    '/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects',
-  '/technologies/angular/recipes/module-federation-with-ssr':
-    '/docs/technologies/angular/guides/module-federation-with-ssr',
-  '/technologies/angular/recipes/dynamic-module-federation-with-angular':
-    '/docs/technologies/angular/guides/dynamic-module-federation-with-angular',
-  '/technologies/angular/recipes/setup-incremental-builds-angular':
-    '/docs/technologies/angular/guides/setup-incremental-builds-angular',
-  '/technologies/angular/recipes/nx-and-angular':
-    '/docs/technologies/angular/guides/nx-and-angular',
-  '/technologies/angular/recipes/nx-devkit-angular-devkit':
-    '/docs/technologies/angular/guides/nx-devkit-angular-devkit',
-  '/technologies/angular/recipes/angular-nx-version-matrix':
-    '/docs/technologies/angular/guides/angular-nx-version-matrix',
+  '/technologies/typescript/recipes/:path*':
+    '/docs/technologies/typescript/guides/:path*',
+  '/technologies/angular/recipes/:path*':
+    '/docs/technologies/angular/guides/:path*',
   '/technologies/angular/angular-rspack/recipes':
     '/docs/technologies/angular/angular-rspack/guides/getting-started',
-  '/technologies/angular/angular-rspack/recipes/getting-started':
-    '/docs/technologies/angular/angular-rspack/guides/getting-started',
-  '/technologies/angular/angular-rspack/recipes/migrate-from-webpack':
-    '/docs/technologies/angular/angular-rspack/guides/migrate-from-webpack',
-  '/technologies/angular/angular-rspack/recipes/handling-configurations':
-    '/docs/technologies/angular/angular-rspack/guides/handling-configurations',
-  '/technologies/angular/angular-rspack/recipes/internationalization':
-    '/docs/technologies/angular/angular-rspack/guides/internationalization',
+  '/technologies/angular/angular-rspack/recipes/:path*':
+    '/docs/technologies/angular/angular-rspack/guides/:path*',
   '/technologies/angular/angular-rspack/api':
     '/docs/technologies/angular/angular-rspack/guides/getting-started',
   '/technologies/angular/angular-rspack/api/create-config':
@@ -741,23 +560,8 @@ const docsToAstroRedirects = {
     '/docs/technologies/angular/angular-rsbuild/create-config',
   '/technologies/angular/angular-rsbuild/api/create-server':
     '/docs/technologies/angular/angular-rsbuild/create-server',
-  '/technologies/react/recipes/react-native':
-    '/docs/technologies/react/guides/react-native',
-  '/technologies/react/recipes/remix': '/docs/technologies/react/guides/remix',
-  '/technologies/react/recipes/react-router':
-    '/docs/technologies/react/guides/react-router',
-  '/technologies/react/recipes/use-environment-variables-in-react':
-    '/docs/technologies/react/guides/use-environment-variables-in-react',
-  '/technologies/react/recipes/using-tailwind-css-in-react':
-    '/docs/technologies/react/guides/using-tailwind-css-in-react',
-  '/technologies/react/recipes/adding-assets-react':
-    '/docs/technologies/react/guides/adding-assets-react',
-  '/technologies/react/recipes/module-federation-with-ssr':
-    '/docs/technologies/react/guides/module-federation-with-ssr',
-  '/technologies/react/recipes/deploy-nextjs-to-vercel':
-    '/docs/technologies/react/guides/deploy-nextjs-to-vercel',
-  '/technologies/react/recipes/react-compiler':
-    '/docs/technologies/react/guides/react-compiler',
+  '/technologies/react/recipes/:path*':
+    '/docs/technologies/react/guides/:path*',
   '/technologies/react/next/recipes': '/docs/technologies/react/next/guides',
   '/technologies/react/next/recipes/next-config-setup':
     '/docs/technologies/react/next/guides/next-config-setup',
@@ -774,49 +578,29 @@ const docsToAstroRedirects = {
   '/technologies/vue/nuxt/recipes/deploy-nuxt-to-vercel':
     '/docs/technologies/vue/nuxt/guides/deploy-nuxt-to-vercel',
   '/technologies/vue/nuxt/api': '/docs/technologies/vue/nuxt',
-  '/technologies/node/recipes/node-server-fly-io':
-    '/docs/technologies/node/guides/node-server-fly-io',
-  '/technologies/node/recipes/node-serverless-functions-netlify':
-    '/docs/technologies/node/guides/node-serverless-functions-netlify',
-  '/technologies/node/recipes/node-aws-lambda':
-    '/docs/technologies/node/guides/node-aws-lambda',
-  '/technologies/node/recipes/application-proxies':
-    '/docs/technologies/node/guides/application-proxies',
-  '/technologies/node/recipes/wait-for-tasks':
-    '/docs/technologies/node/guides/wait-for-tasks',
+  '/technologies/node/recipes/:path*': '/docs/technologies/node/guides/:path*',
   '/technologies/node/express/api': '/docs/technologies/node/express',
   '/technologies/node/nest/api': '/docs/technologies/node/nest',
   '/technologies/java/introduction': '/docs/technologies/java/introduction',
-  '/technologies/module-federation/recipes/create-a-host':
-    '/docs/technologies/module-federation/guides/create-a-host',
-  '/technologies/module-federation/recipes/create-a-remote':
-    '/docs/technologies/module-federation/guides/create-a-remote',
-  '/technologies/module-federation/recipes/federate-a-module':
-    '/docs/technologies/module-federation/guides/federate-a-module',
+  // exception: nx-module-federation-plugin renamed to create-a-host
   '/technologies/module-federation/recipes/nx-module-federation-plugin':
     '/docs/technologies/module-federation/guides/create-a-host',
-  '/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin':
-    '/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin',
-  '/technologies/eslint/recipes/eslint':
-    '/docs/technologies/eslint/guides/eslint',
-  '/technologies/eslint/recipes/flat-config':
-    '/docs/technologies/eslint/guides/flat-config',
+  '/technologies/module-federation/recipes/:path*':
+    '/docs/technologies/module-federation/guides/:path*',
+  '/technologies/eslint/recipes/:path*':
+    '/docs/technologies/eslint/guides/:path*',
   '/technologies/eslint/eslint-plugin/recipes':
     '/docs/technologies/eslint/eslint-plugin/guides',
-  '/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries':
-    '/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries',
-  '/technologies/eslint/eslint-plugin/recipes/dependency-checks':
-    '/docs/technologies/eslint/eslint-plugin/guides/dependency-checks',
+  '/technologies/eslint/eslint-plugin/recipes/:path*':
+    '/docs/technologies/eslint/eslint-plugin/guides/:path*',
   '/technologies/eslint/eslint-plugin/api':
     '/docs/technologies/eslint/eslint-plugin',
   '/technologies/build-tools/docker':
     '/docs/technologies/build-tools/docker/introduction',
   '/technologies/build-tools/webpack/recipes':
     '/docs/technologies/build-tools/webpack/guides',
-  '/technologies/build-tools/webpack/recipes/webpack-config-setup':
-    '/docs/technologies/build-tools/webpack/guides/webpack-config-setup',
-  '/technologies/build-tools/webpack/recipes/webpack-plugins':
-    '/docs/technologies/build-tools/webpack/guides/webpack-plugins',
+  '/technologies/build-tools/webpack/recipes/:path*':
+    '/docs/technologies/build-tools/webpack/guides/:path*',
   '/technologies/build-tools/webpack/api':
     '/docs/technologies/build-tools/webpack',
   '/technologies/build-tools/vite/recipes':
@@ -843,12 +627,8 @@ const docsToAstroRedirects = {
     '/docs/technologies/build-tools/rsbuild/introduction',
   '/technologies/test-tools/cypress/recipes':
     '/docs/technologies/test-tools/cypress/guides/cypress-component-testing',
-  '/technologies/test-tools/cypress/recipes/cypress-component-testing':
-    '/docs/technologies/test-tools/cypress/guides/cypress-component-testing',
-  '/technologies/test-tools/cypress/recipes/cypress-setup-node-events':
-    '/docs/technologies/test-tools/cypress/guides/cypress-setup-node-events',
-  '/technologies/test-tools/cypress/recipes/cypress-v11-migration':
-    '/docs/technologies/test-tools/cypress/guides/cypress-v11-migration',
+  '/technologies/test-tools/cypress/recipes/:path*':
+    '/docs/technologies/test-tools/cypress/guides/:path*',
   '/technologies/test-tools/cypress/api':
     '/docs/technologies/test-tools/cypress',
   '/technologies/test-tools/jest/recipes':
@@ -860,36 +640,11 @@ const docsToAstroRedirects = {
     '/docs/technologies/test-tools/playwright',
   '/technologies/test-tools/storybook/recipes':
     '/docs/technologies/test-tools/storybook/guides',
-  '/technologies/test-tools/storybook/recipes/best-practices':
-    '/docs/technologies/test-tools/storybook/guides/best-practices',
+  // exception: storybook-9-setup renamed to upgrading-storybook
   '/technologies/test-tools/storybook/recipes/storybook-9-setup':
     '/docs/technologies/test-tools/storybook/guides/upgrading-storybook',
-  '/technologies/test-tools/storybook/recipes/overview-react':
-    '/docs/technologies/test-tools/storybook/guides/overview-react',
-  '/technologies/test-tools/storybook/recipes/overview-angular':
-    '/docs/technologies/test-tools/storybook/guides/overview-angular',
-  '/technologies/test-tools/storybook/recipes/overview-vue':
-    '/docs/technologies/test-tools/storybook/guides/overview-vue',
-  '/technologies/test-tools/storybook/recipes/configuring-storybook':
-    '/docs/technologies/test-tools/storybook/guides/configuring-storybook',
-  '/technologies/test-tools/storybook/recipes/one-storybook-for-all':
-    '/docs/technologies/test-tools/storybook/guides/one-storybook-for-all',
-  '/technologies/test-tools/storybook/recipes/one-storybook-per-scope':
-    '/docs/technologies/test-tools/storybook/guides/one-storybook-per-scope',
-  '/technologies/test-tools/storybook/recipes/one-storybook-with-composition':
-    '/docs/technologies/test-tools/storybook/guides/one-storybook-with-composition',
-  '/technologies/test-tools/storybook/recipes/custom-builder-configs':
-    '/docs/technologies/test-tools/storybook/guides/custom-builder-configs',
-  '/technologies/test-tools/storybook/recipes/storybook-interaction-tests':
-    '/docs/technologies/test-tools/storybook/guides/storybook-interaction-tests',
-  '/technologies/test-tools/storybook/recipes/upgrading-storybook':
-    '/docs/technologies/test-tools/storybook/guides/upgrading-storybook',
-  '/technologies/test-tools/storybook/recipes/storybook-composition-setup':
-    '/docs/technologies/test-tools/storybook/guides/storybook-composition-setup',
-  '/technologies/test-tools/storybook/recipes/angular-storybook-compodoc':
-    '/docs/technologies/test-tools/storybook/guides/angular-storybook-compodoc',
-  '/technologies/test-tools/storybook/recipes/angular-configuring-styles':
-    '/docs/technologies/test-tools/storybook/guides/angular-configuring-styles',
+  '/technologies/test-tools/storybook/recipes/:path*':
+    '/docs/technologies/test-tools/storybook/guides/:path*',
   '/technologies/test-tools/storybook/api':
     '/docs/technologies/test-tools/storybook/guides/angular-configuring-styles',
   '/technologies/test-tools/detox/recipes':
@@ -899,16 +654,12 @@ const docsToAstroRedirects = {
     '/docs/technologies/test-tools/cypress/executors',
   '/technologies/test-tools/cypress/api/generators':
     '/docs/technologies/test-tools/cypress/generators',
-  '/technologies/test-tools/cypress/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/test-tools/cypress/api/migrations':
     '/docs/technologies/test-tools/cypress/migrations',
   '/technologies/test-tools/detox/api/executors':
     '/docs/technologies/test-tools/detox/executors',
   '/technologies/test-tools/detox/api/generators':
     '/docs/technologies/test-tools/detox/generators',
-  '/technologies/test-tools/detox/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/test-tools/detox/api/migrations':
     '/docs/technologies/test-tools/detox/migrations',
   '/technologies/build-tools/esbuild/api/executors':
@@ -919,8 +670,6 @@ const docsToAstroRedirects = {
     '/docs/technologies/build-tools/esbuild/generators',
   '/technologies/build-tools/esbuild/api/migrations':
     '/docs/technologies/build-tools/esbuild',
-  '/technologies/eslint/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/eslint/eslint-plugin/api/executors':
     '/docs/technologies/eslint/eslint-plugin',
   '/technologies/eslint/eslint-plugin/api/generators':
@@ -931,8 +680,6 @@ const docsToAstroRedirects = {
     '/docs/technologies/react/expo/executors',
   '/technologies/react/expo/api/generators':
     '/docs/technologies/react/expo/generators',
-  '/technologies/react/expo/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/react/expo/api/migrations':
     '/docs/technologies/react/expo/migrations',
   '/technologies/node/express/api/executors': '/docs/technologies/node/express',
@@ -946,8 +693,6 @@ const docsToAstroRedirects = {
     '/docs/technologies/test-tools/jest/executors',
   '/technologies/test-tools/jest/api/generators':
     '/docs/technologies/test-tools/jest/generators',
-  '/technologies/test-tools/jest/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/test-tools/jest/api/migrations':
     '/docs/technologies/test-tools/jest/migrations',
   '/technologies/node/nest/api/executors': '/docs/technologies/node/nest',
@@ -959,8 +704,6 @@ const docsToAstroRedirects = {
     '/docs/technologies/react/next/executors',
   '/technologies/react/next/api/generators':
     '/docs/technologies/react/next/generators',
-  '/technologies/react/next/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/react/next/api/migrations':
     '/docs/technologies/react/next/migrations',
   '/technologies/vue/nuxt/api/executors': '/docs/technologies/vue/nuxt',
@@ -972,32 +715,24 @@ const docsToAstroRedirects = {
     '/docs/technologies/test-tools/playwright/executors',
   '/technologies/test-tools/playwright/api/generators':
     '/docs/technologies/test-tools/playwright/generators',
-  '/technologies/test-tools/playwright/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/test-tools/playwright/api/migrations':
     '/docs/technologies/test-tools/playwright/migrations',
   '/technologies/react/react-native/api/executors':
     '/docs/technologies/react/react-native/executors',
   '/technologies/react/react-native/api/generators':
     '/docs/technologies/react/react-native/generators',
-  '/technologies/react/react-native/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/react/react-native/api/migrations':
     '/docs/technologies/react/react-native/migrations',
   '/technologies/react/remix/api/executors':
     '/docs/technologies/react/remix/executors',
   '/technologies/react/remix/api/generators':
     '/docs/technologies/react/remix/generators',
-  '/technologies/react/remix/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/react/remix/api/migrations':
     '/docs/technologies/react/remix/migrations',
   '/technologies/build-tools/rollup/api/executors':
     '/docs/technologies/build-tools/rollup/executors',
   '/technologies/build-tools/rollup/api/generators':
     '/docs/technologies/build-tools/rollup/generators',
-  '/technologies/build-tools/rollup/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/build-tools/rollup/api/migrations':
     '/docs/technologies/build-tools/rollup/migrations',
   '/technologies/build-tools/rsbuild/api/executors':
@@ -1010,32 +745,24 @@ const docsToAstroRedirects = {
     '/docs/technologies/build-tools/rspack/executors',
   '/technologies/build-tools/rspack/api/generators':
     '/docs/technologies/build-tools/rspack/generators',
-  '/technologies/build-tools/rspack/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/build-tools/rspack/api/migrations':
     '/docs/technologies/build-tools/rspack/migrations',
   '/technologies/test-tools/storybook/api/executors':
     '/docs/technologies/test-tools/storybook/executors',
   '/technologies/test-tools/storybook/api/generators':
     '/docs/technologies/test-tools/storybook/generators',
-  '/technologies/test-tools/storybook/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/test-tools/storybook/api/migrations':
     '/docs/technologies/test-tools/storybook/migrations',
   '/technologies/build-tools/vite/api/executors':
     '/docs/technologies/build-tools/vite/executors',
   '/technologies/build-tools/vite/api/generators':
     '/docs/technologies/build-tools/vite/generators',
-  '/technologies/build-tools/vite/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/build-tools/vite/api/migrations':
     '/docs/technologies/build-tools/vite/migrations',
   '/technologies/build-tools/webpack/api/executors':
     '/docs/technologies/build-tools/webpack/executors',
   '/technologies/build-tools/webpack/api/generators':
     '/docs/technologies/build-tools/webpack/generators',
-  '/technologies/build-tools/webpack/api/generators/convert-to-inferred':
-    '/docs/guides/tasks--caching/convert-to-inferred',
   '/technologies/build-tools/webpack/api/migrations':
     '/docs/technologies/build-tools/webpack/migrations',
   '/technologies/typescript/recipes':
@@ -1097,59 +824,26 @@ const docsToAstroRedirects = {
   '/technologies/vue/api/executors': '/docs/technologies/vue',
   '/technologies/vue/api/generators': '/docs/technologies/vue/generators',
   '/technologies/vue/api/migrations': '/docs/technologies/vue/migrations',
-  '/troubleshooting': '/docs/troubleshooting',
-  '/troubleshooting/resolve-circular-dependencies':
-    '/docs/troubleshooting/resolve-circular-dependencies',
-  '/troubleshooting/troubleshoot-nx-install-issues':
-    '/docs/troubleshooting/troubleshoot-nx-install-issues',
-  '/troubleshooting/troubleshoot-cache-misses':
-    '/docs/troubleshooting/troubleshoot-cache-misses',
-  '/troubleshooting/unknown-local-cache':
-    '/docs/troubleshooting/unknown-local-cache',
-  '/troubleshooting/performance-profiling':
-    '/docs/troubleshooting/performance-profiling',
+  // /troubleshooting exception (name changed)
   '/troubleshooting/convert-to-inferred':
     '/docs/troubleshooting/troubleshoot-convert-to-inferred',
+  // /troubleshooting wildcard
+  '/troubleshooting': '/docs/troubleshooting',
+  '/troubleshooting/:path*': '/docs/troubleshooting/:path*',
   '/ci': '/docs/getting-started/nx-cloud',
   '/ci/recipes': '/docs/guides/nx-cloud',
   '/ci/recipes/improving-ttg': '/docs/guides/nx-cloud/optimize-your-ttg',
   '/ci/recipes/set-up': '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/set-up/monorepo-ci-azure': '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/set-up/monorepo-ci-circle-ci': '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/set-up/monorepo-ci-jenkins': '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/set-up/monorepo-ci-gitlab': '/docs/guides/nx-cloud/setup-ci',
-  '/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines':
-    '/docs/guides/nx-cloud/setup-ci',
+  '/ci/recipes/set-up/:path*': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/security': '/docs/guides/nx-cloud',
   '/ci/recipes/dte': '/docs/guides/nx-cloud/manual-dte',
-  '/ci/recipes/dte/github-dte': '/docs/guides/nx-cloud/manual-dte',
-  '/ci/recipes/dte/circle-ci-dte': '/docs/guides/nx-cloud/manual-dte',
-  '/ci/recipes/dte/azure-dte': '/docs/guides/nx-cloud/manual-dte',
-  '/ci/recipes/dte/bitbucket-dte': '/docs/guides/nx-cloud/manual-dte',
-  '/ci/recipes/dte/gitlab-dte': '/docs/guides/nx-cloud/manual-dte',
-  '/ci/recipes/dte/jenkins-dte': '/docs/guides/nx-cloud/manual-dte',
+  '/ci/recipes/dte/:path*': '/docs/guides/nx-cloud/manual-dte',
   '/ci/recipes/other': '/docs/guides/nx-cloud/setup-ci',
   '/see-also': '/docs/getting-started/intro',
   '/see-also/sitemap': '/docs/getting-started/intro',
+  // /showcase wildcard (all example-repos go to intro)
   '/showcase': '/docs/getting-started/intro',
-  '/showcase/example-repos': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-express': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-lit': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-solid': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-qwik': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-rust': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-dotnet': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-astro': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-svelte': '/docs/getting-started/intro',
-  '/showcase/example-repos/add-fastify': '/docs/getting-started/intro',
-  '/showcase/example-repos/apollo-react': '/docs/getting-started/intro',
-  '/showcase/example-repos/nestjs-prisma': '/docs/getting-started/intro',
-  '/showcase/example-repos/mongo-fastify': '/docs/getting-started/intro',
-  '/showcase/example-repos/redis-fastify': '/docs/getting-started/intro',
-  '/showcase/example-repos/postgres-fastify': '/docs/getting-started/intro',
-  '/showcase/example-repos/serverless-fastify-planetscale':
-    '/docs/getting-started/intro',
-  '/showcase/example-repos/mfe': '/docs/getting-started/intro',
+  '/showcase/example-repos/:path*': '/docs/getting-started/intro',
   '/reference/workspace': '/docs/reference/workspace',
   '/reference/workspace/generators': '/docs/reference/workspace/generators',
   '/reference/workspace/migrations': '/docs/reference/workspace/migrations',
@@ -1163,6 +857,7 @@ const docsToAstroRedirects = {
   '/reference/web/executors': '/docs/reference/web/executors',
   '/reference/web/generators': '/docs/reference/web/generators',
   '/ci/intro': '/docs/getting-started/nx-cloud',
+  '/features/self-healing-ci': '/docs/features/ci-features/self-healing-ci',
 };
 
 module.exports = docsToAstroRedirects;

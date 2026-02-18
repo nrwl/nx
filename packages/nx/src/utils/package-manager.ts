@@ -66,10 +66,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
+        ? 'yarn'
+        : existsSync(join(dir, 'pnpm-lock.yaml'))
+          ? 'pnpm'
+          : 'npm')
   );
 }
 
@@ -231,7 +231,7 @@ export function getPackageManagerCommand(
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
-        updateLockFile: 'bun install --frozen-lockfile',
+        updateLockFile: 'bun install --lockfile-only',
         add: 'bun install',
         addDev: 'bun install -D',
         rm: 'bun rm',

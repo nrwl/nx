@@ -86,8 +86,14 @@ function _makeAcyclic(
   const continuousDeps = graph.continuousDependencies?.[id] ?? [];
   for (const d of [...deps, ...continuousDeps]) {
     if (path.includes(d)) {
-      deps.splice(deps.indexOf(d), 1);
-      continuousDeps.splice(continuousDeps.indexOf(d), 1);
+      const depsIdx = deps.indexOf(d);
+      if (depsIdx >= 0) {
+        deps.splice(depsIdx, 1);
+      }
+      const continuousIdx = continuousDeps.indexOf(d);
+      if (continuousIdx >= 0) {
+        continuousDeps.splice(continuousIdx, 1);
+      }
     } else {
       _makeAcyclic(graph, d, visited, [...path, d]);
     }
@@ -192,7 +198,10 @@ export function assertTaskGraphDoesNotContainInvalidTargets(
 }
 
 class NonParallelTaskDependsOnContinuousTasksError extends Error {
-  constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
+  constructor(
+    public invalidTasks: Task[],
+    taskGraph: TaskGraph
+  ) {
     let message =
       'The following tasks do not support parallelism but depend on continuous tasks:';
 
@@ -208,7 +217,10 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
 }
 
 class DependingOnNonParallelContinuousTaskError extends Error {
-  constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
+  constructor(
+    public invalidTasks: Task[],
+    taskGraph: TaskGraph
+  ) {
     let message =
       'The following continuous tasks do not support parallelism but are depended on:';
 

@@ -140,7 +140,7 @@ describe('lib migrator', () => {
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -163,7 +163,7 @@ describe('lib migrator', () => {
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -182,7 +182,7 @@ describe('lib migrator', () => {
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -888,6 +888,90 @@ describe('lib migrator', () => {
           main: 'libs/lib1/src/test.ts',
           tsConfig: 'libs/lib1/tsconfig.spec.json',
           karmaConfig: 'libs/lib1/karma.conf.js',
+        },
+      });
+    });
+
+    it('should update test target using @angular/build:unit-test builder', async () => {
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        sourceRoot: 'projects/lib1/src',
+        architect: {
+          test: {
+            builder: '@angular/build:unit-test',
+            options: {
+              tsConfig: 'projects/lib1/tsconfig.spec.json',
+            },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'lib1');
+      expect(targets.test).toStrictEqual({
+        executor: '@angular/build:unit-test',
+        options: {
+          tsConfig: 'libs/lib1/tsconfig.spec.json',
+        },
+      });
+    });
+
+    it('should update test target with runnerConfig and setupFiles', async () => {
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        sourceRoot: 'projects/lib1/src',
+        architect: {
+          test: {
+            builder: '@angular/build:unit-test',
+            options: {
+              tsConfig: 'projects/lib1/tsconfig.spec.json',
+              runnerConfig: 'projects/lib1/vitest.config.ts',
+              setupFiles: ['projects/lib1/src/test-setup.ts'],
+            },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'lib1');
+      expect(targets.test).toStrictEqual({
+        executor: '@angular/build:unit-test',
+        options: {
+          tsConfig: 'libs/lib1/tsconfig.spec.json',
+          runnerConfig: 'libs/lib1/vitest.config.ts',
+          setupFiles: ['libs/lib1/src/test-setup.ts'],
+        },
+      });
+    });
+
+    it('should update test target when using a different name than "test"', async () => {
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        sourceRoot: 'projects/lib1/src',
+        architect: {
+          myCustomTestTarget: {
+            builder: '@angular/build:unit-test',
+            options: {
+              tsConfig: 'projects/lib1/tsconfig.spec.json',
+              providersFile: 'projects/lib1/src/test-providers.ts',
+            },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'lib1');
+      expect(targets.myCustomTestTarget).toStrictEqual({
+        executor: '@angular/build:unit-test',
+        options: {
+          tsConfig: 'libs/lib1/tsconfig.spec.json',
+          providersFile: 'libs/lib1/src/test-providers.ts',
         },
       });
     });

@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 export function transformCjsConfigFile(tree: Tree, configPath: string) {
   const configContents = tree.read(configPath, 'utf-8');
@@ -28,11 +28,11 @@ function detectJsExtensions(configContents: string): boolean {
 
 function transformWithWebCalls(tree: Tree, configPath: string) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   // Find withWeb() calls
-  const withWebCallNodes = tsquery(
-    ast,
+  const withWebCallNodes = query(
+    sourceFile,
     'CallExpression > Identifier[name=withWeb]'
   );
 
@@ -80,8 +80,8 @@ function transformWithWebCalls(tree: Tree, configPath: string) {
   }
 
   // If no withWeb calls, check for withReact calls
-  const withReactCallNodes = tsquery(
-    ast,
+  const withReactCallNodes = query(
+    sourceFile,
     'CallExpression > Identifier[name=withReact]'
   );
   if (withReactCallNodes.length === 0) {
@@ -134,17 +134,17 @@ function transformComposePlugins(
   scope: '@nx' | '@nrwl'
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_COMPOSE_PLUGINS_FROM_NX_WEBPACK = `VariableDeclaration:has(Identifier[name=composePlugins]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/webpack]`;
-  const nodes = tsquery(ast, HAS_COMPOSE_PLUGINS_FROM_NX_WEBPACK);
+  const nodes = query(sourceFile, HAS_COMPOSE_PLUGINS_FROM_NX_WEBPACK);
   if (nodes.length === 0) {
     return;
   }
 
   const COMPOSE_PLUGINS_IMPORT =
     'VariableDeclaration:has(Identifier[name=composePlugins]) Identifier[name=composePlugins]';
-  const composePluginsNodes = tsquery(ast, COMPOSE_PLUGINS_IMPORT);
+  const composePluginsNodes = query(sourceFile, COMPOSE_PLUGINS_IMPORT);
   if (nodes.length === 0) {
     return;
   }
@@ -167,17 +167,17 @@ function transformWithNx(
   scope: '@nx' | '@nrwl'
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_WITH_NX_FROM_NX_WEBPACK = `VariableDeclaration:has(Identifier[name=withNx]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/webpack]`;
-  const nodes = tsquery(ast, HAS_WITH_NX_FROM_NX_WEBPACK);
+  const nodes = query(sourceFile, HAS_WITH_NX_FROM_NX_WEBPACK);
   if (nodes.length === 0) {
     return;
   }
 
   const WITH_NX_IMPORT =
     'VariableDeclaration:has(Identifier[name=withNx]) Identifier[name=withNx]';
-  const withNxNodes = tsquery(ast, WITH_NX_IMPORT);
+  const withNxNodes = query(sourceFile, WITH_NX_IMPORT);
   if (nodes.length === 0) {
     return;
   }
@@ -200,17 +200,17 @@ function transformWithWeb(
   scope: '@nx' | '@nrwl'
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_WITH_WEB_FROM_NX_WEBPACK = `VariableDeclaration:has(Identifier[name=withWeb]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/webpack]`;
-  const nodes = tsquery(ast, HAS_WITH_WEB_FROM_NX_WEBPACK);
+  const nodes = query(sourceFile, HAS_WITH_WEB_FROM_NX_WEBPACK);
   if (nodes.length === 0) {
     return;
   }
 
   const WITH_WEB_IMPORT =
     'VariableDeclaration:has(Identifier[name=withWeb]) Identifier[name=withWeb]';
-  const withWebNodes = tsquery(ast, WITH_WEB_IMPORT);
+  const withWebNodes = query(sourceFile, WITH_WEB_IMPORT);
   if (nodes.length === 0) {
     return;
   }
@@ -233,17 +233,17 @@ function transformWithReact(
   scope: '@nx' | '@nrwl'
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_WITH_REACT_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withReact]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/react]`;
-  const nodes = tsquery(ast, HAS_WITH_REACT_FROM_NX_REACT);
+  const nodes = query(sourceFile, HAS_WITH_REACT_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
   }
 
   const WITH_REACT_IMPORT =
     'VariableDeclaration:has(Identifier[name=withReact]) Identifier[name=withReact]';
-  const withReactNodes = tsquery(ast, WITH_REACT_IMPORT);
+  const withReactNodes = query(sourceFile, WITH_REACT_IMPORT);
   if (nodes.length === 0) {
     return;
   }
@@ -266,17 +266,20 @@ function transformModuleFederationConfig(
   scope: '@nx' | '@nrwl'
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=ModuleFederationConfig]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/webpack]`;
-  const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
+  const nodes = query(sourceFile, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
   }
 
   const WITH_MODULE_FEDERATION_IMPORT =
     'VariableDeclaration:has(Identifier[name=ModuleFederationConfig]) Identifier[name=ModuleFederationConfig]';
-  const withModuleFederationNodes = tsquery(ast, WITH_MODULE_FEDERATION_IMPORT);
+  const withModuleFederationNodes = query(
+    sourceFile,
+    WITH_MODULE_FEDERATION_IMPORT
+  );
   if (nodes.length === 0) {
     return;
   }
@@ -300,19 +303,22 @@ function transformWithModuleFederation(
   usesJsExtensions: boolean
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederation]) > CallExpression:has(Identifier[name=require]) StringLiteral[value="${scope}/module-federation/webpack${
     usesJsExtensions ? '.js' : ''
   }"]`;
-  const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
+  const nodes = query(sourceFile, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
   }
 
   const WITH_MODULE_FEDERATION_IMPORT =
     'VariableDeclaration:has(Identifier[name=withModuleFederation]) Identifier[name=withModuleFederation]';
-  const withModuleFederationNodes = tsquery(ast, WITH_MODULE_FEDERATION_IMPORT);
+  const withModuleFederationNodes = query(
+    sourceFile,
+    WITH_MODULE_FEDERATION_IMPORT
+  );
   if (nodes.length === 0) {
     return;
   }
@@ -339,19 +345,22 @@ function transformWithModuleFederationSSR(
   usesJsExtensions: boolean
 ) {
   const configContents = tree.read(configPath, 'utf-8');
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) > CallExpression:has(Identifier[name=require]) StringLiteral[value="${scope}/module-federation/webpack${
     usesJsExtensions ? '.js' : ''
   }"]`;
-  const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
+  const nodes = query(sourceFile, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
   }
 
   const WITH_MODULE_FEDERATION_IMPORT =
     'VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) Identifier[name=withModuleFederationForSSR]';
-  const withModuleFederationNodes = tsquery(ast, WITH_MODULE_FEDERATION_IMPORT);
+  const withModuleFederationNodes = query(
+    sourceFile,
+    WITH_MODULE_FEDERATION_IMPORT
+  );
   if (nodes.length === 0) {
     return;
   }

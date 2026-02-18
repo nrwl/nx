@@ -16,7 +16,6 @@
     "src/**/*.ts",
     "src/**/*.mts",
     "../../../docs/map.json",
-    "../../../docs/generated/manifests/*.json",
-    "../../../community/approved-plugins.json"
+    "../../../docs/generated/manifests/*.json"
   ]
 }

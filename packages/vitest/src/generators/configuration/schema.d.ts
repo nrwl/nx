@@ -6,6 +6,7 @@ export interface VitestGeneratorSchema {
   skipViteConfig?: boolean;
   testTarget?: string;
   skipFormat?: boolean;
+  skipPackageJson?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
   addPlugin?: boolean;
   runtimeTsconfigFileName?: string;

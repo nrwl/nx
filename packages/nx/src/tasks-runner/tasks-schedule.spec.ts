@@ -229,10 +229,12 @@ describe('TasksSchedule', () => {
 
         expect(taskSchedule.nextBatch()).toEqual({
           executorName: 'awesome-executors:build',
+          id: 'awesome-executors:build 1',
           taskGraph: removeTasksFromTaskGraph(taskGraph, ['app2:build']),
         });
         expect(taskSchedule.nextBatch()).toEqual({
           executorName: 'awesome-executors:app2-build',
+          id: 'awesome-executors:app2-build 1',
           taskGraph: removeTasksFromTaskGraph(taskGraph, [
             'app1:build',
             'lib1:build',
@@ -513,6 +515,7 @@ describe('TasksSchedule', () => {
 
         expect(taskSchedule.nextBatch()).toEqual({
           executorName: 'awesome-executors:test',
+          id: 'awesome-executors:test 1',
           taskGraph: removeTasksFromTaskGraph(taskGraph, [
             'app2:test',
             'app3:test',
@@ -521,6 +524,7 @@ describe('TasksSchedule', () => {
         });
         expect(taskSchedule.nextBatch()).toEqual({
           executorName: 'awesome-executors:app2-test',
+          id: 'awesome-executors:app2-test 1',
           taskGraph: removeTasksFromTaskGraph(taskGraph, [
             'app1:test',
             'lib1:test',

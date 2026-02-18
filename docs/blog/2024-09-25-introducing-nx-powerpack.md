@@ -7,9 +7,9 @@ cover_image: /blog/images/introducing-powerpack/thumbnail.avif
 description: Introducing Nx Powerpack, a paid extension suite for enterprise use cases, ensuring Nx remains open source and existing features are free.
 ---
 
-{% callout type="info" title="Update - March 31st, 2025" %}
+{% callout type="info" title="Update - December 10, 2025" %}
 
-Self-hosted caching is now free for everyone. Read more [in our blog post](/blog/custom-runners-and-self-hosted-caching) and in our documentation about [remote caching options with Nx](/remote-cache).
+Nx Powerpack is no longer available as a standalone product. Self-hosted caching remains free for everyone — [see all our remote caching solutions](/remote-cache). All packages, including Conformance and Owners, are still maintained and are now included as part of the [Enterprise plan](/enterprise).
 
 {% /callout %}
 
@@ -25,8 +25,6 @@ Open source projects can continue to use Nx Cloud for **free** the same way they
 
 So this leaves us with:
 ![Nx products and their licenses](/blog/images/evolving-nx/nx-products-licenses.avif)
-
-> But why are we releasing Nx Powerpack under a commercial license? Read all about our strategy, the reasoning behind Powerpack and OSS funding in the **blog post from our CEO, Jeff Cross**: [Evolving Nx](/blog/evolving-nx).
 
 But now to the fun, technical part! Nx Powerpack is a bundle that - in this very first release - comes with these major features:
 

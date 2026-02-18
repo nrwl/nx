@@ -85,7 +85,7 @@ export function Filters({
                 aria-label={`Filter by ${filter.label}`}
                 scroll={false}
                 prefetch={false}
-                className="flex items-center justify-center gap-2 rounded-full border border-slate-400 bg-white px-2.5 py-1.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="flex items-center justify-center gap-2 rounded-full border border-zinc-400 bg-white px-2.5 py-1.5 font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
                 onClick={() => setSelectedFilterHeading(filter.heading)}
               >
                 {filter.icon && (
@@ -101,7 +101,7 @@ export function Filters({
       <div className="relative lg:hidden">
         <Menu as="div" className="inline-block text-left">
           <MenuButton
-            className="inline-flex w-full justify-center rounded-md border border-slate-400 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex w-full justify-center rounded-md border border-zinc-400 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
             aria-label="Select filter topic"
           >
             Topics
@@ -121,7 +121,7 @@ export function Filters({
           >
             <MenuItems
               as="ul"
-              className="absolute right-0 z-[31] mt-2 flex w-56 origin-top-right flex-col gap-4 rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-slate-800 dark:text-white"
+              className="absolute right-0 z-[31] mt-2 flex w-56 origin-top-right flex-col gap-4 rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-zinc-800 dark:text-white"
               aria-label="Filter topics"
             >
               {filters

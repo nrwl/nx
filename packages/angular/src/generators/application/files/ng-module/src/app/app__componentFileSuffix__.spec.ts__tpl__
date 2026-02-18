@@ -11,9 +11,9 @@ describe('App<%= componentType %>', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', <% if (zoneless) { %>async <% } %>() => {
     const fixture = TestBed.createComponent(App<%= componentType %>);
-    fixture.detectChanges();
+    <%= zoneless ? 'await fixture.whenStable();' : 'fixture.detectChanges();' %>
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome <%= appName %>'

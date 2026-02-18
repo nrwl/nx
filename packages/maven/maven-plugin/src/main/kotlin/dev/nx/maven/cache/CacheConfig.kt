@@ -29,7 +29,6 @@ data class CacheConfig(
             defaultInputs = listOf(
                 PathPattern("src/main/**/*", recursive = true),
                 PathPattern("src/test/**/*", recursive = true),
-                PathPattern("pom.xml"),
                 PathPattern("*.properties")
             ),
             defaultOutputs = listOf(
@@ -82,7 +81,7 @@ data class CacheConfig(
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("compileSourceRoots", "**/*.java"),
+                        Parameter("testCompileSourceRoots", "**/*.java"),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null),

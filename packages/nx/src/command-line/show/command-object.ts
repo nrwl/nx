@@ -27,7 +27,7 @@ export type ShowProjectsOptions = NxShowArgs & {
 };
 
 export type ShowProjectOptions = NxShowArgs & {
-  projectName: string;
+  projectName?: string;
   web?: boolean;
   open?: boolean;
   verbose?: boolean;
@@ -133,14 +133,16 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
 };
 
 const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
-  command: 'project <projectName>',
-  describe: 'Shows resolved project configuration for a given project.',
+  command: 'project [projectName]',
+  describe:
+    'Shows resolved project configuration for a given project. If run within a project directory and no project name is provided, the project is inferred from the current working directory.',
   builder: (yargs) =>
     withVerbose(yargs)
       .positional('projectName', {
         type: 'string',
         alias: 'p',
-        description: 'Which project should be viewed?.',
+        description:
+          'The project to show. If not provided, infers the project from the current working directory.',
       })
       .option('web', {
         type: 'boolean',
@@ -173,6 +175,10 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       .example(
         '$0 show project my-app --web',
         'View project information for my-app in the browser'
+      )
+      .example(
+        '$0 show project',
+        'View project information for the project in the current working directory'
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {

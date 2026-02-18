@@ -13,7 +13,10 @@ export class FileChangeRecorder {
     return this.mutableContent.original;
   }
 
-  constructor(private readonly tree: Tree, private readonly filePath: string) {
+  constructor(
+    private readonly tree: Tree,
+    private readonly filePath: string
+  ) {
     this.setContentToFileContent();
   }
 

@@ -23,7 +23,6 @@ describe('preset', () => {
     expect(tree.children(`apps/${name}`).sort()).toMatchInlineSnapshot(`
       [
         ".eslintrc.json",
-        "jest.config.ts",
         "project.json",
         "public",
         "src",
@@ -38,7 +37,6 @@ describe('preset', () => {
         "index.html",
         "main.ts",
         "styles.css",
-        "test-setup.ts",
       ]
     `);
     expect(tree.children(`apps/${name}/src/app`).sort()).toMatchInlineSnapshot(`
@@ -144,7 +142,7 @@ describe('preset', () => {
         plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
         // Uncomment this if you are using workers.
         // worker: {
-        //  plugins: [ nxViteTsPaths() ],
+        //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
           outDir: '../../dist/apps/vue-preset-monorepo',
@@ -300,7 +298,7 @@ describe('preset', () => {
         plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
         // Uncomment this if you are using workers.
         // worker: {
-        //  plugins: [ nxViteTsPaths() ],
+        //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
           outDir: './dist/react-standalone-preset-vite',
@@ -357,7 +355,7 @@ describe('preset', () => {
         plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
         // Uncomment this if you are using workers.
         // worker: {
-        //  plugins: [ nxViteTsPaths() ],
+        //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
           outDir: './dist/vue-standalone-preset',

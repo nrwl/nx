@@ -26,7 +26,7 @@ export function normalizeOptions(
   // If we're not generating package.json file, then copy it as-is as an asset when not using ts solution setup.
   const assets =
     options.generatePackageJson || isTsSolutionSetup
-      ? options.assets ?? []
+      ? (options.assets ?? [])
       : [
           ...options.assets,
           joinPathFragments(

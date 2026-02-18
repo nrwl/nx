@@ -3,6 +3,8 @@ import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
 import { readJsonFile, writeJsonFileAsync } from '../utils/fileutils';
 import { nxVersion } from '../utils/versions';
+import { clientLogger } from './logger';
+import { VersionMismatchError } from './client/daemon-socket-messenger';
 
 export interface DaemonProcessJson {
   processId: number;
@@ -18,12 +20,18 @@ export const serverProcessJsonPath = join(
 export function readDaemonProcessJsonCache(): DaemonProcessJson | null {
   try {
     const daemonJson = readJsonFile(serverProcessJsonPath);
-    // If the daemon version doesn't match the client version, treat it as stale
+    // If the daemon version doesn't match the client version, throw error
     if (daemonJson.nxVersion !== nxVersion) {
-      return null;
+      clientLogger.log(
+        `[Cache] Version mismatch: daemon=${daemonJson.nxVersion}, client=${nxVersion}`
+      );
+      throw new VersionMismatchError();
     }
     return daemonJson;
-  } catch {
+  } catch (e) {
+    if (e instanceof VersionMismatchError) {
+      throw e; // Let version mismatch bubble up
+    }
     return null;
   }
 }

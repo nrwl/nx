@@ -2,7 +2,7 @@ import { CreateNodesContextV2 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, EslintPluginOptions } from './plugin';
-import { mkdirSync, rmdirSync } from 'fs';
+import { mkdirSync, rmSync } from 'fs';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
@@ -39,7 +39,7 @@ describe('@nx/eslint/plugin', () => {
     jest.resetModules();
     tempFs.cleanup();
     tempFs = null;
-    rmdirSync('tmp/project-graph-cache', { recursive: true });
+    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });
 
   it('should not create any nodes when there are no eslint configs', async () => {

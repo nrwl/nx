@@ -8,7 +8,13 @@ import { CreateNxWorkspaceError } from './error-utils';
  */
 export function spawnAndWait(command: string, args: string[], cwd: string) {
   return new Promise((res, rej) => {
-    const childProcess = spawn(command, args, {
+    // Combine command and args into a single string to avoid DEP0190 warning
+    // (passing args with shell: true is deprecated)
+    const fullCommand = [command, ...args]
+      .map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
+      .join(' ');
+
+    const childProcess = spawn(fullCommand, {
       cwd,
       stdio: 'inherit',
       env: {

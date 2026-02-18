@@ -1,33 +1,55 @@
 import { prompt } from 'enquirer';
-import { output } from '../../utils/output';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
-import * as chalk from 'chalk';
-
+import { existsSync, readFileSync } from 'node:fs';
+import { relative } from 'node:path';
+import * as pc from 'picocolors';
+import { claudeMcpJsonPath } from '../../ai/constants';
 import {
   Agent,
-  agentDisplayMap,
-  supportedAgents,
+  AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
-  AgentConfiguration,
+  supportedAgents,
 } from '../../ai/utils';
+import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../devkit-internals';
+import { output } from '../../utils/output';
+import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
-import { relative } from 'path';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
+  // When called as inner from the tmp install, just run the impl directly
+  if (inner) {
+    return await configureAiAgentsHandlerImpl(args);
+  }
+
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||
-    process.env.NX_AI_FILES_USE_LOCAL === 'true' ||
-    inner
+    process.env.NX_AI_FILES_USE_LOCAL === 'true'
   ) {
-    return await configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
+    await resetDaemonAgentStatus();
+    return;
+  }
+
+  // Skip downloading latest if the current version is already the latest
+  try {
+    const latestVersion = await resolvePackageVersionUsingRegistry(
+      'nx',
+      'latest'
+    );
+    if (latestVersion === nxVersion) {
+      return await configureAiAgentsHandlerImpl(args);
+    }
+  } catch {
+    // If we can't check, proceed with download
   }
 
   let cleanup: () => void | undefined;
@@ -42,24 +64,37 @@ export async function configureAiAgentsHandler(
     );
 
     const module = await import(modulePath);
-    const configureAiAgentsResult = await module.configureAiAgentsHandler(
-      args,
-      true
-    );
+    await module.configureAiAgentsHandler(args, true);
     cleanup();
-    return configureAiAgentsResult;
   } catch (error) {
     if (cleanup) {
       cleanup();
     }
     // Fall back to local implementation
-    return configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
   }
+
+  // Reset daemon cache using the local daemon client (the inner handler's
+  // client belongs to the tmp install and isn't connected to our daemon)
+  await resetDaemonAgentStatus();
 }
 
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
+  // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+  // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+  process.on('uncaughtException', (error) => {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error['code'] === 'ERR_USE_AFTER_CLOSE'
+    )
+      return;
+    throw error;
+  });
+
   const normalizedOptions = normalizeOptions(options);
 
   const {
@@ -86,7 +121,7 @@ export async function configureAiAgentsHandlerImpl(
     output.log({
       title,
       bodyLines: [
-        chalk.dim(
+        pc.dim(
           'To manually configure the Nx MCP in your editor, install Nx Console (https://nx.dev/getting-started/editor-setup)'
         ),
       ],
@@ -223,28 +258,9 @@ export async function configureAiAgentsHandlerImpl(
           required: true,
           footer: function () {
             const focused = this.focused as AgentPromptChoice;
-            if (focused.partial) {
-              return chalk.dim(focused.partialReason);
-            }
-            if (focused.agentConfiguration.outdated) {
-              return chalk.dim(
-                `  The rules file at ${focused.rulesDisplayPath} can be updated with the latest Nx recommendations`
-              );
-            }
-            if (
-              !focused.agentConfiguration.mcp &&
-              !focused.agentConfiguration.rules
-            ) {
-              return chalk.dim(
-                `  Configures agent rules at ${
-                  focused.rulesDisplayPath
-                } and the Nx MCP server ${
-                  focused.mcpDisplayPath
-                    ? `at ${focused.mcpDisplayPath}`
-                    : 'via Nx Console'
-                }`
-              );
-            }
+            return pc.dim(
+              `  ${getAgentFooterDescription(focused.agentConfiguration)}`
+            );
           },
         } as any)
       ).agents;
@@ -267,19 +283,25 @@ export async function configureAiAgentsHandlerImpl(
   try {
     await configureAgents(selectedAgents, workspaceRoot, false);
 
-    const configuredOrUpdatedAgents = [
-      ...new Set([
-        ...fullyConfiguredAgents.map((a) => a.name),
-        ...selectedAgents,
-      ]),
+    // Combine all agent configurations for display
+    const allAgentConfigs = [
+      ...nonConfiguredAgents,
+      ...partiallyConfiguredAgents,
+      ...fullyConfiguredAgents,
     ];
+    const configuredOrUpdatedAgents = allAgentConfigs.filter(
+      (a) =>
+        selectedAgents.includes(a.name) ||
+        fullyConfiguredAgents.some((f) => f.name === a.name)
+    );
 
     configSpinner.stop();
 
-    output.log({
-      title: 'AI agents set up successfully. Configured Agents:',
+    output.success({
+      title: 'AI agents configured successfully',
       bodyLines: configuredOrUpdatedAgents.map(
-        (agent) => `- ${agentDisplayMap[agent]}`
+        (agent) =>
+          `${agent.displayName}: ${getAgentConfiguredDescription(agent)}`
       ),
     });
 
@@ -297,42 +319,84 @@ export async function configureAiAgentsHandlerImpl(
 type AgentPromptChoice = {
   name: Agent;
   message: string;
-  partial: boolean;
-  partialReason?: string;
   agentConfiguration: AgentConfiguration;
-  rulesDisplayPath: string;
-  mcpDisplayPath: string;
 };
+
+/**
+ * Get the verbose footer description for an agent.
+ * Describes the end state per agent type.
+ */
+function getAgentFooterDescription(agent: AgentConfiguration): string {
+  // Extract filename from rulesPath
+  const rulesFile = agent.rulesPath.split('/').pop() || 'AGENTS.md';
+
+  switch (agent.name) {
+    case 'claude': {
+      let description = `Installs Nx plugin (MCP + skills + agents). Updates ${rulesFile}.`;
+      // Check if .mcp.json exists with nx-mcp - if so, mention cleanup
+      const mcpJsonPath = claudeMcpJsonPath(workspaceRoot);
+      if (existsSync(mcpJsonPath)) {
+        try {
+          const mcpJsonContents = JSON.parse(
+            readFileSync(mcpJsonPath, 'utf-8')
+          );
+          if (mcpJsonContents?.mcpServers?.['nx-mcp']) {
+            description +=
+              ' Removes nx-mcp from .mcp.json (now handled by plugin).';
+          }
+        } catch {
+          // Ignore errors reading .mcp.json
+        }
+      }
+      return description;
+    }
+    case 'cursor':
+    case 'copilot':
+      return `Installs Nx Console (MCP). Adds skills and agents. Updates ${rulesFile}.`;
+    case 'gemini':
+    case 'opencode':
+      return `Configures MCP server. Adds skills and agents. Updates ${rulesFile}.`;
+    case 'codex':
+      return `Configures MCP server. Adds skills. Updates ${rulesFile}.`;
+    default:
+      return '';
+  }
+}
+
+/**
+ * Get a compact description of what was configured for an agent.
+ * Used in the post-configuration output.
+ */
+function getAgentConfiguredDescription(agent: AgentConfiguration): string {
+  // Extract filename from rulesPath
+  const rulesFile = agent.rulesPath.split('/').pop() || 'AGENTS.md';
+
+  switch (agent.name) {
+    case 'claude':
+      return `Nx plugin (MCP + skills + agents) + ${rulesFile}`;
+    case 'cursor':
+    case 'copilot':
+      return `Nx Console (MCP) + skills + ${rulesFile}`;
+    case 'gemini':
+    case 'opencode':
+      return `MCP + skills + ${rulesFile}`;
+    case 'codex':
+      return `MCP + skills + ${rulesFile}`;
+    default:
+      return '';
+  }
+}
 
 function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
   const partiallyConfigured = agent.mcp !== agent.rules;
-  let message: string = agent.displayName;
-  if (partiallyConfigured) {
-    message += ` (${agent.rules ? 'MCP missing' : 'rules missing'})`;
-  } else if (agent.outdated) {
-    message += ' (out of date)';
-  }
-  const rulesDisplayPath = agent.rulesPath.startsWith(workspaceRoot)
-    ? relative(workspaceRoot, agent.rulesPath)
-    : agent.rulesPath;
-  const mcpDisplayPath = agent.mcpPath?.startsWith(workspaceRoot)
-    ? relative(workspaceRoot, agent.mcpPath)
-    : agent.mcpPath;
-  const partialReason = partiallyConfigured
-    ? agent.rules
-      ? `  Partially configured: MCP missing ${
-          agent.mcpPath ? `at ${mcpDisplayPath}` : 'via Nx Console'
-        }`
-      : `  Partially configured: rules file missing at ${rulesDisplayPath}`
-    : undefined;
+  const needsUpdate = partiallyConfigured || agent.outdated;
+
   return {
     name: agent.name,
-    message,
-    partial: partiallyConfigured,
-    partialReason,
+    message: needsUpdate
+      ? `${agent.displayName} (update available)`
+      : agent.displayName,
     agentConfiguration: agent,
-    rulesDisplayPath,
-    mcpDisplayPath,
   };
 }
 
@@ -355,4 +419,21 @@ function normalizeOptions(
     agents,
     check,
   };
+}
+
+async function resetDaemonAgentStatus(): Promise<void> {
+  try {
+    // Don't check daemonClient.enabled() — the CLI sets NX_DAEMON=false for
+    // configure-ai-agents (it doesn't need the daemon to do its work), but a
+    // daemon started by a previous command may still be running and serving
+    // cached status. We just need to reach it to reset its cache.
+    if (await daemonClient.isServerAvailable()) {
+      await daemonClient.resetConfigureAiAgentsStatus();
+    }
+  } catch {
+    // Daemon may not be running, that's fine
+  } finally {
+    // Close the daemon socket so the process can exit cleanly.
+    daemonClient.reset();
+  }
 }

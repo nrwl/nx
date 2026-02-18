@@ -74,14 +74,15 @@ export class NxModuleFederationSSRDevServerPlugin
               workspaceRoot,
               this._options.devServerConfig.staticRemotesPort
             );
-            startRemoteProxies(
+            await startRemoteProxies(
               staticRemotesConfig,
               mappedLocationOfRemotes,
               {
                 pathToCert: this._options.devServerConfig.sslCert,
                 pathToKey: this._options.devServerConfig.sslCert,
               },
-              true
+              true,
+              this._options.devServerConfig.host
             );
 
             new DefinePlugin({

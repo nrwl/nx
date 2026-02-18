@@ -23,12 +23,12 @@ export function BuiltForEnterprise(): ReactElement {
             <div className="mt-12 grid w-full grid-cols-2 place-items-center gap-6">
               <CapitalOneIcon
                 aria-hidden="true"
-                className="col-span-1 size-28  text-black dark:text-white"
+                className="col-span-1 size-28 text-black dark:text-white"
               />
 
               <FicoIcon
                 aria-hidden="true"
-                className="col-span-1 size-24  text-[#0A6DE6] dark:text-white"
+                className="col-span-1 size-24 text-[#0A6DE6] dark:text-white"
               />
 
               <AwsIcon
@@ -38,17 +38,17 @@ export function BuiltForEnterprise(): ReactElement {
 
               <ModernaIcon
                 aria-hidden="true"
-                className="col-span-1 size-24  text-black dark:text-white"
+                className="col-span-1 size-24 text-black dark:text-white"
               />
 
               <RoyalBankOfCanadaIcon
                 aria-hidden="true"
-                className="col-span-1 size-14  text-black dark:text-white"
+                className="col-span-1 size-14 text-black dark:text-white"
               />
 
               <AdobeIcon
                 aria-hidden="true"
-                className="col-span-1 size-14  text-[#FF0000] dark:text-white"
+                className="col-span-1 size-14 text-[#FF0000] dark:text-white"
               />
             </div>
           </div>
@@ -61,7 +61,7 @@ export function BuiltForEnterprise(): ReactElement {
               secure.
             </SectionHeading>
 
-            <figure className="mt-16 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+            <figure className="mt-16 rounded-lg bg-zinc-100 p-4 pl-8 dark:bg-zinc-800">
               <blockquote className="text-base/7">
                 <p>
                   “Nx is the tool that helps gain speed and trust on the overall
@@ -77,7 +77,7 @@ export function BuiltForEnterprise(): ReactElement {
                 />
                 <div>
                   <div className="font-semibold">Nicolas Beaussart</div>
-                  <div className="text-slate-500">
+                  <div className="text-zinc-500">
                     Staff Platform Engineer, Payfit
                   </div>
                 </div>

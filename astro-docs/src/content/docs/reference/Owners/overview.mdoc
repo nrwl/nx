@@ -36,8 +36,8 @@ The `nx add @nx/owners` command should have registered the `@nx/owners:sync-code
 // nx.json
 {
   "sync": {
-    "globalGenerators": ["@nx/owners:sync-codeowners-file"]
-  }
+    "globalGenerators": ["@nx/owners:sync-codeowners-file"],
+  },
 }
 ```
 
@@ -74,10 +74,10 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
         // See https://nx.dev/docs/reference/nx-commands#nx-run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
-        "files": [".github/workflows/**/*"]
-      }
-    ]
-  }
+        "files": [".github/workflows/**/*"],
+      },
+    ],
+  },
 }
 ```
 
@@ -103,10 +103,10 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
         // See https://nx.dev/docs/reference/nx-commands#nx-run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
-        "files": [".github/workflows/**/*"]
-      }
-    ]
-  }
+        "files": [".github/workflows/**/*"],
+      },
+    ],
+  },
 }
 ```
 
@@ -134,8 +134,8 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
         // See https://nx.dev/docs/reference/nx-commands#nx-run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
-        "files": [".github/workflows/**/*"]
-      }
+        "files": [".github/workflows/**/*"],
+      },
     ],
     // (Optional)
     "sections": [
@@ -150,10 +150,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
         // (Optional) Do not require any approvals, just notify the owners
         "optional": true,
         // Same format as the root patterns
-        "patterns": []
-      }
-    ]
-  }
+        "patterns": [],
+      },
+    ],
+  },
 }
 ```
 
@@ -193,25 +193,25 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
       {
         "description": "Joe should double check all changes to rust code",
         "projects": ["tag:rust"],
-        "owners": ["@joelovesrust"]
+        "owners": ["@joelovesrust"],
       },
       {
         "description": "The Finance team owns these projects",
         "projects": ["finance-*"],
-        "owners": ["@finance-team"]
+        "owners": ["@finance-team"],
       },
       {
         "description": "Alice, Bob and Cecil work together on these projects",
         "projects": ["admin", "booking", "cart"],
-        "owners": ["@alice", "@bob", "@cecil"]
+        "owners": ["@alice", "@bob", "@cecil"],
       },
       {
         "description": "CI Workflows",
         "files": [".github/workflows/**/*"],
-        "owners": ["@devops"]
-      }
-    ]
-  }
+        "owners": ["@devops"],
+      },
+    ],
+  },
 }
 ```
 
@@ -243,25 +243,25 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
       {
         "description": "Joe should double check all changes to rust code",
         "projects": ["tag:rust"],
-        "owners": ["@joelovesrust"]
+        "owners": ["@joelovesrust"],
       },
       {
         "description": "The Finance team owns these projects",
         "projects": ["finance-*"],
-        "owners": ["@finance-team"]
+        "owners": ["@finance-team"],
       },
       {
         "description": "Alice, Bob and Cecil work together on these projects",
         "projects": ["admin", "booking", "cart"],
-        "owners": ["@alice", "@bob", "@cecil"]
+        "owners": ["@alice", "@bob", "@cecil"],
       },
       {
         "description": "CI Workflows",
         "files": [".github/workflows/**/*"],
-        "owners": ["@devops"]
-      }
-    ]
-  }
+        "owners": ["@devops"],
+      },
+    ],
+  },
 }
 ```
 
@@ -293,13 +293,13 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
       {
         "description": "Joe should double check all changes to rust code",
         "projects": ["tag:rust"],
-        "owners": ["@joelovesrust"]
+        "owners": ["@joelovesrust"],
       },
       {
         "description": "CI Workflows",
         "files": [".github/workflows/**/*"],
-        "owners": ["@devops"]
-      }
+        "owners": ["@devops"],
+      },
     ],
     "sections": [
       {
@@ -309,17 +309,17 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
         "patterns": [
           {
             "description": "The Finance team owns these projects",
-            "projects": ["finance-*"]
+            "projects": ["finance-*"],
           },
           {
             "description": "Alice, Bob and Cecil work together on these projects",
             "projects": ["admin", "booking", "cart"],
-            "owners": ["@alice", "@bob", "@cecil"]
-          }
-        ]
-      }
-    ]
-  }
+            "owners": ["@alice", "@bob", "@cecil"],
+          },
+        ],
+      },
+    ],
+  },
 }
 ```
 
