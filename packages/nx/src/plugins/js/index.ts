@@ -1,6 +1,5 @@
-import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { existsSync, readFileSync, rmSync } from 'fs';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
   ProjectGraph,
