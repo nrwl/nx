@@ -3,6 +3,7 @@ import {
   cleanupProject,
   newProject,
   runCLI,
+  runCLIAsync,
   runCommandAsync,
   tmpProjPath,
   uniq,
@@ -204,11 +205,10 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'))
-      .toMatchInlineSnapshot(`
-
-      NX   No changed files found based on resolved "base" and "head"
-
+    const verboseResult = await runCLIAsync(
+      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'
+    );
+    expect(verboseResult.stdout).toMatchInlineSnapshot(`
 
       NX   There are pending bumps in version plan(s)
 
@@ -220,6 +220,9 @@ describe('nx release version plans check command', () => {
 
 
     `);
+    expect(verboseResult.stderr).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
 
     // it should allow configuring a custom base and head via env vars
     expect(
@@ -239,19 +242,15 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(
-      runCLI('release plan:check --verbose', {
-        env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
-      })
-    ).toMatchInlineSnapshot(`
+    const verboseEnvResult = await runCLIAsync('release plan:check --verbose', {
+      env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
+    });
+    expect(verboseEnvResult.stdout).toMatchInlineSnapshot(`
 
       NX   No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: HEAD~1
 
 
       NX   No explicit --head argument provided, but found environment variable NX_HEAD so using its value as the affected head: HEAD~1
-
-
-      NX   No changed files found based on resolved "base" and "head"
 
 
       NX   There are pending bumps in version plan(s)
@@ -264,6 +263,9 @@ describe('nx release version plans check command', () => {
 
 
     `);
+    expect(verboseEnvResult.stderr).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
   });
 
   it('should work as expected when there are version plans on disk for multiple release groups', async () => {
