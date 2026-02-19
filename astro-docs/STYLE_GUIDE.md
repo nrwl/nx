@@ -61,18 +61,18 @@ The voice should be:
 
 - **Conversational but efficient.** Use contractions. Get to the point. Don't pad sentences.
 - **Second person.** Write "you" — address the reader directly.
-- **Action-oriented.** Lead with what the reader can *do*, not what Nx *is*.
+- **Action-oriented.** Lead with what the reader can _do_, not what Nx _is_.
 - **Honest about tradeoffs.** Don't oversell. If something has limitations, say so.
 
 ### Voice do's and don'ts
 
-| Do | Don't |
-|---|---|
-| "You can speed up builds by enabling remote caching." | "Nx allows you to speed up builds." |
-| "Run `nx build` to build your project." | "In order to build your project, you can run the `nx build` command." |
-| "This works best with fewer than 50 projects." | "This feature can easily scale to any number of projects." |
-| "Nx reads your `vite.config.ts` and infers build targets automatically." | "Nx provides a robust and comprehensive mechanism for inferring build targets." |
-| "If the cache is stale, delete `.nx/cache` and retry." | "Should you encounter issues with caching, you may want to consider clearing your cache directory." |
+| Do                                                                       | Don't                                                                                               |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| "You can speed up builds by enabling remote caching."                    | "Nx allows you to speed up builds."                                                                 |
+| "Run `nx build` to build your project."                                  | "In order to build your project, you can run the `nx build` command."                               |
+| "This works best with fewer than 50 projects."                           | "This feature can easily scale to any number of projects."                                          |
+| "Nx reads your `vite.config.ts` and infers build targets automatically." | "Nx provides a robust and comprehensive mechanism for inferring build targets."                     |
+| "If the cache is stale, delete `.nx/cache` and retry."                   | "Should you encounter issues with caching, you may want to consider clearing your cache directory." |
 
 ### Anti-AI language
 
@@ -186,15 +186,15 @@ Use sentence case for headings. Capitalize proper nouns only.
 
 Feature names are lowercase unless they are a proper product name:
 
-| Correct | Incorrect |
-|---|---|
+| Correct        | Incorrect      |
+| -------------- | -------------- |
 | remote caching | Remote Caching |
-| task pipeline | Task Pipeline |
-| project graph | Project Graph |
-| Nx Cloud | nx cloud |
-| Nx Console | nx console |
-| Nx Agents | nx agents |
-| Nx Replay | nx replay |
+| task pipeline  | Task Pipeline  |
+| project graph  | Project Graph  |
+| Nx Cloud       | nx cloud       |
+| Nx Console     | nx console     |
+| Nx Agents      | nx agents      |
+| Nx Replay      | nx replay      |
 
 ### Acronyms
 
@@ -366,35 +366,23 @@ Use tables for structured data that benefits from a matrix layout. For simple li
 
 Use these terms consistently. When writing about Nx concepts, use the exact term from this list.
 
-| Term | Usage notes |
-|---|---|
-| workspace | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context. |
-| project | An app or library within the workspace. |
-| target | A task that can be run for a project (e.g., `build`, `test`, `lint`). |
-| executor | The implementation behind a target. Not "builder." |
-| generator | Code scaffolding tool. Not "schematic." |
-| plugin | An Nx plugin that provides executors, generators, or graph inference. |
-| task | A specific invocation of a target for a project (e.g., `myapp:build`). |
-| task pipeline | The dependency graph between tasks. Not "task orchestration" or "task graph" in user-facing docs. |
-| project graph | The dependency graph between projects. |
-| affected | Projects impacted by a code change. |
-| cache / cached | Not "memoized" or "stored results." |
-| remote caching | Sharing cached results across machines. Specific product: "Nx Replay." |
-| Nx Cloud | The hosted CI/CD product. Always capitalized. |
-| Nx Console | The IDE extension. Always capitalized. |
-| Nx Agents | Distributed task execution product. Always capitalized. |
-| Nx Replay | Remote caching product. Always capitalized. |
-| `nx.json` | Always in code style. |
-| `project.json` | Always in code style. |
-
-## Vale configuration
-
-TODO: Set up Vale for automated style enforcement.
-
-Vale is a prose linter that can enforce many of these rules automatically. The planned configuration will include:
-
-- Custom vocabulary for Nx terminology
-- Rules for banned phrases (anti-AI language, hedging words)
-- Rules for trust-undermining words ("easily", "simply", "just")
-- Capitalization checks for product names
-- Style checks for active voice, contractions, and sentence length
+| Term           | Usage notes                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| workspace      | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.        |
+| project        | An app or library within the workspace.                                                           |
+| target         | A task that can be run for a project (e.g., `build`, `test`, `lint`).                             |
+| executor       | The implementation behind a target. Not "builder."                                                |
+| generator      | Code scaffolding tool. Not "schematic."                                                           |
+| plugin         | An Nx plugin that provides executors, generators, or graph inference.                             |
+| task           | A specific invocation of a target for a project (e.g., `myapp:build`).                            |
+| task pipeline  | The dependency graph between tasks. Not "task orchestration" or "task graph" in user-facing docs. |
+| project graph  | The dependency graph between projects.                                                            |
+| affected       | Projects impacted by a code change.                                                               |
+| cache / cached | Not "memoized" or "stored results."                                                               |
+| remote caching | Sharing cached results across machines. Specific product: "Nx Replay."                            |
+| Nx Cloud       | The hosted CI/CD product. Always capitalized.                                                     |
+| Nx Console     | The IDE extension. Always capitalized.                                                            |
+| Nx Agents      | Distributed task execution product. Always capitalized.                                           |
+| Nx Replay      | Remote caching product. Always capitalized.                                                       |
+| `nx.json`      | Always in code style.                                                                             |
+| `project.json` | Always in code style.                                                                             |
