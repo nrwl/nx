@@ -125,9 +125,8 @@ class CLIOutput {
       return;
     }
     this.addNewline(stream);
-    bodyLines.forEach(
-      (bodyLine) => this.writeToStream(`${bodyLine}${EOL}`),
-      stream
+    bodyLines.forEach((bodyLine) =>
+      this.writeToStream(`${bodyLine}${EOL}`, stream)
     );
   }
 
