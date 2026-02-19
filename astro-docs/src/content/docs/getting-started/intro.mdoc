@@ -16,7 +16,7 @@ Nx is a build system for monorepos. It helps you **develop faster** and **keep C
 Monorepos have many advantages and are especially powerful for AI-assisted development. But as teams and codebases grow, monorepos are hard to scale:
 
 - **Slow builds and tests** - Hundreds or thousands of tasks compete for CI resources.
-- **Complex task pipelines** - Projects depend on each other, so tasks need to run in the right order — and that's hard to manage by hand.
+- **Complex task pipelines** - Projects depend on each other, so tasks need to run in the right order, and that's hard to manage by hand.
 - **Flaky CI** - Longer pipelines lead to random failures and inconsistent results between local and CI environments.
 - **Architectural erosion** - Without clear boundaries, unwanted dependencies creep in and projects become tightly coupled.
 
@@ -40,7 +40,7 @@ nx run-many -t build test # Run across all projects
 
 {% callout type="deepdive" title="How does Nx run tasks?" %}
 
-At the very core, Nx is a super fast, intelligent task runner. Let's take the example of an NPM workspace. This could be a project's `package.json`:
+At its core, Nx is a fast, intelligent task runner. Take the example of an NPM workspace. This could be a project's `package.json`:
 
 ```json
 // package.json
@@ -53,7 +53,7 @@ At the very core, Nx is a super fast, intelligent task runner. Let's take the ex
 }
 ```
 
-Then you can simply add Nx to your root `package.json`:
+Then add Nx to your root `package.json`:
 
 ```json
 // package.json
@@ -72,7 +72,7 @@ nx build my-project
 
 This will execute the `build` script from `my-project`'s `package.json`, equivalent to running `npm run build` in that project directory.
 
-Similarly you [can run tasks across all projects](/docs/features/run-tasks), just specific ones or just those from projects you touched.
+Similarly you [can run tasks across all projects](/docs/features/run-tasks), specific ones, or only those from projects you touched.
 
 From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/plugin-registry), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
 
@@ -80,7 +80,7 @@ From there, you can gradually enhance your setup by adding features like [task c
 
 ## Start Small, Grow as Needed
 
-Nx is modular. Start with just the CLI and add capabilities as your needs grow.
+Nx is modular. Start with the CLI and add capabilities as your needs grow.
 
 | Component                                            | What It Does                                                                                                                                                                            |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -115,7 +115,7 @@ Nx can also connect multiple repositories into a synthetic monorepo, letting you
 
 {% linkcard title="Concepts" description="Improve your understanding of how Nx works under the hood." href="/docs/concepts" /%}
 
-{% linkcard title="Features" description="Discover all the powerful features that Nx provides to streamline your workflow." href="/docs/features" /%}
+{% linkcard title="Features" description="Explore Nx features like caching, task orchestration, and CI optimization." href="/docs/features" /%}
 
 {% /cardgrid %}
 

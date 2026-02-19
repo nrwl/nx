@@ -6,9 +6,7 @@ sidebar:
 filter: 'type:Concepts'
 ---
 
-Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/docs/concepts/nx-plugins). Nx works with a
-few concepts to drive your monorepo efficiently, and effectively. This guide covers the mental model around how Nx works
-with project graphs, task graphs, affected commands, computation hashing and caching.
+Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/docs/concepts/nx-plugins). Nx works with a few core concepts to drive your monorepo efficiently: project graphs, task graphs, affected commands, computation hashing, and caching.
 
 ## The project graph
 
@@ -308,7 +306,7 @@ Before running a task, Nx computes a hash based on source files, configuration, 
 
 ![computation-hashing](../../../assets/concepts/mental-model/computation-hashing.svg)
 
-Nx checks the local cache first, then the [remote cache](/docs/features/ci-features/remote-cache) if configured. From the user's point of view, the command ran the same, just a lot faster.
+Nx checks the local cache first, then the [remote cache](/docs/features/ci-features/remote-cache) if configured. From the user's point of view, the command ran the same, only a lot faster.
 
 ![cache](../../../assets/concepts/mental-model/cache.svg)
 
@@ -316,7 +314,7 @@ See [How Caching Works](/docs/concepts/how-caching-works) for the complete list 
 
 ## Distributed task execution
 
-For large workspaces, even with caching, running all tasks on a single machine can be slow. [Nx Agents](/docs/features/ci-features/distribute-task-execution) can distribute the task graph across multiple machines, running tasks in parallel while using [remote caching](/docs/features/ci-features/remote-cache) to share artifacts between agents. From your CI's perspective, the results appear as if everything ran locally.
+For large workspaces, even with caching, running all tasks on a single machine can be slow. [Nx Agents](/docs/features/ci-features/distribute-task-execution) can distribute the task graph across multiple machines, running tasks in parallel while using [remote caching](/docs/features/ci-features/remote-cache) to share artifacts between agents. From your CI's perspective, the results appear as if everything ran on a single machine.
 
 ![Distribution](../../../assets/concepts/mental-model/dte.svg)
 
