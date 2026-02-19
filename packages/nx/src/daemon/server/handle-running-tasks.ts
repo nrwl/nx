@@ -2,15 +2,16 @@ import { getRunningTasksService } from '../../utils/running-tasks';
 
 export async function handleGetRunningTasks(ids: string[]) {
   const service = getRunningTasksService();
+  const runningTasks = (await service?.getRunningTasks(ids)) ?? [];
   return {
-    response: JSON.stringify(service?.getRunningTasks(ids) ?? []),
+    response: JSON.stringify(runningTasks),
     description: 'handleGetRunningTasks',
   };
 }
 
 export async function handleAddRunningTask(taskId: string) {
   const service = getRunningTasksService();
-  service?.addRunningTask(taskId);
+  await service?.addRunningTask(taskId);
   return {
     response: 'true',
     description: 'handleAddRunningTask',
@@ -19,7 +20,7 @@ export async function handleAddRunningTask(taskId: string) {
 
 export async function handleRemoveRunningTask(taskId: string) {
   const service = getRunningTasksService();
-  service?.removeRunningTask(taskId);
+  await service?.removeRunningTask(taskId);
   return {
     response: 'true',
     description: 'handleRemoveRunningTask',

@@ -1,4 +1,3 @@
-import { performance } from 'perf_hooks';
 import {
   IS_WASM,
   RunningTasksService as NxRunningTasksService,
@@ -7,7 +6,13 @@ import { getDbConnection } from './db-connection';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 
-export class RunningTasksService {
+export interface RunningTasksService {
+  getRunningTasks(ids: string[]): Promise<string[]>;
+  addRunningTask(taskId: string): Promise<void>;
+  removeRunningTask(taskId: string): Promise<void>;
+}
+
+export class InProcessRunningTasksService implements RunningTasksService {
   private _service?: NxRunningTasksService;
 
   private get service(): NxRunningTasksService {
@@ -17,79 +22,30 @@ export class RunningTasksService {
     return this._service;
   }
 
-  getRunningTasks(ids: string[]): string[] | Promise<string[]> {
-    performance.mark('db:runningTasks.get:start');
-
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      const result = this.service.getRunningTasks(ids);
-      performance.mark('db:runningTasks.get:end');
-      performance.measure(
-        'db:runningTasks.get',
-        'db:runningTasks.get:start',
-        'db:runningTasks.get:end'
-      );
-      return result;
-    }
-
-    return daemonClient.getRunningTasks(ids).then((result) => {
-      performance.mark('db:runningTasks.get:end');
-      performance.measure(
-        'db:runningTasks.get',
-        'db:runningTasks.get:start',
-        'db:runningTasks.get:end'
-      );
-      return result;
-    });
+  async getRunningTasks(ids: string[]): Promise<string[]> {
+    return this.service.getRunningTasks(ids);
   }
 
-  addRunningTask(taskId: string): void | Promise<void> {
-    performance.mark('db:runningTasks.add:start');
-
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      const result = this.service.addRunningTask(taskId);
-      performance.mark('db:runningTasks.add:end');
-      performance.measure(
-        'db:runningTasks.add',
-        'db:runningTasks.add:start',
-        'db:runningTasks.add:end'
-      );
-      return result;
-    }
-
-    return daemonClient.addRunningTask(taskId).then((result) => {
-      performance.mark('db:runningTasks.add:end');
-      performance.measure(
-        'db:runningTasks.add',
-        'db:runningTasks.add:start',
-        'db:runningTasks.add:end'
-      );
-      return result;
-    });
+  async addRunningTask(taskId: string): Promise<void> {
+    this.service.addRunningTask(taskId);
   }
 
-  removeRunningTask(taskId: string): void | Promise<void> {
-    performance.mark('db:runningTasks.remove:start');
+  async removeRunningTask(taskId: string): Promise<void> {
+    this.service.removeRunningTask(taskId);
+  }
+}
 
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      const result = this.service.removeRunningTask(taskId);
-      performance.mark('db:runningTasks.remove:end');
-      performance.measure(
-        'db:runningTasks.remove',
-        'db:runningTasks.remove:start',
-        'db:runningTasks.remove:end'
-      );
-      return result;
-    }
+export class DaemonRunningTasksService implements RunningTasksService {
+  async getRunningTasks(ids: string[]): Promise<string[]> {
+    return daemonClient.getRunningTasks(ids);
+  }
 
-    return daemonClient.removeRunningTask(taskId).then((result) => {
-      performance.mark('db:runningTasks.remove:end');
-      performance.measure(
-        'db:runningTasks.remove',
-        'db:runningTasks.remove:start',
-        'db:runningTasks.remove:end'
-      );
-      return result;
-    });
+  async addRunningTask(taskId: string): Promise<void> {
+    return daemonClient.addRunningTask(taskId);
+  }
+
+  async removeRunningTask(taskId: string): Promise<void> {
+    return daemonClient.removeRunningTask(taskId);
   }
 }
 
@@ -104,7 +60,10 @@ export function getRunningTasksService(): RunningTasksService | null {
     return null;
   }
   if (!runningTasksService) {
-    runningTasksService = new RunningTasksService();
+    runningTasksService =
+      isOnDaemon() || !daemonClient.enabled()
+        ? new InProcessRunningTasksService()
+        : new DaemonRunningTasksService();
   }
   return runningTasksService;
 }

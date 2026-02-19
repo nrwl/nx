@@ -1,11 +1,14 @@
-import { performance } from 'perf_hooks';
 import type { HashedTask } from '../native';
 import { IS_WASM, TaskDetails } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 
-class TaskDetailsRecorder {
+export interface TaskDetailsRecorder {
+  recordTaskDetails(tasks: HashedTask[]): Promise<void>;
+}
+
+export class InProcessTaskDetailsRecorder implements TaskDetailsRecorder {
   private _taskDetails?: TaskDetails;
 
   private get taskDetails(): TaskDetails {
@@ -17,21 +20,14 @@ class TaskDetailsRecorder {
 
   async recordTaskDetails(tasks: HashedTask[]): Promise<void> {
     if (tasks.length === 0) return;
+    this.taskDetails.recordTaskDetails(tasks);
+  }
+}
 
-    performance.mark('db:taskDetails.record:start');
-
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      this.taskDetails.recordTaskDetails(tasks);
-    } else {
-      await daemonClient.recordTaskDetails(tasks);
-    }
-
-    performance.mark('db:taskDetails.record:end');
-    performance.measure(
-      'db:taskDetails.record',
-      'db:taskDetails.record:start',
-      'db:taskDetails.record:end'
-    );
+export class DaemonTaskDetailsRecorder implements TaskDetailsRecorder {
+  async recordTaskDetails(tasks: HashedTask[]): Promise<void> {
+    if (tasks.length === 0) return;
+    return daemonClient.recordTaskDetails(tasks);
   }
 }
 
@@ -46,7 +42,10 @@ export function getTaskDetails(): TaskDetailsRecorder | null {
     return null;
   }
   if (!taskDetailsRecorder) {
-    taskDetailsRecorder = new TaskDetailsRecorder();
+    taskDetailsRecorder =
+      isOnDaemon() || !daemonClient.enabled()
+        ? new InProcessTaskDetailsRecorder()
+        : new DaemonTaskDetailsRecorder();
   }
   return taskDetailsRecorder;
 }

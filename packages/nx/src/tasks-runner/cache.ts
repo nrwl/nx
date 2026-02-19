@@ -68,31 +68,29 @@ export function dbCacheEnabled() {
 // Do not change the order of these arguments as this function is used by nx cloud
 export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
   const nxJson = readNxJson();
-  return dbCacheEnabled()
-    ? new DbCache({
-        // Remove this in Nx 21
-        nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
-        skipRemoteCache: options.skipRemoteCache,
-      })
-    : new Cache(options);
+  if (!dbCacheEnabled()) {
+    return new Cache(options);
+  }
+  return getDbCache({
+    // Remove this in Nx 21
+    nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
+    skipRemoteCache: options.skipRemoteCache,
+  });
 }
 
-export class DbCache {
-  private nxJson = readNxJson();
-  private _cache?: NxCache;
+export function getDbCache(
+  options: {
+    nxCloudRemoteCache?: RemoteCache;
+    skipRemoteCache?: boolean;
+  } = {}
+): DbCache {
+  return !isOnDaemon() && daemonClient.enabled()
+    ? new DaemonDbCache(options)
+    : new InProcessDbCache(options);
+}
 
-  private get cache(): NxCache {
-    if (!this._cache) {
-      this._cache = new NxCache(
-        workspaceRoot,
-        cacheDir,
-        getDbConnection(),
-        undefined,
-        resolveMaxCacheSize(this.nxJson)
-      );
-    }
-    return this._cache;
-  }
+export abstract class DbCache {
+  protected nxJson = readNxJson();
 
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
@@ -100,15 +98,27 @@ export class DbCache {
   private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   constructor(
-    private readonly options: {
-      nxCloudRemoteCache: RemoteCache;
+    protected readonly options: {
+      nxCloudRemoteCache?: RemoteCache;
       skipRemoteCache?: boolean;
-    }
+    } = {}
   ) {}
 
-  private shouldDelegateToDaemon(): boolean {
-    return !isOnDaemon() && daemonClient.enabled();
-  }
+  protected abstract getResult(hash: string): Promise<NativeCacheResult | null>;
+  protected abstract putResult(
+    hash: string,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ): Promise<string[]>;
+  protected abstract getCacheSize(): Promise<number>;
+  protected abstract removeOldRecords(): Promise<void>;
+  protected abstract applyRemoteCacheResults(
+    hash: string,
+    res: NativeCacheResult,
+    outputs: string[]
+  ): Promise<void>;
+  protected abstract checkFsInSync(): Promise<boolean>;
 
   async init() {
     // This should be cheap because we've already loaded
@@ -119,22 +129,7 @@ export class DbCache {
   }
 
   async get(task: Task): Promise<CachedResult | null> {
-    performance.mark('db:cache.get:start');
-
-    let res: NativeCacheResult | null;
-
-    if (this.shouldDelegateToDaemon()) {
-      res = await daemonClient.cacheGet(task.hash);
-    } else {
-      res = this.cache.get(task.hash);
-    }
-
-    performance.mark('db:cache.get:end');
-    performance.measure(
-      'db:cache.get',
-      'db:cache.get:start',
-      'db:cache.get:end'
-    );
+    const res = await this.getResult(task.hash);
 
     if (res) {
       return {
@@ -164,40 +159,8 @@ export class DbCache {
     }
   }
 
-  getUsedCacheSpace(): number | Promise<number> {
-    performance.mark('db:cache.getUsedCacheSpace:start');
-
-    if (this.shouldDelegateToDaemon()) {
-      return daemonClient.cacheGetSize().then((size) => {
-        performance.mark('db:cache.getUsedCacheSpace:end');
-        performance.measure(
-          'db:cache.getUsedCacheSpace',
-          'db:cache.getUsedCacheSpace:start',
-          'db:cache.getUsedCacheSpace:end'
-        );
-        return size;
-      });
-    }
-
-    const result = this.cache.getCacheSize();
-    performance.mark('db:cache.getUsedCacheSpace:end');
-    performance.measure(
-      'db:cache.getUsedCacheSpace',
-      'db:cache.getUsedCacheSpace:start',
-      'db:cache.getUsedCacheSpace:end'
-    );
-    return result;
-  }
-
-  private applyRemoteCacheResults(
-    hash: string,
-    res: NativeCacheResult,
-    outputs: string[]
-  ): void | Promise<void> {
-    if (this.shouldDelegateToDaemon()) {
-      return daemonClient.cacheApplyRemoteResults(hash, res, outputs);
-    }
-    return this.cache.applyRemoteCacheResults(hash, res, outputs);
+  async getUsedCacheSpace(): Promise<number> {
+    return this.getCacheSize();
   }
 
   async put(
@@ -207,17 +170,11 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      performance.mark('db:cache.put:start');
-
-      const expandedOutputs = this.shouldDelegateToDaemon()
-        ? await daemonClient.cachePut(task.hash, terminalOutput, outputs, code)
-        : this.cache.put(task.hash, terminalOutput, outputs, code);
-
-      performance.mark('db:cache.put:end');
-      performance.measure(
-        'db:cache.put',
-        'db:cache.put:start',
-        'db:cache.put:end'
+      const expandedOutputs = await this.putResult(
+        task.hash,
+        terminalOutput,
+        outputs,
+        code
       );
 
       // Notify TaskIOService of actual output files
@@ -235,29 +192,8 @@ export class DbCache {
     });
   }
 
-  removeOldCacheRecords(): void | Promise<void> {
-    performance.mark('db:cache.removeOldRecords:start');
-
-    if (this.shouldDelegateToDaemon()) {
-      return daemonClient.cacheRemoveOldRecords().then((result) => {
-        performance.mark('db:cache.removeOldRecords:end');
-        performance.measure(
-          'db:cache.removeOldRecords',
-          'db:cache.removeOldRecords:start',
-          'db:cache.removeOldRecords:end'
-        );
-        return result;
-      });
-    }
-
-    const result = this.cache.removeOldCacheRecords();
-    performance.mark('db:cache.removeOldRecords:end');
-    performance.measure(
-      'db:cache.removeOldRecords',
-      'db:cache.removeOldRecords:start',
-      'db:cache.removeOldRecords:end'
-    );
-    return result;
+  async removeOldCacheRecords(): Promise<void> {
+    return this.removeOldRecords();
   }
 
   temporaryOutputPath(task: Task): string {
@@ -382,12 +318,7 @@ export class DbCache {
     // hit issues. If we detect this, we can create a fallback db cache in the
     // custom directory, and check if the entries are there when the main db
     // cache misses.
-    let isInSync: boolean;
-    if (this.shouldDelegateToDaemon()) {
-      isInSync = await daemonClient.cacheCheckFsInSync();
-    } else {
-      isInSync = this.cache.checkCacheFsInSync();
-    }
+    const isInSync = await this.checkFsInSync();
 
     if (isCI() && !isInSync) {
       const warningLines = [
@@ -401,6 +332,91 @@ export class DbCache {
         bodyLines: warningLines,
       });
     }
+  }
+}
+
+export class InProcessDbCache extends DbCache {
+  private _cache?: NxCache;
+
+  private get cache(): NxCache {
+    if (!this._cache) {
+      this._cache = new NxCache(
+        workspaceRoot,
+        cacheDir,
+        getDbConnection(),
+        undefined,
+        resolveMaxCacheSize(this.nxJson)
+      );
+    }
+    return this._cache;
+  }
+
+  protected async getResult(hash: string): Promise<NativeCacheResult | null> {
+    return this.cache.get(hash);
+  }
+
+  protected async putResult(
+    hash: string,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ): Promise<string[]> {
+    return this.cache.put(hash, terminalOutput ?? '', outputs, code);
+  }
+
+  protected async getCacheSize(): Promise<number> {
+    return this.cache.getCacheSize();
+  }
+
+  protected async removeOldRecords(): Promise<void> {
+    this.cache.removeOldCacheRecords();
+  }
+
+  protected async applyRemoteCacheResults(
+    hash: string,
+    res: NativeCacheResult,
+    outputs: string[]
+  ): Promise<void> {
+    this.cache.applyRemoteCacheResults(hash, res, outputs);
+  }
+
+  protected async checkFsInSync(): Promise<boolean> {
+    return this.cache.checkCacheFsInSync();
+  }
+}
+
+export class DaemonDbCache extends DbCache {
+  protected async getResult(hash: string): Promise<NativeCacheResult | null> {
+    return daemonClient.cacheGet(hash);
+  }
+
+  protected async putResult(
+    hash: string,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ): Promise<string[]> {
+    return daemonClient.cachePut(hash, terminalOutput, outputs, code);
+  }
+
+  protected async getCacheSize(): Promise<number> {
+    return daemonClient.getCacheSize();
+  }
+
+  protected async removeOldRecords(): Promise<void> {
+    return daemonClient.removeOldCacheRecords();
+  }
+
+  protected async applyRemoteCacheResults(
+    hash: string,
+    res: NativeCacheResult,
+    outputs: string[]
+  ): Promise<void> {
+    return daemonClient.applyRemoteCacheResults(hash, res, outputs);
+  }
+
+  protected async checkFsInSync(): Promise<boolean> {
+    return daemonClient.checkCacheFsInSync();
   }
 }
 

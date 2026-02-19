@@ -1,10 +1,22 @@
-import { performance } from 'perf_hooks';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { IS_WASM, NxTaskHistory, TaskRun, TaskTarget } from '../native';
 import { getDbConnection } from './db-connection';
 
-export class TaskHistory {
+export interface TaskHistory {
+  /**
+   * This function returns estimated timings per task
+   * @param targets
+   * @returns a map where key is task id (project:target:configuration), value is average time of historical runs
+   */
+  getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>>;
+  getFlakyTasks(hashes: string[]): Promise<string[]>;
+  recordTaskRuns(taskRuns: TaskRun[]): Promise<void>;
+}
+
+export class InProcessTaskHistory implements TaskHistory {
   private _taskHistory?: NxTaskHistory;
 
   private get taskHistory(): NxTaskHistory {
@@ -14,68 +26,34 @@ export class TaskHistory {
     return this._taskHistory;
   }
 
-  /**
-   * This function returns estimated timings per task
-   * @param targets
-   * @returns a map where key is task id (project:target:configuration), value is average time of historical runs
-   */
   async getEstimatedTaskTimings(
     targets: TaskTarget[]
   ): Promise<Record<string, number>> {
-    performance.mark('db:taskHistory.getEstimatedTimings:start');
-
-    let result: Record<string, number>;
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      result = this.taskHistory.getEstimatedTaskTimings(targets);
-    } else {
-      result = await daemonClient.getEstimatedTaskTimings(targets);
-    }
-
-    performance.mark('db:taskHistory.getEstimatedTimings:end');
-    performance.measure(
-      'db:taskHistory.getEstimatedTimings',
-      'db:taskHistory.getEstimatedTimings:start',
-      'db:taskHistory.getEstimatedTimings:end'
-    );
-
-    return result;
+    return this.taskHistory.getEstimatedTaskTimings(targets);
   }
 
-  async getFlakyTasks(hashes: string[]) {
-    performance.mark('db:taskHistory.getFlakyTasks:start');
-
-    let result: string[];
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      result = this.taskHistory.getFlakyTasks(hashes);
-    } else {
-      result = await daemonClient.getFlakyTasks(hashes);
-    }
-
-    performance.mark('db:taskHistory.getFlakyTasks:end');
-    performance.measure(
-      'db:taskHistory.getFlakyTasks',
-      'db:taskHistory.getFlakyTasks:start',
-      'db:taskHistory.getFlakyTasks:end'
-    );
-
-    return result;
+  async getFlakyTasks(hashes: string[]): Promise<string[]> {
+    return this.taskHistory.getFlakyTasks(hashes);
   }
 
-  async recordTaskRuns(taskRuns: TaskRun[]) {
-    performance.mark('db:taskHistory.recordTaskRuns:start');
+  async recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
+    this.taskHistory.recordTaskRuns(taskRuns);
+  }
+}
 
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      this.taskHistory.recordTaskRuns(taskRuns);
-    } else {
-      await daemonClient.recordTaskRuns(taskRuns);
-    }
+export class DaemonTaskHistory implements TaskHistory {
+  async getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>> {
+    return daemonClient.getEstimatedTaskTimings(targets);
+  }
 
-    performance.mark('db:taskHistory.recordTaskRuns:end');
-    performance.measure(
-      'db:taskHistory.recordTaskRuns',
-      'db:taskHistory.recordTaskRuns:start',
-      'db:taskHistory.recordTaskRuns:end'
-    );
+  async getFlakyTasks(hashes: string[]): Promise<string[]> {
+    return daemonClient.getFlakyTasks(hashes);
+  }
+
+  async recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
+    return daemonClient.recordTaskRuns(taskRuns);
   }
 }
 
@@ -91,7 +69,10 @@ export function getTaskHistory(): TaskHistory | null {
   }
 
   if (!taskHistory) {
-    taskHistory = new TaskHistory();
+    taskHistory =
+      isOnDaemon() || !daemonClient.enabled()
+        ? new InProcessTaskHistory()
+        : new DaemonTaskHistory();
   }
   return taskHistory;
 }

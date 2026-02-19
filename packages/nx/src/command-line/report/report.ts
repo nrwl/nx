@@ -33,7 +33,7 @@ import {
 } from '../../utils/nx-key';
 import { type NxKey } from '@nx/key';
 import {
-  DbCache,
+  getDbCache,
   dbCacheEnabled,
   formatCacheSize,
   resolveMaxCacheSize,
@@ -276,6 +276,11 @@ export async function reportHandler() {
   });
 }
 
+type CacheInfo = {
+  max: number;
+  used: number;
+};
+
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
@@ -309,10 +314,7 @@ export interface ReportData {
   }>;
   projectGraphError?: Error | null;
   nativeTarget: string | null;
-  cache: {
-    max: number;
-    used: number;
-  } | null;
+  cache: CacheInfo | null;
 }
 
 function findDependencyChain(
@@ -391,6 +393,7 @@ export async function getReportData(): Promise<ReportData> {
   const powerpackPlugins = findInstalledPowerpackPlugins();
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
+  const cache = await getCacheInfo(nxJson);
 
   const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
   packageVersionsWeCareAbout.unshift({
@@ -418,15 +421,6 @@ export async function getReportData(): Promise<ReportData> {
     if (!(e instanceof NxKeyNotInstalledError)) {
       nxKeyError = e;
     }
-  }
-
-  let cache = null;
-  if (dbCacheEnabled()) {
-    const cacheInstance = new DbCache({ nxCloudRemoteCache: null });
-    cache = {
-      max: resolveMaxCacheSize(nxJson),
-      used: await cacheInstance.getUsedCacheSpace(),
-    };
   }
 
   return {
@@ -606,4 +600,18 @@ function isNativeAvailable(): typeof import('../../native') | false {
   } catch {
     return false;
   }
+}
+
+async function getCacheInfo(
+  nxJson: NxJsonConfiguration
+): Promise<CacheInfo | null> {
+  if (dbCacheEnabled()) {
+    const cacheInstance = getDbCache();
+    return {
+      max: resolveMaxCacheSize(nxJson),
+      used: await cacheInstance.getUsedCacheSpace(),
+    };
+  }
+
+  return null;
 }
