@@ -3,7 +3,7 @@ export const nxVersion = require('../../package.json').version;
 export const viteVersion = '^7.0.0';
 export const viteV6Version = '^6.0.0';
 export const viteV5Version = '^5.0.0';
-// TODO(v23): Remove vitest from here since once we drop vitest support in favor of @nx/vitest.
+// TODO(v23): Remove vitest from here once we drop vitest support in favor of @nx/vitest.
 export const vitestV4Version = '^4.0.0';
 export const vitestV3Version = '^3.0.0';
 export const vitestV2Version = '^2.1.8';
