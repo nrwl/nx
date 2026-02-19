@@ -674,30 +674,15 @@ export class TaskOrchestrator {
         }
 
         if (!streamOutput) {
-          if (runningTask instanceof PseudoTtyProcess) {
-            // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
-            let terminalOutput = '';
-            runningTask.onOutput((data) => {
-              terminalOutput += data;
-            });
-            runningTask.onExit((code) => {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-              writeFileSync(temporaryOutputPath, terminalOutput);
-            });
-          } else {
-            runningTask.onExit((code, terminalOutput) => {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-              writeFileSync(temporaryOutputPath, terminalOutput);
-            });
-          }
+          // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
+          runningTask.onExit((code, terminalOutput) => {
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              code === 0 ? 'success' : 'failure',
+              terminalOutput
+            );
+            writeFileSync(temporaryOutputPath, terminalOutput);
+          });
         }
 
         return runningTask;
