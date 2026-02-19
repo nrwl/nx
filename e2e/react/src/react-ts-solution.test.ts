@@ -12,7 +12,9 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 
-describe('React (TS solution)', () => {
+// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
+// See: https://github.com/qmhc/unplugin-dts/issues/461
+xdescribe('React (TS solution)', () => {
   let workspaceName: string;
 
   beforeAll(() => {

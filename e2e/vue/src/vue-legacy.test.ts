@@ -1,6 +1,8 @@
 import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e-utils';
 
-describe('Vue Plugin (legacy)', () => {
+// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
+// See: https://github.com/qmhc/unplugin-dts/issues/461
+xdescribe('Vue Plugin (legacy)', () => {
   let proj: string;
 
   beforeAll(() => {
