@@ -11,7 +11,9 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
-describe('Build React applications and libraries with Vite', () => {
+// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
+// See: https://github.com/qmhc/unplugin-dts/issues/461
+xdescribe('Build React applications and libraries with Vite', () => {
   beforeAll(() => {
     newProject({
       packages: ['@nx/react'],
