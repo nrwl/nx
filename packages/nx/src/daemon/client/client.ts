@@ -981,14 +981,14 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  cacheRemoveOldRecords(): Promise<void> {
+  removeOldCacheRecords(): Promise<void> {
     const message: HandleCacheRemoveOldRecordsMessage = {
       type: CACHE_REMOVE_OLD_RECORDS,
     };
     return this.sendToDaemonViaQueue(message);
   }
 
-  cacheApplyRemoteResults(
+  applyRemoteCacheResults(
     hash: string,
     result: NativeCacheResult,
     outputs: string[]
@@ -1002,7 +1002,7 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  cacheGetSize(): Promise<number> {
+  getCacheSize(): Promise<number> {
     const message: HandleCacheGetSizeMessage = {
       type: CACHE_GET_SIZE,
     };
@@ -1011,7 +1011,7 @@ export class DaemonClient {
     );
   }
 
-  cacheCheckFsInSync(): Promise<boolean> {
+  checkCacheFsInSync(): Promise<boolean> {
     const message: HandleCacheCheckFsInSyncMessage = {
       type: CACHE_CHECK_FS_IN_SYNC,
     };
