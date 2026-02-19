@@ -49,7 +49,9 @@ expect.addSnapshotSerializer({
   },
 });
 
-describe('release publishable libraries', () => {
+// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
+// See: https://github.com/qmhc/unplugin-dts/issues/461
+xdescribe('release publishable libraries', () => {
   let e2eRegistryUrl: string;
 
   beforeAll(async () => {

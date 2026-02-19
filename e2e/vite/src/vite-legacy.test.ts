@@ -26,7 +26,9 @@ import {
 import { join } from 'path';
 import { ChildProcess } from 'child_process';
 
-describe('Vite Plugin', () => {
+// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
+// See: https://github.com/qmhc/unplugin-dts/issues/461
+xdescribe('Vite Plugin', () => {
   let proj: string;
   let originalEnv: string;
   beforeAll(() => {
