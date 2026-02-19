@@ -178,12 +178,6 @@ function isAnyEntryPointPointingToOutDir(
   projectAbsolutePath: string
 ): boolean {
   const resolvedOutDir = resolve(projectAbsolutePath, outDir);
-  const relativePath = relative(projectAbsolutePath, resolvedOutDir);
-
-  // If outDir is outside project root: buildable
-  if (relativePath.startsWith('..')) {
-    return true;
-  }
 
   const isPathInsideOutDir = (path: string): boolean => {
     const normalizedPath = normalizePath(
