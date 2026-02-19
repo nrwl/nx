@@ -244,12 +244,7 @@ export class ForkedProcessTaskRunner {
     });
     this.processes.add(p);
 
-    let terminalOutput = '';
-    p.onOutput((msg) => {
-      terminalOutput += msg;
-    });
-
-    p.onExit((code) => {
+    p.onExit((code, terminalOutput) => {
       if (!this.tuiEnabled && code > 128) {
         process.exit(code);
       }
