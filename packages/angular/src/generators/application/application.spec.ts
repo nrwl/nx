@@ -563,12 +563,45 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.scss')).toEqual(true);
     });
+
+    it('should generate nx-welcome component with CSS syntax for scss', async () => {
+      await generateApp(appTree, 'my-app', { style: 'scss' });
+      const nxWelcomeContent = appTree.read(
+        'my-app/src/app/nx-welcome.ts',
+        'utf-8'
+      );
+      const styleMatch = nxWelcomeContent.match(/<style>([\s\S]*?)<\/style>/);
+      expect(styleMatch).toBeTruthy();
+      const styleContent = styleMatch[1];
+      // CSS/SCSS syntax should contain { and }
+      expect(styleContent).toContain('{');
+      expect(styleContent).toContain('}');
+    });
   });
 
   describe('--style sass', () => {
     it('should generate sass styles', async () => {
       await generateApp(appTree, 'my-app', { style: 'sass' });
       expect(appTree.exists('my-app/src/app/app.sass')).toEqual(true);
+    });
+
+    it('should generate nx-welcome component with SASS indented syntax', async () => {
+      await generateApp(appTree, 'my-app', { style: 'sass' });
+      const nxWelcomeContent = appTree.read(
+        'my-app/src/app/nx-welcome.ts',
+        'utf-8'
+      );
+      const styleMatch = nxWelcomeContent.match(/<style>([\s\S]*?)<\/style>/);
+      expect(styleMatch).toBeTruthy();
+      const styleContent = styleMatch[1];
+      // SASS indented syntax should not contain { or }
+      expect(styleContent).not.toContain('{');
+      expect(styleContent).not.toContain('}');
+      // SASS indented syntax should not contain ; at end of property lines
+      expect(styleContent).not.toMatch(/;\s*$/m);
+      // Should contain valid SASS selectors
+      expect(styleContent).toContain('html');
+      expect(styleContent).toContain('body');
     });
   });
 
