@@ -87,7 +87,6 @@
     </dependencies>
 
     <build>
-        <finalName>maven3-adapter</finalName>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <plugins>
             <plugin>
@@ -109,7 +108,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -117,6 +116,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <outputFile>${project.build.directory}/maven3-adapter.jar</outputFile>
                             <artifactSet>
                                 <includes>
                                     <include>dev.nx.maven:nx-maven-shared</include>
