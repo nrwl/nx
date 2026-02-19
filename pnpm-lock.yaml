@@ -253,8 +253,7 @@ catalogs:
       version: 5.9.2
 
 overrides:
-  minimist: ^1.2.6
-  underscore: ^1.12.1
+  '@microsoft/api-extractor': 7.32.0
 
 patchedDependencies:
   '@astrojs/starlight':
@@ -24732,8 +24731,8 @@ packages:
   underscore.string@2.4.0:
     resolution: {integrity: sha512-yxkabuCaIBnzfIvX3kBxQqCs0ar/bfJwDnFEHJUm/ZrRVhT3IItdRF5cZjARLzEnyQYtIUhsZ2LG2j3HidFOFQ==}
 
-  underscore@1.13.7:
-    resolution: {integrity: sha512-GMXzWtsc57XAtguZgaQViUOzs0KTkk8ojr3/xAxXLITqf/3EMwxC0inyETfDFjH/Krbhuep0HNbbjI9i/q3F3g==}
+  underscore@1.7.0:
+    resolution: {integrity: sha512-cp0oQQyZhUM1kpJDLdGO1jPZHgS/MpzoWYfe9+CM2h/QGDZlqwT2T3YGukuBdaNJ/CAPoeyAZRRHz8JFo176vA==}
 
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
@@ -39749,7 +39748,7 @@ snapshots:
 
   argparse@0.1.16:
     dependencies:
-      underscore: 1.13.7
+      underscore: 1.7.0
       underscore.string: 2.4.0
 
   argparse@1.0.10:
@@ -54508,7 +54507,7 @@ snapshots:
 
   underscore.string@2.4.0: {}
 
-  underscore@1.13.7: {}
+  underscore@1.7.0: {}
 
   undici-types@5.26.5: {}
 

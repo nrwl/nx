@@ -421,5 +421,10 @@
       "check-lock-files",
       "check-codeowners"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "@microsoft/api-extractor": "7.32.0"
+    }
   }
 }
