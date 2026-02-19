@@ -126,5 +126,3 @@ export function targetConfigurationsSourceMapKey(
   }
   return key;
 }
-
-
