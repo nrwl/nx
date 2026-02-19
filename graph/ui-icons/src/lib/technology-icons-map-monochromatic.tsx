@@ -33,7 +33,7 @@ import { VisualBasicIcon } from './technologies/visualbasic';
 
 export const MonochromaticTechnologyIconsMap: Record<
   string,
-  { icon: FunctionComponent<SVGProps<SVGSVGElement>> }
+  { icon: FunctionComponent<SVGProps<SVGSVGElement>>; className?: string }
 > = {
   angular: { icon: AngularIcon },
   'C#': { icon: CSharpIcon },
@@ -46,11 +46,11 @@ export const MonochromaticTechnologyIconsMap: Record<
   expo: { icon: ExpoIcon },
   express: { icon: ExpressIcon },
   'F#': { icon: FSharpIcon },
-  gradle: { icon: JavaIcon },
-  java: { icon: JavaIcon },
+  gradle: { icon: JavaIcon, className: 'text-slate-600 dark:text-slate-300' },
+  java: { icon: JavaIcon, className: 'text-slate-600 dark:text-slate-300' },
   javascript: { icon: JavaScriptIcon },
   jest: { icon: JestIcon },
-  maven: { icon: JavaIcon },
+  maven: { icon: JavaIcon, className: 'text-slate-600 dark:text-slate-300' },
   nest: { icon: NestJSIcon },
   next: { icon: NextJSIcon },
   node: { icon: NodeIcon },
