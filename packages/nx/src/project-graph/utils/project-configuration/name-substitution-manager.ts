@@ -244,6 +244,7 @@ export class ProjectNameInNodePropsManager {
           const projectName = inputProjectNames[j];
           const referencedProject = nameMap.get(projectName);
           if (referencedProject) {
+            const arrayIndex = j; // Capture j by value
             this.registerProjectNameSubstitutor(
               referencedProject.root,
               ownerRoot,
@@ -257,7 +258,7 @@ export class ProjectNameInNodePropsManager {
                   typeof finalInput === 'object' &&
                   'projects' in finalInput
                 ) {
-                  (finalInput['projects'] as string[])[j] = finalName;
+                  (finalInput['projects'] as string[])[arrayIndex] = finalName;
                 }
               }
             );
@@ -325,6 +326,7 @@ export class ProjectNameInNodePropsManager {
           }
           const referencedProject = nameMap.get(projectName);
           if (referencedProject) {
+            const arrayIndex = j; // Capture j by value
             this.registerProjectNameSubstitutor(
               referencedProject.root,
               ownerRoot,
@@ -338,7 +340,7 @@ export class ProjectNameInNodePropsManager {
                   typeof finalDep === 'object' &&
                   'projects' in finalDep
                 ) {
-                  (finalDep['projects'] as string[])[j] = finalName;
+                  (finalDep['projects'] as string[])[arrayIndex] = finalName;
                 }
               }
             );
