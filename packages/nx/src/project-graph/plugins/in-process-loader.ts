@@ -18,6 +18,7 @@ import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
 } from './transpiler';
+import { handleImport } from '../../utils/handle-import';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -60,7 +61,7 @@ export function loadNxPlugin(
   index?: number
 ) {
   return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
+    loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
     () => {},
   ] as const;
 }
@@ -82,8 +83,8 @@ export async function loadNxPluginAsync(
     if (shouldRegisterTSTranspiler) {
       registerPluginTSTranspiler();
     }
-    const { loadResolvedNxPluginAsync } = await import(
-      './load-resolved-plugin'
+    const { loadResolvedNxPluginAsync } = await handleImport(
+      require.resolve('./load-resolved-plugin')
     );
     return loadResolvedNxPluginAsync(
       pluginConfiguration,

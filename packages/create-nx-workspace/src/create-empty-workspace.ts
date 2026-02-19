@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora from 'ora';
 import { join } from 'path';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { execAndWait } from './utils/child-process-utils';
@@ -74,6 +74,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
       `Successfully created the workspace: ${directory}`
     );
   } catch (e) {
+    console.log(e);
     workspaceSetupSpinner.fail();
     const message = e instanceof Error ? e.message : String(e);
     throw new CnwError(
