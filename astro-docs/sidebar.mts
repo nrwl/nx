@@ -100,6 +100,10 @@ const learnGroups: SidebarItems = [
     collapsed: false,
     items: [
       { label: 'Run Tasks', link: 'features/run-tasks' },
+      {
+        label: 'Cache Task Results',
+        link: 'features/cache-task-results',
+      },
       { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
       {
         label: 'Code Organization',
@@ -891,6 +895,10 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'TypeScript',
         collapsed: true,
         items: [
+          {
+            label: 'Maintain TypeScript Monorepos',
+            link: 'features/maintain-typescript-monorepos',
+          },
           ...getTechnologyKBItems('typescript'),
           {
             label: 'Buildable and Publishable Libraries',
@@ -899,10 +907,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'TypeScript Project Linking',
             link: 'concepts/typescript-project-linking',
-          },
-          {
-            label: 'Maintain TypeScript Monorepos',
-            link: 'features/maintain-typescript-monorepos',
           },
         ],
       },

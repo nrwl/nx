@@ -267,7 +267,7 @@ With this, running the same test command creates the following task graph:
 
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar
-relationships between targets of the same project, including a test target that depends on the build.
+relationships between targets of the same project, including a test target that depends on the build. Learn more about configuring task pipelines in [Task Pipeline Configuration](/docs/concepts/task-pipeline-configuration).
 
 A task graph can contain different targets, and those can run in parallel. For instance, as Nx is building `app2`, it
 can be testing `app1` at the same time.
@@ -287,7 +287,7 @@ and `lib:test`.
 
 When you run `nx run-many -t test`, you are telling Nx to do this for all the projects.
 
-As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis to
+As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis via the [`affected` command](/docs/features/ci-features/affected) to
 get the min set of projects that need to be retested. How does it work?
 
 When you run `nx affected -t test`, Nx looks at the files you changed in your PR, it will look at the nature of
@@ -304,104 +304,19 @@ that `app2` cannot be affected by it, so it only retests `app1`.
 
 ## Computation hashing and caching
 
-Nx runs the tasks in the task graph in the right order. Before running the task, Nx computes its computation hash. As
-long as the computation hash is the same, the output of running the task is the same.
-
-How does Nx do it?
-
-By default, the computation hash for say `nx test app1` includes:
-
-- All the source files of `app1` and `lib`
-- Relevant global configuration
-- Versions of external dependencies
-- [Runtime values provisioned by the user](/docs/reference/inputs#runtime-inputs)
-- CLI Command flags
+Before running a task, Nx computes a hash based on source files, configuration, dependencies, and other inputs. If the hash matches a previous run, the cached result is replayed — including terminal output and file artifacts. If not, Nx runs the task and stores the result for next time.
 
 ![computation-hashing](../../../assets/concepts/mental-model/computation-hashing.svg)
 
-This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
-configs. Builds can depend on the `.d.ts` files of the compiled libs instead of their source.
-
-After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally,
-and then if it is missing, and if a remote cache is configured, it checks remotely.
-
-If Nx finds the computation, Nx retrieves it and replays it. Nx places the right files in the right folders and prints
-the terminal output. So from the user's point of view, the command ran the same, just a lot faster.
+Nx checks the local cache first, then the [remote cache](/docs/features/ci-features/remote-cache) if configured. From the user's point of view, the command ran the same, just a lot faster.
 
 ![cache](../../../assets/concepts/mental-model/cache.svg)
 
-If Nx doesn't find this computation, Nx runs the task, and after it completes, it takes the outputs and the terminal
-output and stores it locally (and if configured remotely). All of this happens transparently, so you don't have to worry
-about it.
-
-Although conceptually this is fairly straightforward, Nx optimizes this to make this experience good for you. For
-instance, Nx:
-
-- Captures stdout and stderr to make sure the replayed output looks the same, including on Windows.
-- Minimizes the IO by remembering what files are replayed where.
-- Only shows relevant output when processing a large task graph.
-- Provides affordances for troubleshooting cache misses. And many other optimizations.
-
-As your workspace grows, the task graph looks more like this:
-
-{% graph height="200px" type="task"%}
-
-```json
-{
-  "projects": [
-    {
-      "name": "lib",
-      "type": "lib",
-      "data": {
-        "tags": [],
-        "targets": {
-          "test": {}
-        }
-      }
-    }
-  ],
-  "taskIds": ["lib:test"],
-  "taskGraph": {
-    "roots": ["lib:test"],
-    "tasks": {
-      "lib:test": {
-        "id": "lib:test",
-        "target": {
-          "project": "lib",
-          "target": "test"
-        },
-        "projectRoot": "libs/lib",
-        "overrides": {}
-      }
-    },
-    "dependencies": {}
-  }
-}
-```
-
-{% /graph %}
-
-All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
-work happens. The rest is either left as is or restored from the cache.
+See [How Caching Works](/docs/concepts/how-caching-works) for the complete list of hash inputs, cache configuration options, and optimization details.
 
 ## Distributed task execution
 
-Nx supports running commands across multiple machines. You can either set it up by hand or use Nx Cloud. [Read the comparison of the two approaches.](https://nx.dev/blog/distributing-ci-binning-and-distributed-task-execution)
-
-When using the distributed task execution, Nx is able to run any task graph on many agents instead of locally.
-
-For instance, `nx affected --build` won't run the build locally (which can take hours for large workspaces). Instead,
-it will send the Task Graph to Nx Cloud. Nx Cloud Agents will then pick up the tasks they can run and execute them.
-
-Note that this happens transparently. If an agent builds `app1`, it will fetch the outputs for `lib` if it doesn't have
-them
-already.
-
-As agents complete tasks, the main job where you invoked `nx affected --build` will start receiving created files and
-terminal outputs.
-
-After `nx affected --build` completes, the machine will have the build files and all the terminal outputs as if it ran
-it locally.
+For large workspaces, even with caching, running all tasks on a single machine can be slow. [Nx Agents](/docs/features/ci-features/distribute-task-execution) can distribute the task graph across multiple machines, running tasks in parallel while using [remote caching](/docs/features/ci-features/remote-cache) to share artifacts between agents. From your CI's perspective, the results appear as if everything ran locally.
 
 ![Distribution](../../../assets/concepts/mental-model/dte.svg)
 
@@ -410,5 +325,5 @@ it locally.
 - Nx is able to analyze your source code to create a Project Graph.
 - Nx can use the project graph and information about projects' targets to create a Task Graph.
 - Nx is able to perform code-change analysis to create the smallest task graph for your PR.
-- Nx supports computation caching to never execute the same computation twice. This computation cache is pluggable and
+- Nx supports [computation caching](/docs/features/cache-task-results) to never execute the same computation twice. This computation cache is pluggable and
   can be distributed.
