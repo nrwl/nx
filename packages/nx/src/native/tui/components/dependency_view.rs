@@ -172,10 +172,8 @@ impl DependencyViewState {
                     for _ in 0..page {
                         self.scroll_up();
                     }
-                    true
-                } else {
-                    false
                 }
+                None
             }
             KeyCode::PageDown => {
                 if has_scrollable_content && self.scroll_offset < max_scroll {
@@ -183,10 +181,8 @@ impl DependencyViewState {
                     for _ in 0..page {
                         self.scroll_down(viewport_height);
                     }
-                    true
-                } else {
-                    false
                 }
+                None
             }
             _ => None,
         }
