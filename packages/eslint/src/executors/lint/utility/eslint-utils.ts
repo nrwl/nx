@@ -11,7 +11,6 @@ export async function resolveAndInstantiateESLint(
 ) {
   if (useFlatConfig && eslintConfigPath && !isFlatConfig(eslintConfigPath)) {
     throw new Error(
-      // todo: add support for eslint.config.mjs,
       'When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files'
     );
   }
