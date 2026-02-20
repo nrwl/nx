@@ -15,9 +15,7 @@ import { names } from '@nx/devkit';
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
 
-// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
-// See: https://github.com/qmhc/unplugin-dts/issues/461
-xdescribe('@nx/vite/plugin', () => {
+describe('@nx/vite/plugin', () => {
   let proj: string;
   let originalEnv: string;
   beforeAll(() => {
