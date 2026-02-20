@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Nx Commands show show target human-readable output should render directory containing inputs 1`] = `
+"~ apps/<APP>/src is a directory containing 7 input file(s) for <APP>:build
+  apps/<APP>/src/app/app.element.css
+  apps/<APP>/src/app/app.element.ts
+  apps/<APP>/src/assets/.gitkeep
+  apps/<APP>/src/favicon.ico
+  apps/<APP>/src/index.html
+  apps/<APP>/src/main.ts
+  apps/<APP>/src/styles.css
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render grouped output when checking multiple inputs 1`] = `
+"
+✓ These arguments were inputs for <APP>:build:
+  apps/<APP>/src/main.ts
+  apps/<APP>/src/app/app.element.ts
+
+✗ These arguments were not inputs for <APP>:build:
+  definitely/not/an/input.xyz
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render grouped output when checking multiple outputs 1`] = `
+"
+✓ These arguments were outputs of <APP>:build:
+  dist/apps/<APP>/main.js
+
+✗ These arguments were not outputs of <APP>:build:
+  definitely/not/an/output
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render matching --check input 1`] = `
+"✓ apps/<APP>/src/main.ts is an input for <APP>:build (files)
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render matching --check output 1`] = `
+"✓ dist/apps/<APP> is an output of <APP>:build
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render non-matching --check input 1`] = `
+"✗ definitely/not/an/input.xyz is not an input for <APP>:build
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render non-matching --check output 1`] = `
+"✗ definitely/not/an/output is not an output of <APP>:build
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render output paths 1`] = `
+"Output paths for <APP>:build
+
+Configured outputs:
+  dist/apps/<APP>
+
+Resolved outputs:
+  dist/apps/<APP>
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render target info 1`] = `
+"Target: <APP>:build
+Executor: nx:run-commands
+Command: webpack-cli build
+Options:
+  cwd: "apps/<APP>"
+  args: ["--node-env=production"]
+  command: "webpack-cli build"
+Inputs:
+  - !{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
+  - !{projectRoot}/.eslintrc.json
+  - !{projectRoot}/eslint.config.mjs
+  - !{projectRoot}/src/test-setup.[jt]s
+  - !{projectRoot}/tsconfig.spec.json
+  - default
+  - ^production
+  - {"externalDependencies":["webpack-cli"]}
+Outputs:
+  - {workspaceRoot}/dist/apps/<APP>
+Configurations: production
+Cache: true
+Parallelism: true
+"
+`;
