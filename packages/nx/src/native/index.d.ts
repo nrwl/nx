@@ -212,9 +212,9 @@ export interface CachedResult {
   size?: number
 }
 
-export declare export declare function canInstallNxConsole(): boolean
+export declare export declare function canInstallNxConsole(): Promise<boolean>
 
-export declare export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): boolean
+export declare export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -226,6 +226,13 @@ export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
 }
+
+/**
+ * Detects which AI agent is running and returns its name.
+ * Returns None if no agent is detected.
+ * Filtering against supported agents should be done on the TypeScript side.
+ */
+export declare export declare function detectAiAgent(): string | null
 
 export interface EnvironmentInput {
   env: string
@@ -261,6 +268,7 @@ export interface FileMap {
 
 export interface FileSetInput {
   fileset: string
+  dependencies?: boolean
 }
 
 export declare export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -344,16 +352,16 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
-export declare export declare function installNxConsole(): boolean
+export declare export declare function installNxConsole(): Promise<boolean>
 
-export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): boolean
+export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export const IS_WASM: boolean
 
 /** Detects if the current process is being run by an AI agent */
 export declare export declare function isAiAgent(): boolean
 
-export declare export declare function isEditorInstalled(editor: SupportedEditor): boolean
+export declare export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
 export declare export declare function logDebug(message: string): void
 

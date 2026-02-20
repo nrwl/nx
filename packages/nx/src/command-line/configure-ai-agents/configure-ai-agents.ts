@@ -10,9 +10,12 @@ import {
   getAgentConfigurations,
   supportedAgents,
 } from '../../ai/utils';
+import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../devkit-internals';
 import { output } from '../../utils/output';
+import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
@@ -21,13 +24,32 @@ export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
+  // When called as inner from the tmp install, just run the impl directly
+  if (inner) {
+    return await configureAiAgentsHandlerImpl(args);
+  }
+
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||
-    process.env.NX_AI_FILES_USE_LOCAL === 'true' ||
-    inner
+    process.env.NX_AI_FILES_USE_LOCAL === 'true'
   ) {
-    return await configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
+    await resetDaemonAgentStatus();
+    return;
+  }
+
+  // Skip downloading latest if the current version is already the latest
+  try {
+    const latestVersion = await resolvePackageVersionUsingRegistry(
+      'nx',
+      'latest'
+    );
+    if (latestVersion === nxVersion) {
+      return await configureAiAgentsHandlerImpl(args);
+    }
+  } catch {
+    // If we can't check, proceed with download
   }
 
   let cleanup: () => void | undefined;
@@ -42,24 +64,37 @@ export async function configureAiAgentsHandler(
     );
 
     const module = await import(modulePath);
-    const configureAiAgentsResult = await module.configureAiAgentsHandler(
-      args,
-      true
-    );
+    await module.configureAiAgentsHandler(args, true);
     cleanup();
-    return configureAiAgentsResult;
   } catch (error) {
     if (cleanup) {
       cleanup();
     }
     // Fall back to local implementation
-    return configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
   }
+
+  // Reset daemon cache using the local daemon client (the inner handler's
+  // client belongs to the tmp install and isn't connected to our daemon)
+  await resetDaemonAgentStatus();
 }
 
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
+  // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+  // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+  process.on('uncaughtException', (error) => {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error['code'] === 'ERR_USE_AFTER_CLOSE'
+    )
+      return;
+    throw error;
+  });
+
   const normalizedOptions = normalizeOptions(options);
 
   const {
@@ -322,7 +357,7 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
     case 'opencode':
       return `Configures MCP server. Adds skills and agents. Updates ${rulesFile}.`;
     case 'codex':
-      return `Configures MCP server. Updates ${rulesFile}.`;
+      return `Configures MCP server. Adds skills. Updates ${rulesFile}.`;
     default:
       return '';
   }
@@ -346,7 +381,7 @@ function getAgentConfiguredDescription(agent: AgentConfiguration): string {
     case 'opencode':
       return `MCP + skills + ${rulesFile}`;
     case 'codex':
-      return `MCP + ${rulesFile}`;
+      return `MCP + skills + ${rulesFile}`;
     default:
       return '';
   }
@@ -384,4 +419,21 @@ function normalizeOptions(
     agents,
     check,
   };
+}
+
+async function resetDaemonAgentStatus(): Promise<void> {
+  try {
+    // Don't check daemonClient.enabled() — the CLI sets NX_DAEMON=false for
+    // configure-ai-agents (it doesn't need the daemon to do its work), but a
+    // daemon started by a previous command may still be running and serving
+    // cached status. We just need to reach it to reset its cache.
+    if (await daemonClient.isServerAvailable()) {
+      await daemonClient.resetConfigureAiAgentsStatus();
+    }
+  } catch {
+    // Daemon may not be running, that's fine
+  } finally {
+    // Close the daemon socket so the process can exit cleanly.
+    daemonClient.reset();
+  }
 }

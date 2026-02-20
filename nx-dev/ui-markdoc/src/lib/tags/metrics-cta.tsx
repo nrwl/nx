@@ -3,7 +3,7 @@
 /* this is a separate component s.t. it can be client-side only to avoid hydration errors*/
 
 import { ButtonLink } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function MetricsCTA() {
   return (
@@ -17,7 +17,7 @@ export function MetricsCTA() {
         variant="contrast"
         size="default"
         onClick={() =>
-          sendCustomEvent(
+          sendCustomEventViaGtm(
             'contact-sales-click',
             'metrics-cta-customer-success',
             'blog'

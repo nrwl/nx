@@ -3,6 +3,7 @@ import {
   getTechnologyKBItems,
   getTechnologyAPIItems,
 } from './src/plugins/utils/plugin-mappings';
+import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url';
 
 type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 
@@ -24,8 +25,6 @@ const learnGroups: SidebarItems = [
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
       { label: 'Installation', link: 'getting-started/installation' },
-      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
-      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
       {
         label: 'Start a New Project',
         link: 'getting-started/start-new-project',
@@ -33,6 +32,12 @@ const learnGroups: SidebarItems = [
       {
         label: 'Add to Existing Project',
         link: 'getting-started/start-with-existing-project',
+      },
+      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
+      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
+      {
+        label: 'Nx Cloud',
+        link: 'getting-started/nx-cloud',
       },
       {
         label: 'Tutorials',
@@ -1155,7 +1160,7 @@ const referenceGroups: SidebarItems = [
       },
       {
         label: 'Changelog',
-        link: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
+        link: `${resolveNxDevUrl()}/changelog`,
       },
       {
         label: 'Deprecations',

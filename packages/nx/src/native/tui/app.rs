@@ -990,12 +990,12 @@ impl App {
                                                                 );
                                                             }
                                                             '1' => {
-                                                                self.assign_current_task_to_pane(0);
+                                                                self.toggle_current_task_in_pane(0);
                                                                 let _ = self.handle_pty_resize();
                                                                 // No need to debounce
                                                             }
                                                             '2' => {
-                                                                self.assign_current_task_to_pane(1);
+                                                                self.toggle_current_task_in_pane(1);
                                                                 let _ = self.handle_pty_resize();
                                                                 // No need to debounce
                                                             }
@@ -1670,83 +1670,112 @@ impl App {
         let _ = self.handle_pty_resize();
     }
 
-    fn assign_current_task_to_pane(&mut self, pane_idx: usize) -> Option<()> {
-        // Extract selected item (task or batch) to end the immutable borrow
+    /// Toggle pin state: if the selected task is already in this pane, unpin it;
+    /// otherwise pin it (moving from the other pane if needed). Used by [1]/[2] keys.
+    fn toggle_current_task_in_pane(&mut self, pane_idx: usize) -> Option<()> {
         let selection = self.selection_manager.lock().get_selection().cloned()?;
 
-        // If we're in spacebar mode, clear the spacebar placeholder before pinning
-        // In spacebar mode, pane_tasks[0] is a placeholder that may hold a stale task
         if self.spacebar_mode {
-            // Clear the spacebar placeholder in pane 0
-            self.pane_tasks[0] = None;
-            self.clear_pane_pty_reference(0);
-            self.dependency_view_states[0] = None;
+            self.exit_spacebar_and_pin(selection, pane_idx);
+        } else if self.pane_tasks[pane_idx].as_ref() == Some(&selection) {
+            // Already pinned to this pane — unpin it
+            self.pane_tasks[pane_idx] = None;
+            self.clear_pane_pty_reference(pane_idx);
+            self.dependency_view_states[pane_idx] = None;
 
-            // Exit spacebar mode first
-            self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
-
-            // Dispatch action before moving selection
-            self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
-            self.pane_tasks[pane_idx] = Some(selection);
-            self.layout_manager
-                .set_pane_arrangement(PaneArrangement::Single);
-        } else {
-            // Check if the item is already pinned to the OTHER pane
-            let other_pane_idx = 1 - pane_idx;
-            if self.pane_tasks[other_pane_idx].as_ref() == Some(&selection) {
-                // Clear the other pane - item is "moving" to the new pane
-                self.pane_tasks[other_pane_idx] = None;
-                self.clear_pane_pty_reference(other_pane_idx);
-                self.dependency_view_states[other_pane_idx] = None;
-                self.dispatch_action(Action::UnpinSelection(other_pane_idx));
-
-                // Adjust layout since we now only have one pane
-                self.layout_manager
-                    .set_pane_arrangement(PaneArrangement::Single);
-
-                // Dispatch action before moving selection, then assign
-                self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
-                self.pane_tasks[pane_idx] = Some(selection);
-            } else if self.pane_tasks[pane_idx].as_ref() == Some(&selection) {
-                // Task is already pinned to this pane - just focus it
-                self.update_focus(Focus::MultipleOutput(pane_idx));
-                return None; // Early return - no need to update layout or resize
-            } else {
-                // Pin the item to the specified pane
-                // Cleanup old completed batch before replacing
-                self.cleanup_pane_completed_batch(pane_idx);
-
-                // Dispatch action before moving selection
-                self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
-                self.pane_tasks[pane_idx] = Some(selection);
-                self.update_focus(Focus::TaskList);
-
-                // Exit spacebar mode when pinning
-                // When pinning an item, use name-based selection
-                self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
-
-                // Set pane arrangement based on count of pinned tasks
-                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
-                match pinned_count {
-                    0 => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::None),
-                    1 => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Single),
-                    _ => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Double),
+            let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+            match pinned_count {
+                0 => {
+                    self.update_focus(Focus::TaskList);
+                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
+                    self.layout_manager
+                        .set_pane_arrangement(PaneArrangement::None);
                 }
-
-                // Already assigned above, so just continue to layout update
-                self.finalize_pane_assignment();
-                return Some(());
+                1 => self
+                    .layout_manager
+                    .set_pane_arrangement(PaneArrangement::Single),
+                _ => self
+                    .layout_manager
+                    .set_pane_arrangement(PaneArrangement::Double),
             }
+
+            self.dispatch_action(Action::UnpinSelection(pane_idx));
+        } else {
+            self.move_or_pin_selection(selection, pane_idx);
         }
 
         self.finalize_pane_assignment();
         Some(())
+    }
+
+    /// Pin the selected task to a pane. If the task is already pinned to the other
+    /// pane, it moves it. Never unpins, never focuses. Used by init and as a
+    /// building block for display_and_focus.
+    fn assign_current_task_to_pane(&mut self, pane_idx: usize) -> Option<()> {
+        let selection = self.selection_manager.lock().get_selection().cloned()?;
+
+        if self.spacebar_mode {
+            self.exit_spacebar_and_pin(selection, pane_idx);
+        } else {
+            self.move_or_pin_selection(selection, pane_idx);
+        }
+
+        self.finalize_pane_assignment();
+        Some(())
+    }
+
+    /// Shared helper: exit spacebar mode and pin the selection to the target pane.
+    fn exit_spacebar_and_pin(&mut self, selection: SelectionEntry, pane_idx: usize) {
+        self.pane_tasks[0] = None;
+        self.clear_pane_pty_reference(0);
+        self.dependency_view_states[0] = None;
+
+        self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+
+        self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
+        self.pane_tasks[pane_idx] = Some(selection);
+        self.layout_manager
+            .set_pane_arrangement(PaneArrangement::Single);
+    }
+
+    /// Shared helper: move a selection from the other pane or pin a fresh selection.
+    fn move_or_pin_selection(&mut self, selection: SelectionEntry, pane_idx: usize) {
+        let other_pane_idx = 1 - pane_idx;
+        if self.pane_tasks[other_pane_idx].as_ref() == Some(&selection) {
+            // Moving from the other pane
+            self.pane_tasks[other_pane_idx] = None;
+            self.clear_pane_pty_reference(other_pane_idx);
+            self.dependency_view_states[other_pane_idx] = None;
+            self.dispatch_action(Action::UnpinSelection(other_pane_idx));
+
+            self.layout_manager
+                .set_pane_arrangement(PaneArrangement::Single);
+
+            self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
+            self.pane_tasks[pane_idx] = Some(selection);
+        } else {
+            // Fresh pin
+            self.cleanup_pane_completed_batch(pane_idx);
+
+            self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
+            self.pane_tasks[pane_idx] = Some(selection);
+            self.update_focus(Focus::TaskList);
+
+            self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+
+            let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+            match pinned_count {
+                0 => self
+                    .layout_manager
+                    .set_pane_arrangement(PaneArrangement::None),
+                1 => self
+                    .layout_manager
+                    .set_pane_arrangement(PaneArrangement::Single),
+                _ => self
+                    .layout_manager
+                    .set_pane_arrangement(PaneArrangement::Double),
+            }
+        }
     }
 
     fn finalize_pane_assignment(&mut self) {
@@ -1867,10 +1896,8 @@ impl App {
                         continue;
                     }
 
-                    // With shared dimensions, we only need to call resize once per PTY instance
-                    // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
-                    let mut pty_clone = pty.as_ref().clone();
-                    pty_clone.resize(pty_height, pty_width)?;
+                    // Async resize avoids blocking the event loop for large terminal outputs
+                    pty.resize_async(pty_height, pty_width);
 
                     // If dimensions changed, mark for sort
                     if current_rows != pty_height {
@@ -1911,9 +1938,18 @@ impl App {
         if force_spacebar_mode {
             self.toggle_output_visibility();
         } else {
+            // If already pinned to a pane, just focus it rather than reassigning
+            let selection = self.selection_manager.lock().get_selection().cloned();
+            if let Some(ref sel) = selection {
+                if let Some(pane_idx) = self.pane_tasks.iter().position(|t| t.as_ref() == Some(sel))
+                {
+                    self.update_focus(Focus::MultipleOutput(pane_idx));
+                    return;
+                }
+            }
             self.assign_current_task_to_pane(0);
         }
-        // Unlike in standard spacebar mode, also set focus to the pane, if applicable (if the user pressed enter a second time, there will be no visible panes)
+        // Focus the pane if one is now visible
         if self.has_visible_panes() {
             self.update_focus(Focus::MultipleOutput(0));
         }
@@ -2049,10 +2085,9 @@ impl App {
                 allow_interactive && in_progress && pty.can_be_interactive();
             terminal_pane_data.pty = Some(pty.clone());
 
-            // Resize PTY to match terminal pane dimensions
+            // Resize PTY to match terminal pane dimensions (async to avoid blocking render)
             let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
-            let mut pty_clone = pty.as_ref().clone();
-            pty_clone.resize(pty_height, pty_width).ok();
+            pty.resize_async(pty_height, pty_width);
         } else {
             terminal_pane_data.pty = None;
             terminal_pane_data.can_be_interactive = false;
@@ -2283,15 +2318,14 @@ impl App {
         if let Some(pty_instance) = state.get_pty_instance(&selection_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
-            // Immediately resize PTY to match the current terminal pane dimensions
+            // Async resize PTY to match the current terminal pane dimensions
             if let Some(pane_area) = self
                 .layout_areas
                 .as_ref()
                 .and_then(|la| la.terminal_panes.get(pane_idx))
             {
                 let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
-                let mut pty_clone = pty_instance.as_ref().clone();
-                pty_clone.resize(pty_height, pty_width).ok();
+                pty_instance.resize_async(pty_height, pty_width);
             }
         } else {
             self.terminal_pane_data[pane_idx].pty = None;

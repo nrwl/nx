@@ -34,6 +34,9 @@ class NxMaven3(
     @Volatile private var cachedProjectGraph: ProjectDependencyGraph? = null
     @Volatile private var cachedRepositorySession: RepositorySystemSession? = null
 
+    /** Indexed lookup: "groupId:artifactId" → MavenProject. Built once in setupGraphCache(). */
+    @Volatile private var projectBySelector: Map<String, MavenProject> = emptyMap()
+
     init {
         if (System.getProperty("org.slf4j.simpleLogger.defaultLogLevel") == null) {
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
@@ -93,6 +96,7 @@ class NxMaven3(
                 return
             }
             cachedProjectGraph = graph
+            projectBySelector = graph.allProjects.associateBy { "${it.groupId}:${it.artifactId}" }
 
             session.projects = graph.sortedProjects
             session.allProjects = graph.allProjects
@@ -168,11 +172,9 @@ class NxMaven3(
         session.projectDependencyGraph = graph
 
         val selectedProjects = if (request.selectedProjects.isNotEmpty()) {
-            graph.allProjects.filter { project ->
-                request.selectedProjects.any { selector ->
-                    "${project.groupId}:${project.artifactId}" == selector ||
-                    project.artifactId == selector
-                }
+            request.selectedProjects.mapNotNull { selector ->
+                projectBySelector[selector]
+                    ?: graph.allProjects.find { it.artifactId == selector }
             }
         } else {
             graph.allProjects.filter { it.file?.absolutePath == request.pom?.absolutePath }
@@ -190,14 +192,13 @@ class NxMaven3(
     }
 
     fun recordBuildStates(projectSelectors: Set<String>) {
-        val graph = cachedProjectGraph ?: return
+        if (cachedProjectGraph == null) return
 
         projectSelectors.forEach { selector ->
-            graph.allProjects.find { "${it.groupId}:${it.artifactId}" == selector }
-                ?.let { project ->
-                    try { BuildStateManager.recordBuildState(project) }
-                    catch (_: Exception) { }
-                }
+            projectBySelector[selector]?.let { project ->
+                try { BuildStateManager.recordBuildState(project) }
+                catch (_: Exception) { }
+            }
         }
     }
 }

@@ -231,7 +231,7 @@ export function getPackageManagerCommand(
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
-        updateLockFile: 'bun install --frozen-lockfile',
+        updateLockFile: 'bun install --lockfile-only',
         add: 'bun install',
         addDev: 'bun install -D',
         rm: 'bun rm',

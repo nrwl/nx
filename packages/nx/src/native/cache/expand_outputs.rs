@@ -313,6 +313,156 @@ mod test {
     }
 
     #[test]
+    #[cfg(unix)]
+    fn should_expand_outputs_with_symlinks_and_globs() {
+        // Reproduces https://github.com/nrwl/nx/issues/34013
+        // When outputs include both glob patterns (*.json) and directory patterns
+        // that contain symlinks, the expanded outputs may cause EEXIST errors
+        // during cache operations.
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+
+        // Create .next directory with JSON files
+        temp.child(".next/build-manifest.json")
+            .write_str("{}")
+            .unwrap();
+        temp.child(".next/routes-manifest.json")
+            .write_str("{}")
+            .unwrap();
+
+        // Create .next/standalone with files
+        temp.child(".next/standalone/server.js")
+            .write_str("server")
+            .unwrap();
+        temp.child(".next/standalone/real-pkg/index.js")
+            .write_str("pkg")
+            .unwrap();
+
+        // Create a symlink inside standalone (simulating pnpm/bun linker)
+        symlink(
+            temp.join(".next/standalone/real-pkg/index.js"),
+            temp.join(".next/standalone/linked-entry.js"),
+        )
+        .unwrap();
+
+        // Create .next/server
+        temp.child(".next/server/app.js").write_str("app").unwrap();
+
+        let entries = vec![
+            ".next/*.json".to_string(),
+            ".next/standalone".to_string(),
+            ".next/server".to_string(),
+        ];
+        let mut result = expand_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+
+        // Verify that the symlink is included in expanded outputs
+        assert!(
+            result.contains(&".next/standalone/linked-entry.js".to_string()),
+            "Symlink should be in expanded outputs"
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn should_handle_cache_put_and_restore_with_symlinks() {
+        // Full reproduction of issue #34013 including the cache put and restore cycle
+        use crate::native::cache::file_ops::_copy;
+        use std::os::unix::fs::symlink;
+
+        enable_logger();
+
+        let workspace = TempDir::new().unwrap();
+        let cache = TempDir::new().unwrap();
+
+        // Create workspace structure simulating Next.js standalone build
+        workspace
+            .child("app/.next/build-manifest.json")
+            .write_str("{}")
+            .unwrap();
+        workspace
+            .child("app/.next/routes-manifest.json")
+            .write_str("{}")
+            .unwrap();
+        workspace
+            .child("app/.next/standalone/server.js")
+            .write_str("server")
+            .unwrap();
+        workspace
+            .child("app/.next/standalone/real-pkg/index.js")
+            .write_str("pkg")
+            .unwrap();
+
+        // Create symlink (simulating pnpm/bun linker)
+        symlink(
+            workspace.join("app/.next/standalone/real-pkg/index.js"),
+            workspace.join("app/.next/standalone/linked-entry.js"),
+        )
+        .unwrap();
+
+        workspace
+            .child("app/.next/server/app.js")
+            .write_str("app")
+            .unwrap();
+
+        let outputs = vec![
+            "app/.next/*.json".to_string(),
+            "app/.next/standalone".to_string(),
+            "app/.next/server".to_string(),
+        ];
+
+        // === SIMULATE CACHE PUT ===
+        let cache_hash_dir = cache.child("hash123");
+        cache_hash_dir.create_dir_all().unwrap();
+
+        let expanded = _expand_outputs(workspace.path(), outputs.clone()).unwrap();
+
+        // Copy each expanded output to cache (mimicking cache.rs put())
+        for output in expanded.iter() {
+            let src = workspace.join(output);
+            if src.exists() {
+                let dest = cache_hash_dir.join(output);
+                let result = _copy(&src, &dest);
+                assert!(
+                    result.is_ok(),
+                    "PUT: Failed to copy {}: {:?}",
+                    output,
+                    result.err()
+                );
+            }
+        }
+
+        // === SIMULATE CACHE RESTORE ===
+        // (This is what copy_files_from_cache does)
+
+        // Step 1: Expand outputs from cache directory
+        let restore_expanded = _expand_outputs(cache_hash_dir.path(), outputs.clone()).unwrap();
+
+        // Step 2: Remove expanded outputs from workspace
+        let items_to_remove: Vec<_> = restore_expanded.iter().map(|p| workspace.join(p)).collect();
+        fs_extra::remove_items(&items_to_remove).unwrap();
+
+        // Step 3: Copy entire cache hash dir to workspace (this is where EEXIST occurs)
+        let restore_result = _copy(cache_hash_dir.path(), workspace.path());
+        assert!(
+            restore_result.is_ok(),
+            "RESTORE: Failed to copy from cache to workspace: {:?}",
+            restore_result.err()
+        );
+
+        // Verify files were restored correctly
+        assert!(workspace.child("app/.next/build-manifest.json").exists());
+        assert!(workspace.child("app/.next/standalone/server.js").exists());
+        assert!(
+            workspace
+                .child("app/.next/standalone/linked-entry.js")
+                .exists()
+        );
+        assert!(workspace.child("app/.next/server/app.js").exists());
+    }
+
+    #[test]
     fn should_get_files_for_outputs_when_gitignore_hides_files() {
         let temp = TempDir::new().unwrap();
         temp.child("out/.gitignore").write_str("*").unwrap();

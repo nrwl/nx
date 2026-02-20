@@ -144,17 +144,18 @@ export class PseudoTerminal {
 export class PseudoTtyProcess implements RunningTask {
   isAlive = true;
 
-  private exitCallbacks: Array<(code: number) => void> = [];
+  private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
+    [];
   private outputCallbacks: Array<(output: string) => void> = [];
 
-  private terminalOutput = '';
+  private terminalOutputChunks: string[] = [];
 
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
     private childProcess: ChildProcess
   ) {
     childProcess.onOutput((output) => {
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       this.outputCallbacks.forEach((cb) => cb(output));
     });
 
@@ -164,19 +165,21 @@ export class PseudoTtyProcess implements RunningTask {
       const code = messageToCode(message);
       childProcess.cleanup();
 
-      this.exitCallbacks.forEach((cb) => cb(code));
+      const terminalOutput = this.terminalOutputChunks.join('');
+      this.terminalOutputChunks = [];
+      this.exitCallbacks.forEach((cb) => cb(code, terminalOutput));
     });
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
     return new Promise((res) => {
-      this.onExit((code) => {
-        res({ code, terminalOutput: this.terminalOutput });
+      this.onExit((code, terminalOutput) => {
+        res({ code, terminalOutput });
       });
     });
   }
 
-  onExit(callback: (code: number) => void): void {
+  onExit(callback: (code: number, terminalOutput: string) => void): void {
     this.exitCallbacks.push(callback);
   }
 

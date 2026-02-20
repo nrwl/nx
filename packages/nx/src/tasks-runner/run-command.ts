@@ -552,6 +552,8 @@ export async function runCommandForTasks(
       printSummary();
     }
 
+    await printConfigureAiAgentsDisclaimer();
+
     await printNxKey();
 
     return {
@@ -561,6 +563,24 @@ export async function runCommandForTasks(
   } catch (e) {
     restoreTerminal?.();
     throw e;
+  }
+}
+
+async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+  try {
+    if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
+      return;
+    }
+    const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
+    if (outdatedAgents.length > 0) {
+      output.logRawLine(
+        output.dim(
+          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+        )
+      );
+    }
+  } catch {
+    // Silently ignore errors
   }
 }
 
@@ -913,7 +933,9 @@ export function setEnvVarsBasedOnArgs(
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+  // Force streaming only when the TUI is active, so it can capture and
+  // render task output. Other output styles manage their own streaming.
+  if (isTuiEnabled()) {
     process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {

@@ -30,6 +30,7 @@ import { ConfigurationSourceMaps } from '../../project-graph/utils/project-confi
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { isCI } from '../../utils/is-ci';
+import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import type {
@@ -82,6 +83,13 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+  type ConfigureAiAgentsStatusResponse,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -230,7 +238,7 @@ export class DaemonClient {
       // version mismatch => no daemon because the installed nx version differs from the running one
       if (
         isNxVersionMismatch() ||
-        ((isCI() || isDocker()) && env !== 'true') ||
+        ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
@@ -959,6 +967,20 @@ export class DaemonClient {
     const message: HandleSetNxConsolePreferenceAndInstallMessage = {
       type: SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
       preference,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getConfigureAiAgentsStatus(): Promise<ConfigureAiAgentsStatusResponse> {
+    const message: HandleGetConfigureAiAgentsStatusMessage = {
+      type: GET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  resetConfigureAiAgentsStatus(): Promise<{ success: boolean }> {
+    const message: HandleResetConfigureAiAgentsStatusMessage = {
+      type: RESET_CONFIGURE_AI_AGENTS_STATUS,
     };
     return this.sendToDaemonViaQueue(message);
   }

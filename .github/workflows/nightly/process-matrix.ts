@@ -75,7 +75,7 @@ const matrixData: MatrixData = {
       os_name: 'Linux',
       os_timeout: 60,
       package_managers: ['npm', 'pnpm', 'yarn'],
-      node_versions: ['20.19.0', '22.12.0', '24.0.0'],
+      node_versions: ['20.19.0', '22.13.0', '24.0.0'],
       excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo']
     },
     // Docker is not supported on ARM-based macOS runners (no nested virtualization)

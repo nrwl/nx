@@ -66,7 +66,11 @@ class NxMaven(
   private val executionCount = AtomicInteger(0)
 
   @Volatile
-  private var cachedProjectGraph: ProjectDependencyGraph? = null  // ProjectDependencyGraph
+  private var cachedProjectGraph: ProjectDependencyGraph? = null
+
+  /** Indexed lookup: "groupId:artifactId" → MavenProject. Built once in setupGraphCache(). */
+  @Volatile
+  private var projectBySelector: Map<String, MavenProject> = emptyMap()
 
   @Volatile
   private var cachedRepositorySession: RepositorySystemSession? = null
@@ -167,6 +171,7 @@ class NxMaven(
 
       val graph = graphResult.get()
       cachedProjectGraph = graph
+      projectBySelector = graph.allProjects.associateBy { "${it.groupId}:${it.artifactId}" }
 
       log.debug("   ✅ Graph cache setup complete with ${graph.allProjects.size} projects")
       graph.sortedProjects?.forEach { project ->
@@ -196,9 +201,9 @@ class NxMaven(
     session.projectDependencyGraph = graph
 
     // Find the selected project(s) to build
-    val selectedProjects = session.allProjects.filter {
-      "${it.groupId}:${it.artifactId}" == request.selectedProjects.firstOrNull()
-    }
+    val selectedProjects = listOfNotNull(
+      request.selectedProjects.firstOrNull()?.let { projectBySelector[it] }
+    )
 
     // session.projects controls what lifecycleStarter builds - keep it to selected projects only
     session.projects = selectedProjects
@@ -355,10 +360,7 @@ class NxMaven(
     var failedCount = 0
 
     projectSelectors.forEach { selector ->
-      // Find matching project in the cached graph
-      val project = cachedProjectGraph!!.allProjects.find { p ->
-        "${p.groupId}:${p.artifactId}" == selector
-      }
+      val project = projectBySelector[selector]
 
       if (project != null) {
         try {
