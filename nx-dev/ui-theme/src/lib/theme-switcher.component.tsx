@@ -75,7 +75,7 @@ export function ThemeSwitcher(): JSX.Element {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <ListboxOptions className="absolute -right-10 top-full z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
+            <ListboxOptions className="absolute -right-10 top-full z-50 mt-2 w-36 origin-top-right divide-y divide-zinc-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-zinc-800 dark:bg-zinc-900 dark:ring-white/5">
               {availableThemes.map((t) => (
                 <ListboxOption key={t.value} value={t.value} as={Fragment}>
                   {({ focus, selected }) => (
@@ -83,9 +83,9 @@ export function ThemeSwitcher(): JSX.Element {
                       className={cx(
                         'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
                         {
-                          'bg-slate-100 dark:bg-slate-800/60': focus,
-                          'text-blue-500 dark:text-sky-500': focus || selected,
-                          'text-slate-700 dark:text-slate-400': !focus,
+                          'bg-zinc-100 dark:bg-zinc-800/60': focus,
+                          'text-blue-500 dark:text-blue-500': focus || selected,
+                          'text-zinc-700 dark:text-zinc-400': !focus,
                         }
                       )}
                     >

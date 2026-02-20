@@ -8,6 +8,7 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as figures from 'figures';
+import * as pc from 'picocolors';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
 import { getLeafTasks } from '../task-graph-utils';
 
@@ -50,21 +51,27 @@ export function getTuiTerminalSummaryLifeCycle({
   const inProgressTasks = new Set<string>();
   const stoppedTasks = new Set<string>();
 
+  // Chunks accumulated progressively during task execution
+  const taskOutputChunks: Record<string, string[]> = {};
+  // Finalized output strings set on task completion — read by summary print functions
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToTaskStatus: Record<string, TaskStatus> = {};
 
   const taskIdsInTheOrderTheyStart: string[] = [];
 
+  const getTerminalOutput = (taskId: string): string =>
+    tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
+
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
-      tasksToTerminalOutputs[t.id] ??= '';
+      taskOutputChunks[t.id] ??= [];
       taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
-    tasksToTerminalOutputs[taskId] += output;
+    taskOutputChunks[taskId].push(output);
   };
 
   // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
@@ -88,7 +95,7 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (const { task, status } of taskResults) {
+    for (const { task, status, terminalOutput } of taskResults) {
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
 
@@ -106,6 +113,13 @@ export function getTuiTerminalSummaryLifeCycle({
           totalFailedTasks++;
           failedTasks.add(task.id);
           break;
+      }
+
+      // Store the final string directly — shares the same reference as
+      // TaskResultsLifeCycle, old chunks become GC-eligible
+      if (terminalOutput !== undefined) {
+        tasksToTerminalOutputs[task.id] = terminalOutput;
+        delete taskOutputChunks[task.id];
       }
     }
   };
@@ -162,7 +176,7 @@ export function getTuiTerminalSummaryLifeCycle({
     // above the summary, since run-one should print all task results.
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
+      const terminalOutput = getTerminalOutput(taskId);
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
@@ -196,11 +210,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         messageLines.push('');
         messageLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => messageLines.push(arg));
       }
@@ -238,11 +252,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         messageLines.push('');
         messageLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => messageLines.push(arg));
       }
@@ -307,7 +321,7 @@ export function getTuiTerminalSummaryLifeCycle({
     // First pass: Print task outputs and collect checklist lines
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
+      const terminalOutput = getTerminalOutput(taskId);
       // Task Status is null?
       if (!taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
@@ -388,7 +402,7 @@ export function getTuiTerminalSummaryLifeCycle({
       const successSummaryRows = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.green(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
       ];
 
@@ -399,11 +413,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         successSummaryRows.push('');
         successSummaryRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => successSummaryRows.push(arg));
       }
@@ -425,7 +439,7 @@ export function getTuiTerminalSummaryLifeCycle({
       const failureSummaryRows: string[] = [
         output.applyNxPrefix(
           'red',
-          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.red(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
       ];
 
@@ -436,11 +450,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         failureSummaryRows.push('');
         failureSummaryRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => failureSummaryRows.push(arg));
       }

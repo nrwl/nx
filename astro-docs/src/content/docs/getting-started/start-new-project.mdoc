@@ -1,77 +1,48 @@
 ---
-title: Start a new project with Nx
-description: Create a new Nx workspace manually with your favorite CLI or use the guided setup with presets for various technology stacks and configurations.
+title: Start a New Project
+description: Create a new Nx workspace with starter templates or via Nx Cloud in the browser.
 sidebar:
-  label: Start a new project
+  label: Start a New Project
   order: 3
 filter: 'type:Guides'
 ---
 
-When you start a new project with Nx, you have two options: manual or guided.
+Create a new Nx workspace using one of these options:
 
-## Option 1: Manual setup
+- **[Option 1: Create locally with templates](#option-1-create-locally-with-templates)** - Run a command to scaffold a new monorepo on your machine
+- **[Option 2: Create via Nx Cloud](#option-2-create-via-nx-cloud)** - Use the browser-based setup with CI/CD pre-configured
 
-In a nutshell, this means using your favorite CLI to create your initial project setup and then adding Nx to it.
-
-Let's take the example of an NPM workspace. Create a new root-level `package.json` like:
-
-```json
-// package.json
-{
-  "name": "my-workspace",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": ["packages/*", "apps/*"]
-}
-```
-
-Then you can add Nx to it by using:
-
-```shell
-nx@latest init
-```
-
-{% aside type="note" title="Global Installs" %}
-Make sure you have [Nx installed globally](/docs/getting-started/installation) or use `npx` if you're in a JavaScript environment
+{% aside type="note" title="Adding Nx to an existing project?" %}
+If you already have a project and want to add Nx to it, see [Add to an Existing Project](/docs/getting-started/start-with-existing-project) instead.
 {% /aside %}
 
-Nx will detect the underlying workspace configuration, ask you a couple of questions and install itself into the workspace. You can now [run tasks with Nx](/docs/features/run-tasks) and incrementally add functionality, like:
+## Option 1: Create Locally with Templates
 
-- [Configure caching](/docs/features/cache-task-results)
-- [Adding Nx plugins to help refine your workflows](/docs/plugin-registry)
-- [Optimizing your CI](/docs/guides/nx-cloud/setup-ci)
-
-## Option 2: Create a new workspace with presets
-
-Alternatively, you can choose a more guided approach by leveraging some of the presets Nx comes with.
-
-Run the following command to get started:
+Run the following command to create a new Nx workspace:
 
 ```shell
 npx create-nx-workspace@latest
 ```
 
-This interactive command will guide you through the setup process, allowing you to:
+This interactive command guides you through the setup:
 
-- **Choose your workspace name** - This will be the name of your root directory
-- **Select your preferred package manager** - npm, yarn, or pnpm
-- **Pick a preset** - Choose from [various technology stacks and configurations](/docs/reference/create-nx-workspace#presets)
-- **Configure additional options** - Such as styling solutions, testing frameworks, and more
+- **Workspace name** - The name of your root directory
+- **Template** - Choose from [various technology stacks](/docs/reference/create-nx-workspace#presets) (React, Angular, Node, etc.)
+- **Package manager** - npm, yarn, pnpm, or bun
+- **Additional options** - Styling, testing frameworks, and more depending on your template
 
-Choose a preset that matches your technology stack. This gives you a fully configured workspace.
+For a minimal setup, choose the **empty workspace** template (`--preset=ts`). This gives you a bare TypeScript monorepo that you can extend incrementally.
 
-You can also choose **an empty workspace preset** (`--preset=ts`) which sets up the bare minimum configuration for TypeScript and Nx. This allows you to add technologies and features incrementally over time as you need them.
-
-## Option 3: Get the complete Nx platform experience
+## Option 2: Create via Nx Cloud
 
 [![Nx Cloud onboarding](../../../assets/getting-started/nx-cloud-starting-screen.avif)](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)
 
-For the complete experience, you can also get [started directly from the Nx Cloud application](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project).
+[Create your workspace directly from Nx Cloud](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project) for a browser-based setup experience.
 
-This approach gives you a fully end-to-end development workflow right from the start, making it easy to get up and running when your project is in its initial phase.
-You'll get a fully working CI configuration that includes Nx Cloud's AI-powered features like **AI-powered self-healing CI** that automatically fixes common CI failures.
-This means you benefit from intelligent automation right from day one, without having to configure complex CI pipelines manually.
+This option gives you:
 
-As your project grows and scales, you'll have access to additional features like **remote caching** to speed up builds across your team, **distributed task execution with Nx Agents** to parallelize work across multiple machines, and **automatic test splitting** to optimize your CI pipeline performance.
+- A working CI configuration out of the box
+- [Remote caching](/docs/features/ci-features/remote-cache) enabled from the start
+- [Self-healing CI](/docs/features/ci-features/self-healing-ci) that automatically fixes common failures
 
-[Get started with the complete Nx platform experience →](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)
+[Get started with Nx Cloud →](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)

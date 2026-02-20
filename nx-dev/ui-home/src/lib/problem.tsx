@@ -6,7 +6,7 @@ export function Problem(): ReactElement {
   return (
     <section
       id="problem"
-      className="relative scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+      className="relative scroll-mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-10 flex transform-gpu justify-center overflow-hidden blur-3xl"

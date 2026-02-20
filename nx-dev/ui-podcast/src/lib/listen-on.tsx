@@ -35,7 +35,7 @@ export function ListenOn(): JSX.Element {
         return (
           <li
             key={platform.name}
-            className="inline-block cursor-pointer place-items-center rounded-2xl border border-slate-100 bg-white p-4 text-slate-600 transition-all hover:scale-[1.02] hover:text-slate-950 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-400 dark:hover:text-white"
+            className="inline-block cursor-pointer place-items-center rounded-2xl border border-zinc-100 bg-white p-4 text-zinc-600 transition-all hover:scale-[1.02] hover:text-zinc-950 dark:border-zinc-800/60 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-white"
           >
             <a
               href={platform.url}

@@ -9,7 +9,7 @@ export function Features(): ReactElement {
         Features
       </SectionHeading>
 
-      <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
+      <p className="mt-4 text-lg text-zinc-500 dark:text-zinc-400">
         The Nx Plugin for Java integrates seamlessly with your existing Gradle
         and Maven builds, adding powerful capabilities to your workflow.
       </p>
@@ -46,7 +46,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Distributed Task Execution"
           description="Run your project tasks across multiple machines, dramatically reducing build times for large repositories."
-          href="/ci/features/distribute-task-execution"
+          href="/docs/features/ci-features/distribute-task-execution"
           icon={
             <svg
               className="h-6 w-6"
@@ -86,7 +86,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Affected Targets"
           description="Run tasks only on projects affected by your changes, saving time and computing resources."
-          href="/ci/features/affected"
+          href="/docs/features/ci-features/affected"
           icon={
             <svg
               className="h-6 w-6"
@@ -114,7 +114,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Project Graph"
           description="Nx automatically infers your project graph from project's configuration, providing visualization and dependency analysis."
-          href="/features/explore-graph"
+          href="/docs/features/explore-graph"
           icon={
             <svg
               className="h-6 w-6"
@@ -160,7 +160,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Split E2E Tests"
           description="Automatically split your E2E tests for faster parallel execution in CI environments with Atomizer."
-          href="/ci/features/split-e2e-tasks"
+          href="/docs/features/ci-features/split-e2e-tasks"
           icon={
             <svg
               className="h-6 w-6"
@@ -202,7 +202,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Zero Configuration"
           description="Add Nx to your project in minutes with no changes to your existing setup required."
-          href="/nx-api/gradle/documents/overview"
+          href="/docs/technologies/java/gradle/introduction"
           icon={
             <svg
               className="h-6 w-6"
@@ -256,8 +256,8 @@ function FeatureCard({
     <a href={href} className="block h-full transform-gpu">
       <div
         className={cx(
-          'group relative h-full w-full overflow-hidden rounded-lg border border-slate-200 bg-white p-6',
-          'dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
+          'group relative h-full w-full overflow-hidden rounded-lg border border-zinc-200 bg-white p-6',
+          'dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
           'before:absolute before:inset-0 before:z-0 before:bg-gradient-to-br before:from-blue-50 before:to-transparent before:opacity-0 before:transition-opacity',
           'transition-all duration-300 ease-out',
           'hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/50',
@@ -265,11 +265,11 @@ function FeatureCard({
         )}
       >
         <div className="relative z-10">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:bg-slate-800 dark:text-blue-400 dark:group-hover:bg-blue-900">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:bg-zinc-800 dark:text-blue-400 dark:group-hover:bg-blue-900">
             {icon}
           </div>
           <h3 className="mb-2 text-lg font-medium">{title}</h3>
-          <p className="text-slate-500 dark:text-slate-400">{description}</p>
+          <p className="text-zinc-500 dark:text-zinc-400">{description}</p>
         </div>
       </div>
     </a>

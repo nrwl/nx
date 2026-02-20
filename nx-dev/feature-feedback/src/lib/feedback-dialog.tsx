@@ -93,10 +93,10 @@ function FeedbackDialog({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-slate-900">
+              <DialogPanel className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-zinc-900">
                 <DialogTitle
                   as="h3"
-                  className="bg-white p-4 text-center text-lg font-medium leading-6 text-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                  className="bg-white p-4 text-center text-lg font-medium leading-6 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
                 >
                   What is on your mind?
                   <button className={styles.closebutton} onClick={closeDialog}>
@@ -154,7 +154,7 @@ function FeedbackDialog({
                       htmlFor="idea"
                       tabIndex={0}
                       onKeyDown={(e) => keydownHandler(e)}
-                      className="inline-flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white p-5 text-gray-500 hover:bg-slate-50 focus:outline-none focus:ring-1 peer-checked:border-sky-500 peer-checked:text-sky-500 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800 dark:hover:text-gray-300 dark:peer-checked:text-sky-500"
+                      className="inline-flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white p-5 text-gray-500 hover:bg-zinc-50 focus:outline-none focus:ring-1 peer-checked:border-blue-500 peer-checked:text-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-400 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800 dark:hover:text-gray-300 dark:peer-checked:text-blue-500"
                     >
                       <div className="block">
                         <div className="w-full text-lg font-semibold">Idea</div>
@@ -242,10 +242,10 @@ function FeedbackDialog({
                         onClick={submitFeedback}
                         disabled={formDisabled}
                         className={cx(
-                          'rounded-md border border-slate-200 bg-white px-4 py-2 text-base font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400',
+                          'rounded-md border border-zinc-200 bg-white px-4 py-2 text-base font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400',
                           { 'cursor-not-allowed': formDisabled },
                           {
-                            'focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800':
+                            'focus-within:ring-blue-500 hover:bg-zinc-50 focus:z-10 focus:outline-none focus:ring-1 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800':
                               !formDisabled,
                           }
                         )}

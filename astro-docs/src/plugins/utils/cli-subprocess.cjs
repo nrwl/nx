@@ -18,6 +18,10 @@ require('ts-node').register({
 
 // TypeScript paths are now handled by pnpm workspaces, no need for tsconfig-paths
 
+const { examples: cliExamples } = importFresh(
+  join(workspaceRoot, 'packages/nx/src/command-line/examples')
+);
+
 // Inline command parser functions
 const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
 
@@ -42,6 +46,7 @@ async function parseCommand(name, command) {
         command.description || command.describe || command.desc || '',
       aliases: [],
       options: [],
+      examples: cliExamples[name] || [],
     };
   }
 
@@ -111,6 +116,7 @@ async function parseCommand(name, command) {
     aliases: command.aliases || [],
     options,
     subcommands: subcommands.length > 0 ? subcommands : undefined,
+    examples: cliExamples[name] || [],
   };
 }
 

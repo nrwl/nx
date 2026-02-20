@@ -1,11 +1,14 @@
+import { StringDecoder } from 'string_decoder';
+
 const VERY_END_CODE = 4;
 export const MESSAGE_END_SEQ =
   'NX_MSG_END' + String.fromCharCode(VERY_END_CODE);
 
 export function consumeMessagesFromSocket(callback: (message: string) => void) {
   let message = '';
+  const decoder = new StringDecoder('utf8');
   return (data) => {
-    const chunk = data.toString();
+    const chunk = decoder.write(data);
     message += chunk;
 
     // Check if accumulated message ends with MESSAGE_END_SEQ (not just the chunk)

@@ -14,7 +14,7 @@ import {
   SolutionsTopCallToAction,
 } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function EnterpriseSolutionsManagement(): ReactElement {
   const router = useRouter();
@@ -22,12 +22,12 @@ export function EnterpriseSolutionsManagement(): ReactElement {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/contact/sales',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       title: 'Talk to our team',
       children: 'Talk to our team',
       onClick: () =>
-        sendCustomEvent(
+        sendCustomEventViaGtm(
           'contact-sales-click',
           'scrolling-header-cta',
           'solutions-management'
@@ -51,7 +51,7 @@ export function EnterpriseSolutionsManagement(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

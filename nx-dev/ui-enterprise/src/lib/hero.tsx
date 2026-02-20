@@ -1,12 +1,12 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { WebinarSection } from './webinar-section';
 
 export function Hero(): ReactElement {
   return (
     <section className="relative overflow-hidden">
-      <div className="relative isolate h-[868px] border-b border-slate-200 dark:border-slate-800">
+      <div className="relative isolate h-[868px] border-b border-zinc-200 dark:border-zinc-800">
         <img
           alt="hero illustration"
           src="/images/enterprise/hero-light.avif"
@@ -49,10 +49,10 @@ export function Hero(): ReactElement {
               <ButtonLink
                 href="/enterprise/trial"
                 title="Request a free trial"
-                variant="primary"
+                variant="contrast"
                 size="default"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'request-trial-click',
                     'enterprise-hero',
                     'enterprise'
@@ -68,7 +68,7 @@ export function Hero(): ReactElement {
                 variant="secondary"
                 size="default"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'contact-sales-click',
                     'enterprise-hero',
                     'enterprise'

@@ -1,6 +1,6 @@
 # Nx Native (Rust Core) Development Guide
 
-This directory contains the core Nx functionality written in Rust, providing high-performance operations for the Nx build system.
+This directory contains the core Nx functionality written in Rust, providing high-performance operations for the Nx monorepo platform.
 
 ## Overview
 

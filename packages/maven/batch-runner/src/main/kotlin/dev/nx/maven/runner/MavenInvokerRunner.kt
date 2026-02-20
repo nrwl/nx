@@ -85,6 +85,11 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
             val result = executeSingleTask(taskId, results)
 
+            // Record build state for all batch projects BEFORE emitting result.
+            // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
+            // must be written first to ensure the cached outputs include fresh build state.
+            recordBuildStatesForBatchProjects(taskId)
+
             // Emit result to stderr for streaming to Nx
             emitResult(taskId, result)
 
@@ -132,9 +137,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       // Wait for all tasks to complete
       completionLatch.await()
-
-      // Record build states for all projects that had tasks executed
-      recordBuildStatesForExecutedTasks()
     } finally {
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
@@ -149,35 +151,29 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return results.toMap()
   }
 
+  /** All unique project selectors in the batch, computed once. */
+  private val allBatchProjectSelectors: Set<String> by lazy {
+    options.taskGraph?.tasks?.values
+      ?.map { it.target.project }
+      ?.toSet() ?: emptySet()
+  }
+
   /**
-   * Record build states for all unique projects that had tasks executed.
-   * This is called after all tasks complete to save the build state for future batches.
+   * Record build state for all projects in the batch.
+   * Called after each task execution but before emitting the result to Nx,
+   * ensuring nx-build-state.json is up-to-date when Nx caches the task's outputs.
+   *
+   * We record ALL batch projects (not just the current task's project) because
+   * a task in projectA can modify the Maven session state of projectB
+   * (e.g., adding source roots or classpath entries). The lastWrittenState cache
+   * in BuildStateRecorder ensures we only perform file I/O for projects whose
+   * state actually changed.
    */
-  private fun recordBuildStatesForExecutedTasks() {
+  private fun recordBuildStatesForBatchProjects(taskId: String) {
     try {
-      // Get NxMaven instance if available (only available with ResidentMavenExecutor)
-      val nxMaven = (mavenExecutor as? ResidentMavenExecutor)?.getNxMaven()
-
-      if (nxMaven == null) {
-        log.debug("NxMaven not available, skipping build state recording")
-        return
-      }
-
-      // Extract unique project selectors from executed tasks
-      val uniqueProjectSelectors = options.taskGraph?.tasks?.values
-        ?.map { it.target.project }
-        ?.toSet() ?: emptySet()
-
-      if (uniqueProjectSelectors.isEmpty()) {
-        log.debug("No projects to record build states for")
-        return
-      }
-
-      log.debug("📝 Preparing to record build states for ${uniqueProjectSelectors.size} unique projects")
-      log.debug("Projects: ${uniqueProjectSelectors.joinToString(", ")}")
-      nxMaven.recordBuildStates(uniqueProjectSelectors)
+      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(allBatchProjectSelectors)
     } catch (e: Exception) {
-      log.error("❌ Error recording build states: ${e.message}", e)
+      log.error("Error recording build states after task $taskId: ${e.message}", e)
     }
   }
 

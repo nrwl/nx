@@ -14,12 +14,11 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
     editUrl: false,
   }}
   headings={[]}
->
-</StarlightPage>
+/>
 
 <script>
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
-document.addEventListener('DOMContentLoaded', () => {
-  sendCustomEvent('custom_page_view', '404', window.location.pathname);
-});
+  import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
+  document.addEventListener('DOMContentLoaded', () => {
+    sendCustomEventViaGtm('custom_page_view', '404', window.location.pathname);
+  });
 </script>

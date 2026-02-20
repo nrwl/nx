@@ -1,23 +1,23 @@
+import { getDaemonProcessIdSync } from '../daemon/cache';
 import {
-  ProcessMetricsCollector,
-  ProcessMetadata,
-  ProcessMetrics,
-  MetricsUpdate,
-  SystemInfo,
-  Metadata,
   GroupInfo,
   GroupType,
+  Metadata,
+  MetricsUpdate,
+  ProcessMetadata,
+  ProcessMetrics,
+  ProcessMetricsCollector,
+  SystemInfo,
 } from '../native';
-import { getDaemonProcessIdSync } from '../daemon/cache';
 
 export type {
-  ProcessMetadata,
-  ProcessMetrics,
-  MetricsUpdate,
-  SystemInfo,
-  Metadata,
   GroupInfo,
   GroupType,
+  Metadata,
+  MetricsUpdate,
+  ProcessMetadata,
+  ProcessMetrics,
+  SystemInfo,
 };
 
 export type MetricsCallback = (event: MetricsUpdate) => void;
@@ -73,7 +73,7 @@ class ProcessMetricsService {
    */
   subscribe(callback: MetricsCallback): void {
     if (!this.collector) {
-      return;
+      throw new Error('Metrics collector not initialized');
     }
 
     try {

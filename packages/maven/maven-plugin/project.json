@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "install": {
-      "command": "for i in {1..5}; do ./mvnw install && break || sleep 10; done"
+      "command": "for i in {1..5}; do ./mvnw install -pl dev.nx.maven:nx-maven-plugin -am && break || sleep 10; done"
     },
     "_install": {
       "command": "node scripts/run-native-target.js install nx-maven-plugin"

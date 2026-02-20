@@ -24,7 +24,7 @@ export const SquareDottedPattern: FC<SVGProps<SVGSVGElement>> = (props) => (
             y={0}
             width={4}
             height={4}
-            className="text-slate-200 dark:text-slate-800"
+            className="text-zinc-200 dark:text-zinc-800"
             fill="currentColor"
           />
         </pattern>
@@ -56,7 +56,7 @@ export const SquareDottedPattern: FC<SVGProps<SVGSVGElement>> = (props) => (
             y={0}
             width={4}
             height={4}
-            className="text-slate-200 dark:text-slate-800"
+            className="text-zinc-200 dark:text-zinc-800"
             fill="currentColor"
           />
         </pattern>
@@ -88,7 +88,7 @@ export const SquareDottedPattern: FC<SVGProps<SVGSVGElement>> = (props) => (
             y={0}
             width={4}
             height={4}
-            className="text-slate-200 dark:text-slate-800"
+            className="text-zinc-200 dark:text-zinc-800"
             fill="currentColor"
           />
         </pattern>

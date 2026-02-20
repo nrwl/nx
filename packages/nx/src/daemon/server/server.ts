@@ -159,6 +159,16 @@ import {
   handleGetNxConsoleStatus,
   handleSetNxConsolePreferenceAndInstall,
 } from './handle-nx-console';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+  isHandleGetConfigureAiAgentsStatusMessage,
+  isHandleResetConfigureAiAgentsStatusMessage,
+} from '../message-types/configure-ai-agents';
+import {
+  handleGetConfigureAiAgentsStatus,
+  handleResetConfigureAiAgentsStatus,
+} from './handle-configure-ai-agents';
 import { deserialize, serialize } from 'v8';
 
 let performanceObserver: PerformanceObserver | undefined;
@@ -200,8 +210,9 @@ const server = createServer(async (socket) => {
   );
 
   socket.on('error', (e) => {
-    serverLogger.log('Socket error');
-    console.error(e);
+    serverLogger.log(`Socket error: ${e.message}`);
+    removeRegisteredFileWatcherSocket(socket);
+    removeRegisteredProjectGraphListenerSocket(socket);
   });
 
   socket.on('close', () => {
@@ -441,6 +452,20 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
       () => handleSetNxConsolePreferenceAndInstall(payload.preference),
+      mode
+    );
+  } else if (isHandleGetConfigureAiAgentsStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_CONFIGURE_AI_AGENTS_STATUS,
+      () => handleGetConfigureAiAgentsStatus(),
+      mode
+    );
+  } else if (isHandleResetConfigureAiAgentsStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      RESET_CONFIGURE_AI_AGENTS_STATUS,
+      () => handleResetConfigureAiAgentsStatus(),
       mode
     );
   } else {
@@ -755,6 +780,11 @@ export async function startServer(): Promise<Server> {
 
           // Kick off Nx Console check in background to prime the cache
           handleGetNxConsoleStatus().catch(() => {
+            // Ignore errors, this is a background operation
+          });
+
+          // Kick off AI agents outdated check in background to prime the cache
+          handleGetConfigureAiAgentsStatus().catch(() => {
             // Ignore errors, this is a background operation
           });
 

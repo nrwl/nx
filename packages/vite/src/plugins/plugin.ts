@@ -23,6 +23,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
+import type { ResolvedConfig } from 'vite';
 
 const pmc = getPackageManagerCommand();
 
@@ -214,11 +215,24 @@ async function buildViteTargets(
   } catch {
     // Plugin not installed or not needed, ignore
   }
+  // Workaround for race condition with vitest/node on Node 24+
+  // When multiple vitest.config files are processed in parallel, Node can throw:
+  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
+  // because it is not yet fully loaded.
+  // See: https://github.com/nrwl/nx/issues/34028
+  try {
+    const importVitestNode = () =>
+      new Function('return import("vitest/node")')();
+    await importVitestNode();
+  } catch {
+    // vitest/node not available or not needed, ignore
+  }
   const { resolveConfig } = await loadViteDynamicImport();
   const viteBuildConfig = await resolveConfig(
     {
       configFile: absoluteConfigFilePath,
       mode: 'development',
+      root: projectRoot,
     },
     'build'
   );
@@ -596,7 +610,7 @@ function serveStaticTarget(
 }
 
 function getOutputs(
-  viteBuildConfig: Record<string, any> | undefined,
+  viteBuildConfig: ResolvedConfig | undefined,
   projectRoot: string,
   workspaceRoot: string
 ): {
@@ -615,10 +629,12 @@ function getOutputs(
     'dist'
   );
 
-  const isBuildable =
+  const isBuildable = Boolean(
     build?.lib ||
-    build?.rollupOptions?.input ||
-    existsSync(join(workspaceRoot, projectRoot, 'index.html'));
+      viteBuildConfig?.builder?.buildApp ||
+      build?.rollupOptions?.input ||
+      existsSync(join(workspaceRoot, projectRoot, 'index.html'))
+  );
 
   const hasServeConfig = Boolean(server?.host || server?.port);
 

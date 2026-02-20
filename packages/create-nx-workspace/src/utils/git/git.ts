@@ -43,6 +43,19 @@ export function isGitAvailable(): boolean {
   }
 }
 
+/**
+ * Synchronously checks if GitHub CLI (gh) is available on the system.
+ * Returns true if gh command can be executed, false otherwise.
+ */
+export function isGhCliAvailable(): boolean {
+  try {
+    execSync('gh --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function getGitHubUsername(directory: string): Promise<string> {
   const result = await execAndWait('gh api user --jq .login', directory);
   const username = result.stdout.trim();
