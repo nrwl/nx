@@ -11,9 +11,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 
-// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
-// See: https://github.com/qmhc/unplugin-dts/issues/461
-xdescribe('Vite - TS solution setup', () => {
+describe('Vite - TS solution setup', () => {
   beforeAll(() => {
     newProject({
       packages: ['@nx/react', '@nx/js'],
