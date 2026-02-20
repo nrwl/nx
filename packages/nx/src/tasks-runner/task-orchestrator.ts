@@ -438,15 +438,28 @@ export class TaskOrchestrator {
       // has run, fresh outputs are on disk and we can compute correct hashes
       // so postRunSteps stores cache entries under the right key.
       if (staleHashTasks.size > 0) {
+        // Collect task IDs that need re-hashing
+        const taskIdsToRehash = new Set<string>();
         for (const result of results) {
           if (
             staleHashTasks.has(result.task.id) &&
             result.status === 'success'
           ) {
-            result.task.hash = undefined;
-            result.task.hashDetails = undefined;
+            taskIdsToRehash.add(result.task.id);
           }
         }
+
+        // Clear hashes on the ORIGINAL task objects in batch.taskGraph so
+        // hashTasks (which filters out tasks that already have a hash) will
+        // actually re-hash them with the now-fresh dependency outputs.
+        for (const taskId of taskIdsToRehash) {
+          const original = batch.taskGraph.tasks[taskId];
+          if (original) {
+            original.hash = undefined;
+            original.hashDetails = undefined;
+          }
+        }
+
         await hashTasks(
           this.hasher,
           this.projectGraph,
@@ -454,6 +467,17 @@ export class TaskOrchestrator {
           this.batchEnv,
           this.taskDetails
         );
+
+        // Sync fresh hashes from the originals back to the result copies
+        for (const result of results) {
+          if (taskIdsToRehash.has(result.task.id)) {
+            const original = batch.taskGraph.tasks[result.task.id];
+            if (original) {
+              result.task.hash = original.hash;
+              result.task.hashDetails = original.hashDetails;
+            }
+          }
+        }
       }
     }
 
