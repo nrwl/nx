@@ -307,10 +307,14 @@ export class TaskOrchestrator {
     // Identify tasks whose hashes may be based on stale dependency outputs.
     // When a task with depsOutputs is co-batched with its dependency, the hash
     // was computed using outputs from a previous run that may no longer be valid.
-    const staleHashTasks = await this.identifyTasksWithStaleDepsOutputs(
-      batch.taskGraph
-    );
-    this.batchStaleHashTasks.set(batch, staleHashTasks);
+    try {
+      const staleHashTasks = await this.identifyTasksWithStaleDepsOutputs(
+        batch.taskGraph
+      );
+      this.batchStaleHashTasks.set(batch, staleHashTasks);
+    } catch {
+      // If stale detection fails, proceed without it (conservative: skip no cache reads)
+    }
 
     await Promise.all(
       Object.values(batch.taskGraph.tasks).map((task) =>
@@ -1252,7 +1256,13 @@ export class TaskOrchestrator {
       const deps = taskGraph.dependencies[task.id];
       if (deps.length === 0) continue;
 
-      const { depsOutputs } = getInputs(task, this.projectGraph, this.nxJson);
+      let depsOutputs;
+      try {
+        ({ depsOutputs } = getInputs(task, this.projectGraph, this.nxJson));
+      } catch {
+        // Target may not have inputs configured (e.g. inferred targets)
+        continue;
+      }
       if (depsOutputs.length === 0) continue;
 
       // Check each co-batched dependency's outputs
