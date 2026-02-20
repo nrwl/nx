@@ -548,5 +548,10 @@
     "name": "@berenddeboer/nx-biome",
     "description": "A self-inferring Nx plugin for using biome to format and lint projects. Supports --batch",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-biome"
+  },
+  {
+    "name": "@fluffjs/nx",
+    "description": "Fluff.js - a very lightweight web framework and component system with a syntax which will be familiar to those coming from Angular.",
+    "url": "https://github.com/fluffjs/fluff/tree/master/packages/nx"
   }
 ]
