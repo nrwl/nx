@@ -167,6 +167,29 @@ impl DependencyViewState {
                 ))
             }
             _ => None,
+            KeyCode::PageUp => {
+                if has_scrollable_content && self.scroll_offset > 0 {
+                    let page = viewport_height.saturating_sub(2).max(1);
+                    for _ in 0..page {
+                        self.scroll_up();
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
+            KeyCode::PageDown => {
+                if has_scrollable_content && self.scroll_offset < max_scroll {
+                    let page = viewport_height.saturating_sub(2).max(1);
+                    for _ in 0..page {
+                        self.scroll_down(viewport_height);
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false,
         }
     }
 }

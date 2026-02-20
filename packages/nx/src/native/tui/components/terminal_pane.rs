@@ -89,6 +89,19 @@ impl TerminalPaneData {
                     pty_mut.scroll_to_bottom();
                     return Ok(None);
                 }
+                // Handle PageUp/PageDown for full-page scrolling when not in interactive mode
+                KeyCode::PageUp if !self.is_interactive => {
+                    let (rows, _) = pty_mut.get_dimensions();
+                    let page = (rows as u8).saturating_sub(2).max(1);
+                    pty_mut.scroll_up(page);
+                    return Ok(None);
+                }
+                KeyCode::PageDown if !self.is_interactive => {
+                    let (rows, _) = pty_mut.get_dimensions();
+                    let page = (rows as u8).saturating_sub(2).max(1);
+                    pty_mut.scroll_down(page);
+                    return Ok(None);
+                }
                 // Handle ctrl+u and ctrl+d for scrolling when not in interactive mode
                 KeyCode::Char('u')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
