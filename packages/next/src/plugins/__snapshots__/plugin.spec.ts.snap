@@ -72,7 +72,179 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "command": "pnpm exec nx watch --projects my-app --includeDependentProjects -- pnpm exec nx build-deps my-app",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/next/plugin integrated projects with output export and custom distDir should prefer distDir over output export 1`] = `
+[
+  [
+    "my-app/next.config.js",
+    {
+      "projects": {
+        "my-app": {
+          "root": "my-app",
+          "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "my-build": {
+              "cache": true,
+              "command": "next build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+                "tty": false,
+              },
+              "outputs": [
+                "{workspaceRoot}/my-app/custom-dist/!(cache)/**/*",
+                "{workspaceRoot}/my-app/custom-dist/!(cache)",
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
+            },
+            "my-serve": {
+              "command": "next dev",
+              "continuous": true,
+              "options": {
+                "cwd": "my-app",
+              },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
+            },
+            "my-serve-static": {
+              "command": "next start",
+              "continuous": true,
+              "dependsOn": [
+                "my-build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "my-start": {
+              "command": "next start",
+              "continuous": true,
+              "dependsOn": [
+                "my-build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects my-app --includeDependentProjects -- pnpm exec nx build-deps my-app",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/next/plugin integrated projects with output export should use out/ as output dir when output is export 1`] = `
+[
+  [
+    "my-app/next.config.js",
+    {
+      "projects": {
+        "my-app": {
+          "root": "my-app",
+          "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "my-build": {
+              "cache": true,
+              "command": "next build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+                "tty": false,
+              },
+              "outputs": [
+                "{workspaceRoot}/my-app/out/!(cache)/**/*",
+                "{workspaceRoot}/my-app/out/!(cache)",
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
+            },
+            "my-serve": {
+              "command": "next dev",
+              "continuous": true,
+              "options": {
+                "cwd": "my-app",
+              },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
+            },
+            "my-serve-static": {
+              "command": "next start",
+              "continuous": true,
+              "dependsOn": [
+                "my-build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "my-start": {
+              "command": "next start",
+              "continuous": true,
+              "dependsOn": [
+                "my-build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects my-app --includeDependentProjects -- pnpm exec nx build-deps my-app",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -158,7 +330,93 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects next --includeDependentProjects -- npx nx build-deps next",
+              "command": "pnpm exec nx watch --projects @nx/nx-source --includeDependentProjects -- pnpm exec nx build-deps @nx/nx-source",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/next/plugin root projects with output export should use out/ as output dir when output is export 1`] = `
+[
+  [
+    "next.config.js",
+    {
+      "projects": {
+        ".": {
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "next build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+                "tty": false,
+              },
+              "outputs": [
+                "{projectRoot}/out/!(cache)/**/*",
+                "{projectRoot}/out/!(cache)",
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "dev": {
+              "command": "next dev",
+              "continuous": true,
+              "options": {
+                "cwd": ".",
+              },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
+            },
+            "serve-static": {
+              "command": "next start",
+              "continuous": true,
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "start": {
+              "command": "next start",
+              "continuous": true,
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects root --includeDependentProjects -- pnpm exec nx build-deps root",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
