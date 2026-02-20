@@ -1,3 +1,5 @@
+jest.mock('eslint', () => ({}));
+
 jest.mock('eslint/use-at-your-own-risk', () => ({
   LegacyESLint: jest.fn(),
 }));
