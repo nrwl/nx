@@ -338,7 +338,7 @@ console.log('Build complete');
 
     // Second run - should hit cache and restore without EEXIST error
     const secondRun = runCLI(`build ${projectName}`);
-    expect(secondRun).toContain('local cache');
+    expect(secondRun).toContain('existing outputs match the cache, left as is');
   });
 
   it('should use consider filesets when hashing', async () => {

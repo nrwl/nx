@@ -1143,7 +1143,7 @@ export class TaskOrchestrator {
     if (this.daemon?.enabled()) {
       return this.daemon.outputsHashesMatch(outputs, hash);
     }
-    if (!this.outputFingerprints) return false;
+    if (!this.outputFingerprints || !outputs?.length) return false;
     const stored = this.outputFingerprints.get(hash);
     if (!stored) return false;
     return hashTaskOutput(workspaceRoot, outputs) === stored;
@@ -1153,7 +1153,7 @@ export class TaskOrchestrator {
     if (this.daemon?.enabled()) {
       await this.daemon.recordOutputsHash(task.outputs, task.hash);
     }
-    if (this.outputFingerprints) {
+    if (this.outputFingerprints && task.outputs?.length && task.hash) {
       const fingerprint = hashTaskOutput(workspaceRoot, task.outputs);
       this.outputFingerprints.record(task.hash, fingerprint);
     }
