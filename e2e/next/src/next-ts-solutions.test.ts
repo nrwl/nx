@@ -9,9 +9,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
-// See: https://github.com/qmhc/unplugin-dts/issues/461
-xdescribe('Next TS Solutions', () => {
+describe('Next TS Solutions', () => {
   let proj: string;
 
   beforeAll(() => {
