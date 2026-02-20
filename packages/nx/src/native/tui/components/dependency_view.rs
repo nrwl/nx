@@ -166,7 +166,6 @@ impl DependencyViewState {
                     "This task hasn't started yet. Keyboard shortcuts will be available once the task begins running.".to_string(),
                 ))
             }
-            _ => None,
             KeyCode::PageUp => {
                 if has_scrollable_content && self.scroll_offset > 0 {
                     let page = viewport_height.saturating_sub(2).max(1);
@@ -189,7 +188,7 @@ impl DependencyViewState {
                     false
                 }
             }
-            _ => false,
+            _ => None,
         }
     }
 }
