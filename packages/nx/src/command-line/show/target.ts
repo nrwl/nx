@@ -604,7 +604,29 @@ function renderTargetInfo(
 
   if (data.inputs && data.inputs.length > 0) {
     console.log(`${c.bold('Inputs')}:`);
-    for (const input of data.inputs) {
+    const sortedInputs = [...data.inputs].sort((a, b) => {
+      const aIsString = typeof a === 'string';
+      const bIsString = typeof b === 'string';
+
+      // Objects come after strings
+      if (!aIsString && bIsString) return 1;
+      if (aIsString && !bIsString) return -1;
+
+      // Both are strings
+      if (aIsString && bIsString) {
+        const aIsDep = a.startsWith('^');
+        const bIsDep = b.startsWith('^');
+
+        // Dependency inputs (^) come after regular inputs
+        if (aIsDep && !bIsDep) return 1;
+        if (!aIsDep && bIsDep) return -1;
+
+        return a.localeCompare(b);
+      }
+
+      return 0;
+    });
+    for (const input of sortedInputs) {
       console.log(
         `  - ${typeof input === 'string' ? input : JSON.stringify(input)}`
       );

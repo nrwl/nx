@@ -73,11 +73,12 @@ Options:
   args: ["--node-env=production"]
   command: "webpack-cli build"
 Inputs:
-  - default
+  - !{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
   - !{projectRoot}/.eslintrc.json
   - !{projectRoot}/eslint.config.mjs
-  - !{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
+  - !{projectRoot}/src/test-setup.[jt]s
   - !{projectRoot}/tsconfig.spec.json
+  - default
   - ^production
   - {"externalDependencies":["webpack-cli"]}
 Outputs:
