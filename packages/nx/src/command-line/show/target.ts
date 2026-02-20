@@ -672,10 +672,13 @@ function renderInputs(
     );
   }
 
-  printList('External dependencies', data.external);
-  printList('Runtime inputs', data.runtime);
-  printList('Environment variables', data.environment);
-  printList(`Files (${data.files.length})`, data.files.concat(data.depOutputs));
+  printList('External dependencies', [...data.external].sort());
+  printList('Runtime inputs', [...data.runtime].sort());
+  printList('Environment variables', [...data.environment].sort());
+  printList(
+    `Files (${data.files.length})`,
+    [...data.files, ...data.depOutputs].sort()
+  );
 }
 
 function renderCheckInput(data: ReturnType<typeof resolveCheckFromInputs>) {
@@ -695,7 +698,7 @@ function renderCheckInput(data: ReturnType<typeof resolveCheckFromInputs>) {
         String(data.containedInputFiles.length)
       )} input file(s) for ${c.cyan(data.project)}:${c.green(data.target)}`
     );
-    for (const f of data.containedInputFiles) console.log(`  ${f}`);
+    for (const f of [...data.containedInputFiles].sort()) console.log(`  ${f}`);
   } else {
     console.log(
       `${c.red('✗')} ${c.bold(data.value)} is ${c.red(
