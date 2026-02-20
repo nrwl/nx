@@ -621,7 +621,7 @@ function renderTargetInfo(
         if (aIsDep && !bIsDep) return 1;
         if (!aIsDep && bIsDep) return -1;
 
-        return a.localeCompare(b);
+        return a < b ? -1 : a > b ? 1 : 0;
       }
 
       return 0;
