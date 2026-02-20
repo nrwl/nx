@@ -1522,6 +1522,8 @@ Violation detected in:
       `
         import '@mycompany/myapp';
         import('@mycompany/myapp');
+        import('myapp');
+        import('myapp/subpath');
       `,
       {
         nodes: {
@@ -1555,9 +1557,11 @@ Violation detected in:
     );
 
     const message = 'Imports of apps are forbidden';
-    expect(failures.length).toEqual(2);
+    expect(failures.length).toEqual(4);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
+    expect(failures[2].message).toEqual(message);
+    expect(failures[3].message).toEqual(message);
   });
 
   it('should error on importing an e2e project', () => {
