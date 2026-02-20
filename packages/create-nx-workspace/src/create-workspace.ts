@@ -158,6 +158,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       ...options,
       preset,
       workspaceGlobs,
+      // We want new workspaces to have a short URL to finish Cloud onboarding, but not have nxCloudId set up since it will be handled as part of the onboarding flow.
+      // This is skipping nxCloudId for the "custom" flow.
+      nxCloud: 'skip',
     });
 
     // Mark workspace as ready for SIGINT handler
