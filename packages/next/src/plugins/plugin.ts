@@ -23,6 +23,7 @@ import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
+import type { NextConfig } from 'next';
 import { readdirSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -253,20 +254,29 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
 }
 
 async function getOutputs(projectRoot, nextConfig) {
-  let dir = '.next';
   const { PHASE_PRODUCTION_BUILD } = require('next/constants');
+  let resolvedConfig: Pick<NextConfig, 'distDir' | 'output'> | undefined;
 
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
-    const configResult = await Promise.resolve(
+    resolvedConfig = await Promise.resolve(
       nextConfig(PHASE_PRODUCTION_BUILD, { defaultConfig: {} })
     );
-    if (configResult?.distDir) {
-      dir = configResult?.distDir;
-    }
-  } else if (typeof nextConfig === 'object' && nextConfig?.distDir) {
-    // If nextConfig is an object, directly use its 'distDir' property.
-    dir = nextConfig.distDir;
+  } else if (typeof nextConfig === 'object') {
+    resolvedConfig = nextConfig;
+  }
+
+  // Mirrors Next.js' own `hasCustomExportOutput` check. With `output: 'export'`,
+  // `next build` treats a custom `distDir` as the export directory and falls back
+  // to `out` otherwise, reusing `.next` internally for intermediate artifacts.
+  let dir: string;
+  if (resolvedConfig?.output === 'export') {
+    dir =
+      resolvedConfig.distDir && resolvedConfig.distDir !== '.next'
+        ? resolvedConfig.distDir
+        : 'out';
+  } else {
+    dir = resolvedConfig?.distDir || '.next';
   }
 
   if (projectRoot === '.') {
