@@ -1,12 +1,13 @@
 image: node:20
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 <%= workflowName %>:
   interruptible: true
   only:
-    - main
+    - <%= mainBranch %>
     - merge_requests
   script:
     <% if(packageManager == 'pnpm'){ %>
@@ -24,8 +25,8 @@ variables:
     - <%= packageManagerInstall %><% if(hasCypress){ %>
     - <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
     - <%= packageManagerPrefix %> playwright install --with-deps<% } %><% if(!useRunMany){ %>
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}<% } %>
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
     # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>
