@@ -73,7 +73,7 @@ describe('cache', () => {
       'read the output from the cache'
     );
 
-    expectCached(outputWithBuildApp2Cached, [myapp2]);
+    expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
     // --------------------------------------------
@@ -89,7 +89,9 @@ describe('cache', () => {
 
     // build individual project with caching
     const individualBuildWithCache = runCLI(`build ${myapp1}`);
-    expect(individualBuildWithCache).toContain('local cache');
+    expect(individualBuildWithCache).toContain(
+      'existing outputs match the cache, left as is'
+    );
 
     // skip caching when building individual projects
     const individualBuildWithSkippedCache = runCLI(
