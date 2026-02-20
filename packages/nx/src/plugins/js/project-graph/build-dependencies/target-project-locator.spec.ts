@@ -1277,9 +1277,9 @@ describe('TargetProjectLocator', () => {
     );
 
     it.each`
-      exports                                                      | importPath
-      ${'dist/index.js'}                                           | ${'app1'}
-      ${{ '.': 'dist/index.js' }}                                  | ${'app1/subpath'}
+      exports                     | importPath
+      ${'dist/index.js'}          | ${'app1'}
+      ${{ '.': 'dist/index.js' }} | ${'app1/subpath'}
     `(
       'should find app "$importPath" as "app1" project when exports="$exports"',
       ({ exports, importPath }) => {

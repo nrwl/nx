@@ -1592,11 +1592,11 @@ Violation detected in:
               targets: {},
               metadata: {
                 js: {
-                  packageName: "myapp",
+                  packageName: 'myapp',
                   isInPackageManagerWorkspaces: true,
-                  packageMain: "dist/main.js"
-                }
-              }
+                  packageMain: 'dist/main.js',
+                },
+              },
             },
           },
         },
