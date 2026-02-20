@@ -1515,7 +1515,7 @@ Violation detected in:
     expect(failures.length).toEqual(1);
   });
 
-  it('should error on importing an app (in tsconig paths)', () => {
+  it('should error on importing an app (in tsconfig paths)', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -1560,7 +1560,7 @@ Violation detected in:
     expect(failures[1].message).toEqual(message);
   });
 
-  it('should error on importing an app (not in tsconig paths)', () => {
+  it('should error on importing an app (not in tsconfig paths)', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
