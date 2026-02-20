@@ -1,7 +1,7 @@
 import { Argv, CommandModule } from 'yargs';
-import { WatchArguments } from './watch';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { parseCSV, withVerbose } from '../yargs-utils/shared-options';
+import { WatchArguments } from './watch';
 
 export const yargsWatchCommand: CommandModule = {
   command: 'watch',
@@ -52,6 +52,19 @@ function withWatchOptions(yargs: Argv) {
       description: 'Run the command once before watching for changes.',
       alias: 'i',
       default: false,
+    })
+    .option('executionStrategy', {
+      type: 'string',
+      description:
+        "Execution strategy to use when running commands in watch mode. 'batch' will queue up changes and run the command once after changes have settled. 'persistent' will start a persistent process for each project and restart it when changes are detected.",
+      choices: ['batch', 'persistent'],
+      default: 'batch',
+    })
+    .option('maxParallel', {
+      type: 'number',
+      description:
+        "Maximum number of concurrent persistent processes. Only applies when 'executionStrategy' is 'persistent'. Default: 3.",
+      default: 3,
     })
     .conflicts({
       all: 'projects',
