@@ -73,7 +73,7 @@ describe('cache', () => {
       'read the output from the cache'
     );
 
-    expectCached(outputWithBuildApp2Cached, [myapp2]);
+    expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
     // --------------------------------------------
@@ -89,7 +89,9 @@ describe('cache', () => {
 
     // build individual project with caching
     const individualBuildWithCache = runCLI(`build ${myapp1}`);
-    expect(individualBuildWithCache).toContain('local cache');
+    expect(individualBuildWithCache).toContain(
+      'existing outputs match the cache, left as is'
+    );
 
     // skip caching when building individual projects
     const individualBuildWithSkippedCache = runCLI(
@@ -190,7 +192,9 @@ describe('cache', () => {
 
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
-    expect(rerunWithUntouchedOutputs).toContain('local cache');
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache, left as is'
+    );
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -211,7 +215,9 @@ describe('cache', () => {
 
     // Rerun
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain('local cache');
+    expect(rerunWithNewUnrelatedFile).toContain(
+      'existing outputs match the cache, left as is'
+    );
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -334,7 +340,7 @@ console.log('Build complete');
 
     // Second run - should hit cache and restore without EEXIST error
     const secondRun = runCLI(`build ${projectName}`);
-    expect(secondRun).toContain('local cache');
+    expect(secondRun).toContain('existing outputs match the cache, left as is');
   });
 
   it('should use consider filesets when hashing', async () => {
