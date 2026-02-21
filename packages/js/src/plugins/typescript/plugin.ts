@@ -555,7 +555,7 @@ function buildTscTargets(
           context.workspaceRoot,
           /* emitDeclarationOnly */ true
         ),
-        syncGenerators: ['@nx/js:typescript-sync'],
+        syncGenerators: ['@nx/js:typescript-sync', '@nx/js:deps-sync'],
         metadata: {
           technologies: ['typescript'],
           description: 'Runs type-checking for the project.',
@@ -611,7 +611,7 @@ function buildTscTargets(
         // should be false for build target, but providing it just in case is set to true
         tsConfig.options.emitDeclarationOnly
       ),
-      syncGenerators: ['@nx/js:typescript-sync'],
+      syncGenerators: ['@nx/js:typescript-sync', '@nx/js:deps-sync'],
       metadata: {
         technologies: ['typescript'],
         description: 'Builds the project with `tsc`.',

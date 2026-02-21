@@ -260,15 +260,19 @@ async function createWebpackTargets(
   if (isTsSolutionSetup) {
     targets[options.buildTargetName].syncGenerators = [
       '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
     ];
     targets[options.serveTargetName].syncGenerators = [
       '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
     ];
     targets[options.previewTargetName].syncGenerators = [
       '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
     ];
     targets[options.serveStaticTargetName].syncGenerators = [
       '@nx/js:typescript-sync',
+      '@nx/js:deps-sync',
     ];
   }
 

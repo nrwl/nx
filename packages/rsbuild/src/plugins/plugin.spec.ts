@@ -231,6 +231,6 @@ describe('@nx/rsbuild', () => {
     ]);
     expect(
       nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toEqual(['@nx/js:typescript-sync']);
+    ).toEqual(['@nx/js:typescript-sync', '@nx/js:deps-sync']);
   });
 });
