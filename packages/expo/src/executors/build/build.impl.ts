@@ -65,6 +65,7 @@ function runCliBuild(
           ...(options.local ? { YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' } : {}),
           ...process.env,
         },
+        windowsHide: true,
       }
     );
 

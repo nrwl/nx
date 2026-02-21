@@ -49,6 +49,7 @@ export async function buildStaticRemotes(
           // Ensure that webpack serve env var is not passed to static remotes
           WEBPACK_SERVE: 'false',
         },
+        windowsHide: true,
       }
     );
 

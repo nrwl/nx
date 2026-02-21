@@ -16,6 +16,7 @@ function getLatestCommitHash(): string {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 30000, // 30 second timeout
+      windowsHide: true,
     });
     const hash = output.split('\t')[0];
     if (!hash || hash.length < 10) {
@@ -50,6 +51,7 @@ function cloneRepo(targetPath: string): void {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 120000, // 2 minute timeout for clone
+      windowsHide: true,
     });
 
     // Remove .git directory after clone

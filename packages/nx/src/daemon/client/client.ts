@@ -1314,7 +1314,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: false,
+        windowsHide: true,
         shell: false,
         env: {
           ...DAEMON_ENV_OVERRIDABLE_SETTINGS,

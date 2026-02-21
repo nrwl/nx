@@ -56,7 +56,7 @@ function nodeProcess(
   return new Promise<void>((res, rej) => {
     let cp = exec(
       command,
-      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: false },
+      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: true },
       (error) => {
         if (error) {
           rej(error);

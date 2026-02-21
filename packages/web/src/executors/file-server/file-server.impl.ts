@@ -181,7 +181,7 @@ export default async function* fileServerExecutor(
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
             shell: true,
-            windowsHide: false,
+            windowsHide: true,
           });
         } catch {
           throw new Error(
@@ -246,6 +246,7 @@ export default async function* fileServerExecutor(
       FORCE_COLOR: 'true',
       ...process.env,
     },
+    windowsHide: true,
   });
 
   const processExitListener = () => {
