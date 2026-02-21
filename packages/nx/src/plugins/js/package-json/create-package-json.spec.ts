@@ -750,7 +750,7 @@ describe('createPackageJson', () => {
           }
         })
       );
-      const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
+      const consoleWarnSpy = jest.spyOn(process.stderr, 'write');
       spies.push(consoleWarnSpy);
       spies.push(
         jest
