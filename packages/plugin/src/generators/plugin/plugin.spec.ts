@@ -340,6 +340,22 @@ describe('NxPlugin Plugin Generator', () => {
       const projects = getProjects(tree);
       expect(projects.has('my-plugin-e2e')).toBe(false);
     });
+
+    it('should generate e2e project with jest', async () => {
+      await pluginGenerator(tree, getSchema({ e2eTestRunner: 'jest' }));
+      const projects = getProjects(tree);
+      expect(projects.has('my-plugin-e2e')).toBe(true);
+      const e2eProject = projects.get('my-plugin-e2e');
+      expect(e2eProject.targets.e2e.executor).toBe('@nx/jest:jest');
+    });
+
+    it('should generate e2e project with vitest', async () => {
+      await pluginGenerator(tree, getSchema({ e2eTestRunner: 'vitest' }));
+      const projects = getProjects(tree);
+      expect(projects.has('my-plugin-e2e')).toBe(true);
+      const e2eProject = projects.get('my-plugin-e2e');
+      expect(e2eProject.targets.e2e.executor).toBe('@nx/vitest:test');
+    });
   });
 
   describe('TS solution setup', () => {
