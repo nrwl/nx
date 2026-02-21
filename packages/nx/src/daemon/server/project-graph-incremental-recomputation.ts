@@ -41,7 +41,11 @@ import {
   ProjectConfigurationsError,
   isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
+import {
+  getPlugins,
+  getPluginsSeparated,
+  SeparatedPlugins,
+} from '../../project-graph/plugins/get-plugins';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -97,11 +101,11 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
     // reset the wait time
     waitPeriod = 100;
     await resetInternalStateIfNxDepsMissing();
-    const plugins = await getPlugins();
+    const separatedPlugins = await getPluginsSeparated();
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
-          processFilesAndCreateAndSerializeProjectGraph(plugins);
+          processFilesAndCreateAndSerializeProjectGraph(separatedPlugins);
         serverLogger.log(
           'No files changed, but no in-memory cached project graph found. Recomputing it...'
         );
@@ -115,7 +119,7 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
         `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
       );
       cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(plugins);
+        processFilesAndCreateAndSerializeProjectGraph(separatedPlugins);
     }
     const result = await cachedSerializedProjectGraphPromise;
 
@@ -207,7 +211,9 @@ export function addUpdatedAndDeletedFiles(
       }
 
       cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
+        processFilesAndCreateAndSerializeProjectGraph(
+          await getPluginsSeparated()
+        );
       const { projectGraph, sourceMaps, error } =
         await cachedSerializedProjectGraphPromise;
 
@@ -294,7 +300,7 @@ async function processCollectedUpdatedAndDeletedFiles(
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
-  plugins: LoadedNxPlugin[]
+  separatedPlugins: SeparatedPlugins
 ): Promise<SerializedProjectGraph> {
   const myGeneration = ++recomputationGeneration;
 
@@ -331,7 +337,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     try {
       projectConfigurationsResult = await retrieveProjectConfigurations(
-        plugins,
+        separatedPlugins,
         workspaceRoot,
         nxJson
       );

@@ -703,7 +703,7 @@ async function createContext(
 
   const plugins = await getOnlyDefaultPlugins(tempFs.tempDir);
   const { projects, projectRootMap } = await retrieveProjectConfigurations(
-    plugins,
+    { specifiedPlugins: [], defaultPlugins: plugins },
     tempFs.tempDir,
     nxJson
   );
