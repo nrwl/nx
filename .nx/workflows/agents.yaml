@@ -63,6 +63,12 @@ common-init-steps: &common-init-steps
       git config --global user.name "Test Test"
 
 launch-templates:
+  linux-medium:
+    resource-class: 'docker_linux_amd64/medium+'
+    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
+    env: *common-env-vars
+    init-steps: *common-init-steps
+
   linux-large:
     resource-class: 'docker_linux_amd64/large'
     image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
