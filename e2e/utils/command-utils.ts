@@ -445,9 +445,11 @@ export function runCLI(
 
     const r = stripVTControlCharacters(logs);
 
+    runCLI.lastExitCode = 0;
     return r;
   } catch (e) {
     if (opts.silenceError) {
+      runCLI.lastExitCode = (e.status ?? 1) as number;
       return stripVTControlCharacters(e.stdout + e.stderr);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
@@ -455,6 +457,7 @@ export function runCLI(
     }
   }
 }
+runCLI.lastExitCode = 0 as number;
 
 export function runLernaCLI(
   command: string,
