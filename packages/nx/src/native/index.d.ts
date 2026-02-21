@@ -47,8 +47,16 @@ export declare class FileLock {
 }
 
 export declare class HashPlanInspector {
-  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>)
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
+  /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
+  /**
+   * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
+   * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
+   * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
+   * file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+   */
+  inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
 
 export declare class HashPlanner {
