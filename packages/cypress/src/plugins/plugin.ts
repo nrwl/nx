@@ -8,9 +8,7 @@ import {
   normalizePath,
   type NxJsonConfiguration,
   type ProjectConfiguration,
-  readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -19,6 +17,10 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import {
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname, join, relative } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -29,20 +31,6 @@ export interface CypressPluginOptions {
   openTargetName?: string;
   componentTestingTargetName?: string;
   ciComponentTestingTargetName?: string;
-}
-
-function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(cachePath: string, results: CypressTargets) {
-  writeJsonFile(cachePath, results);
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
@@ -67,7 +55,8 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
       workspaceDataDirectory,
       `cypress-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const pluginCache = readPluginCache<CypressTargets>(cachePath);
+    const targetsCache = pluginCache.data;
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -77,7 +66,7 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      safeWritePluginCache(cachePath, pluginCache);
     }
   },
 ];
@@ -88,7 +77,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: CypressTargets
+  targetsCache: Record<string, CypressTargets>
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
