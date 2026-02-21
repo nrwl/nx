@@ -393,6 +393,95 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
+      it('should add polygraph tool permissions when writeNxCloudRules is true', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+          writeNxCloudRules: true,
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.permissions.allow).toEqual([
+          'mcp__plugin_nx_nx-mcp__cloud_polygraph_delegate',
+          'mcp__plugin_nx_nx-mcp__cloud_child_status',
+        ]);
+      });
+
+      it('should NOT add polygraph tool permissions when writeNxCloudRules is false', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+          writeNxCloudRules: false,
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.permissions).toBeUndefined();
+      });
+
+      it('should preserve existing permissions.allow entries when adding polygraph tools', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+          writeNxCloudRules: true,
+        };
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            permissions: {
+              allow: ['some_other_tool'],
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.permissions.allow).toEqual([
+          'some_other_tool',
+          'mcp__plugin_nx_nx-mcp__cloud_polygraph_delegate',
+          'mcp__plugin_nx_nx-mcp__cloud_child_status',
+        ]);
+      });
+
+      it('should preserve existing permissions.deny when adding polygraph tools', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+          writeNxCloudRules: true,
+        };
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            permissions: {
+              deny: ['dangerous_tool'],
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.permissions.deny).toEqual(['dangerous_tool']);
+        expect(config.permissions.allow).toEqual([
+          'mcp__plugin_nx_nx-mcp__cloud_polygraph_delegate',
+          'mcp__plugin_nx_nx-mcp__cloud_child_status',
+        ]);
+      });
+
       it('should NOT write to .mcp.json for claude (MCP is provided by plugin)', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
