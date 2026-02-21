@@ -9,6 +9,7 @@ import {
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
 } from './running-tasks';
+import { needsShellQuoting } from '../../utils/shell-quoting';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {
@@ -394,17 +395,24 @@ function filterPropKeysFromUnParsedOptions(
 
 function wrapArgIntoQuotesIfNeeded(arg: string): string {
   if (arg.includes('=')) {
-    const [key, value] = arg.split('=');
+    // Split only on first '=' to handle values containing '='
+    const eqIndex = arg.indexOf('=');
+    const key = arg.substring(0, eqIndex);
+    const value = arg.substring(eqIndex + 1);
     if (
       key.startsWith('--') &&
-      value.includes(' ') &&
+      needsShellQuoting(value) &&
       !(value[0] === "'" || value[0] === '"')
     ) {
-      return `${key}="${value}"`;
+      // Escape any existing double quotes in the value
+      const escaped = value.replace(/"/g, '\\"');
+      return `${key}="${escaped}"`;
     }
     return arg;
-  } else if (arg.includes(' ') && !(arg[0] === "'" || arg[0] === '"')) {
-    return `"${arg}"`;
+  } else if (needsShellQuoting(arg) && !(arg[0] === "'" || arg[0] === '"')) {
+    // Escape any existing double quotes in the value
+    const escaped = arg.replace(/"/g, '\\"');
+    return `"${escaped}"`;
   } else {
     return arg;
   }
