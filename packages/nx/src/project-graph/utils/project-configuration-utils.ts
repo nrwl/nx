@@ -6,16 +6,29 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../config/workspace-json-project-json';
-import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
+import { NX_PREFIX } from '../../utils/logger';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { ProjectNameInNodePropsManager } from './project-configuration/name-substitution-manager';
+import {
+  recordSourceMapKeysByIndex,
+  targetConfigurationsSourceMapKey,
+  targetOptionSourceMapKey,
+  targetSourceMapKey,
+} from './project-configuration/source-maps';
 
 import { minimatch } from 'minimatch';
+import { existsSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { existsSync } from 'node:fs';
 
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isGlobPattern } from '../../utils/globs';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -33,20 +46,14 @@ import {
   ProjectWithNoNameError,
   WorkspaceValidityError,
 } from '../error-types';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
-import {
-  getExecutorInformation,
-  parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { toProjectName } from '../../config/to-project-name';
 
-export type SourceInformation = [file: string | null, plugin: string];
-export type ConfigurationSourceMaps = Record<
-  string,
-  Record<string, SourceInformation>
->;
+import type {
+  ConfigurationSourceMaps,
+  SourceInformation,
+} from './project-configuration/source-maps';
+export type { ConfigurationSourceMaps, SourceInformation };
 
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Record<string, ProjectConfiguration>,
@@ -56,7 +63,9 @@ export function mergeProjectConfigurationIntoRootMap(
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean
-): void {
+): {
+  nameChanged: boolean;
+} {
   project.root = project.root === '' ? '.' : project.root;
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -196,7 +205,7 @@ export function mergeProjectConfigurationIntoRootMap(
       const target = project.targets?.[targetName];
 
       if (sourceMap) {
-        sourceMap[`targets.${targetName}`] = sourceInformation;
+        sourceMap[targetSourceMapKey(targetName)] = sourceInformation;
       }
 
       const normalizedTarget = skipTargetNormalization
@@ -232,6 +241,13 @@ export function mergeProjectConfigurationIntoRootMap(
 
   projectRootMap[updatedProjectConfiguration.root] =
     updatedProjectConfiguration;
+
+  return {
+    nameChanged:
+      matchingProject?.name &&
+      project.name &&
+      matchingProject.name !== project.name,
+  };
 }
 
 export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
@@ -248,35 +264,43 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
     const existingValue = matchingMetadata?.[metadataKey];
 
     if (Array.isArray(value) && Array.isArray(existingValue)) {
-      for (const item of [...value]) {
-        const newLength = result[metadataKey].push(item);
-        if (sourceMap) {
-          sourceMap[`${baseSourceMapPath}.${metadataKey}.${newLength - 1}`] =
-            sourceInformation;
-        }
+      const startIndex = result[metadataKey].length;
+      result[metadataKey].push(...value);
+      if (sourceMap) {
+        recordSourceMapKeysByIndex(
+          sourceMap,
+          `${baseSourceMapPath}.${metadataKey}`,
+          result[metadataKey],
+          sourceInformation,
+          startIndex
+        );
       }
     } else if (Array.isArray(value) && existingValue === undefined) {
       result[metadataKey] ??= value;
       if (sourceMap) {
         sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
-      }
-      for (let i = 0; i < value.length; i++) {
-        if (sourceMap) {
-          sourceMap[`${baseSourceMapPath}.${metadataKey}.${i}`] =
-            sourceInformation;
-        }
+        recordSourceMapKeysByIndex(
+          sourceMap,
+          `${baseSourceMapPath}.${metadataKey}`,
+          value,
+          sourceInformation
+        );
       }
     } else if (typeof value === 'object' && typeof existingValue === 'object') {
       for (const key in value) {
         const existingValue = matchingMetadata?.[metadataKey]?.[key];
 
         if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
-          for (const item of value[key]) {
-            const i = result[metadataKey][key].push(item);
-            if (sourceMap) {
-              sourceMap[`${baseSourceMapPath}.${metadataKey}.${key}.${i - 1}`] =
-                sourceInformation;
-            }
+          const startIndex = result[metadataKey][key].length;
+          result[metadataKey][key].push(...value[key]);
+          if (sourceMap) {
+            recordSourceMapKeysByIndex(
+              sourceMap,
+              `${baseSourceMapPath}.${metadataKey}.${key}`,
+              result[metadataKey][key],
+              sourceInformation,
+              startIndex
+            );
           }
         } else {
           result[metadataKey][key] = value[key];
@@ -296,10 +320,12 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
             sourceMap[`${baseSourceMapPath}.${metadataKey}.${k}`] =
               sourceInformation;
             if (Array.isArray(value[k])) {
-              for (let i = 0; i < value[k].length; i++) {
-                sourceMap[`${baseSourceMapPath}.${metadataKey}.${k}.${i}`] =
-                  sourceInformation;
-              }
+              recordSourceMapKeysByIndex(
+                sourceMap,
+                `${baseSourceMapPath}.${metadataKey}.${k}`,
+                value[k],
+                sourceInformation
+              );
             }
           }
         }
@@ -505,6 +531,7 @@ function mergeCreateNodesResults(
   performance.mark('createNodes:merge - start');
   const projectRootMap: Record<string, ProjectConfiguration> = {};
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const projectNameManager = new ProjectNameInNodePropsManager();
   const configurationSourceMaps: Record<
     string,
     Record<string, SourceInformation>
@@ -518,22 +545,29 @@ function mergeCreateNodesResults(
 
     const sourceInfo: SourceInformation = [file, pluginName];
 
-    for (const node in projectNodes) {
+    for (const root in projectNodes) {
       // Handles `{projects: {'libs/foo': undefined}}`.
-      if (!projectNodes[node]) {
+      if (!projectNodes[root]) {
         continue;
       }
       const project = {
-        root: node,
-        ...projectNodes[node],
+        root: root,
+        ...projectNodes[root],
       };
+
       try {
-        mergeProjectConfigurationIntoRootMap(
+        const { nameChanged } = mergeProjectConfigurationIntoRootMap(
           projectRootMap,
           project,
           configurationSourceMaps,
           sourceInfo
         );
+        // If this project's name changed, we mark the root as dirty
+        // in the name manager. This tells it to later apply any substitutions
+        // linked to the project at this root.
+        if (nameChanged) {
+          projectNameManager.markDirty(root);
+        }
       } catch (error) {
         errors.push(
           new MergeNodesError({
@@ -545,10 +579,18 @@ function mergeCreateNodesResults(
         );
       }
     }
+    // This iterates over the plugin's returned project results
+    // and registers substitutors for any fields that reference
+    // another project by name under that target project's root.
+    projectNameManager.registerSubstitutorsForNodeResults(
+      projectNodes,
+      projectRootMap
+    );
     Object.assign(externalNodes, pluginExternalNodes);
   }
 
   try {
+    projectNameManager.applySubstitutions(projectRootMap);
     validateAndNormalizeProjectRootMap(
       workspaceRoot,
       projectRootMap,
@@ -929,7 +971,7 @@ export function mergeTargetDefaultWithTargetDefinition(
           targetName
         );
         for (const optionKey in normalizedDefaults) {
-          const sourceMapKey = `targets.${targetName}.options.${optionKey}`;
+          const sourceMapKey = targetOptionSourceMapKey(targetName, optionKey);
           if (
             targetDefinition.options[optionKey] === undefined ||
             targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
@@ -943,7 +985,7 @@ export function mergeTargetDefaultWithTargetDefinition(
       case 'configurations': {
         if (!result.configurations) {
           result.configurations = {};
-          sourceMap[`targets.${targetName}.configurations`] = [
+          sourceMap[targetConfigurationsSourceMapKey(targetName)] = [
             'nx.json',
             'nx/target-defaults',
           ];
@@ -951,8 +993,9 @@ export function mergeTargetDefaultWithTargetDefinition(
         for (const configuration in targetDefault.configurations) {
           if (!result.configurations[configuration]) {
             result.configurations[configuration] = {};
-            sourceMap[`targets.${targetName}.configurations.${configuration}`] =
-              ['nx.json', 'nx/target-defaults'];
+            sourceMap[
+              targetConfigurationsSourceMapKey(targetName, configuration)
+            ] = ['nx.json', 'nx/target-defaults'];
           }
           const normalizedConfigurationDefaults = resolveNxTokensInOptions(
             targetDefault.configurations[configuration],
@@ -960,7 +1003,11 @@ export function mergeTargetDefaultWithTargetDefinition(
             targetName
           );
           for (const configurationKey in normalizedConfigurationDefaults) {
-            const sourceMapKey = `targets.${targetName}.configurations.${configuration}.${configurationKey}`;
+            const sourceMapKey = targetConfigurationsSourceMapKey(
+              targetName,
+              configuration,
+              configurationKey
+            );
             if (
               targetDefinition.configurations?.[configuration]?.[
                 configurationKey
