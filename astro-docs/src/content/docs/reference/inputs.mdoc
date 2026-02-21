@@ -60,8 +60,8 @@ When specifying a directory as an input, you must use a trailing slash or a glob
   "inputs": [
     "{projectRoot}/src/", // ✓ Matches all files in src (note the trailing slash)
     "{projectRoot}/src/**/*", // ✓ Matches all files in src using glob
-    "{projectRoot}/src" // ✗ Does NOT match files - treated as a file path
-  ]
+    "{projectRoot}/src", // ✗ Does NOT match files - treated as a file path
+  ],
 }
 ```
 
