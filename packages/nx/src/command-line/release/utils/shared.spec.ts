@@ -78,19 +78,16 @@ describe('shared', () => {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: null,
           },
           bar: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: null,
           },
           baz: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: null,
           },
         };
         const userCommitMessage =
@@ -255,6 +252,303 @@ describe('shared', () => {
           ]
         `);
       });
+
+      it('should interpolate docker version for a single fixed group when newVersion is null (docker-only release)', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'my-group',
+            projectsRelationship: 'fixed',
+            projects: ['app-a', 'app-b'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: 'v{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['app-a', 'app-b'])
+        );
+        const versionData = {
+          'app-a': {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+          'app-b': {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+        };
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish v{version}'
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish v2024.01.abc123",
+          ]
+        `);
+      });
+
+      it('should interpolate docker version for a single independent project with {projectName} when newVersion is null', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: '__default__',
+            projectsRelationship: 'independent',
+            projects: ['my-app'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['my-app'])
+        );
+        const versionData = {
+          'my-app': {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.02.def456',
+          },
+        };
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish {projectName} v{version}'
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish my-app v2024.02.def456",
+          ]
+        `);
+      });
+
+      it('should include docker-only independent projects as bullet points in multi-group commits', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'one',
+            projectsRelationship: 'independent',
+            projects: ['foo'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+          {
+            name: 'two',
+            projectsRelationship: 'fixed',
+            projects: ['bar'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: 'v{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        const releaseGroupToFilteredProjects = new Map()
+          .set(releaseGroups[0], new Set(['foo']))
+          .set(releaseGroups[1], new Set(['bar']));
+        const versionData = {
+          foo: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.03.ghi789',
+          },
+          bar: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+          },
+        };
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish v{version}'
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: foo 2024.03.ghi789",
+            "- release-group: two 1.0.1",
+          ]
+        `);
+      });
+
+      it('should include docker-only fixed groups as bullet points in multi-group commits', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'one',
+            projectsRelationship: 'independent',
+            projects: ['foo'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+          {
+            name: 'two',
+            projectsRelationship: 'fixed',
+            projects: ['bar', 'baz'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: 'v{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        const releaseGroupToFilteredProjects = new Map()
+          .set(releaseGroups[0], new Set(['foo']))
+          .set(releaseGroups[1], new Set(['bar', 'baz']));
+        const versionData = {
+          foo: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+          },
+          bar: {
+            currentVersion: '2.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.04.jkl012',
+          },
+          baz: {
+            currentVersion: '2.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.04.jkl012',
+          },
+        };
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish v{version}'
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: foo 1.0.1",
+            "- release-group: two 2024.04.jkl012",
+          ]
+        `);
+      });
+
+      it('should prefer newVersion over dockerVersion when both are present', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'my-group',
+            projectsRelationship: 'fixed',
+            projects: ['app-a'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: false,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: 'v{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['app-a'])
+        );
+        const versionData = {
+          'app-a': {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+        };
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish v{version}'
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish v1.1.0",
+          ]
+        `);
+      });
     });
   });
 
@@ -295,13 +589,11 @@ describe('shared', () => {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: null,
-            dockerVersion: null,
           },
           b: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: null,
-            dockerVersion: null,
           },
         }
       );
