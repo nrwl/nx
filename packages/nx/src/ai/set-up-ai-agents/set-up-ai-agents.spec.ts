@@ -393,6 +393,45 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
+      it('should preserve existing ref in nx-claude-plugins source', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        // Create existing config with a custom ref
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            extraKnownMarketplaces: {
+              'nx-claude-plugins': {
+                source: {
+                  source: 'github',
+                  repo: 'nrwl/nx-ai-agents-config',
+                  ref: 'experimental',
+                },
+              },
+            },
+            enabledPlugins: {
+              'nx@nx-claude-plugins': true,
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.extraKnownMarketplaces['nx-claude-plugins']).toEqual({
+          source: {
+            source: 'github',
+            repo: 'nrwl/nx-ai-agents-config',
+            ref: 'experimental',
+          },
+        });
+      });
+
       it('should NOT write to .mcp.json for claude (MCP is provided by plugin)', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
