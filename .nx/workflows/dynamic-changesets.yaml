@@ -94,15 +94,6 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 6
 
-  # TODO(altan): remove when scheduling issue resolved
-  - projects:
-      - nx-dev
-    targets:
-      - prebuild-banner
-    run-on:
-      - agent: linux-extra-large
-        parallelism: 6
-
   - targets:
       - "*"
     run-on:
