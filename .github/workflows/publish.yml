@@ -174,7 +174,7 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21
+                apk add --no-cache curl xz openjdk21 build-base lld
 
                 # Set up Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -193,6 +193,10 @@ jobs:
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
+
+                # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
+                GCC_DIR=\$(dirname \$(find /usr/lib/gcc -name crtbeginS.o | head -1))
+                export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
 
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
@@ -230,6 +234,9 @@ jobs:
               node --version
               npm --version
 
+              # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
+              export CFLAGS="${CFLAGS} -fuse-ld=lld --gcc-toolchain=/usr/aarch64-unknown-linux-gnu"
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
 
@@ -260,7 +267,7 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21
+                apk add --no-cache curl xz openjdk21 build-base lld
 
                 # Set up Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -279,6 +286,10 @@ jobs:
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
+
+                # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
+                GCC_DIR=\$(dirname \$(find /aarch64-linux-musl-cross/lib/gcc -name crtbeginS.o | head -1))
+                export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
 
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
