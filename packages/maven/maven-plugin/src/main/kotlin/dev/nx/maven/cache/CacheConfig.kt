@@ -10,8 +10,11 @@ data class Parameter(val name: String, val glob: String?)
 data class MojoConfig(
     val inputProperties: Set<String>? = null,
     val inputParameters: Set<Parameter>? = null,
-    val outputParameters: Set<Parameter>? = null
+    val outputParameters: Set<Parameter>? = null,
+    val dependentTaskOutputs: Set<DependentTaskOutput>? = null
 )
+
+data class DependentTaskOutput(val path: String, val transitive: Boolean = true)
 
 /**
  * Simple data types for managing Maven plugin cache configuration.
@@ -107,6 +110,9 @@ data class CacheConfig(
                         Parameter("testClassesDirectory", null),
                         Parameter("suiteXmlFiles", null),
                     ),
+                    dependentTaskOutputs = setOf(
+                        DependentTaskOutput("**/*", transitive = true),
+                    ),
                     outputParameters = setOf(
                         Parameter("reportsDirectory", null),
                     )
@@ -118,6 +124,9 @@ data class CacheConfig(
                         Parameter("testSourceDirectory", null),
                         Parameter("suiteXmlFiles", null),
                     ),
+                    dependentTaskOutputs = setOf(
+                        DependentTaskOutput("**/*", transitive = true),
+                    ),
                     outputParameters = setOf(
                         Parameter("summaryFile", null),
                     )
@@ -127,6 +136,9 @@ data class CacheConfig(
                         Parameter("summaryFile", null),
                         Parameter("summaryFiles", null),
                         Parameter("testClassesDirectory", null),
+                    ),
+                    dependentTaskOutputs = setOf(
+                        DependentTaskOutput("**/*", transitive = true),
                     ),
                     outputParameters = emptySet()
                 ),

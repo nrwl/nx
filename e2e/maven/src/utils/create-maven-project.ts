@@ -155,6 +155,7 @@ export async function createMavenProject(
     '.mvn/wrapper/maven-wrapper.properties',
     readFile('app/.mvn/wrapper/maven-wrapper.properties')
   );
+  updateFile('.gitignore', readFile('.gitignore') + '\ntarget');
 
   chmodSync(join(cwd, 'mvnw'), 0o755);
   chmodSync(join(cwd, 'mvnw.cmd'), 0o755);
