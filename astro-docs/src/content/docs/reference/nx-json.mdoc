@@ -470,7 +470,21 @@ Release tag configuration now uses a nested `releaseTag` object. Old flat proper
 | **requireSemver**        | boolean | `false`                                                           | Whether to require that all tags match semantic versioning                                                   |
 | **strictPreid**          | boolean | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                              |
 | **preferDockerVersion**  | boolean | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                               |
-| **checkAllBranchesWhen** | string  | undefined                                                         | Branch to check when resolving current versions from git tags                                                |
+| **checkAllBranchesWhen** | boolean \| string[]  | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
+
+#### Branch Resolution for Git Tags
+
+The `checkAllBranchesWhen` option controls how Nx resolves existing git tags to determine the current version of your projects.
+
+By default, Nx checks for matching tags on the current branch. If no tags are found, it falls back to checking all branches.
+
+| Value | Behavior |
+| --- | --- |
+| `true` | Always check all branches for the latest matching tag |
+| `false` | Only check the current branch (no fallback to all branches) |
+| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/isaacs/minimatch). Otherwise, use the default behavior |
+
+This option is useful when release tags may exist on multiple branches. Setting `checkAllBranchesWhen` to `true` or to a list of branch patterns ensures Nx finds the latest tag regardless of which branch it was created on.
 
 #### Tag Pattern Syntax
 
@@ -501,7 +515,7 @@ Example patterns and their results:
       "requireSemver": true,
       "strictPreid": true,
       "preferDockerVersion": false,
-      "checkAllBranchesWhen": "main",
+      "checkAllBranchesWhen": ["main", "release/*"],
     },
   },
 }
@@ -518,7 +532,7 @@ Example patterns and their results:
     "releaseTagPatternRequireSemver": true,
     "releaseTagPatternStrictPreid": true,
     "releaseTagPatternPreferDockerVersion": false,
-    "releaseTagPatternCheckAllBranchesWhen": "main",
+    "releaseTagPatternCheckAllBranchesWhen": ["main", "release/*"],
   },
 }
 ```
