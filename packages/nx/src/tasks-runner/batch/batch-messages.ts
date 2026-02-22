@@ -24,7 +24,6 @@ export interface RunTasksMessage {
   executorName: string;
   projectGraph: ProjectGraph;
   batchTaskGraph: TaskGraph;
-  fullTaskGraph: TaskGraph;
 }
 
 export interface CompleteTaskMessage {

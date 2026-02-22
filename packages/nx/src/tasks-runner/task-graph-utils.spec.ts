@@ -2,6 +2,7 @@ import '../internal-testing-utils/mock-fs';
 
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
+  createMinimalTaskGraph,
   findCycle,
   findCycles,
   makeAcyclic,
@@ -310,6 +311,188 @@ describe('task graph utils', () => {
       };
       validateNoAtomizedTasks(taskGraph as any, projectGraph as any);
       expect(mockProcessExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('createMinimalTaskGraph', () => {
+    it('should return only the specified task when it has no dependencies', () => {
+      const taskGraph: TaskGraph = {
+        roots: ['a:build', 'b:build'],
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+          'b:build': {
+            id: 'b:build',
+            target: { project: 'b', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+        },
+        dependencies: {
+          'a:build': [],
+          'b:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+        },
+      };
+
+      const result = createMinimalTaskGraph(taskGraph, 'a:build');
+
+      expect(Object.keys(result.tasks)).toEqual(['a:build']);
+      expect(result.dependencies).toEqual({ 'a:build': [] });
+      expect(result.continuousDependencies).toEqual({ 'a:build': [] });
+      expect(result.roots).toEqual(['a:build']);
+    });
+
+    it('should include direct dependencies but not transitive ones', () => {
+      const taskGraph: TaskGraph = {
+        roots: ['c:build'],
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+          'b:build': {
+            id: 'b:build',
+            target: { project: 'b', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+          'c:build': {
+            id: 'c:build',
+            target: { project: 'c', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+        },
+        dependencies: {
+          'a:build': ['b:build'],
+          'b:build': ['c:build'],
+          'c:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+          'c:build': [],
+        },
+      };
+
+      const result = createMinimalTaskGraph(taskGraph, 'a:build');
+
+      // Should include a:build and its direct dep b:build, but NOT c:build
+      expect(Object.keys(result.tasks).sort()).toEqual(['a:build', 'b:build']);
+      expect(result.dependencies['a:build']).toEqual(['b:build']);
+      expect(result.dependencies['b:build']).toEqual([]);
+      expect(result.roots).toEqual(['b:build']);
+    });
+
+    it('should include continuous dependencies', () => {
+      const taskGraph: TaskGraph = {
+        roots: ['a:build'],
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+          'b:serve': {
+            id: 'b:serve',
+            target: { project: 'b', target: 'serve' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+        },
+        dependencies: {
+          'a:build': [],
+          'b:serve': [],
+        },
+        continuousDependencies: {
+          'a:build': ['b:serve'],
+          'b:serve': [],
+        },
+      };
+
+      const result = createMinimalTaskGraph(taskGraph, 'a:build');
+
+      expect(Object.keys(result.tasks).sort()).toEqual(['a:build', 'b:serve']);
+      expect(result.continuousDependencies['a:build']).toEqual(['b:serve']);
+      expect(result.continuousDependencies['b:serve']).toEqual([]);
+    });
+
+    it('should return an empty graph for a non-existent task', () => {
+      const taskGraph: TaskGraph = {
+        roots: ['a:build'],
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+        },
+        dependencies: { 'a:build': [] },
+        continuousDependencies: { 'a:build': [] },
+      };
+
+      const result = createMinimalTaskGraph(taskGraph, 'nonexistent:build');
+
+      expect(result.tasks).toEqual({});
+      expect(result.roots).toEqual([]);
+      expect(result.dependencies).toEqual({});
+      expect(result.continuousDependencies).toEqual({});
+    });
+
+    it('should dramatically reduce graph size for large task graphs', () => {
+      // Simulate a large monorepo with many projects
+      const tasks: Record<string, any> = {};
+      const dependencies: Record<string, string[]> = {};
+      const continuousDependencies: Record<string, string[]> = {};
+
+      // Create 100 tasks where task-0 depends on task-1, task-1 depends on task-2, etc.
+      for (let i = 0; i < 100; i++) {
+        const id = `project-${i}:build`;
+        tasks[id] = {
+          id,
+          target: { project: `project-${i}`, target: 'build' },
+          overrides: {},
+          outputs: [],
+          parallelism: true,
+        };
+        dependencies[id] = i < 99 ? [`project-${i + 1}:build`] : [];
+        continuousDependencies[id] = [];
+      }
+
+      const taskGraph: TaskGraph = {
+        roots: ['project-99:build'],
+        tasks,
+        dependencies,
+        continuousDependencies,
+      };
+
+      const result = createMinimalTaskGraph(taskGraph, 'project-0:build');
+
+      // Should only contain 2 tasks (project-0 and its direct dep project-1), not all 100
+      expect(Object.keys(result.tasks)).toHaveLength(2);
+      expect(result.tasks['project-0:build']).toBeDefined();
+      expect(result.tasks['project-1:build']).toBeDefined();
+      expect(result.tasks['project-2:build']).toBeUndefined();
     });
   });
 

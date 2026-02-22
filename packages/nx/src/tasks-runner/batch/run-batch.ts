@@ -35,8 +35,7 @@ function getBatchExecutor(
 async function runTasks(
   executorName: string,
   projectGraph: ProjectGraph,
-  batchTaskGraph: TaskGraph,
-  fullTaskGraph: TaskGraph
+  batchTaskGraph: TaskGraph
 ) {
   const input: Record<string, any> = {};
   const projectsConfigurations =
@@ -54,7 +53,7 @@ async function runTasks(
     nxJsonConfiguration,
     isVerbose: false,
     projectGraph,
-    taskGraph: fullTaskGraph,
+    taskGraph: batchTaskGraph,
   };
   for (const task of tasks) {
     const projectConfiguration =
@@ -118,8 +117,7 @@ process.on('message', async (message: BatchMessage) => {
       const results = await runTasks(
         message.executorName,
         message.projectGraph,
-        message.batchTaskGraph,
-        message.fullTaskGraph
+        message.batchTaskGraph
       );
       process.send({
         type: BatchMessageType.CompleteBatchExecution,

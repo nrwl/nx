@@ -45,7 +45,6 @@ export class ForkedProcessTaskRunner {
   public async forkProcessForBatch(
     { executorName, taskGraph: batchTaskGraph }: Batch,
     projectGraph: ProjectGraph,
-    fullTaskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
   ): Promise<BatchProcess> {
     const count = Object.keys(batchTaskGraph.tasks).length;
@@ -90,7 +89,6 @@ export class ForkedProcessTaskRunner {
       executorName,
       projectGraph,
       batchTaskGraph,
-      fullTaskGraph,
     });
 
     return cp;

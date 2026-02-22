@@ -235,6 +235,58 @@ class DependingOnNonParallelContinuousTaskError extends Error {
   }
 }
 
+/**
+ * Creates a minimal task graph containing only the specified task and its
+ * direct dependencies. This is used to avoid sending the entire (potentially
+ * 140MB+) task graph over IPC to forked child processes.
+ *
+ * Most executors only need to know about their own task and immediate
+ * dependencies — sending the full graph is wasteful and causes severe
+ * serialization overhead in large monorepos (2000+ projects).
+ */
+export function createMinimalTaskGraph(
+  taskGraph: TaskGraph,
+  taskId: string
+): TaskGraph {
+  const task = taskGraph.tasks[taskId];
+  if (!task) {
+    // Fallback: return an empty task graph if the task doesn't exist
+    return {
+      roots: [],
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+    };
+  }
+
+  const directDeps = taskGraph.dependencies[taskId] || [];
+  const continuousDeps = taskGraph.continuousDependencies[taskId] || [];
+  const allRelatedTaskIds = new Set([taskId, ...directDeps, ...continuousDeps]);
+
+  const tasks: Record<string, Task> = {};
+  const dependencies: Record<string, string[]> = {};
+  const continuousDependencies: Record<string, string[]> = {};
+
+  for (const id of allRelatedTaskIds) {
+    if (taskGraph.tasks[id]) {
+      tasks[id] = taskGraph.tasks[id];
+    }
+    // For the primary task, keep its direct dependencies.
+    // For dependency tasks, set empty arrays (we don't need their transitive deps).
+    dependencies[id] =
+      id === taskId ? directDeps.filter((d) => taskGraph.tasks[d]) : [];
+    continuousDependencies[id] =
+      id === taskId ? continuousDeps.filter((d) => taskGraph.tasks[d]) : [];
+  }
+
+  const roots = Object.keys(dependencies).filter(
+    (id) =>
+      dependencies[id].length === 0 && continuousDependencies[id].length === 0
+  );
+
+  return { roots, tasks, dependencies, continuousDependencies };
+}
+
 export function getLeafTasks(taskGraph: TaskGraph): Set<string> {
   const reversed = reverseTaskGraph(taskGraph);
   const leafTasks = new Set<string>();

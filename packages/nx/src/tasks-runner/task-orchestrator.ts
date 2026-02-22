@@ -46,6 +46,7 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
+import { createMinimalTaskGraph } from './task-graph-utils';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 
 export class TaskOrchestrator {
@@ -440,7 +441,6 @@ export class TaskOrchestrator {
         await this.forkedProcessTaskRunner.forkProcessForBatch(
           batch,
           this.projectGraph,
-          this.taskGraph,
           env
         );
 
@@ -777,7 +777,7 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput,
             pipeOutput,
-            taskGraph: this.taskGraph,
+            taskGraph: createMinimalTaskGraph(this.taskGraph, task.id),
             env,
             disablePseudoTerminal,
           })
@@ -785,7 +785,7 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput,
             pipeOutput,
-            taskGraph: this.taskGraph,
+            taskGraph: createMinimalTaskGraph(this.taskGraph, task.id),
             env,
           });
 
