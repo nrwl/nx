@@ -9,6 +9,7 @@ import { NxArgs } from '../utils/command-line-utils';
 import { DaemonClient } from '../daemon/client/client';
 import { cacheDir } from '../utils/cache-directory';
 import { readFile, writeFile, mkdir, rename, readdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import { CachedResult } from '../native';
 
@@ -25,6 +26,15 @@ export abstract class RemoteCacheV2 {
       retrieve: async (hash, cacheDirectory) => {
         const res = await cache.retrieve(hash, cacheDirectory);
         if (res) {
+          // Validate that the cache directory actually exists on disk.
+          // A V1 remote cache might report success based on a database
+          // lookup even though the backing files were evicted by
+          // maxCacheSize cleanup on another machine or process.
+          const hashDir = join(cacheDirectory, hash);
+          if (!existsSync(hashDir)) {
+            return null;
+          }
+
           const [terminalOutput, oldTerminalOutput, code] = await Promise.all([
             readFile(
               join(cacheDirectory, hash, 'terminalOutputs'),
@@ -89,6 +99,14 @@ export abstract class RemoteCacheV2 {
     terminalOutput: string,
     code: number
   ): Promise<boolean>;
+
+  /**
+   * Optional method to remove a cache entry from the remote cache.
+   * Implementations should remove both the cached files and any database
+   * records for the given hash to keep the remote cache in sync when local
+   * cache entries are evicted (e.g. due to maxCacheSize limits).
+   */
+  remove?(hash: string, cacheDirectory: string): Promise<boolean>;
 }
 
 export interface DefaultTasksRunnerOptions {

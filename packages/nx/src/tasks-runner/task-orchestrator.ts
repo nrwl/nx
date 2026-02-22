@@ -1,5 +1,5 @@
 import { defaultMaxListeners } from 'events';
-import { writeFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -319,6 +319,31 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
+
+    // Defense-in-depth: for remote cache results that were expected to
+    // restore file outputs, verify that the outputs path actually exists.
+    // This catches cases where the remote cache DB was out of sync with
+    // the actual cached files (e.g. files evicted by maxCacheSize cleanup
+    // on another machine but DB entries not cleaned up).
+    if (
+      cachedResult.remote &&
+      dbCacheEnabled() &&
+      outputs.length > 0 &&
+      cachedResult.outputsPath &&
+      !existsSync(cachedResult.outputsPath)
+    ) {
+      output.warn({
+        title: `Stale remote cache entry for task "${task.id}"`,
+        bodyLines: [
+          'The remote cache reported a hit but the cached output files are missing.',
+          'This can happen when cache entries are evicted due to maxCacheSize limits',
+          'but the remote cache database is not updated.',
+          'The task will be re-executed.',
+        ],
+      });
+      return null;
+    }
+
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache

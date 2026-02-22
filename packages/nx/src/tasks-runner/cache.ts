@@ -7,7 +7,7 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
@@ -121,6 +121,23 @@ export class DbCache {
       );
 
       if (res) {
+        // Validate that the remote cache result actually contains file outputs
+        // before applying it. If the outputs path doesn't exist or is empty,
+        // the remote cache entry is stale (e.g. files were evicted by
+        // maxCacheSize cleanup but the remote cache DB was not updated).
+        if (
+          task.outputs.length > 0 &&
+          res.code === 0 &&
+          !this.remoteCacheOutputsExist(res.outputsPath)
+        ) {
+          logger.warn(
+            `Remote cache hit for task "${task.id}" but cached output files are missing. ` +
+              'This can occur when cache entries are evicted due to maxCacheSize limits ' +
+              'but the remote cache database is not updated. The task will be re-executed.'
+          );
+          return null;
+        }
+
         this.applyRemoteCacheResults(task.hash, res, task.outputs);
 
         return {
@@ -148,6 +165,24 @@ export class DbCache {
     return this.cache.applyRemoteCacheResults(hash, res, outputs);
   }
 
+  /**
+   * Checks whether a remote cache result's outputs path exists and contains
+   * files. Returns false if the path is missing or empty, indicating a stale
+   * remote cache entry whose backing files were evicted.
+   */
+  private remoteCacheOutputsExist(outputsPath: string): boolean {
+    try {
+      if (!existsSync(outputsPath)) {
+        return false;
+      }
+      const entries = readdirSync(outputsPath);
+      return entries.length > 0;
+    } catch {
+      // If we can't read the directory, assume it's invalid
+      return false;
+    }
+  }
+
   async put(
     task: Task,
     terminalOutput: string | null,
@@ -158,6 +193,21 @@ export class DbCache {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
       if (this.remoteCache) {
+        // Verify the local cache entry wasn't immediately evicted by
+        // maxCacheSize cleanup before we try to store it remotely.
+        // If the entry was evicted, the local cache directory is gone and
+        // the remote store would either fail or store incomplete data,
+        // leading to stale entries in the remote cache database.
+        const localCacheEntry = join(this.cache.cacheDirectory, task.hash);
+        if (!existsSync(localCacheEntry)) {
+          logger.warn(
+            `Cache entry for "${task.id}" (${task.hash}) was evicted by maxCacheSize ` +
+              'cleanup before it could be stored in the remote cache. ' +
+              'Consider increasing the maxCacheSize setting in nx.json.'
+          );
+          return;
+        }
+
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,
