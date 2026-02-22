@@ -38,7 +38,7 @@ export interface NxArgs {
   skipRemoteCache?: boolean;
   outputStyle?: string;
   tui?: boolean;
-  nxBail?: boolean;
+  nxBail?: boolean | number;
   nxIgnoreCycles?: boolean;
   type?: string;
   batch?: boolean;
