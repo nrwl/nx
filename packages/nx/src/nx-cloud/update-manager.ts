@@ -300,6 +300,20 @@ function hashDirectory(dir: string): string {
   return createHash('sha256').update(combinedHashes).digest('hex');
 }
 
+/**
+ * Timeout for the Nx Cloud client bundle HTTP download (in milliseconds).
+ * Prevents the process from hanging indefinitely if the download server
+ * is unresponsive or the network connection stalls.
+ */
+const DOWNLOAD_TIMEOUT_MS = 60_000;
+
+/**
+ * Timeout for extracting the downloaded client bundle (in milliseconds).
+ * Prevents the process from hanging indefinitely if the tar extraction
+ * stalls due to a corrupted or incomplete download.
+ */
+const EXTRACT_TIMEOUT_MS = 120_000;
+
 async function downloadAndExtractClientBundle(
   axios: AxiosInstance,
   runnerBundleInstallDirectory: string,
@@ -310,6 +324,7 @@ async function downloadAndExtractClientBundle(
   try {
     resp = await axios.get(url, {
       responseType: 'stream',
+      timeout: DOWNLOAD_TIMEOUT_MS,
     } as AxiosRequestConfig);
   } catch (e: any) {
     console.error('Error while updating Nx Cloud client bundle');
@@ -322,6 +337,14 @@ async function downloadAndExtractClientBundle(
     mkdirSync(bundleExtractLocation);
   }
   return new Promise((res, rej) => {
+    const extractionTimeout = setTimeout(() => {
+      rej(
+        new Error(
+          `Nx Cloud client bundle extraction timed out after ${EXTRACT_TIMEOUT_MS}ms`
+        )
+      );
+    }, EXTRACT_TIMEOUT_MS);
+
     const extract = tar.extract();
     extract.on('entry', function (headers, stream, next) {
       if (headers.type === 'directory') {
@@ -347,10 +370,12 @@ async function downloadAndExtractClientBundle(
     });
 
     extract.on('error', (e) => {
+      clearTimeout(extractionTimeout);
       rej(e);
     });
 
     extract.on('finish', function () {
+      clearTimeout(extractionTimeout);
       removeOldClientBundles(version);
       writeBundleVerificationLock();
       res(bundleExtractLocation);

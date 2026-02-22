@@ -138,6 +138,14 @@ const WAIT_FOR_SERVER_CONFIG = {
   maxAttempts: 6000, // 6000 * 10ms = 60 seconds
 };
 
+/**
+ * Timeout for individual socket connect() attempts (in milliseconds).
+ * Without this, connect() can hang indefinitely in CI environments
+ * (e.g. GitHub Actions) when the daemon socket path exists but the
+ * daemon process is not responsive.
+ */
+const SOCKET_CONNECT_TIMEOUT_MS = 30_000;
+
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
@@ -972,6 +980,14 @@ export class DaemonClient {
           socket.destroy();
           resolve(true);
         });
+        socket.setTimeout(SOCKET_CONNECT_TIMEOUT_MS);
+        socket.once('timeout', () => {
+          clientLogger.log(
+            '[Client] Socket connect timed out in isServerAvailable'
+          );
+          socket.destroy();
+          resolve(false);
+        });
         socket.once('error', () => {
           resolve(false);
         });
@@ -1033,10 +1049,10 @@ export class DaemonClient {
 
   private setUpConnection() {
     const socketPath = this.getSocketPath();
+    const socket = connect(socketPath);
+    socket.setTimeout(SOCKET_CONNECT_TIMEOUT_MS);
 
-    this.socketMessenger = new DaemonSocketMessenger(
-      connect(socketPath)
-    ).listen(
+    this.socketMessenger = new DaemonSocketMessenger(socket).listen(
       (message) => this.handleMessage(message),
       () => {
         // it's ok for the daemon to terminate if the client doesn't wait on
@@ -1295,6 +1311,15 @@ export class DaemonClient {
       }
     );
     backgroundProcess.unref();
+
+    // Close file handles immediately after spawning. The child process
+    // has inherited the file descriptors, so these handles are no longer
+    // needed. Leaving them open keeps the Node.js event loop alive and
+    // can cause the parent process to hang in CI environments.
+    await this._out?.close();
+    await this._err?.close();
+    this._out = null;
+    this._err = null;
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving

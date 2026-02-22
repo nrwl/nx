@@ -20,6 +20,14 @@ export class VersionMismatchError extends Error {
   }
 }
 
+/**
+ * Timeout for the message exchange phase (in milliseconds).
+ * Once the socket is connected, this longer timeout replaces the
+ * aggressive connect-phase timeout. Some daemon operations (e.g.
+ * large project graph computation) can take several minutes.
+ */
+const MESSAGE_EXCHANGE_TIMEOUT_MS = 5 * 60 * 1000;
+
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
@@ -52,6 +60,25 @@ export class DaemonSocketMessenger {
     onError: (err: Error) => void = () => {}
   ): DaemonSocketMessenger {
     clientLogger.log('[Messenger] Setting up socket listeners');
+
+    // Once the socket is connected, transition from the aggressive
+    // connect-phase timeout (set by the caller, e.g. setUpConnection)
+    // to a longer message exchange timeout. The connect timeout detects
+    // unresponsive daemons quickly; the message exchange timeout allows
+    // long-running daemon operations to complete while still preventing
+    // indefinite hangs in CI environments.
+    this.socket.once('connect', () => {
+      this.socket.setTimeout(MESSAGE_EXCHANGE_TIMEOUT_MS);
+    });
+
+    this.socket.on('timeout', () => {
+      clientLogger.log(
+        '[Messenger] Socket timed out communicating with Nx Daemon'
+      );
+      this.socket.destroy(
+        new Error('Socket timed out communicating with Nx Daemon')
+      );
+    });
 
     this.socket.on('close', onClose);
     this.socket.on('error', (err) => {
