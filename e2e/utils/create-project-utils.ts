@@ -444,7 +444,10 @@ export function runCreatePlugin(
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd: e2eCwd,
       stdio: 'pipe',
-      env: process.env,
+      env: {
+        ...process.env,
+        COREPACK_ENABLE_PROJECT_FIELD: '0',
+      },
       encoding: 'utf-8',
     });
 
@@ -484,7 +487,10 @@ export function packageInstall(
     const install = execSync(command, {
       cwd,
       stdio: isVerbose() ? 'inherit' : 'pipe',
-      env: process.env,
+      env: {
+        ...process.env,
+        COREPACK_ENABLE_PROJECT_FIELD: '0',
+      },
       encoding: 'utf-8',
     });
 
@@ -538,7 +544,10 @@ export function runNgNew(
   execSync(command, {
     cwd: e2eCwd,
     stdio: isVerbose() ? 'inherit' : 'pipe',
-    env: process.env,
+    env: {
+      ...process.env,
+      COREPACK_ENABLE_PROJECT_FIELD: '0',
+    },
     encoding: 'utf-8',
   });
 
@@ -561,7 +570,10 @@ export function runNgNew(
   execSync(pmc.install, {
     cwd: join(e2eCwd, projName),
     stdio: isVerbose() ? 'inherit' : 'pipe',
-    env: process.env,
+    env: {
+      ...process.env,
+      COREPACK_ENABLE_PROJECT_FIELD: '0',
+    },
     encoding: 'utf-8',
   });
 
