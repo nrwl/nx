@@ -3,6 +3,10 @@
 //! This module provides both a NAPI-exposed TelemetryService for TypeScript
 //! and a global instance that Rust code can use directly.
 //!
+//! The service uses an unbounded channel architecture with a background task
+//! that batches events and sends them periodically. Page view events are
+//! prioritized over regular events.
+//!
 //! # Example usage from Rust code:
 //! ```rust
 //! use crate::native::telemetry::track_rust_event;
@@ -15,26 +19,43 @@
 
 use napi::bindgen_prelude::*;
 use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use reqwest::{Client, ClientBuilder};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::{mpsc, oneshot};
 
 const TRACKING_ID_PROD: &str = "G-83SJXKY605";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
+const BATCH_INTERVAL_SECS: u64 = 5;
 
 type ParameterMap = HashMap<String, String>;
 
 // Global telemetry instance for Rust code to use directly
 static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
 
+/// Event data to be tracked
+#[derive(Debug, Clone)]
+struct EventData {
+    name: String,
+    parameters: ParameterMap,
+}
+
+/// Page view data to be tracked
+#[derive(Debug, Clone)]
+struct PageViewData {
+    title: String,
+    location: Option<String>,
+    parameters: ParameterMap,
+}
+
 /// Internal telemetry service - not exposed to JavaScript
 pub struct TelemetryService {
-    events_queue: Arc<Mutex<Vec<ParameterMap>>>,
-    page_view_queue: Arc<Mutex<Vec<ParameterMap>>>,
+    event_tx: mpsc::UnboundedSender<EventData>,
+    page_view_tx: mpsc::UnboundedSender<PageViewData>,
+    flush_tx: mpsc::UnboundedSender<oneshot::Sender<Result<()>>>,
     common_request_parameters: ParameterMap,
     user_parameters: ParameterMap,
-    client: Client,
 }
 
 impl TelemetryService {
@@ -88,88 +109,132 @@ impl TelemetryService {
         user_parameters.insert("up.nx_version".to_string(), nx_version); // NxVersion
         user_parameters.insert("ep.is_ai_agent".to_string(), is_ai_agent.to_string()); // IsAgent
 
+        // Create channels
+        let (event_tx, event_rx) = mpsc::unbounded_channel();
+        let (page_view_tx, page_view_rx) = mpsc::unbounded_channel();
+        let (flush_tx, flush_rx) = mpsc::unbounded_channel();
+
+        // Spawn background sender task
+        let common_params = common_request_parameters.clone();
+        let user_params = user_parameters.clone();
+        tokio::spawn(Self::background_sender(
+            client,
+            common_params,
+            user_params,
+            event_rx,
+            page_view_rx,
+            flush_rx,
+        ));
+
         Ok(TelemetryService {
-            events_queue: Arc::new(Mutex::new(Vec::new())),
-            page_view_queue: Arc::new(Mutex::new(Vec::new())),
+            event_tx,
+            page_view_tx,
+            flush_tx,
             common_request_parameters,
             user_parameters,
-            client,
         })
     }
 
-    fn track_event_impl(
-        &self,
-        event_name: String,
-        parameters: Option<HashMap<String, String>>,
-    ) -> Result<()> {
-        let mut event_data = self.user_parameters.clone();
+    /// Background task that receives events and sends them in batches
+    async fn background_sender(
+        client: Client,
+        common_params: ParameterMap,
+        user_params: ParameterMap,
+        mut event_rx: mpsc::UnboundedReceiver<EventData>,
+        mut page_view_rx: mpsc::UnboundedReceiver<PageViewData>,
+        mut flush_rx: mpsc::UnboundedReceiver<oneshot::Sender<Result<()>>>,
+    ) {
+        let mut event_batch = Vec::new();
+        let mut page_view_batch = Vec::new();
+        let mut interval = tokio::time::interval(Duration::from_secs(BATCH_INTERVAL_SECS));
+        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
-        if let Some(params) = parameters {
-            event_data.extend(params);
-        }
+        loop {
+            tokio::select! {
+                // biased = check in order (page views first!)
+                biased;
 
-        event_data.insert("en".to_string(), event_name);
+                // Priority 1: Page views (most important)
+                Some(page_view) = page_view_rx.recv() => {
+                    let mut params = user_params.clone();
+                    params.extend(page_view.parameters);
+                    params.insert("en".to_string(), "page_view".to_string());
+                    params.insert("dt".to_string(), page_view.title.clone());
+                    params.insert("dl".to_string(), page_view.location.unwrap_or(page_view.title));
+                    page_view_batch.push(params);
+                }
 
-        let mut events_queue = self.events_queue.lock();
-        events_queue.push(event_data);
+                // Priority 2: Regular events
+                Some(event) = event_rx.recv() => {
+                    let mut params = user_params.clone();
+                    params.extend(event.parameters);
+                    params.insert("en".to_string(), event.name);
+                    event_batch.push(params);
+                }
 
-        Ok(())
-    }
+                // Priority 3: Flush requests
+                Some(reply) = flush_rx.recv() => {
+                    let result = Self::send_batches(
+                        &client,
+                        &common_params,
+                        &mut event_batch,
+                        &mut page_view_batch,
+                    ).await;
+                    let _ = reply.send(result);
+                }
 
-    fn track_page_view_impl(
-        &self,
-        page_title: String,
-        page_location: Option<String>,
-        parameters: Option<HashMap<String, String>>,
-    ) -> Result<()> {
-        let mut event_data = self.user_parameters.clone();
+                // Priority 4: Periodic flush
+                _ = interval.tick() => {
+                    let _ = Self::send_batches(
+                        &client,
+                        &common_params,
+                        &mut event_batch,
+                        &mut page_view_batch,
+                    ).await;
+                }
 
-        if let Some(params) = parameters {
-            event_data.extend(params);
-        }
-
-        event_data.insert("en".to_string(), "page_view".to_string());
-        let location = page_location.as_ref().unwrap_or(&page_title);
-        event_data.insert("dl".to_string(), location.clone()); // PageLocation
-        event_data.insert("dt".to_string(), page_title); // PageTitle
-
-        let mut page_view_queue = self.page_view_queue.lock();
-        page_view_queue.push(event_data);
-
-        Ok(())
-    }
-
-    async fn flush(&self) -> Result<()> {
-        let events = {
-            let mut queue = self.events_queue.lock();
-            std::mem::take(&mut *queue)
-        };
-
-        let page_views = {
-            let mut queue = self.page_view_queue.lock();
-            std::mem::take(&mut *queue)
-        };
-
-        let pending_count = events.len() + page_views.len();
-        tracing::trace!("Telemetry Flush: {} events", pending_count);
-
-        if pending_count == 0 {
-            return Ok(());
-        }
-
-        // Send events
-        if !events.is_empty() {
-            if let Err(e) = self
-                .send_request(self.common_request_parameters.clone(), events)
-                .await
-            {
-                tracing::trace!("Telemetry Send Error: {}", e);
+                // All channels closed - exit
+                else => break,
             }
         }
 
-        // Send page views
-        for page_view in page_views {
-            let mut request_params = self.common_request_parameters.clone();
+        // Final flush before exit
+        let _ = Self::send_batches(
+            &client,
+            &common_params,
+            &mut event_batch,
+            &mut page_view_batch,
+        )
+        .await;
+    }
+
+    async fn send_batches(
+        client: &Client,
+        common_params: &ParameterMap,
+        event_batch: &mut Vec<ParameterMap>,
+        page_view_batch: &mut Vec<ParameterMap>,
+    ) -> Result<()> {
+        if event_batch.is_empty() && page_view_batch.is_empty() {
+            return Ok(());
+        }
+
+        tracing::trace!(
+            "Telemetry: Sending {} events, {} page views",
+            event_batch.len(),
+            page_view_batch.len()
+        );
+
+        // Send events batch
+        if !event_batch.is_empty() {
+            if let Err(e) = Self::send_request(client, common_params, event_batch.clone()).await {
+                tracing::trace!("Telemetry Send Error: {}", e);
+            }
+            event_batch.clear();
+        }
+
+        // Send page views (one per request)
+        for page_view in page_view_batch.drain(..) {
+            let mut request_params = common_params.clone();
             if let Some(title) = page_view.get("dt") {
                 request_params.insert("dt".to_string(), title.clone());
             }
@@ -177,7 +242,7 @@ impl TelemetryService {
                 request_params.insert("dl".to_string(), location.clone());
             }
 
-            if let Err(e) = self.send_request(request_params, vec![page_view]).await {
+            if let Err(e) = Self::send_request(client, &request_params, vec![page_view]).await {
                 tracing::trace!("Telemetry Send Error: {}", e);
             }
         }
@@ -185,8 +250,12 @@ impl TelemetryService {
         Ok(())
     }
 
-    async fn send_request(&self, parameters: ParameterMap, data: Vec<ParameterMap>) -> Result<()> {
-        let query_string = Self::build_query_string(&parameters);
+    async fn send_request(
+        client: &Client,
+        parameters: &ParameterMap,
+        data: Vec<ParameterMap>,
+    ) -> Result<()> {
+        let query_string = Self::build_query_string(parameters);
         let url = format!("{}?{}", GA_ENDPOINT, query_string);
 
         let body = data
@@ -195,8 +264,7 @@ impl TelemetryService {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let response = self
-            .client
+        let response = client
             .post(&url)
             .header(
                 "user-agent",
@@ -224,6 +292,54 @@ impl TelemetryService {
             .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
             .collect::<Vec<_>>()
             .join("&")
+    }
+
+    fn track_event_impl(
+        &self,
+        event_name: String,
+        parameters: Option<HashMap<String, String>>,
+    ) -> Result<()> {
+        let event = EventData {
+            name: event_name,
+            parameters: parameters.unwrap_or_default(),
+        };
+
+        self.event_tx
+            .send(event)
+            .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+
+        Ok(())
+    }
+
+    fn track_page_view_impl(
+        &self,
+        page_title: String,
+        page_location: Option<String>,
+        parameters: Option<HashMap<String, String>>,
+    ) -> Result<()> {
+        let page_view = PageViewData {
+            title: page_title,
+            location: page_location,
+            parameters: parameters.unwrap_or_default(),
+        };
+
+        self.page_view_tx
+            .send(page_view)
+            .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+
+        Ok(())
+    }
+
+    async fn flush(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.flush_tx
+            .send(tx)
+            .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+
+        // Wait for flush to complete
+        rx.await
+            .map_err(|_| Error::from_reason("Flush reply channel closed"))?
     }
 }
 
