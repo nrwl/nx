@@ -30,7 +30,159 @@ const TRACKING_ID_PROD: &str = "G-83SJXKY605";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
 const BATCH_INTERVAL_MS: u64 = 50;
 
+// Google Analytics Measurement Protocol limits
+const MAX_EVENT_NAME_LENGTH: usize = 40;
+const MAX_PARAM_NAME_LENGTH: usize = 40;
+const MAX_PARAM_VALUE_LENGTH: usize = 100;
+const MAX_URL_PARAM_VALUE_LENGTH: usize = 500;
+const MAX_EVENTS_PER_BATCH: usize = 25;
+const MAX_CUSTOM_PARAMS: usize = 25;
+
 type ParameterMap = HashMap<String, String>;
+
+// =============================================================================
+// Public API
+// =============================================================================
+
+/// Initialize the global telemetry service
+/// This should be called once at startup from TypeScript
+#[napi]
+pub fn initialize_telemetry(
+    workspace_id: String,
+    user_id: String,
+    nx_version: String,
+    package_manager_name: String,
+    package_manager_version: Option<String>,
+    node_version: String,
+    os_arch: String,
+    os_platform: String,
+    os_release: String,
+) -> Result<()> {
+    let service = TelemetryService::new(
+        workspace_id,
+        user_id,
+        nx_version,
+        package_manager_name,
+        package_manager_version,
+        node_version,
+        os_arch,
+        os_platform,
+        os_release,
+    )?;
+
+    GLOBAL_TELEMETRY
+        .set(Arc::new(service))
+        .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
+
+    Ok(())
+}
+
+/// Track an event using the global telemetry instance
+#[napi]
+pub fn track_event(event_name: String, parameters: Option<HashMap<String, String>>) -> Result<()> {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.track_event_impl(event_name, parameters)?;
+    }
+    Ok(())
+}
+
+/// Track a page view using the global telemetry instance
+#[napi]
+pub fn track_page_view(
+    page_title: String,
+    page_location: Option<String>,
+    parameters: Option<HashMap<String, String>>,
+) -> Result<()> {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.track_page_view_impl(page_title, page_location, parameters)?;
+    }
+    Ok(())
+}
+
+/// Flush all pending telemetry data
+/// This should be called before process exit
+#[napi]
+pub async fn flush_telemetry() -> Result<()> {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.flush().await?;
+    }
+    Ok(())
+}
+
+/// Track an event from Rust code
+/// This is a fire-and-forget operation - errors are logged but not returned
+pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        if let Err(e) = telemetry.track_event_impl(event_name.into(), Some(parameters)) {
+            tracing::trace!("Failed to track event: {}", e);
+        }
+    }
+}
+
+// =============================================================================
+// Helper functions
+// =============================================================================
+
+/// Truncate a string to a maximum byte length, ensuring we don't split UTF-8 characters
+fn truncate_string(s: &str, max_bytes: usize) -> String {
+    if s.len() <= max_bytes {
+        return s.to_string();
+    }
+
+    // Find the last valid UTF-8 character boundary within the limit
+    let mut end = max_bytes;
+    while end > 0 && !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    s[..end].to_string()
+}
+
+/// Truncate parameter value based on whether it's a URL parameter
+fn truncate_param_value(key: &str, value: &str) -> String {
+    let max_len = if key == "dl" || key == "dr" {
+        // URL parameters (document location, referrer) get more space
+        MAX_URL_PARAM_VALUE_LENGTH
+    } else {
+        MAX_PARAM_VALUE_LENGTH
+    };
+    truncate_string(value, max_len)
+}
+
+/// Sanitize and truncate parameters, ensuring they meet GA limits
+fn sanitize_params(mut params: ParameterMap) -> ParameterMap {
+    let mut sanitized = HashMap::new();
+    let mut custom_param_count = 0;
+
+    for (key, value) in params.drain() {
+        // Truncate key
+        let truncated_key = truncate_string(&key, MAX_PARAM_NAME_LENGTH);
+
+        // Truncate value based on parameter type
+        let truncated_value = truncate_param_value(&truncated_key, &value);
+
+        // Count custom parameters (those starting with ep., up., or without prefix)
+        let is_custom = truncated_key.starts_with("ep.")
+            || truncated_key.starts_with("up.")
+            || (!truncated_key.starts_with("_") && truncated_key.len() <= 3);
+
+        if is_custom {
+            custom_param_count += 1;
+            if custom_param_count > MAX_CUSTOM_PARAMS {
+                // Skip this parameter if we've exceeded the limit
+                tracing::trace!("Telemetry: Skipping parameter '{}' - exceeded max custom params", truncated_key);
+                continue;
+            }
+        }
+
+        sanitized.insert(truncated_key, truncated_value);
+    }
+
+    sanitized
+}
+
+// =============================================================================
+// Internal implementation
+// =============================================================================
 
 // Global telemetry instance for Rust code to use directly
 static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
@@ -55,8 +207,6 @@ pub struct TelemetryService {
     event_tx: Mutex<Option<mpsc::UnboundedSender<EventData>>>,
     page_view_tx: Mutex<Option<mpsc::UnboundedSender<PageViewData>>>,
     flush_tx: mpsc::UnboundedSender<oneshot::Sender<Result<()>>>,
-    common_request_parameters: ParameterMap,
-    user_parameters: ParameterMap,
 }
 
 impl TelemetryService {
@@ -131,8 +281,6 @@ impl TelemetryService {
             event_tx: Mutex::new(Some(event_tx)),
             page_view_tx: Mutex::new(Some(page_view_tx)),
             flush_tx,
-            common_request_parameters,
-            user_parameters,
         })
     }
 
@@ -160,17 +308,17 @@ impl TelemetryService {
                     let mut params = user_params.clone();
                     params.extend(page_view.parameters);
                     params.insert("en".to_string(), "page_view".to_string());
-                    params.insert("dt".to_string(), page_view.title.clone());
-                    params.insert("dl".to_string(), page_view.location.unwrap_or(page_view.title));
-                    page_view_batch.push(params);
+                    params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
+                    params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
+                    page_view_batch.push(sanitize_params(params));
                 }
 
                 // Priority 2: Regular events
                 Some(event) = event_rx.recv() => {
                     let mut params = user_params.clone();
                     params.extend(event.parameters);
-                    params.insert("en".to_string(), event.name);
-                    event_batch.push(params);
+                    params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
+                    event_batch.push(sanitize_params(params));
                 }
 
                 // Priority 3: Flush requests
@@ -179,17 +327,17 @@ impl TelemetryService {
                     while let Ok(event) = event_rx.try_recv() {
                         let mut params = user_params.clone();
                         params.extend(event.parameters);
-                        params.insert("en".to_string(), event.name);
-                        event_batch.push(params);
+                        params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
+                        event_batch.push(sanitize_params(params));
                     }
 
                     while let Ok(page_view) = page_view_rx.try_recv() {
                         let mut params = user_params.clone();
                         params.extend(page_view.parameters);
                         params.insert("en".to_string(), "page_view".to_string());
-                        params.insert("dt".to_string(), page_view.title.clone());
-                        params.insert("dl".to_string(), page_view.location.unwrap_or(page_view.title));
-                        page_view_batch.push(params);
+                        params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
+                        params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
+                        page_view_batch.push(sanitize_params(params));
                     }
 
                     // Send final batch
@@ -243,10 +391,12 @@ impl TelemetryService {
             page_view_batch.len()
         );
 
-        // Send events batch
+        // Send events in chunks of MAX_EVENTS_PER_BATCH
         if !event_batch.is_empty() {
-            if let Err(e) = Self::send_request(client, common_params, event_batch.clone()).await {
-                tracing::trace!("Telemetry Send Error: {}", e);
+            for chunk in event_batch.chunks(MAX_EVENTS_PER_BATCH) {
+                if let Err(e) = Self::send_request(client, common_params, chunk.to_vec()).await {
+                    tracing::trace!("Telemetry Send Error: {}", e);
+                }
             }
             event_batch.clear();
         }
@@ -366,81 +516,4 @@ impl TelemetryService {
         rx.await
             .map_err(|_| Error::from_reason("Flush reply channel closed"))?
     }
-}
-
-// Global telemetry initialization and helper functions for Rust code
-
-/// Initialize the global telemetry service
-/// This should be called once at startup from TypeScript
-#[napi]
-pub fn initialize_telemetry(
-    workspace_id: String,
-    user_id: String,
-    nx_version: String,
-    package_manager_name: String,
-    package_manager_version: Option<String>,
-    node_version: String,
-    os_arch: String,
-    os_platform: String,
-    os_release: String,
-) -> Result<()> {
-    let service = TelemetryService::new(
-        workspace_id,
-        user_id,
-        nx_version,
-        package_manager_name,
-        package_manager_version,
-        node_version,
-        os_arch,
-        os_platform,
-        os_release,
-    )?;
-
-    GLOBAL_TELEMETRY
-        .set(Arc::new(service))
-        .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
-
-    Ok(())
-}
-
-/// Track an event from Rust code
-/// This is a fire-and-forget operation - errors are logged but not returned
-pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
-    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        if let Err(e) = telemetry.track_event_impl(event_name.into(), Some(parameters)) {
-            tracing::trace!("Failed to track event: {}", e);
-        }
-    }
-}
-
-/// Track an event using the global telemetry instance
-#[napi]
-pub fn track_event(event_name: String, parameters: Option<HashMap<String, String>>) -> Result<()> {
-    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        telemetry.track_event_impl(event_name, parameters)?;
-    }
-    Ok(())
-}
-
-/// Track a page view using the global telemetry instance
-#[napi]
-pub fn track_page_view(
-    page_title: String,
-    page_location: Option<String>,
-    parameters: Option<HashMap<String, String>>,
-) -> Result<()> {
-    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        telemetry.track_page_view_impl(page_title, page_location, parameters)?;
-    }
-    Ok(())
-}
-
-/// Flush all pending telemetry data
-/// This should be called before process exit
-#[napi]
-pub async fn flush_telemetry() -> Result<()> {
-    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        telemetry.flush().await?;
-    }
-    Ok(())
 }
