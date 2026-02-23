@@ -47,7 +47,7 @@ export class ProjectNameInNodePropsManager {
   // when a source-map key is overwritten by a later plugin registration.
   private projectNameSubstitutors = new Map<string, Set<SubstitutorEntry>>();
 
-  // Tracks substitutor entries by (array path, index). This serves two purposes:
+  // Tracks substitutor entries by (array path, index, subIndex). This serves two purposes:
   //
   // 1. Per-index deduplication: if the same array index is registered again
   //    (e.g. two plugin results contribute to the same position), the old
@@ -58,28 +58,57 @@ export class ProjectNameInNodePropsManager {
   //    needing to iterate from fromIndex to the end.
   //
   // Outer key: array path (e.g. "targets.build.inputs")
-  // Inner array: indexed by position; entries may be undefined for positions
-  //   that have no project-name reference (skipped during registration).
+  // Inner array: indexed by position; each position is itself an array to handle
+  //   multiple project names within a single projects array (e.g., ['project-b', 'project-c']).
   private substitutorsByArrayKey = new Map<
     string,
-    Array<{ referencedRoot: string; entry: SubstitutorEntry } | undefined>
+    Array<
+      | Array<{ referencedRoot: string; entry: SubstitutorEntry } | undefined>
+      | undefined
+    >
   >();
 
   // Roots whose project name changed during the merge phase. Only these
   // roots need their substitutors executed in applySubstitutions.
   private dirtyRoots = new Set<string>();
 
-  // Removes the substitutor registered at the given index of an array, if any.
+  // Removes the substitutor registered at the given index (and optional subIndex) of an array, if any.
   // Used when re-registering for the same index (same position overwritten by
   // a later plugin).
-  private clearSubstitutorAtIndex(arrayKey: string, index: number) {
+  private clearSubstitutorAtIndex(
+    arrayKey: string,
+    index: number,
+    subIndex?: number
+  ) {
     const byIndex = this.substitutorsByArrayKey.get(arrayKey);
-    const existing = byIndex?.[index];
-    if (existing) {
-      this.projectNameSubstitutors
-        .get(existing.referencedRoot)
-        ?.delete(existing.entry);
+    const atIndex = byIndex?.[index];
+    if (!atIndex) {
+      return;
+    }
+    if (subIndex === undefined) {
+      // Clear the entire index entry (single project reference)
+      if (Array.isArray(atIndex)) {
+        // It's an array of substitutors, clear all
+        for (const item of atIndex) {
+          if (item) {
+            this.projectNameSubstitutors
+              .get(item.referencedRoot)
+              ?.delete(item.entry);
+          }
+        }
+      }
       byIndex[index] = undefined;
+    } else {
+      // Clear only the specific subIndex (within a projects array)
+      if (Array.isArray(atIndex)) {
+        const existing = atIndex[subIndex];
+        if (existing) {
+          this.projectNameSubstitutors
+            .get(existing.referencedRoot)
+            ?.delete(existing.entry);
+          atIndex[subIndex] = undefined;
+        }
+      }
     }
   }
 
@@ -92,27 +121,35 @@ export class ProjectNameInNodePropsManager {
       return;
     }
     const removed = byIndex.splice(fromIndex);
-    for (const item of removed) {
-      if (item) {
-        this.projectNameSubstitutors
-          .get(item.referencedRoot)
-          ?.delete(item.entry);
+    for (const atIndex of removed) {
+      if (atIndex) {
+        if (Array.isArray(atIndex)) {
+          // It's an array of substitutors (for projects arrays)
+          for (const item of atIndex) {
+            if (item) {
+              this.projectNameSubstitutors
+                .get(item.referencedRoot)
+                ?.delete(item.entry);
+            }
+          }
+        }
       }
     }
   }
 
   // Registers a new substitutor for the project at `referencedRoot`, tracked
-  // at (arrayKey, index) so it can be individually replaced or bulk-evicted
+  // at (arrayKey, index, subIndex) so it can be individually replaced or bulk-evicted
   // when the array shrinks.
   private registerProjectNameSubstitutor(
     referencedRoot: string,
     ownerRoot: string,
     arrayKey: string,
     index: number,
-    substitutor: ProjectNameSubstitutor
+    substitutor: ProjectNameSubstitutor,
+    subIndex?: number
   ) {
     // Evict any existing substitutor at this exact position first.
-    this.clearSubstitutorAtIndex(arrayKey, index);
+    this.clearSubstitutorAtIndex(arrayKey, index, subIndex);
 
     let substitutorsForRoot = this.projectNameSubstitutors.get(referencedRoot);
     if (!substitutorsForRoot) {
@@ -128,7 +165,20 @@ export class ProjectNameInNodePropsManager {
       byIndex = [];
       this.substitutorsByArrayKey.set(arrayKey, byIndex);
     }
-    byIndex[index] = { referencedRoot, entry };
+
+    if (subIndex === undefined) {
+      // Single project reference - store directly
+      byIndex[index] = [{ referencedRoot, entry }];
+    } else {
+      // Multiple projects in an array - ensure the array exists and store at subIndex
+      if (!byIndex[index]) {
+        byIndex[index] = [];
+      }
+      const subArray = byIndex[index] as Array<
+        { referencedRoot: string; entry: SubstitutorEntry } | undefined
+      >;
+      subArray[subIndex] = { referencedRoot, entry };
+    }
   }
 
   /**
@@ -205,7 +255,7 @@ export class ProjectNameInNodePropsManager {
     inputs: NonNullable<ProjectConfiguration['targets'][string]['inputs']>,
     nameMap: AggregateMap<string, ProjectConfiguration>
   ) {
-    const arrayKey = `targets.${targetName}.inputs`;
+    const arrayKey = `${ownerRoot}:targets.${targetName}.inputs`;
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i];
       if (typeof input !== 'object' || !('projects' in input)) {
@@ -260,7 +310,8 @@ export class ProjectNameInNodePropsManager {
                 ) {
                   (finalInput['projects'] as string[])[arrayIndex] = finalName;
                 }
-              }
+              },
+              j // Pass subIndex for array elements
             );
           }
         }
@@ -284,7 +335,7 @@ export class ProjectNameInNodePropsManager {
     >,
     nameMap: AggregateMap<string, ProjectConfiguration>
   ) {
-    const arrayKey = `targets.${targetName}.dependsOn`;
+    const arrayKey = `${ownerRoot}:targets.${targetName}.dependsOn`;
     for (let i = 0; i < dependsOn.length; i++) {
       const dep = dependsOn[i];
       if (typeof dep !== 'object' || !dep.projects) {
@@ -342,7 +393,8 @@ export class ProjectNameInNodePropsManager {
                 ) {
                   (finalDep['projects'] as string[])[arrayIndex] = finalName;
                 }
-              }
+              },
+              j // Pass subIndex for array elements
             );
           }
         }
