@@ -246,8 +246,10 @@ pub fn initialize_telemetry(
     os_arch: String,
     os_platform: String,
     os_release: String,
-    is_ai_agent: bool,
 ) -> Result<()> {
+    // Detect AI agent from environment variables
+    let is_ai_agent = crate::native::utils::ai::is_ai_agent();
+
     let service = TelemetryService::new(
         workspace_id,
         user_id,

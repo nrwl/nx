@@ -1,7 +1,7 @@
 import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
-import { initializeTelemetry, flushTelemetry, isAiAgent } from '../native';
+import { initializeTelemetry, flushTelemetry } from '../native';
 import {
   getPackageManagerVersion,
   detectPackageManager,
@@ -41,8 +41,7 @@ export async function startAnalytics() {
       nodeVersionString,
       os.arch(),
       os.platform(),
-      os.release(),
-      isAiAgent()
+      os.release()
     );
     _telemetryInitialized = true;
   } catch (error) {
