@@ -11,14 +11,11 @@ import {
   getPackageManagerVersion,
   detectPackageManager,
 } from '../utils/package-manager';
-import {
-  EventCustomDimension,
-  EventCustomMetric,
-  ParameterValue,
-} from './parameter';
 import { parse } from 'semver';
 import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
+
+type ParameterValue = number | boolean | string;
 
 let _telemetryInitialized = false;
 
@@ -59,17 +56,13 @@ export async function startAnalytics() {
 
 export function reportNxAddCommand(packageName: string, version: string) {
   reportCommandRunEvent('add', {
-    [EventCustomDimension.PackageName]: packageName,
-    [EventCustomDimension.PackageVersion]: version,
+    'ep.package_name': packageName,
+    'ep.package_version': version,
   });
 }
 
 export function reportNxGenerateCommand(generator: string) {
-  trackEvent(
-    'generator_used',
-    { [EventCustomDimension.GeneratorName]: generator },
-    false
-  );
+  trackEvent('generator_used', { 'ep.generator_name': generator });
 }
 
 export function reportCommandRunEvent(
@@ -90,7 +83,7 @@ export function reportCommandRunEvent(
 
 export function reportProjectGraphCreationEvent(time: number) {
   trackEvent('project_graph_creation', {
-    [EventCustomMetric.Time]: time,
+    'epn.time': time,
   });
 }
 
