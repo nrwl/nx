@@ -65,7 +65,9 @@ export function reportNxAddCommand(packageName: string, version: string) {
 }
 
 export function reportNxGenerateCommand(generator: string) {
-  trackPageView('generator_used', generator, { [EventCustomDimension.GeneratorName]: generator });
+  reportCommandRunEvent('generate', {
+    [EventCustomDimension.GeneratorName]: generator,
+  });
 }
 
 export function reportCommandRunEvent(
