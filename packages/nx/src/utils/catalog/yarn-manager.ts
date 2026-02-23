@@ -1,22 +1,20 @@
 import { dump, load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { output, type Tree } from 'nx/src/devkit-exports';
-import { readYamlFile } from 'nx/src/devkit-internals';
-import type {
-  PnpmCatalogEntry,
-  PnpmWorkspaceYaml,
-} from 'nx/src/utils/pnpm-workspace';
+import type { Tree } from '../../generators/tree';
+import { readYamlFile } from '../fileutils';
+import { output } from '../output';
+import type { YarnCatalogEntry, YarnWorkspaceYaml } from '../yarn-workspace';
 import { formatCatalogError, type CatalogManager } from './manager';
 import type { CatalogReference } from './types';
 
-const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
+const YARNRC_FILENAME = '.yarnrc.yml';
 
 /**
- * PNPM-specific catalog manager implementation
+ * Yarn Berry (v4+) catalog manager implementation
  */
-export class PnpmCatalogManager implements CatalogManager {
-  readonly name = 'pnpm';
+export class YarnCatalogManager implements CatalogManager {
+  readonly name = 'yarn';
   readonly catalogProtocol = 'catalog:';
 
   isCatalogReference(version: string): boolean {
@@ -39,21 +37,21 @@ export class PnpmCatalogManager implements CatalogManager {
   }
 
   getCatalogDefinitionFilePaths(): string[] {
-    return [PNPM_WORKSPACE_FILENAME];
+    return [YARNRC_FILENAME];
   }
 
-  getCatalogDefinitions(treeOrRoot: Tree | string): PnpmWorkspaceYaml | null {
+  getCatalogDefinitions(treeOrRoot: Tree | string): YarnWorkspaceYaml | null {
     if (typeof treeOrRoot === 'string') {
-      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
+      const configPath = join(treeOrRoot, YARNRC_FILENAME);
       if (!existsSync(configPath)) {
         return null;
       }
       return readConfigFromFs(configPath);
     } else {
-      if (!treeOrRoot.exists(PNPM_WORKSPACE_FILENAME)) {
+      if (!treeOrRoot.exists(YARNRC_FILENAME)) {
         return null;
       }
-      return readConfigFromTree(treeOrRoot, PNPM_WORKSPACE_FILENAME);
+      return readConfigFromTree(treeOrRoot, YARNRC_FILENAME);
     }
   }
 
@@ -72,7 +70,7 @@ export class PnpmCatalogManager implements CatalogManager {
       return null;
     }
 
-    let catalogToUse: PnpmCatalogEntry | undefined;
+    let catalogToUse: YarnCatalogEntry | undefined;
     if (catalogRef.isDefaultCatalog) {
       // Check both locations for default catalog
       catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
@@ -99,19 +97,19 @@ export class PnpmCatalogManager implements CatalogManager {
     if (!catalogDefs) {
       throw new Error(
         formatCatalogError(
-          `Cannot get Pnpm catalog definitions. No ${PNPM_WORKSPACE_FILENAME} found in workspace root.`,
-          [`Create a ${PNPM_WORKSPACE_FILENAME} file in your workspace root`]
+          `Cannot get Yarn catalog definitions. No ${YARNRC_FILENAME} found in workspace root.`,
+          [`Create a ${YARNRC_FILENAME} file in your workspace root`]
         )
       );
     }
 
-    let catalogToUse: PnpmCatalogEntry | undefined;
+    let catalogToUse: YarnCatalogEntry | undefined;
 
     if (catalogRef.isDefaultCatalog) {
       const hasCatalog = !!catalogDefs.catalog;
       const hasCatalogsDefault = !!catalogDefs.catalogs?.default;
 
-      // Error if both defined (matches pnpm behavior)
+      // Error if both defined
       if (hasCatalog && hasCatalogsDefault) {
         throw new Error(
           "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
@@ -123,7 +121,7 @@ export class PnpmCatalogManager implements CatalogManager {
         const availableCatalogs = Object.keys(catalogDefs.catalogs || {});
 
         const suggestions = [
-          `Define a default catalog in ${PNPM_WORKSPACE_FILENAME} under the "catalog" key`,
+          `Define a default catalog in ${YARNRC_FILENAME} under the "catalog" key`,
         ];
         if (availableCatalogs.length > 0) {
           suggestions.push(
@@ -135,7 +133,7 @@ export class PnpmCatalogManager implements CatalogManager {
 
         throw new Error(
           formatCatalogError(
-            `No default catalog defined in ${PNPM_WORKSPACE_FILENAME}`,
+            `No default catalog defined in ${YARNRC_FILENAME}`,
             suggestions
           )
         );
@@ -153,7 +151,7 @@ export class PnpmCatalogManager implements CatalogManager {
             : null;
 
         const suggestions = [
-          `Define the catalog in ${PNPM_WORKSPACE_FILENAME} under the "catalogs" key`,
+          `Define the catalog in ${YARNRC_FILENAME} under the "catalogs" key`,
         ];
         if (availableCatalogs.length > 0) {
           suggestions.push(
@@ -168,7 +166,7 @@ export class PnpmCatalogManager implements CatalogManager {
 
         throw new Error(
           formatCatalogError(
-            `Catalog "${catalogRef.catalogName}" not found in ${PNPM_WORKSPACE_FILENAME}`,
+            `Catalog "${catalogRef.catalogName}" not found in ${YARNRC_FILENAME}`,
             suggestions
           )
         );
@@ -189,7 +187,7 @@ export class PnpmCatalogManager implements CatalogManager {
 
       const availablePackages = Object.keys(catalogToUse!);
       const suggestions = [
-        `Add "${packageName}" to ${catalogName} in ${PNPM_WORKSPACE_FILENAME}`,
+        `Add "${packageName}" to ${catalogName} in ${YARNRC_FILENAME}`,
       ];
       if (availablePackages.length > 0) {
         suggestions.push(
@@ -221,23 +219,22 @@ export class PnpmCatalogManager implements CatalogManager {
     let writeYaml: (content: string) => void;
 
     if (typeof treeOrRoot === 'string') {
-      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
+      const configPath = join(treeOrRoot, YARNRC_FILENAME);
       checkExists = () => existsSync(configPath);
       readYaml = () => readFileSync(configPath, 'utf-8');
       writeYaml = (content) => writeFileSync(configPath, content, 'utf-8');
     } else {
-      checkExists = () => treeOrRoot.exists(PNPM_WORKSPACE_FILENAME);
-      readYaml = () => treeOrRoot.read(PNPM_WORKSPACE_FILENAME, 'utf-8');
-      writeYaml = (content) =>
-        treeOrRoot.write(PNPM_WORKSPACE_FILENAME, content);
+      checkExists = () => treeOrRoot.exists(YARNRC_FILENAME);
+      readYaml = () => treeOrRoot.read(YARNRC_FILENAME, 'utf-8');
+      writeYaml = (content) => treeOrRoot.write(YARNRC_FILENAME, content);
     }
 
     if (!checkExists()) {
       output.warn({
-        title: `No ${PNPM_WORKSPACE_FILENAME} found`,
+        title: `No ${YARNRC_FILENAME} found`,
         bodyLines: [
-          `Cannot update catalog versions without a ${PNPM_WORKSPACE_FILENAME} file.`,
-          `Create a ${PNPM_WORKSPACE_FILENAME} file to use catalogs.`,
+          `Cannot update catalog versions without a ${YARNRC_FILENAME} file.`,
+          `Create a ${YARNRC_FILENAME} file to use catalogs.`,
         ],
       });
       return;
@@ -253,7 +250,7 @@ export class PnpmCatalogManager implements CatalogManager {
         const normalizedCatalogName =
           catalogName === 'default' ? undefined : catalogName;
 
-        let targetCatalog: PnpmCatalogEntry;
+        let targetCatalog: YarnCatalogEntry;
         if (!normalizedCatalogName) {
           // Default catalog - update whichever exists, prefer catalog over catalogs.default
           if (configData.catalog) {
@@ -297,12 +294,12 @@ export class PnpmCatalogManager implements CatalogManager {
   }
 }
 
-function readConfigFromFs(path: string): PnpmWorkspaceYaml | null {
+function readConfigFromFs(path: string): YarnWorkspaceYaml | null {
   try {
-    return readYamlFile<PnpmWorkspaceYaml>(path);
+    return readYamlFile<YarnWorkspaceYaml>(path);
   } catch (error) {
     output.warn({
-      title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
+      title: `Unable to parse ${YARNRC_FILENAME}`,
       bodyLines: [error.toString()],
     });
     return null;
@@ -312,14 +309,15 @@ function readConfigFromFs(path: string): PnpmWorkspaceYaml | null {
 function readConfigFromTree(
   tree: Tree,
   path: string
-): PnpmWorkspaceYaml | null {
+): YarnWorkspaceYaml | null {
   const content = tree.read(path, 'utf-8');
+  const { load } = require('@zkochan/js-yaml');
 
   try {
-    return load(content, { filename: path }) as PnpmWorkspaceYaml;
+    return load(content, { filename: path }) as YarnWorkspaceYaml;
   } catch (error) {
     output.warn({
-      title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
+      title: `Unable to parse ${YARNRC_FILENAME}`,
       bodyLines: [error.toString()],
     });
     return null;
