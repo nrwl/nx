@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   runCLI,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
@@ -22,6 +23,9 @@ describe('create-nx-workspace --template', () => {
         });
 
         expect(() => runCLI('run-many -t lint,test,build')).not.toThrow();
+
+        const nxJson = readJson(`nx.json`);
+        expect(nxJson.nxCloudId).toBeUndefined();
       },
       600_000
     );

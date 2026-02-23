@@ -3,8 +3,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import * as pc from 'picocolors';
 import { claudeMcpJsonPath } from '../../ai/constants';
+import { detectAiAgent } from '../../ai/detect-ai-agent';
 import {
   Agent,
+  agentDisplayMap,
   AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
@@ -208,6 +210,99 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   }
+
+  // Automatic mode (no explicit --agents): update outdated agents and report
+  // non-configured ones. When an AI agent is detected, also configure the
+  // detected agent itself (even if non-configured or partial).
+  const detectedAgent = detectAiAgent();
+  const agentsExplicitlyPassed = options.agents !== undefined;
+  const isAutoMode =
+    !agentsExplicitlyPassed && (options.interactive === false || detectedAgent);
+
+  if (isAutoMode) {
+    const agentsToConfig: Agent[] = [];
+    const allConfigs = [
+      ...nonConfiguredAgents,
+      ...partiallyConfiguredAgents,
+      ...fullyConfiguredAgents,
+    ];
+
+    // When an AI agent is detected, configure it if it needs it
+    if (detectedAgent) {
+      const detectedNeedsConfig =
+        nonConfiguredAgents.some((a) => a.name === detectedAgent) ||
+        partiallyConfiguredAgents.some((a) => a.name === detectedAgent) ||
+        fullyConfiguredAgents.some(
+          (a) => a.name === detectedAgent && a.outdated
+        );
+
+      if (detectedNeedsConfig) {
+        agentsToConfig.push(detectedAgent);
+      }
+    }
+
+    // Update any other outdated agents
+    for (const a of fullyConfiguredAgents) {
+      if (a.outdated && !agentsToConfig.includes(a.name)) {
+        agentsToConfig.push(a.name);
+      }
+    }
+
+    const stillNonConfigured = nonConfiguredAgents.filter(
+      (a) => !agentsToConfig.includes(a.name)
+    );
+
+    const nothingToDoMessage = detectedAgent
+      ? `${
+          agentDisplayMap[detectedAgent] ?? detectedAgent
+        } configuration is up to date`
+      : 'All configured AI agents are up to date';
+
+    if (agentsToConfig.length > 0) {
+      const configSpinner = ora(`Configuring agent(s)...`).start();
+      try {
+        await configureAgents(agentsToConfig, workspaceRoot, false);
+        configSpinner.stop();
+
+        output.success({
+          title: 'AI agents configured successfully',
+          bodyLines: agentsToConfig.map((name) => {
+            const config = allConfigs.find((a) => a.name === name);
+            return config
+              ? `${config.displayName}: ${getAgentConfiguredDescription(config)}`
+              : `- ${name}`;
+          }),
+        });
+      } catch (e) {
+        configSpinner.fail('Failed to configure AI agents');
+        output.error({
+          title: 'Error details:',
+          bodyLines: [e.message],
+        });
+        process.exit(1);
+      }
+    } else {
+      output.success({
+        title: nothingToDoMessage,
+      });
+    }
+
+    if (stillNonConfigured.length > 0) {
+      const agentNames = stillNonConfigured.map((a) => a.name);
+      output.log({
+        title: 'The following agents are not yet configured:',
+        bodyLines: [
+          ...stillNonConfigured.map((a) => `- ${a.displayName}`),
+          '',
+          `Run: nx configure-ai-agents --agents ${agentNames.join(' ')}`,
+        ],
+      });
+    }
+
+    return;
+  }
+
+  // Interactive mode (or non-interactive with explicit --agents)
   const allAgentChoices: AgentPromptChoice[] = [];
   const preselectedIndices: number[] = [];
   let currentIndex = 0;
@@ -268,7 +363,7 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   } else {
-    // in non-interactive mode, configure all
+    // non-interactive with explicit --agents: configure all requested
     selectedAgents = allAgentChoices.map((a) => a.name);
   }
 

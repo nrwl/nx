@@ -297,7 +297,7 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --nxCloud=skip --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --no-interactive`;
 
   if (preset) {
     command += ` --preset=${preset}`;

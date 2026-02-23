@@ -402,7 +402,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
  * Generate a reason for why a plugin was detected.
  * Used for AI `needs_input` output.
  */
-function getPluginReason(plugin: string): string {
+export function getPluginReason(plugin: string): string {
   const reasonMap: Record<string, string> = {
     '@nx/eslint': 'eslint detected in dependencies',
     '@nx/storybook': 'storybook detected in dependencies',

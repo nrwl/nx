@@ -63,6 +63,9 @@ class NxProjectAnalyzer(
     val projectMetadata = JsonObject()
     projectMetadata.addProperty("mavenProject", projectName)
     projectMetadata.add("targetGroups", targetGroups)
+    val technologies = JsonArray()
+    technologies.add("maven")
+    projectMetadata.add("technologies", technologies)
     nxProject.add("metadata", projectMetadata)
 
     // Tags
