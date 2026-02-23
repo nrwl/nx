@@ -1,7 +1,12 @@
 import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
-import { initializeTelemetry, flushTelemetry } from '../native';
+import {
+  initializeTelemetry,
+  flushTelemetry,
+  trackEvent as trackEventNative,
+  trackPageView as trackPageViewNative,
+} from '../native';
 import {
   getPackageManagerVersion,
   detectPackageManager,
@@ -259,17 +264,13 @@ function trackEvent(
       }
     }
 
-    // Import dynamically to avoid circular dependencies
+    // Fire and forget - don't await
     if (isPageView) {
-      const { trackPageView } = require('../native');
-      // Fire and forget - don't await
-      trackPageView(eventName, pageLocation, stringParams).catch(() => {
+      trackPageViewNative(eventName, pageLocation, stringParams).catch(() => {
         // Silently ignore errors
       });
     } else {
-      const { trackEvent } = require('../native');
-      // Fire and forget - don't await
-      trackEvent(eventName, stringParams).catch(() => {
+      trackEventNative(eventName, stringParams).catch(() => {
         // Silently ignore errors
       });
     }
