@@ -272,6 +272,12 @@ export interface FileSetInput {
 
 export declare export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
+/**
+ * Flush all pending telemetry data
+ * This should be called before process exit
+ */
+export declare export declare function flushTelemetry(): Promise<void>
+
 export declare export declare function getBinaryTarget(): string
 
 export declare export declare function getDefaultMaxCacheSize(cachePath: string): number
@@ -344,6 +350,12 @@ export interface HashInputs {
   /** External dependencies */
   external: Array<string>
 }
+
+/**
+ * Initialize the global telemetry service
+ * This should be called once at startup from TypeScript
+ */
+export declare export declare function initializeTelemetry(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isAiAgent: boolean): void
 
 export interface InputsInput {
   input: string
@@ -519,6 +531,12 @@ export interface TaskTarget {
 }
 
 export declare export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/**
+ * Track an event from JavaScript/TypeScript code using the global instance
+ * This is a wrapper for the global instance's event method
+ */
+export declare export declare function trackEventFromJs(eventName: string, parameters?: Record<string, string> | undefined | null, isPageView?: boolean | undefined | null, pageLocation?: string | undefined | null): Promise<void>
 
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker

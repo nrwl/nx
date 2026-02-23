@@ -1,4 +1,26 @@
+//! Telemetry service for tracking analytics events
+//!
+//! This module provides both a NAPI-exposed TelemetryService for TypeScript
+//! and a global instance that Rust code can use directly.
+//!
+//! # Example usage from Rust code:
+//! ```rust
+//! use crate::native::telemetry::{track_event, track_event_sync};
+//! use std::collections::HashMap;
+//!
+//! // From async context:
+//! let mut params = HashMap::new();
+//! params.insert("project_count".to_string(), "42".to_string());
+//! track_event("workspace_analyzed", params);
+//!
+//! // From sync context:
+//! let mut params = HashMap::new();
+//! params.insert("error_type".to_string(), "parse_error".to_string());
+//! track_event_sync("native_error", params);
+//! ```
+
 use napi::bindgen_prelude::*;
+use once_cell::sync::OnceCell;
 use reqwest::{Client, ClientBuilder};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -8,6 +30,9 @@ const TRACKING_ID_PROD: &str = "G-83SJXKY605";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
 
 type ParameterMap = HashMap<String, String>;
+
+// Global telemetry instance for Rust code to use directly
+static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
 
 #[napi]
 pub struct TelemetryService {
@@ -198,4 +223,106 @@ impl TelemetryService {
             .collect::<Vec<_>>()
             .join("&")
     }
+}
+
+// Global telemetry initialization and helper functions for Rust code
+
+/// Initialize the global telemetry service
+/// This should be called once at startup from TypeScript
+#[napi]
+pub fn initialize_telemetry(
+    workspace_id: String,
+    user_id: String,
+    nx_version: String,
+    package_manager_name: String,
+    package_manager_version: Option<String>,
+    node_version: String,
+    os_arch: String,
+    os_platform: String,
+    os_release: String,
+    is_ai_agent: bool,
+) -> Result<()> {
+    let service = TelemetryService::new(
+        workspace_id,
+        user_id,
+        nx_version,
+        package_manager_name,
+        package_manager_version,
+        node_version,
+        os_arch,
+        os_platform,
+        os_release,
+        is_ai_agent,
+    )?;
+
+    GLOBAL_TELEMETRY
+        .set(Arc::new(service))
+        .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
+
+    Ok(())
+}
+
+/// Track an event from Rust code (non-blocking)
+/// This is a fire-and-forget operation - errors are logged but not returned
+pub fn track_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        let event_name = event_name.into();
+        let telemetry = Arc::clone(telemetry);
+
+        // Spawn a task to avoid blocking the caller
+        tokio::spawn(async move {
+            if let Err(e) = telemetry
+                .event(event_name, Some(parameters), None, None)
+                .await
+            {
+                tracing::trace!("Failed to track event: {}", e);
+            }
+        });
+    }
+}
+
+/// Track an event from Rust code synchronously (for use in non-async contexts)
+/// This queues the event but doesn't wait for it to be sent
+pub fn track_event_sync(event_name: impl Into<String>, parameters: HashMap<String, String>) {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        let event_name = event_name.into();
+        let parameters = Some(parameters);
+        let telemetry = Arc::clone(telemetry);
+
+        // Spawn on the tokio runtime without waiting
+        let _ = tokio::runtime::Handle::try_current().map(|handle| {
+            handle.spawn(async move {
+                if let Err(e) = telemetry.event(event_name, parameters, None, None).await {
+                    tracing::trace!("Failed to track event: {}", e);
+                }
+            });
+        });
+    }
+}
+
+/// Track an event from JavaScript/TypeScript code using the global instance
+/// This is a wrapper for the global instance's event method
+#[napi]
+pub async fn track_event_from_js(
+    event_name: String,
+    parameters: Option<HashMap<String, String>>,
+    is_page_view: Option<bool>,
+    page_location: Option<String>,
+) -> Result<()> {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry
+            .event(event_name, parameters, is_page_view, page_location)
+            .await?;
+    }
+    Ok(())
+}
+
+/// Flush all pending telemetry data
+/// This should be called before process exit
+#[napi]
+pub async fn flush_telemetry() -> Result<()> {
+    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.flush().await?;
+    }
+    Ok(())
 }

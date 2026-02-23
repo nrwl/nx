@@ -1,7 +1,7 @@
 import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
-import { TelemetryService, isAiAgent } from '../native';
+import { initializeTelemetry, flushTelemetry, isAiAgent } from '../native';
 import { machineId } from 'node-machine-id';
 import {
   getPackageManagerVersion,
@@ -15,7 +15,7 @@ import {
 import { parse } from 'semver';
 import * as os from 'os';
 
-let _telemetryService: TelemetryService | null = null;
+let _telemetryInitialized = false;
 let _currentMachineId: string = null;
 
 export async function startAnalytics() {
@@ -33,7 +33,7 @@ export async function startAnalytics() {
     : 'unknown';
 
   try {
-    _telemetryService = new TelemetryService(
+    initializeTelemetry(
       workspaceId,
       userId,
       nxVersion,
@@ -45,6 +45,7 @@ export async function startAnalytics() {
       os.release(),
       isAiAgent()
     );
+    _telemetryInitialized = true;
   } catch (error) {
     // If telemetry service fails to initialize, continue without it
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -249,7 +250,7 @@ function trackEvent(
   isPageView?: boolean,
   pageLocation?: string
 ) {
-  if (_telemetryService) {
+  if (_telemetryInitialized) {
     // Convert parameters to string map for Rust
     const stringParams: Record<string, string> = {};
     if (parameters) {
@@ -259,14 +260,22 @@ function trackEvent(
         }
       }
     }
-    _telemetryService.event(eventName, stringParams, isPageView, pageLocation);
+
+    // Import dynamically to avoid circular dependencies
+    const { trackEventFromJs } = require('../native');
+    // Fire and forget - don't await
+    trackEventFromJs(eventName, stringParams, isPageView, pageLocation).catch(
+      () => {
+        // Silently ignore errors
+      }
+    );
   }
 }
 
 export async function flushAnalytics() {
-  if (_telemetryService) {
+  if (_telemetryInitialized) {
     try {
-      await _telemetryService.flush();
+      await flushTelemetry();
     } catch (error) {
       // Failure to report analytics shouldn't crash the CLI
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -277,7 +286,7 @@ export async function flushAnalytics() {
 }
 
 export function exitAndFlushAnalytics(code: string | number): never {
-  if (_telemetryService) {
+  if (_telemetryInitialized) {
     // Synchronously flush analytics before exit
     // This is a blocking operation that waits for HTTP requests to complete
     flushAnalytics()
