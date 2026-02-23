@@ -94,7 +94,10 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2 --no-batch', { verbose: true });
+        let buildOutput = runCLI('build app2 --no-batch', {
+          verbose: true,
+          redirectStderr: true,
+        });
         // app2 depends on app
         expect(buildOutput).toContain('nx run app:build');
         expect(buildOutput).toContain(':app:classes');
