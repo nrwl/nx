@@ -15,10 +15,10 @@ see [Bundling projects for deployment](/docs/technologies/node/guides/bundling-n
 
 ## When to prune instead of bundle
 
-| Approach | Best for                                | Trade-off                                     |
-| -------- | --------------------------------------- | --------------------------------------------- |
+| Approach                                                          | Best for                                | Trade-off                                     |
+| ----------------------------------------------------------------- | --------------------------------------- | --------------------------------------------- |
 | [Bundling](/docs/technologies/node/guides/bundling-node-projects) | Serverless functions, simple APIs       | Single file output, no `node_modules` needed  |
-| Pruning  | Docker deployments, native dependencies | Keeps `node_modules` but only production deps |
+| Pruning                                                           | Docker deployments, native dependencies | Keeps `node_modules` but only production deps |
 
 Use pruning when:
 
@@ -69,9 +69,7 @@ Add the following targets to your project's `package.json` or `project.json`:
   "nx": {
     "targets": {
       "prune-lockfile": {
-        "dependsOn": [
-          "build"
-        ],
+        "dependsOn": ["build"],
         "cache": true,
         "executor": "@nx/js:prune-lockfile",
         "outputs": [
@@ -83,23 +81,16 @@ Add the following targets to your project's `package.json` or `project.json`:
         }
       },
       "copy-workspace-modules": {
-        "dependsOn": [
-          "build"
-        ],
+        "dependsOn": ["build"],
         "cache": true,
-        "outputs": [
-          "{workspaceRoot}/apps/my-app/dist/workspace_modules"
-        ],
+        "outputs": ["{workspaceRoot}/apps/my-app/dist/workspace_modules"],
         "executor": "@nx/js:copy-workspace-modules",
         "options": {
           "buildTarget": "build"
         }
       },
       "prune": {
-        "dependsOn": [
-          "prune-lockfile",
-          "copy-workspace-modules"
-        ],
+        "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
         "executor": "nx:noop"
       }
     }
@@ -117,9 +108,7 @@ Add the following targets to your project's `package.json` or `project.json`:
   "name": "@my-org/my-app",
   "targets": {
     "prune-lockfile": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "cache": true,
       "executor": "@nx/js:prune-lockfile",
       "outputs": [
@@ -131,23 +120,16 @@ Add the following targets to your project's `package.json` or `project.json`:
       }
     },
     "copy-workspace-modules": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "cache": true,
-      "outputs": [
-        "{workspaceRoot}/apps/my-app/dist/workspace_modules"
-      ],
+      "outputs": ["{workspaceRoot}/apps/my-app/dist/workspace_modules"],
       "executor": "@nx/js:copy-workspace-modules",
       "options": {
         "buildTarget": "build"
       }
     },
     "prune": {
-      "dependsOn": [
-        "prune-lockfile",
-        "copy-workspace-modules"
-      ],
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
       "executor": "nx:noop"
     }
   }

@@ -14,10 +14,10 @@ see [pruning projects for deployment](/docs/technologies/node/guides/deploying-n
 
 ## When to bundle instead of prune
 
-| Approach | Best for                                | Trade-off                                     |
-| -------- | --------------------------------------- | --------------------------------------------- |
-| Bundling | Serverless functions, simple APIs       | Single file output, no `node_modules` needed  |
-| [Pruning](/docs/technologies/node/guides/deploying-node-projects)  | Docker deployments, native dependencies | Keeps `node_modules` but only production deps |
+| Approach                                                          | Best for                                | Trade-off                                     |
+| ----------------------------------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| Bundling                                                          | Serverless functions, simple APIs       | Single file output, no `node_modules` needed  |
+| [Pruning](/docs/technologies/node/guides/deploying-node-projects) | Docker deployments, native dependencies | Keeps `node_modules` but only production deps |
 
 Use bundling when:
 
