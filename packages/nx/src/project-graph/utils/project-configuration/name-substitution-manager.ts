@@ -249,6 +249,70 @@ export class ProjectNameInNodePropsManager {
   // the *referenced* project, so they fire when that project is renamed.
   // The substitutor closes over `ownerRoot` and the array index so it can
   // navigate to the correct property in the final merged config.
+  // Factory methods for creating substitutors. Using factory functions instead
+  // of inline closures ensures that index variables (i, j) are captured as
+  // function parameters (always by value), preventing classic closure-over-
+  // loop-variable bugs where a shared `let` binding is mutated after the
+  // closure is created.
+
+  private createInputsStringSubstitutor(
+    targetName: string,
+    i: number
+  ): ProjectNameSubstitutor {
+    return (finalName, ownerConfig) => {
+      const finalInput = ownerConfig.targets?.[targetName]?.inputs?.[i];
+      if (
+        finalInput &&
+        typeof finalInput === 'object' &&
+        'projects' in finalInput
+      ) {
+        (finalInput as { projects: string }).projects = finalName;
+      }
+    };
+  }
+
+  private createInputsArraySubstitutor(
+    targetName: string,
+    i: number,
+    j: number
+  ): ProjectNameSubstitutor {
+    return (finalName, ownerConfig) => {
+      const finalInput = ownerConfig.targets?.[targetName]?.inputs?.[i];
+      if (
+        finalInput &&
+        typeof finalInput === 'object' &&
+        'projects' in finalInput
+      ) {
+        (finalInput['projects'] as string[])[j] = finalName;
+      }
+    };
+  }
+
+  private createDependsOnStringSubstitutor(
+    targetName: string,
+    i: number
+  ): ProjectNameSubstitutor {
+    return (finalName, ownerConfig) => {
+      const finalDep = ownerConfig.targets?.[targetName]?.dependsOn?.[i];
+      if (finalDep && typeof finalDep === 'object' && 'projects' in finalDep) {
+        (finalDep as { projects: string }).projects = finalName;
+      }
+    };
+  }
+
+  private createDependsOnArraySubstitutor(
+    targetName: string,
+    i: number,
+    j: number
+  ): ProjectNameSubstitutor {
+    return (finalName, ownerConfig) => {
+      const finalDep = ownerConfig.targets?.[targetName]?.dependsOn?.[i];
+      if (finalDep && typeof finalDep === 'object' && 'projects' in finalDep) {
+        (finalDep['projects'] as string[])[j] = finalName;
+      }
+    };
+  }
+
   private registerSubstitutorsForInputs(
     ownerRoot: string,
     targetName: string,
@@ -277,16 +341,7 @@ export class ProjectNameInNodePropsManager {
             ownerRoot,
             arrayKey,
             i,
-            (finalName, ownerConfig) => {
-              const finalInput = ownerConfig.targets?.[targetName]?.inputs?.[i];
-              if (
-                finalInput &&
-                typeof finalInput === 'object' &&
-                'projects' in finalInput
-              ) {
-                (finalInput as { projects: string }).projects = finalName;
-              }
-            }
+            this.createInputsStringSubstitutor(targetName, i)
           );
         }
       } else if (Array.isArray(inputProjectNames)) {
@@ -294,23 +349,12 @@ export class ProjectNameInNodePropsManager {
           const projectName = inputProjectNames[j];
           const referencedProject = nameMap.get(projectName);
           if (referencedProject) {
-            const arrayIndex = j; // Capture j by value
             this.registerProjectNameSubstitutor(
               referencedProject.root,
               ownerRoot,
               arrayKey,
               i,
-              (finalName, ownerConfig) => {
-                const finalInput =
-                  ownerConfig.targets?.[targetName]?.inputs?.[i];
-                if (
-                  finalInput &&
-                  typeof finalInput === 'object' &&
-                  'projects' in finalInput
-                ) {
-                  (finalInput['projects'] as string[])[arrayIndex] = finalName;
-                }
-              },
+              this.createInputsArraySubstitutor(targetName, i, j),
               j // Pass subIndex for array elements
             );
           }
@@ -354,17 +398,7 @@ export class ProjectNameInNodePropsManager {
             ownerRoot,
             arrayKey,
             i,
-            (finalName, ownerConfig) => {
-              const finalDep =
-                ownerConfig.targets?.[targetName]?.dependsOn?.[i];
-              if (
-                finalDep &&
-                typeof finalDep === 'object' &&
-                'projects' in finalDep
-              ) {
-                (finalDep as { projects: string }).projects = finalName;
-              }
-            }
+            this.createDependsOnStringSubstitutor(targetName, i)
           );
         }
       } else if (Array.isArray(depProjects)) {
@@ -377,23 +411,12 @@ export class ProjectNameInNodePropsManager {
           }
           const referencedProject = nameMap.get(projectName);
           if (referencedProject) {
-            const arrayIndex = j; // Capture j by value
             this.registerProjectNameSubstitutor(
               referencedProject.root,
               ownerRoot,
               arrayKey,
               i,
-              (finalName, ownerConfig) => {
-                const finalDep =
-                  ownerConfig.targets?.[targetName]?.dependsOn?.[i];
-                if (
-                  finalDep &&
-                  typeof finalDep === 'object' &&
-                  'projects' in finalDep
-                ) {
-                  (finalDep['projects'] as string[])[arrayIndex] = finalName;
-                }
-              },
+              this.createDependsOnArraySubstitutor(targetName, i, j),
               j // Pass subIndex for array elements
             );
           }

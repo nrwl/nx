@@ -537,7 +537,15 @@ function mergeCreateNodesResults(
     Record<string, SourceInformation>
   > = {};
 
-  for (const result of results.flat()) {
+  const flatResults = results.flat();
+
+  // Pass 1: merge all plugin results into projectRootMap. Substitutors are
+  // registered in a second pass (below) so that the full projectRootMap is
+  // available when looking up referenced project names. Without two passes,
+  // processing proj-a's dependsOn before proj-b has been merged would make
+  // nameMap.get('project-b-original') return undefined, silently skipping
+  // substitutor registration.
+  for (const result of flatResults) {
     const [pluginName, file, nodes, pluginIndex] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
@@ -579,14 +587,21 @@ function mergeCreateNodesResults(
         );
       }
     }
+    Object.assign(externalNodes, pluginExternalNodes);
+  }
+
+  // Pass 2: now that projectRootMap contains all projects from all plugins,
+  // register substitutors. Each entry's projectNodes can look up any
+  // cross-plugin project reference by name in the fully-populated map.
+  for (const result of flatResults) {
+    const [, , nodes] = result;
     // This iterates over the plugin's returned project results
     // and registers substitutors for any fields that reference
     // another project by name under that target project's root.
     projectNameManager.registerSubstitutorsForNodeResults(
-      projectNodes,
+      nodes.projects,
       projectRootMap
     );
-    Object.assign(externalNodes, pluginExternalNodes);
   }
 
   try {
