@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.NxBatchOptions
+import dev.nx.gradle.data.NxTaskGraph
 
 fun parseArgs(args: Array<String>): NxBatchOptions {
   val argMap = mutableMapOf<String, String>()
@@ -28,6 +29,12 @@ fun parseArgs(args: Array<String>): NxBatchOptions {
         gson.fromJson(tasksJson, taskType)
       } else emptyMap()
 
+  val taskGraphJson = argMap["--taskGraph"]
+  val taskGraph: NxTaskGraph? =
+      if (taskGraphJson != null) {
+        gson.fromJson(taskGraphJson, NxTaskGraph::class.java)
+      } else null
+
   val excludeTasks =
       argMap["--excludeTasks"]?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
           ?: emptyList()
@@ -42,5 +49,6 @@ fun parseArgs(args: Array<String>): NxBatchOptions {
       args = argMap["--args"] ?: "",
       quiet = argMap["--quiet"]?.toBoolean() ?: false,
       excludeTasks = excludeTasks,
-      excludeTestTasks = excludeTestTasks)
+      excludeTestTasks = excludeTestTasks,
+      taskGraph = taskGraph)
 }

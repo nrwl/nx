@@ -33,6 +33,7 @@ import org.gradle.api.Task
 
 /**
  * Configure Nx project-level settings.
+ * extra comment line and such
  *
  * @param project The Gradle project to configure
  * @param configure The configuration block

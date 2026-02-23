@@ -48,7 +48,7 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
   @TaskAction
   fun action() {
     logger.info("${Date()} Apply task action NxProjectReportTask for ${projectName.get()}")
-    logger.info("${Date()} Hash input: ${hash.get()}")
+    logger.info("${Date()} Hash inputs hahahaha: ${hash.get()}")
     logger.info("${Date()} Target Name Overrides ${targetNameOverrides.get()}")
     logger.info("${Date()} Target Name Prefix: ${targetNamePrefix.get()}")
     logger.info("${Date()} Atomized: ${atomized.get()}")

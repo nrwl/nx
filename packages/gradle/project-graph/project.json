@@ -2,6 +2,15 @@
   "name": "gradle-project-graph",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "build": {
+      "dependsOn": [
+        "^build",
+        "typecheck",
+        "legacy-post-build",
+        "build-base",
+        "build-native"
+      ]
+    },
     "test": {
       "command": "./gradlew :project-graph:test",
       "options": {

@@ -81,7 +81,8 @@ export default async function* gradleBatchExecutor(
       excludeTasks,
       excludeTestTasks,
       args,
-      root
+      root,
+      taskGraph
     )) {
       receivedTasks.add(result.task);
       yield result;
@@ -198,7 +199,8 @@ async function* runTasksInBatchStreaming(
   excludeTasks: Set<string>,
   excludeTestTasks: Set<string>,
   args: string[],
-  root: string
+  root: string,
+  taskGraph: TaskGraph
 ): AsyncGenerator<BatchTaskResult> {
   const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
@@ -216,6 +218,11 @@ async function* runTasksInBatchStreaming(
     `--args=${args.join(' ').replaceAll("'", '"')}`,
     `--excludeTasks=${Array.from(excludeTasks).join(',')}`,
     `--excludeTestTasks=${Array.from(excludeTestTasks).join(',')}`,
+    `--taskGraph=${JSON.stringify({
+      roots: taskGraph.roots,
+      dependencies: taskGraph.dependencies,
+      continuousDependencies: {},
+    })}`,
   ];
 
   if (process.env.NX_VERBOSE_LOGGING !== 'true') {
