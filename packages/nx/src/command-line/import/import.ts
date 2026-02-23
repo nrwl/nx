@@ -40,11 +40,13 @@ import {
   logProgress,
   writeAiOutput,
   buildImportNeedsOptionsResult,
+  buildImportNeedsPluginSelectionResult,
   buildImportSuccessResult,
   buildImportErrorResult,
   determineImportErrorCode,
   type ImportWarning,
 } from './utils/ai-output';
+import { getPluginReason } from '../init/init-v2';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -94,6 +96,17 @@ export async function importHandler(options: ImportOptions) {
         buildImportNeedsOptionsResult(missingFields, sourceRepository)
       );
       process.exit(0);
+    }
+
+    // Check if this is a plugin-only call (second step of two-step flow)
+    if (destination && options.plugins) {
+      const absDestAi = join(process.cwd(), destination);
+      const destGitClient = new GitRepository(process.cwd());
+      const destFiles = await destGitClient.getGitFiles(absDestAi);
+      if (destFiles.length > 0) {
+        // Destination not empty + --plugins provided + AI mode = plugin-only mode
+        return await handlePluginOnlyMode(options, destGitClient, verbose);
+      }
     }
   }
   const destinationGitClient = new GitRepository(process.cwd());
@@ -346,6 +359,8 @@ export async function importHandler(options: ImportOptions) {
   let plugins: string[];
   let updatePackageScripts: boolean;
 
+  let detectedButNotInstalled: string[] | undefined;
+
   if (aiMode) {
     logProgress('detecting-plugins', 'Checking for recommended plugins...');
 
@@ -354,21 +369,21 @@ export async function importHandler(options: ImportOptions) {
     if (parsedPlugins === 'skip') {
       plugins = [];
       updatePackageScripts = false;
-    } else {
+    } else if (parsedPlugins === 'all') {
       const detected = await detectPlugins(nxJson, packageJson, false, true);
-      const detectedPluginNames = detected.plugins;
-
-      if (parsedPlugins === 'all' || parsedPlugins === undefined) {
-        // Default to installing all detected plugins in agent mode
-        plugins = detectedPluginNames;
-        updatePackageScripts = detected.updatePackageScripts;
-      } else if (Array.isArray(parsedPlugins)) {
-        plugins = parsedPlugins;
-        updatePackageScripts = true;
-      } else {
-        plugins = [];
-        updatePackageScripts = false;
+      plugins = detected.plugins;
+      updatePackageScripts = detected.updatePackageScripts;
+    } else if (Array.isArray(parsedPlugins)) {
+      plugins = parsedPlugins;
+      updatePackageScripts = true;
+    } else {
+      // No --plugins flag: detect and report, let agent decide
+      const detected = await detectPlugins(nxJson, packageJson, false, true);
+      if (detected.plugins.length > 0) {
+        detectedButNotInstalled = detected.plugins;
       }
+      plugins = [];
+      updatePackageScripts = false;
     }
   } else {
     const detected = await detectPlugins(
@@ -494,47 +509,63 @@ export async function importHandler(options: ImportOptions) {
   }
 
   if (aiMode) {
-    const warnings: ImportWarning[] = [];
+    if (detectedButNotInstalled && detectedButNotInstalled.length > 0) {
+      // Import is done but plugins need selection — return needs_input
+      writeAiOutput(
+        buildImportNeedsPluginSelectionResult({
+          detectedPlugins: detectedButNotInstalled.map((name) => ({
+            name,
+            reason: getPluginReason(name),
+          })),
+          sourceRepository,
+          ref,
+          source: source || '.',
+          destination,
+        })
+      );
+    } else {
+      const warnings: ImportWarning[] = [];
 
-    if (packageManager !== sourcePackageManager) {
-      warnings.push({
-        type: 'package_manager_mismatch',
-        message: `Source uses ${sourcePackageManager}, workspace uses ${packageManager}`,
-        hint: 'Check for package.json feature discrepancies',
-      });
-    }
-    if (source !== destination) {
-      warnings.push({
-        type: 'config_path_mismatch',
-        message: `Source directory (${source}) differs from destination (${destination})`,
-        hint: 'Update relative paths in configuration files (tsconfig.json, project.json, etc.)',
-      });
-    }
-    if (ref) {
-      warnings.push({
-        type: 'missing_root_deps',
-        message: 'Root dependencies and devDependencies are not imported',
-        hint: 'Manually add required dependencies from the source repository',
-      });
-    }
-    if (!installed) {
-      warnings.push({
-        type: 'install_failed',
-        message: 'Package installation failed after import',
-        hint: `Run "${pmc.install}" manually to resolve`,
-      });
-    }
+      if (packageManager !== sourcePackageManager) {
+        warnings.push({
+          type: 'package_manager_mismatch',
+          message: `Source uses ${sourcePackageManager}, workspace uses ${packageManager}`,
+          hint: 'Check for package.json feature discrepancies',
+        });
+      }
+      if (source !== destination) {
+        warnings.push({
+          type: 'config_path_mismatch',
+          message: `Source directory (${source}) differs from destination (${destination})`,
+          hint: 'Update relative paths in configuration files (tsconfig.json, project.json, etc.)',
+        });
+      }
+      if (ref) {
+        warnings.push({
+          type: 'missing_root_deps',
+          message: 'Root dependencies and devDependencies are not imported',
+          hint: 'Manually add required dependencies from the source repository',
+        });
+      }
+      if (!installed) {
+        warnings.push({
+          type: 'install_failed',
+          message: 'Package installation failed after import',
+          hint: `Run "${pmc.install}" manually to resolve`,
+        });
+      }
 
-    writeAiOutput(
-      buildImportSuccessResult({
-        sourceRepository,
-        ref,
-        source: source || '.',
-        destination,
-        pluginsInstalled: plugins.filter(() => installed),
-        warnings: warnings.length > 0 ? warnings : undefined,
-      })
-    );
+      writeAiOutput(
+        buildImportSuccessResult({
+          sourceRepository,
+          ref,
+          source: source || '.',
+          destination,
+          pluginsInstalled: plugins.filter(() => installed),
+          warnings: warnings.length > 0 ? warnings : undefined,
+        })
+      );
+    }
   }
 }
 
@@ -548,6 +579,79 @@ async function assertDestinationEmpty(
       `Destination directory ${absDestination} is not empty. Please make sure it is empty before importing into it.`
     );
   }
+}
+
+/**
+ * Handle the plugin-only mode (second call in two-step AI flow).
+ * Destination already has imported code, just install plugins.
+ */
+async function handlePluginOnlyMode(
+  options: ImportOptions,
+  destinationGitClient: GitRepository,
+  verbose: boolean
+): Promise<void> {
+  logProgress(
+    'installing-plugins',
+    'Installing plugins for imported project...'
+  );
+
+  const pmc = getPackageManagerCommand();
+  const nxJson = readNxJson(workspaceRoot);
+  let packageJson: PackageJson | null;
+  try {
+    packageJson = readJsonFile<PackageJson>('package.json');
+  } catch {
+    packageJson = null;
+  }
+
+  const parsedPlugins = parsePluginsFlag(options.plugins);
+  let plugins: string[];
+  let updatePackageScripts: boolean;
+
+  if (parsedPlugins === 'skip') {
+    plugins = [];
+    updatePackageScripts = false;
+  } else if (parsedPlugins === 'all') {
+    const detected = await detectPlugins(nxJson, packageJson, false, true);
+    plugins = detected.plugins;
+    updatePackageScripts = detected.updatePackageScripts;
+  } else if (Array.isArray(parsedPlugins)) {
+    plugins = parsedPlugins;
+    updatePackageScripts = true;
+  } else {
+    plugins = [];
+    updatePackageScripts = false;
+  }
+
+  if (plugins.length > 0) {
+    const installed = await runPluginsInstall(
+      plugins,
+      pmc,
+      destinationGitClient
+    );
+    if (installed) {
+      const { succeededPlugins } = await configurePlugins(
+        plugins,
+        updatePackageScripts,
+        pmc,
+        workspaceRoot,
+        verbose
+      );
+      if (succeededPlugins.length > 0) {
+        await destinationGitClient.amendCommit();
+      }
+    }
+  }
+
+  writeAiOutput(
+    buildImportSuccessResult({
+      sourceRepository: options.sourceRepository,
+      ref: options.ref,
+      source: options.source || '.',
+      destination: options.destination,
+      pluginsInstalled: plugins,
+    })
+  );
 }
 
 function getTempImportBranch(sourceBranch: string) {

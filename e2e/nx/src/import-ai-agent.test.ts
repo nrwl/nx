@@ -119,8 +119,8 @@ describe('Nx Import - AI Agent Mode', () => {
     });
   });
 
-  describe('default plugin detection (no --plugins flag)', () => {
-    it('should detect plugins and complete without --plugins flag', () => {
+  describe('default behavior without --plugins flag', () => {
+    it('should import and complete when no plugins detected', () => {
       const repoPath = createSimpleRepo(
         tempImportE2ERoot,
         'default-plugins-test'
@@ -141,12 +141,39 @@ describe('Nx Import - AI Agent Mode', () => {
       );
       expect(success).toBeDefined();
       expect(success.result.destination).toBe('projects/default-plugins');
-      expect(Array.isArray(success.result.pluginsInstalled)).toBe(true);
+      expect(success.result.pluginsInstalled).toEqual([]);
 
       checkFilesExist(
         'projects/default-plugins/README.md',
         'projects/default-plugins/package.json'
       );
+    });
+  });
+
+  describe('two-step plugin flow', () => {
+    it('should allow plugin-only second call on already-imported destination', () => {
+      const repoPath = createSimpleRepo(tempImportE2ERoot, 'two-step-test');
+
+      // Step 1: Import without plugins
+      runCLI(
+        `import ${repoPath} projects/two-step --ref main --source . --plugins skip`,
+        { verbose: true, env: agentEnv }
+      );
+      runCommand(`git add . && git commit -am "first import"`);
+
+      // Step 2: Call again with --plugins on the same destination
+      const output = runCLI(
+        `import ${repoPath} projects/two-step --ref main --source . --plugins skip`,
+        { verbose: true, env: agentEnv }
+      );
+      const messages = parseNdjsonOutput(output);
+
+      const success = findMessage(
+        messages,
+        (m) => m.stage === 'complete' && m.success === true
+      );
+      expect(success).toBeDefined();
+      expect(success.result.destination).toBe('projects/two-step');
     });
   });
 
@@ -183,8 +210,9 @@ describe('Nx Import - AI Agent Mode', () => {
       );
       runCommand(`git add . && git commit -am "first import"`);
 
+      // Second call without --plugins: should error (not plugin-only mode)
       const output = runCLI(
-        `import ${repoPath} projects/error-dest --ref main --source . --plugins skip`,
+        `import ${repoPath} projects/error-dest --ref main --source .`,
         { silenceError: true, env: agentEnv }
       );
       const messages = parseNdjsonOutput(output);

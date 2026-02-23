@@ -8,6 +8,7 @@ import {
   writeAiOutput,
   logProgress,
   writeErrorLog,
+  type DetectedPlugin,
   type NextStep,
   type UserNextSteps,
   type PluginWarning,
@@ -24,6 +25,7 @@ export type ImportProgressStage =
   | 'merging'
   | 'detecting-plugins'
   | 'installing'
+  | 'installing-plugins'
   | 'complete'
   | 'error'
   | 'needs_input';
@@ -55,6 +57,24 @@ export interface ImportNeedsOptionsResult {
   missingFields: string[];
   availableOptions: Record<string, ImportOptionInfo>;
   exampleCommand: string;
+}
+
+export interface ImportNeedsPluginSelectionResult {
+  stage: 'needs_input';
+  success: false;
+  inputType: 'plugins';
+  message: string;
+  detectedPlugins: DetectedPlugin[];
+  options: string[];
+  recommendedOption: string;
+  recommendedReason: string;
+  exampleCommand: string;
+  result: {
+    sourceRepository: string;
+    ref: string;
+    source: string;
+    destination: string;
+  };
 }
 
 export interface ImportSuccessResult {
@@ -98,6 +118,7 @@ export interface ImportErrorResult {
 export type ImportAiOutputMessage =
   | { stage: ImportProgressStage; message: string }
   | ImportNeedsOptionsResult
+  | ImportNeedsPluginSelectionResult
   | ImportSuccessResult
   | ImportErrorResult;
 
@@ -138,6 +159,35 @@ export function buildImportNeedsOptionsResult(
     missingFields,
     availableOptions: AVAILABLE_OPTIONS,
     exampleCommand: `nx import ${exampleRepo} --ref=main --source=apps/my-app --destination=apps/my-app`,
+  };
+}
+
+export function buildImportNeedsPluginSelectionResult(options: {
+  detectedPlugins: DetectedPlugin[];
+  sourceRepository: string;
+  ref: string;
+  source: string;
+  destination: string;
+}): ImportNeedsPluginSelectionResult {
+  const pluginList = options.detectedPlugins.map((p) => p.name).join(',');
+
+  return {
+    stage: 'needs_input',
+    success: false,
+    inputType: 'plugins',
+    message:
+      'Import complete. Plugin selection required. Ask the user which plugins to install, then run again with --plugins flag.',
+    detectedPlugins: options.detectedPlugins,
+    options: ['--plugins=skip', '--plugins=all', `--plugins=${pluginList}`],
+    recommendedOption: '--plugins=skip',
+    recommendedReason: 'Plugins can be added later with nx add.',
+    exampleCommand: `nx import ${options.sourceRepository} ${options.destination} --ref=${options.ref} --source=${options.source} --plugins=${options.detectedPlugins[0]?.name || '@nx/vite'}`,
+    result: {
+      sourceRepository: options.sourceRepository,
+      ref: options.ref,
+      source: options.source,
+      destination: options.destination,
+    },
   };
 }
 

@@ -1,5 +1,6 @@
 import {
   buildImportNeedsOptionsResult,
+  buildImportNeedsPluginSelectionResult,
   buildImportSuccessResult,
   buildImportErrorResult,
   determineImportErrorCode,
@@ -30,6 +31,34 @@ describe('import ai-output', () => {
         'https://github.com/org/repo'
       );
       expect(result.exampleCommand).toContain('https://github.com/org/repo');
+    });
+  });
+
+  describe('buildImportNeedsPluginSelectionResult', () => {
+    it('should include detected plugins and import result details', () => {
+      const result = buildImportNeedsPluginSelectionResult({
+        detectedPlugins: [
+          { name: '@nx/vite', reason: 'vite detected in dependencies' },
+          { name: '@nx/jest', reason: 'jest detected in dependencies' },
+        ],
+        sourceRepository: 'https://github.com/org/repo',
+        ref: 'main',
+        source: '.',
+        destination: 'apps/my-app',
+      });
+      expect(result.stage).toBe('needs_input');
+      expect(result.success).toBe(false);
+      expect(result.inputType).toBe('plugins');
+      expect(result.detectedPlugins).toHaveLength(2);
+      expect(result.detectedPlugins[0].name).toBe('@nx/vite');
+      expect(result.result.sourceRepository).toBe(
+        'https://github.com/org/repo'
+      );
+      expect(result.result.destination).toBe('apps/my-app');
+      expect(result.options).toContain('--plugins=skip');
+      expect(result.options).toContain('--plugins=all');
+      expect(result.exampleCommand).toContain('apps/my-app');
+      expect(result.exampleCommand).toContain('@nx/vite');
     });
   });
 
