@@ -169,7 +169,10 @@ fn sanitize_params(mut params: ParameterMap) -> ParameterMap {
             custom_param_count += 1;
             if custom_param_count > MAX_CUSTOM_PARAMS {
                 // Skip this parameter if we've exceeded the limit
-                tracing::trace!("Telemetry: Skipping parameter '{}' - exceeded max custom params", truncated_key);
+                tracing::trace!(
+                    "Telemetry: Skipping parameter '{}' - exceeded max custom params",
+                    truncated_key
+                );
                 continue;
             }
         }
