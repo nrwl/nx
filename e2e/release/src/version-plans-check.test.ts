@@ -641,9 +641,15 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(planCheckResult.stderr).toContain('Touched projects missing version plans');
-    expect(planCheckResult.stderr).toContain('The following touched projects under release group "fixed-group" do not feature in any version plan files');
-    expect(planCheckResult.stderr).toContain('The following touched projects under release group "independent-group" do not feature in any version plan files');
+    expect(planCheckResult.stderr).toContain(
+      'Touched projects missing version plans'
+    );
+    expect(planCheckResult.stderr).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult.stderr).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
     const verbosePlanCheckResult = await runCLIAsync(
       'release plan:check --verbose',
       { silenceError: true }
@@ -675,9 +681,15 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(verbosePlanCheckResult.stderr).toContain('Touched projects missing version plans');
-    expect(verbosePlanCheckResult.stderr).toContain('The following touched projects under release group "fixed-group" do not feature in any version plan files');
-    expect(verbosePlanCheckResult.stderr).toContain('The following touched projects under release group "independent-group" do not feature in any version plan files');
+    expect(verbosePlanCheckResult.stderr).toContain(
+      'Touched projects missing version plans'
+    );
+    expect(verbosePlanCheckResult.stderr).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(verbosePlanCheckResult.stderr).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
 
     // Configure release groups with different ignore patterns to each other
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
