@@ -58,7 +58,10 @@ import {
   NxGraphProjectEdgePanelContent,
 } from '@nx/graph/ui';
 import { ElementData, useRendererEvents } from '@nx/graph';
-import { ArrowLeftCircleIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowLeftCircleIcon,
+  DocumentMagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import { ErrorToast } from '@nx/graph-ui-common';
 import classNames from 'classnames';
 import { Tab, TabGroup, TabList } from '@headlessui/react';
@@ -440,24 +443,37 @@ function ProjectsShellInner() {
         >
           {{
             project: (element) => (
-              <NxGraphProjectNodePanelContent
-                element={element}
-                sectionHeadingClassName="text-slate-900 dark:text-slate-100"
-                sectionTextClassName="text-slate-700 dark:text-slate-300"
-                tagBadgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600"
-                actionButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
-                cancelActionButtonClassName="bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 border-red-500 dark:border-red-600"
-                dependencyItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                dependentItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                emptyItemListClassName="text-slate-600 dark:text-slate-400"
-                traceAlgorithmButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
-                traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white hover:bg-sky-600 dark:hover:bg-sky-700 border-sky-500 dark:border-sky-600"
-                traceableProjectItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 justify-between"
-                traceableProjectSelectedItemClassName="bg-sky-500/10 dark:bg-sky-600/10 text-slate-900 dark:text-slate-100"
-                onViewProjectDetailsClick={() =>
-                  onViewProjectDetailsClick(element)
-                }
-              />
+              <>
+                {handleEventResult.rendererConfig.platform !== 'nx-dev' && (
+                  <div className="mb-3 flex flex-col gap-2">
+                    <button
+                      onClick={() => onViewProjectDetailsClick(element)}
+                      className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-slate-100/60 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-700/60 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                    >
+                      <DocumentMagnifyingGlassIcon className="h-4 w-4" />
+                      <span>View Project Details</span>
+                    </button>
+                  </div>
+                )}
+                <NxGraphProjectNodePanelContent
+                  element={element}
+                  sectionHeadingClassName="text-slate-900 dark:text-slate-100"
+                  sectionTextClassName="text-slate-700 dark:text-slate-300"
+                  tagBadgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600"
+                  actionButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
+                  cancelActionButtonClassName="bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 border-red-500 dark:border-red-600"
+                  dependencyItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  dependentItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  emptyItemListClassName="text-slate-600 dark:text-slate-400"
+                  traceAlgorithmButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
+                  traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white hover:bg-sky-600 dark:hover:bg-sky-700 border-sky-500 dark:border-sky-600"
+                  traceableProjectItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 justify-between"
+                  traceableProjectSelectedItemClassName="bg-sky-500/10 dark:bg-sky-600/10 text-slate-900 dark:text-slate-100"
+                  onViewProjectDetailsClick={() =>
+                    onViewProjectDetailsClick(element)
+                  }
+                />
+              </>
             ),
             'project-edge': (element) => (
               <NxGraphProjectEdgePanelContent
