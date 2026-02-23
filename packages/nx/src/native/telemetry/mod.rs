@@ -54,11 +54,13 @@ impl TelemetryService {
         os_arch: String,
         os_platform: String,
         os_release: String,
-        is_ai_agent: bool,
     ) -> Result<Self> {
         let client = ClientBuilder::new()
             .build()
             .map_err(|e| Error::from_reason(format!("Failed to create HTTP client: {}", e)))?;
+
+        // Detect AI agent from environment variables
+        let is_ai_agent = crate::native::utils::ai::is_ai_agent();
 
         // Session ID - generate a unique ID for this session
         let session_id = uuid::Uuid::new_v4().to_string();
@@ -247,9 +249,6 @@ pub fn initialize_telemetry(
     os_platform: String,
     os_release: String,
 ) -> Result<()> {
-    // Detect AI agent from environment variables
-    let is_ai_agent = crate::native::utils::ai::is_ai_agent();
-
     let service = TelemetryService::new(
         workspace_id,
         user_id,
@@ -260,7 +259,6 @@ pub fn initialize_telemetry(
         os_arch,
         os_platform,
         os_release,
-        is_ai_agent,
     )?;
 
     GLOBAL_TELEMETRY
