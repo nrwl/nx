@@ -212,6 +212,11 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
+  // Never display this warning if Nx is already running via Nx
+  if (process.env.NX_CLI_SET) {
+    return;
+  }
+
   const isOutdatedGlobalInstall = checkOutdatedGlobalInstallation(
     globalNxVersion,
     localNxVersion
@@ -219,11 +224,6 @@ function warnIfUsingOutdatedGlobalInstall(
 
   // Using a global Nx Install
   if (isOutdatedGlobalInstall) {
-    // Never display this warning if Nx is already running via Nx (nested execution)
-    if (process.env.NX_CLI_SET) {
-      return;
-    }
-
     const bodyLines = localNxVersion
       ? [
           `Your repository uses a higher version of Nx (${localNxVersion}) than your global CLI version (${globalNxVersion})`,
