@@ -15,7 +15,19 @@ export function getPropertyType(property: any): string {
   }
 
   if (property.oneOf) {
-    return 'string';
+    const types = property.oneOf
+      .map((item: any) => {
+        if (item.type === 'array') {
+          const itemType = item.items?.type || 'any';
+          return `${itemType}[]`;
+        }
+        return item.type || 'any';
+      })
+      .filter(
+        (type: string, index: number, arr: string[]) =>
+          arr.indexOf(type) === index
+      );
+    return types.join(' | ');
   }
 
   return 'any';
