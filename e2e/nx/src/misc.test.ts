@@ -567,21 +567,23 @@ describe('Nx Commands', () => {
       const parsed = JSON.parse(jsonOutput);
 
       expect(parsed.name).toBe('@nx/js');
-      expect(parsed.path).toBeDefined();
-      expect(typeof parsed.generators).toBe('object');
-      expect(typeof parsed.executors).toBe('object');
+      expect(parsed.path).toContain('node_modules/@nx/js');
 
-      // check that generators have path and schema
-      expect(parsed.generators['library']).toBeDefined();
-      expect(parsed.generators['library'].description).toBeDefined();
-      expect(parsed.generators['library'].path).toBeDefined();
-      expect(parsed.generators['library'].schema).toBeDefined();
+      // check generator values
+      const libGen = parsed.generators['library'];
+      expect(libGen).toBeDefined();
+      expect(libGen.description).toEqual(expect.any(String));
+      expect(libGen.path).toContain('node_modules/@nx/js');
+      expect(libGen.schema).toContain('node_modules/@nx/js');
+      expect(libGen.schema).toContain('schema.json');
 
-      // check that executors have path and schema
-      expect(parsed.executors['tsc']).toBeDefined();
-      expect(parsed.executors['tsc'].description).toBeDefined();
-      expect(parsed.executors['tsc'].path).toBeDefined();
-      expect(parsed.executors['tsc'].schema).toBeDefined();
+      // check executor values
+      const tscExec = parsed.executors['tsc'];
+      expect(tscExec).toBeDefined();
+      expect(tscExec.description).toEqual(expect.any(String));
+      expect(tscExec.path).toContain('node_modules/@nx/js');
+      expect(tscExec.schema).toContain('node_modules/@nx/js');
+      expect(tscExec.schema).toContain('schema.json');
     }, 120000);
   });
 
