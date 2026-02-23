@@ -543,6 +543,46 @@ describe('Nx Commands', () => {
         );
       }
     }, 120000);
+
+    it('should list plugins as JSON with --json flag', () => {
+      const jsonOutput = runCLI('list --json');
+      const parsed = JSON.parse(jsonOutput);
+
+      expect(parsed.installedPlugins).toBeDefined();
+      expect(Array.isArray(parsed.installedPlugins)).toBe(true);
+      expect(parsed.localWorkspacePlugins).toBeDefined();
+      expect(Array.isArray(parsed.localWorkspacePlugins)).toBe(true);
+
+      const workspacePlugin = parsed.installedPlugins.find(
+        (p) => p.name === '@nx/workspace'
+      );
+      expect(workspacePlugin).toBeDefined();
+      expect(workspacePlugin.path).toBeDefined();
+      expect(workspacePlugin.capabilities).toBeDefined();
+      expect(Array.isArray(workspacePlugin.capabilities)).toBe(true);
+    }, 120000);
+
+    it('should list plugin capabilities as JSON with --json flag', () => {
+      const jsonOutput = runCLI('list @nx/js --json');
+      const parsed = JSON.parse(jsonOutput);
+
+      expect(parsed.name).toBe('@nx/js');
+      expect(parsed.path).toBeDefined();
+      expect(typeof parsed.generators).toBe('object');
+      expect(typeof parsed.executors).toBe('object');
+
+      // check that generators have path and schema
+      expect(parsed.generators['library']).toBeDefined();
+      expect(parsed.generators['library'].description).toBeDefined();
+      expect(parsed.generators['library'].path).toBeDefined();
+      expect(parsed.generators['library'].schema).toBeDefined();
+
+      // check that executors have path and schema
+      expect(parsed.executors['tsc']).toBeDefined();
+      expect(parsed.executors['tsc'].description).toBeDefined();
+      expect(parsed.executors['tsc'].path).toBeDefined();
+      expect(parsed.executors['tsc'].schema).toBeDefined();
+    }, 120000);
   });
 
   describe('format', () => {
