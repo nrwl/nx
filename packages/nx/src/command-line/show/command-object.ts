@@ -270,7 +270,7 @@ const showTargetInfoCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> =
           showTargetInfoHandler,
           showTargetInputsHandler,
           showTargetOutputsHandler,
-        } = await handleImport('./target.js');
+        } = await handleImport('./target.js', __dirname);
         if (args.subcommand === 'inputs') {
           await showTargetInputsHandler(args);
           return;
@@ -315,7 +315,10 @@ const showTargetInputsCommand: CommandModule<
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetInputsHandler } = await handleImport('./target.js');
+      const { showTargetInputsHandler } = await handleImport(
+        './target.js',
+        __dirname
+      );
       await showTargetInputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);
@@ -358,7 +361,10 @@ const showTargetOutputsCommand: CommandModule<
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetOutputsHandler } = await handleImport('./target.js');
+      const { showTargetOutputsHandler } = await handleImport(
+        './target.js',
+        __dirname
+      );
       await showTargetOutputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);

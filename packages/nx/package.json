@@ -248,8 +248,8 @@
       "default": "./dist/release/index.js"
     },
     "./presets/*": {
-      "@nx/nx-source": "./presets/*.json",
-      "default": "./dist/presets/*.json"
+      "@nx/nx-source": "./presets/*",
+      "default": "./dist/presets/*"
     }
   }
 }

@@ -60,7 +60,9 @@ export const yargsImportCommand: CommandModule = {
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
       try {
-        return await (await handleImport('./import.js', __dirname)).importHandler(args as any);
+        return await (
+          await handleImport('./import.js', __dirname)
+        ).importHandler(args as any);
       } catch (error) {
         if (isAiAgent()) {
           const errorMessage =

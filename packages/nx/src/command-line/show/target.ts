@@ -26,6 +26,7 @@ import type {
   ShowTargetInputsOptions,
   ShowTargetOutputsOptions,
 } from './command-object';
+import { handleImport } from '../../utils/handle-import';
 
 // ── Entry points ─────────────────────────────────────────────────────
 
@@ -383,8 +384,9 @@ async function resolveInputFiles(
   graph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): Promise<HashInputs> {
-  const { HashPlanInspector } = (await import(
-    '../../hasher/hash-plan-inspector'
+  const { HashPlanInspector } = (await handleImport(
+    '../../hasher/hash-plan-inspector.js',
+    __dirname
   )) as typeof import('../../hasher/hash-plan-inspector');
   const inspector = new HashPlanInspector(graph, workspaceRoot, nxJson);
   await inspector.init();

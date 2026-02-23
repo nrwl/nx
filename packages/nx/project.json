@@ -160,6 +160,7 @@
     "legacy-post-build": {
       "dependsOn": ["copy-local-native"],
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "inputs": ["production", "^production", "native"],
       "outputs": ["{projectRoot}/dist"],
       "options": {
         "main": "./bin/nx.js",
