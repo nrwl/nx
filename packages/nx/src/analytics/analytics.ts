@@ -65,11 +65,7 @@ export function reportNxAddCommand(packageName: string, version: string) {
 }
 
 export function reportNxGenerateCommand(generator: string) {
-  trackEvent(
-    'generator_used',
-    { [EventCustomDimension.GeneratorName]: generator },
-    false
-  );
+  trackEvent('generator_used', { [EventCustomDimension.GeneratorName]: generator });
 }
 
 export function reportCommandRunEvent(
