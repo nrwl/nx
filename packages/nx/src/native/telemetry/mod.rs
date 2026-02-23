@@ -19,6 +19,7 @@
 
 use napi::bindgen_prelude::*;
 use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use reqwest::{Client, ClientBuilder};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -51,8 +52,8 @@ struct PageViewData {
 
 /// Internal telemetry service - not exposed to JavaScript
 pub struct TelemetryService {
-    event_tx: mpsc::UnboundedSender<EventData>,
-    page_view_tx: mpsc::UnboundedSender<PageViewData>,
+    event_tx: Mutex<Option<mpsc::UnboundedSender<EventData>>>,
+    page_view_tx: Mutex<Option<mpsc::UnboundedSender<PageViewData>>>,
     flush_tx: mpsc::UnboundedSender<oneshot::Sender<Result<()>>>,
     common_request_parameters: ParameterMap,
     user_parameters: ParameterMap,
@@ -127,8 +128,8 @@ impl TelemetryService {
         ));
 
         Ok(TelemetryService {
-            event_tx,
-            page_view_tx,
+            event_tx: Mutex::new(Some(event_tx)),
+            page_view_tx: Mutex::new(Some(page_view_tx)),
             flush_tx,
             common_request_parameters,
             user_parameters,
@@ -174,6 +175,24 @@ impl TelemetryService {
 
                 // Priority 3: Flush requests
                 Some(reply) = flush_rx.recv() => {
+                    // Drain any remaining events from closed channels
+                    while let Ok(event) = event_rx.try_recv() {
+                        let mut params = user_params.clone();
+                        params.extend(event.parameters);
+                        params.insert("en".to_string(), event.name);
+                        event_batch.push(params);
+                    }
+
+                    while let Ok(page_view) = page_view_rx.try_recv() {
+                        let mut params = user_params.clone();
+                        params.extend(page_view.parameters);
+                        params.insert("en".to_string(), "page_view".to_string());
+                        params.insert("dt".to_string(), page_view.title.clone());
+                        params.insert("dl".to_string(), page_view.location.unwrap_or(page_view.title));
+                        page_view_batch.push(params);
+                    }
+
+                    // Send final batch
                     let result = Self::send_batches(
                         &client,
                         &common_params,
@@ -304,9 +323,10 @@ impl TelemetryService {
             parameters: parameters.unwrap_or_default(),
         };
 
-        self.event_tx
-            .send(event)
-            .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+        if let Some(tx) = self.event_tx.lock().as_ref() {
+            tx.send(event)
+                .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+        }
 
         Ok(())
     }
@@ -323,21 +343,26 @@ impl TelemetryService {
             parameters: parameters.unwrap_or_default(),
         };
 
-        self.page_view_tx
-            .send(page_view)
-            .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+        if let Some(tx) = self.page_view_tx.lock().as_ref() {
+            tx.send(page_view)
+                .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+        }
 
         Ok(())
     }
 
     async fn flush(&self) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
+        // 1. Close event channels (stop accepting new events)
+        self.event_tx.lock().take();
+        self.page_view_tx.lock().take();
 
+        // 2. Send flush request and wait for background task to drain everything
+        let (tx, rx) = oneshot::channel();
         self.flush_tx
             .send(tx)
             .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
 
-        // Wait for flush to complete
+        // 3. Wait for flush to complete
         rx.await
             .map_err(|_| Error::from_reason("Flush reply channel closed"))?
     }
