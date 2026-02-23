@@ -64,7 +64,7 @@ export function mergeProjectConfigurationIntoRootMap(
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean
 ): {
-  nameChanged: boolean;
+  previousName?: string;
 } {
   project.root = project.root === '' ? '.' : project.root;
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
@@ -242,12 +242,14 @@ export function mergeProjectConfigurationIntoRootMap(
   projectRootMap[updatedProjectConfiguration.root] =
     updatedProjectConfiguration;
 
-  return {
-    nameChanged:
-      matchingProject?.name &&
-      project.name &&
-      matchingProject.name !== project.name,
-  };
+  const previousName =
+    matchingProject?.name &&
+    project.name &&
+    matchingProject.name !== project.name
+      ? matchingProject.name
+      : undefined;
+
+  return { previousName };
 }
 
 export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
@@ -537,15 +539,7 @@ function mergeCreateNodesResults(
     Record<string, SourceInformation>
   > = {};
 
-  const flatResults = results.flat();
-
-  // Pass 1: merge all plugin results into projectRootMap. Substitutors are
-  // registered in a second pass (below) so that the full projectRootMap is
-  // available when looking up referenced project names. Without two passes,
-  // processing proj-a's dependsOn before proj-b has been merged would make
-  // nameMap.get('project-b-original') return undefined, silently skipping
-  // substitutor registration.
-  for (const result of flatResults) {
+  for (const result of results.flat()) {
     const [pluginName, file, nodes, pluginIndex] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
@@ -564,17 +558,16 @@ function mergeCreateNodesResults(
       };
 
       try {
-        const { nameChanged } = mergeProjectConfigurationIntoRootMap(
+        const { previousName } = mergeProjectConfigurationIntoRootMap(
           projectRootMap,
           project,
           configurationSourceMaps,
           sourceInfo
         );
-        // If this project's name changed, we mark the root as dirty
-        // in the name manager. This tells it to later apply any substitutions
-        // linked to the project at this root.
-        if (nameChanged) {
-          projectNameManager.markDirty(root);
+        // If this project's name changed, record the rename so substitutors
+        // registered for the old name can fire during applySubstitutions.
+        if (previousName) {
+          projectNameManager.markDirty(root, previousName);
         }
       } catch (error) {
         errors.push(
@@ -587,21 +580,12 @@ function mergeCreateNodesResults(
         );
       }
     }
+    // Register substitutors for any project-name references in this result's
+    // targets. Substitutors are keyed by the referenced name (not by root),
+    // so registration requires no lookup and is safe regardless of whether
+    // the referenced project has been processed yet.
+    projectNameManager.registerSubstitutorsForNodeResults(projectNodes);
     Object.assign(externalNodes, pluginExternalNodes);
-  }
-
-  // Pass 2: now that projectRootMap contains all projects from all plugins,
-  // register substitutors. Each entry's projectNodes can look up any
-  // cross-plugin project reference by name in the fully-populated map.
-  for (const result of flatResults) {
-    const [, , nodes] = result;
-    // This iterates over the plugin's returned project results
-    // and registers substitutors for any fields that reference
-    // another project by name under that target project's root.
-    projectNameManager.registerSubstitutorsForNodeResults(
-      nodes.projects,
-      projectRootMap
-    );
   }
 
   try {
