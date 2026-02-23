@@ -49,7 +49,9 @@ export function getTuiTerminalSummaryLifeCycle({
 
   const failedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
+  // Tasks ended with 'stopped' status (interrupted, didn't finish — counts as failure)
   const stoppedTasks = new Set<string>();
+  // Tasks shown with cyan stopped icon (includes fulfilled continuous tasks ended as 'success')
   const displayStoppedTasks = new Set<string>();
 
   // Chunks accumulated progressively during task execution
@@ -324,16 +326,7 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = getTerminalOutput(taskId);
-      // Check stopped/display-stopped tasks first (before other status checks)
-      if (displayStoppedTasks.has(taskId)) {
-        output.logCommandOutput(taskId, taskStatus, terminalOutput);
-        output.addNewline();
-        checklistLines.push(
-          `${LEFT_PAD}${output.colors.cyan(
-            figures.squareSmallFilled
-          )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
-        );
-      } else if (!taskStatus) {
+      if (displayStoppedTasks.has(taskId) || !taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         checklistLines.push(

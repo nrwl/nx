@@ -99,17 +99,16 @@ export class TaskOrchestrator {
       runningTask: RunningTask;
       groupId: number;
       ownsRunningTasksService: boolean;
+      stoppingReason?: 'interrupted' | 'fulfilled';
     }
   >();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
-  private runningDiscreteTasks = new Map<string, RunningTask>();
-  private stoppingContinuousTasks = new Map<
+  private runningDiscreteTasks = new Map<
     string,
-    'interrupted' | 'fulfilled'
+    { runningTask: RunningTask; stopping: boolean }
   >();
-  private stoppingDiscreteTasks = new Set<string>();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
-  private _cleanupDone = false;
+  private cleanupDone = false;
 
   private batchTaskResultsStreamed = new Set<string>();
 
@@ -621,12 +620,15 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         pipeOutput
       );
-      this.runningDiscreteTasks.set(task.id, childProcess);
+      this.runningDiscreteTasks.set(task.id, {
+        runningTask: childProcess,
+        stopping: false,
+      });
 
       const { code, terminalOutput } = await childProcess.getResults();
+      const isStopping =
+        this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
       this.runningDiscreteTasks.delete(task.id);
-
-      const isStopping = this.stoppingDiscreteTasks.delete(task.id);
       results.push({
         task,
         code,
@@ -1098,7 +1100,6 @@ export class TaskOrchestrator {
               // Don't skip tasks that are still running/stopping — their own
               // exit handler will set the correct terminal status
               if (
-                this.stoppingDiscreteTasks.has(depTaskId) ||
                 this.runningDiscreteTasks.has(depTaskId) ||
                 this.runningContinuousTasks.has(depTaskId)
               ) {
@@ -1192,54 +1193,77 @@ export class TaskOrchestrator {
         return;
       }
 
-      if (this.runningContinuousTasks.delete(task.id)) {
-        if (ownsRunningTasksService) {
-          this.runningTasksService.removeRunningTask(task.id);
-        }
-      }
-
-      task.endTime = Date.now();
-      const stoppingReason = this.stoppingContinuousTasks.get(task.id);
-      this.stoppingContinuousTasks.delete(task.id);
+      const stoppingReason = this.runningContinuousTasks.get(
+        task.id
+      )?.stoppingReason;
       if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
-        if (stoppingReason === 'fulfilled') {
-          await this.complete(
-            [
-              {
-                task,
-                status: 'success',
-                displayStatus: NativeTaskStatus.Stopped,
-              },
-            ],
-            groupId
-          );
-        } else {
-          await this.complete([{ task, status: 'stopped' }], groupId);
-        }
+        const reason =
+          stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
+        await this.completeContinuousTask(
+          task,
+          groupId,
+          ownsRunningTasksService,
+          reason
+        );
       } else {
         console.error(
           `Task "${task.id}" is continuous but exited with code ${code}`
         );
-        await this.complete([{ task, status: 'failure' }], groupId);
+        await this.completeContinuousTask(
+          task,
+          groupId,
+          ownsRunningTasksService,
+          'crashed'
+        );
       }
     });
   }
 
+  private async completeContinuousTask(
+    task: Task,
+    groupId: number,
+    ownsRunningTasksService: boolean,
+    reason: 'fulfilled' | 'interrupted' | 'crashed'
+  ) {
+    if (this.completedTasks[task.id] !== undefined) return;
+
+    this.runningContinuousTasks.delete(task.id);
+    if (ownsRunningTasksService) {
+      this.runningTasksService.removeRunningTask(task.id);
+    }
+
+    task.endTime = Date.now();
+    if (reason === 'fulfilled') {
+      await this.complete(
+        [
+          {
+            task,
+            status: 'success',
+            displayStatus: NativeTaskStatus.Stopped,
+          },
+        ],
+        groupId
+      );
+    } else if (reason === 'crashed') {
+      await this.complete([{ task, status: 'failure' }], groupId);
+    } else {
+      await this.complete([{ task, status: 'stopped' }], groupId);
+    }
+  }
+
   private async cleanup() {
-    if (this._cleanupDone) {
+    if (this.cleanupDone) {
       return;
     }
-    this._cleanupDone = true;
+    this.cleanupDone = true;
 
-    // Mark all running continuous tasks for intentional stop
+    // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
-    for (const taskId of this.runningContinuousTasks.keys()) {
-      this.stoppingContinuousTasks.set(taskId, reason);
+    for (const entry of this.runningContinuousTasks.values()) {
+      entry.stoppingReason = reason;
     }
-
-    // Mark all running discrete tasks for intentional stop
-    for (const taskId of this.runningDiscreteTasks.keys()) {
-      this.stoppingDiscreteTasks.add(taskId);
+    for (const entry of this.runningDiscreteTasks.values()) {
+      entry.stopping = true;
     }
 
     // Snapshot continuous tasks before clearing the map.
@@ -1256,27 +1280,14 @@ export class TaskOrchestrator {
       taskId,
       { groupId, ownsRunningTasksService },
     ] of continuousSnapshot) {
-      this.stoppingContinuousTasks.delete(taskId);
       const task = this.taskGraph.tasks[taskId];
-      if (!task || this.completedTasks[taskId] !== undefined) continue;
-      if (ownsRunningTasksService) {
-        this.runningTasksService.removeRunningTask(taskId);
-      }
-      task.endTime = Date.now();
-      if (reason === 'fulfilled') {
-        await this.complete(
-          [
-            {
-              task,
-              status: 'success',
-              displayStatus: NativeTaskStatus.Stopped,
-            },
-          ],
-          groupId
-        );
-      } else {
-        await this.complete([{ task, status: 'stopped' }], groupId);
-      }
+      if (!task) continue;
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        reason
+      );
     }
 
     // Kill all processes
@@ -1347,15 +1358,12 @@ export class TaskOrchestrator {
       }
     }
 
-    for (const taskId of this.runningContinuousTasks.keys()) {
+    for (const [taskId, entry] of this.runningContinuousTasks) {
       if (!neededContinuousTasks.has(taskId)) {
-        const entry = this.runningContinuousTasks.get(taskId);
-        if (entry) {
-          // Mark as intentional kill before calling kill()
-          // onExit will see this and use success/Stopped
-          this.stoppingContinuousTasks.set(taskId, 'fulfilled');
-          entry.runningTask.kill();
-        }
+        // Mark as intentional kill before calling kill()
+        // onExit will see this and use success/Stopped
+        entry.stoppingReason = 'fulfilled';
+        entry.runningTask.kill();
       }
     }
   }
