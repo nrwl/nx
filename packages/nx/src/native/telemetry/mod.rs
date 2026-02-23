@@ -4,7 +4,7 @@
 //! and a global instance that Rust code can use directly.
 //!
 //! The service uses an unbounded channel architecture with a background task
-//! that batches events and sends them periodically. Page view events are
+//! that batches events and sends them every 50ms. Page view events are
 //! prioritized over regular events.
 //!
 //! # Example usage from Rust code:
@@ -28,7 +28,7 @@ use tokio::sync::{mpsc, oneshot};
 
 const TRACKING_ID_PROD: &str = "G-83SJXKY605";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
-const BATCH_INTERVAL_SECS: u64 = 5;
+const BATCH_INTERVAL_MS: u64 = 50;
 
 type ParameterMap = HashMap<String, String>;
 
@@ -147,7 +147,7 @@ impl TelemetryService {
     ) {
         let mut event_batch = Vec::new();
         let mut page_view_batch = Vec::new();
-        let mut interval = tokio::time::interval(Duration::from_secs(BATCH_INTERVAL_SECS));
+        let mut interval = tokio::time::interval(Duration::from_millis(BATCH_INTERVAL_MS));
         interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
         loop {
