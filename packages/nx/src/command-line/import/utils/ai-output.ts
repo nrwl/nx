@@ -179,8 +179,9 @@ export function buildImportNeedsPluginSelectionResult(options: {
       'Import complete. Plugin selection required. Ask the user which plugins to install, then run again with --plugins flag.',
     detectedPlugins: options.detectedPlugins,
     options: ['--plugins=skip', '--plugins=all', `--plugins=${pluginList}`],
-    recommendedOption: '--plugins=skip',
-    recommendedReason: 'Plugins can be added later with nx add.',
+    recommendedOption: '--plugins=all',
+    recommendedReason:
+      'Installing all detected plugins ensures the imported project works correctly with Nx.',
     exampleCommand: `nx import ${options.sourceRepository} ${options.destination} --ref=${options.ref} --source=${options.source} --plugins=${options.detectedPlugins[0]?.name || '@nx/vite'}`,
     result: {
       sourceRepository: options.sourceRepository,
