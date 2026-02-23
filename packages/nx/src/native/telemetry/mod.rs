@@ -5,26 +5,20 @@
 //!
 //! # Example usage from Rust code:
 //! ```rust
-//! use crate::native::telemetry::{track_rust_event, track_rust_event_sync};
+//! use crate::native::telemetry::track_rust_event;
 //! use std::collections::HashMap;
 //!
-//! // From async context:
 //! let mut params = HashMap::new();
 //! params.insert("project_count".to_string(), "42".to_string());
 //! track_rust_event("workspace_analyzed", params);
-//!
-//! // From sync context:
-//! let mut params = HashMap::new();
-//! params.insert("error_type".to_string(), "parse_error".to_string());
-//! track_rust_event_sync("native_error", params);
 //! ```
 
 use napi::bindgen_prelude::*;
 use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use reqwest::{Client, ClientBuilder};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 const TRACKING_ID_PROD: &str = "G-83SJXKY605";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
@@ -103,7 +97,7 @@ impl TelemetryService {
         })
     }
 
-    async fn track_event_impl(
+    fn track_event_impl(
         &self,
         event_name: String,
         parameters: Option<HashMap<String, String>>,
@@ -116,13 +110,13 @@ impl TelemetryService {
 
         event_data.insert("en".to_string(), event_name);
 
-        let mut events_queue = self.events_queue.lock().await;
+        let mut events_queue = self.events_queue.lock();
         events_queue.push(event_data);
 
         Ok(())
     }
 
-    async fn track_page_view_impl(
+    fn track_page_view_impl(
         &self,
         page_title: String,
         page_location: Option<String>,
@@ -139,7 +133,7 @@ impl TelemetryService {
         event_data.insert("dl".to_string(), location.clone()); // PageLocation
         event_data.insert("dt".to_string(), page_title); // PageTitle
 
-        let mut page_view_queue = self.page_view_queue.lock().await;
+        let mut page_view_queue = self.page_view_queue.lock();
         page_view_queue.push(event_data);
 
         Ok(())
@@ -147,12 +141,12 @@ impl TelemetryService {
 
     async fn flush(&self) -> Result<()> {
         let events = {
-            let mut queue = self.events_queue.lock().await;
+            let mut queue = self.events_queue.lock();
             std::mem::take(&mut *queue)
         };
 
         let page_views = {
-            let mut queue = self.page_view_queue.lock().await;
+            let mut queue = self.page_view_queue.lock();
             std::mem::take(&mut *queue)
         };
 
@@ -268,67 +262,34 @@ pub fn initialize_telemetry(
     Ok(())
 }
 
-/// Track an event from Rust code (non-blocking)
+/// Track an event from Rust code
 /// This is a fire-and-forget operation - errors are logged but not returned
 pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        let event_name = event_name.into();
-        let telemetry = Arc::clone(telemetry);
-
-        // Spawn a task to avoid blocking the caller
-        tokio::spawn(async move {
-            if let Err(e) = telemetry
-                .track_event_impl(event_name, Some(parameters))
-                .await
-            {
-                tracing::trace!("Failed to track event: {}", e);
-            }
-        });
-    }
-}
-
-/// Track an event from Rust code synchronously (for use in non-async contexts)
-/// This queues the event but doesn't wait for it to be sent
-pub fn track_rust_event_sync(event_name: impl Into<String>, parameters: HashMap<String, String>) {
-    if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        let event_name = event_name.into();
-        let parameters = Some(parameters);
-        let telemetry = Arc::clone(telemetry);
-
-        // Spawn on the tokio runtime without waiting
-        let _ = tokio::runtime::Handle::try_current().map(|handle| {
-            handle.spawn(async move {
-                if let Err(e) = telemetry.track_event_impl(event_name, parameters).await {
-                    tracing::trace!("Failed to track event: {}", e);
-                }
-            });
-        });
+        if let Err(e) = telemetry.track_event_impl(event_name.into(), Some(parameters)) {
+            tracing::trace!("Failed to track event: {}", e);
+        }
     }
 }
 
 /// Track an event using the global telemetry instance
 #[napi]
-pub async fn track_event(
-    event_name: String,
-    parameters: Option<HashMap<String, String>>,
-) -> Result<()> {
+pub fn track_event(event_name: String, parameters: Option<HashMap<String, String>>) -> Result<()> {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        telemetry.track_event_impl(event_name, parameters).await?;
+        telemetry.track_event_impl(event_name, parameters)?;
     }
     Ok(())
 }
 
 /// Track a page view using the global telemetry instance
 #[napi]
-pub async fn track_page_view(
+pub fn track_page_view(
     page_title: String,
     page_location: Option<String>,
     parameters: Option<HashMap<String, String>>,
 ) -> Result<()> {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        telemetry
-            .track_page_view_impl(page_title, page_location, parameters)
-            .await?;
+        telemetry.track_page_view_impl(page_title, page_location, parameters)?;
     }
     Ok(())
 }

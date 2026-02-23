@@ -262,10 +262,12 @@ function trackEvent(
       }
     }
 
-    // Fire and forget - don't await
-    trackEventNative(eventName, stringParams).catch(() => {
+    // Fire and forget - synchronous call
+    try {
+      trackEventNative(eventName, stringParams);
+    } catch {
       // Silently ignore errors
-    });
+    }
   }
 }
 
@@ -285,10 +287,12 @@ function trackPageView(
       }
     }
 
-    // Fire and forget - don't await
-    trackPageViewNative(pageTitle, pageLocation, stringParams).catch(() => {
+    // Fire and forget - synchronous call
+    try {
+      trackPageViewNative(pageTitle, pageLocation, stringParams);
+    } catch {
       // Silently ignore errors
-    });
+    }
   }
 }
 
