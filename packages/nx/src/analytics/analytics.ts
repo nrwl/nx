@@ -85,7 +85,7 @@ export function reportCommandRunEvent(
       pageLocation = `${command}?${qs}`;
     }
   }
-  trackEvent(command, parameters, true, pageLocation);
+  trackPageView(command, pageLocation, parameters);
 }
 
 export function reportProjectGraphCreationEvent(time: number) {
@@ -249,9 +249,7 @@ export function argsToQueryString(args: Record<string, any>): string {
 
 function trackEvent(
   eventName: string,
-  parameters?: Record<string, ParameterValue>,
-  isPageView?: boolean,
-  pageLocation?: string
+  parameters?: Record<string, ParameterValue>
 ) {
   if (_telemetryInitialized) {
     // Convert parameters to string map for Rust
@@ -265,15 +263,32 @@ function trackEvent(
     }
 
     // Fire and forget - don't await
-    if (isPageView) {
-      trackPageViewNative(eventName, pageLocation, stringParams).catch(() => {
-        // Silently ignore errors
-      });
-    } else {
-      trackEventNative(eventName, stringParams).catch(() => {
-        // Silently ignore errors
-      });
+    trackEventNative(eventName, stringParams).catch(() => {
+      // Silently ignore errors
+    });
+  }
+}
+
+function trackPageView(
+  pageTitle: string,
+  pageLocation?: string,
+  parameters?: Record<string, ParameterValue>
+) {
+  if (_telemetryInitialized) {
+    // Convert parameters to string map for Rust
+    const stringParams: Record<string, string> = {};
+    if (parameters) {
+      for (const [key, value] of Object.entries(parameters)) {
+        if (value !== undefined && value !== null) {
+          stringParams[key] = String(value);
+        }
+      }
     }
+
+    // Fire and forget - don't await
+    trackPageViewNative(pageTitle, pageLocation, stringParams).catch(() => {
+      // Silently ignore errors
+    });
   }
 }
 
