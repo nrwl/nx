@@ -3,7 +3,6 @@ import {
   cleanupProject,
   newProject,
   runCLI,
-  runCLIAsync,
   runCommandAsync,
   tmpProjPath,
   uniq,
@@ -205,10 +204,17 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    const verboseResult = await runCLIAsync(
-      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'
+    const verboseResult = runCLI(
+      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose',
+      { redirectStderr: true }
     );
-    expect(verboseResult.stdout).toMatchInlineSnapshot(`
+    expect(verboseResult).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
+    expect(verboseResult).toMatchInlineSnapshot(`
+
+      NX   No changed files found based on resolved "base" and "head"
+
 
       NX   There are pending bumps in version plan(s)
 
@@ -220,9 +226,6 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(verboseResult.stderr).toContain(
-      'No changed files found based on resolved "base" and "head"'
-    );
 
     // it should allow configuring a custom base and head via env vars
     expect(
@@ -242,15 +245,22 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    const verboseEnvResult = await runCLIAsync('release plan:check --verbose', {
+    const verboseEnvResult = runCLI('release plan:check --verbose', {
       env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
+      redirectStderr: true,
     });
-    expect(verboseEnvResult.stdout).toMatchInlineSnapshot(`
+    expect(verboseEnvResult).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
+    expect(verboseEnvResult).toMatchInlineSnapshot(`
 
       NX   No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: HEAD~1
 
 
       NX   No explicit --head argument provided, but found environment variable NX_HEAD so using its value as the affected head: HEAD~1
+
+
+      NX   No changed files found based on resolved "base" and "head"
 
 
       NX   There are pending bumps in version plan(s)
@@ -263,9 +273,6 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(verboseEnvResult.stderr).toContain(
-      'No changed files found based on resolved "base" and "head"'
-    );
   });
 
   it('should work as expected when there are version plans on disk for multiple release groups', async () => {
@@ -621,16 +628,34 @@ describe('nx release version plans check command', () => {
     writeFileSync(join(pkg3Dir, 'file.css'), '.foo { color: red; }');
 
     // it should show information about the missing version plans and show an error message
-    const planCheckResult = await runCLIAsync('release plan:check', {
+    const planCheckResult = runCLI('release plan:check', {
       silenceError: true,
+      redirectStderr: true,
     });
-    expect(planCheckResult.stdout).toMatchInlineSnapshot(`
+    expect(planCheckResult).toContain('Touched projects missing version plans');
+    expect(planCheckResult).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult).toMatchInlineSnapshot(`
 
       NX   Touched projects based on changed files under release group "fixed-group"
 
       - {project-name}
 
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
+
+
+      NX   Touched projects missing version plans
+
+      The following touched projects under release group "fixed-group" do not feature in any version plan files:
+      - {project-name}
+
+      Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
+
+      Run with --verbose to see the full list of changed files used for the touched projects logic.
 
 
       NX   Touched projects based on changed files under release group "independent-group"
@@ -640,21 +665,31 @@ describe('nx release version plans check command', () => {
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
+      NX   Touched projects missing version plans
+
+      The following touched projects under release group "independent-group" do not feature in any version plan files:
+      - {project-name}
+
+      Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
+
+      Run with --verbose to see the full list of changed files used for the touched projects logic.
+
+
     `);
-    expect(planCheckResult.stderr).toContain(
+    const verbosePlanCheckResult = runCLI('release plan:check --verbose', {
+      silenceError: true,
+      redirectStderr: true,
+    });
+    expect(verbosePlanCheckResult).toContain(
       'Touched projects missing version plans'
     );
-    expect(planCheckResult.stderr).toContain(
+    expect(verbosePlanCheckResult).toContain(
       'The following touched projects under release group "fixed-group" do not feature in any version plan files'
     );
-    expect(planCheckResult.stderr).toContain(
+    expect(verbosePlanCheckResult).toContain(
       'The following touched projects under release group "independent-group" do not feature in any version plan files'
     );
-    const verbosePlanCheckResult = await runCLIAsync(
-      'release plan:check --verbose',
-      { silenceError: true }
-    );
-    expect(verbosePlanCheckResult.stdout).toMatchInlineSnapshot(`
+    expect(verbosePlanCheckResult).toMatchInlineSnapshot(`
 
       NX   Affected criteria defaulted to --base=main --head=HEAD
 
@@ -673,6 +708,14 @@ describe('nx release version plans check command', () => {
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
+      NX   Touched projects missing version plans
+
+      The following touched projects under release group "fixed-group" do not feature in any version plan files:
+      - {project-name}
+
+      Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
+
+
       NX   Touched projects based on changed files under release group "independent-group"
 
       - {project-name}
@@ -680,16 +723,15 @@ describe('nx release version plans check command', () => {
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
+      NX   Touched projects missing version plans
+
+      The following touched projects under release group "independent-group" do not feature in any version plan files:
+      - {project-name}
+
+      Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
+
+
     `);
-    expect(verbosePlanCheckResult.stderr).toContain(
-      'Touched projects missing version plans'
-    );
-    expect(verbosePlanCheckResult.stderr).toContain(
-      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
-    );
-    expect(verbosePlanCheckResult.stderr).toContain(
-      'The following touched projects under release group "independent-group" do not feature in any version plan files'
-    );
 
     // Configure release groups with different ignore patterns to each other
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
