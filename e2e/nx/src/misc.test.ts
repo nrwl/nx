@@ -15,6 +15,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandAsync,
   runCommandUntil,
   tmpProjPath,
   uniq,
@@ -1399,17 +1400,14 @@ describe('global installation', () => {
       updateFile('node_modules/nx/bin/nx.js', nxJsContents);
     });
 
-    it('should warn if local Nx has higher major version', () => {
+    it('should warn if local Nx has higher major version', async () => {
       const packageJsonContents = readFile('node_modules/nx/package.json');
       updateJson('node_modules/nx/package.json', (json) => {
         json.version = `${major(getPublishedVersion()) + 2}.0.0`;
         return json;
       });
-      let output: string;
-      expect(() => {
-        output = runCommand(`nx show projects`);
-      }).not.toThrow();
-      expect(output).toContain(`It's time to update Nx`);
+      const { stderr } = await runCommandAsync(`nx show projects`);
+      expect(stderr).toContain(`It's time to update Nx`);
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });
 
