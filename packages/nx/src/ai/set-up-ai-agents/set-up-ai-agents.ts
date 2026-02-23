@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
+import TOML from '@ltd/j-toml';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { generateFiles } from '../../generators/utils/generate-files';
@@ -25,19 +26,17 @@ import {
   agentsMdPath,
   claudeMcpJsonPath,
   geminiMdPath,
-  opencodeMcpPath,
-} from '../constants';
-import { getAiConfigRepoPath } from '../clone-ai-config-repo';
-import { Agent, supportedAgents } from '../utils';
-import {
   getAgentRulesWrapped,
   getNxMcpTomlConfig,
   nxMcpTomlHeader,
   nxRulesMarkerCommentDescription,
   nxRulesMarkerCommentEnd,
   nxRulesMarkerCommentStart,
+  opencodeMcpPath,
   rulesRegex,
 } from '../constants';
+import { getAiConfigRepoPath } from '../clone-ai-config-repo';
+import { Agent, supportedAgents } from '../utils';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
@@ -215,17 +214,25 @@ export async function setupAiAgentsGeneratorImpl(
     );
   }
 
+  // Get the ai-config repo path once for all non-Claude agents that need it
+  const needsAiConfigRepo =
+    hasAgent('codex') ||
+    hasAgent('opencode') ||
+    hasAgent('copilot') ||
+    hasAgent('cursor') ||
+    hasAgent('gemini');
+  let aiConfigRepoPath: string | undefined;
+  if (needsAiConfigRepo) {
+    try {
+      aiConfigRepoPath = getAiConfigRepoPath();
+    } catch {
+      // Network/clone failure — individual consumers handle fallback
+    }
+  }
+
   if (hasAgent('codex')) {
     const codexTomlPath = join(options.directory, '.codex', 'config.toml');
-    const tomlConfig = getNxMcpTomlConfig(nxVersion);
-    if (!tree.exists(codexTomlPath)) {
-      tree.write(codexTomlPath, tomlConfig);
-    } else {
-      const existing = tree.read(codexTomlPath, 'utf-8');
-      if (!existing.includes(nxMcpTomlHeader)) {
-        tree.write(codexTomlPath, existing + '\n' + tomlConfig);
-      }
-    }
+    writeCodexConfig(tree, codexTomlPath, nxVersion, aiConfigRepoPath);
   }
 
   if (hasAgent('gemini')) {
@@ -265,20 +272,19 @@ export async function setupAiAgentsGeneratorImpl(
   }
 
   // Copy extensibility artifacts (commands, skills, subagents) for non-Claude agents
-  if (
-    hasAgent('opencode') ||
-    hasAgent('copilot') ||
-    hasAgent('cursor') ||
-    hasAgent('codex') ||
-    hasAgent('gemini')
-  ) {
-    const repoPath = getAiConfigRepoPath();
+  if (aiConfigRepoPath) {
+    const repoPath = aiConfigRepoPath;
 
     const agentDirs: { agent: Agent; src: string; dest: string }[] = [
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
       { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
+      {
+        agent: 'codex',
+        src: 'generated/.codex/agents',
+        dest: '.codex/agents',
+      },
       { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
     ];
 
@@ -414,6 +420,136 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     });
     tree.write(path, existing + '\n\n' + expectedRules);
   }
+}
+
+/**
+ * Write or merge the Codex config.toml.
+ *
+ * Reads the generated config.toml from the nx-ai-agents-config repo (which
+ * contains MCP servers, agent definitions, and feature flags) and deep-merges
+ * it into the user's existing config.toml using proper TOML parsing.
+ *
+ * Merge rules:
+ * - [mcp_servers."nx-mcp"] — upsert with version-adjusted args, preserving extra user args
+ * - [features] multi_agent — set to true unless user has explicitly set it to false
+ * - [agents.*] — upsert each agent definition
+ * - All other user config is preserved untouched
+ *
+ * Falls back to a minimal hardcoded MCP config if the generated file is unavailable.
+ */
+function writeCodexConfig(
+  tree: Tree,
+  codexTomlPath: string,
+  nxVersion: string,
+  aiConfigRepoPath?: string
+): void {
+  let generated: Record<string, any> | null = null;
+
+  if (aiConfigRepoPath) {
+    const generatedConfigPath = join(
+      aiConfigRepoPath,
+      'generated',
+      '.codex',
+      'config.toml'
+    );
+    if (existsSync(generatedConfigPath)) {
+      const generatedConfig = readFileSync(generatedConfigPath, 'utf-8');
+      generated = TOML.parse(generatedConfig) as Record<string, any>;
+    }
+  }
+
+  if (!generated) {
+    // Fallback: use hardcoded MCP-only config (no agents/features)
+    const tomlConfig = getNxMcpTomlConfig(nxVersion);
+    if (!tree.exists(codexTomlPath)) {
+      tree.write(codexTomlPath, tomlConfig);
+    } else {
+      const existing = tree.read(codexTomlPath, 'utf-8');
+      if (!existing.includes(nxMcpTomlHeader)) {
+        tree.write(codexTomlPath, existing + '\n' + tomlConfig);
+      }
+    }
+    return;
+  }
+
+  // Parse existing config (or start empty)
+  let config: Record<string, any> = {};
+  if (tree.exists(codexTomlPath)) {
+    try {
+      config = TOML.parse(tree.read(codexTomlPath, 'utf-8')) as Record<
+        string,
+        any
+      >;
+    } catch {
+      // If existing file can't be parsed, start fresh
+      config = {};
+    }
+  }
+
+  // ── Merge MCP servers ──
+  const majorVersion = major(nxVersion);
+  const mcpArgs: string[] = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+
+  // Preserve extra user args from existing config
+  const existingArgs: string[] =
+    (config as any).mcp_servers?.['nx-mcp']?.args ?? [];
+  const extraArgs = stripKnownMcpBaseArgs(existingArgs);
+  mcpArgs.push(...extraArgs);
+
+  config.mcp_servers ??= {};
+  (config as any).mcp_servers['nx-mcp'] = {
+    command: 'npx',
+    args: mcpArgs,
+  };
+
+  // ── Merge features ──
+  // Only set multi_agent = true if user hasn't explicitly set it to false
+  const userSetMultiAgentFalse =
+    (config as any).features?.multi_agent === false;
+  if (!userSetMultiAgentFalse && generated.features) {
+    config.features ??= {};
+    Object.assign(config.features, generated.features);
+  }
+
+  // ── Merge agents ──
+  if (generated.agents) {
+    config.agents ??= {};
+    for (const [name, def] of Object.entries(generated.agents)) {
+      (config as any).agents[name] = def;
+    }
+  }
+
+  // ── Serialize and write ──
+  const tomlString = TOML.stringify(config as any, {
+    newlineAround: 'section',
+  });
+  tree.write(
+    codexTomlPath,
+    Array.isArray(tomlString) ? tomlString.join('\n') : tomlString
+  );
+}
+
+/**
+ * Strip known MCP base command args (["nx", "mcp"] or ["nx-mcp"]) from an
+ * args array, returning only the extra user-added args.
+ */
+function stripKnownMcpBaseArgs(args: string[]): string[] {
+  const knownBasePatterns = [['nx', 'mcp'], ['nx-mcp']];
+
+  for (const pattern of knownBasePatterns) {
+    if (args.length < pattern.length) continue;
+    const matches = pattern.every((baseArg, i) => {
+      if (baseArg === 'nx-mcp') {
+        return args[i] === 'nx-mcp' || args[i].startsWith('nx-mcp@');
+      }
+      return args[i] === baseArg;
+    });
+    if (matches) {
+      return args.slice(pattern.length);
+    }
+  }
+
+  return [];
 }
 
 /**
