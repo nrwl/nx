@@ -42,6 +42,7 @@ export interface ExecutorJsonEntryConfig {
   schema: string;
   implementation: string;
   batchImplementation?: string;
+  preferBatch?: boolean;
   description?: string;
   hasher?: string;
 }
@@ -128,6 +129,7 @@ export interface ExecutorConfig {
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;
+  preferBatch?: boolean;
 }
 
 /**

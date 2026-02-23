@@ -102,6 +102,7 @@ export function getExecutorInformation(
       schema,
       implementationFactory,
       batchImplementationFactory,
+      preferBatch: executorConfig.preferBatch,
       hasherFactory,
       isNgCompat,
       isNxExecutor: !isNgCompat,
@@ -127,6 +128,7 @@ function readExecutorJson(
   executorConfig: {
     implementation: string;
     batchImplementation?: string;
+    preferBatch?: boolean;
     schema: string;
     hasher?: string;
   };
