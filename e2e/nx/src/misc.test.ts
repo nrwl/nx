@@ -1406,8 +1406,8 @@ describe('global installation', () => {
         json.version = `${major(getPublishedVersion()) + 2}.0.0`;
         return json;
       });
-      const { stderr } = await runCommandAsync(`nx show projects`);
-      expect(stderr).toContain(`It's time to update Nx`);
+      const { combinedOutput } = await runCommandAsync(`nx show projects`);
+      expect(combinedOutput).toContain(`It's time to update Nx`);
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });
 
