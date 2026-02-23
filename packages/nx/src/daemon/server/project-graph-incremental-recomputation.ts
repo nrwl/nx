@@ -319,29 +319,32 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     let projectConfigurationsResult: ConfigurationResult;
     let projectConfigurationsError;
+    let g: SerializedProjectGraph;
 
     try {
-      projectConfigurationsResult = await retrieveProjectConfigurations(
-        plugins,
-        workspaceRoot,
-        nxJson
-      );
-    } catch (e) {
-      if (e instanceof ProjectConfigurationsError) {
-        projectConfigurationsResult = e.partialProjectConfigurationsResult;
-        projectConfigurationsError = e;
-      } else {
-        throw e;
+      try {
+        projectConfigurationsResult = await retrieveProjectConfigurations(
+          plugins,
+          workspaceRoot,
+          nxJson
+        );
+      } catch (e) {
+        if (e instanceof ProjectConfigurationsError) {
+          projectConfigurationsResult = e.partialProjectConfigurationsResult;
+          projectConfigurationsError = e;
+        } else {
+          throw e;
+        }
       }
+      await processCollectedUpdatedAndDeletedFiles(
+        projectConfigurationsResult,
+        updatedFileHashes,
+        deletedFiles
+      );
+      g = await createAndSerializeProjectGraph(projectConfigurationsResult);
+    } finally {
+      delete global.NX_GRAPH_CREATION;
     }
-    await processCollectedUpdatedAndDeletedFiles(
-      projectConfigurationsResult,
-      updatedFileHashes,
-      deletedFiles
-    );
-    const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
-
-    delete global.NX_GRAPH_CREATION;
 
     const errors = [...(projectConfigurationsError?.errors ?? [])];
 

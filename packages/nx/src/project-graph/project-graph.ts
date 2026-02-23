@@ -108,82 +108,84 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   preventRecursionInGraphConstruction();
 
   global.NX_GRAPH_CREATION = true;
-  const nxJson = readNxJson();
-
-  performance.mark('retrieve-project-configurations:start');
-  let configurationResult: ConfigurationResult;
-  let projectConfigurationsError: ProjectConfigurationsError;
-  const plugins = await getPlugins();
   try {
-    configurationResult = await retrieveProjectConfigurations(
-      plugins,
-      workspaceRoot,
-      nxJson
-    );
-  } catch (e) {
-    if (e instanceof ProjectConfigurationsError) {
-      projectConfigurationsError = e;
-      configurationResult = e.partialProjectConfigurationsResult;
-    } else {
-      throw e;
+    const nxJson = readNxJson();
+
+    performance.mark('retrieve-project-configurations:start');
+    let configurationResult: ConfigurationResult;
+    let projectConfigurationsError: ProjectConfigurationsError;
+    const plugins = await getPlugins();
+    try {
+      configurationResult = await retrieveProjectConfigurations(
+        plugins,
+        workspaceRoot,
+        nxJson
+      );
+    } catch (e) {
+      if (e instanceof ProjectConfigurationsError) {
+        projectConfigurationsError = e;
+        configurationResult = e.partialProjectConfigurationsResult;
+      } else {
+        throw e;
+      }
     }
-  }
-  const { projects, externalNodes, sourceMaps, projectRootMap } =
-    configurationResult;
-  performance.mark('retrieve-project-configurations:end');
+    const { projects, externalNodes, sourceMaps, projectRootMap } =
+      configurationResult;
+    performance.mark('retrieve-project-configurations:end');
 
-  performance.mark('retrieve-workspace-files:start');
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-  performance.mark('retrieve-workspace-files:end');
+    performance.mark('retrieve-workspace-files:start');
+    const { allWorkspaceFiles, fileMap, rustReferences } =
+      await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+    performance.mark('retrieve-workspace-files:end');
 
-  const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
-  performance.mark('build-project-graph-using-project-file-map:start');
-  let projectGraphError: AggregateProjectGraphError;
-  let projectGraphResult: Awaited<
-    ReturnType<typeof buildProjectGraphUsingProjectFileMap>
-  >;
-  try {
-    projectGraphResult = await buildProjectGraphUsingProjectFileMap(
-      projects,
-      externalNodes,
-      fileMap,
-      allWorkspaceFiles,
-      rustReferences,
-      cacheEnabled ? readFileMapCache() : null,
-      plugins,
-      sourceMaps
-    );
-  } catch (e) {
-    if (isAggregateProjectGraphError(e)) {
-      projectGraphResult = {
-        projectGraph: e.partialProjectGraph,
-        projectFileMapCache: null,
-      };
-      projectGraphError = e;
-    } else {
-      throw e;
+    const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+    performance.mark('build-project-graph-using-project-file-map:start');
+    let projectGraphError: AggregateProjectGraphError;
+    let projectGraphResult: Awaited<
+      ReturnType<typeof buildProjectGraphUsingProjectFileMap>
+    >;
+    try {
+      projectGraphResult = await buildProjectGraphUsingProjectFileMap(
+        projects,
+        externalNodes,
+        fileMap,
+        allWorkspaceFiles,
+        rustReferences,
+        cacheEnabled ? readFileMapCache() : null,
+        plugins,
+        sourceMaps
+      );
+    } catch (e) {
+      if (isAggregateProjectGraphError(e)) {
+        projectGraphResult = {
+          projectGraph: e.partialProjectGraph,
+          projectFileMapCache: null,
+        };
+        projectGraphError = e;
+      } else {
+        throw e;
+      }
     }
-  }
 
-  const { projectGraph, projectFileMapCache } = projectGraphResult;
-  performance.mark('build-project-graph-using-project-file-map:end');
+    const { projectGraph, projectFileMapCache } = projectGraphResult;
+    performance.mark('build-project-graph-using-project-file-map:end');
 
-  delete global.NX_GRAPH_CREATION;
+    const errors = [
+      ...(projectConfigurationsError?.errors ?? []),
+      ...(projectGraphError?.errors ?? []),
+    ];
 
-  const errors = [
-    ...(projectConfigurationsError?.errors ?? []),
-    ...(projectGraphError?.errors ?? []),
-  ];
+    if (cacheEnabled) {
+      writeCache(projectFileMapCache, projectGraph, sourceMaps, errors);
+    }
 
-  if (cacheEnabled) {
-    writeCache(projectFileMapCache, projectGraph, sourceMaps, errors);
-  }
-
-  if (errors.length > 0) {
-    throw new ProjectGraphError(errors, projectGraph, sourceMaps);
-  } else {
-    return { projectGraph, sourceMaps };
+    if (errors.length > 0) {
+      throw new ProjectGraphError(errors, projectGraph, sourceMaps);
+    } else {
+      return { projectGraph, sourceMaps };
+    }
+  } finally {
+    delete global.NX_GRAPH_CREATION;
   }
 }
 
@@ -418,7 +420,12 @@ export async function createProjectGraphAndSourceMapsAsync(
 export function preventRecursionInGraphConstruction() {
   // preventRecursionInGraphConstruction -> callee -> ...
   // slice removes preventRecursionInGraphConstruction and its caller,
-  // which is useful when using this function to detect recursion in buildProjectGraphAndSourceMapsWithoutDaemon
+  // which is useful when using this function to detect recursion in buildProjectGraphAndSourceMapsWithoutDaemon.
+  //
+  // NOTE: getCallSites() now deduplicates consecutive frames with the
+  // same function name and file name. This normalizes differences between
+  // runtimes (e.g. Bun produces duplicate consecutive frames for async
+  // function boundaries) so that the slice(2) offset works correctly.
   const stackframes = getCallSites().slice(2);
 
   if (
