@@ -162,6 +162,12 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
 }
 
+export declare class TelemetryService {
+  constructor(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isAiAgent: boolean)
+  event(eventName: string, parameters?: Record<string, string> | undefined | null, isPageView?: boolean | undefined | null, pageLocation?: string | undefined | null): Promise<void>
+  flush(): Promise<void>
+}
+
 export declare class Watcher {
   origin: string
   /**

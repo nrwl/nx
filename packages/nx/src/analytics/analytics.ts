@@ -1,7 +1,7 @@
 import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
-import { AnalyticsCollector } from './analytics-collector';
+import { TelemetryService, isAiAgent } from '../native';
 import { machineId } from 'node-machine-id';
 import {
   getPackageManagerVersion,
@@ -12,11 +12,10 @@ import {
   EventCustomMetric,
   ParameterValue,
 } from './parameter';
-import { extname, join } from 'path';
-import { writeFileSync } from 'fs';
-import { spawn } from 'child_process';
+import { parse } from 'semver';
+import * as os from 'os';
 
-let _analyticsCollector: AnalyticsCollector = null;
+let _telemetryService: TelemetryService | null = null;
 let _currentMachineId: string = null;
 
 export async function startAnalytics() {
@@ -28,12 +27,30 @@ export async function startAnalytics() {
   const userId = await currentMachineId();
   const packageManagerInfo = getPackageManagerInfo();
 
-  _analyticsCollector = new AnalyticsCollector(
-    workspaceId,
-    userId,
-    nxVersion,
-    packageManagerInfo
-  );
+  const nodeVersion = parse(process.version);
+  const nodeVersionString = nodeVersion
+    ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
+    : 'unknown';
+
+  try {
+    _telemetryService = new TelemetryService(
+      workspaceId,
+      userId,
+      nxVersion,
+      packageManagerInfo.name,
+      packageManagerInfo.version,
+      nodeVersionString,
+      os.arch(),
+      os.platform(),
+      os.release(),
+      isAiAgent()
+    );
+  } catch (error) {
+    // If telemetry service fails to initialize, continue without it
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.log(`Failed to initialize telemetry: ${error.message}`);
+    }
+  }
 }
 
 export function reportNxAddCommand(packageName: string, version: string) {
@@ -232,59 +249,49 @@ function trackEvent(
   isPageView?: boolean,
   pageLocation?: string
 ) {
-  if (_analyticsCollector) {
-    _analyticsCollector.event(eventName, parameters, isPageView, pageLocation);
+  if (_telemetryService) {
+    // Convert parameters to string map for Rust
+    const stringParams: Record<string, string> = {};
+    if (parameters) {
+      for (const [key, value] of Object.entries(parameters)) {
+        if (value !== undefined && value !== null) {
+          stringParams[key] = String(value);
+        }
+      }
+    }
+    _telemetryService.event(eventName, stringParams, isPageView, pageLocation);
   }
 }
 
 export async function flushAnalytics() {
-  if (_analyticsCollector) {
-    await _analyticsCollector.flush();
+  if (_telemetryService) {
+    try {
+      await _telemetryService.flush();
+    } catch (error) {
+      // Failure to report analytics shouldn't crash the CLI
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.log(`Failed to flush telemetry: ${error.message}`);
+      }
+    }
   }
 }
 
-let processorSpawned = false;
 export function exitAndFlushAnalytics(code: string | number): never {
-  if (_analyticsCollector && !processorSpawned) {
-    processorSpawned = true;
-
-    // Multiple processes running at the same time can cause issues with the file system.
-    // Write to unique file path and pass to the spawned process
-    const analyticsBufferFile = join(
-      workspaceRoot,
-      '.nx',
-      'workspace-data',
-      `analytics-${process.pid}-${Date.now()}.json`
-    );
-    writeFileSync(analyticsBufferFile, _analyticsCollector.serialize());
-
-    const pathToProcessor = require.resolve('./analytics-processor');
-    const isUsingTS = extname(pathToProcessor) === '.ts';
-    spawn(
-      'node',
-      [
-        ...(isUsingTS ? ['--require', 'ts-node/register'] : []),
-        pathToProcessor,
-      ],
-      {
-        env: {
-          ...process.env,
-          NX_ANALYTICS_BUFFER_FILE: analyticsBufferFile,
-          ...(isUsingTS
-            ? {
-                TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-                  module: 'commonjs',
-                  moduleResolution: 'node',
-                }),
-              }
-            : {}),
-        },
-        detached: true,
-        windowsHide: true,
-        stdio: 'ignore',
-      }
-    ).unref();
+  if (_telemetryService) {
+    // Synchronously flush analytics before exit
+    // This is a blocking operation that waits for HTTP requests to complete
+    flushAnalytics()
+      .then(() => {
+        process.exit(code);
+      })
+      .catch(() => {
+        // Even if analytics fails, we should still exit
+        process.exit(code);
+      });
+  } else {
+    process.exit(code);
   }
+  // TypeScript needs this for the 'never' return type
   process.exit(code);
 }
 

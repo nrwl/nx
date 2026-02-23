@@ -8,6 +8,7 @@ pub mod metadata;
 pub mod plugins;
 pub mod project_graph;
 pub mod tasks;
+pub mod telemetry;
 mod types;
 pub mod utils;
 mod walker;
