@@ -108,6 +108,7 @@ describe('nx release version plans only touched', () => {
       'release plan minor -m "Should not happen due to no changed projects" --verbose',
       {
         silenceError: true,
+        redirectStderr: true,
       }
     );
 
