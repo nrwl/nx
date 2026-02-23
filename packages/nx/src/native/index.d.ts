@@ -162,6 +162,12 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
 }
 
+export declare class TelemetryService {
+  constructor(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isAiAgent: boolean)
+  event(eventName: string, parameters?: Record<string, string> | undefined | null, isPageView?: boolean | undefined | null, pageLocation?: string | undefined | null): Promise<void>
+  flush(): Promise<void>
+}
+
 export declare class Watcher {
   origin: string
   /**
@@ -349,7 +355,7 @@ export interface HashInputs {
  * Initialize the global telemetry service
  * This should be called once at startup from TypeScript
  */
-export declare export declare function initializeTelemetry(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string): void
+export declare export declare function initializeTelemetry(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isAiAgent: boolean): void
 
 export interface InputsInput {
   input: string
@@ -526,11 +532,11 @@ export interface TaskTarget {
 
 export declare export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
 
-/** Track an event using the global telemetry instance */
-export declare export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void
-
-/** Track a page view using the global telemetry instance */
-export declare export declare function trackPageView(pageTitle: string, pageLocation?: string | undefined | null, parameters?: Record<string, string> | undefined | null): void
+/**
+ * Track an event from JavaScript/TypeScript code using the global instance
+ * This is a wrapper for the global instance's event method
+ */
+export declare export declare function trackEventFromJs(eventName: string, parameters?: Record<string, string> | undefined | null, isPageView?: boolean | undefined | null, pageLocation?: string | undefined | null): Promise<void>
 
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker
