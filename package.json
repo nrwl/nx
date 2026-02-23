@@ -210,7 +210,7 @@
     "eslint-plugin-react-hooks": "5.0.0",
     "eslint-plugin-storybook": "^0.8.0",
     "express": "^4.21.2",
-    "fast-xml-parser": "^4.2.7",
+    "fast-xml-parser": "^5.3.7",
     "figures": "3.2.0",
     "file-type": "^16.2.0",
     "flat": "^5.0.2",
