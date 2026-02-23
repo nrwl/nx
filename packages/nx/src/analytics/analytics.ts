@@ -2,7 +2,6 @@ import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
 import { initializeTelemetry, flushTelemetry, isAiAgent } from '../native';
-import { machineId } from 'node-machine-id';
 import {
   getPackageManagerVersion,
   detectPackageManager,
@@ -14,9 +13,9 @@ import {
 } from './parameter';
 import { parse } from 'semver';
 import * as os from 'os';
+import { getCurrentMachineId } from '../utils/machine-id-cache';
 
 let _telemetryInitialized = false;
-let _currentMachineId: string = null;
 
 export async function startAnalytics() {
   const workspaceId = getAnalyticsId();
@@ -24,7 +23,7 @@ export async function startAnalytics() {
     // Analytics are disabled, exit early.
     return;
   }
-  const userId = await currentMachineId();
+  const userId = await getCurrentMachineId();
   const packageManagerInfo = getPackageManagerInfo();
 
   const nodeVersion = parse(process.version);
@@ -262,13 +261,19 @@ function trackEvent(
     }
 
     // Import dynamically to avoid circular dependencies
-    const { trackEventFromJs } = require('../native');
-    // Fire and forget - don't await
-    trackEventFromJs(eventName, stringParams, isPageView, pageLocation).catch(
-      () => {
+    if (isPageView) {
+      const { trackPageView } = require('../native');
+      // Fire and forget - don't await
+      trackPageView(eventName, pageLocation, stringParams).catch(() => {
         // Silently ignore errors
-      }
-    );
+      });
+    } else {
+      const { trackEvent } = require('../native');
+      // Fire and forget - don't await
+      trackEvent(eventName, stringParams).catch(() => {
+        // Silently ignore errors
+      });
+    }
   }
 }
 
@@ -315,18 +320,4 @@ function getPackageManagerInfo() {
 function getAnalyticsId(): string | false | undefined {
   const nxJson = readNxJson(workspaceRoot);
   return nxJson?.analytics;
-}
-
-async function currentMachineId() {
-  if (!_currentMachineId) {
-    try {
-      _currentMachineId = await machineId();
-    } catch (e) {
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`Unable to get machineId. Error: ${e.message}`);
-      }
-      _currentMachineId = '';
-    }
-  }
-  return _currentMachineId;
 }
