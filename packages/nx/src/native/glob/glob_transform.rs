@@ -320,6 +320,6 @@ mod test {
 
         // Test multiple ZeroOrOne patterns
         let globs = convert_glob("?(a)test?(b)").unwrap();
-        assert_eq!(globs, vec!["test", "testb", "atest", "atestb"]);
+        assert_eq!(globs, vec!["atest", "atestb", "test", "testb"]);
     }
 }
