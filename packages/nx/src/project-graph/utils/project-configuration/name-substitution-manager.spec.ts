@@ -494,6 +494,301 @@ describe('ProjectNameInNodePropsManager', () => {
     });
   });
 
+  // ============== DependsOn String-Form Target String Tests ==============
+
+  describe('dependsOn with string-form target strings', () => {
+    it('should substitute a project name in a "project:target" string entry', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['project-b:compile'],
+          },
+        },
+      });
+
+      const projectB = createProject('project-b', 'libs/b');
+
+      const pluginResultProjects = createPluginResult([projectA, projectB]);
+
+      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.markDirty('libs/b', 'project-b');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'project-b-renamed', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.build.dependsOn[0]).toBe(
+        'project-b-renamed:compile'
+      );
+    });
+
+    it('should not substitute "^target" dependency-mode strings', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['^build'],
+          },
+        },
+      });
+
+      const pluginResultProjects = createPluginResult([projectA]);
+
+      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.markDirty('libs/a', 'project-a');
+
+      const rootMap = createRootMap([
+        { name: 'renamed-a', root: 'libs/a', targets: projectA.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.build.dependsOn[0]).toBe('^build');
+    });
+
+    it('should not substitute bare target name strings (no colon)', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['compile'],
+          },
+        },
+      });
+
+      const pluginResultProjects = createPluginResult([projectA]);
+
+      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.markDirty('libs/a', 'project-a');
+
+      const rootMap = createRootMap([
+        { name: 'renamed-a', root: 'libs/a', targets: projectA.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.build.dependsOn[0]).toBe('compile');
+    });
+
+    it('should handle mixed string and object dependsOn entries', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: [
+              'project-b:compile',
+              { target: 'build', projects: 'project-c' },
+              '^lint',
+            ],
+          },
+        },
+      });
+
+      const projectB = createProject('project-b', 'libs/b');
+      const projectC = createProject('project-c', 'libs/c');
+
+      const pluginResultProjects = createPluginResult([
+        projectA,
+        projectB,
+        projectC,
+      ]);
+
+      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.markDirty('libs/b', 'project-b');
+      manager.markDirty('libs/c', 'project-c');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'new-b', root: 'libs/b' },
+        { name: 'new-c', root: 'libs/c' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.build.dependsOn[0]).toBe('new-b:compile');
+      expect(projectA.targets.build.dependsOn[1].projects).toBe('new-c');
+      expect(projectA.targets.build.dependsOn[2]).toBe('^lint');
+    });
+
+    it('should handle "project:target" string from a separate plugin result', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projA = createProject('project-a', 'proj-a', {
+        targets: {
+          build: {
+            dependsOn: ['project-b-original:compile'],
+          },
+        },
+      });
+      const projAResult = createPluginResult([projA]);
+
+      const projB = createProject('project-b-original', 'proj-b');
+      const projBResult = createPluginResult([projB]);
+
+      manager.registerSubstitutorsForNodeResults(projAResult);
+      manager.registerSubstitutorsForNodeResults(projBResult);
+      manager.markDirty('proj-b', 'project-b-original');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'proj-a', targets: projA.targets },
+        { name: 'project-b-renamed', root: 'proj-b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projA.targets.build.dependsOn[0]).toBe(
+        'project-b-renamed:compile'
+      );
+    });
+
+    it('should handle quoted project names with colons', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Register the colon-bearing project so splitTargetFromNodes
+      // can recognise it in the string-form dependsOn entry.
+      const scopedPkg = createProject('@scope:pkg', 'libs/scoped', {
+        targets: { build: {} },
+      });
+
+      // dependsOn uses quoted syntax: "@scope:pkg" contains a colon
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['"@scope:pkg":build'],
+          },
+        },
+      });
+
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([scopedPkg, projectA])
+      );
+      manager.markDirty('libs/scoped', '@scope:pkg');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'new-pkg', root: 'libs/scoped' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // The colon-bearing name is resolved via splitByColons quoting,
+      // so the substitutor is keyed by '@scope:pkg'.
+      expect(projectA.targets.build.dependsOn[0]).toBe('new-pkg:build');
+    });
+
+    it('should handle project names with colons when the final name also has colons', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projectB = createProject('project-b', 'libs/b', {
+        targets: { compile: {} },
+      });
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['project-b:compile'],
+          },
+        },
+      });
+
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([projectA, projectB])
+      );
+      manager.markDirty('libs/b', 'project-b');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        // The renamed project has a colon in its name
+        { name: '@scope:new-b', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // No quoting — downstream splitTarget with the full graph will
+      // correctly match the project name against known projects.
+      expect(projectA.targets.build.dependsOn[0]).toBe('@scope:new-b:compile');
+    });
+
+    it('should disambiguate colon strings using known project nodes', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Register a project whose name contains colons so
+      // splitTargetFromNodes can match it against "a:b:c".
+      const projectAB = createProject('a:b', 'libs/ab', {
+        targets: { c: {} },
+      });
+
+      const projectOwner = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['a:b:c'],
+          },
+        },
+      });
+
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([projectAB, projectOwner])
+      );
+      manager.markDirty('libs/ab', 'a:b');
+
+      const rootMap = createRootMap([
+        {
+          name: 'project-a',
+          root: 'libs/a',
+          targets: projectOwner.targets,
+        },
+        { name: 'new-ab', root: 'libs/ab' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // splitTargetFromNodes matched "a:b" as the project (with target "c")
+      // rather than "a" as the project (with target "b:c").
+      expect(projectOwner.targets.build.dependsOn[0]).toBe('new-ab:c');
+    });
+
+    it('should substitute for targets expanded from glob keys with string dependsOn', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          'build-*': {
+            dependsOn: ['project-b:compile'],
+          },
+        },
+      });
+
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([projectA])
+      );
+      manager.markDirty('libs/b', 'project-b');
+
+      const expandedTargets = {
+        'build-prod': {
+          dependsOn: ['project-b:compile'],
+        },
+      };
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: expandedTargets },
+        { name: 'renamed-b', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(expandedTargets['build-prod'].dependsOn[0]).toBe(
+        'renamed-b:compile'
+      );
+    });
+  });
+
   // ============== Multiple Plugin Calls Tests ==============
 
   describe('multiple plugin calls', () => {

@@ -1,5 +1,7 @@
+import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { isGlobPattern } from '../../../utils/globs';
+import { splitTargetFromNodes } from '../../../utils/split-target';
 import { minimatch } from 'minimatch';
 
 // A substitutor receives the final resolved name of the project that was
@@ -76,6 +78,12 @@ export class ProjectNameInNodePropsManager {
   // These are used in applySubstitutions to locate substitutors keyed by
   // old names.
   private dirtyEntries = new Map<string, Set<string>>();
+
+  // Partial project graph nodes accumulated across plugin registrations.
+  // Used by splitTargetFromNodes to properly parse string-form dependsOn
+  // entries like "project:target" — including project / target names that
+  // contain colons.
+  private knownProjectNodes: Record<string, ProjectGraphProjectNode> = {};
 
   private removeSubstitutorEntry(item: {
     referencedName: string;
@@ -259,10 +267,10 @@ export class ProjectNameInNodePropsManager {
    * reference another project by name, and registers substitutors so those
    * references are updated if the target project is later renamed.
    *
-   * No lookup into any project map is performed — substitutors are simply
-   * keyed by whatever name appears in the reference. This means registration
-   * is safe to call at any point during the merge, regardless of whether the
-   * referenced project has been processed yet.
+   * Project nodes from each call are accumulated internally so that
+   * string-form `dependsOn` entries (e.g. `"project:target"`) can be
+   * properly parsed with {@link splitTargetFromNodes}, even when project
+   * or target names contain colons.
    *
    * @param pluginResultProjects Projects from a single plugin's createNodes call.
    */
@@ -274,6 +282,19 @@ export class ProjectNameInNodePropsManager {
   ) {
     if (!pluginResultProjects) {
       return;
+    }
+
+    // Accumulate partial project graph nodes for splitTargetFromNodes.
+    for (const root in pluginResultProjects) {
+      const project = pluginResultProjects[root];
+      const name = project.name;
+      if (name) {
+        this.knownProjectNodes[name] = {
+          type: 'lib',
+          name,
+          data: { root, ...project } as ProjectConfiguration,
+        };
+      }
     }
 
     for (const ownerRoot in pluginResultProjects) {
@@ -382,6 +403,22 @@ export class ProjectNameInNodePropsManager {
     };
   }
 
+  private createDependsOnTargetStringSubstitutor(
+    targetName: string,
+    i: number,
+    targetPart: string
+  ): ProjectNameSubstitutor {
+    return (finalName, ownerConfig) => {
+      this.forEachTargetConfig(ownerConfig, targetName, (targetConfig) => {
+        const finalDep = targetConfig.dependsOn?.[i];
+        if (typeof finalDep === 'string') {
+          (targetConfig.dependsOn as (string | object)[])[i] =
+            `${finalName}:${targetPart}`;
+        }
+      });
+    };
+  }
+
   private registerSubstitutorsForInputs(
     ownerRoot: string,
     targetName: string,
@@ -442,6 +479,33 @@ export class ProjectNameInNodePropsManager {
     const arrayKey = `${ownerRoot}:targets.${targetName}.dependsOn`;
     for (let i = 0; i < dependsOn.length; i++) {
       const dep = dependsOn[i];
+      if (typeof dep === 'string') {
+        // String-form dependsOn entries like "project:target". Strings
+        // starting with '^' are dependency-mode references (no project
+        // name). Use splitTargetFromNodes with accumulated project nodes
+        // to properly handle project / target names containing colons.
+        if (!dep.startsWith('^')) {
+          const [maybeProject, ...rest] = splitTargetFromNodes(
+            dep,
+            this.knownProjectNodes
+          );
+          if (rest.length > 0) {
+            const targetPart = rest.join(':');
+            this.registerProjectNameSubstitutor(
+              maybeProject,
+              ownerRoot,
+              arrayKey,
+              i,
+              this.createDependsOnTargetStringSubstitutor(
+                targetName,
+                i,
+                targetPart
+              )
+            );
+          }
+        }
+        continue;
+      }
       if (typeof dep !== 'object' || !dep.projects) {
         continue;
       }
