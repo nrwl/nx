@@ -110,6 +110,19 @@ import {
   UPDATE_WORKSPACE_CONTEXT,
 } from '../message-types/update-workspace-context';
 import {
+  GET_RUNNING_TASKS,
+  GET_RUNNING_TASK_OUTPUT,
+  REGISTER_RUNNING_TASKS,
+  UNREGISTER_RUNNING_TASKS,
+  UPDATE_RUNNING_TASKS,
+  type HandleGetRunningTaskOutputMessage,
+  type HandleGetRunningTasksMessage,
+  type HandleRegisterRunningTasksMessage,
+  type HandleUnregisterRunningTasksMessage,
+  type HandleUpdateRunningTasksMessage,
+  type RunningTaskStatusUpdate,
+} from '../message-types/running-tasks';
+import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
   isDaemonDisabled,
@@ -1341,6 +1354,58 @@ export class DaemonClient {
         'Failed to start or connect to the Nx Daemon process.'
       );
     }
+  }
+
+  registerRunningTasks(
+    pid: number,
+    command: string,
+    taskIds: string[]
+  ): Promise<void> {
+    const message: HandleRegisterRunningTasksMessage = {
+      type: REGISTER_RUNNING_TASKS,
+      pid,
+      command,
+      taskIds,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  updateRunningTasks(
+    pid: number,
+    taskUpdates: RunningTaskStatusUpdate[],
+    outputChunks: Record<string, string>
+  ): Promise<void> {
+    const message: HandleUpdateRunningTasksMessage = {
+      type: UPDATE_RUNNING_TASKS,
+      pid,
+      taskUpdates,
+      outputChunks,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  unregisterRunningTasks(pid: number): Promise<void> {
+    const message: HandleUnregisterRunningTasksMessage = {
+      type: UNREGISTER_RUNNING_TASKS,
+      pid,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getRunningTasks(): Promise<string> {
+    const message: HandleGetRunningTasksMessage = {
+      type: GET_RUNNING_TASKS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getRunningTaskOutput(pid: number, taskId: string): Promise<string> {
+    const message: HandleGetRunningTaskOutputMessage = {
+      type: GET_RUNNING_TASK_OUTPUT,
+      pid,
+      taskId,
+    };
+    return this.sendToDaemonViaQueue(message);
   }
 
   async stop(): Promise<void> {
