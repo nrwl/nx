@@ -345,14 +345,13 @@ impl TelemetryService {
                 recv(page_view_rx) -> msg => {
                     match msg {
                         Ok(page_view) => {
-                            tracing::trace!("Received page view in background thread: {}", page_view.title);
+                            tracing::trace!("Queued page view for sending: {}", page_view.title);
                             let mut params = user_params.clone();
                             params.extend(page_view.parameters);
                             params.insert("en".to_string(), "page_view".to_string());
                             params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
                             params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
                             page_view_batch.push(sanitize_params(params));
-                            tracing::trace!("Page view batch now has {} items", page_view_batch.len());
                         }
                         Err(_) => break, // Channel closed
                     }
