@@ -869,6 +869,9 @@ importers:
       '@zkochan/js-yaml':
         specifier: 'catalog:'
         version: 0.0.7
+      ai:
+        specifier: 3.0.19
+        version: 3.0.19(react@18.3.1)(solid-js@1.9.7)(svelte@5.35.5)(vue@3.5.17(typescript@5.9.2))(zod@4.3.5)
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -38871,7 +38874,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.17':
     dependencies:
-      '@babel/parser': 7.28.3
+      '@babel/parser': 7.28.6
       '@vue/shared': 3.5.17
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -47449,7 +47452,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 2.0.0
       connect: 3.7.0
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
       error-stack-parser: 2.1.4
       flow-enums-runtime: 0.0.6
       graceful-fs: 4.2.11

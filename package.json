@@ -172,6 +172,7 @@
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
     "@zkochan/js-yaml": "catalog:",
+    "ai": "3.0.19",
     "ajv": "^8.12.0",
     "angular-eslint": "catalog:eslint",
     "autoprefixer": "10.4.13",
