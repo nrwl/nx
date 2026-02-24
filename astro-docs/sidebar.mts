@@ -93,6 +93,10 @@ const learnGroups: SidebarItems = [
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
+      {
+        label: 'Synthetic Monorepos',
+        link: 'concepts/synthetic-monorepos',
+      },
     ],
   },
   {

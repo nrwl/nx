@@ -1,0 +1,70 @@
+---
+title: Synthetic Monorepos
+description: Learn how synthetic monorepos connect separate repositories into a unified dependency graph, giving you monorepo intelligence without moving code.
+---
+
+Most organizations don't have a single giant monorepo. They have a handful of monorepos per team or domain, plus dozens of standalone repos. Consolidating everything into one repository is not just a technical challenge: the organizational side — bringing teams along, changing workflows, ensuring adoption — is often harder than the code migration itself.
+
+Synthetic monorepos let you get monorepo benefits without that consolidation.
+
+## What is a synthetic monorepo?
+
+A synthetic monorepo connects separate repositories into a unified dependency graph without moving any code. Which repo depends on which, what a change affects downstream, how projects relate across teams: all of that becomes visible automatically.
+
+> A synthetic monorepo doesn't tear down the walls between repos. It creates tunnels through them, giving humans and AI agents the visibility to effectively work across boundaries.
+
+Unlike a traditional monorepo where all code lives in one repository, a synthetic monorepo leaves each repository where it is. Instead, it builds a cross-repo graph that tooling can reason about, just as if the code were in one place.
+
+## Why they matter
+
+Repository boundaries create problems at multiple levels.
+
+### For humans
+
+Collaboration, visibility, and enforcing common standards across an organization becomes hard when code is spread across many repos. A platform engineer or software architect who needs to ensure multiple systems work together cohesively has to manually catalog, inspect, and cross-reference dozens or hundreds of repos to make sure things align.
+
+Cross-repo changes are especially painful: coordinating PRs, ensuring compatibility, managing release order — all of this becomes a manual, error-prone process.
+
+### For AI agents
+
+Repository boundaries are walls AI agents cannot see across. Agents operate at a local maximum based on the information available in a single repo, missing downstream impacts, shared types, and cross-project relationships.
+
+Consider an AI agent implementing a feature that spans a backend API and a frontend app in separate repos. Without cross-repo visibility, the agent must work against specs or documentation rather than actual implementation. Information gets lost in handoffs, shared types must be manually provided, and coordination falls on the human.
+
+With a synthetic monorepo, the agent can read the cross-repo graph and understand how projects relate, enabling coordinated changes across repo boundaries.
+
+## What synthetic monorepos provide
+
+### Cross-repo dependency graph
+
+Automatically creates a dependency graph across repositories, representing how they connect. This gives you the same visibility you'd get in a monorepo: which project depends on which, what a change affects downstream, and how teams' work relates.
+
+### Tooling on top of the graph
+
+The graph becomes actionable, not just a visualization. Conformance checking, impact analysis, and coordinated changes all become possible across repo boundaries. CI intelligence like affected detection, caching, and distribution can work across the full graph.
+
+### AI agent enablement
+
+Tooling built on synthetic monorepos exposes metadata that AI agents can read and use to see beyond polyrepo boundaries. This enables patterns like:
+
+- A **coordinator agent** reads the cross-repo graph and identifies affected repos
+- **Per-repo agents** are spawned for each repo that needs changes (backend, frontend, etc.)
+- The coordinator **funnels context between agents** (e.g., passing DTO structures from the backend agent to the frontend agent)
+- Agents **manage the PR lifecycle** across repos, with a consolidated view as if submitting to one repo
+
+## An entry point, not an endpoint
+
+A synthetic monorepo is an entry point, not an endpoint. Organizations can start with cross-repo visibility and gradually deepen integration where it makes sense, one team or repo at a time.
+
+The progression looks like this:
+
+1. **Connect** — Link existing repos into a unified graph. No code changes, no CI changes required.
+2. **Observe** — Use the graph for visibility, impact analysis, and conformance checking.
+3. **Automate** — Enable coordinated changes, cross-repo CI, and AI agent workflows.
+4. **Migrate gradually** — Where it makes sense, consolidate repos into actual monorepos, guided by the relationships the graph reveals.
+
+You don't have to reorganize your repos to start getting monorepo benefits. Start synthetic, migrate gradually, move at your own pace.
+
+{% aside type="note" title="Nx and synthetic monorepos" %}
+Nx supports synthetic monorepos through [Nx Polygraph](/docs/enterprise/polygraph), which connects existing repositories into a unified, intelligent graph. Polygraph works with any repo — even those that don't use Nx — through metadata-only workspaces that require zero changes to target repos.
+{% /aside %}
