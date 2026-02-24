@@ -54,15 +54,12 @@ This is the same workflow you'd get with a real monorepo, but without requiring 
 
 ## When to use a synthetic monorepo vs. a real monorepo
 
-A real monorepo gives you the deepest integration: atomic commits, a single toolchain, and the simplest mental model. If you can consolidate, it's the best option.
+A real monorepo is the best option when you can consolidate. It gives you atomic commits, a single toolchain, and the simplest mental model.
 
-But consolidation isn't always feasible. Teams have autonomy concerns, repos have different CI setups, and migrating hundreds of repos is a multi-month effort. A synthetic monorepo gives you monorepo intelligence without requiring that migration.
+A synthetic monorepo is the better starting point when:
 
-**Start synthetic, consolidate where it makes sense.** The two approaches aren't mutually exclusive. A common progression:
+- **Consolidation isn't feasible yet** — team autonomy concerns, divergent CI setups, or hundreds of repos make migration impractical.
+- **You need cross-repo visibility now** — you can't wait months for a migration to see how projects relate across teams.
+- **Teams need to stay autonomous** — each team keeps their repo, workflow, and release cadence while still participating in a unified graph.
 
-1. **Connect** existing repos into a unified graph with Nx Polygraph. No code changes, no CI changes required.
-2. **Observe** how projects relate. Use the graph for visibility, impact analysis, and conformance checking.
-3. **Automate** coordinated changes, cross-repo CI, and AI agent workflows across the graph.
-4. **Consolidate gradually** where it makes sense. Teams that work closely together can merge repos into a real monorepo, guided by the relationships the graph reveals.
-
-You might end up with a mix: a few real monorepos for tightly coupled teams, connected through a synthetic monorepo for org-wide visibility. Nx supports both, and moving between them is incremental.
+The two aren't mutually exclusive. Start synthetic for org-wide visibility, then consolidate tightly coupled teams into real monorepos where it makes sense.
