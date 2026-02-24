@@ -320,7 +320,7 @@ impl TelemetryService {
             .build()
             .expect("Failed to create tokio runtime for telemetry");
 
-        let mut event_batch = Vec::new();
+        let mut event_queue = Vec::new();
         let mut page_view_queue = Vec::new();
         let mut last_send = std::time::Instant::now();
 
@@ -328,11 +328,11 @@ impl TelemetryService {
             // Check if we should send batches periodically
             let should_send = last_send.elapsed() >= Duration::from_millis(BATCH_INTERVAL_MS);
 
-            if should_send && (!event_batch.is_empty() || !page_view_queue.is_empty()) {
+            if should_send && (!event_queue.is_empty() || !page_view_queue.is_empty()) {
                 let _ = rt.block_on(Self::send_batches(
                     &client,
                     &common_params,
-                    &mut event_batch,
+                    &mut event_queue,
                     &mut page_view_queue,
                 ));
                 last_send = std::time::Instant::now();
@@ -345,7 +345,7 @@ impl TelemetryService {
                 recv(page_view_rx) -> msg => {
                     match msg {
                         Ok(page_view) => {
-                            tracing::trace!("Queued page view for sending: {}", page_view.title);
+                            tracing::trace!("Queuing page view: {}", page_view.title);
                             let mut params = user_params.clone();
                             params.extend(page_view.parameters);
                             params.insert("en".to_string(), "page_view".to_string());
@@ -359,10 +359,11 @@ impl TelemetryService {
                 recv(event_rx) -> msg => {
                     match msg {
                         Ok(event) => {
+                            tracing::trace!("Queuing event: {}", event.name);
                             let mut params = user_params.clone();
                             params.extend(event.parameters);
                             params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
-                            event_batch.push(sanitize_params(params));
+                            event_queue.push(sanitize_params(params));
                         }
                         Err(_) => break, // Channel closed
                     }
@@ -375,7 +376,7 @@ impl TelemetryService {
                                 let mut params = user_params.clone();
                                 params.extend(event.parameters);
                                 params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
-                                event_batch.push(sanitize_params(params));
+                                event_queue.push(sanitize_params(params));
                             }
 
                             while let Ok(page_view) = page_view_rx.try_recv() {
@@ -391,7 +392,7 @@ impl TelemetryService {
                             let result = rt.block_on(Self::send_batches(
                                 &client,
                                 &common_params,
-                                &mut event_batch,
+                                &mut event_queue,
                                 &mut page_view_queue,
                             ));
                             let _ = reply.send(result);
@@ -411,7 +412,7 @@ impl TelemetryService {
         let _ = rt.block_on(Self::send_batches(
             &client,
             &common_params,
-            &mut event_batch,
+            &mut event_queue,
             &mut page_view_queue,
         ));
     }
@@ -419,27 +420,27 @@ impl TelemetryService {
     async fn send_batches(
         client: &Client,
         common_params: &ParameterMap,
-        event_batch: &mut Vec<ParameterMap>,
+        event_queue: &mut Vec<ParameterMap>,
         page_view_queue: &mut Vec<ParameterMap>,
     ) -> Result<()> {
-        if event_batch.is_empty() && page_view_queue.is_empty() {
+        if event_queue.is_empty() && page_view_queue.is_empty() {
             return Ok(());
         }
 
         tracing::trace!(
-            "Telemetry: Sending {} events, {} page views",
-            event_batch.len(),
+            "Sending {} events and {} page views",
+            event_queue.len(),
             page_view_queue.len()
         );
 
         // Send events in chunks of MAX_EVENTS_PER_BATCH
-        if !event_batch.is_empty() {
-            for chunk in event_batch.chunks(MAX_EVENTS_PER_BATCH) {
+        if !event_queue.is_empty() {
+            for chunk in event_queue.chunks(MAX_EVENTS_PER_BATCH) {
                 if let Err(e) = Self::send_request(client, common_params, chunk.to_vec()).await {
                     tracing::trace!("Telemetry Send Error: {}", e);
                 }
             }
-            event_batch.clear();
+            event_queue.clear();
         }
 
         // Send page views (one per request)
