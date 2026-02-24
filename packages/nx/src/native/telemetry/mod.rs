@@ -434,13 +434,22 @@ impl TelemetryService {
                     .iter()
                     .filter_map(|params| params.get("en").cloned())
                     .collect();
-                tracing::debug!(
+                tracing::trace!(
                     "Sending {} events: [{}]",
                     chunk.len(),
                     event_names.join(", ")
                 );
-                if let Err(e) = Self::send_request(client, common_params, chunk.to_vec()).await {
-                    tracing::trace!("Telemetry Send Error: {}", e);
+                match Self::send_request(client, common_params, chunk.to_vec()).await {
+                    Ok(_) => {
+                        tracing::debug!(
+                            "Sent {} events: [{}]",
+                            chunk.len(),
+                            event_names.join(", ")
+                        );
+                    }
+                    Err(e) => {
+                        tracing::trace!("Telemetry Send Error: {}", e);
+                    }
                 }
             }
             event_queue.clear();
@@ -448,31 +457,48 @@ impl TelemetryService {
 
         // Send page views (one per request)
         for page_view in page_view_queue.drain(..) {
-            let title = page_view.get("dt");
-            let location = page_view.get("dl");
+            let title = page_view.get("dt").cloned();
+            let location = page_view.get("dl").cloned();
 
-            if let Some(t) = title {
-                if let Some(l) = location {
+            // Trace log before sending
+            if let Some(ref t) = title {
+                if let Some(ref l) = location {
                     if t != l {
-                        tracing::debug!("Sending page view: {} (location: {})", t, l);
+                        tracing::trace!("Sending page view: {} (location: {})", t, l);
                     } else {
-                        tracing::debug!("Sending page view: {}", t);
+                        tracing::trace!("Sending page view: {}", t);
                     }
                 } else {
-                    tracing::debug!("Sending page view: {}", t);
+                    tracing::trace!("Sending page view: {}", t);
                 }
             }
 
             let mut request_params = common_params.clone();
-            if let Some(title) = title {
-                request_params.insert("dt".to_string(), title.clone());
+            if let Some(ref t) = title {
+                request_params.insert("dt".to_string(), t.clone());
             }
-            if let Some(location) = location {
-                request_params.insert("dl".to_string(), location.clone());
+            if let Some(ref l) = location {
+                request_params.insert("dl".to_string(), l.clone());
             }
 
-            if let Err(e) = Self::send_request(client, &request_params, vec![page_view]).await {
-                tracing::trace!("Telemetry Send Error: {}", e);
+            match Self::send_request(client, &request_params, vec![page_view]).await {
+                Ok(_) => {
+                    // Debug log after successful send
+                    if let Some(ref t) = title {
+                        if let Some(ref l) = location {
+                            if t != l {
+                                tracing::debug!("Sent page view: {} (location: {})", t, l);
+                            } else {
+                                tracing::debug!("Sent page view: {}", t);
+                            }
+                        } else {
+                            tracing::debug!("Sent page view: {}", t);
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::trace!("Telemetry Send Error: {}", e);
+                }
             }
         }
 
