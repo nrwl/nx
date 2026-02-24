@@ -128,6 +128,62 @@ afterEvaluate {
   tasks.withType<Sign>().configureEach { onlyIf { !skipSign } }
 }
 
-tasks.test { useJUnitPlatform() }
+tasks.test {
+  useJUnitPlatform()
+
+  // Diagnostic logging for CI XML test result write failures
+  doFirst {
+    val resultsDir = reports.junitXml.outputLocation.get().asFile
+    val binResultsDir = binaryResultsDirectory.get().asFile
+    logger.lifecycle("=== Test diagnostics (doFirst) ===")
+    logger.lifecycle("JUnit XML output dir: $resultsDir")
+    logger.lifecycle("  exists=${resultsDir.exists()}, canWrite=${resultsDir.canWrite()}, isDirectory=${resultsDir.isDirectory}")
+    logger.lifecycle("Binary results dir: $binResultsDir")
+    logger.lifecycle("  exists=${binResultsDir.exists()}, canWrite=${binResultsDir.canWrite()}, isDirectory=${binResultsDir.isDirectory}")
+    logger.lifecycle("Build dir: ${project.layout.buildDirectory.get().asFile}")
+    logger.lifecycle("  exists=${project.layout.buildDirectory.get().asFile.exists()}, canWrite=${project.layout.buildDirectory.get().asFile.canWrite()}")
+
+    // Check disk space
+    val buildFile = project.layout.buildDirectory.get().asFile
+    val root = if (buildFile.exists()) buildFile else project.projectDir
+    logger.lifecycle("Disk space on ${root.absolutePath}:")
+    logger.lifecycle("  totalSpace=${root.totalSpace / (1024*1024)}MB, freeSpace=${root.freeSpace / (1024*1024)}MB, usableSpace=${root.usableSpace / (1024*1024)}MB")
+
+    // List parent directory contents
+    val parentDir = resultsDir.parentFile
+    if (parentDir?.exists() == true) {
+      logger.lifecycle("Parent dir contents (${parentDir.absolutePath}):")
+      parentDir.listFiles()?.forEach { logger.lifecycle("  ${it.name} (dir=${it.isDirectory}, write=${it.canWrite()})") }
+    }
+  }
+
+  doLast {
+    val resultsDir = reports.junitXml.outputLocation.get().asFile
+    logger.lifecycle("=== Test diagnostics (doLast) ===")
+    logger.lifecycle("JUnit XML output dir after tests: $resultsDir")
+    logger.lifecycle("  exists=${resultsDir.exists()}, canWrite=${resultsDir.canWrite()}")
+    if (resultsDir.exists()) {
+      logger.lifecycle("XML result files:")
+      resultsDir.listFiles()?.forEach {
+        logger.lifecycle("  ${it.name} size=${it.length()} canRead=${it.canRead()}")
+      }
+    }
+
+    val binResultsDir = binaryResultsDirectory.get().asFile
+    logger.lifecycle("Binary results dir after tests: $binResultsDir")
+    logger.lifecycle("  exists=${binResultsDir.exists()}")
+    if (binResultsDir.exists()) {
+      logger.lifecycle("Binary result files:")
+      binResultsDir.listFiles()?.forEach {
+        logger.lifecycle("  ${it.name} size=${it.length()}")
+      }
+    }
+
+    // Check disk space again
+    val root = if (resultsDir.exists()) resultsDir else project.projectDir
+    logger.lifecycle("Disk space after tests:")
+    logger.lifecycle("  freeSpace=${root.freeSpace / (1024*1024)}MB, usableSpace=${root.usableSpace / (1024*1024)}MB")
+  }
+}
 
 java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
