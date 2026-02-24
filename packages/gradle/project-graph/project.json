@@ -1,4 +1,5 @@
 {
+  "name": ":gradle-project-graph",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "publish-staging": {
