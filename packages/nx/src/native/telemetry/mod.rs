@@ -58,6 +58,8 @@ pub fn initialize_telemetry(
     os_platform: String,
     os_release: String,
 ) -> Result<()> {
+    tracing::trace!("Initializing telemetry service for workspace: {}", workspace_id);
+
     let service = TelemetryService::new(
         workspace_id,
         user_id,
@@ -74,14 +76,18 @@ pub fn initialize_telemetry(
         .set(Arc::new(service))
         .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
 
+    tracing::trace!("Telemetry service initialized successfully");
     Ok(())
 }
 
 /// Track an event using the global telemetry instance
 #[napi]
 pub fn track_event(event_name: String, parameters: Option<HashMap<String, String>>) -> Result<()> {
+    tracing::trace!("Tracking event: {}", event_name);
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
         telemetry.track_event_impl(event_name, parameters)?;
+    } else {
+        tracing::trace!("Telemetry not initialized, skipping event");
     }
     Ok(())
 }
@@ -93,8 +99,11 @@ pub fn track_page_view(
     page_location: Option<String>,
     parameters: Option<HashMap<String, String>>,
 ) -> Result<()> {
+    tracing::trace!("Tracking page view: {} (location: {:?})", page_title, page_location);
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
         telemetry.track_page_view_impl(page_title, page_location, parameters)?;
+    } else {
+        tracing::trace!("Telemetry not initialized, skipping page view");
     }
     Ok(())
 }
