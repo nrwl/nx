@@ -57,7 +57,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
     }
   } catch (e) {
     console.error(e.message);
-    await flushAnalytics();
+    flushAnalytics();
     process.exit(1);
   }
 }

@@ -1,8 +1,12 @@
 import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
-import { AnalyticsCollector } from './analytics-collector';
-import { machineId } from 'node-machine-id';
+import {
+  initializeTelemetry,
+  flushTelemetry,
+  trackEvent as trackEventNative,
+  trackPageView as trackPageViewNative,
+} from '../native';
 import {
   getPackageManagerVersion,
   detectPackageManager,
@@ -12,12 +16,12 @@ import {
   EventCustomMetric,
   ParameterValue,
 } from './parameter';
-import { extname, join } from 'path';
-import { writeFileSync } from 'fs';
-import { spawn } from 'child_process';
+import { parse } from 'semver';
+import * as os from 'os';
+import { getCurrentMachineId } from '../utils/machine-id-cache';
+import { isCI } from '../utils/is-ci';
 
-let _analyticsCollector: AnalyticsCollector = null;
-let _currentMachineId: string = null;
+let _telemetryInitialized = false;
 
 export async function startAnalytics() {
   const workspaceId = getAnalyticsId();
@@ -25,15 +29,34 @@ export async function startAnalytics() {
     // Analytics are disabled, exit early.
     return;
   }
-  const userId = await currentMachineId();
+  const userId = await getCurrentMachineId();
   const packageManagerInfo = getPackageManagerInfo();
 
-  _analyticsCollector = new AnalyticsCollector(
-    workspaceId,
-    userId,
-    nxVersion,
-    packageManagerInfo
-  );
+  const nodeVersion = parse(process.version);
+  const nodeVersionString = nodeVersion
+    ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
+    : 'unknown';
+
+  try {
+    initializeTelemetry(
+      workspaceId,
+      userId,
+      nxVersion,
+      packageManagerInfo.name,
+      packageManagerInfo.version,
+      nodeVersionString,
+      os.arch(),
+      os.platform(),
+      os.release(),
+      !!isCI()
+    );
+    _telemetryInitialized = true;
+  } catch (error) {
+    // If telemetry service fails to initialize, continue without it
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.log(`Failed to initialize telemetry: ${error.message}`);
+    }
+  }
 }
 
 export function reportNxAddCommand(packageName: string, version: string) {
@@ -44,11 +67,9 @@ export function reportNxAddCommand(packageName: string, version: string) {
 }
 
 export function reportNxGenerateCommand(generator: string) {
-  trackEvent(
-    'generator_used',
-    { [EventCustomDimension.GeneratorName]: generator },
-    false
-  );
+  reportCommandRunEvent('generate', {
+    [EventCustomDimension.GeneratorName]: generator,
+  });
 }
 
 export function reportCommandRunEvent(
@@ -64,7 +85,7 @@ export function reportCommandRunEvent(
       pageLocation = `${command}?${qs}`;
     }
   }
-  trackEvent(command, parameters, true, pageLocation);
+  trackPageView(command, pageLocation, parameters);
 }
 
 export function reportProjectGraphCreationEvent(time: number) {
@@ -228,62 +249,71 @@ export function argsToQueryString(args: Record<string, any>): string {
 
 function trackEvent(
   eventName: string,
-  parameters?: Record<string, ParameterValue>,
-  isPageView?: boolean,
-  pageLocation?: string
+  parameters?: Record<string, ParameterValue>
 ) {
-  if (_analyticsCollector) {
-    _analyticsCollector.event(eventName, parameters, isPageView, pageLocation);
-  }
-}
-
-export async function flushAnalytics() {
-  if (_analyticsCollector) {
-    await _analyticsCollector.flush();
-  }
-}
-
-let processorSpawned = false;
-export function exitAndFlushAnalytics(code: string | number): never {
-  if (_analyticsCollector && !processorSpawned) {
-    processorSpawned = true;
-
-    // Multiple processes running at the same time can cause issues with the file system.
-    // Write to unique file path and pass to the spawned process
-    const analyticsBufferFile = join(
-      workspaceRoot,
-      '.nx',
-      'workspace-data',
-      `analytics-${process.pid}-${Date.now()}.json`
-    );
-    writeFileSync(analyticsBufferFile, _analyticsCollector.serialize());
-
-    const pathToProcessor = require.resolve('./analytics-processor');
-    const isUsingTS = extname(pathToProcessor) === '.ts';
-    spawn(
-      'node',
-      [
-        ...(isUsingTS ? ['--require', 'ts-node/register'] : []),
-        pathToProcessor,
-      ],
-      {
-        env: {
-          ...process.env,
-          NX_ANALYTICS_BUFFER_FILE: analyticsBufferFile,
-          ...(isUsingTS
-            ? {
-                TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-                  module: 'commonjs',
-                  moduleResolution: 'node',
-                }),
-              }
-            : {}),
-        },
-        detached: true,
-        windowsHide: true,
-        stdio: 'ignore',
+  if (_telemetryInitialized) {
+    // Convert parameters to string map for Rust
+    const stringParams: Record<string, string> = {};
+    if (parameters) {
+      for (const [key, value] of Object.entries(parameters)) {
+        if (value !== undefined && value !== null) {
+          stringParams[key] = String(value);
+        }
       }
-    ).unref();
+    }
+
+    // Fire and forget - synchronous call
+    try {
+      trackEventNative(eventName, stringParams);
+    } catch {
+      // Silently ignore errors
+    }
+  }
+}
+
+function trackPageView(
+  pageTitle: string,
+  pageLocation?: string,
+  parameters?: Record<string, ParameterValue>
+) {
+  if (_telemetryInitialized) {
+    // Convert parameters to string map for Rust
+    const stringParams: Record<string, string> = {};
+    if (parameters) {
+      for (const [key, value] of Object.entries(parameters)) {
+        if (value !== undefined && value !== null) {
+          stringParams[key] = String(value);
+        }
+      }
+    }
+
+    // Fire and forget - synchronous call
+    try {
+      trackPageViewNative(pageTitle, pageLocation, stringParams);
+    } catch {
+      // Silently ignore errors
+    }
+  }
+}
+
+export function flushAnalytics() {
+  if (_telemetryInitialized) {
+    try {
+      flushTelemetry();
+    } catch (error) {
+      // Failure to report analytics shouldn't crash the CLI
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.log(`Failed to flush telemetry: ${error.message}`);
+      }
+    }
+  }
+}
+
+export function exitAndFlushAnalytics(code: string | number): never {
+  if (_telemetryInitialized) {
+    // Synchronously flush analytics before exit
+    // This is a blocking operation that waits for HTTP requests to complete
+    flushAnalytics();
   }
   process.exit(code);
 }
@@ -299,18 +329,4 @@ function getPackageManagerInfo() {
 function getAnalyticsId(): string | false | undefined {
   const nxJson = readNxJson(workspaceRoot);
   return nxJson?.analytics;
-}
-
-async function currentMachineId() {
-  if (!_currentMachineId) {
-    try {
-      _currentMachineId = await machineId();
-    } catch (e) {
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`Unable to get machineId. Error: ${e.message}`);
-      }
-      _currentMachineId = '';
-    }
-  }
-  return _currentMachineId;
 }
