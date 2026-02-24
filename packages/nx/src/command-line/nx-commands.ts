@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import * as yargs from 'yargs';
 
 import { yargsRegisterCommand } from './register/command-object';
@@ -46,6 +46,8 @@ import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
 import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
+import { yargsApplyLocallyCommand } from './nx-cloud/apply-locally/command-object';
+import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-client/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
@@ -70,7 +72,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart Monorepos · Fast Builds'))
+  .usage(pc.bold('Smart Monorepos · Fast Builds'))
   .demandCommand(1, '')
   .command(yargsRegisterCommand)
   .command(yargsAddCommand)
@@ -114,6 +116,8 @@ export const commandsObject = yargs
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)
+  .command(yargsApplyLocallyCommand)
+  .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())

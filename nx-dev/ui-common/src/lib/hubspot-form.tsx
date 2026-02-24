@@ -5,11 +5,8 @@ import { Component } from 'react';
  * From https://www.npmjs.com/package/react-hubspot-form
  */
 
-let globalId = 0;
-
 declare const window: {
   hbspt: any;
-  Cookiebot?: any;
 };
 
 declare const Calendly: any;
@@ -19,6 +16,7 @@ interface HubspotFormProps {
   portalId?: string;
   formId?: string;
   calendlyFormId?: string | null;
+  targetId?: string;
   noScript?: boolean;
   loading?: any;
   onSubmit?: (formData) => void;
@@ -33,7 +31,7 @@ export class HubspotForm extends Component<
     calendlyFormId: null,
   };
 
-  id: number;
+  id: string;
   el?: HTMLDivElement | null = null;
   calendlyInitAttempts: number = 0;
 
@@ -42,19 +40,30 @@ export class HubspotForm extends Component<
     this.state = {
       loaded: false,
     };
-    this.id = globalId++;
+    this.id = HubspotForm.buildTargetId(props);
     this.createForm = this.createForm.bind(this);
     this.findFormElement = this.findFormElement.bind(this);
   }
 
+  private static buildTargetId(props: HubspotFormProps): string {
+    if (props.targetId) {
+      return props.targetId;
+    }
+    const parts = ['reactHubspotForm'];
+    if (props.portalId) {
+      parts.push(props.portalId);
+    }
+    if (props.formId) {
+      parts.push(props.formId);
+    }
+    if (props.calendlyFormId) {
+      parts.push(props.calendlyFormId);
+    }
+    return parts.join('-');
+  }
+
   createForm(): void {
     if (typeof window === 'undefined') return;
-
-    // Check if user has consented to marketing cookies
-    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
-      // Don't create form if marketing consent is not given
-      return;
-    }
 
     if (window.hbspt) {
       // protect against component unmounting before window.hbspt is available
@@ -85,23 +94,6 @@ export class HubspotForm extends Component<
     } else {
       setTimeout(this.createForm, 1);
     }
-  }
-
-  loadScript() {
-    // Check if user has consented to marketing cookies
-    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
-      // Don't load script if marketing consent is not given
-      return;
-    }
-
-    const script = document.createElement(`script`);
-    script.defer = true;
-    script.onload = () => {
-      this.createForm();
-      this.findFormElement();
-    };
-    script.src = `//js.hsforms.net/forms/v2.js`;
-    document.head.appendChild(script);
   }
 
   findFormElement() {
@@ -144,30 +136,9 @@ export class HubspotForm extends Component<
   }
 
   override componentDidMount() {
-    // Function to initialize when consent is available
-    const initialize = () => {
-      if (!window.hbspt && !this.props.noScript) {
-        this.loadScript();
-      } else {
-        this.createForm();
-        this.findFormElement();
-      }
-    };
-
-    // Check if Cookiebot is loaded and consent is given
-    if (
-      process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE === 'true' ||
-      (window.Cookiebot && window.Cookiebot.consent?.marketing)
-    ) {
-      initialize();
-    } else {
-      // Listen for consent acceptance
-      window.addEventListener('CookiebotOnAccept', () => {
-        if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
-          initialize();
-        }
-      });
-    }
+    // HubSpot scripts are loaded via GTM; createForm will retry until available.
+    this.createForm();
+    this.findFormElement();
   }
 
   override render() {
@@ -177,7 +148,7 @@ export class HubspotForm extends Component<
           ref={(el) => {
             this.el = el;
           }}
-          id={`reactHubspotForm${this.id}`}
+          id={this.id}
           style={{ display: this.state.loaded ? 'block' : 'none' }}
         />
         {!this.state.loaded && this.props.loading}

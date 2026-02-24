@@ -2,7 +2,7 @@
 import { ReactElement } from 'react';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { NxCloudHeroVideo } from './hero/nx-cloud-hero-video';
-import { sendCustomEvent } from 'nx-dev/feature-analytics/src';
+import { sendCustomEventViaGtm } from 'nx-dev/feature-analytics/src';
 
 export function NxCloudHero(): ReactElement {
   return (
@@ -132,8 +132,8 @@ export function NxCloudHero(): ReactElement {
               , automatically.
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-8">
-              Nx Cloud is the only platform that is smart, scalable, and
-              self-healing so your CI isn’t your bottleneck.
+              Nx Cloud is the only monorepo platform that is smart, scalable,
+              and self-healing so your CI isn’t your bottleneck.
             </SectionHeading>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <ButtonLink
@@ -142,7 +142,7 @@ export function NxCloudHero(): ReactElement {
                 variant="contrast"
                 size="default"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'get-started-click',
                     'nx-cloud-hero',
                     'nx-cloud'
@@ -157,7 +157,7 @@ export function NxCloudHero(): ReactElement {
                 variant="secondary"
                 size="default"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'contact-sales-click',
                     'nx-cloud-hero-book-demo',
                     'nx-cloud'

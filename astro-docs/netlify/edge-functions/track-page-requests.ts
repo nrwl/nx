@@ -4,21 +4,6 @@ const GA_MEASUREMENT_ID =
   Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
 const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
 
-function shouldTrack(request: Request): boolean {
-  const accept = request.headers.get('accept') || '';
-
-  // Track if:
-  // - No Accept header (some LLM tools)
-  // - Accept contains text/html (browsers)
-  // - Accept contains */* (curl, browser default)
-  if (!accept || accept.includes('text/html') || accept.includes('*/*')) {
-    return true;
-  }
-
-  // Skip image/css/js/font requests
-  return false;
-}
-
 function getClientId(request: Request): string {
   const cookies = request.headers.get('cookie') || '';
   const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
@@ -41,8 +26,19 @@ async function sendToGA4(
 
   const clientId = getClientId(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
+  // Anthropic:   ClaudeBot (training), Claude-User (user fetch), Claude-SearchBot (search index),
+  //              Claude-Web (web crawler), anthropic-ai (legacy training)
+  // OpenAI:      GPTBot (training), ChatGPT-User (user browsing), OAI-SearchBot (search index)
+  // Perplexity:  PerplexityBot (search index), Perplexity-User (user fetch)
+  // Google:      Google-Extended (AI/Gemini training)
+  // Other:       Bytespider (ByteDance training)
   const isAITool =
-    /bot|crawler|spider|gpt|claude|anthropic|openai|perplexity|cohere/i.test(
+    /ClaudeBot|Claude-User|Claude-SearchBot|Claude-Web|anthropic-ai|GPTBot|ChatGPT-User|OAI-SearchBot|PerplexityBot|Perplexity-User|Google-Extended|Bytespider/i.test(
+      userAgent
+    );
+  // Generic bots (SEO crawlers, social previews, etc.)
+  const isGenericBot =
+    /Googlebot|Amazonbot|CCBot|BingBot|YandexBot|DuckDuckBot|Applebot|crawler|spider|slurp|facebook|twitter|linkedin|slack|discord|telegram/i.test(
       userAgent
     );
 
@@ -59,6 +55,7 @@ async function sendToGA4(
           file_extension: '.html',
           user_agent: userAgent,
           is_ai_tool: isAITool ? 'true' : 'false',
+          is_bot: isGenericBot ? 'true' : 'false',
           country: context.geo?.country?.code || 'unknown',
         },
       },
@@ -85,9 +82,8 @@ export default async function handler(
 ): Promise<Response> {
   const pathname = new URL(request.url).pathname;
 
-  if (shouldTrack(request)) {
-    context.waitUntil(sendToGA4(request, context, pathname));
-  }
+  // Always track - filtering is done at config level via `accept: ['text/html']`
+  context.waitUntil(sendToGA4(request, context, pathname));
 
   const response = await context.next();
   const newHeaders = new Headers(response.headers);
@@ -102,6 +98,9 @@ export default async function handler(
 
 export const config = {
   path: ['/docs/*'],
+  // Only track requests from clients that want HTML (browsers)
+  // This filters out curl, AI agents, and other non-browser clients
+  accept: ['text/html'],
   excludedPath: [
     // Text/code files (handled by track-asset-requests or not tracked)
     '/docs/*.md',

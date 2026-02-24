@@ -24,8 +24,8 @@ export function CiBottleneck(): ReactElement {
             </span>
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="mt-8">
-            Your scaling investments won't pay off if your CI becomes your
-            bottleneck.
+            AI development allows teams to produce code faster than ever—but is
+            it creating new challenges?
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="sr-only mt-8">
             Your team is producing code faster than ever. Growing teams and AI
@@ -36,6 +36,12 @@ export function CiBottleneck(): ReactElement {
 
         <div className="relative isolate mx-auto mt-24 max-w-3xl">
           <CiBottleneckAnimation />
+        </div>
+        <div className="mx-auto mt-20 max-w-3xl text-center">
+          <SectionHeading as="p" variant="subtitle">
+            More code. More PRs. More failures. <br />
+            More context switches.
+          </SectionHeading>
         </div>
 
         <div className="mt-24">

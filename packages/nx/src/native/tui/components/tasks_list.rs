@@ -166,6 +166,7 @@ impl std::str::FromStr for TaskStatus {
             "success" => Ok(Self::Success),
             "failure" => Ok(Self::Failure),
             "skipped" => Ok(Self::Skipped),
+            "stopped" => Ok(Self::Stopped),
             "local-cache-kept-existing" => Ok(Self::LocalCacheKeptExisting),
             "local-cache" => Ok(Self::LocalCache),
             "remote-cache" => Ok(Self::RemoteCache),
@@ -1402,7 +1403,20 @@ impl TasksList {
     }
 
     /// Handles a standalone task finishing by switching selection to another in-progress task.
+    /// Only changes selection if the finished task was the currently selected task.
     fn handle_standalone_task_finished(&mut self, task_id: &str, old_index: Option<usize>) {
+        // Only switch selection if the finished task was the selected task
+        let is_selected = {
+            let selection_manager = self.selection_manager.lock();
+            matches!(
+                selection_manager.get_selection(),
+                Some(SelectionEntry::Task(name)) if name == task_id
+            )
+        };
+        if !is_selected {
+            return;
+        }
+
         // Check terminal pane exception
         if self.is_terminal_showing_task(task_id) {
             return; // Keep selection on finished task

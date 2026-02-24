@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function CallToAction(): ReactElement {
   return (
@@ -68,7 +68,7 @@ export function CallToAction(): ReactElement {
             prefetch={false}
             title="Request a free trial"
             onClick={() =>
-              sendCustomEvent(
+              sendCustomEventViaGtm(
                 'request-trial-click',
                 'enterprise-bottom-cta',
                 'enterprise'
@@ -86,7 +86,7 @@ export function CallToAction(): ReactElement {
               className="font-semibold underline"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'enterprise-bottom-cta-contact-team',
                   'enterprise'

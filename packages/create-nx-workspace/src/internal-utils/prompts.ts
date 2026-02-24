@@ -18,6 +18,7 @@ import {
   agentDisplayMap,
   supportedAgents,
 } from '../create-workspace-options';
+import { detectAiAgentName } from '../utils/ai/ai-output';
 import { CnwError } from '../utils/error-utils';
 
 export async function determineNxCloud(
@@ -45,27 +46,9 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Locked to "full platform" messaging (CLOUD-4147)
-  // Flow variant only affects completion banners, not this prompt
-  const promptConfig = {
-    name: 'nxCloud',
-    message: 'Try the full Nx platform?',
-    type: 'autocomplete',
-    choices: [
-      { value: 'yes', name: 'Yes' },
-      { value: 'skip', name: 'Skip' },
-    ],
-    initial: 0,
-    footer: () =>
-      chalk.dim(
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud'
-      ),
-  };
-
-  const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
-    promptConfig as any, // types in enquirer are not up to date
-  ]);
-  return result.nxCloud;
+  // Auto-select GitHub flow for deferred connection (variant 2 locked in - CLOUD-4255)
+  // Note: skipCloudConnect=true prevents actual connection, but we still get the banner
+  return 'github';
 }
 
 export async function determineIfGitHubWillBeUsed(
@@ -168,7 +151,14 @@ export async function determineTemplate(
 export async function determineAiAgents(
   parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
 ): Promise<Agent[]> {
-  return parsedArgs.aiAgents ?? [];
+  if (parsedArgs.aiAgents) {
+    return parsedArgs.aiAgents;
+  }
+  const detected = detectAiAgentName();
+  if (detected) {
+    return [detected as Agent];
+  }
+  return [];
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {

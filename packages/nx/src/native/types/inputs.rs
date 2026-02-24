@@ -11,6 +11,7 @@ pub struct InputsInput {
 #[napi(object)]
 pub struct FileSetInput {
     pub fileset: String,
+    pub dependencies: Option<bool>,
 }
 
 #[napi(object)]
@@ -70,16 +71,28 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                 }
             }
             Either8::B(string) => {
-                if let Some(input) = string.strip_prefix('^') {
-                    Input::Inputs {
-                        input,
-                        dependencies: true,
+                if let Some(rest) = string.strip_prefix('^') {
+                    // Check if this is a dependency fileset (starts with {projectRoot} or {workspaceRoot})
+                    if rest.starts_with("{projectRoot}") || rest.starts_with("{workspaceRoot}") {
+                        Input::FileSet {
+                            fileset: rest,
+                            dependencies: true,
+                        }
+                    } else {
+                        // This is a named input reference (existing behavior)
+                        Input::Inputs {
+                            input: rest,
+                            dependencies: true,
+                        }
                     }
                 } else {
                     Input::String(string)
                 }
             }
-            Either8::C(file_set) => Input::FileSet(&file_set.fileset),
+            Either8::C(file_set) => Input::FileSet {
+                fileset: &file_set.fileset,
+                dependencies: file_set.dependencies.unwrap_or(false),
+            },
             Either8::D(runtime) => Input::Runtime(&runtime.runtime),
             Either8::E(environment) => Input::Environment(&environment.env),
             Either8::F(external_dependencies) => {
@@ -103,7 +116,10 @@ pub(crate) enum Input<'a> {
         dependencies: bool,
     },
     String(&'a str),
-    FileSet(&'a str),
+    FileSet {
+        fileset: &'a str,
+        dependencies: bool,
+    },
     Runtime(&'a str),
     Environment(&'a str),
     ExternalDependency(&'a [String]),

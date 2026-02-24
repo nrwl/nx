@@ -10,7 +10,8 @@ data class NxTarget(
   val continuous: Boolean,
   var dependsOn: JsonArray? = null,
   var outputs: JsonArray? = null,
-  var inputs: JsonArray? = null
+  var inputs: JsonArray? = null,
+  var metadata: JsonObject? = null
 ) {
   fun toJSON(): JsonObject {
     val node = JsonObject()
@@ -24,6 +25,7 @@ data class NxTarget(
     dependsOn?.let { node.add("dependsOn", it) }
     outputs?.let { node.add("outputs", it) }
     inputs?.let { node.add("inputs", it) }
+    metadata?.let { node.add("metadata", it) }
 
     return node
   }

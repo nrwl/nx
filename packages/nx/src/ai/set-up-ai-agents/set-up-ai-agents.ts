@@ -1,11 +1,4 @@
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'fs';
-import { homedir } from 'os';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -30,7 +23,7 @@ import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   agentsMdPath,
-  codexConfigTomlPath,
+  claudeMcpJsonPath,
   geminiMdPath,
   opencodeMcpPath,
 } from '../constants';
@@ -178,6 +171,7 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.extraKnownMarketplaces,
         'nx-claude-plugins': {
           source: {
+            ...json.extraKnownMarketplaces?.['nx-claude-plugins']?.source,
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
           },
@@ -188,6 +182,27 @@ export async function setupAiAgentsGeneratorImpl(
         'nx@nx-claude-plugins': true,
       },
     }));
+
+    // Clean up .mcp.json (nx-mcp now handled by plugin)
+    const mcpJsonPath = claudeMcpJsonPath(options.directory);
+    if (tree.exists(mcpJsonPath)) {
+      try {
+        const mcpJsonContents = readJson(tree, mcpJsonPath);
+        if (mcpJsonContents?.mcpServers?.['nx-mcp']) {
+          const serverKeys = Object.keys(mcpJsonContents.mcpServers || {});
+          if (serverKeys.length === 1 && serverKeys[0] === 'nx-mcp') {
+            // nx-mcp is the only server, delete the file
+            tree.delete(mcpJsonPath);
+          } else {
+            // Other servers exist, just remove nx-mcp entry
+            delete mcpJsonContents.mcpServers['nx-mcp'];
+            writeJson(tree, mcpJsonPath, mcpJsonContents);
+          }
+        }
+      } catch {
+        // Ignore errors reading .mcp.json
+      }
+    }
   }
 
   if (hasAgent('opencode')) {
@@ -198,6 +213,19 @@ export async function setupAiAgentsGeneratorImpl(
     updateJson(tree, opencodeMcpJsonPath, (json) =>
       opencodeMcpConfigUpdater(json, nxVersion)
     );
+  }
+
+  if (hasAgent('codex')) {
+    const codexTomlPath = join(options.directory, '.codex', 'config.toml');
+    const tomlConfig = getNxMcpTomlConfig(nxVersion);
+    if (!tree.exists(codexTomlPath)) {
+      tree.write(codexTomlPath, tomlConfig);
+    } else {
+      const existing = tree.read(codexTomlPath, 'utf-8');
+      if (!existing.includes(nxMcpTomlHeader)) {
+        tree.write(codexTomlPath, existing + '\n' + tomlConfig);
+      }
+    }
   }
 
   if (hasAgent('gemini')) {
@@ -250,7 +278,7 @@ export async function setupAiAgentsGeneratorImpl(
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      { agent: 'codex', src: 'generated/.codex', dest: '.codex' },
+      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
       { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
     ];
 
@@ -270,39 +298,14 @@ export async function setupAiAgentsGeneratorImpl(
   return async (check: boolean = false) => {
     const messages: CLINoteMessageConfig[] = [];
     const errors: CLIErrorMessageConfig[] = [];
-    if (hasAgent('codex')) {
-      if (existsSync(codexConfigTomlPath)) {
-        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
-        if (!tomlContents.includes(nxMcpTomlHeader)) {
-          if (!check) {
-            appendFileSync(
-              codexConfigTomlPath,
-              `\n${getNxMcpTomlConfig(nxVersion)}`
-            );
-          }
-          messages.push({
-            title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
-          });
-        }
-      } else {
-        if (!check) {
-          mkdirSync(join(homedir(), '.codex'), { recursive: true });
-          writeFileSync(codexConfigTomlPath, getNxMcpTomlConfig(nxVersion));
-        }
-        messages.push({
-          title: `Created ${codexConfigTomlPath} with nx-mcp server`,
-        });
-      }
-    }
-
     if (hasAgent('copilot')) {
       try {
         if (
-          isEditorInstalled(SupportedEditor.VSCode) &&
-          canInstallNxConsoleForEditor(SupportedEditor.VSCode)
+          (await isEditorInstalled(SupportedEditor.VSCode)) &&
+          (await canInstallNxConsoleForEditor(SupportedEditor.VSCode))
         ) {
           if (!check) {
-            installNxConsoleForEditor(SupportedEditor.VSCode);
+            await installNxConsoleForEditor(SupportedEditor.VSCode);
           }
           messages.push({
             title: `Installed Nx Console for VSCode`,
@@ -316,11 +319,11 @@ export async function setupAiAgentsGeneratorImpl(
       }
       try {
         if (
-          isEditorInstalled(SupportedEditor.VSCodeInsiders) &&
-          canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders)
+          (await isEditorInstalled(SupportedEditor.VSCodeInsiders)) &&
+          (await canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders))
         ) {
           if (!check) {
-            installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+            await installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
           }
           messages.push({
             title: `Installed Nx Console for VSCode Insiders`,
@@ -336,11 +339,11 @@ export async function setupAiAgentsGeneratorImpl(
     if (hasAgent('cursor')) {
       try {
         if (
-          isEditorInstalled(SupportedEditor.Cursor) &&
-          canInstallNxConsoleForEditor(SupportedEditor.Cursor)
+          (await isEditorInstalled(SupportedEditor.Cursor)) &&
+          (await canInstallNxConsoleForEditor(SupportedEditor.Cursor))
         ) {
           if (!check) {
-            installNxConsoleForEditor(SupportedEditor.Cursor);
+            await installNxConsoleForEditor(SupportedEditor.Cursor);
           }
           messages.push({
             title: `Installed Nx Console for Cursor`,
@@ -361,9 +364,12 @@ export async function setupAiAgentsGeneratorImpl(
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  const expectedRules = getAgentRulesWrapped(writeNxCloudRules);
-
   if (!tree.exists(path)) {
+    // File doesn't exist - create with h1 header (standalone content)
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: true,
+    });
     tree.write(path, expectedRules);
     return;
   }
@@ -374,6 +380,14 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   const existingNxConfiguration = existing.match(regex);
 
   if (existingNxConfiguration) {
+    // Check the rest of the file (outside nx block) for an h1 header
+    // to ensure only one h1 exists in the document
+    const contentWithoutNxBlock = existing.replace(regex, '');
+    const hasExternalH1 = /^# /m.test(contentWithoutNxBlock);
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: !hasExternalH1,
+    });
     const contentOnly = (str: string) =>
       str
         .replace(nxRulesMarkerCommentStart, '')
@@ -391,13 +405,62 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const updatedContent = existing.replace(regex, expectedRules);
     tree.write(path, updatedContent);
   } else {
+    // Appending to existing content - use h2 only if the file already has an h1 header
+    // This prevents unnecessary changes when users add content without their own h1
+    const hasExistingH1 = /^# /m.test(existing);
+    const expectedRules = getAgentRulesWrapped({
+      writeNxCloudRules,
+      useH1: !hasExistingH1,
+    });
     tree.write(path, existing + '\n\n' + expectedRules);
   }
+}
+
+/**
+ * Extract user-added extra args/flags from an existing MCP config args array
+ * by stripping the known base command prefix.
+ *
+ * Known base patterns (matched in order, first wins):
+ *   ['nx', 'mcp']  or  ['nx-mcp'] (possibly with @version suffix like nx-mcp@latest)
+ *   For opencode the caller prepends 'npx' to these patterns.
+ */
+function getExtraMcpArgs(
+  existingArgs: string[] | undefined,
+  knownBasePatterns: string[][]
+): string[] {
+  if (!Array.isArray(existingArgs) || existingArgs.length === 0) return [];
+
+  for (const pattern of knownBasePatterns) {
+    if (existingArgs.length < pattern.length) continue;
+
+    const matches = pattern.every((baseArg, i) => {
+      if (baseArg === 'nx-mcp') {
+        // Also match versioned variants like nx-mcp@latest
+        return (
+          existingArgs[i] === 'nx-mcp' || existingArgs[i].startsWith('nx-mcp@')
+        );
+      }
+      return existingArgs[i] === baseArg;
+    });
+
+    if (matches) {
+      return existingArgs.slice(pattern.length);
+    }
+  }
+
+  return [];
 }
 
 function mcpConfigUpdater(existing: any, nxVersion: string): any {
   const majorVersion = major(nxVersion);
   const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+
+  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+  const extraArgs = getExtraMcpArgs(existing.mcpServers?.['nx-mcp']?.args, [
+    ['nx', 'mcp'],
+    ['nx-mcp'],
+  ]);
+  mcpArgs.push(...extraArgs);
 
   if (existing.mcpServers) {
     existing.mcpServers['nx-mcp'] = {
@@ -421,6 +484,13 @@ function opencodeMcpConfigUpdater(existing: any, nxVersion: string): any {
   const majorVersion = major(nxVersion);
   const mcpCommand =
     majorVersion >= 22 ? ['npx', 'nx', 'mcp'] : ['npx', 'nx-mcp'];
+
+  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+  const extraArgs = getExtraMcpArgs(existing.mcp?.['nx-mcp']?.command, [
+    ['npx', 'nx', 'mcp'],
+    ['npx', 'nx-mcp'],
+  ]);
+  mcpCommand.push(...extraArgs);
 
   if (existing.mcp) {
     existing.mcp['nx-mcp'] = {

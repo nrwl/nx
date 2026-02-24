@@ -11,7 +11,7 @@ import {
 import { removeDbConnections } from '../../utils/db-connection';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
-import { cleanupLatestNxInstallation } from './nx-console-operations';
+import { cleanupLatestNx } from './latest-nx';
 import { spawn } from 'child_process';
 import { join } from 'path';
 import { mkdirSync, existsSync, writeFileSync } from 'node:fs';
@@ -145,8 +145,8 @@ async function performShutdown(
 
     removeDbConnections();
 
-    // Clean up Nx Console latest installation
-    cleanupLatestNxInstallation();
+    // Clean up shared latest Nx installation
+    cleanupLatestNx();
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
@@ -174,7 +174,9 @@ export function respondToClient(
     }
     socket.write(response + MESSAGE_END_SEQ, (err) => {
       if (err) {
-        console.error(err);
+        serverLogger.log(
+          `Socket write error (client likely disconnected): ${err.message}`
+        );
       }
       serverLogger.log(`Done responding to the client`, description);
       res(null);

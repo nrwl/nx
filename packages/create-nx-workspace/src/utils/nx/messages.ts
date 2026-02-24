@@ -1,46 +1,29 @@
 import { VcsPushStatus } from '../git/git';
 
 /**
- * Banner variants for the completion message experiment (CLOUD-4147).
- * - '0': Plain link (control) - always used for enterprise URLs
- * - '1': "Try the full Nx platform" decorative banner
- * - '2': "Unlock 70% faster CI" decorative banner
- * - '3': "Reclaim your team's focus" decorative banner
+ * Banner variants for the completion message (CLOUD-4255).
+ * - '0': Plain link - used for enterprise URLs and docs generation
+ * - '2': Simple box banner with setup URL
  */
-export type BannerVariant = '0' | '1' | '2' | '3';
+export type BannerVariant = '0' | '2';
 
 /**
- * Generates the decorative ASCII art banner for Nx Cloud.
- * Line widths are carefully calculated to align properly.
+ * Generates a simple box banner with the setup URL.
  */
-function generateDecorativeBanner(
-  headline: string,
-  url: string,
-  subtext: string
-): string[] {
-  // Fixed banner structure - pad content to fit within the box
-  // Total inner width is 60 characters
-  const innerWidth = 60;
-
-  const padCenter = (text: string, width: number): string => {
-    const padding = width - text.length;
-    const leftPad = Math.floor(padding / 2);
-    const rightPad = padding - leftPad;
-    return ' '.repeat(leftPad) + text + ' '.repeat(rightPad);
-  };
-
-  const line1 = padCenter('', innerWidth);
-  const line2 = padCenter(`- ${headline} -`, innerWidth);
-  const line3 = padCenter(url, innerWidth);
-  const line4 = padCenter(subtext, innerWidth);
+function generateSimpleBanner(url: string): string[] {
+  const content = `Finish your set up here: ${url}`;
+  // Add padding around content (3 spaces on each side)
+  const innerWidth = content.length + 6;
+  const horizontalBorder = '+' + '-'.repeat(innerWidth) + '+';
+  const emptyLine = '|' + ' '.repeat(innerWidth) + '|';
+  const contentLine = '|   ' + content + '   |';
 
   return [
-    ` ${'_'.repeat(innerWidth + 1)}  ____   ___   __   `,
-    ` \\${line1}\\ \\   \\  \\  \\  \\ \\`,
-    `  \\${line2}\\ \\   \\  \\  \\  \\ \\`,
-    `   \\${line3}\\ \\   \\  \\  \\  \\ \\`,
-    `    \\${line4}\\ \\   \\  \\  \\  \\ \\ `,
-    `     \\${'_'.repeat(innerWidth)}\\ \\___\\  \\__\\  \\_\\`,
+    horizontalBorder,
+    emptyLine,
+    contentLine,
+    emptyLine,
+    horizontalBorder,
   ];
 }
 
@@ -49,28 +32,11 @@ function generateDecorativeBanner(
  * Returns empty array for variant 0 (plain link).
  */
 function getBannerLines(variant: BannerVariant, url: string): string[] {
-  switch (variant) {
-    case '1':
-      return generateDecorativeBanner(
-        'Try the full Nx platform',
-        url,
-        'Remote caching * Distribution * Self-healing CI'
-      );
-    case '2':
-      return generateDecorativeBanner(
-        'Unlock 70% faster CI',
-        url,
-        'Remote caching & Distribution'
-      );
-    case '3':
-      return generateDecorativeBanner(
-        "Reclaim your team's focus",
-        url,
-        'Self-healing CI + Remote caching'
-      );
-    default:
-      return [];
+  if (variant === '2') {
+    return generateSimpleBanner(url);
   }
+  // Variant 0: plain link (no banner)
+  return [];
 }
 
 function getSetupMessage(
@@ -123,12 +89,16 @@ export function getCompletionMessage(
   const messageConfig = completionMessages[key];
   const variant = bannerVariant ?? '0';
 
-  // For decorative banner variants (1, 2, 3), show the banner instead of plain text
+  // Variant 2: No title since nothing was configured yet (deferred connection)
+  // The banner with the connect URL is sufficient
+  const title = variant === '2' ? '' : messageConfig.title;
+
+  // For decorative banner variants (1, 2), show the banner instead of plain text
   if (variant !== '0' && url) {
     const bannerLines = getBannerLines(variant, url);
     if (bannerLines.length > 0) {
       return {
-        title: messageConfig.title,
+        title,
         bodyLines: [...bannerLines, ''],
       };
     }
@@ -138,7 +108,7 @@ export function getCompletionMessage(
   const bodyLines = [getSetupMessage(url, pushedToVcs, workspaceName)];
 
   return {
-    title: messageConfig.title,
+    title,
     bodyLines,
   };
 }

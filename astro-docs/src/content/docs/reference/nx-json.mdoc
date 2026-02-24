@@ -136,6 +136,48 @@ Plugins use config files to infer tasks for projects. You can specify which conf
 
 The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
 
+#### Using Negation Patterns
+
+You can use negation patterns (patterns starting with `!`) to create more precise include/exclude rules. Patterns are processed in order, with later patterns overriding earlier ones.
+
+**Example: Excluding all e2e projects except one**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": ["**/*-e2e/**/*", "!**/toolkit-workspace-e2e/**/*"],
+    },
+  ],
+}
+```
+
+This will exclude all e2e projects except `toolkit-workspace-e2e`.
+
+**Example: Including packages except legacy ones**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["packages/**/*", "!packages/legacy/**/*"],
+    },
+  ],
+}
+```
+
+**How negation patterns work:**
+
+- Patterns are processed in order from first to last
+- A pattern starting with `!` removes files from the match set
+- A pattern without `!` adds files to the match set
+- The last matching pattern determines if a file is included
+- If the first pattern is a negation, all files are matched initially
+
 ## Task Options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
@@ -422,13 +464,27 @@ Release tag configuration now uses a nested `releaseTag` object. Old flat proper
 
 #### Configuration Options
 
-| Property                 | Type    | Default                                                           | Description                                                                                                  |
-| ------------------------ | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **pattern**              | string  | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}` |
-| **requireSemver**        | boolean | `false`                                                           | Whether to require that all tags match semantic versioning                                                   |
-| **strictPreid**          | boolean | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                              |
-| **preferDockerVersion**  | boolean | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                               |
-| **checkAllBranchesWhen** | string  | undefined                                                         | Branch to check when resolving current versions from git tags                                                |
+| Property                 | Type                | Default                                                           | Description                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **pattern**              | string              | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}`                                                                                                                                                                                          |
+| **requireSemver**        | boolean             | `false`                                                           | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
+| **strictPreid**          | boolean             | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
+| **preferDockerVersion**  | boolean             | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                                                                                                                                                                                                                        |
+| **checkAllBranchesWhen** | boolean \| string[] | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
+
+#### Branch Resolution for Git Tags
+
+The `checkAllBranchesWhen` option controls how Nx resolves existing git tags to determine the current version of your projects.
+
+By default, Nx checks for matching tags on the current branch. If no tags are found, it falls back to checking all branches.
+
+| Value      | Behavior                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`     | Always check all branches for the latest matching tag                                                                                                                     |
+| `false`    | Only check the current branch (no fallback to all branches)                                                                                                               |
+| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/isaacs/minimatch). Otherwise, use the default behavior |
+
+This option is useful when release tags may exist on multiple branches. Setting `checkAllBranchesWhen` to `true` or to a list of branch patterns ensures Nx finds the latest tag regardless of which branch it was created on.
 
 #### Tag Pattern Syntax
 
@@ -459,7 +515,7 @@ Example patterns and their results:
       "requireSemver": true,
       "strictPreid": true,
       "preferDockerVersion": false,
-      "checkAllBranchesWhen": "main",
+      "checkAllBranchesWhen": ["main", "release/*"],
     },
   },
 }
@@ -476,7 +532,7 @@ Example patterns and their results:
     "releaseTagPatternRequireSemver": true,
     "releaseTagPatternStrictPreid": true,
     "releaseTagPatternPreferDockerVersion": false,
-    "releaseTagPatternCheckAllBranchesWhen": "main",
+    "releaseTagPatternCheckAllBranchesWhen": ["main", "release/*"],
   },
 }
 ```

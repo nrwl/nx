@@ -152,6 +152,7 @@ export function getStrippedEnvironmentVariables() {
         'NX_ISOLATE_PLUGINS',
         'NX_VERBOSE_LOGGING',
         'NX_NATIVE_LOGGING',
+        'NX_USE_LOCAL',
       ];
 
       if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
@@ -166,6 +167,22 @@ export function getStrippedEnvironmentVariables() {
       // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
       // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
       if (key === 'NODE_PATH') {
+        return false;
+      }
+
+      // Remove AI agent detection env vars to prevent the test runner's
+      // environment (e.g., running inside Claude Code) from leaking into
+      // e2e test subprocesses. Tests that need these pass them explicitly.
+      const aiAgentEnvVars = [
+        'CLAUDECODE',
+        'CLAUDE_CODE',
+        'OPENCODE',
+        'GEMINI_CLI',
+        'CURSOR_TRACE_ID',
+        'COMPOSER_NO_INTERACTION',
+        'REPL_ID',
+      ];
+      if (aiAgentEnvVars.includes(key)) {
         return false;
       }
 

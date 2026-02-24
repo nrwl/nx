@@ -30,6 +30,9 @@ jobs:
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_USE_NEW_TASK_APIS: 'true'
       NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
+      NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
+      NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'false'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
 
     steps:
       - name: Checkout

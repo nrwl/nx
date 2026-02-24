@@ -140,7 +140,7 @@ async function setupTypeScript(options: TypeCheckOptions) {
               ? options.outDir.replace(projectRoot, '')
               : undefined,
         }
-      : { noEmit: true };
+      : { noEmit: true, composite: false };
 
   const compilerOptions = {
     ...config.options,

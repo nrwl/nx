@@ -384,6 +384,7 @@ module.exports.canInstallNxConsoleForEditor = nativeBinding.canInstallNxConsoleF
 module.exports.closeDbConnection = nativeBinding.closeDbConnection
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
+module.exports.detectAiAgent = nativeBinding.detectAiAgent
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandOutputs = nativeBinding.expandOutputs
 module.exports.findImports = nativeBinding.findImports

@@ -13,7 +13,7 @@ const CLOUD_SETUP_SECTION = `## Finish your Nx platform setup
 /**
  * Updates README content by processing the nx-cloud marker section.
  * - If connectUrl is provided: replaces markers and content with the connect URL section
- * - If connectUrl is undefined: removes markers and their content entirely
+ * - If connectUrl is undefined: keeps the content between markers but strips the marker comments
  *
  * This ensures users never see the raw <!-- BEGIN/END: nx-cloud --> markers in their README.
  *
@@ -32,21 +32,23 @@ export function updateReadmeContent(
     return readmeContent;
   }
 
-  // If no connect URL, remove the markers and placeholder content entirely
+  // If no connect URL, keep the content between markers but strip the marker comments
   if (!connectUrl) {
-    // Remove the marker section and surrounding newlines to avoid extra blank lines
-    // Skip one newline before BEGIN marker (if present)
-    const beforeBegin =
-      beginIndex > 0 && readmeContent[beginIndex - 1] === '\n'
-        ? beginIndex - 1
-        : beginIndex;
-    // Skip one newline after END marker (if present)
+    // Extract content between markers (after BEGIN marker + newline, before END marker)
+    const contentStart = beginIndex + BEGIN_MARKER.length;
+    const contentStartSkipNewline =
+      readmeContent[contentStart] === '\n' ? contentStart + 1 : contentStart;
+    const content = readmeContent.slice(contentStartSkipNewline, endIndex);
+
+    // Skip trailing newline after END marker if present
     const afterEnd = endIndex + END_MARKER.length;
     const skipTrailing =
       readmeContent[afterEnd] === '\n' ? afterEnd + 1 : afterEnd;
 
     return (
-      readmeContent.slice(0, beforeBegin) + readmeContent.slice(skipTrailing)
+      readmeContent.slice(0, beginIndex) +
+      content +
+      readmeContent.slice(skipTrailing)
     );
   }
 
@@ -106,6 +108,7 @@ export async function amendOrCommitReadme(
   alreadyPushed: boolean
 ): Promise<void> {
   await execAndWait('git add README.md', directory);
+
   if (alreadyPushed) {
     await execAndWait(
       'git commit -m "chore: add Nx Cloud setup link to README"',
@@ -113,6 +116,11 @@ export async function amendOrCommitReadme(
     );
     await execAndWait('git push', directory);
   } else {
-    await execAndWait('git commit --amend --no-edit', directory);
+    try {
+      await execAndWait('git commit --amend --no-edit', directory);
+    } catch {
+      // If amend fails, it could be that the original git init failed (we log but do not throw)
+      // Let the flow continue
+    }
   }
 }
