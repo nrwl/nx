@@ -12,6 +12,7 @@ import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { startAnalytics } from '../../analytics';
 import {
   getInstalledNxVersion,
   isNxVersionMismatch,
@@ -663,6 +664,9 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 
 export async function startServer(): Promise<Server> {
   setupWorkspaceContext(workspaceRoot);
+
+  // Initialize analytics for daemon process
+  await startAnalytics();
 
   const socketPath = getFullOsSocketPath();
 

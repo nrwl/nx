@@ -11,6 +11,7 @@ import {
 import { removeDbConnections } from '../../utils/db-connection';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+import { flushAnalytics } from '../../analytics';
 import { cleanupLatestNxInstallation } from './nx-console-operations';
 import { spawn } from 'child_process';
 import { join } from 'path';
@@ -147,6 +148,9 @@ async function performShutdown(
 
     // Clean up Nx Console latest installation
     cleanupLatestNxInstallation();
+
+    // Flush analytics before exiting
+    await flushAnalytics();
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
