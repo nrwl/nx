@@ -584,7 +584,18 @@ function mergeCreateNodesResults(
     // targets. Substitutors are keyed by the referenced name (not by root),
     // so registration requires no lookup and is safe regardless of whether
     // the referenced project has been processed yet.
-    projectNameManager.registerSubstitutorsForNodeResults(projectNodes);
+    try {
+      projectNameManager.registerSubstitutorsForNodeResults(projectNodes);
+    } catch (error) {
+      errors.push(
+        new MergeNodesError({
+          file,
+          pluginName,
+          error,
+          pluginIndex,
+        })
+      );
+    }
     Object.assign(externalNodes, pluginExternalNodes);
   }
 

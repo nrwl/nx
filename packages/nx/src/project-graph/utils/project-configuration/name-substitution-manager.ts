@@ -1,5 +1,6 @@
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { isGlobPattern } from '../../../utils/globs';
+import { minimatch } from 'minimatch';
 
 // A substitutor receives the final resolved name of the project that was
 // renamed, and the final merged configuration of the project that *holds
@@ -71,9 +72,24 @@ export class ProjectNameInNodePropsManager {
   >();
 
   // Projects whose names changed during the merge phase. Key = root of the
-  // renamed project, value = its name *before* the rename. These are used
-  // in applySubstitutions to locate substitutors keyed by the old name.
-  private dirtyEntries = new Map<string, string>();
+  // renamed project, value = all names it previously held in this merge.
+  // These are used in applySubstitutions to locate substitutors keyed by
+  // old names.
+  private dirtyEntries = new Map<string, Set<string>>();
+
+  private removeSubstitutorEntry(item: {
+    referencedName: string;
+    entry: SubstitutorEntry;
+  }) {
+    const substitutors = this.projectNameSubstitutors.get(item.referencedName);
+    if (!substitutors) {
+      return;
+    }
+    substitutors.delete(item.entry);
+    if (substitutors.size === 0) {
+      this.projectNameSubstitutors.delete(item.referencedName);
+    }
+  }
 
   // Removes the substitutor registered at the given index (and optional
   // subIndex) of an array, if any. Used when re-registering for the same
@@ -92,9 +108,7 @@ export class ProjectNameInNodePropsManager {
       // Clear the entire index entry (single project reference)
       for (const item of atIndex) {
         if (item) {
-          this.projectNameSubstitutors
-            .get(item.referencedName)
-            ?.delete(item.entry);
+          this.removeSubstitutorEntry(item);
         }
       }
       byIndex[index] = undefined;
@@ -102,9 +116,7 @@ export class ProjectNameInNodePropsManager {
       // Clear only the specific subIndex (within a projects array)
       const existing = atIndex[subIndex];
       if (existing) {
-        this.projectNameSubstitutors
-          .get(existing.referencedName)
-          ?.delete(existing.entry);
+        this.removeSubstitutorEntry(existing);
         atIndex[subIndex] = undefined;
       }
     }
@@ -122,12 +134,79 @@ export class ProjectNameInNodePropsManager {
       if (atIndex) {
         for (const item of atIndex) {
           if (item) {
-            this.projectNameSubstitutors
-              .get(item.referencedName)
-              ?.delete(item.entry);
+            this.removeSubstitutorEntry(item);
           }
         }
       }
+    }
+  }
+
+  // Removes all substitutors at sub-indices >= `fromSubIndex` for one
+  // specific array index of the given array key.
+  private clearSubstitutorsFromSubIndex(
+    arrayKey: string,
+    index: number,
+    fromSubIndex: number
+  ) {
+    const byIndex = this.substitutorsByArrayKey.get(arrayKey);
+    const atIndex = byIndex?.[index];
+    if (!atIndex) {
+      return;
+    }
+
+    const removed = atIndex.splice(fromSubIndex);
+    for (const item of removed) {
+      if (item) {
+        this.removeSubstitutorEntry(item);
+      }
+    }
+
+    let hasAnyItem = false;
+    for (const item of atIndex) {
+      if (item) {
+        hasAnyItem = true;
+        break;
+      }
+    }
+
+    if (!hasAnyItem) {
+      byIndex[index] = undefined;
+    }
+  }
+
+  private forEachTargetConfig(
+    ownerConfig: ProjectConfiguration,
+    targetName: string,
+    callback: (
+      targetConfig: NonNullable<ProjectConfiguration['targets'][string]>
+    ) => void
+  ) {
+    const ownerTargets = ownerConfig.targets;
+    if (!ownerTargets) {
+      return;
+    }
+
+    const exactMatch = ownerTargets[targetName];
+    if (exactMatch && typeof exactMatch === 'object') {
+      callback(exactMatch);
+      return;
+    }
+
+    if (!isGlobPattern(targetName)) {
+      return;
+    }
+
+    for (const candidateTargetName in ownerTargets) {
+      if (!minimatch(candidateTargetName, targetName)) {
+        continue;
+      }
+
+      const targetConfig = ownerTargets[candidateTargetName];
+      if (!targetConfig || typeof targetConfig !== 'object') {
+        continue;
+      }
+
+      callback(targetConfig);
     }
   }
 
@@ -204,14 +283,17 @@ export class ProjectNameInNodePropsManager {
       }
       for (const targetName in project.targets) {
         const targetConfig = project.targets[targetName];
-        if (targetConfig.inputs) {
+        if (!targetConfig || typeof targetConfig !== 'object') {
+          continue;
+        }
+        if (Array.isArray(targetConfig.inputs)) {
           this.registerSubstitutorsForInputs(
             ownerRoot,
             targetName,
             targetConfig.inputs
           );
         }
-        if (targetConfig.dependsOn) {
+        if (Array.isArray(targetConfig.dependsOn)) {
           this.registerSubstitutorsForDependsOn(
             ownerRoot,
             targetName,
@@ -231,14 +313,16 @@ export class ProjectNameInNodePropsManager {
     i: number
   ): ProjectNameSubstitutor {
     return (finalName, ownerConfig) => {
-      const finalInput = ownerConfig.targets?.[targetName]?.inputs?.[i];
-      if (
-        finalInput &&
-        typeof finalInput === 'object' &&
-        'projects' in finalInput
-      ) {
-        (finalInput as { projects: string }).projects = finalName;
-      }
+      this.forEachTargetConfig(ownerConfig, targetName, (targetConfig) => {
+        const finalInput = targetConfig.inputs?.[i];
+        if (
+          finalInput &&
+          typeof finalInput === 'object' &&
+          'projects' in finalInput
+        ) {
+          (finalInput as { projects: string }).projects = finalName;
+        }
+      });
     };
   }
 
@@ -248,14 +332,16 @@ export class ProjectNameInNodePropsManager {
     j: number
   ): ProjectNameSubstitutor {
     return (finalName, ownerConfig) => {
-      const finalInput = ownerConfig.targets?.[targetName]?.inputs?.[i];
-      if (
-        finalInput &&
-        typeof finalInput === 'object' &&
-        'projects' in finalInput
-      ) {
-        (finalInput['projects'] as string[])[j] = finalName;
-      }
+      this.forEachTargetConfig(ownerConfig, targetName, (targetConfig) => {
+        const finalInput = targetConfig.inputs?.[i];
+        if (
+          finalInput &&
+          typeof finalInput === 'object' &&
+          'projects' in finalInput
+        ) {
+          (finalInput['projects'] as string[])[j] = finalName;
+        }
+      });
     };
   }
 
@@ -264,10 +350,16 @@ export class ProjectNameInNodePropsManager {
     i: number
   ): ProjectNameSubstitutor {
     return (finalName, ownerConfig) => {
-      const finalDep = ownerConfig.targets?.[targetName]?.dependsOn?.[i];
-      if (finalDep && typeof finalDep === 'object' && 'projects' in finalDep) {
-        (finalDep as { projects: string }).projects = finalName;
-      }
+      this.forEachTargetConfig(ownerConfig, targetName, (targetConfig) => {
+        const finalDep = targetConfig.dependsOn?.[i];
+        if (
+          finalDep &&
+          typeof finalDep === 'object' &&
+          'projects' in finalDep
+        ) {
+          (finalDep as { projects: string }).projects = finalName;
+        }
+      });
     };
   }
 
@@ -277,10 +369,16 @@ export class ProjectNameInNodePropsManager {
     j: number
   ): ProjectNameSubstitutor {
     return (finalName, ownerConfig) => {
-      const finalDep = ownerConfig.targets?.[targetName]?.dependsOn?.[i];
-      if (finalDep && typeof finalDep === 'object' && 'projects' in finalDep) {
-        (finalDep['projects'] as string[])[j] = finalName;
-      }
+      this.forEachTargetConfig(ownerConfig, targetName, (targetConfig) => {
+        const finalDep = targetConfig.dependsOn?.[i];
+        if (
+          finalDep &&
+          typeof finalDep === 'object' &&
+          'projects' in finalDep
+        ) {
+          (finalDep['projects'] as string[])[j] = finalName;
+        }
+      });
     };
   }
 
@@ -323,6 +421,12 @@ export class ProjectNameInNodePropsManager {
             j // subIndex for array elements
           );
         }
+        // Clear stale sub-indices if a later plugin shrinks the array.
+        this.clearSubstitutorsFromSubIndex(
+          arrayKey,
+          i,
+          inputProjectNames.length
+        );
       }
     }
     // Evict any dangling substitutors at indices beyond the new array length —
@@ -371,6 +475,8 @@ export class ProjectNameInNodePropsManager {
             j // subIndex for array elements
           );
         }
+        // Clear stale sub-indices if a later plugin shrinks the array.
+        this.clearSubstitutorsFromSubIndex(arrayKey, i, depProjects.length);
       }
     }
     // Evict any dangling substitutors at indices beyond the new array length —
@@ -384,7 +490,12 @@ export class ProjectNameInNodePropsManager {
    * {@link applySubstitutions}.
    */
   markDirty(root: string, previousName: string) {
-    this.dirtyEntries.set(root, previousName);
+    let previousNames = this.dirtyEntries.get(root);
+    if (!previousNames) {
+      previousNames = new Set<string>();
+      this.dirtyEntries.set(root, previousNames);
+    }
+    previousNames.add(previousName);
   }
 
   /**
@@ -393,21 +504,23 @@ export class ProjectNameInNodePropsManager {
    * called once after all plugin results have been merged.
    */
   applySubstitutions(rootMap: Record<string, ProjectConfiguration>) {
-    for (const [root, previousName] of this.dirtyEntries) {
-      const substitutors = this.projectNameSubstitutors.get(previousName);
-      if (!substitutors) {
-        continue;
-      }
+    for (const [root, previousNames] of this.dirtyEntries) {
       const finalName = rootMap[root]?.name;
       if (!finalName) {
         continue;
       }
-      for (const { ownerRoot, substitutor } of substitutors) {
-        // Each entry stores the ownerRoot of the project holding the stale
-        // reference so we can look up its final merged config here.
-        const ownerConfig = rootMap[ownerRoot];
-        if (ownerConfig) {
-          substitutor(finalName, ownerConfig);
+      for (const previousName of previousNames) {
+        const substitutors = this.projectNameSubstitutors.get(previousName);
+        if (!substitutors) {
+          continue;
+        }
+        for (const { ownerRoot, substitutor } of substitutors) {
+          // Each entry stores the ownerRoot of the project holding the stale
+          // reference so we can look up its final merged config here.
+          const ownerConfig = rootMap[ownerRoot];
+          if (ownerConfig) {
+            substitutor(finalName, ownerConfig);
+          }
         }
       }
     }
