@@ -3,7 +3,7 @@ title: Synthetic Monorepos
 description: Learn how synthetic monorepos connect separate repositories into a unified dependency graph, giving you monorepo intelligence without moving code.
 ---
 
-Most organizations don't have a single giant monorepo. They have a handful of monorepos per team or domain, plus dozens of standalone repos. Consolidating everything into one repository is not just a technical challenge: the organizational side — bringing teams along, changing workflows, ensuring adoption — is often harder than the code migration itself.
+Most organizations don't have a single giant monorepo. They have a handful of monorepos per team or domain, plus dozens of standalone repos. Consolidating everything into one repository is not just a technical challenge. The organizational side (bringing teams along, changing workflows, ensuring adoption) is often harder than the code migration itself.
 
 Synthetic monorepos let you get monorepo benefits without that consolidation.
 
@@ -11,60 +11,58 @@ Synthetic monorepos let you get monorepo benefits without that consolidation.
 
 A synthetic monorepo connects separate repositories into a unified dependency graph without moving any code. Which repo depends on which, what a change affects downstream, how projects relate across teams: all of that becomes visible automatically.
 
-> A synthetic monorepo doesn't tear down the walls between repos. It creates tunnels through them, giving humans and AI agents the visibility to effectively work across boundaries.
+![A synthetic monorepo connecting multiple monorepos and standalone repos into a unified dependency graph](../../../assets/concepts/synthetic-monorepo.svg)
 
 Unlike a traditional monorepo where all code lives in one repository, a synthetic monorepo leaves each repository where it is. Instead, it builds a cross-repo graph that tooling can reason about, just as if the code were in one place.
 
+Nx implements synthetic monorepos through [Nx Polygraph](/docs/enterprise/polygraph). Polygraph connects existing repositories into a unified, intelligent graph. It works with any repo, even those that don't use Nx, through metadata-only workspaces that require zero changes to target repos.
+
 ## Why they matter
 
-Repository boundaries create problems at multiple levels.
+Repository boundaries create problems at multiple levels:
 
-### For humans
-
-Collaboration, visibility, and enforcing common standards across an organization becomes hard when code is spread across many repos. A platform engineer or software architect who needs to ensure multiple systems work together cohesively has to manually catalog, inspect, and cross-reference dozens or hundreds of repos to make sure things align.
-
-Cross-repo changes are especially painful: coordinating PRs, ensuring compatibility, managing release order — all of this becomes a manual, error-prone process.
-
-### For AI agents
-
-Repository boundaries are walls AI agents cannot see across. Agents operate at a local maximum based on the information available in a single repo, missing downstream impacts, shared types, and cross-project relationships.
-
-Consider an AI agent implementing a feature that spans a backend API and a frontend app in separate repos. Without cross-repo visibility, the agent must work against specs or documentation rather than actual implementation. Information gets lost in handoffs, shared types must be manually provided, and coordination falls on the human.
-
-With a synthetic monorepo, the agent can read the cross-repo graph and understand how projects relate, enabling coordinated changes across repo boundaries.
+|                     | Polyrepo problem                                                                                                         | What a synthetic monorepo solves                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| **Visibility**      | No way to see how projects across repos relate. Platform engineers manually catalog and cross-reference dozens of repos. | Automatic cross-repo dependency graph shows which repo depends on which and what a change affects downstream.         |
+| **Coordination**    | Cross-repo changes require coordinating PRs, ensuring compatibility, and managing release order manually.                | Tooling on top of the graph enables coordinated changes, impact analysis, and conformance checking across boundaries. |
+| **Standards**       | Enforcing common conventions across repos requires manual effort and often drifts.                                       | Conformance rules and architecture constraints apply across the entire graph.                                         |
+| **CI intelligence** | Each repo has its own CI in isolation. No affected detection, caching, or distribution across repo boundaries.           | CI can work across the full graph: affected detection, remote caching, and distributed task execution span repos.     |
+| **AI agents**       | Agents operate within a single repo, missing downstream impacts, shared types, and cross-project relationships.          | Agents read the cross-repo graph and perform coordinated changes across repo boundaries.                              |
 
 ## What synthetic monorepos provide
 
 ### Cross-repo dependency graph
 
-Automatically creates a dependency graph across repositories, representing how they connect. This gives you the same visibility you'd get in a monorepo: which project depends on which, what a change affects downstream, and how teams' work relates.
+Nx Polygraph automatically creates a dependency graph across repositories through the [Workspace Graph](/docs/enterprise/polygraph). This gives you the same visibility you'd get in a monorepo: which project depends on which, what a change affects downstream, and how teams' work relates.
 
 ### Tooling on top of the graph
 
-The graph becomes actionable, not just a visualization. Conformance checking, impact analysis, and coordinated changes all become possible across repo boundaries. CI intelligence like affected detection, caching, and distribution can work across the full graph.
+The graph becomes actionable, not just a visualization. Conformance checking, impact analysis, and coordinated changes all become possible across repo boundaries. Nx Cloud CI features like [affected detection](/docs/concepts/mental-model#affected-commands), [remote caching](/docs/concepts/how-caching-works), and [distribution](/docs/concepts/ci-concepts/parallelization-distribution) work across the full graph.
 
-### AI agent enablement
+### AI agent workflows across repos
 
-Tooling built on synthetic monorepos exposes metadata that AI agents can read and use to see beyond polyrepo boundaries. This enables patterns like:
+Nx Polygraph exposes metadata that AI agents can read and use to operate across polyrepo boundaries. Through Nx's [MCP integration](/docs/features/enhance-ai) and agent skills, this enables multi-repo agentic workflows:
 
-- A **coordinator agent** reads the cross-repo graph and identifies affected repos
-- **Per-repo agents** are spawned for each repo that needs changes (backend, frontend, etc.)
-- The coordinator **funnels context between agents** (e.g., passing DTO structures from the backend agent to the frontend agent)
-- Agents **manage the PR lifecycle** across repos, with a consolidated view as if submitting to one repo
+1. You give a prompt like _"Change the ratings API to also include the review author"_
+2. A **coordinator agent** reads the Polygraph graph, identifies affected repos (e.g., backend and frontend)
+3. **Per-repo agents** are spawned in parallel: the backend agent adjusts the API, the frontend agent updates the UI
+4. The coordinator **funnels context between agents** (e.g., the DTO structure from the backend agent is passed to the frontend agent so types stay in sync)
+5. Each agent **submits a PR** in its repo, [self-healing CI](/docs/platform-features/ci/self-healing-ci) kicks in if CI fails
+6. Result: coordinated PRs across repos, tracked in a single Nx Cloud dashboard
 
-## An entry point, not an endpoint
+This is the same workflow you'd get with a real monorepo, but without requiring code to live in one repository.
 
-A synthetic monorepo is an entry point, not an endpoint. Organizations can start with cross-repo visibility and gradually deepen integration where it makes sense, one team or repo at a time.
+## When to use a synthetic monorepo vs. a real monorepo
 
-The progression looks like this:
+A real monorepo gives you the deepest integration: atomic commits, a single toolchain, and the simplest mental model. If you can consolidate, it's the best option.
 
-1. **Connect** — Link existing repos into a unified graph. No code changes, no CI changes required.
-2. **Observe** — Use the graph for visibility, impact analysis, and conformance checking.
-3. **Automate** — Enable coordinated changes, cross-repo CI, and AI agent workflows.
-4. **Migrate gradually** — Where it makes sense, consolidate repos into actual monorepos, guided by the relationships the graph reveals.
+But consolidation isn't always feasible. Teams have autonomy concerns, repos have different CI setups, and migrating hundreds of repos is a multi-month effort. A synthetic monorepo gives you monorepo intelligence without requiring that migration.
 
-You don't have to reorganize your repos to start getting monorepo benefits. Start synthetic, migrate gradually, move at your own pace.
+**Start synthetic, consolidate where it makes sense.** The two approaches aren't mutually exclusive. A common progression:
 
-{% aside type="note" title="Nx and synthetic monorepos" %}
-Nx supports synthetic monorepos through [Nx Polygraph](/docs/enterprise/polygraph), which connects existing repositories into a unified, intelligent graph. Polygraph works with any repo — even those that don't use Nx — through metadata-only workspaces that require zero changes to target repos.
-{% /aside %}
+1. **Connect** existing repos into a unified graph with Nx Polygraph. No code changes, no CI changes required.
+2. **Observe** how projects relate. Use the graph for visibility, impact analysis, and conformance checking.
+3. **Automate** coordinated changes, cross-repo CI, and AI agent workflows across the graph.
+4. **Consolidate gradually** where it makes sense. Teams that work closely together can merge repos into a real monorepo, guided by the relationships the graph reveals.
+
+You might end up with a mix: a few real monorepos for tightly coupled teams, connected through a synthetic monorepo for org-wide visibility. Nx supports both, and moving between them is incremental.
