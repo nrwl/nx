@@ -1392,7 +1392,7 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getRunningTasks(): Promise<string> {
+  getRunningTasks(): Promise<any[]> {
     const message: HandleGetRunningTasksMessage = {
       type: GET_RUNNING_TASKS,
     };

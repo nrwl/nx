@@ -19,7 +19,7 @@ describe('handle-running-tasks', () => {
     ]);
 
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     expect(tasks).toHaveLength(1);
     expect(tasks[0]).toMatchObject({
       pid: process.pid,
@@ -44,7 +44,7 @@ describe('handle-running-tasks', () => {
     );
 
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     expect(tasks[0].tasks['app:build'].status).toBe('in-progress');
   });
 
@@ -57,7 +57,7 @@ describe('handle-running-tasks', () => {
     );
 
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     expect(tasks[0].tasks['app:build']).toMatchObject({
       status: 'in-progress',
       continuous: true,
@@ -76,7 +76,7 @@ describe('handle-running-tasks', () => {
     await handleUpdateRunningTasks(process.pid, [], { 'app:serve': lines });
 
     const result = await handleGetRunningTaskOutput(process.pid, 'app:serve');
-    const output = JSON.parse(result.response as string);
+    const output = result.response as any;
     const outputLines = output.split('\n').filter(Boolean);
     expect(outputLines).toHaveLength(100);
     expect(outputLines[0]).toBe('line 50');
@@ -94,7 +94,7 @@ describe('handle-running-tasks', () => {
     });
 
     const result = await handleGetRunningTaskOutput(process.pid, 'app:serve');
-    const output = JSON.parse(result.response as string);
+    const output = result.response as any;
     expect(output).toBe('line 1\nline 2');
   });
 
@@ -106,7 +106,7 @@ describe('handle-running-tasks', () => {
     await handleUnregisterRunningTasks(process.pid);
 
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     expect(tasks).toEqual([]);
 
     // Output should also be cleaned up
@@ -114,7 +114,7 @@ describe('handle-running-tasks', () => {
       process.pid,
       'app:build'
     );
-    const output = JSON.parse(outputResult.response as string);
+    const output = outputResult.response as string;
     expect(output).toBe('');
   });
 
@@ -123,7 +123,7 @@ describe('handle-running-tasks', () => {
     await handleRegisterRunningTasks(999999, 'nx build', ['app:build']);
 
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     expect(tasks).toEqual([]);
   });
 
@@ -134,7 +134,7 @@ describe('handle-running-tasks', () => {
     // Use current process PID so they aren't pruned as dead
     // Instead, just check the map has both before pruning
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     // Both will be pruned since PIDs 1111 and 2222 don't exist,
     // but the register and storage itself works
     expect(tasks).toEqual([]);
@@ -153,7 +153,7 @@ describe('handle-running-tasks', () => {
 
   it('should return empty output for non-existent task', async () => {
     const result = await handleGetRunningTaskOutput(1234, 'nonexistent:task');
-    const output = JSON.parse(result.response as string);
+    const output = result.response as any;
     expect(output).toBe('');
   });
 
@@ -169,7 +169,7 @@ describe('handle-running-tasks', () => {
     );
 
     const result = await handleGetRunningTasks();
-    const tasks = JSON.parse(result.response as string);
+    const tasks = result.response as any;
     expect(tasks[0].tasks['app:build']).toMatchObject({
       status: 'success',
       startTime,

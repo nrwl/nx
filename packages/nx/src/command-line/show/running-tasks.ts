@@ -10,8 +10,7 @@ export async function showRunningTasksHandler(
   args: ShowRunningTasksOptions,
   client = daemonClient
 ): Promise<void> {
-  const rawRunningTasks = await client.getRunningTasks();
-  const runningTasks = JSON.parse(rawRunningTasks);
+  const runningTasks = await client.getRunningTasks();
 
   if (args.task) {
     // Find which process has this task
@@ -38,8 +37,7 @@ export async function showRunningTasksHandler(
       process.exit(1);
     }
 
-    const rawOutput = await client.getRunningTaskOutput(targetPid, args.task);
-    const taskOutput = JSON.parse(rawOutput);
+    const taskOutput = await client.getRunningTaskOutput(targetPid, args.task);
     process.stdout.write(taskOutput);
     if (taskOutput && !taskOutput.endsWith('\n')) {
       process.stdout.write('\n');

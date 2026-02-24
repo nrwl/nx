@@ -5,10 +5,8 @@ function createMockDaemonClient(
   taskOutput: string = ''
 ) {
   return {
-    getRunningTasks: jest.fn().mockResolvedValue(JSON.stringify(runningTasks)),
-    getRunningTaskOutput: jest
-      .fn()
-      .mockResolvedValue(JSON.stringify(taskOutput)),
+    getRunningTasks: jest.fn().mockResolvedValue(runningTasks),
+    getRunningTaskOutput: jest.fn().mockResolvedValue(taskOutput),
   } as any;
 }
 
