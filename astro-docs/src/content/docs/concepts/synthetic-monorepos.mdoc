@@ -47,7 +47,7 @@ Nx Polygraph exposes metadata that AI agents can read and use to operate across 
 2. A **coordinator agent** reads the Polygraph graph, identifies affected repos (e.g., backend and frontend)
 3. **Per-repo agents** are spawned in parallel: the backend agent adjusts the API, the frontend agent updates the UI
 4. The coordinator **funnels context between agents** (e.g., the DTO structure from the backend agent is passed to the frontend agent so types stay in sync)
-5. Each agent **submits a PR** in its repo, [self-healing CI](/docs/platform-features/ci/self-healing-ci) kicks in if CI fails
+5. Each agent **submits a PR** in its repo, [self-healing CI](/docs/features/ci-features/self-healing-ci) kicks in if CI fails
 6. Result: coordinated PRs across repos, tracked in a single Nx Cloud dashboard
 
 This is the same workflow you'd get with a real monorepo, but without requiring code to live in one repository.
