@@ -22,7 +22,7 @@ In this article, **I will show what a proper monorepo setup looks like and talk 
 
 Monorepos are not a silver bullet. Nothing is. But hopefully **at the end of this article, you will have a clear understanding of the benefits a monorepo brings, what _actual_ challenges you will face, and if it is the right approach for your organization.**
 
-_For the examples in this post, I will use [Nx](/), an extensible build system optimized for monorepos. But the concepts apply broadly to any monorepo tooling._
+_For the examples in this post, I will use [Nx](/docs/getting-started/intro), an extensible build system optimized for monorepos. But the concepts apply broadly to any monorepo tooling._
 
 {% toc /%}
 
