@@ -79,7 +79,7 @@ pub fn initialize_telemetry(
         .set(Arc::new(service))
         .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
 
-    tracing::trace!("Telemetry service initialized successfully");
+    tracing::debug!("Telemetry service initialized successfully");
     Ok(())
 }
 
@@ -345,7 +345,7 @@ impl TelemetryService {
                 recv(page_view_rx) -> msg => {
                     match msg {
                         Ok(page_view) => {
-                            tracing::trace!("Queuing page view: {}", page_view.title);
+                            tracing::debug!("Queuing page view: {}", page_view.title);
                             let mut params = user_params.clone();
                             params.extend(page_view.parameters);
                             params.insert("en".to_string(), "page_view".to_string());
@@ -359,7 +359,7 @@ impl TelemetryService {
                 recv(event_rx) -> msg => {
                     match msg {
                         Ok(event) => {
-                            tracing::trace!("Queuing event: {}", event.name);
+                            tracing::debug!("Queuing event: {}", event.name);
                             let mut params = user_params.clone();
                             params.extend(event.parameters);
                             params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
@@ -427,7 +427,7 @@ impl TelemetryService {
             return Ok(());
         }
 
-        tracing::trace!(
+        tracing::debug!(
             "Sending {} events and {} page views",
             event_queue.len(),
             page_view_queue.len()
