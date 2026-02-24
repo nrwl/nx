@@ -345,7 +345,7 @@ impl TelemetryService {
                 recv(page_view_rx) -> msg => {
                     match msg {
                         Ok(page_view) => {
-                            tracing::debug!("Queuing page view: {}", page_view.title);
+                            tracing::trace!("Queuing page view: {}", page_view.title);
                             let mut params = user_params.clone();
                             params.extend(page_view.parameters);
                             params.insert("en".to_string(), "page_view".to_string());
@@ -359,7 +359,7 @@ impl TelemetryService {
                 recv(event_rx) -> msg => {
                     match msg {
                         Ok(event) => {
-                            tracing::debug!("Queuing event: {}", event.name);
+                            tracing::trace!("Queuing event: {}", event.name);
                             let mut params = user_params.clone();
                             params.extend(event.parameters);
                             params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
@@ -430,7 +430,15 @@ impl TelemetryService {
         // Send events in chunks of MAX_EVENTS_PER_BATCH
         if !event_queue.is_empty() {
             for chunk in event_queue.chunks(MAX_EVENTS_PER_BATCH) {
-                tracing::debug!("Sending {} events", chunk.len());
+                let event_names: Vec<String> = chunk
+                    .iter()
+                    .filter_map(|params| params.get("en").cloned())
+                    .collect();
+                tracing::debug!(
+                    "Sending {} events: [{}]",
+                    chunk.len(),
+                    event_names.join(", ")
+                );
                 if let Err(e) = Self::send_request(client, common_params, chunk.to_vec()).await {
                     tracing::trace!("Telemetry Send Error: {}", e);
                 }
@@ -440,15 +448,26 @@ impl TelemetryService {
 
         // Send page views (one per request)
         for page_view in page_view_queue.drain(..) {
-            if let Some(title) = page_view.get("dt") {
-                tracing::debug!("Sending page view: {}", title);
+            let title = page_view.get("dt");
+            let location = page_view.get("dl");
+
+            if let Some(t) = title {
+                if let Some(l) = location {
+                    if t != l {
+                        tracing::debug!("Sending page view: {} (location: {})", t, l);
+                    } else {
+                        tracing::debug!("Sending page view: {}", t);
+                    }
+                } else {
+                    tracing::debug!("Sending page view: {}", t);
+                }
             }
 
             let mut request_params = common_params.clone();
-            if let Some(title) = page_view.get("dt") {
+            if let Some(title) = title {
                 request_params.insert("dt".to_string(), title.clone());
             }
-            if let Some(location) = page_view.get("dl") {
+            if let Some(location) = location {
                 request_params.insert("dl".to_string(), location.clone());
             }
 
