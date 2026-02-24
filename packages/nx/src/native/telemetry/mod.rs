@@ -427,15 +427,10 @@ impl TelemetryService {
             return Ok(());
         }
 
-        tracing::debug!(
-            "Sending {} events and {} page views",
-            event_queue.len(),
-            page_view_queue.len()
-        );
-
         // Send events in chunks of MAX_EVENTS_PER_BATCH
         if !event_queue.is_empty() {
             for chunk in event_queue.chunks(MAX_EVENTS_PER_BATCH) {
+                tracing::debug!("Sending {} events", chunk.len());
                 if let Err(e) = Self::send_request(client, common_params, chunk.to_vec()).await {
                     tracing::trace!("Telemetry Send Error: {}", e);
                 }
@@ -445,6 +440,10 @@ impl TelemetryService {
 
         // Send page views (one per request)
         for page_view in page_view_queue.drain(..) {
+            if let Some(title) = page_view.get("dt") {
+                tracing::debug!("Sending page view: {}", title);
+            }
+
             let mut request_params = common_params.clone();
             if let Some(title) = page_view.get("dt") {
                 request_params.insert("dt".to_string(), title.clone());
