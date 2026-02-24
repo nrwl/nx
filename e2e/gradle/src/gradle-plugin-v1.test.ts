@@ -43,7 +43,10 @@ describe('Gradle Plugin V1', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app --no-batch', { verbose: true });
+        const buildOutput = runCLI('build app --no-batch', {
+          verbose: true,
+          redirectStderr: true,
+        });
         expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain('nx run utilities:build');
