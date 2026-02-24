@@ -93,10 +93,6 @@ const learnGroups: SidebarItems = [
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
-      {
-        label: 'Synthetic Monorepos',
-        link: 'concepts/synthetic-monorepos',
-      },
     ],
   },
   {
@@ -105,6 +101,10 @@ const learnGroups: SidebarItems = [
     items: [
       { label: 'Run Tasks', link: 'features/run-tasks' },
       { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
+      {
+        label: 'Synthetic Monorepos',
+        link: 'concepts/synthetic-monorepos',
+      },
       {
         label: 'Code Organization',
         collapsed: true,
