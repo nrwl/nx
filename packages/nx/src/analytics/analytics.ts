@@ -48,7 +48,7 @@ export async function startAnalytics() {
       os.arch(),
       os.platform(),
       os.release(),
-      isCI()
+      !!isCI()
     );
     _telemetryInitialized = true;
   } catch (error) {
