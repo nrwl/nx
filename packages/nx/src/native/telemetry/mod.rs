@@ -58,7 +58,10 @@ pub fn initialize_telemetry(
     os_platform: String,
     os_release: String,
 ) -> Result<()> {
-    tracing::trace!("Initializing telemetry service for workspace: {}", workspace_id);
+    tracing::trace!(
+        "Initializing telemetry service for workspace: {}",
+        workspace_id
+    );
 
     let service = TelemetryService::new(
         workspace_id,
@@ -99,7 +102,11 @@ pub fn track_page_view(
     page_location: Option<String>,
     parameters: Option<HashMap<String, String>>,
 ) -> Result<()> {
-    tracing::trace!("Tracking page view: {} (location: {:?})", page_title, page_location);
+    tracing::trace!(
+        "Tracking page view: {} (location: {:?})",
+        page_title,
+        page_location
+    );
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
         telemetry.track_page_view_impl(page_title, page_location, parameters)?;
     } else {
@@ -317,12 +324,14 @@ impl TelemetryService {
 
                 // Priority 1: Page views (most important)
                 Some(page_view) = page_view_rx.recv() => {
+                    tracing::trace!("Received page view in background task: {}", page_view.title);
                     let mut params = user_params.clone();
                     params.extend(page_view.parameters);
                     params.insert("en".to_string(), "page_view".to_string());
                     params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
                     params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
                     page_view_batch.push(sanitize_params(params));
+                    tracing::trace!("Page view batch now has {} items", page_view_batch.len());
                 }
 
                 // Priority 2: Regular events
