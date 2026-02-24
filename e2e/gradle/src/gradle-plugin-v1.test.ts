@@ -37,7 +37,9 @@ describe('Gradle Plugin V1', () => {
       afterAll(() => cleanupProject());
 
       it('should build without batch mode', () => {
-        const projects = runCLI(`show projects`);
+        const projects = runCLI(`show projects`, {
+          redirectStderr: true,
+        });
         expect(projects).toContain('app');
         expect(projects).toContain('list');
         expect(projects).toContain('utilities');
@@ -126,8 +128,14 @@ dependencies {
         });
 
         expect(() => {
-          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
-          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
+          runCLI('run app:test-ci--MessageUtilsTest', {
+            verbose: true,
+            redirectStderr: true,
+          });
+          runCLI('run list:test-ci--LinkedListTest', {
+            verbose: true,
+            redirectStderr: true,
+          });
         }).not.toThrow();
       });
     }
