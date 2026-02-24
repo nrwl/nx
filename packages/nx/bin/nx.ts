@@ -171,7 +171,7 @@ function determineNxVersions(
 
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   // root relative to location of the nx bin
-  const globalsRoot = join(__dirname, '../../../');
+  const globalsRoot = join(__dirname, '../../../../');
 
   // prefer Nx installed in .nx/installation
   try {
