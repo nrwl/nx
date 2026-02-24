@@ -417,6 +417,32 @@ impl TelemetryService {
         ));
     }
 
+    fn log_page_view(level: &str, prefix: &str, title: &Option<String>, location: &Option<String>) {
+        if let Some(t) = title {
+            if let Some(l) = location {
+                if t != l {
+                    match level {
+                        "trace" => tracing::trace!("{} page view: {} (location: {})", prefix, t, l),
+                        "debug" => tracing::debug!("{} page view: {} (location: {})", prefix, t, l),
+                        _ => {}
+                    }
+                } else {
+                    match level {
+                        "trace" => tracing::trace!("{} page view: {}", prefix, t),
+                        "debug" => tracing::debug!("{} page view: {}", prefix, t),
+                        _ => {}
+                    }
+                }
+            } else {
+                match level {
+                    "trace" => tracing::trace!("{} page view: {}", prefix, t),
+                    "debug" => tracing::debug!("{} page view: {}", prefix, t),
+                    _ => {}
+                }
+            }
+        }
+    }
+
     async fn send_batches(
         client: &Client,
         common_params: &ParameterMap,
@@ -460,18 +486,7 @@ impl TelemetryService {
             let title = page_view.get("dt").cloned();
             let location = page_view.get("dl").cloned();
 
-            // Trace log before sending
-            if let Some(ref t) = title {
-                if let Some(ref l) = location {
-                    if t != l {
-                        tracing::trace!("Sending page view: {} (location: {})", t, l);
-                    } else {
-                        tracing::trace!("Sending page view: {}", t);
-                    }
-                } else {
-                    tracing::trace!("Sending page view: {}", t);
-                }
-            }
+            Self::log_page_view("trace", "Sending", &title, &location);
 
             let mut request_params = common_params.clone();
             if let Some(ref t) = title {
@@ -483,18 +498,7 @@ impl TelemetryService {
 
             match Self::send_request(client, &request_params, vec![page_view]).await {
                 Ok(_) => {
-                    // Debug log after successful send
-                    if let Some(ref t) = title {
-                        if let Some(ref l) = location {
-                            if t != l {
-                                tracing::debug!("Sent page view: {} (location: {})", t, l);
-                            } else {
-                                tracing::debug!("Sent page view: {}", t);
-                            }
-                        } else {
-                            tracing::debug!("Sent page view: {}", t);
-                        }
-                    }
+                    Self::log_page_view("debug", "Sent", &title, &location);
                 }
                 Err(e) => {
                     tracing::trace!("Telemetry Send Error: {}", e);
