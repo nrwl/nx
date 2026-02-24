@@ -20,7 +20,7 @@
       "dependsOn": [
         "^build-base",
         "build-native",
-        "gradle-batch-runner:assemble"
+        ":gradle-batch-runner:assemble"
       ]
     },
     "legacy-post-build": {

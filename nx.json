@@ -298,8 +298,7 @@
     {
       "plugin": "@nx/gradle",
       "options": {
-        "ciTestTargetName": "gradle:test-ci",
-        "targetNamePrefix": "gradle:"
+        "testTargetName": "test-kt"
       },
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
