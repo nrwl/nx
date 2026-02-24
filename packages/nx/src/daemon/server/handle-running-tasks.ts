@@ -141,7 +141,7 @@ export async function handleGetRunningTasks(): Promise<HandlerResult> {
   pruneDeadProcesses();
   const result = Array.from(runningProcesses.values());
   return {
-    response: JSON.stringify(result),
+    response: result,
     description: 'handleGetRunningTasks',
   };
 }
@@ -153,7 +153,7 @@ export async function handleGetRunningTaskOutput(
   const key = bufferKey(pid, taskId);
   const buffer = outputBuffers.get(key) ?? [];
   return {
-    response: JSON.stringify(buffer.join('\n')),
+    response: buffer.join('\n'),
     description: 'handleGetRunningTaskOutput',
   };
 }
