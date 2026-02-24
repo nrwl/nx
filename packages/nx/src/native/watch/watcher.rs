@@ -27,7 +27,7 @@ use watchexec_events::{Event, FileType, Priority, Tag};
 use watchexec_signals::Signal;
 
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
-fn build_ignore_glob_set() -> NxGlobSet {
+fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
@@ -180,7 +180,7 @@ impl Watcher {
         // Hardcoded ignore patterns for dynamic directory registration.
         // These are always applied regardless of use_ignore - we never want to watch
         // node_modules, .git, etc. even when watching task outputs.
-        let ignore_globs: Arc<NxGlobSet> = Arc::new(build_ignore_glob_set());
+        let ignore_globs: Arc<NxGlobSet> = build_ignore_glob_set();
 
         let origin = self.origin.clone();
         let watch_exec_for_action = self.watch_exec.clone();
