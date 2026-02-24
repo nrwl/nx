@@ -1,11 +1,12 @@
 import { readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
-import {
-  initializeTelemetry,
-  flushTelemetry,
-  trackEvent as trackEventNative,
-  trackPageView as trackPageViewNative,
+import { IS_WASM } from '../native';
+import type {
+  initializeTelemetry as InitializeTelemetryType,
+  flushTelemetry as FlushTelemetryType,
+  trackEvent as TrackEventType,
+  trackPageView as TrackPageViewType,
 } from '../native';
 import {
   getPackageManagerVersion,
@@ -21,9 +22,28 @@ import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
 
+// Conditionally import telemetry functions only on non-WASM platforms
+let initializeTelemetry: typeof InitializeTelemetryType;
+let flushTelemetry: typeof FlushTelemetryType;
+let trackEventNative: typeof TrackEventType;
+let trackPageViewNative: typeof TrackPageViewType;
+
+if (!IS_WASM) {
+  const nativeModule = require('../native');
+  initializeTelemetry = nativeModule.initializeTelemetry;
+  flushTelemetry = nativeModule.flushTelemetry;
+  trackEventNative = nativeModule.trackEvent;
+  trackPageViewNative = nativeModule.trackPageView;
+}
+
 let _telemetryInitialized = false;
 
 export async function startAnalytics() {
+  // Analytics not supported on WASM
+  if (IS_WASM) {
+    return;
+  }
+
   const workspaceId = getAnalyticsId();
   if (!workspaceId) {
     // Analytics are disabled, exit early.
