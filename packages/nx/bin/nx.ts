@@ -320,5 +320,6 @@ process.on('exit', () => {
 
 main().catch((error) => {
   console.error(error);
-  flushAnalytics().finally(() => process.exit(1));
+  flushAnalytics();
+  process.exit(1);
 });
