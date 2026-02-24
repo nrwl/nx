@@ -39,6 +39,11 @@ export type ShowTargetBaseOptions = NxShowArgs & {
   verbose?: boolean;
 };
 
+export type ShowRunningTasksOptions = NxShowArgs & {
+  task?: string;
+  verbose?: boolean;
+};
+
 export type ShowTargetInputsOptions = NxShowArgs & {
   target?: string;
   check?: string[];
@@ -60,6 +65,7 @@ export const yargsShowCommand: CommandModule<
       .command(showProjectsCommand)
       .command(showProjectCommand)
       .command(showTargetCommand)
+      .command(showRunningTasksCommand)
       .demandCommand()
       .option('json', {
         type: 'boolean',
@@ -355,6 +361,37 @@ const showTargetOutputsCommand: CommandModule<
       await showTargetOutputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);
+  },
+};
+
+const showRunningTasksCommand: CommandModule<
+  NxShowArgs,
+  ShowRunningTasksOptions
+> = {
+  command: 'running-tasks',
+  describe:
+    'Show currently running Nx tasks and their status. Queries the Nx daemon for live task state.',
+  builder: (yargs) =>
+    withVerbose(yargs)
+      .option('task', {
+        type: 'string',
+        description:
+          'Show the log output of a specific running task (e.g., myapp:serve).',
+      })
+      .example(
+        '$0 show running-tasks',
+        'List all currently running tasks as JSON'
+      )
+      .example(
+        '$0 show running-tasks --task myapp:serve',
+        'Show log output of the myapp:serve task'
+      ) as any,
+  handler: async (args) => {
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showRunningTasksHandler } = await import('./running-tasks');
+      await showRunningTasksHandler(args);
+    });
+    process.exit(exitCode);
   },
 };
 
