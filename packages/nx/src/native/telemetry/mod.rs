@@ -321,19 +321,19 @@ impl TelemetryService {
             .expect("Failed to create tokio runtime for telemetry");
 
         let mut event_batch = Vec::new();
-        let mut page_view_batch = Vec::new();
+        let mut page_view_queue = Vec::new();
         let mut last_send = std::time::Instant::now();
 
         loop {
             // Check if we should send batches periodically
             let should_send = last_send.elapsed() >= Duration::from_millis(BATCH_INTERVAL_MS);
 
-            if should_send && (!event_batch.is_empty() || !page_view_batch.is_empty()) {
+            if should_send && (!event_batch.is_empty() || !page_view_queue.is_empty()) {
                 let _ = rt.block_on(Self::send_batches(
                     &client,
                     &common_params,
                     &mut event_batch,
-                    &mut page_view_batch,
+                    &mut page_view_queue,
                 ));
                 last_send = std::time::Instant::now();
             }
@@ -351,7 +351,7 @@ impl TelemetryService {
                             params.insert("en".to_string(), "page_view".to_string());
                             params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
                             params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
-                            page_view_batch.push(sanitize_params(params));
+                            page_view_queue.push(sanitize_params(params));
                         }
                         Err(_) => break, // Channel closed
                     }
@@ -384,7 +384,7 @@ impl TelemetryService {
                                 params.insert("en".to_string(), "page_view".to_string());
                                 params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
                                 params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
-                                page_view_batch.push(sanitize_params(params));
+                                page_view_queue.push(sanitize_params(params));
                             }
 
                             // Send final batch
@@ -392,7 +392,7 @@ impl TelemetryService {
                                 &client,
                                 &common_params,
                                 &mut event_batch,
-                                &mut page_view_batch,
+                                &mut page_view_queue,
                             ));
                             let _ = reply.send(result);
                             last_send = std::time::Instant::now();
@@ -412,7 +412,7 @@ impl TelemetryService {
             &client,
             &common_params,
             &mut event_batch,
-            &mut page_view_batch,
+            &mut page_view_queue,
         ));
     }
 
@@ -420,16 +420,16 @@ impl TelemetryService {
         client: &Client,
         common_params: &ParameterMap,
         event_batch: &mut Vec<ParameterMap>,
-        page_view_batch: &mut Vec<ParameterMap>,
+        page_view_queue: &mut Vec<ParameterMap>,
     ) -> Result<()> {
-        if event_batch.is_empty() && page_view_batch.is_empty() {
+        if event_batch.is_empty() && page_view_queue.is_empty() {
             return Ok(());
         }
 
         tracing::trace!(
             "Telemetry: Sending {} events, {} page views",
             event_batch.len(),
-            page_view_batch.len()
+            page_view_queue.len()
         );
 
         // Send events in chunks of MAX_EVENTS_PER_BATCH
@@ -443,7 +443,7 @@ impl TelemetryService {
         }
 
         // Send page views (one per request)
-        for page_view in page_view_batch.drain(..) {
+        for page_view in page_view_queue.drain(..) {
             let mut request_params = common_params.clone();
             if let Some(title) = page_view.get("dt") {
                 request_params.insert("dt".to_string(), title.clone());
