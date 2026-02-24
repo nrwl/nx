@@ -431,7 +431,7 @@ export function runCLI(
         ...opts.env,
       },
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: ['pipe', 'pipe', opts.redirectStderr ? 'pipe' : 'inherit'],
       maxBuffer: 50 * 1024 * 1024,
     });
 
