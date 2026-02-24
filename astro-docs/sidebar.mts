@@ -102,6 +102,10 @@ const learnGroups: SidebarItems = [
       { label: 'Run Tasks', link: 'features/run-tasks' },
       { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
       {
+        label: 'Synthetic Monorepos',
+        link: 'concepts/synthetic-monorepos',
+      },
+      {
         label: 'Code Organization',
         collapsed: true,
         items: [
