@@ -270,7 +270,7 @@ export declare export declare function findImports(projectFileMap: Record<string
  * Flush all pending telemetry data
  * This should be called before process exit
  */
-export declare export declare function flushTelemetry(): Promise<void>
+export declare export declare function flushTelemetry(): void
 
 export declare export declare function getBinaryTarget(): string
 

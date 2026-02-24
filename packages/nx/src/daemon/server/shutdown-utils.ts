@@ -150,7 +150,7 @@ async function performShutdown(
     cleanupLatestNxInstallation();
 
     // Flush analytics before exiting
-    await flushAnalytics();
+    flushAnalytics();
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {

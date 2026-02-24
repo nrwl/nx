@@ -294,10 +294,10 @@ function trackPageView(
   }
 }
 
-export async function flushAnalytics() {
+export function flushAnalytics() {
   if (_telemetryInitialized) {
     try {
-      await flushTelemetry();
+      flushTelemetry();
     } catch (error) {
       // Failure to report analytics shouldn't crash the CLI
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -311,18 +311,8 @@ export function exitAndFlushAnalytics(code: string | number): never {
   if (_telemetryInitialized) {
     // Synchronously flush analytics before exit
     // This is a blocking operation that waits for HTTP requests to complete
-    flushAnalytics()
-      .then(() => {
-        process.exit(code);
-      })
-      .catch(() => {
-        // Even if analytics fails, we should still exit
-        process.exit(code);
-      });
-  } else {
-    process.exit(code);
+    flushAnalytics();
   }
-  // TypeScript needs this for the 'never' return type
   process.exit(code);
 }
 

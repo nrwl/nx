@@ -17,6 +17,7 @@
 //! track_rust_event("workspace_analyzed", params);
 //! ```
 
+use crossbeam_channel::{self, Receiver, Sender};
 use napi::bindgen_prelude::*;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -24,7 +25,6 @@ use reqwest::{Client, ClientBuilder};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{mpsc, oneshot};
 
 const TRACKING_ID_PROD: &str = "G-83SJXKY605";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
@@ -118,9 +118,9 @@ pub fn track_page_view(
 /// Flush all pending telemetry data
 /// This should be called before process exit
 #[napi]
-pub async fn flush_telemetry() -> Result<()> {
+pub fn flush_telemetry() -> Result<()> {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
-        telemetry.flush().await?;
+        telemetry.flush()?;
     }
     Ok(())
 }
@@ -223,9 +223,9 @@ struct PageViewData {
 
 /// Internal telemetry service - not exposed to JavaScript
 pub struct TelemetryService {
-    event_tx: Mutex<Option<mpsc::UnboundedSender<EventData>>>,
-    page_view_tx: Mutex<Option<mpsc::UnboundedSender<PageViewData>>>,
-    flush_tx: mpsc::UnboundedSender<oneshot::Sender<Result<()>>>,
+    event_tx: Mutex<Option<Sender<EventData>>>,
+    page_view_tx: Mutex<Option<Sender<PageViewData>>>,
+    flush_tx: Sender<Sender<Result<()>>>,
 }
 
 impl TelemetryService {
@@ -280,21 +280,23 @@ impl TelemetryService {
         user_parameters.insert("ep.is_ai_agent".to_string(), is_ai_agent.to_string()); // IsAgent
 
         // Create channels
-        let (event_tx, event_rx) = mpsc::unbounded_channel();
-        let (page_view_tx, page_view_rx) = mpsc::unbounded_channel();
-        let (flush_tx, flush_rx) = mpsc::unbounded_channel();
+        let (event_tx, event_rx) = crossbeam_channel::unbounded();
+        let (page_view_tx, page_view_rx) = crossbeam_channel::unbounded();
+        let (flush_tx, flush_rx) = crossbeam_channel::unbounded();
 
-        // Spawn background sender task
+        // Spawn background sender thread
         let common_params = common_request_parameters.clone();
         let user_params = user_parameters.clone();
-        tokio::spawn(Self::background_sender(
-            client,
-            common_params,
-            user_params,
-            event_rx,
-            page_view_rx,
-            flush_rx,
-        ));
+        std::thread::spawn(move || {
+            Self::background_sender(
+                client,
+                common_params,
+                user_params,
+                event_rx,
+                page_view_rx,
+                flush_rx,
+            )
+        });
 
         Ok(TelemetryService {
             event_tx: Mutex::new(Some(event_tx)),
@@ -303,97 +305,116 @@ impl TelemetryService {
         })
     }
 
-    /// Background task that receives events and sends them in batches
-    async fn background_sender(
+    /// Background thread that receives events and sends them in batches
+    fn background_sender(
         client: Client,
         common_params: ParameterMap,
         user_params: ParameterMap,
-        mut event_rx: mpsc::UnboundedReceiver<EventData>,
-        mut page_view_rx: mpsc::UnboundedReceiver<PageViewData>,
-        mut flush_rx: mpsc::UnboundedReceiver<oneshot::Sender<Result<()>>>,
+        event_rx: Receiver<EventData>,
+        page_view_rx: Receiver<PageViewData>,
+        flush_rx: Receiver<Sender<Result<()>>>,
     ) {
+        // Create a tokio runtime for async HTTP requests
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("Failed to create tokio runtime for telemetry");
+
         let mut event_batch = Vec::new();
         let mut page_view_batch = Vec::new();
-        let mut interval = tokio::time::interval(Duration::from_millis(BATCH_INTERVAL_MS));
-        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        let mut last_send = std::time::Instant::now();
 
         loop {
-            tokio::select! {
-                // biased = check in order (page views first!)
-                biased;
+            // Check if we should send batches periodically
+            let should_send = last_send.elapsed() >= Duration::from_millis(BATCH_INTERVAL_MS);
 
-                // Priority 1: Page views (most important)
-                Some(page_view) = page_view_rx.recv() => {
-                    tracing::trace!("Received page view in background task: {}", page_view.title);
-                    let mut params = user_params.clone();
-                    params.extend(page_view.parameters);
-                    params.insert("en".to_string(), "page_view".to_string());
-                    params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
-                    params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
-                    page_view_batch.push(sanitize_params(params));
-                    tracing::trace!("Page view batch now has {} items", page_view_batch.len());
-                }
+            if should_send && (!event_batch.is_empty() || !page_view_batch.is_empty()) {
+                let _ = rt.block_on(Self::send_batches(
+                    &client,
+                    &common_params,
+                    &mut event_batch,
+                    &mut page_view_batch,
+                ));
+                last_send = std::time::Instant::now();
+            }
 
-                // Priority 2: Regular events
-                Some(event) = event_rx.recv() => {
-                    let mut params = user_params.clone();
-                    params.extend(event.parameters);
-                    params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
-                    event_batch.push(sanitize_params(params));
-                }
+            // Try to receive with timeout to implement periodic flushing
+            let timeout = Duration::from_millis(BATCH_INTERVAL_MS);
 
-                // Priority 3: Flush requests
-                Some(reply) = flush_rx.recv() => {
-                    // Drain any remaining events from closed channels
-                    while let Ok(event) = event_rx.try_recv() {
-                        let mut params = user_params.clone();
-                        params.extend(event.parameters);
-                        params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
-                        event_batch.push(sanitize_params(params));
+            crossbeam_channel::select! {
+                recv(page_view_rx) -> msg => {
+                    match msg {
+                        Ok(page_view) => {
+                            tracing::trace!("Received page view in background thread: {}", page_view.title);
+                            let mut params = user_params.clone();
+                            params.extend(page_view.parameters);
+                            params.insert("en".to_string(), "page_view".to_string());
+                            params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
+                            params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
+                            page_view_batch.push(sanitize_params(params));
+                            tracing::trace!("Page view batch now has {} items", page_view_batch.len());
+                        }
+                        Err(_) => break, // Channel closed
                     }
-
-                    while let Ok(page_view) = page_view_rx.try_recv() {
-                        let mut params = user_params.clone();
-                        params.extend(page_view.parameters);
-                        params.insert("en".to_string(), "page_view".to_string());
-                        params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
-                        params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
-                        page_view_batch.push(sanitize_params(params));
+                }
+                recv(event_rx) -> msg => {
+                    match msg {
+                        Ok(event) => {
+                            let mut params = user_params.clone();
+                            params.extend(event.parameters);
+                            params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
+                            event_batch.push(sanitize_params(params));
+                        }
+                        Err(_) => break, // Channel closed
                     }
-
-                    // Send final batch
-                    let result = Self::send_batches(
-                        &client,
-                        &common_params,
-                        &mut event_batch,
-                        &mut page_view_batch,
-                    ).await;
-                    let _ = reply.send(result);
                 }
+                recv(flush_rx) -> msg => {
+                    match msg {
+                        Ok(reply) => {
+                            // Drain any remaining events
+                            while let Ok(event) = event_rx.try_recv() {
+                                let mut params = user_params.clone();
+                                params.extend(event.parameters);
+                                params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
+                                event_batch.push(sanitize_params(params));
+                            }
 
-                // Priority 4: Periodic flush
-                _ = interval.tick() => {
-                    let _ = Self::send_batches(
-                        &client,
-                        &common_params,
-                        &mut event_batch,
-                        &mut page_view_batch,
-                    ).await;
+                            while let Ok(page_view) = page_view_rx.try_recv() {
+                                let mut params = user_params.clone();
+                                params.extend(page_view.parameters);
+                                params.insert("en".to_string(), "page_view".to_string());
+                                params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
+                                params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
+                                page_view_batch.push(sanitize_params(params));
+                            }
+
+                            // Send final batch
+                            let result = rt.block_on(Self::send_batches(
+                                &client,
+                                &common_params,
+                                &mut event_batch,
+                                &mut page_view_batch,
+                            ));
+                            let _ = reply.send(result);
+                            last_send = std::time::Instant::now();
+                        }
+                        Err(_) => break, // Channel closed
+                    }
                 }
-
-                // All channels closed - exit
-                else => break,
+                default(timeout) => {
+                    // Timeout - just continue to check if we should send
+                    continue;
+                }
             }
         }
 
         // Final flush before exit
-        let _ = Self::send_batches(
+        let _ = rt.block_on(Self::send_batches(
             &client,
             &common_params,
             &mut event_batch,
             &mut page_view_batch,
-        )
-        .await;
+        ));
     }
 
     async fn send_batches(
@@ -522,19 +543,21 @@ impl TelemetryService {
         Ok(())
     }
 
-    async fn flush(&self) -> Result<()> {
+    fn flush(&self) -> Result<()> {
         // 1. Close event channels (stop accepting new events)
         self.event_tx.lock().take();
         self.page_view_tx.lock().take();
 
-        // 2. Send flush request and wait for background task to drain everything
-        let (tx, rx) = oneshot::channel();
+        // 2. Send flush request and wait for background thread to drain everything
+        let (tx, rx) = crossbeam_channel::bounded(0); // Rendezvous channel
         self.flush_tx
             .send(tx)
             .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
 
-        // 3. Wait for flush to complete
-        rx.await
-            .map_err(|_| Error::from_reason("Flush reply channel closed"))?
+        // 3. Wait for flush to complete (synchronously)
+        match rx.recv() {
+            Ok(result) => result,
+            Err(_) => Err(Error::from_reason("Flush reply channel closed")),
+        }
     }
 }
