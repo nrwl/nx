@@ -9,7 +9,6 @@ import {
 } from './utils/ai-output';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
 import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsImportCommand: CommandModule = {

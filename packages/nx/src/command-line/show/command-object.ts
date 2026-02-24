@@ -6,7 +6,6 @@ import {
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
 import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface NxShowArgs {
