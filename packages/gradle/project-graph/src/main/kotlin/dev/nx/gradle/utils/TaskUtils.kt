@@ -11,6 +11,7 @@ import org.gradle.api.Task
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.TaskProvider
 
 /**
@@ -71,7 +72,13 @@ fun processTask(
   // process inputs
   val inputs =
       getInputsForTask(
-          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+          dependsOnTasks,
+          task,
+          projectRoot,
+          workspaceRoot,
+          externalNodes,
+          gitIgnoreClassifier,
+          project)
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
@@ -107,46 +114,40 @@ fun getGradlewCommand(): String {
   }
 }
 
-/**
- * Parse task and get inputs for this task
- *
- * @param dependsOnTasks set of tasks this task depends on
- * @param task task to process
- * @param projectRoot the project root path
- * @param workspaceRoot the workspace root path
- * @param externalNodes map of external nodes
- * @param gitIgnoreClassifier classifier to determine if files match gitignore patterns
- * @return a list of inputs including external dependencies, null if empty or an error occurred
- */
 fun getInputsForTask(
     dependsOnTasks: Set<Task>?,
     task: Task,
     projectRoot: String,
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>? = null,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    project: Project
 ): List<Any>? {
   return try {
-    val inputs = mutableListOf<Any>()
-    val externalDependencies = mutableListOf<String>()
+    val sourceGlobPatterns = mutableSetOf<String>()
+    val dependentOutputGlobPatterns = mutableSetOf<String>()
+    val externalDependencies = mutableSetOf<String>()
+    val individualInputs = mutableSetOf<String>()
 
-    // Collect outputs from dependent tasks
+    val sourceDirs = getSourceDirectories(project)
+
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
     tasksToProcess.forEach { dependentTask ->
       dependentTask.outputs.files.files.forEach { outputFile ->
         if (isFileInWorkspace(outputFile, workspaceRoot)) {
-          val relativePath = toRelativePathOrGlob(outputFile, workspaceRoot)
-          inputs.add(mapOf("dependentTasksOutputFiles" to relativePath))
+          val outputDir = if (outputFile.isDirectory) outputFile else outputFile.parentFile
+          if (outputDir != null) {
+            val globPattern = toGlobPattern(outputDir, projectRoot, workspaceRoot)
+            dependentOutputGlobPatterns.add(globPattern)
+          }
         }
       }
     }
 
-    // Process each tasks's input files from the tooling API
     task.inputs.files.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
       when {
-        // File is outside workspace - treat as external dependency
         relativePath == null -> {
           try {
             val externalDep =
@@ -157,22 +158,34 @@ fun getInputsForTask(
           }
         }
 
-        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
         gitIgnoreClassifier.isIgnored(inputFile) -> {
-          val relativePathOrGlob = toRelativePathOrGlob(inputFile, workspaceRoot)
-          inputs.add(mapOf("dependentTasksOutputFiles" to relativePathOrGlob))
+          val outputDir = if (inputFile.isDirectory) inputFile else inputFile.parentFile
+          if (outputDir != null) {
+            val globPattern = toGlobPattern(outputDir, projectRoot, workspaceRoot)
+            dependentOutputGlobPatterns.add(globPattern)
+          }
         }
 
-        // Regular source file - add as direct input
         else -> {
-          inputs.add(relativePath)
+          val sourceRoot = findSourceRoot(inputFile, sourceDirs)
+          if (sourceRoot != null) {
+            val globPattern = toGlobPattern(sourceRoot, projectRoot, workspaceRoot)
+            sourceGlobPatterns.add(globPattern)
+          } else {
+            individualInputs.add(relativePath)
+          }
         }
       }
     }
 
-    // Step 3: Add external dependencies if any
+    val inputs = mutableListOf<Any>()
+    inputs.addAll(sourceGlobPatterns)
+    inputs.addAll(individualInputs)
+    dependentOutputGlobPatterns.forEach { pattern ->
+      inputs.add(mapOf("dependentTasksOutputFiles" to pattern))
+    }
     if (externalDependencies.isNotEmpty()) {
-      inputs.add(mapOf("externalDependencies" to externalDependencies))
+      inputs.add(mapOf("externalDependencies" to externalDependencies.toList()))
     }
 
     inputs.ifEmpty { null }
@@ -183,21 +196,56 @@ fun getInputsForTask(
   }
 }
 
-/** Checks if a file is within the workspace. */
 private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
   return file.path.startsWith(workspaceRoot + File.separator)
 }
 
-/** Converts a file to a relative path. If it's a directory, returns a glob pattern. */
-private fun toRelativePathOrGlob(file: File, workspaceRoot: String): String {
-  val relativePath = file.path.substring(workspaceRoot.length + 1)
-  val isFile = file.name.contains('.') || (file.exists() && file.isFile)
+private fun getSourceDirectories(project: Project): Set<File> {
+  val sourceDirs = mutableSetOf<File>()
 
-  return if (isFile) {
-    relativePath
-  } else {
-    "$relativePath${File.separator}**${File.separator}*"
+  try {
+    val javaExt = project.extensions.findByType(JavaPluginExtension::class.java)
+    if (javaExt != null) {
+      javaExt.sourceSets.forEach { sourceSet -> sourceDirs.addAll(sourceSet.allSource.srcDirs) }
+    }
+  } catch (e: Exception) {
+    project.logger.debug("Could not get Java source sets: ${e.message}")
   }
+
+  return sourceDirs
+}
+
+private fun findSourceRoot(file: File, sourceDirs: Set<File>): File? {
+  val canonicalFilePath =
+      try {
+        file.canonicalPath
+      } catch (e: Exception) {
+        file.absolutePath
+      }
+  return sourceDirs.find { sourceDir ->
+    val canonicalSourcePath =
+        try {
+          sourceDir.canonicalPath
+        } catch (e: Exception) {
+          sourceDir.absolutePath
+        }
+    canonicalFilePath.startsWith(canonicalSourcePath + File.separator)
+  }
+}
+
+private fun toGlobPattern(dir: File, projectRoot: String, workspaceRoot: String): String {
+  val dirPath = dir.path
+  val relativePath =
+      when {
+        dirPath.startsWith(projectRoot + File.separator) ->
+            "{projectRoot}" + dirPath.removePrefix(projectRoot)
+        dirPath == projectRoot -> "{projectRoot}"
+        dirPath.startsWith(workspaceRoot + File.separator) ->
+            "{workspaceRoot}" + dirPath.removePrefix(workspaceRoot)
+        dirPath == workspaceRoot -> "{workspaceRoot}"
+        else -> dirPath
+      }
+  return "$relativePath/**/*"
 }
 
 /**

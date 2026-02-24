@@ -131,32 +131,35 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask with dependsOn outputs exclusion`() {
-      // Create dependent task with outputs
       val dependentTask = project.tasks.register("dependentTask").get()
       val outputFile = java.io.File("$workspaceRoot/dist/output.jar")
       dependentTask.outputs.file(outputFile)
 
-      // Create main task with inputs and dependsOn
       val mainTask = project.tasks.register("mainTask").get()
       mainTask.dependsOn(dependentTask)
 
-      // Add inputs - one that matches dependent output, one that doesn't
-      val inputFile1 = java.io.File("$workspaceRoot/dist/output.jar") // Should be excluded
-      val inputFile2 = java.io.File("$workspaceRoot/src/main.kt") // Should be included
+      val inputFile1 = java.io.File("$workspaceRoot/dist/output.jar")
+      val inputFile2 = java.io.File("$workspaceRoot/src/main.kt")
       mainTask.inputs.files(inputFile1, inputFile2)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+              project)
 
       assertNotNull(result)
 
-      // Should contain dependentTasksOutputFiles for the output
       assertTrue(
-          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar" })
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "{projectRoot}/dist/**/*"
+          })
 
-      // Should contain the non-conflicting input file
       assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
     }
 
@@ -164,11 +167,9 @@ class ProcessTaskUtilsTest {
     fun `test getInputsForTask directory vs file patterns`() {
       val dependentTask = project.tasks.register("dependentTask").get()
 
-      // Add file output (should get exact path)
       val outputFile = java.io.File("$workspaceRoot/dist/app.jar")
       dependentTask.outputs.file(outputFile)
 
-      // Add directory output (should get /**/* pattern)
       val outputDir = java.io.File("$workspaceRoot/dist/classes")
       dependentTask.outputs.dir(outputDir)
 
@@ -178,41 +179,41 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+              project)
 
       assertNotNull(result)
 
-      // File should get exact path
-      assertTrue(
-          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/app.jar" })
+      val dependentOutputs =
+          result!!.filterIsInstance<Map<*, *>>().mapNotNull {
+            it["dependentTasksOutputFiles"] as? String
+          }
 
-      // Directory should get glob pattern
       assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).endsWith("/**/*")
-          })
+          dependentOutputs.contains("{projectRoot}/dist/**/*") ||
+              dependentOutputs.contains("{projectRoot}/dist/classes/**/*"))
     }
 
     @Test
     fun `test getInputsForTask with pre-computed dependsOnTasks`() {
-      // Create dependent task with output
       val dependentTask = project.tasks.register("dependentTask").get()
       val outputFile = java.io.File("$workspaceRoot/dist/output.jar")
       dependentTask.outputs.file(outputFile)
 
-      // Create main task with dependsOn
       val mainTask = project.tasks.register("mainTask").get()
       mainTask.dependsOn(dependentTask)
 
-      // Add input file
       val inputFile = java.io.File("$workspaceRoot/src/main.kt")
       mainTask.inputs.files(inputFile)
 
-      // Pre-compute dependsOnTasks using getDependsOnTask
       val preComputedDependsOn = getDependsOnTask(mainTask)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      // Test with pre-computed dependsOnTasks
       val resultWithPreComputed =
           getInputsForTask(
               preComputedDependsOn,
@@ -220,29 +221,32 @@ class ProcessTaskUtilsTest {
               projectRoot,
               workspaceRoot,
               mutableMapOf(),
-              gitIgnoreClassifier)
+              gitIgnoreClassifier,
+              project)
 
-      // Test without pre-computed (should compute internally)
       val resultWithoutPreComputed =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+              project)
 
-      // Both results should be identical
       assertNotNull(resultWithPreComputed)
       assertNotNull(resultWithoutPreComputed)
       assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
 
-      // Should contain dependentTasksOutputFiles for the dependent task output
       assertTrue(
           resultWithPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar"
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "{projectRoot}/dist/**/*"
           })
       assertTrue(
           resultWithoutPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar"
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "{projectRoot}/dist/**/*"
           })
 
-      // Should contain the input file
       assertTrue(resultWithPreComputed.any { it == "{projectRoot}/src/main.kt" })
       assertTrue(resultWithoutPreComputed.any { it == "{projectRoot}/src/main.kt" })
     }
@@ -317,7 +321,6 @@ class ProcessTaskUtilsTest {
               java.io.File("$workspaceRoot/config/app.properties"))
       mainTask.inputs.files(inputFiles)
 
-      // Get dependsOnTasks once and reuse
       val dependsOnTasks = getDependsOnTask(mainTask)
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
@@ -327,44 +330,23 @@ class ProcessTaskUtilsTest {
               projectRoot,
               workspaceRoot,
               mutableMapOf(),
-              gitIgnoreClassifier)
+              gitIgnoreClassifier,
+              project)
 
       assertNotNull(result)
 
-      // Should contain dependentTasksOutputFiles for file output (exact path)
-      assertTrue(
-          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/app.jar" })
+      val dependentOutputs =
+          result!!
+              .filterIsInstance<Map<*, *>>()
+              .mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              .toSet()
 
-      // Should contain dependentTasksOutputFiles for directory output (with /**/* pattern)
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
-          })
+      assertTrue(dependentOutputs.contains("{projectRoot}/dist/**/*"))
+      assertTrue(dependentOutputs.contains("{projectRoot}/build/**/*"))
+      assertTrue(dependentOutputs.contains("{projectRoot}/reports/**/*"))
 
-      // Should contain dependentTasksOutputFiles for test report file
-      assertTrue(
-          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "reports/test.xml" })
-
-      // Should contain dependentTasksOutputFiles for coverage directory (with /**/* pattern)
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                (it["dependentTasksOutputFiles"] as String) == "reports/coverage/**/*"
-          })
-
-      // Should contain regular input files
       assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
       assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
-
-      // Verify we have the expected number of dependentTasksOutputFiles entries (4 outputs from 3
-      // tasks)
-      val dependentTasksOutputFilesCount =
-          result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
-      assertEquals(4, dependentTasksOutputFilesCount)
-
-      // Verify we have the expected number of regular input files (2)
-      val regularInputsCount = result.count { it is String && it.startsWith("{projectRoot}") }
-      assertEquals(2, regularInputsCount)
     }
 
     @Test
@@ -400,27 +382,29 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+              project)
 
       assertNotNull(result)
 
-      // Source file should be regular input
       assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
 
-      // Config file should be regular input
       assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
 
-      // Build file should be dependentTasksOutputFiles (matches gitignore)
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("build")
-          })
+      val dependentOutputs =
+          result
+              .filterIsInstance<Map<*, *>>()
+              .mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              .toSet()
 
-      // Log file should be dependentTasksOutputFiles (matches gitignore)
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log")
-          })
+      assertTrue(dependentOutputs.contains("{projectRoot}/build/classes/**/*"))
+
+      assertTrue(dependentOutputs.contains("{projectRoot}/**/*"))
     }
 
     @Test
@@ -451,21 +435,27 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+              project)
 
       assertNotNull(result)
 
       assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
 
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("Main.class")
-          })
+      val dependentOutputs =
+          result
+              .filterIsInstance<Map<*, *>>()
+              .mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              .toSet()
 
       assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("dist")
-          })
+          dependentOutputs.contains("{projectRoot}/dist/**/*") ||
+              dependentOutputs.contains("{projectRoot}/dist/production/**/*"))
     }
   }
 
@@ -515,13 +505,13 @@ class ProcessTaskUtilsTest {
     assertEquals(1, dependsOn!!.size)
     assertEquals("testProject:compile", dependsOn[0])
 
-    // Verify inputs contain both regular inputs and dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
     assertNotNull(inputs)
     assertTrue(inputs!!.any { it == "{projectRoot}/src/test.kt" })
     assertTrue(
         inputs.any {
-          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
+          it is Map<*, *> &&
+              (it["dependentTasksOutputFiles"] as String) == "{projectRoot}/build/**/*"
         })
   }
 

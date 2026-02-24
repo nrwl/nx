@@ -108,7 +108,8 @@ private fun buildTestCiTarget(
     gitIgnoreClassifier: GitIgnoreClassifier
 ): MutableMap<String, Any?> {
   val taskInputs =
-      getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+      getInputsForTask(
+          null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier, testTask.project)
 
   val target =
       mutableMapOf<String, Any?>(
@@ -146,7 +147,8 @@ private fun ensureParentCiTarget(
 ) {
   if (ciDependsOn.isNotEmpty()) {
     val taskInputs =
-        getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+        getInputsForTask(
+            null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier, testTask.project)
 
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(

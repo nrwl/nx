@@ -2,7 +2,9 @@ package dev.nx.gradle
 
 import com.google.gson.Gson
 import dev.nx.gradle.utils.createNodeForProject
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileWriter
 import java.util.*
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -53,22 +55,49 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
     logger.info("${Date()} Target Name Prefix: ${targetNamePrefix.get()}")
     logger.info("${Date()} Atomized: ${atomized.get()}")
 
-    val project = projectRef.get() // Get project reference at execution time
+    val project = projectRef.get()
     val report =
         createNodeForProject(
             project,
             targetNameOverrides.get(),
             workspaceRoot.get(),
             atomized.get(),
-            targetNamePrefix.get()) // Compute report at execution time
-    val reportJson = gson.toJson(report)
+            targetNamePrefix.get())
 
-    if (outputFile.exists() && outputFile.readText() == reportJson) {
+    outputFile.parentFile.mkdirs()
+    val tempFile = File(outputFile.parentFile, "${outputFile.name}.tmp")
+
+    BufferedWriter(FileWriter(tempFile)).use { writer -> gson.toJson(report, writer) }
+
+    val shouldUpdate =
+        !outputFile.exists() ||
+            tempFile.length() != outputFile.length() ||
+            !filesHaveSameContent(tempFile, outputFile)
+
+    if (shouldUpdate) {
+      logger.info("${Date()} Writing node report for ${projectName.get()}")
+      tempFile.renameTo(outputFile)
+    } else {
       logger.info("${Date()} No change in the node report for ${projectName.get()}")
-      return
+      tempFile.delete()
     }
+  }
 
-    logger.info("${Date()} Writing node report for ${projectName.get()}")
-    outputFile.writeText(reportJson)
+  private fun filesHaveSameContent(file1: File, file2: File): Boolean {
+    if (file1.length() != file2.length()) return false
+
+    file1.inputStream().buffered().use { is1 ->
+      file2.inputStream().buffered().use { is2 ->
+        val buffer1 = ByteArray(8192)
+        val buffer2 = ByteArray(8192)
+        while (true) {
+          val read1 = is1.read(buffer1)
+          val read2 = is2.read(buffer2)
+          if (read1 != read2) return false
+          if (read1 == -1) return true
+          if (!buffer1.contentEquals(buffer2)) return false
+        }
+      }
+    }
   }
 }
