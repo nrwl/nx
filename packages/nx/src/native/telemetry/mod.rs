@@ -57,6 +57,7 @@ pub fn initialize_telemetry(
     os_arch: String,
     os_platform: String,
     os_release: String,
+    is_ci: bool,
 ) -> Result<()> {
     tracing::trace!(
         "Initializing telemetry service for workspace: {}",
@@ -73,6 +74,7 @@ pub fn initialize_telemetry(
         os_arch,
         os_platform,
         os_release,
+        is_ci,
     )?;
 
     GLOBAL_TELEMETRY
@@ -239,6 +241,7 @@ impl TelemetryService {
         os_arch: String,
         os_platform: String,
         os_release: String,
+        is_ci: bool,
     ) -> Result<Self> {
         let client = ClientBuilder::new()
             .build()
@@ -278,6 +281,7 @@ impl TelemetryService {
         }
         user_parameters.insert("up.nx_version".to_string(), nx_version); // NxVersion
         user_parameters.insert("ep.is_ai_agent".to_string(), is_ai_agent.to_string()); // IsAgent
+        user_parameters.insert("ep.is_ci".to_string(), is_ci.to_string()); // IsCI
 
         // Create channels
         let (event_tx, event_rx) = crossbeam_channel::unbounded();

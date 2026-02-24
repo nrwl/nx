@@ -19,6 +19,7 @@ import {
 import { parse } from 'semver';
 import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
+import { isCI } from '../utils/is-ci';
 
 let _telemetryInitialized = false;
 
@@ -46,7 +47,8 @@ export async function startAnalytics() {
       nodeVersionString,
       os.arch(),
       os.platform(),
-      os.release()
+      os.release(),
+      isCI()
     );
     _telemetryInitialized = true;
   } catch (error) {
