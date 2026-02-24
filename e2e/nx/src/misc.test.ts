@@ -1441,7 +1441,7 @@ describe('global installation', () => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
       expect(output).toContain('local install');
-      updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+      updateFile('node_modules/nx/dist/bin/nx.js', nxJsContents);
     });
 
     it('should warn if local Nx has higher major version', () => {
