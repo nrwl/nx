@@ -3,12 +3,12 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { output, type Tree } from 'nx/src/devkit-exports';
 import { readYamlFile } from 'nx/src/devkit-internals';
-import type {
-  YarnCatalogEntry,
-  YarnWorkspaceYaml,
-} from 'nx/src/utils/yarn-workspace';
 import { formatCatalogError, type CatalogManager } from './manager';
-import type { CatalogReference } from './types';
+import type {
+  CatalogDefinitions,
+  CatalogEntry,
+  CatalogReference,
+} from './types';
 
 const YARNRC_FILENAME = '.yarnrc.yml';
 
@@ -42,7 +42,7 @@ export class YarnCatalogManager implements CatalogManager {
     return [YARNRC_FILENAME];
   }
 
-  getCatalogDefinitions(treeOrRoot: Tree | string): YarnWorkspaceYaml | null {
+  getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
     if (typeof treeOrRoot === 'string') {
       const configPath = join(treeOrRoot, YARNRC_FILENAME);
       if (!existsSync(configPath)) {
@@ -72,7 +72,7 @@ export class YarnCatalogManager implements CatalogManager {
       return null;
     }
 
-    let catalogToUse: YarnCatalogEntry | undefined;
+    let catalogToUse: CatalogEntry | undefined;
     if (catalogRef.isDefaultCatalog) {
       // Check both locations for default catalog
       catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
@@ -105,7 +105,7 @@ export class YarnCatalogManager implements CatalogManager {
       );
     }
 
-    let catalogToUse: YarnCatalogEntry | undefined;
+    let catalogToUse: CatalogEntry | undefined;
 
     if (catalogRef.isDefaultCatalog) {
       const hasCatalog = !!catalogDefs.catalog;
@@ -252,7 +252,7 @@ export class YarnCatalogManager implements CatalogManager {
         const normalizedCatalogName =
           catalogName === 'default' ? undefined : catalogName;
 
-        let targetCatalog: YarnCatalogEntry;
+        let targetCatalog: CatalogEntry;
         if (!normalizedCatalogName) {
           // Default catalog - update whichever exists, prefer catalog over catalogs.default
           if (configData.catalog) {
@@ -296,9 +296,9 @@ export class YarnCatalogManager implements CatalogManager {
   }
 }
 
-function readConfigFromFs(path: string): YarnWorkspaceYaml | null {
+function readConfigFromFs(path: string): CatalogDefinitions | null {
   try {
-    return readYamlFile<YarnWorkspaceYaml>(path);
+    return readYamlFile<CatalogDefinitions>(path);
   } catch (error) {
     output.warn({
       title: `Unable to parse ${YARNRC_FILENAME}`,
@@ -311,12 +311,11 @@ function readConfigFromFs(path: string): YarnWorkspaceYaml | null {
 function readConfigFromTree(
   tree: Tree,
   path: string
-): YarnWorkspaceYaml | null {
+): CatalogDefinitions | null {
   const content = tree.read(path, 'utf-8');
-  const { load } = require('@zkochan/js-yaml');
 
   try {
-    return load(content, { filename: path }) as YarnWorkspaceYaml;
+    return load(content, { filename: path }) as CatalogDefinitions;
   } catch (error) {
     output.warn({
       title: `Unable to parse ${YARNRC_FILENAME}`,

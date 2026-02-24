@@ -3,7 +3,11 @@ export interface CatalogReference {
   isDefaultCatalog: boolean;
 }
 
+export interface CatalogEntry {
+  [packageName: string]: string;
+}
+
 export interface CatalogDefinitions {
-  catalog?: Record<string, string>;
-  catalogs?: Record<string, Record<string, string>>;
+  catalog?: CatalogEntry;
+  catalogs?: Record<string, CatalogEntry>;
 }

@@ -4,9 +4,12 @@ import { join } from 'node:path';
 import type { Tree } from '../../generators/tree';
 import { readYamlFile } from '../fileutils';
 import { output } from '../output';
-import type { PnpmCatalogEntry, PnpmWorkspaceYaml } from '../pnpm-workspace';
 import { formatCatalogError, type CatalogManager } from './manager';
-import type { CatalogReference } from './types';
+import type {
+  CatalogDefinitions,
+  CatalogEntry,
+  CatalogReference,
+} from './types';
 
 const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
 
@@ -40,7 +43,7 @@ export class PnpmCatalogManager implements CatalogManager {
     return [PNPM_WORKSPACE_FILENAME];
   }
 
-  getCatalogDefinitions(treeOrRoot: Tree | string): PnpmWorkspaceYaml | null {
+  getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
     if (typeof treeOrRoot === 'string') {
       const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
       if (!existsSync(configPath)) {
@@ -70,7 +73,7 @@ export class PnpmCatalogManager implements CatalogManager {
       return null;
     }
 
-    let catalogToUse: PnpmCatalogEntry | undefined;
+    let catalogToUse: CatalogEntry | undefined;
     if (catalogRef.isDefaultCatalog) {
       // Check both locations for default catalog
       catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
@@ -103,7 +106,7 @@ export class PnpmCatalogManager implements CatalogManager {
       );
     }
 
-    let catalogToUse: PnpmCatalogEntry | undefined;
+    let catalogToUse: CatalogEntry | undefined;
 
     if (catalogRef.isDefaultCatalog) {
       const hasCatalog = !!catalogDefs.catalog;
@@ -251,7 +254,7 @@ export class PnpmCatalogManager implements CatalogManager {
         const normalizedCatalogName =
           catalogName === 'default' ? undefined : catalogName;
 
-        let targetCatalog: PnpmCatalogEntry;
+        let targetCatalog: CatalogEntry;
         if (!normalizedCatalogName) {
           // Default catalog - update whichever exists, prefer catalog over catalogs.default
           if (configData.catalog) {
@@ -295,9 +298,9 @@ export class PnpmCatalogManager implements CatalogManager {
   }
 }
 
-function readConfigFromFs(path: string): PnpmWorkspaceYaml | null {
+function readConfigFromFs(path: string): CatalogDefinitions | null {
   try {
-    return readYamlFile<PnpmWorkspaceYaml>(path);
+    return readYamlFile<CatalogDefinitions>(path);
   } catch (error) {
     output.warn({
       title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
@@ -310,11 +313,11 @@ function readConfigFromFs(path: string): PnpmWorkspaceYaml | null {
 function readConfigFromTree(
   tree: Tree,
   path: string
-): PnpmWorkspaceYaml | null {
+): CatalogDefinitions | null {
   const content = tree.read(path, 'utf-8');
 
   try {
-    return load(content, { filename: path }) as PnpmWorkspaceYaml;
+    return load(content, { filename: path }) as CatalogDefinitions;
   } catch (error) {
     output.warn({
       title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
