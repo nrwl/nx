@@ -130,6 +130,8 @@ private fun buildTestCiTarget(
         target["outputs"] = it
       }
 
+  getDependsOnForTask(null, testTask)?.takeIf { it.isNotEmpty() }?.let { target["dependsOn"] = it }
+
   return target
 }
 
