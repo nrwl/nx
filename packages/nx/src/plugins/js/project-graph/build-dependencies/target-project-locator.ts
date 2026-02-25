@@ -138,7 +138,6 @@ export class TargetProjectLocator {
     }
 
     if (isBuiltinModuleImport(importExpr)) {
-      this.npmResolutionCache.set(importExpr, null);
       return null;
     }
 
@@ -176,8 +175,14 @@ export class TargetProjectLocator {
       return localProject;
     }
 
-    // nothing found, cache for later
-    this.npmResolutionCache.set(importExpr, null);
+    // nothing found, cache the negative result with the scoped key
+    const packageName = getPackageNameFromImportPath(importExpr);
+    const dirPath = dirname(
+      filePath.startsWith(workspaceRoot)
+        ? filePath.replace(workspaceRoot, '')
+        : filePath
+    );
+    this.npmResolutionCache.set(`${packageName}__${dirPath}`, null);
     return null;
   }
 
