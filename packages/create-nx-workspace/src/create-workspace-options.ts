@@ -42,10 +42,15 @@ export interface CreateWorkspaceOptions {
   cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
   aiAgents?: Agent[]; // List of AI agents to configure
   /**
-   * @description Skip cloud connection (variant 1 experiment - NXC-3628)
+   * @description Skip cloud connection (deferred - show banner but don't write nxCloudId)
    * @default false
    */
   skipCloudConnect?: boolean;
+  /**
+   * @description Set neverConnectToCloud in nx.json (full opt-out)
+   * @default false
+   */
+  neverConnectToCloud?: boolean;
   /**
    * @description Whether GitHub CLI (gh) is available on the system (for telemetry)
    */
