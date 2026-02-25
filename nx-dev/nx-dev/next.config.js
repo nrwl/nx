@@ -1,6 +1,5 @@
 // nx-ignore-next-line
 const { withNx } = require('@nx/next/plugins/with-nx');
-const redirectRules = require('./redirect-rules');
 
 // For deploy previews, always point to the matching astro-docs preview
 // (overrides any site-level env var that would otherwise point to production).
@@ -184,22 +183,6 @@ module.exports = withNx({
         ],
       },
     ];
-  },
-  async redirects() {
-    const rules = [];
-
-    // Apply all the redirects from the redirect-rules.js file
-    for (const section of Object.keys(redirectRules)) {
-      for (const source of Object.keys(redirectRules[section])) {
-        rules.push({
-          source: source,
-          destination: redirectRules[section][source],
-          permanent: true,
-        });
-      }
-    }
-
-    return rules;
   },
   webpack: (config, { dev }) => {
     if (!dev) {
