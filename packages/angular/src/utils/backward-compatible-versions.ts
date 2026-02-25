@@ -31,7 +31,7 @@ export const backwardCompatibleVersions: VersionMap = {
     typesExpressVersion: '^4.17.21',
     browserSyncVersion: '^3.0.0',
     moduleFederationNodeVersion: '^2.7.21',
-    moduleFederationEnhancedVersion: '^0.21.2',
+    moduleFederationEnhancedVersion: '^2.0.0',
     angularEslintVersion: '^20.3.0',
     typescriptEslintVersion: '^7.16.0',
     tailwindVersion: '^3.0.2',
