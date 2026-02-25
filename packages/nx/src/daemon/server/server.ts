@@ -147,6 +147,7 @@ import {
   handleCacheApplyRemoteResults,
   handleCacheGetSize,
   handleCacheCheckFsInSync,
+  handleCacheFileChanges,
 } from './handle-cache';
 import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
 import { handleForceShutdown } from './handle-force-shutdown';
@@ -896,6 +897,8 @@ export async function startServer(): Promise<Server> {
           );
           // register file change listener to invalidate sync generator cache
           registerFileChangeListener(clearSyncGeneratorsCache);
+          // invalidate cache instance when nx.json changes
+          registerFileChangeListener(handleCacheFileChanges);
           // trigger an initial project graph recomputation
           addUpdatedAndDeletedFiles([], [], []);
 

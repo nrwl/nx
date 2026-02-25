@@ -8,6 +8,18 @@ import { resolveMaxCacheSize } from '../../tasks-runner/cache';
 
 let cache: NxCache | null = null;
 
+export function handleCacheFileChanges({
+  updatedFiles,
+  createdFiles,
+}: {
+  updatedFiles: string[];
+  createdFiles: string[];
+}): void {
+  if ([...updatedFiles, ...createdFiles].some((f) => f.endsWith('nx.json'))) {
+    cache = null;
+  }
+}
+
 function getCacheInstance(): NxCache {
   if (!cache) {
     const nxJson = readNxJson();
