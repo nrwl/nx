@@ -76,7 +76,7 @@ describe('handle-running-tasks', () => {
     await handleUpdateRunningTasks(process.pid, [], { 'app:serve': lines });
 
     const result = await handleGetRunningTaskOutput(process.pid, 'app:serve');
-    const output = result.response as any;
+    const { output } = result.response as any;
     const outputLines = output.split('\n').filter(Boolean);
     expect(outputLines).toHaveLength(100);
     expect(outputLines[0]).toBe('line 50');
@@ -94,7 +94,7 @@ describe('handle-running-tasks', () => {
     });
 
     const result = await handleGetRunningTaskOutput(process.pid, 'app:serve');
-    const output = result.response as any;
+    const { output } = result.response as any;
     expect(output).toBe('line 1\nline 2');
   });
 
@@ -114,7 +114,7 @@ describe('handle-running-tasks', () => {
       process.pid,
       'app:build'
     );
-    const output = outputResult.response as string;
+    const { output } = outputResult.response as any;
     expect(output).toBe('');
   });
 
@@ -153,7 +153,7 @@ describe('handle-running-tasks', () => {
 
   it('should return empty output for non-existent task', async () => {
     const result = await handleGetRunningTaskOutput(1234, 'nonexistent:task');
-    const output = result.response as any;
+    const { output } = result.response as any;
     expect(output).toBe('');
   });
 

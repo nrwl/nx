@@ -153,7 +153,7 @@ export async function handleGetRunningTaskOutput(
   const key = bufferKey(pid, taskId);
   const buffer = outputBuffers.get(key) ?? [];
   return {
-    response: buffer.join('\n'),
+    response: { output: buffer.join('\n') },
     description: 'handleGetRunningTaskOutput',
   };
 }
