@@ -149,9 +149,11 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   // If publishing locally, force all projects to not be private first
   if (options.local) {
-    styleText(
-      'dim',
-      `\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+    console.log(
+      styleText(
+        'dim',
+        `\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+      )
     );
     const projectGraph = await createProjectGraphAsync();
     for (const proj of Object.values(projectGraph.nodes)) {
