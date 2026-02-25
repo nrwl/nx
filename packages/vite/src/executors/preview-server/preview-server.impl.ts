@@ -76,7 +76,8 @@ export async function* vitePreviewServerExecutor(
     },
     'build',
     defaultMode,
-    process.env.NODE_ENV ?? defaultMode
+    process.env.NODE_ENV ?? defaultMode,
+    true
   );
 
   const outDir =
