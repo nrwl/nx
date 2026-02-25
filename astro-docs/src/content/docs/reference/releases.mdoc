@@ -11,7 +11,7 @@ filter: 'type:References'
 This page covers the releases of the Nx tooling itself. If you are looking for guidance on releasing your project with Nx Release, [see the documentation on managing releases](/docs/features/manage-releases).
 {% /aside %}
 
-The `nx` package, and all packages under the `@nx` namespace which live alongside each other in the [https://github.com/nrwl/nx](https://github.com/nrwl/nx) repository, are released together in lockstep. You should always use matching versions of the `nx` package and the `@nx` packages, e.g. `nx@19.2.0` and `@nx/js@19.2.0` should be used together.
+The `nx` package, and all packages under the `@nx` namespace which live alongside each other in the [https://github.com/nrwl/nx](https://github.com/nrwl/nx) repository, are released together in lockstep. You should always use matching versions of the `nx` package and the `@nx` packages, e.g. `nx@22.2.0` and `@nx/js@22.2.0` should be used together.
 
 Major Nx versions are released as the _latest_ every six months, typically around April and October.
 After each major version release, the _previous_ major version moves to long-term support (LTS) for 12 months, after
@@ -33,14 +33,9 @@ The following are the currently supported major versions of Nx.
 
 | Version | Support Type | Release Date |
 | :-----: | :----------: | :----------: |
-|   v21   |   Current    |  2025-05-05  |
+|   v22   |   Current    |  2025-10-22  |
+|   v21   |     LTS      |  2025-05-05  |
 |   v20   |     LTS      |  2024-10-06  |
-|   v19   |     LTS      |  2024-05-06  |
-|  v18\*  |     LTS      |  2024-02-03  |
-|   v17   |     LTS      |  2023-10-19  |
-
-**\*Note:** v18 is a special release and does not fit into the normal release cycle. Thus, v17 continues to be supported
-according to schedule.
 
 ### Current vs LTS
 
@@ -54,7 +49,7 @@ When the Nx team intends to remove an API or feature, it will be marked as _depr
 surface in documentation, terminal output, or in TSDoc. The deprecated API will remain
 functional for a whole major version, after which they will be removed.
 
-For example, if a feature is deprecated in v19.1.0, it will be removed in v21.0.0 (two major versions later).
+For example, if a feature is deprecated in v21.1.0, it will be removed in v23.0.0 (two major versions later).
 
 ## Breaking Changes and Migration Path
 

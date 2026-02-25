@@ -12,6 +12,7 @@ import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
 
 export interface Batch {
+  id: string;
   executorName: string;
   taskGraph: TaskGraph;
 }
@@ -29,6 +30,7 @@ export class TasksSchedule {
   private scheduleRequestsExecutionChain = Promise.resolve();
   private estimatedTaskTimings: Record<string, number> = {};
   private projectDependencies: Record<string, number> = {};
+  private batchCounters: Record<string, number> = {};
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -112,7 +114,10 @@ export class TasksSchedule {
   }
 
   private async scheduleTasks() {
-    if (this.options.batch || process.env.NX_BATCH_MODE === 'true') {
+    // Try to schedule batches unless --batch=false explicitly
+    // Individual tasks will be filtered by preferBatch in processTaskForBatches
+    // NX_BATCH_MODE env var is also checked for backward compatibility
+    if (this.options.batch !== false && process.env.NX_BATCH_MODE !== 'false') {
       await this.scheduleBatches();
     }
     for (let root of this.notScheduledTaskGraph.roots) {
@@ -186,18 +191,25 @@ export class TasksSchedule {
       );
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
-      this.scheduleBatch({ executorName, taskGraph });
+      this.scheduleBatch(executorName, taskGraph);
     }
   }
 
-  private scheduleBatch({ executorName, taskGraph }: Batch) {
+  private scheduleBatch(executorName: string, taskGraph: TaskGraph) {
+    // Generate batch ID with incrementing counter
+    if (!this.batchCounters[executorName]) {
+      this.batchCounters[executorName] = 0;
+    }
+    this.batchCounters[executorName]++;
+    const batchId = `${executorName} ${this.batchCounters[executorName]}`;
+
     // Create a new task graph without the tasks that are being scheduled as part of this batch
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
       Object.keys(taskGraph.tasks)
     );
 
-    this.scheduledBatches.push({ executorName, taskGraph });
+    this.scheduledBatches.push({ id: batchId, executorName, taskGraph });
   }
 
   private async processTaskForBatches(
@@ -216,7 +228,7 @@ export class TasksSchedule {
       return;
     }
 
-    const { batchImplementationFactory } = getExecutorForTask(
+    const { batchImplementationFactory, preferBatch } = getExecutorForTask(
       task,
       this.projectGraph
     );
@@ -226,6 +238,16 @@ export class TasksSchedule {
     }
 
     if (!batchImplementationFactory) {
+      return;
+    }
+
+    // Check if we should batch this task:
+    // - If --batch is explicitly true or NX_BATCH_MODE=true, batch everything with batchImplementation
+    // - If --batch is not set (undefined) and NX_BATCH_MODE is not 'true', only batch if preferBatch is true
+    // - If --batch is explicitly false, we never get here (early return in scheduleTasks)
+    const batchForced =
+      this.options.batch === true || process.env.NX_BATCH_MODE === 'true';
+    if (!batchForced && !preferBatch) {
       return;
     }
 

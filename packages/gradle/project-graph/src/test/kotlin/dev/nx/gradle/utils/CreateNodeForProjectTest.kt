@@ -52,4 +52,32 @@ class CreateNodeForProjectTest {
     assertTrue(result.dependencies.isEmpty(), "Expected no dependencies")
     assertTrue(result.externalNodes.isEmpty(), "Expected no external nodes")
   }
+
+  @Test
+  fun `should use buildTreePath as project name for subprojects`(@TempDir workspaceDir: File) {
+    val workspaceRoot = workspaceDir.absolutePath
+    val rootDir = File(workspaceRoot, "root").apply { mkdirs() }
+    val appDir = File(rootDir, "app").apply { mkdirs() }
+
+    val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+    val appProject =
+        ProjectBuilder.builder()
+            .withParent(rootProject)
+            .withProjectDir(appDir)
+            .withName("app")
+            .build()
+
+    appProject.tasks.register("compileJava").get()
+
+    val result =
+        createNodeForProject(
+            project = appProject,
+            targetNameOverrides = emptyMap(),
+            workspaceRoot = workspaceRoot,
+            atomized = false)
+
+    val projectNode = result.nodes[appProject.projectDir.absolutePath]
+    assertNotNull(projectNode)
+    assertEquals(":app", projectNode.name, "Expected project name to be ':app' (buildTreePath)")
+  }
 }

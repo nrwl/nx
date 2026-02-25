@@ -11,7 +11,10 @@ import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxWorkspaceFilesExternals } from '../native';
+import { HashInputs, NxWorkspaceFilesExternals } from '../native';
+
+// Re-export HashInputs from native module for public API
+export { HashInputs };
 
 /**
  * A data structure returned by the default hasher.
@@ -21,6 +24,7 @@ export interface PartialHash {
   details: {
     [name: string]: string;
   };
+  inputs: HashInputs;
 }
 
 /**
@@ -34,6 +38,7 @@ export interface Hash {
     implicitDeps?: { [fileName: string]: string };
     runtime?: { [input: string]: string };
   };
+  inputs?: HashInputs;
 }
 
 export interface TaskHasher {
@@ -181,7 +186,7 @@ export class InProcessTaskHasher implements TaskHasher {
     return this.createHashDetails(task, res);
   }
 
-  private createHashDetails(task: Task, res: PartialHash) {
+  private createHashDetails(task: Task, res: PartialHash): Hash {
     const command = this.hashCommand(task);
     return {
       value: hashArray([res.value, command]),
@@ -191,6 +196,7 @@ export class InProcessTaskHasher implements TaskHasher {
         implicitDeps: {},
         runtime: {},
       },
+      inputs: res.inputs,
     };
   }
 
@@ -259,9 +265,14 @@ export function getTargetInputs(
 
   const selfInputs = extractPatternsFromFileSets(inputs.selfInputs);
 
-  const dependencyInputs = extractPatternsFromFileSets(
-    inputs.depsInputs.map((s) => expandNamedInput(s.input, namedInputs)).flat()
-  );
+  const dependencyInputs = [
+    ...extractPatternsFromFileSets(
+      inputs.depsInputs
+        .map((s) => expandNamedInput(s.input, namedInputs))
+        .flat()
+    ),
+    ...inputs.depsFilesets.map((d) => d.fileset),
+  ];
 
   return { selfInputs, dependencyInputs };
 }
@@ -283,15 +294,15 @@ export function getInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
   const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
-  const { selfInputs, depsInputs, depsOutputs, projectInputs } =
+  const { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets } =
     splitInputsIntoSelfAndDependencies(
       targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
       namedInputs
     );
-  return { selfInputs, depsInputs, depsOutputs, projectInputs };
+  return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
 }
 
-function splitInputsIntoSelfAndDependencies(
+export function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
@@ -299,30 +310,49 @@ function splitInputsIntoSelfAndDependencies(
   projectInputs: { input: string; projects: string[] }[];
   selfInputs: ExpandedSelfInput[];
   depsOutputs: ExpandedDepsOutput[];
+  depsFilesets: { fileset: string; dependencies: true }[];
 } {
   const depsInputs: { input: string; dependencies: true }[] = [];
   const projectInputs: { input: string; projects: string[] }[] = [];
+  const depsFilesets: { fileset: string; dependencies: true }[] = [];
   const selfInputs = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
       if (d.startsWith('^')) {
-        depsInputs.push({ input: d.substring(1), dependencies: true });
+        const rest = d.substring(1);
+        if (
+          rest.startsWith('{projectRoot}') ||
+          rest.startsWith('{workspaceRoot}')
+        ) {
+          depsFilesets.push({ fileset: rest, dependencies: true });
+        } else {
+          depsInputs.push({ input: rest, dependencies: true });
+        }
       } else {
         selfInputs.push(d);
       }
     } else {
-      if (
-        ('dependencies' in d && d.dependencies) ||
-        // Todo(@AgentEnder): Remove check in v17
-        ('projects' in d &&
-          typeof d.projects === 'string' &&
-          d.projects === 'dependencies')
+      if ('fileset' in d && 'dependencies' in d && d.dependencies) {
+        depsFilesets.push({
+          fileset: (d as { fileset: string; dependencies: true }).fileset,
+          dependencies: true,
+        });
+      } else if (
+        'input' in d &&
+        !('fileset' in d) &&
+        (('dependencies' in d && d.dependencies) ||
+          // Todo(@AgentEnder): Remove check in v17
+          ('projects' in d &&
+            typeof d.projects === 'string' &&
+            d.projects === 'dependencies'))
       ) {
         depsInputs.push({
           input: d.input,
           dependencies: true,
         });
       } else if (
+        'input' in d &&
+        !('fileset' in d) &&
         'projects' in d &&
         d.projects &&
         // Todo(@AgentEnder): Remove check in v17
@@ -343,6 +373,7 @@ function splitInputsIntoSelfAndDependencies(
     projectInputs,
     selfInputs: expandedInputs.filter(isSelfInput),
     depsOutputs: expandedInputs.filter(isDepsOutput),
+    depsFilesets,
   };
 }
 

@@ -7,6 +7,11 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 /**
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
+ *
+ * @remarks
+ * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip Prettier
+ * formatting. This is useful for repositories that use alternative formatters
+ * like Biome, dprint, or have custom formatting requirements.
  */
 export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree,
@@ -14,6 +19,10 @@ export async function formatChangedFilesWithPrettierIfAvailable(
     silent?: boolean;
   }
 ): Promise<void> {
+  if (process.env.NX_SKIP_FORMAT === 'true') {
+    return;
+  }
+
   const files = new Set(
     tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
@@ -37,6 +46,11 @@ export async function formatFilesWithPrettierIfAvailable(
   }
 ): Promise<Map<string, string>> {
   const results = new Map<string, string>();
+
+  // Check here as well for direct callers of this function
+  if (process.env.NX_SKIP_FORMAT === 'true') {
+    return results;
+  }
 
   let prettier: typeof Prettier;
   try {

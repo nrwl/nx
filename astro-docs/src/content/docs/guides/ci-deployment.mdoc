@@ -4,6 +4,10 @@ description: 'Learn how to generate package.json and pruned lock files for your 
 filter: 'type:Guides'
 ---
 
+{% aside type="note" title="Using TS Solution Setup?" %}
+If your workspace uses TS project references (the default in Nx 20+), use the [prune workflow](/docs/technologies/node/guides/deploying-node-projects) instead. The `generatePackageJson` approach below applies to workspaces without TS Solution Setup.
+{% /aside %}
+
 A common approach to deploying applications is via docker containers. Some applications can be built into bundles that are environment agnostic, while others depend on OS-specific packages being installed. For these situations, having just bundled code is not enough, we also need to have `package.json`.
 
 Nx supports the generation of the project's `package.json` by identifying all the project's dependencies. The generated `package.json` is created next to the built artifacts (usually at `dist/apps/name-of-the-app`).

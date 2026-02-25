@@ -1,4 +1,4 @@
-use hashbrown::HashSet;
+use hashbrown::{HashMap as HashbrownHashMap, HashSet};
 #[cfg(not(test))]
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use std::collections::HashMap;
@@ -11,9 +11,10 @@ use crate::native::utils::time::current_timestamp_millis;
 
 // Re-export for backward compatibility with places that use TuiState timing
 
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::RunMode;
+use super::lifecycle::{BatchInfo, BatchStatus, RunMode};
 use super::pty::PtyInstance;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
@@ -28,6 +29,17 @@ pub type ForcedShutdownCallback = ();
 pub type DoneCallback = ThreadsafeFunction<(), ErrorStrategy::Fatal>;
 #[cfg(not(test))]
 pub type ForcedShutdownCallback = ThreadsafeFunction<(), ErrorStrategy::Fatal>;
+
+/// Batch metadata stored for mode switching persistence
+#[derive(Debug, Clone)]
+pub struct StoredBatchState {
+    pub info: BatchInfo,
+    pub start_time: i64,
+    pub is_completed: bool,
+    pub final_status: Option<BatchStatus>,
+    pub display_name: Option<String>,
+    pub completion_time: Option<i64>,
+}
 
 /// Shared state that can be transferred between TUI modes
 /// This is the "source of truth" for task execution state
@@ -72,13 +84,27 @@ pub struct TuiState {
 
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
-    ui_pane_tasks: [Option<String>; 2],
+    ui_pane_tasks: [Option<SelectionEntry>; 2],
     /// Whether spacebar (follow) mode is active
     ui_spacebar_mode: bool,
     /// Index of focused pane (None = task list, Some(0) = pane 0, Some(1) = pane 1)
     ui_focused_pane: Option<usize>,
-    /// Currently selected task in the task list
-    ui_selected_task: Option<String>,
+    /// Currently selected item in the task list (task or batch group)
+    ui_selected_item: Option<SelectionEntry>,
+    /// max_parallel value from start_command, needed to restore TasksList parallel section
+    ui_max_parallel: Option<u32>,
+
+    // === Batch Metadata (for mode switching persistence) ===
+    batch_metadata: HashMap<String, StoredBatchState>,
+
+    // === Filter State (for mode switching persistence) ===
+    /// Filter text from TasksList (always persisted when restored)
+    ui_filter_text: String,
+
+    /// Batch expansion states for mode switching restoration
+    ui_batch_expansion_states: HashbrownHashMap<String, bool>,
+
+    dimensions: Option<(u16, u16)>,
 }
 
 impl TuiState {
@@ -93,6 +119,7 @@ impl TuiState {
         title_text: String,
         task_graph: TaskGraph,
         estimated_task_timings: HashMap<String, i64>,
+        dimensions: Option<(u16, u16)>,
     ) -> Self {
         // Initialize task status map with NotStarted for all tasks
         let mut task_status_map = HashMap::new();
@@ -123,7 +150,12 @@ impl TuiState {
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
             ui_focused_pane: None,
-            ui_selected_task: None,
+            ui_selected_item: None,
+            batch_metadata: HashMap::new(),
+            ui_max_parallel: None,
+            ui_filter_text: String::new(),
+            ui_batch_expansion_states: HashbrownHashMap::new(),
+            dimensions,
         }
     }
 
@@ -152,6 +184,27 @@ impl TuiState {
         self.task_status_map
             .iter()
             .find(|(_, status)| **status == TaskStatus::InProgress)
+            .map(|(id, _)| id.clone())
+    }
+
+    /// Get the ID of the first currently running item (task or batch)
+    ///
+    /// Checks running tasks first, then running batches.
+    /// Returns the ID as a String that can represent either type.
+    pub fn get_current_running_item(&self) -> Option<String> {
+        // First check for running tasks
+        if let Some(task_id) = self
+            .task_status_map
+            .iter()
+            .find(|(_, status)| **status == TaskStatus::InProgress)
+            .map(|(id, _)| id.clone())
+        {
+            return Some(task_id);
+        }
+        // Then check for running batches
+        self.batch_metadata
+            .iter()
+            .find(|(_, batch)| !batch.is_completed)
             .map(|(id, _)| id.clone())
     }
 
@@ -420,19 +473,23 @@ impl TuiState {
     /// Save the UI state from full-screen mode for later restoration
     pub fn save_ui_state(
         &mut self,
-        pane_tasks: [Option<String>; 2],
+        pane_tasks: [Option<SelectionEntry>; 2],
         spacebar_mode: bool,
         focused_pane: Option<usize>,
-        selected_task: Option<String>,
+        selected_item: Option<SelectionEntry>,
+        batch_expansion_states: HashbrownHashMap<String, bool>,
+        filter_text: String,
     ) {
         self.ui_pane_tasks = pane_tasks;
         self.ui_spacebar_mode = spacebar_mode;
         self.ui_focused_pane = focused_pane;
-        self.ui_selected_task = selected_task;
+        self.ui_selected_item = selected_item;
+        self.ui_filter_text = filter_text;
+        self.ui_batch_expansion_states = batch_expansion_states;
     }
 
     /// Get the saved pane tasks
-    pub fn get_ui_pane_tasks(&self) -> &[Option<String>; 2] {
+    pub fn get_ui_pane_tasks(&self) -> &[Option<SelectionEntry>; 2] {
         &self.ui_pane_tasks
     }
 
@@ -446,26 +503,99 @@ impl TuiState {
         self.ui_focused_pane
     }
 
-    /// Get the saved selected task from the task list
-    pub fn get_ui_selected_task(&self) -> Option<&String> {
-        self.ui_selected_task.as_ref()
+    /// Get the saved selected item from the task list (task or batch group)
+    pub fn get_ui_selected_item(&self) -> Option<&SelectionEntry> {
+        self.ui_selected_item.as_ref()
     }
 
-    /// Get the task that should be shown in inline mode
-    /// Priority: focused pane task > first pane task > selected task
-    pub fn get_focused_task(&self) -> Option<String> {
-        // If we have a focused pane, use that pane's task
+    /// Get the item ID (task or batch) that should be shown in inline mode
+    /// Priority: focused pane item > first pane item > selected item
+    pub fn get_focused_item_id(&self) -> Option<String> {
+        // If we have a focused pane, use that pane's item
         if let Some(pane_idx) = self.ui_focused_pane {
-            if let Some(task) = &self.ui_pane_tasks[pane_idx] {
-                return Some(task.clone());
+            if let Some(selection) = &self.ui_pane_tasks[pane_idx] {
+                return Some(selection.id().to_string());
             }
         }
         // Otherwise try the first pane
-        if let Some(task) = &self.ui_pane_tasks[0] {
-            return Some(task.clone());
+        if let Some(selection) = &self.ui_pane_tasks[0] {
+            return Some(selection.id().to_string());
         }
-        // No pane tasks available
+        // No pane items available
         None
+    }
+
+    // === Batch Metadata Methods (for mode switching persistence) ===
+
+    /// Store batch metadata for mode switching
+    pub fn save_batch_metadata(&mut self, batch_id: String, info: BatchInfo, start_time: i64) {
+        self.batch_metadata.insert(
+            batch_id,
+            StoredBatchState {
+                info,
+                start_time,
+                is_completed: false,
+                final_status: None,
+                display_name: None,
+                completion_time: None,
+            },
+        );
+    }
+
+    /// Update batch as completed
+    pub fn complete_batch_metadata(
+        &mut self,
+        batch_id: &str,
+        final_status: BatchStatus,
+        display_name: String,
+        completion_time: i64,
+    ) {
+        if let Some(batch) = self.batch_metadata.get_mut(batch_id) {
+            batch.is_completed = true;
+            batch.final_status = Some(final_status);
+            batch.display_name = Some(display_name);
+            batch.completion_time = Some(completion_time);
+        }
+    }
+
+    /// Remove batch metadata (when batch is unpinned or fully cleaned up)
+    pub fn remove_batch_metadata(&mut self, batch_id: &str) {
+        self.batch_metadata.remove(batch_id);
+    }
+
+    /// Get all batch metadata for restoration
+    pub fn get_batch_metadata(&self) -> &HashMap<String, StoredBatchState> {
+        &self.batch_metadata
+    }
+
+    // === Max Parallel Methods (for mode switching persistence) ===
+
+    /// Save max_parallel value for mode switching restoration
+    pub fn save_max_parallel(&mut self, max_parallel: Option<u32>) {
+        self.ui_max_parallel = max_parallel;
+    }
+
+    /// Get saved max_parallel value for mode switching restoration
+    pub fn get_max_parallel(&self) -> Option<u32> {
+        self.ui_max_parallel
+    }
+
+    /// Get saved filter text for mode switching restoration
+    pub fn get_filter_text(&self) -> &str {
+        &self.ui_filter_text
+    }
+
+    /// Get saved batch expansion states for mode switching restoration
+    pub fn get_batch_expansion_states(&self) -> &HashbrownHashMap<String, bool> {
+        &self.ui_batch_expansion_states
+    }
+
+    pub fn get_dimensions(&self) -> Option<(u16, u16)> {
+        self.dimensions
+    }
+
+    pub fn set_dimensions(&mut self, dimensions: (u16, u16)) {
+        self.dimensions = Some(dimensions);
     }
 }
 
@@ -519,6 +649,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )
     }
 
@@ -846,6 +977,7 @@ mod integration_tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )
     }
 

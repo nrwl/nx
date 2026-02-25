@@ -1,49 +1,88 @@
 ---
 title: Overview of the Nx Vite Plugin
-description: The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.
+description: Use Vite with Nx for inferred dev/build tasks, generators, and CI-friendly workflows.
 sidebar:
   label: Introduction
 filter: 'type:References'
 ---
 
-The Nx plugin for [Vite](https://vite.dev/) and [Vitest](https://vitest.dev/).
+[Vite](https://vite.dev/) is a fast build tool and dev server for modern web apps.
 
-[Vite](https://vite.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects.
+The `@nx/vite` plugin adds [inferred targets](#configuration) and [project configuration generators](#setup).
 
-Why should you use this plugin?
+{% aside type="note" title="Vitest is now in @nx/vitest" %}
+Starting with Nx v22, Vitest support has moved to the dedicated [`@nx/vitest` plugin](/docs/technologies/test-tools/vitest/introduction). In Nx v21 and prior, `@nx/vite` contained what is now in `@nx/vitest`. If you are upgrading, see the [migration guide](/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite).
+{% /aside %}
 
-- Instant dev server start
-- Lightning fast Hot-Module Reloading
-- _Fast_ builds using Vite.
-- Vite-powered tests with smart and instant watch mode
+You can use Vite with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-Read more about Vite and Vitest in the [Vite documentation](https://vite.dev/).
+## Setup
 
-## Setting up a new Nx workspace with @nx/vite
-
-Here's an example on how to create a new React app with Vite
-
-```shell
-npx create-nx-workspace@latest --preset=react-standalone --bundler=vite
-```
-
-### Installation
+### Add to an existing workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/vite` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
-In any Nx workspace, you can install `@nx/vite` by running the following command:
+Install the plugin:
 
 ```shell
 nx add @nx/vite
 ```
 
-This will install the correct version of `@nx/vite`.
+Configure an existing project to use Vite:
 
-### How @nx/vite Infers Tasks
+```shell
+nx g @nx/vite:configuration --project=my-app
+```
 
-The `@nx/vite` plugin will create a task for any project that has a Vite configuration file present. Any of the following files will be recognized as a Vite configuration file:
+Verify inferred tasks in the project details view:
+
+```shell
+nx show project my-app --web
+```
+
+Replace `my-app` with your project name.
+
+### Create a new workspace
+
+Use a framework preset and keep the setup minimal:
+
+{% tabs syncKey="framework" %}
+{% tabitem label="React" %}
+
+```shell
+npx create-nx-workspace@latest --preset=react-standalone --bundler=vite
+```
+
+{% /tabitem %}
+{% tabitem label="Web" %}
+
+```shell
+npx create-nx-workspace@latest --preset=web-components --bundler=vite
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+For the full framework workflows, see the [React introduction](/docs/technologies/react/introduction) or [Web app reference](/docs/reference/web).
+
+## Local Development
+
+- `nx dev my-app` starts the Vite dev server for the project (same as the deprecated `serve` target).
+- `nx build my-app` creates a production build in `dist/` (controlled by `build.outDir` in `vite.config.*`) and registers the outputs for Nx caching.
+- `nx preview my-app` serves the production build using Vite preview (runs after `build`).
+- `nx serve-static my-app` serves the built assets from `dist/` for quick smoke tests.
+- `nx typecheck my-app` runs TypeScript typechecking when a `tsconfig*.json` exists in the project.
+
+Replace `my-app` with your project name.
+
+## Configuration
+
+### Configure Task Inference
+
+The `@nx/vite` plugin infers tasks by reading Vite config files. Any of the following config files will be picked up:
 
 - `vite.config.js`
 - `vite.config.ts`
@@ -51,22 +90,21 @@ The `@nx/vite` plugin will create a task for any project that has a Vite configu
 - `vite.config.mts`
 - `vite.config.cjs`
 - `vite.config.cts`
-- `vitest.config.js`
-- `vitest.config.ts`
-- `vitest.config.mjs`
-- `vitest.config.mts`
-- `vitest.config.cjs`
-- `vitest.config.cts`
 
-### View Inferred Tasks
+Build targets are only created when the project is buildable. A project is treated as buildable when any of the following are true:
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+- `build.lib` is set in `vite.config.*`
+- `build.rollupOptions.input` is set
+- `builder.buildApp` is set
+- an `index.html` file exists at the project root
 
-### @nx/vite Configuration
+Dev, preview, and serve-static targets are created for buildable projects. If you are in library mode (`build.lib`), these targets are skipped unless you explicitly configure a dev server (e.g. `server.host` or `server.port`).
 
-The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
+Typecheck targets are created when a `tsconfig*.json` file exists in the project.
 
-<!-- TODO(v23): remove testTargetName -->
+### Plugin Options
+
+Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 
 ```json
 // nx.json
@@ -77,51 +115,72 @@ The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
       "options": {
         "buildTargetName": "build",
         "previewTargetName": "preview",
-        "testTargetName": "test",
+        "serveTargetName": "serve",
         "devTargetName": "dev",
-        "serveStaticTargetName": "serve-static"
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-**Note:** In Nx 22, testTargetName has moved to `@nx/vitest` and will be removed from `@nx/vite/plugin` in Nx 23.
+`serveTargetName` is deprecated; use `devTargetName` instead. `buildDepsTargetName` and `watchDepsTargetName` create targets that build or watch project dependencies.
 
-The `buildTargetName`, `previewTargetName`, `devTargetName` and `serveStaticTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `preview`, `dev` and `serve-static`.
+| Option                  | Description                                          | Default        |
+| ----------------------- | ---------------------------------------------------- | -------------- |
+| `buildTargetName`       | Name of the Vite build target                        | `build`        |
+| `previewTargetName`     | Name of the Vite preview target                      | `preview`      |
+| `serveTargetName`       | Name of the deprecated Vite serve target             | `serve`        |
+| `devTargetName`         | Name of the Vite dev server target                   | `dev`          |
+| `serveStaticTargetName` | Name of the static file server target                | `serve-static` |
+| `typecheckTargetName`   | Name of the typecheck target                         | `typecheck`    |
+| `buildDepsTargetName`   | Name of the build-deps target for dependency builds  | none           |
+| `watchDepsTargetName`   | Name of the watch-deps target for dependency watches | none           |
 
-## Using @nx/vite
+### Disable or Scope Inference
 
-### Generate a new project using Vite
+To stop inference for a specific project, exclude its config file with `include`/`exclude` filters in `nx.json`:
 
-You can generate a [React](/docs/technologies/react/introduction) application or library or a [Web](/docs/reference/web) application that uses Vite. The [`@nx/react:app`](/docs/technologies/react/generators#application), [`@nx/react:lib`](/docs/technologies/react/generators#library) and [`@nx/web:app`](/docs/reference/web/generators#application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite, and it will also install all the necessary dependencies, including the `@nx/vite` plugin.
-
-To generate a React application using Vite, run the following:
-
-```bash frame="none"
-nx g @nx/react:app apps/my-app --bundler=vite
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "exclude": ["apps/legacy/**"]
+    }
+  ]
+}
 ```
 
-To generate a React library using Vite, run the following:
+To avoid specific targets, adjust the config files that trigger them. For example, remove `tsconfig*.json` to stop `typecheck`, or use library mode (`build.lib`) to skip `dev`, `preview`, and `serve-static` unless you set dev server options.
 
-```bash frame="none"
-nx g @nx/react:lib libs/my-lib --bundler=vite
+### View Inferred Tasks
+
+To see what tasks Nx inferred for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run:
+
+```shell
+nx show project my-app --web
 ```
 
-To generate a Web application using Vite, run the following:
+## CI and Scale
 
-```bash frame="none"
-nx g @nx/web:app apps/my-app --bundler=vite
-```
+Use Nx to keep CI fast in large monorepos:
 
-### Modify an existing React or Web project to use Vite
+- Run only affected Vite projects: `nx affected -t build,typecheck`.
+- Enable remote caching with [Nx Cloud](/docs/guides/nx-cloud/setup-ci) using `nx connect`.
+- Follow the [CI setup guide](/docs/guides/nx-cloud/setup-ci) for a full pipeline.
 
-You can use the `@nx/vite:configuration` generator to change your React or Web project to use Vite. This generator will modify your project's configuration to use Vite, and it will also install all the necessary dependencies.
+## What's Next
 
-You can read more about this generator on the [`@nx/vite:configuration`](/docs/technologies/build-tools/vite/generators#configuration) generator page.
-
-### Modify an existing project to use Vitest
-
-You can use the `@nx/vite:vitest` generator to generate Vitest configuration for your project. This generator will generate a `vitest.config.ts` file in the root of your project, and it will also install all the necessary dependencies.
-
-You can read more about this generator on the [`@nx/vite:vitest`](/docs/technologies/build-tools/vite/generators#vitest) generator page.
+{% cardgrid %}
+{% linkcard title="Configure Vite" description="Set up Vite config, Nx-specific plugins, and recommended defaults." href="/docs/technologies/build-tools/vite/guides/configure-vite" /%}
+{% linkcard title="React with Nx" description="Learn the React workflow in an Nx monorepo and how Vite fits." href="/docs/technologies/react/introduction" /%}
+{% linkcard title="Vue with Nx" description="See the Vue workflow in Nx and where Vite is used." href="/docs/technologies/vue/introduction" /%}
+{% linkcard title="Vitest with Nx" description="Add and run Vitest tests, including CI-friendly patterns." href="/docs/technologies/test-tools/vitest/introduction" /%}
+{% linkcard title="Vite Generators" description="Browse all Vite generator options for configuration and testing." href="/docs/technologies/build-tools/vite/generators" /%}
+{% linkcard title="Vite Executors" description="Browse all Vite executor options for dev and build." href="/docs/technologies/build-tools/vite/executors" /%}
+{% /cardgrid %}

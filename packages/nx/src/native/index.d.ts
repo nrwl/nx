@@ -23,6 +23,9 @@ export declare class AppLifeCycle {
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
+  registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
+  appendBatchOutput(batchId: string, output: string): void
+  setBatchStatus(batchId: string, status: BatchStatus): void
 }
 
 export declare class ChildProcess {
@@ -44,8 +47,16 @@ export declare class FileLock {
 }
 
 export declare class HashPlanInspector {
-  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>)
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
+  /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
+  /**
+   * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
+   * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
+   * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
+   * file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+   */
+  inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
 
 export declare class HashPlanner {
@@ -71,7 +82,7 @@ export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
-  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
+  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
@@ -155,7 +166,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, options?: HasherOptions | undefined | null)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
 }
 
@@ -163,10 +174,8 @@ export declare class Watcher {
   origin: string
   /**
    * Creates a new Watcher instance.
-   * Will always ignore the following directories:
-   * * .git/
-   * * node_modules/
-   * * .nx/
+   * Will always ignore directories from HARDCODED_IGNORE_PATTERNS plus
+   * watcher-specific patterns like vite/vitest timestamp files.
    */
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callback: (err: string | null, events: WatchEvent[]) => void): void
@@ -193,6 +202,17 @@ export declare class WorkspaceContext {
   getFilesInDirectory(directory: string): Array<string>
 }
 
+export interface BatchInfo {
+  executorName: string
+  taskIds: Array<string>
+}
+
+export declare const enum BatchStatus {
+  Running = 'Running',
+  Success = 'Success',
+  Failure = 'Failure'
+}
+
 export interface CachedResult {
   code: number
   terminalOutput?: string
@@ -200,9 +220,9 @@ export interface CachedResult {
   size?: number
 }
 
-export declare export declare function canInstallNxConsole(): boolean
+export declare export declare function canInstallNxConsole(): Promise<boolean>
 
-export declare export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): boolean
+export declare export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -214,6 +234,13 @@ export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
 }
+
+/**
+ * Detects which AI agent is running and returns its name.
+ * Returns None if no agent is detected.
+ * Filtering against supported agents should be done on the TypeScript side.
+ */
+export declare export declare function detectAiAgent(): string | null
 
 export interface EnvironmentInput {
   env: string
@@ -249,6 +276,7 @@ export interface FileMap {
 
 export interface FileSetInput {
   fileset: string
+  dependencies?: boolean
 }
 
 export declare export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -295,6 +323,8 @@ export declare export declare function hashArray(input: Array<string | undefined
 export interface HashDetails {
   value: string
   details: Record<string, string>
+  /** Structured inputs used for hashing (file patterns, env vars, etc.) */
+  inputs: HashInputs
 }
 
 export interface HashedTask {
@@ -310,22 +340,36 @@ export interface HasherOptions {
 
 export declare export declare function hashFile(file: string): string | null
 
+/** NAPI-compatible struct for returning hash inputs to JavaScript */
+export interface HashInputs {
+  /** Expanded file paths that were used as inputs */
+  files: Array<string>
+  /** Runtime commands */
+  runtime: Array<string>
+  /** Environment variable names */
+  environment: Array<string>
+  /** Dependent task outputs */
+  depOutputs: Array<string>
+  /** External dependencies */
+  external: Array<string>
+}
+
 export interface InputsInput {
   input: string
   dependencies?: boolean
   projects?: string | Array<string>
 }
 
-export declare export declare function installNxConsole(): boolean
+export declare export declare function installNxConsole(): Promise<boolean>
 
-export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): boolean
+export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export const IS_WASM: boolean
 
 /** Detects if the current process is being run by an AI agent */
 export declare export declare function isAiAgent(): boolean
 
-export declare export declare function isEditorInstalled(editor: SupportedEditor): boolean
+export declare export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
 export declare export declare function logDebug(message: string): void
 

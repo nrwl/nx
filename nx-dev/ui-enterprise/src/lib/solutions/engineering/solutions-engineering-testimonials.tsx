@@ -11,7 +11,7 @@ import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function SolutionsEngineeringTestimonials(): ReactElement {
   return (
-    <div className="border border-slate-100 bg-slate-50 px-6 py-24 sm:px-6 sm:py-32 lg:px-8 dark:border-slate-900 dark:bg-slate-900/[0.8]">
+    <div className="border border-zinc-100 bg-zinc-50 px-6 py-24 sm:px-6 sm:py-32 lg:px-8 dark:border-zinc-900 dark:bg-zinc-900/[0.8]">
       <div className="mx-auto max-w-5xl text-center">
         <SectionHeading as="h2" variant="title" id="testimonials">
           Don't just take our word for it.
@@ -22,7 +22,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
         </SectionHeading>
       </div>
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-3">
-        <figure className="mt-16 flex flex-col justify-between rounded-lg bg-white p-4 pl-8 dark:bg-slate-950">
+        <figure className="mt-16 flex flex-col justify-between rounded-lg bg-white p-4 pl-8 dark:bg-zinc-950">
           <blockquote className="text-base/7">
             <p>
               “Using Nx Cloud, our CI times have reduced by 83%! Our teams are
@@ -38,7 +38,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
             />
             <div>
               <div className="font-semibold">Laurent Delamare</div>
-              <div className="text-slate-500">Senior Engineer, VMware</div>
+              <div className="text-zinc-500">Senior Engineer, VMware</div>
             </div>
             <VmwareIcon
               aria-hidden="true"
@@ -46,7 +46,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
             />
           </figcaption>
         </figure>
-        <figure className="mt-16 flex flex-col justify-between rounded-lg bg-white p-4 pl-8 dark:bg-slate-950">
+        <figure className="mt-16 flex flex-col justify-between rounded-lg bg-white p-4 pl-8 dark:bg-zinc-950">
           <blockquote className="text-base/7">
             <p>
               "Engineers will run a test command and expect it to run for 20
@@ -62,7 +62,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
             />
             <div>
               <div className="font-semibold">Pavlo Grosse</div>
-              <div className="text-slate-500">
+              <div className="text-zinc-500">
                 Senior Engineer, Hetzner Cloud
               </div>
             </div>
@@ -73,7 +73,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
             />
           </figcaption>
         </figure>
-        <figure className="mt-16 flex flex-col justify-between rounded-lg bg-white p-4 pl-8 dark:bg-slate-950">
+        <figure className="mt-16 flex flex-col justify-between rounded-lg bg-white p-4 pl-8 dark:bg-zinc-950">
           <blockquote className="text-base/7">
             <p>
               "Maintaining our own CI was not efficient. With Nx Cloud our
@@ -89,7 +89,7 @@ export function SolutionsEngineeringTestimonials(): ReactElement {
             />
             <div>
               <div className="font-semibold">Sid Govindaraju</div>
-              <div className="text-slate-500">Engineering Manager, UKG</div>
+              <div className="text-zinc-500">Engineering Manager, UKG</div>
             </div>
             <UkgIcon
               aria-hidden="true"

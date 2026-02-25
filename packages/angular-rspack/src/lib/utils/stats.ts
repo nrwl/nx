@@ -469,7 +469,7 @@ export function rspackStatsLogger(
   statOptions: StatsOptions,
   budgetFailures?: BudgetCalculatorResult[]
 ): void {
-  const json = stats.toJson();
+  const json = stats.toJson(statOptions);
   console.log(statsToString(stats, json, statOptions, budgetFailures));
 
   if (typeof stats !== 'object') {

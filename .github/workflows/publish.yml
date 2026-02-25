@@ -22,7 +22,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 22.16.0
-  PNPM_VERSION: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -354,12 +354,24 @@ jobs:
           architecture: x86
 
       - name: Build in docker
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         if: ${{ matrix.settings.docker }}
-        with:
-          image: ${{ matrix.settings.docker }}
-          options: --user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build
-          run: ${{ matrix.settings.build }}
+        shell: bash
+        env:
+          BUILD_SCRIPT: ${{ matrix.settings.build }}
+        run: |
+          SCRIPT_FILE=$(mktemp)
+          echo "$BUILD_SCRIPT" > "$SCRIPT_FILE"
+          docker run --rm \
+            --user 0:0 \
+            -e PNPM_VERSION \
+            -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
+            -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
+            -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
+            -v ${{ github.workspace }}:/build \
+            -v "$SCRIPT_FILE:/build-script.sh" \
+            -w /build \
+            ${{ matrix.settings.docker }} \
+            bash /build-script.sh
 
       - name: Build
         run: ${{ matrix.settings.build }}
@@ -406,7 +418,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
-            sudo npm install --location=global --ignore-scripts pnpm@10.11.1
+            sudo npm install --location=global --ignore-scripts pnpm@10.28.2
             # Set up Java 17
             export JAVA_HOME=/usr/local/openjdk17
             export PATH="$JAVA_HOME/bin:$PATH"
@@ -472,11 +484,27 @@ jobs:
             rm -rf ~/.rustup/toolchains/*/share || true
             # Remove other development tool caches
             rm -rf ~/.cache/* || true
+
+            # Remove unnecessary workspace directories
+            rm -rf docs astro-docs nx-dev || true
+
             echo "Checking disk space after cleanup"
             df -h
             
             echo "Building FreeBSD bindings"
-            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            BUILD_EXIT=0
+            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
+
+            echo "=== Disk usage after build ==="
+            df -h
+
+            if [ "$BUILD_EXIT" -ne 0 ]; then
+              echo "Build failed with exit code $BUILD_EXIT"
+              exit $BUILD_EXIT
+            fi
+
+            echo "Build succeeded"
+            
             echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules

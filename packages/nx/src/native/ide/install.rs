@@ -126,17 +126,17 @@ fn install_extension(command: &str) -> Result<bool, Error> {
 }
 
 #[napi]
-pub fn can_install_nx_console() -> bool {
+pub async fn can_install_nx_console() -> bool {
     enable_logger();
 
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
 
-    can_install_nx_console_for_editor(*current_editor)
+    can_install_nx_console_for_editor(*current_editor).await
 }
 
 #[napi]
-pub fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
+pub async fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
     enable_logger();
 
     if let Some(command) = get_command_for_editor(&editor) {
@@ -151,17 +151,17 @@ pub fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
 }
 
 #[napi]
-pub fn install_nx_console() -> bool {
+pub async fn install_nx_console() -> bool {
     enable_logger();
 
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
 
-    return install_nx_console_for_editor(*current_editor);
+    return install_nx_console_for_editor(*current_editor).await;
 }
 
 #[napi]
-pub fn install_nx_console_for_editor(editor: SupportedEditor) -> bool {
+pub async fn install_nx_console_for_editor(editor: SupportedEditor) -> bool {
     enable_logger();
 
     if let Some(command) = get_command_for_editor(&editor) {
@@ -256,7 +256,7 @@ fn get_command_for_editor(editor: &SupportedEditor) -> Option<&'static str> {
 }
 
 #[napi]
-pub fn is_editor_installed(editor: SupportedEditor) -> bool {
+pub async fn is_editor_installed(editor: SupportedEditor) -> bool {
     enable_logger();
 
     if let Some(command) = get_command_for_editor(&editor) {

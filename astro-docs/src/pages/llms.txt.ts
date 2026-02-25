@@ -79,9 +79,9 @@ export const GET: APIRoute = async ({ site }) => {
   const lines: string[] = [
     '# Nx',
     '',
-    '> Nx is an AI-first build platform that connects your editor to CI. It helps you deliver fast without breaking things by optimizing builds, scaling CI, and fixing failed PRs.',
+    '> Nx is an AI-first monorepo platform that connects your editor to CI. It helps you deliver fast without breaking things by optimizing builds, scaling CI, and fixing failed PRs.',
     '',
-    'Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx provides intelligent task execution, caching, and CI optimization.',
+    'Nx is a powerful, open-source, technology-agnostic monorepo platform designed to efficiently manage codebases of any scale. From small workspaces to large enterprise monorepos, Nx provides intelligent task execution, caching, and CI optimization.',
     '',
     'Note: All documentation pages are available as raw Markdown by appending `.md` to the URL.',
     `For example: ${siteUrl}/docs/getting-started/intro.md returns the raw Markdown content.`,

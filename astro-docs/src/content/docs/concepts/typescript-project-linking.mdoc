@@ -55,7 +55,7 @@ The configuration for package manager workspaces varies based on which package m
 
 Defining the `workspaces` property in the root `package.json` file lets npm know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `npm install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available.
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application/library's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available.
 
 ```json title="/apps/my-app/package.json"
 {
@@ -76,7 +76,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 Defining the `workspaces` property in the root `package.json` file lets yarn know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `yarn` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application/library's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
 
 ```json title="/apps/my-app/package.json"
 {
@@ -97,7 +97,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 Defining the `workspaces` property in the root `package.json` file lets bun know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `bun install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application/library's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
 
 ```json title="/apps/my-app/package.json"
 {
