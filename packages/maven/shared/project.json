@@ -1,10 +1,11 @@
 {
+  "name": "dev.nx.maven:nx-maven-shared",
   "projectType": "library",
-  "name": "maven-shared",
   "targets": {
     "maven:test": {
       "command": "./mvnw clean verify -am -pl dev.nx.maven:maven-shared"
     }
   },
-  "tags": ["maven:dev.nx.maven"]
+  "tags": ["maven:dev.nx.maven"],
+  "implicitDependencies": []
 }
