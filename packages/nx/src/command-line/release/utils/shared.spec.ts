@@ -636,6 +636,178 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group/a@1.1.0', 'my-group/b@1.2.0']);
     });
 
+    it('should fall back to newVersion when preferDockerVersion is true but dockerVersion is null (fixed group)', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.preferDockerVersion = true;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-1.1.0']);
+    });
+
+    it('should fall back to newVersion when preferDockerVersion is true but dockerVersion is null (independent group)', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}-{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: true,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+            dockerVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual(['a-1.1.0', 'b-1.2.0']);
+    });
+
+    it('should produce no tag when both dockerVersion and newVersion are null with preferDockerVersion true', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.preferDockerVersion = true;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual([]);
+    });
+
+    it('should fall back to dockerVersion when preferDockerVersion is false but newVersion is null', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.preferDockerVersion = false;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-2024.01.abc123']);
+    });
+
+    it('should handle mixed independent group where some projects have docker version and some do not', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}-{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: true,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+            dockerVersion: null,
+          },
+        }
+      );
+
+      // Project 'a' has dockerVersion so uses it; project 'b' falls back to newVersion
+      expect(tags).toEqual(['a-2024.01.abc123', 'b-1.2.0']);
+    });
+
     function setUpReleaseGroup() {
       const projects = ['a', 'b'];
       const releaseGroup: ReleaseGroupWithName = {
