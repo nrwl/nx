@@ -425,11 +425,9 @@ describe('Cypress Component Testing Configuration', () => {
       .toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       import { defineConfig } from 'cypress';
-
       export default defineConfig({
-        component: nxComponentTestingPreset(__filename)
-      });
-      "
+          component: nxComponentTestingPreset(__filename)
+      });"
     `);
     expect(
       tree.read('my-lib/cypress/support/component.ts', 'utf-8')
@@ -917,22 +915,18 @@ describe('Cypress Component Testing Configuration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-      
       // Import commands.ts using ES2015 syntax:
       import './commands';
-      
       // add component testing only related command here, such as mount
       declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            
-            mount: typeof mount;
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              interface Chainable<Subject> {
+                  mount: typeof mount;
+              }
           }
-        }
       }
-      
       Cypress.Commands.add('mount', mount);"
     `);
   });
@@ -985,22 +979,18 @@ describe('Cypress Component Testing Configuration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-      
       // Import commands.ts using ES2015 syntax:
       import './commands';
-      
       // add component testing only related command here, such as mount
       declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            
-            mount: typeof mount;
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              interface Chainable<Subject> {
+                  mount: typeof mount;
+              }
           }
-        }
       }
-      
       Cypress.Commands.add('mount', mount);"
     `);
   });

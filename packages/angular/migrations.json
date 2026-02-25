@@ -2170,6 +2170,77 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.4.0": {
+      "version": "22.4.0-beta.4",
+      "x-prompt": "Do you want to update the Angular version to v21.1?",
+      "requires": {
+        "@angular/core": ">=21.0.0 <21.1.0"
+      },
+      "packages": {
+        "@angular/cli": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.2101.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.2101.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

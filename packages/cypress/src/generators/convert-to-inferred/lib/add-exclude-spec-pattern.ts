@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 export function addExcludeSpecPattern(
   tree: Tree,
   configFilePath: string,
@@ -7,21 +7,18 @@ export function addExcludeSpecPattern(
 ) {
   let configFileContents = tree.read(configFilePath, 'utf-8');
 
-  let ast = tsquery.ast(configFileContents);
+  let sourceFile = ast(configFileContents);
 
   const E2E_CONFIG_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) > ObjectLiteralExpression';
-  const e2eConfigNodes = tsquery(ast, E2E_CONFIG_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const e2eConfigNodes = query(sourceFile, E2E_CONFIG_SELECTOR);
   if (e2eConfigNodes.length !== 0) {
     const e2eConfigNode = e2eConfigNodes[0];
     const EXCLUDE_SPEC_PATTERN_SELECTOR =
       'PropertyAssignment:has(Identifier[name="excludeSpecPattern"])';
-    const excludeSpecPatternNodes = tsquery(
+    const excludeSpecPatternNodes = query(
       e2eConfigNode,
-      EXCLUDE_SPEC_PATTERN_SELECTOR,
-      { visitAllChildren: true }
+      EXCLUDE_SPEC_PATTERN_SELECTOR
     );
 
     if (excludeSpecPatternNodes.length !== 0) {

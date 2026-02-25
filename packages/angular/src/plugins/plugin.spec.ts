@@ -2,10 +2,16 @@ import type { CreateNodesContextV2 } from '@nx/devkit';
 import { mkdirSync, rmSync } from 'node:fs';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, type AngularProjectConfiguration } from './plugin';
+import { loadVite } from './utils/vitest';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
+
+jest.mock('./utils/vitest', () => ({
+  ...jest.requireActual('./utils/vitest'),
+  loadVite: jest.fn(),
 }));
 
 describe('@nx/angular/plugin', () => {
@@ -1169,6 +1175,226 @@ describe('@nx/angular/plugin', () => {
         },
       }
     `);
+  });
+
+  it('should use coverage.reportsDirectory from vitest config when runnerConfig is set', async () => {
+    (loadVite as jest.Mock).mockResolvedValue({
+      resolveConfig: jest.fn().mockResolvedValue({
+        test: {
+          coverage: {
+            reportsDirectory: 'custom-coverage-dir',
+          },
+        },
+      }),
+    });
+
+    await createAngularWorkspace('');
+    await tempFs.createFile('vitest-base.config.ts', 'export default {}');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+          options: {
+            runnerConfig: true,
+          },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{projectRoot}/custom-coverage-dir',
+    ]);
+  });
+
+  it('should infer default vitest outputs for @angular/build:unit-test builder', async () => {
+    await createAngularWorkspace('');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{workspaceRoot}/coverage/{projectName}',
+    ]);
+    expect(nodes[0][1].projects['.'].targets.test.inputs).toContainEqual({
+      externalDependencies: ['@angular/cli', 'vitest'],
+    });
+    expect(
+      nodes[0][1].projects['.'].targets.test.metadata.help.example.options
+    ).toEqual({ coverage: true });
+  });
+
+  it('should include outputFile in vitest outputs when specified in executor options', async () => {
+    await createAngularWorkspace('');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+          options: {
+            outputFile: 'test-results/results.json',
+          },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{workspaceRoot}/coverage/{projectName}',
+      '{projectRoot}/test-results/results.json',
+    ]);
+  });
+
+  it('should include outputFile from reporters tuples in vitest outputs', async () => {
+    await createAngularWorkspace('');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+          options: {
+            reporters: [
+              'default',
+              ['junit', { outputFile: 'test-results/junit.xml' }],
+            ],
+          },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{workspaceRoot}/coverage/{projectName}',
+      '{projectRoot}/test-results/junit.xml',
+    ]);
+  });
+
+  it('should use executor outputFile and ignore config outputFile when both are set', async () => {
+    (loadVite as jest.Mock).mockResolvedValue({
+      resolveConfig: jest.fn().mockResolvedValue({
+        test: {
+          outputFile: 'config-results.xml',
+        },
+      }),
+    });
+
+    await createAngularWorkspace('');
+    await tempFs.createFile('vitest-base.config.ts', 'export default {}');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+          options: {
+            runnerConfig: true,
+            outputFile: 'executor-results.json',
+          },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{workspaceRoot}/coverage/{projectName}',
+      '{projectRoot}/executor-results.json',
+    ]);
+    expect(nodes[0][1].projects['.'].targets.test.outputs).not.toContain(
+      '{projectRoot}/config-results.xml'
+    );
+  });
+
+  it('should use executor reporters and ignore config reporters when both are set', async () => {
+    (loadVite as jest.Mock).mockResolvedValue({
+      resolveConfig: jest.fn().mockResolvedValue({
+        test: {
+          reporters: [['junit', { outputFile: 'config-junit.xml' }]],
+        },
+      }),
+    });
+
+    await createAngularWorkspace('');
+    await tempFs.createFile('vitest-base.config.ts', 'export default {}');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+          options: {
+            runnerConfig: true,
+            reporters: [['json', { outputFile: 'executor-json.json' }]],
+          },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{workspaceRoot}/coverage/{projectName}',
+      '{projectRoot}/executor-json.json',
+    ]);
+    expect(nodes[0][1].projects['.'].targets.test.outputs).not.toContain(
+      '{projectRoot}/config-junit.xml'
+    );
+  });
+
+  it('should use config outputFile and reporters when executor options are not set', async () => {
+    (loadVite as jest.Mock).mockResolvedValue({
+      resolveConfig: jest.fn().mockResolvedValue({
+        test: {
+          outputFile: 'config-results.xml',
+          reporters: [['junit', { outputFile: 'config-junit.xml' }]],
+        },
+      }),
+    });
+
+    await createAngularWorkspace('');
+    await tempFs.createFile('vitest-base.config.ts', 'export default {}');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      sourceRoot: 'src',
+      projectType: 'application',
+      architect: {
+        test: {
+          builder: '@angular/build:unit-test',
+          options: {
+            runnerConfig: true,
+          },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+      '{workspaceRoot}/coverage/{projectName}',
+      '{projectRoot}/config-results.xml',
+      '{projectRoot}/config-junit.xml',
+    ]);
   });
 
   async function createAngularWorkspace(root: string) {

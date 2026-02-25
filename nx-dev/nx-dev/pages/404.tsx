@@ -1,4 +1,4 @@
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { Footer, Header } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import Image from 'next/image';
@@ -19,7 +19,7 @@ export function FourOhFour(): JSX.Element {
   })();
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
-      sendCustomEvent('custom_page_view', '404', url.toString());
+      sendCustomEventViaGtm('custom_page_view', '404', url.toString());
     router.events.on('routeChangeStart', (url) => handleRouteChange(url));
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router]);
@@ -45,7 +45,7 @@ export function FourOhFour(): JSX.Element {
                   src={illustrationUrl}
                   className="drop-shadow"
                 />
-                <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl lg:ml-8 dark:text-slate-100">
+                <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-6xl lg:ml-8 dark:text-zinc-100">
                   <span className="sr-only">404 - </span>Page not found!
                 </h1>
               </div>

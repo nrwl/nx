@@ -265,7 +265,7 @@ nx generate ${fullItemName} ${positionalArgs
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
 
-        const optionName = `\`${propName}\``;
+        const optionName = `\`--${propName}\``;
 
         if (isRequired) {
           type += ' [**required**]';
@@ -279,14 +279,14 @@ nx generate ${fullItemName} ${positionalArgs
   }
 
   markdown += `
-     ## Getting Help
+## Getting Help
 
-     You can get help for any generator by adding the \`--help\` flag:
+You can get help for any generator by adding the \`--help\` flag:
 
-     \`\`\`bash
-     nx generate ${packageName}:<generator> --help
-     \`\`\`
-     `;
+\`\`\`bash
+nx generate ${packageName}:<generator> --help
+\`\`\`
+`;
 
   return markdown;
 }

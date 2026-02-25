@@ -43,6 +43,19 @@ export function isGitAvailable(): boolean {
   }
 }
 
+/**
+ * Synchronously checks if GitHub CLI (gh) is available on the system.
+ * Returns true if gh command can be executed, false otherwise.
+ */
+export function isGhCliAvailable(): boolean {
+  try {
+    execSync('gh --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function getGitHubUsername(directory: string): Promise<string> {
   const result = await execAndWait('gh api user --jq .login', directory);
   const username = result.stdout.trim();
@@ -278,30 +291,14 @@ export async function pushToGitHub(
     });
     return VcsPushStatus.PushedToVcs;
   } catch (e) {
-    const isVerbose =
-      options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
-    const errorMessage = e instanceof Error ? e.message : String(e);
-
     // Error code 127 means gh wasn't installed
     // GitHubPushSkippedError means user hasn't opted in or we couldn't authenticate
     const title =
       e instanceof GitHubPushSkippedError || (e as any)?.code === 127
         ? 'Push your workspace to GitHub.'
-        : 'Could not push. Push repo to complete setup.';
+        : 'Could not push.';
 
-    const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
-      options.name
-    )}`;
-    output.log({
-      title,
-      bodyLines: isVerbose
-        ? [
-            `Go to ${createRepoUrl} and push this workspace.`,
-            'Error details:',
-            errorMessage,
-          ]
-        : [`Go to ${createRepoUrl} and push this workspace.`],
-    });
+    output.log({ title });
     return VcsPushStatus.FailedToPushToVcs;
   }
 }

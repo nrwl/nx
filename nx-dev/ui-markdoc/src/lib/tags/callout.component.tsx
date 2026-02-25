@@ -34,14 +34,14 @@ const typeMap: Record<
   note: {
     icon: (
       <InformationCircleIcon
-        className="h-5 w-5 text-slate-500 dark:text-slate-300"
+        className="h-5 w-5 text-zinc-500 dark:text-zinc-300"
         aria-hidden="true"
       />
     ),
-    backgroundColor: 'bg-slate-50 dark:bg-slate-800/40',
-    borderColor: 'border-slate-200 dark:border-slate-700',
-    titleColor: 'text-slate-600 dark:text-slate-300',
-    textColor: 'text-slate-700 dark:text-slate-400',
+    backgroundColor: 'bg-zinc-50 dark:bg-zinc-800/40',
+    borderColor: 'border-zinc-200 dark:border-zinc-700',
+    titleColor: 'text-zinc-600 dark:text-zinc-300',
+    textColor: 'text-zinc-700 dark:text-zinc-400',
   },
   announcement: {
     icon: (

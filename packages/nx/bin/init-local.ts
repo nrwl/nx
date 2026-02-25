@@ -47,6 +47,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
       const split = newArgs.indexOf('--');
       if (help > -1 && (split === -1 || split > help)) {
         commandsObject.showHelp();
+        process.exit(0);
       } else {
         commandsObject.parse(newArgs);
       }
@@ -125,7 +126,7 @@ function shouldDelegateToAngularCLI() {
 
 async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
   // Only proceed if daemon is available
-  if (!daemonClient.enabled()) {
+  if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
     return;
   }
 

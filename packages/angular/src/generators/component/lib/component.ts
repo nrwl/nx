@@ -82,14 +82,13 @@ function shouldExportInEntryPoint(
   }
 
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const moduleImportPath = getRelativeImportToFile(entryPoint, modulePath);
   const entryPointContent = tree.read(entryPoint, 'utf-8');
-  const entryPointAst = tsquery.ast(entryPointContent);
-  const moduleExport = tsquery(
+  const entryPointAst = ast(entryPointContent);
+  const moduleExport = query(
     entryPointAst,
-    `ExportDeclaration StringLiteral[value='${moduleImportPath}']`,
-    { visitAllChildren: true }
+    `ExportDeclaration StringLiteral[value='${moduleImportPath}']`
   )[0] as StringLiteral;
 
   return Boolean(moduleExport);

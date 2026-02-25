@@ -310,6 +310,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -331,6 +332,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -524,6 +526,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -545,6 +548,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -741,6 +745,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -762,6 +767,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -989,6 +995,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -1010,6 +1017,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -1221,6 +1229,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -1242,6 +1251,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -1461,6 +1471,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -1482,6 +1493,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -1702,6 +1714,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -1723,6 +1736,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -1923,6 +1937,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -1944,6 +1959,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -2144,6 +2160,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -2165,6 +2182,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -2375,6 +2393,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -2396,6 +2415,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -2600,6 +2620,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -2637,6 +2658,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -2658,6 +2680,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -2860,6 +2883,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -2881,6 +2905,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -3075,6 +3100,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternRequireSemver": true,
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3102,6 +3128,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternRequireSemver": false,
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3123,6 +3150,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -3332,6 +3360,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3364,6 +3393,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3385,6 +3415,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -3596,6 +3627,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3628,6 +3660,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3649,6 +3682,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -3863,6 +3897,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3895,6 +3930,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -3916,6 +3952,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -4138,6 +4175,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternPreferDockerVersion": true,
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -4171,6 +4209,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternPreferDockerVersion": false,
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -4204,6 +4243,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternPreferDockerVersion": "both",
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -4225,6 +4265,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -4426,6 +4467,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -4447,6 +4489,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -4646,6 +4689,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -4667,6 +4711,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -4869,6 +4914,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -4890,6 +4936,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -5088,6 +5135,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -5109,6 +5157,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -5310,6 +5359,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "nx run-many -t build -p lib-a",
                   "logUnchangedProjects": true,
@@ -5331,6 +5381,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -5524,6 +5575,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -5551,6 +5603,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternRequireSemver": true,
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -5572,6 +5625,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -5765,6 +5819,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -5792,6 +5847,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPatternStrictPreid": false,
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -5813,6 +5869,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -6033,6 +6090,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -6054,6 +6112,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -6267,6 +6326,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -6288,6 +6348,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -6486,6 +6547,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -6507,6 +6569,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -6708,6 +6771,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -6732,6 +6796,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -6951,6 +7016,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -6972,6 +7038,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -7170,6 +7237,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -7191,6 +7259,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -7405,6 +7474,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -7427,6 +7497,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -7617,6 +7688,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -7638,6 +7710,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -7869,6 +7942,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -7890,6 +7964,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -8111,6 +8186,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -8132,6 +8208,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -8331,6 +8408,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -8352,6 +8430,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -8556,6 +8635,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -8577,6 +8657,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -8784,6 +8865,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -8805,6 +8887,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -9012,6 +9095,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -9033,6 +9117,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -9241,6 +9326,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -9262,6 +9348,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -9548,6 +9635,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -9569,6 +9657,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -9793,6 +9882,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -9814,6 +9904,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -10204,6 +10295,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -10225,6 +10317,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -10422,6 +10515,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -10443,6 +10537,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -10676,6 +10771,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -10697,6 +10793,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -10906,6 +11003,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -10927,6 +11025,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -11139,6 +11238,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -11160,6 +11260,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -11373,6 +11474,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -11394,6 +11496,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -11610,6 +11713,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -11631,6 +11735,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -11872,6 +11977,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -11898,6 +12004,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -11935,6 +12042,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -11956,6 +12064,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -12200,6 +12309,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "releaseTagPattern": "{projectName}-{version}",
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -12221,6 +12331,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -12461,6 +12572,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -12482,6 +12594,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -12703,6 +12816,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -12724,6 +12838,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -13166,6 +13281,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -13187,6 +13303,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -13598,6 +13715,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -13625,6 +13743,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -13646,6 +13765,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -13832,6 +13952,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -13853,6 +13974,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -14053,6 +14175,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "currentVersionResolver": "git-tag",
                   "groupPreVersionCommand": "",
@@ -14075,6 +14198,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": "git-tag",
               "git": {
@@ -14271,6 +14395,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "currentVersionResolver": "registry",
                   "groupPreVersionCommand": "",
@@ -14293,6 +14418,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": "registry",
               "git": {
@@ -14491,6 +14617,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": true,
                   "currentVersionResolver": "git-tag",
                   "groupPreVersionCommand": "",
@@ -14514,6 +14641,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
               "git": {
@@ -14719,6 +14847,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "fallbackCurrentVersionResolver": "disk",
                   "groupPreVersionCommand": "",
@@ -14741,6 +14870,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
               "fallbackCurrentVersionResolver": "disk",
@@ -14945,6 +15075,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -14967,6 +15098,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -15168,6 +15300,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15194,6 +15327,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -15395,6 +15529,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15422,6 +15557,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15443,6 +15579,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -15640,6 +15777,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15671,6 +15809,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15692,6 +15831,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -15889,6 +16029,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15915,6 +16056,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -15937,6 +16079,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {
@@ -16136,6 +16279,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -16162,6 +16306,7 @@ describe('createNxReleaseConfig()', () => {
                   "strictPreid": true,
                 },
                 "version": {
+                  "adjustSemverBumpsForZeroMajorVersion": false,
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
@@ -16188,6 +16333,7 @@ describe('createNxReleaseConfig()', () => {
               "strictPreid": true,
             },
             "version": {
+              "adjustSemverBumpsForZeroMajorVersion": false,
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
               "git": {

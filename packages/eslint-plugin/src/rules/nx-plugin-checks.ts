@@ -2,7 +2,7 @@ import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
 import { readFileSync } from 'fs';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { query } from '@phenomnomnominal/tsquery';
 
 import {
   ProjectGraphProjectNode,
@@ -605,7 +605,7 @@ export function checkIfIdentifierIsFunction(
       true
     );
 
-    const exportedFunctions = tsquery(
+    const exportedFunctions = query(
       sourceFile,
       `
       FunctionDeclaration[name.text="${identifier}"][modifiers],

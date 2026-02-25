@@ -3,6 +3,7 @@ import {
   getLatestGitTagForPattern,
   sanitizeProjectNameForGitTag,
 } from './git';
+import { RepoGitTags } from './repository-git-tags';
 
 jest.mock('./exec-command', () => ({
   execCommand: jest.fn(() =>
@@ -150,6 +151,10 @@ See merge request nx-release-test/nx-release-test!2`,
   });
 
   describe('getLatestGitTagForPattern', () => {
+    // Create a mock resolveTags function that uses the mocked execCommand
+    const mockRepoGitTags = RepoGitTags.create();
+    const mockResolveTags = mockRepoGitTags.resolveTags.bind(mockRepoGitTags);
+
     afterEach(() => {
       jest.clearAllMocks();
     });
@@ -350,6 +355,7 @@ See merge request nx-release-test/nx-release-test!2`,
               projectName,
               releaseGroupName,
             },
+            mockResolveTags,
             {
               requireSemver,
               preid: preid,
@@ -449,6 +455,7 @@ See merge request nx-release-test/nx-release-test!2`,
             {
               projectName,
             },
+            mockResolveTags,
             {
               preid: preid,
               requireSemver: true,
@@ -474,6 +481,7 @@ See merge request nx-release-test/nx-release-test!2`,
         {
           projectName: 'my-lib-1',
         },
+        mockResolveTags,
         {
           requireSemver: true,
           strictPreid: false,
@@ -488,6 +496,7 @@ See merge request nx-release-test/nx-release-test!2`,
         {
           projectName: 'my-lib-1',
         },
+        mockResolveTags,
         {
           requireSemver: true,
           strictPreid: false,

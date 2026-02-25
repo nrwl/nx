@@ -40,12 +40,12 @@ const iconMap: { [key: string]: JSX.Element } = {
 
 function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white/60 p-5 dark:border-slate-800/40 dark:bg-slate-800/60">
+    <div className="rounded-lg border border-zinc-200 bg-white/60 p-5 dark:border-zinc-800/40 dark:bg-zinc-800/60">
       <h4 className="mt-0 flex items-center pb-2 text-xl font-bold">
         {iconMap[category.id] ?? iconMap.default}
         {category.name}
       </h4>
-      <ul className="list-none divide-y divide-slate-300 pl-0 dark:divide-slate-700">
+      <ul className="list-none divide-y divide-zinc-300 pl-0 dark:divide-zinc-700">
         {category.relatedDocuments.map((d) => (
           <li
             key={d.id}
@@ -53,11 +53,11 @@ function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
           >
             <Link
               href={d.path}
-              className="flex flex-grow items-center justify-between no-underline transition-colors ease-out hover:text-blue-700 hover:underline dark:text-sky-500 dark:hover:text-sky-400"
+              className="flex flex-grow items-center justify-between no-underline transition-colors ease-out hover:text-blue-700 hover:underline dark:text-blue-500 dark:hover:text-blue-400"
               prefetch={false}
             >
               <span>{d.name}</span>
-              <ArrowRightIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+              <ArrowRightIcon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             </Link>
           </li>
         ))}

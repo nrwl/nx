@@ -39,12 +39,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         'https://nx.app/setup/123',
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -55,12 +56,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         'https://nx.app/setup/123',
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -71,12 +73,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         null,
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -87,12 +90,29 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'ci-setup',
         null,
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
+          ],
+          "title": "Your CI setup is almost complete.",
+        }
+      `);
+    });
+
+    it('should use generic GitHub URL when workspaceName is not provided', () => {
+      const message = getCompletionMessage(
+        'ci-setup',
+        'https://nx.app/setup/123',
+        VcsPushStatus.FailedToPushToVcs
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Push your repo (https://github.com/new), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -137,12 +157,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         'https://nx.app/setup/456',
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -153,12 +174,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         'https://nx.app/setup/456',
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -169,12 +191,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         null,
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -185,12 +208,13 @@ describe('Nx Cloud Messages', () => {
       const message = getCompletionMessage(
         'cache-setup',
         null,
-        VcsPushStatus.OptedOutOfPushingToVcs
+        VcsPushStatus.OptedOutOfPushingToVcs,
+        'myworkspace'
       );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
         }
@@ -211,12 +235,14 @@ describe('Nx Cloud Messages', () => {
       const messageNotPushedWithUrl = getCompletionMessage(
         'cache-setup',
         'https://nx.app/setup/456',
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
       const messageNotPushedWithoutUrl = getCompletionMessage(
         'cache-setup',
         null,
-        VcsPushStatus.FailedToPushToVcs
+        VcsPushStatus.FailedToPushToVcs,
+        'myworkspace'
       );
 
       expect(messageWithUrl.bodyLines).toHaveLength(1);
@@ -242,7 +268,12 @@ describe('Nx Cloud Messages', () => {
       ];
 
       scenarios.forEach(({ url, pushed }) => {
-        const message = getCompletionMessage('cache-setup', url, pushed);
+        const message = getCompletionMessage(
+          'cache-setup',
+          url,
+          pushed,
+          'myworkspace'
+        );
         expect(message.title).toBe(
           'Your remote cache setup is almost complete.'
         );

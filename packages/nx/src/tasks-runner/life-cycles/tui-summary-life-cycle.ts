@@ -6,10 +6,11 @@ import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
+import { getLeafTasks } from '../task-graph-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as figures from 'figures';
+import * as pc from 'picocolors';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
-import { getLeafTasks } from '../task-graph-utils';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -48,23 +49,32 @@ export function getTuiTerminalSummaryLifeCycle({
 
   const failedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
+  // Tasks ended with 'stopped' status (interrupted, didn't finish — counts as failure)
   const stoppedTasks = new Set<string>();
+  // Tasks shown with cyan stopped icon (includes fulfilled continuous tasks ended as 'success')
+  const displayStoppedTasks = new Set<string>();
 
+  // Chunks accumulated progressively during task execution
+  const taskOutputChunks: Record<string, string[]> = {};
+  // Finalized output strings set on task completion — read by summary print functions
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToTaskStatus: Record<string, TaskStatus> = {};
 
   const taskIdsInTheOrderTheyStart: string[] = [];
 
+  const getTerminalOutput = (taskId: string): string =>
+    tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
+
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
-      tasksToTerminalOutputs[t.id] ??= '';
+      taskOutputChunks[t.id] ??= [];
       taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
-    tasksToTerminalOutputs[taskId] += output;
+    taskOutputChunks[taskId].push(output);
   };
 
   // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
@@ -82,15 +92,19 @@ export function getTuiTerminalSummaryLifeCycle({
   };
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
-      stoppedTasks.add(taskId);
+      displayStoppedTasks.add(taskId);
       inProgressTasks.delete(taskId);
     }
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (const { task, status } of taskResults) {
+    for (const { task, status, terminalOutput } of taskResults) {
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
+      tasksToTaskStatus[task.id] = status;
+      if (status === 'stopped') {
+        stoppedTasks.add(task.id);
+      }
 
       switch (status) {
         case 'remote-cache':
@@ -106,6 +120,15 @@ export function getTuiTerminalSummaryLifeCycle({
           totalFailedTasks++;
           failedTasks.add(task.id);
           break;
+        case 'stopped':
+          break;
+      }
+
+      // Store the final string directly — shares the same reference as
+      // TaskResultsLifeCycle, old chunks become GC-eligible
+      if (terminalOutput !== undefined) {
+        tasksToTerminalOutputs[task.id] = terminalOutput;
+        delete taskOutputChunks[task.id];
       }
     }
   };
@@ -126,16 +149,11 @@ export function getTuiTerminalSummaryLifeCycle({
       return;
     }
 
-    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
+    const failure = totalSuccessfulTasks !== totalTasks;
     const cancelled =
-      // Some tasks were in progress...
+      stoppedTasks.size > 0 ||
       inProgressTasks.size > 0 ||
-      // or some tasks had not started yet
-      totalTasks !== tasks.length ||
-      // the run had a continous task as a leaf...
-      // this is needed because continous tasks get marked as stopped when the process is interrupted
-      [...getLeafTasks(taskGraph)].filter((t) => taskGraph.tasks[t].continuous)
-        .length > 0;
+      [...getLeafTasks(taskGraph)].some((t) => taskGraph.tasks[t]?.continuous);
 
     if (isRunOne) {
       printRunOneSummary({
@@ -162,7 +180,7 @@ export function getTuiTerminalSummaryLifeCycle({
     // above the summary, since run-one should print all task results.
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
+      const terminalOutput = getTerminalOutput(taskId);
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
@@ -196,11 +214,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         messageLines.push('');
         messageLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => messageLines.push(arg));
       }
@@ -238,11 +256,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         messageLines.push('');
         messageLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => messageLines.push(arg));
       }
@@ -295,12 +313,20 @@ export function getTuiTerminalSummaryLifeCycle({
     // Collect checklist lines to print after task outputs
     const checklistLines: string[] = [];
 
+    // Sort tasks by status: successful tasks first, failed tasks at the end
+    const sortedTaskIds = [...taskIdsInTheOrderTheyStart].sort((a, b) => {
+      const statusA = tasksToTaskStatus[a];
+      const statusB = tasksToTaskStatus[b];
+      const isFailureA = statusA === 'failure' || !statusA ? 1 : 0;
+      const isFailureB = statusB === 'failure' || !statusB ? 1 : 0;
+      return isFailureA - isFailureB;
+    });
+
     // First pass: Print task outputs and collect checklist lines
-    for (const taskId of taskIdsInTheOrderTheyStart) {
+    for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
-      // Task Status is null?
-      if (!taskStatus) {
+      const terminalOutput = getTerminalOutput(taskId);
+      if (displayStoppedTasks.has(taskId) || !taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         checklistLines.push(
@@ -369,7 +395,7 @@ export function getTuiTerminalSummaryLifeCycle({
       console.log(line);
     }
 
-    if (totalSuccessfulTasks + stoppedTasks.size === totalTasks) {
+    if (totalSuccessfulTasks === totalTasks) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
         targets,
@@ -379,7 +405,7 @@ export function getTuiTerminalSummaryLifeCycle({
       const successSummaryRows = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.green(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
       ];
 
@@ -390,11 +416,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         successSummaryRows.push('');
         successSummaryRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => successSummaryRows.push(arg));
       }
@@ -416,7 +442,7 @@ export function getTuiTerminalSummaryLifeCycle({
       const failureSummaryRows: string[] = [
         output.applyNxPrefix(
           'red',
-          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.red(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
       ];
 
@@ -427,11 +453,11 @@ export function getTuiTerminalSummaryLifeCycle({
       if (filteredOverrides.length > 0) {
         failureSummaryRows.push('');
         failureSummaryRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => failureSummaryRows.push(arg));
       }
@@ -439,12 +465,20 @@ export function getTuiTerminalSummaryLifeCycle({
       failureSummaryRows.push('');
 
       if (totalCompletedTasks > 0) {
+        // For display purposes, treat stopped tasks as in-progress
+        // (they were running when the process was interrupted)
+        const displayCompleted = totalCompletedTasks - stoppedTasks.size;
+        const displayInProgress = new Set([
+          ...inProgressTasks,
+          ...stoppedTasks,
+        ]);
+
         if (totalSuccessfulTasks > 0) {
           failureSummaryRows.push(
             output.dim(
               `${LEFT_PAD}${output.dim(
                 figures.tick
-              )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+              )}${SPACER}${totalSuccessfulTasks}${`/${displayCompleted}`} succeeded ${output.dim(
                 `[${totalCachedTasks} read from cache]`
               )}`
             ),
@@ -460,7 +494,7 @@ export function getTuiTerminalSummaryLifeCycle({
           failureSummaryRows.push(
             `${LEFT_PAD}${output.colors.red(
               figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
+            )}${SPACER}${totalFailedTasks}${`/${displayCompleted}`} targets failed, including the following:`,
             '',
             `${failedTasksForPrinting
               .map(
@@ -482,15 +516,15 @@ export function getTuiTerminalSummaryLifeCycle({
             );
           }
         }
-        if (totalCompletedTasks !== totalTasks) {
-          const remainingTasks = totalTasks - totalCompletedTasks;
-          if (inProgressTasks.size) {
+        if (displayCompleted !== totalTasks) {
+          const remainingTasks = totalTasks - displayCompleted;
+          if (displayInProgress.size) {
             failureSummaryRows.push(
               `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                inProgressTasks.size
+                displayInProgress.size
               }${`/${totalTasks}`} targets were in progress, including the following:`,
               '',
-              `${Array.from(inProgressTasks)
+              `${Array.from(displayInProgress)
                 .map(
                   (t) =>
                     `${EXTENDED_LEFT_PAD}${output.colors.red(
@@ -501,11 +535,11 @@ export function getTuiTerminalSummaryLifeCycle({
               ''
             );
           }
-          if (remainingTasks - inProgressTasks.size > 0) {
+          if (remainingTasks - displayInProgress.size > 0) {
             failureSummaryRows.push(
               output.dim(
                 `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                  remainingTasks - inProgressTasks.size
+                  remainingTasks - displayInProgress.size
                 }${`/${totalTasks}`} targets had not started.`
               ),
               ''

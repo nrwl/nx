@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  BatchStatus,
   IS_WASM,
   parseTaskStatus,
   RunningTasksService,
@@ -21,6 +22,10 @@ import { getDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
+import {
+  EXPECTED_TERMINATION_SIGNALS,
+  signalToCode,
+} from '../utils/exit-codes';
 import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -85,10 +90,27 @@ export class TaskOrchestrator {
   private groups = [];
 
   private bailed = false;
-  private cleaningUp = false;
+  private resolveStopPromise: (() => void) | null = null;
+  private stopRequested = false;
 
-  private runningContinuousTasks = new Map<string, RunningTask>();
+  private runningContinuousTasks = new Map<
+    string,
+    {
+      runningTask: RunningTask;
+      groupId: number;
+      ownsRunningTasksService: boolean;
+      stoppingReason?: 'interrupted' | 'fulfilled';
+    }
+  >();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
+  private runningDiscreteTasks = new Map<
+    string,
+    { runningTask: RunningTask; stopping: boolean }
+  >();
+  private discreteTaskExitHandled = new Map<string, Promise<void>>();
+  private cleanupDone = false;
+
+  private batchTaskResultsStreamed = new Set<string>();
 
   // endregion internal state
 
@@ -107,6 +129,8 @@ export class TaskOrchestrator {
   ) {}
 
   async init() {
+    this.setupSignalHandlers();
+
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
@@ -148,11 +172,16 @@ export class TaskOrchestrator {
             new Promise((resolve) => {
               this.options.lifeCycle.registerForcedShutdownCallback(() => {
                 // The user force quit the TUI with ctrl+c, so proceed onto cleanup
+                this.stopRequested = true;
                 resolve(undefined);
               });
             }),
           ]
-        : []),
+        : [
+            new Promise<void>((resolve) => {
+              this.resolveStopPromise = resolve;
+            }),
+          ]),
     ]);
 
     performance.mark('task-execution:end');
@@ -161,8 +190,9 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
-    this.cache.removeOldCacheRecords();
-
+    if (!this.stopRequested) {
+      this.cache.removeOldCacheRecords();
+    }
     await this.cleanup();
 
     return this.completedTasks;
@@ -174,7 +204,7 @@ export class TaskOrchestrator {
 
   private async executeNextBatchOfTasksUsingTaskSchedule() {
     // completed all the tasks
-    if (!this.tasksSchedule.hasTasks() || this.bailed) {
+    if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
       return null;
     }
 
@@ -199,7 +229,20 @@ export class TaskOrchestrator {
       const groupId = this.closeGroup();
 
       if (task.continuous) {
-        await this.startContinuousTask(task, groupId);
+        const runningTask = await this.startContinuousTask(task, groupId);
+
+        if (this.initializingTaskIds.has(task.id)) {
+          await new Promise<void>((res) => {
+            runningTask.onExit((code) => {
+              if (!this.tuiEnabled) {
+                if (code > 128) {
+                  process.exit(code);
+                }
+              }
+              res();
+            });
+          });
+        }
       } else {
         await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
       }
@@ -337,6 +380,11 @@ export class TaskOrchestrator {
     // Wait for batch to be processed
     await this.processedBatches.get(batch);
 
+    this.options.lifeCycle.registerRunningBatch?.(batch.id, {
+      executorName: batch.executorName,
+      taskIds: Object.keys(batch.taskGraph.tasks),
+    });
+
     await this.preRunSteps(tasks, { groupId });
 
     let results: TaskResult[] = doNotSkipCache
@@ -345,23 +393,36 @@ export class TaskOrchestrator {
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
+      await this.postRunSteps(results, doNotSkipCache, { groupId });
+
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
         results.map(({ task }) => task.id)
       );
 
-      const batchResults = await this.runBatch(
+      results = await this.runBatch(
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
-        this.batchEnv
+        this.batchEnv,
+        groupId
       );
-
-      results.push(...batchResults);
     }
 
-    await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+    await this.postRunSteps(results, doNotSkipCache, { groupId });
+
+    // Update batch status based on all task results
+    const hasFailures = taskEntries.some(([taskId]) => {
+      const status = this.completedTasks[taskId];
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? BatchStatus.Failure : BatchStatus.Success
+    );
+
     this.forkedProcessTaskRunner.cleanUpBatchProcesses();
 
     const tasksCompleted = taskEntries.filter(
@@ -373,6 +434,7 @@ export class TaskOrchestrator {
       await this.applyFromCacheOrRunBatch(
         doNotSkipCache,
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: removeTasksFromTaskGraph(
             batch.taskGraph,
@@ -396,7 +458,8 @@ export class TaskOrchestrator {
 
   private async runBatch(
     batch: Batch,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    groupId: number
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
@@ -407,8 +470,55 @@ export class TaskOrchestrator {
           this.taskGraph,
           env
         );
+
+      // Stream output from batch process to the batch
+      batchProcess.onOutput((output) => {
+        this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
+      });
+
+      // Stream task results as they complete
+      // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
+      batchProcess.onTaskResults((taskId, result) => {
+        const task = this.taskGraph.tasks[taskId];
+        const status = result.success ? 'success' : 'failure';
+
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          status,
+          result.terminalOutput ?? ''
+        );
+
+        if (result.terminalOutput) {
+          this.options.lifeCycle.appendTaskOutput(
+            taskId,
+            result.terminalOutput,
+            false
+          );
+        }
+
+        this.options.lifeCycle.endTasks(
+          [
+            {
+              task: {
+                ...task,
+                startTime: result.startTime,
+                endTime: result.endTime,
+              },
+              status,
+              code: result.success ? 0 : 1,
+              terminalOutput: result.terminalOutput,
+            },
+          ],
+          { groupId }
+        );
+
+        this.batchTaskResultsStreamed.add(taskId);
+        this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+      });
+
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
+
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
         code: result.success ? 0 : 1,
@@ -421,12 +531,20 @@ export class TaskOrchestrator {
         terminalOutput: result.terminalOutput,
       }));
     } catch (e) {
-      return batch.taskGraph.roots.map((rootTaskId) => ({
-        task: this.taskGraph.tasks[rootTaskId],
-        code: 1,
-        status: 'failure' as TaskStatus,
-        terminalOutput: e.stack ?? e.message ?? '',
-      }));
+      const isBatchStopping = this.stopRequested;
+
+      return Object.keys(batch.taskGraph.tasks).map((taskId) => {
+        const task = this.taskGraph.tasks[taskId];
+        if (isBatchStopping) {
+          task.endTime = Date.now();
+        }
+        return {
+          task,
+          code: 1,
+          status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
+          terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
+        };
+      });
     } finally {
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
       performance.measure(
@@ -488,7 +606,13 @@ export class TaskOrchestrator {
     }[] = doNotSkipCache ? await this.applyCachedResults([task]) : [];
 
     // the task wasn't cached
+    let resolveDiscreteExit: (() => void) | undefined;
     if (results.length === 0) {
+      const discreteExitHandled = new Promise<void>(
+        (r) => (resolveDiscreteExit = r)
+      );
+      this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
+
       const childProcess = await this.runTask(
         task,
         streamOutput,
@@ -496,17 +620,30 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         pipeOutput
       );
+      this.runningDiscreteTasks.set(task.id, {
+        runningTask: childProcess,
+        stopping: false,
+      });
 
       const { code, terminalOutput } = await childProcess.getResults();
-
+      const isStopping =
+        this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
+      this.runningDiscreteTasks.delete(task.id);
       results.push({
         task,
         code,
-        status: code === 0 ? 'success' : 'failure',
+        status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
         terminalOutput,
       });
     }
-    await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+    try {
+      await this.postRunSteps(results, doNotSkipCache, { groupId });
+    } finally {
+      if (resolveDiscreteExit) {
+        this.discreteTaskExitHandled.delete(task.id);
+        resolveDiscreteExit();
+      }
+    }
     return results[0];
   }
 
@@ -591,30 +728,15 @@ export class TaskOrchestrator {
         }
 
         if (!streamOutput) {
-          if (runningTask instanceof PseudoTtyProcess) {
-            // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
-            let terminalOutput = '';
-            runningTask.onOutput((data) => {
-              terminalOutput += data;
-            });
-            runningTask.onExit((code) => {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-              writeFileSync(temporaryOutputPath, terminalOutput);
-            });
-          } else {
-            runningTask.onExit((code, terminalOutput) => {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-              writeFileSync(temporaryOutputPath, terminalOutput);
-            });
-          }
+          // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
+          runningTask.onExit((code, terminalOutput) => {
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              code === 0 ? 'success' : 'failure',
+              terminalOutput
+            );
+            writeFileSync(temporaryOutputPath, terminalOutput);
+          });
         }
 
         return runningTask;
@@ -734,40 +856,16 @@ export class TaskOrchestrator {
         task.id
       );
 
-      this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit((code) => {
-        if (this.tuiEnabled && !this.completedTasks[task.id]) {
-          this.options.lifeCycle.setTaskStatus(
-            task.id,
-            NativeTaskStatus.Stopped
-          );
-        }
-        this.runningContinuousTasks.delete(task.id);
-
-        // we're not cleaning up, so this is an unexpected exit, fail the task
-        if (!this.cleaningUp) {
-          console.error(
-            `Task "${task.id}" is continuous but exited with code ${code}`
-          );
-          this.complete([{ taskId: task.id, status: 'failure' }]);
-        }
+      this.runningContinuousTasks.set(task.id, {
+        runningTask,
+        groupId,
+        ownsRunningTasksService: false,
       });
+      this.registerContinuousTaskExitHandler(runningTask, task, groupId, false);
 
       // task is already running by another process, we schedule the next tasks
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
-      if (this.initializingTaskIds.has(task.id)) {
-        await new Promise<void>((res) => {
-          runningTask.onExit((code) => {
-            if (!this.tuiEnabled) {
-              if (code > 128) {
-                process.exit(code);
-              }
-            }
-            res();
-          });
-        });
-      }
       return runningTask;
     }
 
@@ -811,38 +909,13 @@ export class TaskOrchestrator {
       pipeOutput
     );
     this.runningTasksService.addRunningTask(task.id);
-    this.runningContinuousTasks.set(task.id, childProcess);
-
-    childProcess.onExit((code) => {
-      // Only set status to Stopped if task hasn't been completed yet
-      if (this.tuiEnabled && !this.completedTasks[task.id]) {
-        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
-      }
-      if (this.runningContinuousTasks.delete(task.id)) {
-        this.runningTasksService.removeRunningTask(task.id);
-      }
-
-      // we're not cleaning up, so this is an unexpected exit, fail the task
-      if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        this.complete([{ taskId: task.id, status: 'failure' }]);
-      }
+    this.runningContinuousTasks.set(task.id, {
+      runningTask: childProcess,
+      groupId,
+      ownsRunningTasksService: true,
     });
+    this.registerContinuousTaskExitHandler(childProcess, task, groupId, true);
     await this.scheduleNextTasksAndReleaseThreads();
-    if (this.initializingTaskIds.has(task.id)) {
-      await new Promise<void>((res) => {
-        childProcess.onExit((code) => {
-          if (!this.tuiEnabled) {
-            if (code > 128) {
-              process.exit(code);
-            }
-          }
-          res();
-        });
-      });
-    }
 
     return childProcess;
   }
@@ -859,7 +932,6 @@ export class TaskOrchestrator {
   }
 
   private async postRunSteps(
-    tasks: Task[],
     results: {
       task: Task;
       status: TaskStatus;
@@ -869,12 +941,15 @@ export class TaskOrchestrator {
     { groupId }: { groupId: number }
   ) {
     const now = Date.now();
-    for (const task of tasks) {
-      task.endTime = now;
-      await this.recordOutputsHash(task);
+    for (const { task } of results) {
+      // Only set endTime as fallback (batch provides timing via result.task)
+      task.endTime ??= now;
+      if (!this.stopRequested) {
+        await this.recordOutputsHash(task);
+      }
     }
 
-    if (doNotSkipCache) {
+    if (doNotSkipCache && !this.stopRequested) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
@@ -884,7 +959,8 @@ export class TaskOrchestrator {
               status !== 'local-cache' &&
               status !== 'local-cache-kept-existing' &&
               status !== 'remote-cache' &&
-              status !== 'skipped'
+              status !== 'skipped' &&
+              status !== 'stopped'
           )
           .map((result) => ({
             ...result,
@@ -910,38 +986,18 @@ export class TaskOrchestrator {
         'cache-results-end'
       );
     }
-    await this.options.lifeCycle.endTasks(
-      results.map((result) => {
-        const code =
-          result.status === 'success' ||
-          result.status === 'local-cache' ||
-          result.status === 'local-cache-kept-existing' ||
-          result.status === 'remote-cache'
-            ? 0
-            : 1;
-        return {
-          ...result,
-          task: result.task,
-          status: result.status,
-          code,
-        };
-      }),
-      { groupId }
-    );
 
-    this.complete(
-      results.map(({ task, status }) => {
-        return {
-          taskId: task.id,
-          status,
-        };
-      })
-    );
-
+    await this.complete(results, groupId);
     await this.scheduleNextTasksAndReleaseThreads();
   }
 
   private async scheduleNextTasksAndReleaseThreads() {
+    if (this.stopRequested) {
+      this.waitingForTasks.forEach((f) => f(null));
+      this.waitingForTasks.length = 0;
+      return;
+    }
+
     await this.tasksSchedule.scheduleNextTasks();
 
     // release blocked threads
@@ -949,41 +1005,116 @@ export class TaskOrchestrator {
     this.waitingForTasks.length = 0;
   }
 
-  private complete(
-    taskResults: {
-      taskId: string;
+  private async complete(
+    results: {
+      task: Task;
       status: TaskStatus;
-    }[]
-  ) {
-    this.tasksSchedule.complete(taskResults.map(({ taskId }) => taskId));
-
+      terminalOutput?: string;
+      displayStatus?: NativeTaskStatus;
+    }[],
+    groupId: number
+  ): Promise<void> {
+    await this.completeTasks(results, groupId);
     this.cleanUpUnneededContinuousTasks();
+  }
 
-    for (const { taskId, status } of taskResults) {
-      if (this.completedTasks[taskId] === undefined) {
-        this.completedTasks[taskId] = status;
+  /**
+   * Unified task completion handler for a set of tasks.
+   * - Calls endTasks() lifecycle hook (non-skipped only)
+   * - Marks complete in scheduler
+   * - Sets completedTasks
+   * - Updates TUI status
+   * - Skip dependent tasks
+   */
+  private async completeTasks(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+      displayStatus?: NativeTaskStatus;
+    }[],
+    groupId: number
+  ): Promise<void> {
+    // 1. endTasks FIRST (non-skipped only, and not already streamed for batch)
+    const tasksToReport: TaskResult[] = [];
+    const taskIds: string[] = [];
+    for (const { task, status, terminalOutput } of results) {
+      taskIds.push(task.id);
 
-        if (this.tuiEnabled) {
-          this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+      if (this.completedTasks[task.id] === undefined && status !== 'skipped') {
+        if (!this.batchTaskResultsStreamed.has(task.id)) {
+          tasksToReport.push({
+            task,
+            status,
+            terminalOutput,
+            code:
+              status === 'success' ||
+              status === 'local-cache' ||
+              status === 'local-cache-kept-existing' ||
+              status === 'remote-cache'
+                ? 0
+                : 1,
+          });
+        } else {
+          // clean up the task id from the set since we've already verified it
+          this.batchTaskResultsStreamed.delete(task.id);
         }
+      }
+    }
 
-        if (status === 'failure' || status === 'skipped') {
-          if (this.bail) {
-            // mark the execution as bailed which will stop all further execution
-            // only the tasks that are currently running will finish
-            this.bailed = true;
-          } else {
-            // only mark the packages that depend on the current task as skipped
-            // other tasks will continue to execute
-            this.complete(
-              this.reverseTaskDeps[taskId].map((depTaskId) => ({
-                taskId: depTaskId,
-                status: 'skipped',
-              }))
-            );
+    if (tasksToReport.length > 0) {
+      await this.options.lifeCycle.endTasks(tasksToReport, { groupId });
+    }
+
+    // 2. Mark complete in scheduler
+    this.tasksSchedule.complete(taskIds);
+
+    // 3. Set completedTasks + update TUI + collect dependent tasks to skip
+    const dependentTasksToSkip: { task: Task; status: TaskStatus }[] = [];
+    for (const { task, status, displayStatus } of results) {
+      if (this.completedTasks[task.id] !== undefined) continue;
+
+      this.completedTasks[task.id] = status;
+
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(
+          task.id,
+          displayStatus ?? parseTaskStatus(status)
+        );
+      }
+
+      if (
+        status === 'failure' ||
+        status === 'skipped' ||
+        status === 'stopped'
+      ) {
+        if (this.bail) {
+          // mark the execution as bailed which will stop all further execution
+          // only the tasks that are currently running will finish
+          this.bailed = true;
+        } else {
+          // Collect reverse deps to skip
+          for (const depTaskId of this.reverseTaskDeps[task.id]) {
+            const depTask = this.taskGraph.tasks[depTaskId];
+            if (depTask) {
+              // Don't skip tasks that are still running/stopping — their own
+              // exit handler will set the correct terminal status
+              if (
+                this.runningDiscreteTasks.has(depTaskId) ||
+                this.runningContinuousTasks.has(depTaskId)
+              ) {
+                continue;
+              }
+              dependentTasksToSkip.push({ task: depTask, status: 'skipped' });
+            }
           }
         }
       }
+    }
+
+    // 4. Skip dependent tasks
+    if (dependentTasksToSkip.length > 0) {
+      await this.completeTasks(dependentTasksToSkip, groupId);
     }
   }
 
@@ -1050,23 +1181,123 @@ export class TaskOrchestrator {
 
   // endregion utils
 
+  private registerContinuousTaskExitHandler(
+    runningTask: RunningTask,
+    task: Task,
+    groupId: number,
+    ownsRunningTasksService: boolean
+  ) {
+    runningTask.onExit(async (code) => {
+      // If cleanup already completed this task, nothing left to do
+      if (this.completedTasks[task.id] !== undefined) {
+        return;
+      }
+
+      const stoppingReason = this.runningContinuousTasks.get(
+        task.id
+      )?.stoppingReason;
+      if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+        const reason =
+          stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
+        await this.completeContinuousTask(
+          task,
+          groupId,
+          ownsRunningTasksService,
+          reason
+        );
+      } else {
+        console.error(
+          `Task "${task.id}" is continuous but exited with code ${code}`
+        );
+        await this.completeContinuousTask(
+          task,
+          groupId,
+          ownsRunningTasksService,
+          'crashed'
+        );
+      }
+    });
+  }
+
+  private async completeContinuousTask(
+    task: Task,
+    groupId: number,
+    ownsRunningTasksService: boolean,
+    reason: 'fulfilled' | 'interrupted' | 'crashed'
+  ) {
+    if (this.completedTasks[task.id] !== undefined) return;
+
+    this.runningContinuousTasks.delete(task.id);
+    if (ownsRunningTasksService) {
+      this.runningTasksService.removeRunningTask(task.id);
+    }
+
+    task.endTime = Date.now();
+    if (reason === 'fulfilled') {
+      await this.complete(
+        [
+          {
+            task,
+            status: 'success',
+            displayStatus: NativeTaskStatus.Stopped,
+          },
+        ],
+        groupId
+      );
+    } else if (reason === 'crashed') {
+      await this.complete([{ task, status: 'failure' }], groupId);
+    } else {
+      await this.complete([{ task, status: 'stopped' }], groupId);
+    }
+  }
+
   private async cleanup() {
-    this.cleaningUp = true;
+    if (this.cleanupDone) {
+      return;
+    }
+    this.cleanupDone = true;
+
+    // Mark all running tasks for intentional stop
+    const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
+    for (const entry of this.runningContinuousTasks.values()) {
+      entry.stoppingReason = reason;
+    }
+    for (const entry of this.runningDiscreteTasks.values()) {
+      entry.stopping = true;
+    }
+
+    // Snapshot continuous tasks before clearing the map.
+    // We clear first because complete() -> cleanUpUnneededContinuousTasks()
+    // iterates runningContinuousTasks and would re-kill already-stopping tasks.
+    const continuousSnapshot = Array.from(
+      this.runningContinuousTasks.entries()
+    );
+    this.runningContinuousTasks.clear();
+
+    // Complete continuous tasks directly — don't rely on onExit which may hang
+    // when grandchild processes keep the pty slave fd open.
+    for (const [
+      taskId,
+      { groupId, ownsRunningTasksService },
+    ] of continuousSnapshot) {
+      const task = this.taskGraph.tasks[taskId];
+      if (!task) continue;
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        reason
+      );
+    }
+
+    // Kill all processes
     this.forkedProcessTaskRunner.cleanup();
     await Promise.all([
-      ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
+      ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
-          await t.kill();
-          this.options.lifeCycle.setTaskStatus?.(
-            taskId,
-            NativeTaskStatus.Stopped
-          );
+          await runningTask.kill();
         } catch (e) {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
-        } finally {
-          if (this.runningContinuousTasks.delete(taskId)) {
-            this.runningTasksService.removeRunningTask(taskId);
-          }
         }
       }),
       ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
@@ -1077,6 +1308,38 @@ export class TaskOrchestrator {
         }
       }),
     ]);
+
+    // Discrete exit promises resolve promptly (process kill → getResults →
+    // postRunSteps → resolve). Await them so lifecycle endTasks() completes
+    // before run() returns and endCommand() is called.
+    await Promise.all(this.discreteTaskExitHandled.values());
+  }
+
+  private setupSignalHandlers() {
+    process.once('SIGINT', () => {
+      this.stopRequested = true;
+      this.cleanup().finally(() => {
+        if (this.resolveStopPromise) {
+          this.resolveStopPromise();
+        } else {
+          process.exit(signalToCode('SIGINT'));
+        }
+      });
+    });
+    process.once('SIGTERM', () => {
+      this.cleanup().finally(() => {
+        if (this.resolveStopPromise) {
+          this.resolveStopPromise();
+        }
+      });
+    });
+    process.once('SIGHUP', () => {
+      this.cleanup().finally(() => {
+        if (this.resolveStopPromise) {
+          this.resolveStopPromise();
+        }
+      });
+    });
   }
 
   private cleanUpUnneededContinuousTasks() {
@@ -1095,16 +1358,12 @@ export class TaskOrchestrator {
       }
     }
 
-    for (const taskId of this.runningContinuousTasks.keys()) {
+    for (const [taskId, entry] of this.runningContinuousTasks) {
       if (!neededContinuousTasks.has(taskId)) {
-        const runningTask = this.runningContinuousTasks.get(taskId);
-        if (runningTask) {
-          runningTask.kill();
-          this.options.lifeCycle.setTaskStatus?.(
-            taskId,
-            NativeTaskStatus.Stopped
-          );
-        }
+        // Mark as intentional kill before calling kill()
+        // onExit will see this and use success/Stopped
+        entry.stoppingReason = 'fulfilled';
+        entry.runningTask.kill();
       }
     }
   }

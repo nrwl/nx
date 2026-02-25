@@ -1,6 +1,6 @@
 import { relative, resolve } from 'path/posix';
 import { workspaceRoot, type Tree, joinPathFragments } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 export function toProjectRelativePath(
   path: string,
@@ -39,11 +39,9 @@ export function addConfigValuesToViteConfig(
   const IMPORT_PROPERTY_SELECTOR = 'ImportDeclaration';
   const viteConfigContents = tree.read(configFile, 'utf-8');
 
-  const ast = tsquery.ast(viteConfigContents);
+  const sourceFile = ast(viteConfigContents);
   // AST TO GET SECTION TO APPEND TO
-  const importNodes = tsquery(ast, IMPORT_PROPERTY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const importNodes = query(sourceFile, IMPORT_PROPERTY_SELECTOR);
   if (importNodes.length === 0) {
     return;
   }

@@ -250,6 +250,93 @@ describe('cache', () => {
     expect(outputsWithoutOutputs).not.toContain('z.md');
   });
 
+  it('should handle outputs with globs and directories containing symlinks', async () => {
+    // Reproduces https://github.com/nrwl/nx/issues/34013
+    // When outputs include both glob patterns (*.json) and directory patterns
+    // (standalone, server), and those directories contain symlinks,
+    // the cache put operation fails with "File exists (os error 17)" (EEXIST).
+    const projectName = uniq('myapp');
+
+    // Create a build script that produces output with symlinks
+    // (simulating Next.js standalone build with pnpm/bun node_modules)
+    updateFile(
+      `apps/${projectName}/build.js`,
+      `
+const fs = require('fs');
+const path = require('path');
+
+const projectRoot = path.join(process.cwd(), 'apps/${projectName}');
+const nextDir = path.join(projectRoot, '.next');
+
+// Clean previous output
+fs.rmSync(nextDir, { recursive: true, force: true });
+
+// Create .next directory with JSON files
+fs.mkdirSync(nextDir, { recursive: true });
+fs.writeFileSync(path.join(nextDir, 'build-manifest.json'), JSON.stringify({pages:{}}));
+fs.writeFileSync(path.join(nextDir, 'routes-manifest.json'), JSON.stringify({routes:[]}));
+
+// Create .next/standalone with a symlink (simulating pnpm linker)
+const standaloneDir = path.join(nextDir, 'standalone');
+fs.mkdirSync(path.join(standaloneDir, 'real-pkg'), { recursive: true });
+fs.writeFileSync(path.join(standaloneDir, 'real-pkg', 'index.js'), 'module.exports = {}');
+fs.writeFileSync(path.join(standaloneDir, 'server.js'), 'require("./real-pkg")');
+
+// Create a symlink inside standalone (outside of node_modules)
+// This simulates the kind of symlink structure pnpm/bun creates
+fs.symlinkSync(
+  path.join(standaloneDir, 'real-pkg', 'index.js'),
+  path.join(standaloneDir, 'linked-entry.js')
+);
+
+// Create .next/server
+const serverDir = path.join(nextDir, 'server');
+fs.mkdirSync(serverDir, { recursive: true });
+fs.writeFileSync(path.join(serverDir, 'app.js'), 'module.exports = {}');
+
+console.log('Build complete');
+`
+    );
+
+    updateFile(
+      `apps/${projectName}/project.json`,
+      JSON.stringify({
+        name: projectName,
+        targets: {
+          build: {
+            cache: true,
+            command: `node apps/${projectName}/build.js`,
+            inputs: ['{projectRoot}/build.js'],
+            outputs: [
+              `{projectRoot}/.next/*.json`,
+              `{projectRoot}/.next/standalone`,
+              `{projectRoot}/.next/server`,
+            ],
+          },
+        },
+      })
+    );
+
+    // First run - should cache without error
+    const firstRun = runCLI(`build ${projectName}`);
+    expect(firstRun).not.toContain('read the output from the cache');
+    expect(firstRun).toContain('Build complete');
+
+    // Verify the output files exist including the symlink
+    expect(
+      fileExists(tmpProjPath(`apps/${projectName}/.next/build-manifest.json`))
+    ).toBe(true);
+    expect(
+      fileExists(
+        tmpProjPath(`apps/${projectName}/.next/standalone/linked-entry.js`)
+      )
+    ).toBe(true);
+
+    // Second run - should hit cache and restore without EEXIST error
+    const secondRun = runCLI(`build ${projectName}`);
+    expect(secondRun).toContain('local cache');
+  });
+
   it('should use consider filesets when hashing', async () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');
@@ -317,6 +404,75 @@ describe('cache', () => {
     expect(parentRunSpecChangeChild1).not.toContain(
       'read the output from the cache'
     );
+  }, 120000);
+
+  it('should support dependency filesets with ^{projectRoot} syntax', async () => {
+    const parent = uniq('parent');
+    const child = uniq('child');
+    runCLI(`generate @nx/js:lib libs/${parent}`);
+    runCLI(`generate @nx/js:lib libs/${child}`);
+
+    // Use the new ^{projectRoot} syntax directly in inputs (without named inputs)
+    // This tests the shorthand: ^{projectRoot}/src/**/*.ts means "include src .ts files from dependencies"
+    updateJson(`nx.json`, (c) => {
+      c.targetDefaults = {
+        build: {
+          cache: true,
+          inputs: [
+            '{projectRoot}/src/**/*.ts', // self src .ts files
+            '^{projectRoot}/src/**/*.ts', // dependency src .ts files
+          ],
+        },
+      };
+      return c;
+    });
+
+    updateJson(`libs/${parent}/project.json`, (c) => {
+      c.implicitDependencies = [child];
+      c.targets = {
+        build: {
+          command: 'echo "building parent"',
+        },
+      };
+      return c;
+    });
+
+    updateJson(`libs/${child}/project.json`, (c) => {
+      c.targets = {
+        build: {
+          command: 'echo "building child"',
+        },
+      };
+      return c;
+    });
+
+    // First run - should not be cached
+    const firstRun = runCLI(`build ${parent}`);
+    expect(firstRun).not.toContain('read the output from the cache');
+
+    // Second run - should be cached
+    const secondRun = runCLI(`build ${parent}`);
+    expect(secondRun).toContain('read the output from the cache');
+
+    // Change child's src .ts file - should invalidate parent's cache
+    // because of ^{projectRoot}/src/**/*.ts dependency fileset
+    updateFile(`libs/${child}/src/lib/${child}.ts`, (c) => {
+      return c + '\n// some change to child';
+    });
+
+    const afterChildChange = runCLI(`build ${parent}`);
+    expect(afterChildChange).not.toContain('read the output from the cache');
+
+    // Verify cache works again after the change
+    const afterChildChangeSecond = runCLI(`build ${parent}`);
+    expect(afterChildChangeSecond).toContain('read the output from the cache');
+
+    // Change child's foo.json - should NOT invalidate parent's cache
+    // because ^{projectRoot}/src/**/*.ts only includes src .ts files from dependencies
+    updateFile(`libs/${child}/foo.json`, JSON.stringify({ some: 'change' }));
+
+    const afterChildConfigChange = runCLI(`build ${parent}`);
+    expect(afterChildConfigChange).toContain('read the output from the cache');
   }, 120000);
 
   it('should support ENV as an input', () => {

@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { ReactElement } from 'react';
 
 export function CallToAction(): ReactElement {
@@ -25,7 +25,7 @@ export function CallToAction(): ReactElement {
         <svg
           x="50%"
           y={0}
-          className="overflow-visible fill-slate-200/20 dark:fill-slate-800/20"
+          className="overflow-visible fill-zinc-200/20 dark:fill-zinc-800/20"
         >
           <path
             d="M-200 0h201v201h-201Z M600 0h201v201h-201Z M-400 600h201v201h-201Z M200 800h201v201h-201Z"
@@ -54,7 +54,7 @@ export function CallToAction(): ReactElement {
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="cta"
-          className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white"
+          className="text-3xl font-medium tracking-tight text-zinc-950 sm:text-5xl dark:text-white"
         >
           Ready to enhance your CLI?
         </h2>
@@ -63,9 +63,9 @@ export function CallToAction(): ReactElement {
             href="/contact/sales"
             title="Get in touch"
             prefetch={false}
-            className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
+            className="group text-sm font-semibold leading-6 text-zinc-950 dark:text-white"
             onClick={() =>
-              sendCustomEvent(
+              sendCustomEventViaGtm(
                 'contact-sales-click',
                 'powerpack-footer-cta',
                 'powerpack'

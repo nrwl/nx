@@ -12,14 +12,14 @@ export function GetStarted(): ReactElement {
               as="h2"
               variant="title"
               id="get-started-title"
-              className="text-white dark:text-slate-950"
+              className="text-white dark:text-zinc-950"
             >
               Get Started
             </SectionHeading>
             <SectionHeading
               as="p"
               variant="subtitle"
-              className="mt-8 text-white dark:text-slate-950"
+              className="mt-8 text-white dark:text-zinc-950"
             >
               In 5 minutes, you'll see the difference.
             </SectionHeading>

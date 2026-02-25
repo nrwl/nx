@@ -24,7 +24,7 @@ By default, the computation hash for something like `nx test remixapp` includes:
 
 After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally, and then if it is missing, and if a remote cache is configured, it checks remotely. If a matching computation is found, Nx retrieves and replays it. This includes restoring files.
 
-Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, just a lot faster.
+Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, only a lot faster.
 
 ![cache](../../../assets/concepts/caching/cache.svg)
 
@@ -32,7 +32,7 @@ If Nx doesn't find a corresponding computation hash, Nx runs the task, and after
 
 ## Optimizations
 
-Although conceptually this is fairly straightforward, Nx optimizes the experience for you. For instance, Nx:
+Nx optimizes the caching experience in several ways. For instance, Nx:
 
 - Captures stdout and stderr to make sure the replayed output looks the same, including on Windows.
 - Minimizes the IO by remembering what files are replayed where.
@@ -46,7 +46,7 @@ As your workspace grows, the task graph looks more like this:
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.
 
-## Fine-tuning Nx's Cache
+## Fine-tuning the Nx cache
 
 Each cacheable task defines a set of inputs and outputs. Inputs are factors Nx considers when calculating the computation hash.
 Outputs are files that will be cached and restored when the computation hash matches.

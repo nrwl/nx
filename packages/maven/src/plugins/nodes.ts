@@ -5,6 +5,7 @@ import { runMavenAnalysis } from './maven-analyzer';
 import {
   getCachePath,
   readMavenCache,
+  setCurrentMavenData,
   writeMavenCache,
 } from './maven-data-cache';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -36,22 +37,6 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
       return [];
     }
 
-    // Vercel does not allow JAVA_VERSION to be set, skip on Vercel
-    if (process.env.VERCEL) {
-      console.error(
-        `VERCEL environment detected, skipping maven plugin computation.`
-      );
-      return [];
-    }
-
-    // Netlify only supports Java 8, skip on Netlify
-    if (process.env.NETLIFY) {
-      console.error(
-        `NETLIFY environment detected, skipping maven plugin computation.`
-      );
-      return [];
-    }
-
     // Get cache path based on options
     const optionsHash = hashObject(opts);
     const cachePath = getCachePath(context.workspaceRoot, optionsHash);
@@ -80,6 +65,9 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
         // Cache the results with the hash
         mavenCache[hash] = mavenData;
       }
+
+      // Store in module-level variable for createDependencies to use
+      setCurrentMavenData(mavenData);
 
       // Return createNodesResults (atomization now handled in Kotlin)
       return mavenData.createNodesResults.map(

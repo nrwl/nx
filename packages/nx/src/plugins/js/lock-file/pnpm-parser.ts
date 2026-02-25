@@ -12,7 +12,6 @@ import {
 } from './utils/pnpm-normalizer';
 import {
   getHoistedPackageVersion,
-  invertObject,
   NormalizedPackageJson,
 } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
@@ -83,6 +82,20 @@ export function getPnpmLockfileDependencies(
   return getDependencies(data, keyMap, isV5, ctx);
 }
 
+function invertRecordWithoutAliases(
+  record: Record<string, string>
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [depName, depVersion] of Object.entries(record)) {
+    if (isAliasVersion(depVersion)) {
+      // Ignore alias specifiers so aliases do not replace actual package names
+      continue;
+    }
+    result[depVersion] = depName;
+  }
+  return result;
+}
+
 const cachedInvertedRecords = new Map<string, Record<string, string>>();
 function matchPropValue(
   record: Record<string, string>,
@@ -94,7 +107,8 @@ function matchPropValue(
     return undefined;
   }
   if (!cachedInvertedRecords.has(recordName)) {
-    cachedInvertedRecords.set(recordName, invertObject(record));
+    // Inversion is only for non-alias specs to avoid alias -> target mislabeling.
+    cachedInvertedRecords.set(recordName, invertRecordWithoutAliases(record));
   }
   const packageName = cachedInvertedRecords.get(recordName)[key];
   if (packageName) {
@@ -214,6 +228,7 @@ function getNodes(
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
 } {
+  cachedInvertedRecords.clear();
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
@@ -278,8 +293,8 @@ function getNodes(
     hash?: string;
     alias?: boolean;
   }>();
-  let packageNameObj;
   for (const [key, snapshot] of Object.entries(data.packages)) {
+    let packageNameObj;
     const originalPackageName = extractNameFromKey(key, isV5);
     if (!originalPackageName) {
       continue;
@@ -371,25 +386,26 @@ function getNodes(
       }
     }
 
+    if (packageNameObj) {
+      packageNames.add(packageNameObj);
+    }
     const aliasedDep = maybeAliasedPackageVersions.get(`/${key}`);
     if (aliasedDep) {
-      packageNameObj = {
+      packageNames.add({
         key,
         packageName: aliasedDep,
         hash,
         alias: true,
-      };
+      });
     }
-    packageNames.add(packageNameObj);
     const localAlias = maybeAliasedPackageVersions.get(key);
     if (localAlias) {
-      packageNameObj = {
+      packageNames.add({
         key,
         packageName: localAlias,
         hash,
         alias: true,
-      };
-      packageNames.add(packageNameObj);
+      });
     }
   }
 

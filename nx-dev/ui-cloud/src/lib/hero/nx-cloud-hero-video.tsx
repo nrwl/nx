@@ -18,7 +18,7 @@ export function NxCloudHeroVideo(): ReactElement {
                 <div className="h-20 w-20 bg-[radial-gradient(var(--blue-500)_40%,transparent_60%)] opacity-[0.8] dark:bg-[radial-gradient(var(--pink-500)_40%,transparent_60%)]" />
               </MovingBorder>
             </div>
-            <picture className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 antialiased backdrop-blur-xl dark:border-slate-900 dark:bg-slate-900/[0.8]">
+            <picture className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50 antialiased backdrop-blur-xl dark:border-zinc-900 dark:bg-zinc-900/[0.8]">
               <Image
                 src="/images/cloud/nrwl-ocean.avif"
                 alt="App screenshot: overview"

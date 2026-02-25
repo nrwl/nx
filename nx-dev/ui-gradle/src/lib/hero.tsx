@@ -15,7 +15,7 @@ export function Hero(): ReactElement {
       <div className="mx-auto max-w-2xl text-center">
         {/* Logo displayed above the title */}
         <div className="mb-6 flex justify-center">
-          <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
+          <div className="rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
             <JavaIcon className="h-20 w-20" />
           </div>
         </div>
@@ -32,7 +32,7 @@ export function Hero(): ReactElement {
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
           <ButtonLink
             href="https://nx.dev/getting-started/tutorials/gradle-tutorial"
-            variant="primary"
+            variant="contrast"
             size="default"
             title="Get Started"
           >
@@ -43,7 +43,7 @@ export function Hero(): ReactElement {
             href="https://github.com/nrwl/nx-recipes/tree/main/gradle"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center text-sm font-semibold leading-6 text-slate-800 dark:text-white"
+            className="group inline-flex items-center text-sm font-semibold leading-6 text-zinc-800 dark:text-white"
           >
             View Example Project{' '}
             <span
@@ -62,10 +62,10 @@ export function Hero(): ReactElement {
 export function GettingStarted(): ReactElement {
   return (
     <section className="relative py-16 sm:py-24">
-      <div className="absolute inset-0 bg-white dark:bg-slate-900"></div>
+      <div className="absolute inset-0 bg-white dark:bg-zinc-900"></div>
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
             Add Nx To An Existing Project
           </h2>
           <p className="mt-8">Nx supports both Gradle and Maven</p>
@@ -102,7 +102,7 @@ export function GettingStarted(): ReactElement {
             href="https://github.com/nrwl/nx-recipes/tree/main/gradle"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-3 font-medium text-slate-900 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-blue-500"
+            className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-6 py-3 font-medium text-zinc-900 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-400 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:border-blue-500"
           >
             <svg
               className="h-5 w-5"
@@ -135,15 +135,15 @@ function GetStartedCard({
   description,
 }: GetStartedCardProps): ReactElement {
   return (
-    <div className="h-full rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
-      <h3 className="text-lg font-medium text-slate-900 dark:text-white">
+    <div className="h-full rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800">
+      <h3 className="text-lg font-medium text-zinc-900 dark:text-white">
         {title}
       </h3>
-      <div className="mt-3 overflow-hidden rounded-md bg-slate-800 px-4 py-3 text-sm text-white dark:bg-slate-950">
+      <div className="mt-3 overflow-hidden rounded-md bg-zinc-800 px-4 py-3 text-sm text-white dark:bg-zinc-950">
         <code style={{ whiteSpace: 'pre-line' }}>{command}</code>
       </div>
       <p
-        className="mt-3 text-sm text-slate-600 dark:text-slate-300"
+        className="mt-3 text-sm text-zinc-600 dark:text-zinc-300"
         dangerouslySetInnerHTML={{ __html: description }}
       ></p>
     </div>

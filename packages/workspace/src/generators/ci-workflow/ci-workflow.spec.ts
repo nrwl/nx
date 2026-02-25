@@ -403,8 +403,8 @@ describe('CI Workflow generator', () => {
               - run: npm ci
               - uses: nrwl/nx-set-shas@v4
 
-              # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-              # - run: npx nx-cloud record -- echo Hello World
+              # Prepend any command with "nx record --" to record its logs to Nx Cloud
+              # - run: npx nx record -- echo Hello World
               - run: npx nx affected -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
               - run: npx nx fix-ci
@@ -439,8 +439,8 @@ describe('CI Workflow generator', () => {
               - nx/set-shas:
                   main-branch-name: 'main'
 
-              # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-              # - run: npx nx-cloud record -- echo Hello World
+              # Prepend any command with "nx record --" to record its logs to Nx Cloud
+              # - run: npx nx record -- echo Hello World
               - run:
                   command: npx nx affected -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -516,8 +516,8 @@ describe('CI Workflow generator', () => {
               - script: git branch --track main origin/main
                 condition: eq(variables['Build.Reason'], 'PullRequest')
 
-              # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-              # - script: npx nx-cloud record -- echo Hello World
+              # Prepend any command with "nx record --" to record its logs to Nx Cloud
+              # - script: npx nx record -- echo Hello World
               - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
               - script: npx nx fix-ci
@@ -555,8 +555,8 @@ describe('CI Workflow generator', () => {
 
                     - npm ci
 
-                    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-                    # npx nx-cloud record -- echo Hello World
+                    # Prepend any command with "nx record --" to record its logs to Nx Cloud
+                    # npx nx record -- echo Hello World
                     - npx nx affected --base=origin/main -t lint test build typecheck
                     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -577,8 +577,8 @@ describe('CI Workflow generator', () => {
 
                     - npm ci
 
-                    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-                    # - npx nx-cloud record -- echo Hello World
+                    # Prepend any command with "nx record --" to record its logs to Nx Cloud
+                    # - npx nx record -- echo Hello World
                     - npx nx affected -t lint test build typecheck --base=HEAD~1
         "
       `);
@@ -609,8 +609,8 @@ describe('CI Workflow generator', () => {
             - NX_HEAD=$CI_COMMIT_SHA
             - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
+            # Prepend any command with "nx record --" to record its logs to Nx Cloud
+            # - npx nx record -- echo Hello World
             - npx nx affected -t lint test build typecheck
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 

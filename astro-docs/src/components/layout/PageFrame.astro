@@ -13,13 +13,10 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 const bannerCollection = await getCollection('banner');
 const bannerConfig = bannerCollection[0]?.data;
 
-// Check if banner is active
+// Check if banner is active based on activeUntil date
 function isBannerActive(config: typeof bannerConfig): boolean {
-  if (!config?.enabled) return false;
-  if (config.activeUntil) {
-    return new Date() < new Date(config.activeUntil);
-  }
-  return true;
+  if (!config?.activeUntil) return false;
+  return new Date() < new Date(config.activeUntil);
 }
 
 const showBanner = isBannerActive(bannerConfig);
@@ -41,7 +38,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
                 <GitHubStarWidget starsCount={githubStarsCount} client:load />
                 <div class="flex flex-col mx-2 gap-2">
                   <a
-                    href="https://nx.dev/contact"
+                    href={`${import.meta.env.SITE || 'https://nx.dev'}/contact`}
                     class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
                     title="Contact Us"
                   >
@@ -114,7 +111,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       inset-block: var(--sl-nav-height) 0;
       inset-inline-start: 0;
       width: 100%;
-      background-color: var(--sl-color-black);
+      background-color: var(--sl-color-bg-sidebar);
       overflow-y: auto;
     }
 

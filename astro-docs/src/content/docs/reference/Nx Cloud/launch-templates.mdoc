@@ -738,3 +738,20 @@ launch-templates:
           # This is a safer approach to prevent leaking tokens/passwords
           echo "SOME_VALUE: $SOME_VALUE"
 ```
+
+## Nx Workspace in a Subdirectory
+
+If your Nx workspace is in a subdirectory of your repository, set `NX_WORKING_DIRECTORY` in your launch template:
+
+```yaml
+launch-templates:
+  my-template:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.11-v9'
+    env:
+      NX_WORKING_DIRECTORY: './client'
+    init-steps:
+      # ...
+```
+
+The `install-node-modules` step automatically respects this variable (but can be overridden at the step level if your lockfile is hosted at the root). For other steps, set the working directory manually.

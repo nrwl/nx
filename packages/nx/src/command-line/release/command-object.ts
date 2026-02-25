@@ -107,6 +107,7 @@ export type ReleaseOptions = NxReleaseArgs &
     yes?: boolean;
     preid?: VersionOptions['preid'];
     skipPublish?: boolean;
+    otp?: number;
   };
 
 export type VersionPlanArgs = {
@@ -224,6 +225,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
             type: 'boolean',
             description:
               'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
+          })
+          .option('otp', {
+            type: 'number',
+            description:
+              'A one-time password for publishing to a registry that requires 2FA.',
           })
           .check((argv) => {
             if (argv.yes !== undefined && argv.skipPublish !== undefined) {

@@ -2,7 +2,7 @@ use anyhow::Result;
 #[cfg(test)]
 use crossbeam_channel::Receiver;
 use crossbeam_channel::{Sender, unbounded};
-use dashmap::DashMap;
+use dashmap::{DashMap, DashSet};
 use napi::{Env, JsFunction};
 use napi_derive::napi;
 use parking_lot::Mutex;
@@ -11,7 +11,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
-use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
+use sysinfo::{
+    CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
+};
 use tracing::{error, trace};
 
 use crate::native::metrics::types::{
@@ -78,6 +80,8 @@ struct CollectionRunner {
     main_cli_pid: Arc<Mutex<Option<i32>>>,
     main_cli_subprocess_pids: Arc<DashMap<i32, Option<String>>>,
     daemon_pid: Arc<Mutex<Option<i32>>>,
+    /// PIDs registered since last baseline refresh (lock-free concurrent set)
+    pids_needing_baseline: Arc<DashSet<i32>>,
 
     // Collection infrastructure
     system: Arc<Mutex<System>>,
@@ -102,6 +106,7 @@ impl CollectionRunner {
             main_cli_pid: Arc::clone(&collector.main_cli_pid),
             main_cli_subprocess_pids: Arc::clone(&collector.main_cli_subprocess_pids),
             daemon_pid: Arc::clone(&collector.daemon_pid),
+            pids_needing_baseline: Arc::clone(&collector.pids_needing_baseline),
             system: Arc::clone(&collector.system),
             config: collector.config.clone(),
             process_metadata_map: Arc::clone(&collector.process_metadata_map),
@@ -110,9 +115,43 @@ impl CollectionRunner {
         }
     }
 
+    /// Establish CPU baselines for all processes when there are processes needing a baseline.
+    /// Uses bulk refresh to keep all process timing in sync (avoids per-PID refresh bug).
+    /// Returns true if baseline was actually performed, false if skipped (nothing to baseline).
+    fn run_baseline_if_needed(&self) -> bool {
+        if self.pids_needing_baseline.is_empty() {
+            return false;
+        }
+
+        trace!("New processes need baseline, running bulk CPU refresh");
+
+        {
+            let mut sys = self.system.lock();
+            sys.refresh_processes_specifics(
+                sysinfo::ProcessesToUpdate::All,
+                false, // don't remove dead processes; collection handles cleanup
+                ProcessRefreshKind::nothing().with_cpu(),
+            );
+        } // release system lock before clearing set
+
+        // Clear the set: bulk refresh establishes baselines for all processes
+        self.pids_needing_baseline.clear();
+        trace!("Baseline refresh complete");
+        true
+    }
+
     /// Run the collection loop
     fn run(self) {
         let interval = Duration::from_millis(self.config.collection_interval_ms);
+        // sysinfo's MINIMUM_CPU_UPDATE_INTERVAL + 50ms safety buffer
+        let baseline_offset = sysinfo::MINIMUM_CPU_UPDATE_INTERVAL + Duration::from_millis(50);
+        let post_collection_sleep = interval - baseline_offset;
+
+        // First iteration: baseline if needed, then wait before first collection
+        if self.should_collect.load(Ordering::Acquire) && self.run_baseline_if_needed() {
+            // Sleep to allow CPU to be calculated correctly for the baselined processes
+            self.sleep_with_early_exit(baseline_offset);
+        }
 
         while self.should_collect.load(Ordering::Acquire) {
             // Collect current metrics and send to main collector thread
@@ -121,8 +160,15 @@ impl CollectionRunner {
                 .map(|result| self.send_metrics(result))
                 .ok();
 
-            // Sleep in small chunks so thread can exit quickly on shutdown
-            self.sleep_with_early_exit(interval);
+            // Sleep after collection, before baseline
+            self.sleep_with_early_exit(post_collection_sleep);
+            if !self.should_collect.load(Ordering::Acquire) {
+                break;
+            }
+
+            self.run_baseline_if_needed();
+            // Sleep until next collection (offset)
+            self.sleep_with_early_exit(baseline_offset);
         }
 
         self.is_collecting.store(false, Ordering::Release);
@@ -688,6 +734,10 @@ impl CollectionRunner {
             daemon_pid_to_clear,
         } = self.refresh_and_collect_metrics();
 
+        // Collection's bulk refresh established CPU baselines for all processes,
+        // so clear the tracking set to avoid redundant baseline refreshes
+        self.pids_needing_baseline.clear();
+
         // Now that system lock is released, clear daemon PID if needed
         // This avoids holding system lock while acquiring daemon_pid lock
         if let Some(_pid) = daemon_pid_to_clear {
@@ -784,6 +834,8 @@ pub struct ProcessMetricsCollector {
     main_cli_subprocess_pids: Arc<DashMap<i32, Option<String>>>,
     /// Daemon process PID (can be updated when daemon connects)
     daemon_pid: Arc<Mutex<Option<i32>>>,
+    /// PIDs registered since last baseline refresh (lock-free concurrent set)
+    pids_needing_baseline: Arc<DashSet<i32>>,
     /// Cached CPU core count (set once at initialization)
     cpu_cores: u32,
     /// Cached total memory in bytes (set once at initialization)
@@ -816,7 +868,15 @@ impl ProcessMetricsCollector {
 
     /// Create a new ProcessMetricsCollector with custom configuration
     fn with_config(config: CollectorConfig) -> Self {
-        let sys = System::new_all();
+        // Use targeted refresh instead of new_all() to avoid loading unnecessary data
+        // (disks, networks, components, users). Load processes to establish CPU baseline
+        // so first collection cycle has accurate CPU data.
+        let sys = System::new_with_specifics(
+            RefreshKind::nothing()
+                .with_cpu(CpuRefreshKind::nothing())
+                .with_memory(MemoryRefreshKind::nothing().with_ram())
+                .with_processes(ProcessRefreshKind::nothing().with_cpu().with_memory()),
+        );
         let cpu_cores = sys.cpus().len() as u32;
         let total_memory = sys.total_memory() as i64;
 
@@ -827,6 +887,7 @@ impl ProcessMetricsCollector {
             main_cli_pid: Arc::new(Mutex::new(None)),
             main_cli_subprocess_pids: Arc::new(DashMap::new()),
             daemon_pid: Arc::new(Mutex::new(None)),
+            pids_needing_baseline: Arc::new(DashSet::new()),
             cpu_cores,
             total_memory,
             system: Arc::new(Mutex::new(sys)),
@@ -1048,30 +1109,13 @@ impl ProcessMetricsCollector {
         }
     }
 
-    /// Establish baseline process metrics by acquiring system lock and refreshing
-    /// Must be called BEFORE any registration to avoid deadlock with collection thread
-    fn establish_process_baseline(&self, pid: i32) {
-        let target_pid = Pid::from(pid as usize);
-        let mut sys = self.system.lock();
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
-        drop(sys); // Explicitly release system lock
-    }
-
     /// Register the main CLI process for metrics collection
     #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
         trace!("Registering main CLI process: pid={}", pid);
-
-        // Establish baseline immediately for the main CLI process
-        // This ensures accurate CPU data from the first collection cycle
-        self.establish_process_baseline(pid);
-
-        // Now register the PID (after releasing system lock)
         *self.main_cli_pid.lock() = Some(pid);
+        // Track that this PID needs a baseline for accurate first CPU reading
+        self.pids_needing_baseline.insert(pid);
         trace!("Main CLI process registered: pid={}", pid);
     }
 
@@ -1082,13 +1126,9 @@ impl ProcessMetricsCollector {
             "Registering main CLI subprocess: pid={}, alias={:?}",
             pid, alias
         );
-
-        // Establish baseline immediately for this subprocess
-        // This ensures accurate CPU data from the first collection cycle after spawn
-        self.establish_process_baseline(pid);
-
-        // Now register in map (after releasing system lock)
         self.main_cli_subprocess_pids.insert(pid, alias);
+        // Track that this PID needs a baseline for accurate first CPU reading
+        self.pids_needing_baseline.insert(pid);
         trace!("Main CLI subprocess registered: pid={}", pid);
     }
 
@@ -1097,6 +1137,8 @@ impl ProcessMetricsCollector {
     pub fn register_daemon_process(&self, pid: i32) {
         let mut daemon_pid = self.daemon_pid.lock();
         *daemon_pid = Some(pid);
+        // Track that this PID needs a baseline for accurate first CPU reading
+        self.pids_needing_baseline.insert(pid);
     }
 
     /// Register a process for a specific task
@@ -1104,17 +1146,13 @@ impl ProcessMetricsCollector {
     #[napi]
     pub fn register_task_process(&self, task_id: String, pid: i32) {
         trace!("Registering task process: task_id={}, pid={}", task_id, pid);
-
-        // Establish baseline immediately for this task process
-        // This ensures accurate CPU data from the first collection cycle after spawn
-        self.establish_process_baseline(pid);
-
-        // Now register the task (after releasing system lock)
         self.individual_tasks
             .entry(task_id.clone())
             .or_insert_with(|| IndividualTaskRegistration::new(task_id.clone()))
             .anchor_pids
             .insert(pid);
+        // Track that this PID needs a baseline for accurate first CPU reading
+        self.pids_needing_baseline.insert(pid);
         trace!("Task process registered: task_id={}, pid={}", task_id, pid);
     }
 
@@ -1127,15 +1165,12 @@ impl ProcessMetricsCollector {
             task_ids.len(),
             pid
         );
-
-        // Establish baseline immediately for the batch worker
-        self.establish_process_baseline(pid);
-
-        // Now register the batch (after releasing system lock)
         self.batches.insert(
             batch_id.clone(),
             BatchRegistration::new(batch_id.clone(), task_ids, pid),
         );
+        // Track that this PID needs a baseline for accurate first CPU reading
+        self.pids_needing_baseline.insert(pid);
         trace!("Batch registered: batch_id={}, pid={}", batch_id, pid);
     }
 
@@ -1189,6 +1224,7 @@ mod tests {
             main_cli_pid: Arc::new(Mutex::new(None)),
             main_cli_subprocess_pids: Arc::new(DashMap::new()),
             daemon_pid: Arc::new(Mutex::new(None)),
+            pids_needing_baseline: Arc::new(DashSet::new()),
             system: Arc::new(Mutex::new(System::new())),
             config: CollectorConfig::default(),
             process_metadata_map: Arc::new(DashMap::new()),

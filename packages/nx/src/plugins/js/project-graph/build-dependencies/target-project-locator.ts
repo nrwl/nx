@@ -29,6 +29,7 @@ import {
  * resolved external node name from the project graph.
  */
 type NpmResolutionCache = Map<string, string | null>;
+type PackageJsonResolutionCache = Map<string, PackageJson | null>;
 
 type PathPattern = {
   pattern: string;
@@ -44,6 +45,7 @@ type ParsedPatterns = {
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
+const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
@@ -71,7 +73,8 @@ export class TargetProjectLocator {
       string,
       ProjectGraphExternalNode
     > = {},
-    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
+    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache,
+    private readonly packageJsonResolutionCache: PackageJsonResolutionCache = defaultPackageJsonResolutionCache
   ) {
     /**
      * Only the npm external nodes should be included.
@@ -546,10 +549,17 @@ export class TargetProjectLocator {
       relativeToDir
     );
     if (packageJsonPath) {
+      if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+        return this.packageJsonResolutionCache.get(packageJsonPath);
+      }
       const parsedPackageJson = readJsonFile(packageJsonPath);
 
       if (parsedPackageJson.name && parsedPackageJson.version) {
+        this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
+      } else {
+        this.packageJsonResolutionCache.set(packageJsonPath, null);
+        return null;
       }
     }
 
@@ -561,14 +571,24 @@ export class TargetProjectLocator {
 
       while (dir !== dirname(dir)) {
         const packageJsonPath = join(dir, 'package.json');
+        if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+          return this.packageJsonResolutionCache.get(packageJsonPath);
+        }
         try {
           const parsedPackageJson = readJsonFile(packageJsonPath);
           // Ensure the package.json contains the "name" and "version" fields
           if (parsedPackageJson.name && parsedPackageJson.version) {
+            this.packageJsonResolutionCache.set(
+              packageJsonPath,
+              parsedPackageJson
+            );
             return parsedPackageJson;
+          } else {
+            this.packageJsonResolutionCache.set(packageJsonPath, null);
+            return null;
           }
         } catch {
-          // Package.json doesn't exist, keep traversing
+          // Package.json is invalid, keep traversing
         }
         dir = dirname(dir);
       }

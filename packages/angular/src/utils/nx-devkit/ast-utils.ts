@@ -713,16 +713,14 @@ export function isNgStandaloneApp(tree: Tree, projectName: string) {
   }
 
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
 
   const mainFileContents = tree.read(mainFile, 'utf-8');
 
   const BOOTSTRAP_APPLICATION_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication])';
-  const ast = tsquery.ast(mainFileContents);
-  const nodes = tsquery(ast, BOOTSTRAP_APPLICATION_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const sourceFile = ast(mainFileContents);
+  const nodes = query(sourceFile, BOOTSTRAP_APPLICATION_SELECTOR);
   return nodes.length > 0;
 }
 
@@ -738,15 +736,13 @@ export function addProviderToBootstrapApplication(
   providerToAdd: string
 ) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const PROVIDERS_ARRAY_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
   const fileContents = tree.read(filePath, 'utf-8');
-  const ast = tsquery.ast(fileContents);
-  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const sourceFile = ast(fileContents);
+  const providersArrayNodes = query(sourceFile, PROVIDERS_ARRAY_SELECTOR);
   if (providersArrayNodes.length === 0) {
     throw new Error(
       `Providers does not exist in the bootstrapApplication call within ${filePath}.`
@@ -779,15 +775,13 @@ export function addProviderToAppConfig(
   providerToAdd: string
 ) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const PROVIDERS_ARRAY_SELECTOR =
     'VariableDeclaration:has(TypeReference > Identifier[name=ApplicationConfig]) > ObjectLiteralExpression  PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
   const fileContents = tree.read(filePath, 'utf-8');
-  const ast = tsquery.ast(fileContents);
-  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const sourceFile = ast(fileContents);
+  const providersArrayNodes = query(sourceFile, PROVIDERS_ARRAY_SELECTOR);
   if (providersArrayNodes.length === 0) {
     throw new Error(
       `'providers' does not exist in the application configuration at '${filePath}'.`

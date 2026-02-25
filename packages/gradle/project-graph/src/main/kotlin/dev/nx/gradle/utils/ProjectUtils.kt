@@ -7,6 +7,14 @@ import java.util.*
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
 
+/**
+ * Get the Nx project name from a Gradle project. This returns the buildTreePath with `:` prefix for
+ * subprojects (e.g., `:app`, `:lib:core`), or just the project name for root projects.
+ */
+fun getNxProjectName(project: Project): String =
+    if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
+    else project.buildTreePath
+
 /** Loops through a project and populate dependencies and nodes for each target */
 fun createNodeForProject(
     project: Project,
@@ -18,16 +26,7 @@ fun createNodeForProject(
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
 
-  // Initialize dependencies with an empty Set to prevent null issues
-  val dependencies: MutableSet<Dependency> =
-      try {
-        getDependenciesForProject(project)
-      } catch (e: Exception) {
-        logger.info(
-            "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}")
-        mutableSetOf()
-      }
-  logger.info("${Date()} ${project.name} createNodeForProject: got dependencies")
+  val dependencies: MutableSet<Dependency> = mutableSetOf()
 
   // Initialize nodes and externalNodes with empty maps to prevent null issues
   var nodes: Map<String, ProjectNode>
@@ -37,6 +36,15 @@ fun createNodeForProject(
     val gradleTargets: GradleTargets =
         processTargetsForProject(
             project, dependencies, targetNameOverrides, workspaceRoot, atomized, targetNamePrefix)
+
+    try {
+      val configDependencies = getDependenciesForProject(project)
+      dependencies.addAll(configDependencies)
+      logger.info("${Date()} ${project.name} createNodeForProject: got configuration dependencies")
+    } catch (e: Exception) {
+      logger.info(
+          "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}")
+    }
     val projectRoot = project.projectDir.path
 
     // Read project-level nx config if it exists
@@ -44,9 +52,7 @@ fun createNodeForProject(
     val nxConfig = nxProjectExtension?.json?.getOrNull()?.takeIf { it.isNotEmpty() }
 
     // Use Gradle defaults for project metadata (TypeScript side will merge nxConfig)
-    val projectName =
-        if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
-        else project.buildTreePath
+    val projectName = getNxProjectName(project)
     val projectDescription = project.description
 
     val projectNode =
@@ -106,19 +112,24 @@ fun processTargetsForProject(
   val gitIgnoreClassifier = GitIgnoreClassifier(File(workspaceRoot))
 
   val projectBuildPath = project.buildTreePath.trimEnd(':')
+  val nxProjectName = getNxProjectName(project)
 
   logger.info("${Date()} ${project}: Process targets")
 
   val ciTestTargetBaseName = targetNameOverrides["ciTestTargetName"]?.let { applyPrefix(it) }
   val testTargetName = applyPrefix(targetNameOverrides.getOrDefault("testTargetName", "test"))
 
-  val testTasks = project.tasks.withType(Test::class.java)
+  // Create a snapshot of test tasks to avoid ConcurrentModificationException
+  // with Kotlin Multiplatform which adds tasks dynamically
+  val testTasks = project.tasks.withType(Test::class.java).toList()
   val hasCiTestTarget = ciTestTargetBaseName != null && testTasks.isNotEmpty() && atomized
 
   logger.info(
       "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
 
-  project.tasks.forEach { task ->
+  // Create a snapshot of all tasks to avoid ConcurrentModificationException
+  // with Kotlin Multiplatform which adds tasks dynamically
+  project.tasks.toList().forEach { task ->
     try {
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
@@ -147,7 +158,8 @@ fun processTargetsForProject(
               dependencies,
               targetNameOverrides,
               gitIgnoreClassifier,
-              targetNamePrefix)
+              targetNamePrefix,
+              project)
 
       targets[targetName] = target
 
@@ -198,15 +210,15 @@ fun processTargetsForProject(
                 val dependsOn = dependency.toString()
 
                 when {
-                  hasCiTestTarget && dependsOn == "${project.name}:$testTargetName" -> {
-                    "${project.name}:$ciTestTargetBaseName"
+                  hasCiTestTarget && dependsOn == "$nxProjectName:$testTargetName" -> {
+                    "$nxProjectName:$ciTestTargetBaseName"
                   }
-                  hasCiTestTarget && dependsOn.startsWith("${project.name}:") -> {
-                    val taskName = dependsOn.removePrefix("${project.name}:")
+                  hasCiTestTarget && dependsOn.startsWith("$nxProjectName:") -> {
+                    val taskName = dependsOn.removePrefix("$nxProjectName:")
                     // Check if it's a test task that's not the default test target
                     if (testTasks.any { it.name == taskName } &&
                         applyPrefix(taskName) != testTargetName) {
-                      "${project.name}:$ciTestTargetBaseName-$taskName"
+                      "$nxProjectName:$ciTestTargetBaseName-$taskName"
                     } else {
                       dependency
                     }
@@ -233,8 +245,8 @@ fun processTargetsForProject(
           val replacedDependencies =
               (target["dependsOn"] as? List<*>)?.map { dep ->
                 val dependsOn = dep.toString()
-                if (dependsOn == "${project.name}:${applyPrefix("check")}") {
-                  "${project.name}:$ciCheckTargetName"
+                if (dependsOn == "$nxProjectName:${applyPrefix("check")}") {
+                  "$nxProjectName:$ciCheckTargetName"
                 } else {
                   dep
                 }

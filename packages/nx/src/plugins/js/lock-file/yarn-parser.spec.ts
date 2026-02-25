@@ -1087,31 +1087,31 @@ __metadata:
 
         expect(graph.externalNodes).toMatchInlineSnapshot(`
           {
-            "npm:@babel/runtime@7.26.0": {
+            "npm:@babel/runtime": {
               "data": {
                 "hash": "sha512-FDSOghenHTiToteC/QRlv2q3DhPZ/oOXTBoirfWNx1Cx3TMVcGWQtMMmQcSvb/JjpNeGzx8Pq/b4fKEJuWm1sw==",
                 "packageName": "@babel/runtime",
                 "version": "7.26.0",
               },
-              "name": "npm:@babel/runtime@7.26.0",
+              "name": "npm:@babel/runtime",
               "type": "npm",
             },
-            "npm:@docusaurus/core@3.7.0": {
+            "npm:@docusaurus/core": {
               "data": {
                 "hash": "sha512-b0fUmaL+JbzDIQaamzpAFpTviiaU4cX3Qz8cuo14+HGBCwa0evEK0UYCBFY3n4cLzL8Op1BueeroUD2LYAIHbQ==",
                 "packageName": "@docusaurus/core",
                 "version": "3.7.0",
               },
-              "name": "npm:@docusaurus/core@3.7.0",
+              "name": "npm:@docusaurus/core",
               "type": "npm",
             },
-            "npm:@docusaurus/module-type-aliases@3.7.0": {
+            "npm:@docusaurus/module-type-aliases": {
               "data": {
                 "hash": "sha512-g7WdPqDNaqA60CmBrr0cORTrsOit77hbsTj7xE2l71YhBn79sxdm7WMK7wfhcaafkbpIh7jv5ef5TOpf1Xv9Lg==",
                 "packageName": "@docusaurus/module-type-aliases",
                 "version": "3.7.0",
               },
-              "name": "npm:@docusaurus/module-type-aliases@3.7.0",
+              "name": "npm:@docusaurus/module-type-aliases",
               "type": "npm",
             },
             "npm:react-helmet-async": {

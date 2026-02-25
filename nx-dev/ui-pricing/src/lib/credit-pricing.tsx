@@ -110,14 +110,14 @@ export function CreditPricing(): ReactElement {
             {nonComputeItems.map((project) => (
               <li
                 key={project.name}
-                className="col-span-1 flex overflow-hidden rounded-md border border-slate-200 shadow-sm dark:border-slate-800"
+                className="col-span-1 flex overflow-hidden rounded-md border border-zinc-200 shadow-sm dark:border-zinc-800"
               >
-                <div className="flex flex-1 items-center justify-between bg-white dark:bg-slate-900">
+                <div className="flex flex-1 items-center justify-between bg-white dark:bg-zinc-900">
                   <div className="flex-1 px-4 py-2 text-sm">
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
                       {project.name}
                     </span>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-zinc-500">
                       {project.description}
                     </p>
                   </div>
@@ -146,17 +146,17 @@ export function CreditPricing(): ReactElement {
             {linuxAmd64.map((project) => (
               <li
                 key={project.name}
-                className="col-span-1 flex overflow-hidden rounded-md border border-slate-200 shadow-sm dark:border-slate-800"
+                className="col-span-1 flex overflow-hidden rounded-md border border-zinc-200 shadow-sm dark:border-zinc-800"
               >
-                <div className="flex w-16 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-50 text-sm font-medium dark:border-slate-800 dark:bg-slate-800">
+                <div className="flex w-16 shrink-0 items-center justify-center border-r border-zinc-200 bg-zinc-50 text-sm font-medium dark:border-zinc-800 dark:bg-zinc-800">
                   {project.icon}
                 </div>
-                <div className="flex flex-1 items-center justify-between truncate bg-white dark:bg-slate-900">
+                <div className="flex flex-1 items-center justify-between truncate bg-white dark:bg-zinc-900">
                   <div className="flex-1 truncate px-4 py-2 text-sm">
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
                       {project.name}
                     </span>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-zinc-500">
                       {project.description}
                     </p>
                   </div>
@@ -183,17 +183,17 @@ export function CreditPricing(): ReactElement {
             {linuxArm64.map((project) => (
               <li
                 key={project.name}
-                className="col-span-1 flex overflow-hidden rounded-md border border-slate-200 shadow-sm dark:border-slate-800"
+                className="col-span-1 flex overflow-hidden rounded-md border border-zinc-200 shadow-sm dark:border-zinc-800"
               >
-                <div className="flex w-16 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-50 text-sm font-medium dark:border-slate-800 dark:bg-slate-800">
+                <div className="flex w-16 shrink-0 items-center justify-center border-r border-zinc-200 bg-zinc-50 text-sm font-medium dark:border-zinc-800 dark:bg-zinc-800">
                   {project.icon}
                 </div>
-                <div className="flex flex-1 items-center justify-between truncate bg-white dark:bg-slate-900">
+                <div className="flex flex-1 items-center justify-between truncate bg-white dark:bg-zinc-900">
                   <div className="flex-1 truncate px-4 py-2 text-sm">
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
                       {project.name}
                     </span>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-zinc-500">
                       {project.description}
                     </p>
                   </div>
@@ -215,17 +215,17 @@ export function CreditPricing(): ReactElement {
             {windows.map((project) => (
               <li
                 key={project.name}
-                className="col-span-1 flex overflow-hidden rounded-md border border-slate-200 shadow-sm dark:border-slate-800"
+                className="col-span-1 flex overflow-hidden rounded-md border border-zinc-200 shadow-sm dark:border-zinc-800"
               >
-                <div className="flex w-16 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-50 text-sm font-medium dark:border-slate-800 dark:bg-slate-800">
+                <div className="flex w-16 shrink-0 items-center justify-center border-r border-zinc-200 bg-zinc-50 text-sm font-medium dark:border-zinc-800 dark:bg-zinc-800">
                   {project.icon}
                 </div>
-                <div className="flex flex-1 items-center justify-between truncate bg-white dark:bg-slate-900">
+                <div className="flex flex-1 items-center justify-between truncate bg-white dark:bg-zinc-900">
                   <div className="flex-1 truncate px-4 py-2 text-sm">
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
                       {project.name}
                     </span>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-zinc-500">
                       {project.description}
                     </p>
                   </div>

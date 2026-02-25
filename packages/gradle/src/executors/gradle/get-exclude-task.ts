@@ -9,11 +9,18 @@ import {
  *
  * For example, if a project defines `dependsOn: ['lint']` for the `test` target,
  * and only `test` is running, this will return: ['lint']
+ *
+ * @param taskIds - Set of Nx task IDs to process
+ * @param nodes - Project graph nodes
+ * @param runningTaskIds - Set of task IDs that are currently running (won't be excluded)
+ * @param includeDependsOnTasks - Set of Gradle task names that should be included (not excluded)
+ *   (typically provider-based dependencies that Gradle must resolve)
  */
 export function getExcludeTasks(
   taskIds: Set<string>,
   nodes: Record<string, ProjectGraphProjectNode>,
-  runningTaskIds: Set<string> = new Set()
+  runningTaskIds: Set<string> = new Set(),
+  includeDependsOnTasks: Set<string> = new Set()
 ): Set<string> {
   const excludes = new Set<string>();
 
@@ -25,7 +32,7 @@ export function getExcludeTasks(
       const taskId = typeof dep === 'string' ? dep : dep?.target;
       if (taskId && !runningTaskIds.has(taskId)) {
         const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
-        if (gradleTaskName) {
+        if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
           excludes.add(gradleTaskName);
         }
       }

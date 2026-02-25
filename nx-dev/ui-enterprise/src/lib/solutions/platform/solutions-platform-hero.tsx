@@ -9,7 +9,7 @@ import {
   VideoPlayerButton,
   VideoPlayerModal,
 } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { PayfitIcon } from '@nx/nx-dev-ui-icons';
 import { WebinarSection } from '../../webinar-section';
@@ -27,7 +27,7 @@ export function SolutionsPlatformHero(): ReactElement {
             className="mt-8 text-pretty tracking-tight"
           >
             CI that works out of the box –{' '}
-            <span className="rounded-lg bg-gradient-to-r from-blue-500 to-sky-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent">
               stays reliable at scale
             </span>
           </SectionHeading>
@@ -44,10 +44,10 @@ export function SolutionsPlatformHero(): ReactElement {
             <ButtonLink
               href="/contact/sales"
               title="Talk to our team"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'solutions-platform-hero',
                   'solutions-platform'
@@ -63,7 +63,7 @@ export function SolutionsPlatformHero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'subscribe-newsletter-click',
                   'solutions-platform-hero',
                   'solutions-platform'

@@ -66,7 +66,7 @@ export async function format(
         sortTsConfig();
       }
       addRootConfigFiles(chunkList, nxArgs);
-      chunkList.forEach((chunk) => write(chunk));
+      chunkList.forEach((chunk) => write(prettier, chunk));
       break;
     case 'check': {
       const filesWithDifferentFormatting = [];
@@ -196,7 +196,7 @@ function getPatternsFromProjects(
   return getProjectRoots(projects, projectGraph);
 }
 
-function write(patterns: string[]) {
+function write(prettier: typeof import('prettier'), patterns: string[]) {
   if (patterns.length > 0) {
     const [swcrcPatterns, regularPatterns] = patterns.reduce(
       (result, pattern) => {
@@ -206,7 +206,7 @@ function write(patterns: string[]) {
       [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
     );
     const prettierPath = getPrettierPath();
-    const listDifferentArg = shouldUseListDifferent()
+    const listDifferentArg = shouldUseListDifferent(prettier.version)
       ? '--list-different '
       : '';
 
@@ -282,8 +282,12 @@ function getPrettierPath() {
     return prettierPath;
   }
 
-  const { bin } = readModulePackageJson('prettier').packageJson;
-  prettierPath = require.resolve(path.join('prettier', bin as string));
+  const { packageJson, path: packageJsonPath } =
+    readModulePackageJson('prettier');
+  prettierPath = path.resolve(
+    path.dirname(packageJsonPath),
+    packageJson.bin as string
+  );
 
   return prettierPath;
 }
@@ -294,12 +298,12 @@ let useListDifferent: boolean | undefined;
  * Determines if --list-different should be used with --write.
  * Prettier 4+ and 3.6.x with experimental CLI don't support combining these flags.
  */
-function shouldUseListDifferent(): boolean {
+function shouldUseListDifferent(prettierVersion: string): boolean {
   if (useListDifferent !== undefined) {
     return useListDifferent;
   }
 
-  const prettierMajor = major(require('prettier').version);
+  const prettierMajor = major(prettierVersion);
   const isExperimentalCli = process.env.PRETTIER_EXPERIMENTAL_CLI === '1';
 
   useListDifferent = prettierMajor < 4 && !isExperimentalCli;
