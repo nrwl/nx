@@ -30,7 +30,7 @@ import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export const batchRunnerPath = join(
   __dirname,
-  '../../../batch-runner/build/libs/batch-runner-all.jar'
+  '../../../batch-runner/build/libs/gradle-batch-runner-all.jar'
 );
 
 export default async function gradleBatch(
