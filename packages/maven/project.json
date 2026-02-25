@@ -4,17 +4,76 @@
   "projectType": "library",
   "targets": {
     "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:_install"]
+      "dependsOn": [
+        "^nx-release-publish",
+        "dev.nx.maven:nx-maven-plugin:mvn-install-with-retries"
+      ]
     },
     "build": {
       "command": "node ./scripts/copy-readme.js maven packages/maven/readme-template.md packages/maven/README.md",
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"]
     },
-    "copy-assets": {
-      "dependsOn": ["maven-batch-runner:_package"]
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        "build-base",
+        "dev.nx.maven:maven-batch-runner:mvn-package",
+        "dev.nx.maven:maven3-adapter:mvn-package",
+        "dev.nx.maven:maven4-adapter:mvn-package"
+      ],
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "packages/maven/dist",
+        "assets": [
+          {
+            "input": "packages/maven/src",
+            "glob": "**/@(files|files-angular)/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven/src",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven/src",
+            "glob": "**/*.json",
+            "ignore": ["maven-plugin/**/*"],
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "@(generators|executors).json",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven/batch-runner/target",
+            "glob": "batch-runner.jar",
+            "output": "/",
+            "includeIgnoredFiles": true
+          },
+          {
+            "input": "packages/maven/batch-runner-adapters/maven3/target",
+            "glob": "maven3-adapter.jar",
+            "output": "/nx-maven-adapters",
+            "includeIgnoredFiles": true
+          },
+          {
+            "input": "packages/maven/batch-runner-adapters/maven4/target",
+            "glob": "maven4-adapter.jar",
+            "output": "/nx-maven-adapters",
+            "includeIgnoredFiles": true
+          }
+        ]
+      }
     }
   },
   "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-batch-runner", "nx-maven-plugin"]
+  "implicitDependencies": [
+    "dev.nx.maven:maven-batch-runner",
+    "dev.nx.maven:nx-maven-plugin",
+    "!@nx/nx-source"
+  ]
 }

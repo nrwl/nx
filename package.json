@@ -92,6 +92,7 @@
     "@nx/jest": "23.0.0-rc.4",
     "@nx/js": "23.0.0-rc.4",
     "@nx/key": "5.0.4",
+    "@nx/maven": "23.0.0-beta.8",
     "@nx/next": "23.0.0-rc.4",
     "@nx/playwright": "23.0.0-rc.4",
     "@nx/plugin": "23.0.0-rc.4",
