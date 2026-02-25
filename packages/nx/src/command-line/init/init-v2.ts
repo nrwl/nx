@@ -45,6 +45,7 @@ import {
   DetectedPlugin,
 } from './utils/ai-output';
 import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface InitArgs {
   interactive: boolean;
@@ -292,7 +293,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
           `Detected ${detectedPluginNames.length} plugin(s): ${detectedPluginNames.join(', ')}`
         );
         writeAiOutput(buildNeedsInputResult(detectedPlugins));
-        process.exit(0);
+        exitAndFlushAnalytics(0);
       }
       // else: no plugins flag and no plugins detected, proceed with empty array
     }

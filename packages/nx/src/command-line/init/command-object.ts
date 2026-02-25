@@ -20,7 +20,7 @@ export const yargsInitCommand: CommandModule = {
     if (wantsHelp) {
       const y = await withInitOptions(yargs);
       y.showHelp();
-      process.exit(0);
+      exitAndFlushAnalytics(0);
     }
     return withInitOptions(yargs);
   },

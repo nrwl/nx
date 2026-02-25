@@ -48,6 +48,7 @@ import {
 } from './utils/ai-output';
 import { getPluginReason } from '../init/init-v2';
 import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -97,7 +98,7 @@ export async function importHandler(options: ImportOptions) {
       writeAiOutput(
         buildImportNeedsOptionsResult(missingFields, sourceRepository)
       );
-      process.exit(0);
+      exitAndFlushAnalytics(0);
     }
 
     // Check if this is a plugin-only call (second step of two-step flow)

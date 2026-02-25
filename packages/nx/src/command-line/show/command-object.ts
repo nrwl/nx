@@ -370,6 +370,6 @@ const showTargetCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> = {
       .command(showTargetInfoCommand),
   handler: async () => {
     showHelp();
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   },
 };

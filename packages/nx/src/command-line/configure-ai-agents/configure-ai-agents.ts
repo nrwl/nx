@@ -282,7 +282,7 @@ export async function configureAiAgentsHandlerImpl(
           title: 'Error details:',
           bodyLines: [e.message],
         });
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       }
     } else {
       output.success({

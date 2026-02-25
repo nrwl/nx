@@ -26,6 +26,7 @@ import type {
   ShowTargetInputsOptions,
   ShowTargetOutputsOptions,
 } from './command-object';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 // ── Entry points ─────────────────────────────────────────────────────
 
@@ -198,7 +199,7 @@ function resolveTargetIdentifier(
         `  nx show target <target>  (infers project from cwd)`,
       ],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   const [project, target, config] = splitTarget(args.target, graph);
@@ -229,7 +230,7 @@ function resolveTargetIdentifier(
         `Or run this command from within a project directory.`,
       ],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   return { projectName, targetName };
@@ -247,12 +248,12 @@ function resolveProjectNode(projectName: string, graph: ProjectGraph) {
         bodyLines:
           projects.length > 100 ? [...projects.slice(0, 100), '...'] : projects,
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     } else {
       output.error({
         title: `Could not find project "${projectName}".`,
       });
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   }
   return node;
@@ -270,7 +271,7 @@ function reportTargetNotFound(
       ? [`Available targets:`, ...availableTargets.map((t) => `  - ${t}`)]
       : [`This project has no targets configured.`],
   });
-  process.exit(1);
+  exitAndFlushAnalytics(1);
 }
 
 function validateConfiguration(
@@ -290,7 +291,7 @@ function validateConfiguration(
           ]
         : [`This target has no configurations.`],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 }
 

@@ -1,5 +1,6 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsApplyLocallyCommand: CommandModule = {
   command: 'apply-locally [options]',
@@ -11,7 +12,7 @@ export const yargsApplyLocallyCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(
+    exitAndFlushAnalytics(
       await (await import('./apply-locally')).applyLocallyHandler(args)
     );
   },
