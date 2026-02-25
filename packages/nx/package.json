@@ -182,6 +182,9 @@
       "default": "./dist/bin/nx.js"
     },
     "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./bin/nx": {
       "@nx/nx-source": "./bin/nx.ts",
       "types": "./bin/nx.d.ts",
