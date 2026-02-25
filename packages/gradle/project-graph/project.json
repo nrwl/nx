@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "publish-staging": {
-      "command": "./gradlew :project-graph:publish",
+      "command": "./gradlew :gradle-project-graph:publish",
       "cache": true,
       "outputs": ["{projectRoot}/build/staging"]
     },
