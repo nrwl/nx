@@ -160,19 +160,16 @@ fn add_matching_projects_by_name<'a>(
         return Ok(());
     }
 
-    get_matching_strings(
-        pattern.value,
-        &build_glob_set(&[pattern.value])?,
-        project_names,
-    )
-    .iter()
-    .for_each(|item| {
-        if pattern.exclude {
-            matched_projects.remove(item);
-        } else {
-            matched_projects.insert(item);
-        }
-    });
+    let glob = build_glob_set(&[pattern.value])?;
+    get_matching_strings(pattern.value, &glob, project_names)
+        .iter()
+        .for_each(|item| {
+            if pattern.exclude {
+                matched_projects.remove(item);
+            } else {
+                matched_projects.insert(item);
+            }
+        });
 
     Ok(())
 }
