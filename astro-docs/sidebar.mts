@@ -402,7 +402,7 @@ const technologiesGroups: SidebarItems = [
           },
           {
             label: 'Angular Rsbuild',
-            link: 'technologies/angular/angular-rsbuild/create-config',
+            link: 'technologies/angular/angular-rsbuild/introduction',
           },
           { label: 'React', link: 'technologies/react/introduction' },
           {
@@ -1010,10 +1010,6 @@ const referenceGroups: SidebarItems = [
       { label: 'nxignore', link: 'reference/nxignore' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
-      {
-        label: 'Node/TypeScript Compatibility',
-        link: 'reference/nodejs-typescript-compatibility',
-      },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console Settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },

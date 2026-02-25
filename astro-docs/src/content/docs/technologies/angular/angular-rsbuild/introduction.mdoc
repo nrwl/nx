@@ -1,10 +1,25 @@
 ---
-title: 'createConfig - @nx/angular-rsbuild'
-description: 'API Reference for createConfig from @nx/angular-rsbuild'
+title: 'Angular Rsbuild Plugin for Nx'
+description: 'Use Rsbuild as the build tool for Angular applications in your Nx workspace with the @nx/angular-rsbuild plugin.'
 sidebar:
-  label: 'Create Config'
+  label: 'Introduction'
 filter: 'type:References'
 ---
+
+The `@nx/angular-rsbuild` package provides configuration utilities for building Angular applications with [Rsbuild](https://rsbuild.dev). Rsbuild is built on top of Rspack and offers a streamlined development experience with fast builds and hot module replacement.
+
+## Requirements
+
+The `@nx/angular-rsbuild` plugin supports the following package versions.
+
+| Package         | Supported Versions                                                                        |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| `@rsbuild/core` | ^1.1.0                                                                                    |
+| `@angular/core` | See [Angular version matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Usage
 
 ```shell
 import { createConfig } from '@nx/angular-rsbuild';
