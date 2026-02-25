@@ -548,5 +548,10 @@
     "name": "@berenddeboer/nx-biome",
     "description": "A self-inferring Nx plugin for using biome to format and lint projects. Supports --batch",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-biome"
+  },
+  {
+    "name": "@berenddeboer/nx-knip",
+    "description": "A self-inferring Nx plugin for using knip to find and fix unused dependencies, exports and files",
+    "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-knip"
   }
 ]
