@@ -20,7 +20,8 @@ export const yargsImportCommand: CommandModule = {
         yargs
           .positional('sourceRepository', {
             type: 'string',
-            description: 'The remote URL of the source to import.',
+            description:
+              'The remote URL or local path of the source repository to import.',
           })
           .positional('destinationDirectory', {
             type: 'string',
