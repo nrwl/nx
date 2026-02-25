@@ -14,8 +14,6 @@ export class BatchProcess {
     (task: string, result: TaskResult) => void
   > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
-  private terminalOutputChunks: string[] = [];
-  private joinedTerminalOutput: string | undefined;
 
   constructor(
     private childProcess: ChildProcess,
@@ -59,7 +57,6 @@ export class BatchProcess {
     if (this.childProcess.stdout) {
       this.childProcess.stdout.on('data', (chunk) => {
         const output = chunk.toString();
-        this.terminalOutputChunks.push(output);
 
         // Maintain current terminal output behavior
         process.stdout.write(chunk);
@@ -75,7 +72,6 @@ export class BatchProcess {
     if (this.childProcess.stderr) {
       this.childProcess.stderr.on('data', (chunk) => {
         const output = chunk.toString();
-        this.terminalOutputChunks.push(output);
 
         // Maintain current terminal output behavior
         process.stderr.write(chunk);
@@ -133,10 +129,5 @@ export class BatchProcess {
     if (this.childProcess.connected) {
       this.childProcess.kill(signal);
     }
-  }
-
-  getTerminalOutput(): string {
-    this.joinedTerminalOutput ??= this.terminalOutputChunks.join('');
-    return this.joinedTerminalOutput;
   }
 }
