@@ -15,6 +15,7 @@ const { Content, headings } = await render(nxCli);
     ...nxCli.data,
     title: 'Nx Commands',
     description: 'Complete reference for Nx CLI',
+    tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
   }}
   headings={headings || []}
 >
