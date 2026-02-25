@@ -1399,13 +1399,14 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getRunningTaskOutput(pid: number, taskId: string): Promise<string> {
+  async getRunningTaskOutput(pid: number, taskId: string): Promise<string> {
     const message: HandleGetRunningTaskOutputMessage = {
       type: GET_RUNNING_TASK_OUTPUT,
       pid,
       taskId,
     };
-    return this.sendToDaemonViaQueue(message);
+    const result = await this.sendToDaemonViaQueue(message);
+    return result?.output ?? '';
   }
 
   async stop(): Promise<void> {
