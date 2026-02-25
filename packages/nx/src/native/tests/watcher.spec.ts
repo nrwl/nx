@@ -249,4 +249,69 @@ describe('watcher', () => {
       )
     ).toBeTruthy();
   }, 20000);
+
+  // Verify file watching works in large directory structures (10,000+ directories).
+  // This tests that the watcher can handle monorepo-scale directory trees without
+  // silent failures due to resource exhaustion.
+  it('should detect file changes in large directory structures', async () => {
+    // Create a large directory structure simulating a monorepo
+    const scopeCount = 20;
+    const projectsPerScope = 50;
+    const dirsPerProject = 10;
+
+    // Create the directory structure
+    const structure = {};
+    for (let scope = 0; scope < scopeCount; scope++) {
+      for (let proj = 0; proj < projectsPerScope; proj++) {
+        for (let dir = 0; dir < dirsPerProject; dir++) {
+          structure[
+            `packages/scope-${scope}/project-${proj}/dir-${dir}/file.ts`
+          ] = `// file ${scope}-${proj}-${dir}`;
+        }
+      }
+    }
+
+    temp.createFilesSync(structure);
+    await wait();
+
+    watcher = new Watcher(temp.tempDir);
+    const allPaths: WatchEvent[] = [];
+    watcher.watch((err, paths) => {
+      allPaths.push(...paths);
+    });
+
+    await wait(2000);
+
+    // Create a file deep in the directory tree
+    temp.createFileSync(
+      'packages/scope-10/project-25/dir-5/newfile.ts',
+      'export const test = true;'
+    );
+
+    await wait(2000);
+
+    // Modify a file deep in the directory tree
+    temp.appendFile(
+      'packages/scope-15/project-40/dir-8/file.ts',
+      '\n// updated'
+    );
+
+    await wait(2000);
+
+    // Verify events are delivered for files deep in the directory tree
+    expect(
+      allPaths.some(
+        ({ path }) => path === 'packages/scope-10/project-25/dir-5/newfile.ts'
+      )
+    ).toBeTruthy();
+
+    expect(
+      allPaths.some(
+        ({ path }) => path === 'packages/scope-15/project-40/dir-8/file.ts'
+      )
+    ).toBeTruthy();
+
+    // This test creates ~10,000 directories (20 * 50 * 10 = 10,000) to ensure
+    // the watcher can handle monorepo-scale directory structures without failing.
+  }, 30000);
 });
