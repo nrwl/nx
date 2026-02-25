@@ -34,10 +34,12 @@ export async function determineNxCloud(
 
 export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
-): Promise<'github' | 'skip'> {
+): Promise<'yes' | 'skip' | 'never'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
-    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'github';
+    if (parsedArgs.nxCloud === 'skip') return 'skip';
+    if (parsedArgs.nxCloud === 'never') return 'never';
+    return 'yes';
   }
 
   // Non-interactive mode
@@ -45,9 +47,10 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Auto-select GitHub flow for deferred connection (variant 2 locked in - CLOUD-4255)
-  // Note: skipCloudConnect=true prevents actual connection, but we still get the banner
-  return 'github';
+  const result = await nxCloudPrompt('setupNxCloudV2');
+  if (result === 'never') return 'never';
+  if (result === 'skip') return 'skip';
+  return 'yes';
 }
 
 export async function determineIfGitHubWillBeUsed(

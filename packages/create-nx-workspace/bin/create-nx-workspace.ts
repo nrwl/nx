@@ -306,7 +306,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         const errorFile =
           error instanceof Error ? extractErrorFile(error) : undefined;
 
-        useCloud = argv.nxCloud !== 'skip';
+        useCloud = argv.nxCloud !== 'skip' && argv.nxCloud !== 'never';
 
         await recordStat({
           nxVersion,
@@ -451,7 +451,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: parsedArgs.nxCloud !== 'skip',
+    useCloud: parsedArgs.nxCloud !== 'skip' && parsedArgs.nxCloud !== 'never',
     meta: {
       type: 'complete',
       flowVariant: getFlowVariant(),
@@ -604,7 +604,7 @@ async function normalizeArgsMiddleware(
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: argv.nxCloud !== 'skip',
+    useCloud: argv.nxCloud !== 'skip' && argv.nxCloud !== 'never',
     meta: {
       type: 'start',
       flowVariant: getFlowVariant(),
@@ -629,24 +629,36 @@ async function normalizeArgsMiddleware(
 
       let nxCloud: string;
       let completionMessageKey: string | undefined;
+      let skipCloudConnect = false;
+      let neverConnectToCloud = false;
 
       if (argv.skipGit === true) {
         nxCloud = 'skip';
         completionMessageKey = undefined;
       } else {
-        // Always show cloud prompt with "full platform" message (CLOUD-4147)
-        // Flow variant only affects completion banners, not this prompt
-        nxCloud = await determineNxCloudV2(argv);
+        const cloudChoice = await determineNxCloudV2(argv);
+        if (cloudChoice === 'yes') {
+          nxCloud = 'yes';
+          skipCloudConnect = false;
+        } else if (cloudChoice === 'skip') {
+          nxCloud = 'yes';
+          skipCloudConnect = true;
+        } else {
+          nxCloud = 'never';
+          neverConnectToCloud = true;
+        }
         completionMessageKey =
-          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
+          cloudChoice === 'never'
+            ? undefined
+            : getCompletionMessageKeyForVariant();
       }
 
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
-        useGitHub: nxCloud !== 'skip',
-        // Deferred connection: skip cloud connect but show banner (CLOUD-4255)
-        skipCloudConnect: nxCloud !== 'skip',
+        useGitHub: nxCloud !== 'skip' && nxCloud !== 'never',
+        skipCloudConnect,
+        neverConnectToCloud,
         completionMessageKey,
         packageManager,
         defaultBase: 'main',
@@ -657,7 +669,7 @@ async function normalizeArgsMiddleware(
       await recordStat({
         nxVersion,
         command: 'create-nx-workspace',
-        useCloud: nxCloud !== 'skip',
+        useCloud: nxCloud !== 'skip' && nxCloud !== 'never',
         meta: {
           type: 'precreate',
           flowVariant: getFlowVariant(),
@@ -698,6 +710,7 @@ async function normalizeArgsMiddleware(
       let useGitHub: boolean | undefined;
       let completionMessageKey: string | undefined;
       let skipCloudConnect = false;
+      let neverConnectToCloud = false;
 
       if (argv.skipGit === true) {
         nxCloud = 'skip';
@@ -706,23 +719,38 @@ async function normalizeArgsMiddleware(
         // CLI arg provided: use existing flow (CI provider selection if needed)
         nxCloud = await determineNxCloud(argv);
         useGitHub =
-          nxCloud === 'skip'
+          nxCloud === 'skip' || nxCloud === 'never'
             ? undefined
             : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+        if (nxCloud === 'never') {
+          neverConnectToCloud = true;
+        }
       } else {
         // No CLI arg: use simplified prompt (same as template flow)
-        nxCloud = await determineNxCloudV2(argv);
-        useGitHub = nxCloud !== 'skip';
+        const cloudChoice = await determineNxCloudV2(argv);
+        if (cloudChoice === 'yes') {
+          nxCloud = 'yes';
+          skipCloudConnect = false;
+        } else if (cloudChoice === 'skip') {
+          nxCloud = 'yes';
+          skipCloudConnect = true;
+        } else {
+          nxCloud = 'never';
+          neverConnectToCloud = true;
+        }
+        useGitHub =
+          nxCloud !== 'skip' && nxCloud !== 'never' ? true : undefined;
         completionMessageKey =
-          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
-        // Deferred connection: skip cloud connect but show banner (CLOUD-4255)
-        skipCloudConnect = nxCloud !== 'skip';
+          cloudChoice === 'never'
+            ? undefined
+            : getCompletionMessageKeyForVariant();
       }
 
       Object.assign(argv, {
         nxCloud,
         useGitHub,
         skipCloudConnect,
+        neverConnectToCloud,
         completionMessageKey,
         packageManager,
         defaultBase,
@@ -734,7 +762,7 @@ async function normalizeArgsMiddleware(
       await recordStat({
         nxVersion,
         command: 'create-nx-workspace',
-        useCloud: nxCloud !== 'skip',
+        useCloud: nxCloud !== 'skip' && nxCloud !== 'never',
         meta: {
           type: 'precreate',
           flowVariant: getFlowVariant(),
