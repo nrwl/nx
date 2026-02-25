@@ -211,3 +211,33 @@ Fixes #ISSUE_NUMBER
 - For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
 
 <!-- nx configuration end-->
+
+## Cursor Cloud specific instructions
+
+### Environment overview
+
+This is the **Nx monorepo** source repository. Key services:
+
+| Component        | How to run                                | Notes                                                     |
+| ---------------- | ----------------------------------------- | --------------------------------------------------------- |
+| Nx CLI (core)    | `npx nx <command>`                        | Must build first: `npx nx build nx`                       |
+| Nx Graph UI      | `npx nx graph --host 0.0.0.0 --port 4211` | Interactive project/task graph at `http://localhost:4211` |
+| Astro docs site  | `npx nx serve astro-docs`                 | Dev server at `http://localhost:4321`                     |
+| nx-dev (Next.js) | `npx nx serve nx-dev`                     | Blog/landing pages at `http://localhost:3000`             |
+
+### Build, lint, test
+
+- Standard commands are documented in the "Essential Commands" section above and in `CONTRIBUTING.md`.
+- Before running tests or lint, the `nx` package must be built: `npx nx build nx`. This compiles the Rust native bindings and TypeScript source. Other packages auto-build their dependencies via Nx task pipelines.
+- The `pnpm install` step after a fresh clone will emit warnings about missing bin symlinks (e.g. `packages/nx/bin/nx.js`). These resolve after `npx nx build nx`.
+- pnpm 10 shows a warning about ignored build scripts. The `onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` is intentionally restrictive; do **not** run `pnpm approve-builds` interactively.
+
+### Node.js version
+
+Required version is **Node.js 24** (exact version in `mise.toml`). The VM uses nvm; install with `nvm install 24` if not already present. After switching Node versions, re-enable corepack: `corepack enable && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack prepare --activate`.
+
+### Gotchas
+
+- Jest 30 is used for unit tests. The CLI flag `--testPathPattern` was renamed to `--testPathPatterns` (plural) in Jest 30; use `-- --testPathPatterns="..."` when targeting specific test files via `nx test`.
+- Some tests in the `nx` package report a "CustomGC open handle" warning from the native `.node` module. This is benign and does not indicate test failure.
+- Rust 1.90.0 and Cargo are required to build `packages/nx` native bindings. The build target is `nx:build-native`.
