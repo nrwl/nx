@@ -25,7 +25,7 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError } from './log-utils';
+import { logError, logInfo } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -34,6 +34,7 @@ export interface RunCmdOpts {
   silent?: boolean;
   verbose?: boolean;
   redirectStderr?: boolean;
+  timeout?: number;
 }
 
 /**
@@ -416,11 +417,14 @@ export function runCLI(
     redirectStderr: undefined,
   }
 ): string {
+  const timeoutMs = opts.timeout ?? 5 * 60 * 1000;
   try {
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
       (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
+    logInfo(`Run Command: ${command}`);
+    const startTime = performance.now();
     const logs = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
@@ -433,7 +437,10 @@ export function runCLI(
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
+      timeout: timeoutMs,
     });
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+    logInfo(`Run Command: ${command} (${elapsed}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
@@ -447,6 +454,15 @@ export function runCLI(
 
     return r;
   } catch (e) {
+    if (e.killed || e.signal) {
+      const timeoutSec = Math.round(timeoutMs / 1000);
+      const processOutput = stripVTControlCharacters(
+        `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
+      ).trim();
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      logError(`Command timed out`, msg);
+      throw new Error(msg);
+    }
     if (opts.silenceError) {
       return stripVTControlCharacters(e.stdout + e.stderr);
     } else {
@@ -463,6 +479,7 @@ export function runLernaCLI(
     env: undefined,
   }
 ): string {
+  const timeoutMs = opts.timeout ?? 2 * 60 * 1000;
   try {
     const pm = getPackageManagerCommand();
     const fullCommand = `${pm.runLerna} ${command}`;
@@ -475,6 +492,7 @@ export function runLernaCLI(
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
+      timeout: timeoutMs,
     });
 
     if (opts.verbose ?? isVerboseE2ERun()) {
@@ -488,6 +506,15 @@ export function runLernaCLI(
 
     return r;
   } catch (e) {
+    if (e.killed || e.signal) {
+      const timeoutSec = Math.round(timeoutMs / 1000);
+      const processOutput = stripVTControlCharacters(
+        `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
+      ).trim();
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      logError(`Command timed out`, msg);
+      throw new Error(msg);
+    }
     if (opts.silenceError) {
       return stripVTControlCharacters(e.stdout + e.stderr);
     } else {
