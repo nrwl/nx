@@ -66,7 +66,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         createReleaseConfig !== false &&
         typeof createReleaseConfig !== 'string'
       ) {
-        hostname = createReleaseConfig.hostname;
+        hostname = createReleaseConfig.hostname || hostname;
         apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
