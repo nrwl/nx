@@ -105,8 +105,8 @@ fun runBuildLauncher(
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          setStandardOutput(outputStream)
-          setStandardError(errorStream)
+          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardError(TeeOutputStream(errorStream, System.err))
           withDetailedFailure()
           addProgressListener(buildListener(tasks, taskStartTimes, taskResults), OperationType.TASK)
         }
@@ -175,8 +175,8 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(outputStream)
-          setStandardError(errorStream)
+          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardError(TeeOutputStream(errorStream, System.err))
           addProgressListener(
               testListener(tasks, testTaskStatus, testStartTimes, testEndTimes), eventTypes)
           withDetailedFailure()

@@ -18,10 +18,6 @@ import {
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
 import {
-  createPseudoTerminal,
-  PseudoTerminal,
-} from 'nx/src/tasks-runner/pseudo-terminal';
-import {
   getAllDependsOn,
   getExcludeTasks,
   getGradleTaskNameWithNxTaskId,
@@ -189,9 +185,6 @@ async function runTasksInBatch(
 ): Promise<BatchResults> {
   const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
-  const usePseudoTerminal =
-    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    PseudoTerminal.isSupported();
   const debugOptions = ' ' + (process.env.NX_GRADLE_BATCH_DEBUG ?? '');
   const command = `java${debugOptions} -jar ${batchRunnerPath} --tasks='${JSON.stringify(
     gradlewTasksToRun
@@ -202,33 +195,16 @@ async function runTasksInBatch(
   )}' --excludeTestTasks='${Array.from(excludeTestTasks).join(',')}' ${
     process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
   }`;
-  let batchResults;
-  if (usePseudoTerminal && process.env.NX_VERBOSE_LOGGING !== 'true') {
-    const terminal = createPseudoTerminal();
-    await terminal.init();
-
-    const cp = terminal.runCommand(command, {
-      cwd: workspaceRoot,
-      jsEnv: process.env,
-      quiet: true,
-    });
-    const results = await cp.getResults();
-    terminal.shutdown(0);
-    batchResults = results.terminalOutput;
-
-    batchResults = batchResults.replace(command, '');
-    const startIndex = batchResults.indexOf('{');
-    const endIndex = batchResults.lastIndexOf('}');
-    // only keep the json part
-    batchResults = batchResults.substring(startIndex, endIndex + 1);
-  } else {
-    batchResults = execSync(command, {
-      cwd: workspaceRoot,
-      windowsHide: true,
-      env: process.env,
-      maxBuffer: LARGE_BUFFER,
-    }).toString();
-  }
+  // Use 'inherit' for stderr so Gradle output (tee'd to System.err
+  // by TeeOutputStream) flows to the terminal in real-time.
+  // stdout is piped to capture the JSON batch results.
+  const batchResults = execSync(command, {
+    cwd: workspaceRoot,
+    windowsHide: true,
+    env: process.env,
+    stdio: ['pipe', 'pipe', 'inherit'],
+    maxBuffer: LARGE_BUFFER,
+  }).toString();
   const gradlewBatchEnd = performance.mark(`gradlew-batch:end`);
   performance.measure(
     `gradlew-batch`,
