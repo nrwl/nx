@@ -385,7 +385,7 @@ const docsToAstroRedirects = {
   '/reference/core-api/web/migrations': '/reference/web/migrations',
   '/reference/core-api/workspace/documents': '/docs/reference/workspace',
   '/reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix':
-    '/docs/reference/nodejs-typescript-compatibility',
+    '/docs/technologies/node/introduction',
   '/reference/core-api/workspace/executors': '/reference/workspace/executors',
   '/reference/core-api/workspace/executors/counter':
     '/reference/workspace/executors',
@@ -452,7 +452,7 @@ const docsToAstroRedirects = {
   '/technologies/angular/angular-rspack/introduction':
     '/docs/technologies/angular/angular-rspack/introduction',
   '/technologies/angular/angular-rsbuild':
-    '/docs/technologies/angular/angular-rsbuild',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/technologies/react': '/docs/technologies/react',
   '/technologies/react/introduction': '/docs/technologies/react/introduction',
   '/technologies/react/next': '/docs/technologies/react/next',
@@ -555,9 +555,9 @@ const docsToAstroRedirects = {
   '/technologies/angular/angular-rspack/api/create-server':
     '/docs/technologies/angular/angular-rspack/create-server',
   '/technologies/angular/angular-rsbuild/api':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/technologies/angular/angular-rsbuild/api/create-config':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/technologies/angular/angular-rsbuild/api/create-server':
     '/docs/technologies/angular/angular-rsbuild/create-server',
   '/technologies/react/recipes/:path*':

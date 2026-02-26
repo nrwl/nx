@@ -1,6 +1,6 @@
 ---
-title: Overview of the Nx Playwright Plugin
-description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright. This page also explains how to configure Playwright on your Nx workspace.
+title: Playwright Plugin for Nx
+description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright, including setup and configuration for your Nx workspace.
 sidebar:
   label: Introduction
 filter: 'type:References'
@@ -13,6 +13,16 @@ Playwright is a modern web test runner. With included features such as:
 - Automatic waiting
 - Test generation
 - Screenshots and videos
+
+## Requirements
+
+The `@nx/playwright` plugin supports the following package versions.
+
+| Package            | Supported Versions |
+| ------------------ | ------------------ |
+| `@playwright/test` | ^1.36.0            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setting Up @nx/playwright
 
@@ -68,7 +78,7 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E Tests
 
-`@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/docs/features/ci-features/split-e2e-tasks).
+`@nx/playwright/plugin` uses Nx Atomizer to automatically split your e2e tests into smaller tasks for more efficient distribution in CI. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
 
 If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
 

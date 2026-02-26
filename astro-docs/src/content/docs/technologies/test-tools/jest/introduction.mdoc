@@ -1,6 +1,6 @@
 ---
-title: Overview of the Nx Jest Plugin
-description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest. This page also explains how to configure Jest on your Nx workspace.
+title: Jest Plugin for Nx
+description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest, including setup and configuration for your Nx workspace.
 sidebar:
   label: Introduction
 filter: 'type:References'
@@ -11,6 +11,16 @@ filter: 'type:References'
 The `@nx/jest` plugin adds [inferred Jest targets](#configuration), a [Jest configuration generator](#add-jest-to-a-project), and CI-ready [test splitting](#unit-and-e2e-configurations).
 
 You can use Jest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+## Requirements
+
+The `@nx/jest` plugin supports the following package versions.
+
+| Package | Supported Versions   |
+| ------- | -------------------- |
+| `jest`  | ^29.0.0 \|\| ^30.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setup
 
@@ -234,7 +244,7 @@ Organize tests by feature to get better cache hits and more targeted CI runs. Se
 
 Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] --runInBand` for the best performance.
 
-This is because each jest process creates workers based on system resources, running multiple projects via Nx and using jest workers will create too many processes overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process. You can then leverage Nx parallelism to run multiple jest projects at once.
+This is because each Jest process creates workers based on system resources, and running multiple projects via Nx with Jest workers will create too many processes overall, causing the system to run slower than desired. Using the `--runInBand` flag tells Jest to run in a single process. You can then use Nx parallelism to run multiple Jest projects at once.
 
 ### Batch Mode
 
