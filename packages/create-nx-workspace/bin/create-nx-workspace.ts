@@ -641,8 +641,7 @@ async function normalizeArgsMiddleware(
           nxCloud = 'yes';
           skipCloudConnect = false;
         } else if (cloudChoice === 'skip') {
-          nxCloud = 'yes';
-          skipCloudConnect = true;
+          nxCloud = 'skip';
         } else {
           nxCloud = 'never';
           neverConnectToCloud = true;
@@ -732,8 +731,7 @@ async function normalizeArgsMiddleware(
           nxCloud = 'yes';
           skipCloudConnect = false;
         } else if (cloudChoice === 'skip') {
-          nxCloud = 'yes';
-          skipCloudConnect = true;
+          nxCloud = 'skip';
         } else {
           nxCloud = 'never';
           neverConnectToCloud = true;
