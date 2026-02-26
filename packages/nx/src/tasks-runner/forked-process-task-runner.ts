@@ -428,7 +428,11 @@ export class ForkedProcessTaskRunner {
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', messageHandler);
 
-    // Terminate any task processes on exit
+    // Terminate any task processes on exit (sync, last resort).
+    // cleanup() is async but the initial signal dispatch is synchronous
+    // (killProcessTreeGraceful snapshots and signals before the async
+    // grace period). The grace period won't complete here, but each
+    // child also has its own sync exit handler as a final fallback.
     process.once('exit', () => {
       this.cleanup();
       process.off('message', messageHandler);

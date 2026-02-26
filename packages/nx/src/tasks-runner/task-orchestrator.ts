@@ -1290,9 +1290,10 @@ export class TaskOrchestrator {
       );
     }
 
-    // Kill all processes
-    this.forkedProcessTaskRunner.cleanup();
+    // Kill all processes — await forked runner cleanup for graceful shutdown
+    const forkedCleanup = this.forkedProcessTaskRunner.cleanup();
     await Promise.all([
+      forkedCleanup,
       ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
           await runningTask.kill();
