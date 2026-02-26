@@ -143,9 +143,7 @@
               "@nx/powerpack-conformance",
               "@nx/conformance",
               // Nx Docker plugin conditionally available dynamically at runtime
-              "@nx/docker",
-              // Only used in test-utils at the time of writing
-              "@ltd/j-toml"
+              "@nx/docker"
             ]
           }
         ]
