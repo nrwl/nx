@@ -68,7 +68,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
         createReleaseConfig !== false &&
         typeof createReleaseConfig !== 'string'
       ) {
-        hostname = createReleaseConfig.hostname;
+        hostname = createReleaseConfig.hostname || hostname;
         apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
