@@ -1,11 +1,11 @@
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::types::TaskTarget;
-use crate::native::types::StoredExternal;
 use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use rusqlite::{params, types::Value};
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use tracing::trace;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_history (
@@ -31,22 +31,24 @@ pub struct TaskRun {
 
 #[napi]
 pub struct NxTaskHistory {
-    db: StoredExternal<NxDbConnection>,
+    db: Arc<Mutex<NxDbConnection>>,
 }
 
 #[napi]
 impl NxTaskHistory {
     #[napi(constructor)]
-    pub fn new(db: &External<NxDbConnection>) -> anyhow::Result<Self> {
-        Ok(Self {
-            db: StoredExternal::from_ref(db),
-        })
+    pub fn new(
+        #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<
+            Arc<Mutex<NxDbConnection>>,
+        >,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { db: Arc::clone(db) })
     }
 
     #[napi]
     pub fn record_task_runs(&mut self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
         trace!("Recording task runs");
-        self.db.deref_mut().transaction(|conn| {
+        self.db.lock().unwrap().transaction(|conn| {
             let mut stmt = conn.prepare(
                 "INSERT OR REPLACE INTO task_history
         (hash, status, code, start, end)
@@ -77,6 +79,8 @@ impl NxTaskHistory {
         );
 
         self.db
+            .lock()
+            .unwrap()
             .prepare(
                 "SELECT hash from task_history
                     WHERE hash IN rarray(?1) AND status != 'stopped'
@@ -110,6 +114,8 @@ impl NxTaskHistory {
 
         // for older query sql version, need to select:  (project || ':' || target || (CASE WHEN coalesce(configuration, '') <> '' THEN ':' || configuration ELSE '' END)) AS target_string,
         self.db
+            .lock()
+            .unwrap()
             .prepare(
                 "
                 SELECT

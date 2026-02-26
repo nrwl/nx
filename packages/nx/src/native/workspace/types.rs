@@ -1,6 +1,7 @@
 use crate::native::types::FileData;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum FileLocation {
@@ -22,9 +23,9 @@ pub struct NxWorkspaceFiles {
 /// `FromNapiValue` since `External<T>` only supports `FromNapiRef` in napi v3.
 #[napi(object, object_from_js = false)]
 pub struct NxWorkspaceFilesExternals {
-    pub project_files: External<ProjectFiles>,
-    pub global_files: External<Vec<FileData>>,
-    pub all_workspace_files: External<Vec<FileData>>,
+    pub project_files: External<Arc<ProjectFiles>>,
+    pub global_files: External<Arc<Vec<FileData>>>,
+    pub all_workspace_files: External<Arc<Vec<FileData>>>,
 }
 
 #[napi(object, object_from_js = false)]

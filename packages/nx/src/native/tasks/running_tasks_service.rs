@@ -1,10 +1,10 @@
 use crate::native::db::connection::NxDbConnection;
-use crate::native::types::StoredExternal;
 use crate::native::utils::Normalize;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use std::env::args_os;
 use std::ffi::OsString;
+use std::sync::{Arc, Mutex};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
 use tracing::debug;
 
@@ -17,16 +17,20 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
 
 #[napi]
 struct RunningTasksService {
-    db: StoredExternal<NxDbConnection>,
+    db: Arc<Mutex<NxDbConnection>>,
     added_tasks: HashSet<String>,
 }
 
 #[napi]
 impl RunningTasksService {
     #[napi(constructor)]
-    pub fn new(db: &External<NxDbConnection>) -> anyhow::Result<Self> {
+    pub fn new(
+        #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<
+            Arc<Mutex<NxDbConnection>>,
+        >,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
-            db: StoredExternal::from_ref(db),
+            db: Arc::clone(db),
             added_tasks: Default::default(),
         })
     }
@@ -46,7 +50,7 @@ impl RunningTasksService {
     }
 
     fn is_task_running(&self, task_id: &String) -> anyhow::Result<bool> {
-        if let Some((pid, db_process_command, db_process_cwd)) = self.db.query_row(
+        if let Some((pid, db_process_command, db_process_cwd)) = self.db.lock().unwrap().query_row(
             "SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?",
             [task_id],
             |row| {
@@ -103,7 +107,7 @@ impl RunningTasksService {
         let cwd = std::env::current_dir()
             .expect("The current working directory does not exist")
             .to_normalized_string();
-        self.db.execute(
+        self.db.lock().unwrap().execute(
             "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
             [&task_id, &pid.to_string(), &command_str, &cwd],
         )?;
@@ -115,6 +119,8 @@ impl RunningTasksService {
     #[napi]
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
         self.db
+            .lock()
+            .unwrap()
             .execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())

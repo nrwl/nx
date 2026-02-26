@@ -311,15 +311,19 @@ impl WorkspaceContext {
     pub fn update_project_files(
         &self,
         project_root_mappings: ProjectRootMappings,
-        project_files: &External<ProjectFiles>,
-        global_files: &External<Vec<FileData>>,
+        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_files: &External<
+            Arc<ProjectFiles>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] global_files: &External<
+            Arc<Vec<FileData>>,
+        >,
         updated_files: HashMap<String, String>,
         deleted_files: Vec<String>,
     ) -> UpdatedWorkspaceFiles {
         trace!("updating project files");
         trace!("{project_root_mappings:?}");
         let deleted_files: Vec<&str> = deleted_files.iter().map(|s| s.as_str()).collect();
-        let mut project_files_map: ProjectFiles = (**project_files).clone();
+        let mut project_files_map: ProjectFiles = (***project_files).clone();
         let mut global_files = global_files
             .iter()
             .map(|f| (f.file.clone(), f.hash.clone()))
@@ -402,9 +406,9 @@ impl WorkspaceContext {
                 non_project_files: non_project_files.clone(),
             },
             external_references: NxWorkspaceFilesExternals {
-                project_files: External::new(project_files_map),
-                global_files: External::new(non_project_files),
-                all_workspace_files: External::new(self.all_file_data()),
+                project_files: External::new(Arc::new(project_files_map)),
+                global_files: External::new(Arc::new(non_project_files)),
+                all_workspace_files: External::new(Arc::new(self.all_file_data())),
             },
         }
     }

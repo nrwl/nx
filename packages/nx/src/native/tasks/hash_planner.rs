@@ -17,23 +17,28 @@ use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
 use crate::native::tasks::utils;
-use crate::native::types::StoredExternal;
 use crate::native::utils::find_matching_projects;
+use std::sync::Arc;
 
 #[napi]
 pub struct HashPlanner {
     nx_json: NxJson,
-    project_graph: StoredExternal<ProjectGraph>,
+    project_graph: Arc<ProjectGraph>,
 }
 
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
-    pub fn new(nx_json: NxJson, project_graph: &External<ProjectGraph>) -> Self {
+    pub fn new(
+        nx_json: NxJson,
+        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
+            Arc<ProjectGraph>,
+        >,
+    ) -> Self {
         enable_logger();
         Self {
             nx_json,
-            project_graph: StoredExternal::from_ref(project_graph),
+            project_graph: Arc::clone(project_graph),
         }
     }
 
