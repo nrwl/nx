@@ -3116,7 +3116,7 @@ importers:
         specifier: 0.0.7
         version: 0.0.7
       eslint:
-        specifier: ^8.0.0 || ^9.0.0
+        specifier: ^8.0.0 || ^9.0.0 || ^10.0.0
         version: 8.57.0
       semver:
         specifier: 'catalog:'
