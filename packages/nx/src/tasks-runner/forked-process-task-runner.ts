@@ -407,10 +407,8 @@ export class ForkedProcessTaskRunner {
     writeFileSync(outputPath, content);
   }
 
-  cleanup(signal?: NodeJS.Signals) {
-    this.processes.forEach((p) => {
-      p.kill(signal);
-    });
+  async cleanup(signal?: NodeJS.Signals) {
+    await Promise.all([...this.processes].map((p) => p.kill(signal)));
     this.cleanUpBatchProcesses();
   }
 
@@ -435,6 +433,24 @@ export class ForkedProcessTaskRunner {
       this.cleanup();
       process.off('message', messageHandler);
     });
-    // Signal handlers removed - TaskOrchestrator owns signal handling
+    process.once('SIGINT', () => {
+      this.cleanup('SIGTERM').finally(() => {
+        process.off('message', messageHandler);
+        // we exit here because we don't need to write anything to cache.
+        process.exit(signalToCode('SIGINT'));
+      });
+    });
+    process.once('SIGTERM', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.once('SIGHUP', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
   }
 }

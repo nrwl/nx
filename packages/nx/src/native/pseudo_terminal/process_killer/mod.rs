@@ -73,7 +73,69 @@ pub fn kill_process_tree(root_pid: i32, signal: Option<Either<String, i32>>) {
 /// Collect all PIDs in the process tree rooted at `root_pid` via BFS.
 ///
 /// Returns the list in BFS order (root first, leaves last).
+/// If the root process has already exited, returns an empty Vec.
+/// Use `collect_process_tree_from_pids` when the root may have exited
+/// but you still want to find surviving descendants.
 fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
+    let root = Pid::from(root_pid as usize);
+    collect_process_tree_inner(sys, root, true)
+}
+
+/// Collect descendants of `root_pid` even if the root itself has already exited.
+///
+/// Scans all processes whose parent chain includes `root_pid`. This handles the
+/// case where the root exits quickly but its children (now reparented to init/1)
+/// are still alive.
+fn collect_descendants_of(sys: &System, root_pid: i32, known_pids: &[Pid]) -> Vec<Pid> {
+    // Build the parent→children map
+    let mut children: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(sys.processes().len() / 4);
+    for (pid, proc_info) in sys.processes() {
+        if proc_info.thread_kind().is_some() {
+            continue;
+        }
+        if let Some(parent) = proc_info.parent() {
+            children.entry(parent).or_default().push(*pid);
+        }
+    }
+
+    // BFS from each known PID that still exists to find their descendants
+    let mut result = Vec::new();
+    let mut visited = HashSet::new();
+    let root = Pid::from(root_pid as usize);
+    visited.insert(root); // don't re-add root (it may be dead)
+
+    for &pid in known_pids {
+        if visited.insert(pid) {
+            if sys.process(pid).is_some() {
+                result.push(pid);
+            }
+            let mut queue = VecDeque::new();
+            if let Some(kids) = children.get(&pid) {
+                for &kid in kids {
+                    if visited.insert(kid) {
+                        queue.push_back(kid);
+                    }
+                }
+            }
+            while let Some(p) = queue.pop_front() {
+                if sys.process(p).is_some() {
+                    result.push(p);
+                }
+                if let Some(kids) = children.get(&p) {
+                    for &kid in kids {
+                        if visited.insert(kid) {
+                            queue.push_back(kid);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    result
+}
+
+fn collect_process_tree_inner(sys: &System, root: Pid, require_root: bool) -> Vec<Pid> {
     let mut children: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(sys.processes().len() / 4);
     for (pid, proc_info) in sys.processes() {
         // Skip threads (on Linux, threads appear as processes but we only want to kill processes)
@@ -85,9 +147,8 @@ fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
         }
     }
 
-    let root = Pid::from(root_pid as usize);
-    if sys.process(root).is_none() {
-        debug!("Root process {} not found", root_pid);
+    if require_root && sys.process(root).is_none() {
+        debug!("Root process {} not found", root);
         return Vec::new();
     }
 
@@ -98,7 +159,9 @@ fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
     visited.insert(root);
 
     while let Some(pid) = queue.pop_front() {
-        to_kill.push(pid);
+        if sys.process(pid).is_some() {
+            to_kill.push(pid);
+        }
         if let Some(kids) = children.get(&pid) {
             for &kid in kids {
                 if visited.insert(kid) {
@@ -214,13 +277,34 @@ pub async fn kill_process_tree_graceful(
         loop {
             std::thread::sleep(poll);
 
-            let alive = get_alive_pids(&to_kill);
+            // Check which originally-signaled PIDs are still alive.
+            // Also scan for any descendants that may have been missed
+            // (e.g. root exited quickly and children were reparented).
+            let mut alive = get_alive_pids(&to_kill);
             if alive.is_empty() {
-                debug!(
-                    "All processes exited gracefully after {}ms",
-                    start.elapsed().as_millis()
+                // Double-check: root may have died, reparenting children.
+                // Do a fresh full scan to catch orphaned descendants.
+                let mut sys = System::new();
+                sys.refresh_processes_specifics(
+                    ProcessesToUpdate::All,
+                    true,
+                    ProcessRefreshKind::nothing(),
                 );
-                return;
+                let stragglers = collect_descendants_of(&sys, root_pid, &to_kill);
+                if stragglers.is_empty() {
+                    debug!(
+                        "All processes exited gracefully after {}ms",
+                        start.elapsed().as_millis()
+                    );
+                    return;
+                }
+                // Signal the stragglers and continue the grace period
+                debug!(
+                    "Found {} reparented descendants, signaling them",
+                    stragglers.len()
+                );
+                send_signal_to_pids(&sys, &stragglers, mapped);
+                alive = stragglers;
             }
             if start.elapsed() >= deadline {
                 debug!(
