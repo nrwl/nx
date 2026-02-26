@@ -5,6 +5,7 @@ import {
   ChildProcess,
   IS_WASM,
   RustPseudoTerminal,
+  killProcessTree,
   killProcessTreeGraceful,
 } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
@@ -54,9 +55,14 @@ export class PseudoTerminal {
   }
 
   shutdown(code: number) {
+    // Called from process.on('exit') — must be synchronous/best-effort.
+    // Use fire-and-forget killProcessTree, not the async graceful variant.
     for (const cp of this.childProcesses) {
       try {
-        cp.kill(codeToSignal(code));
+        const pid = cp.getPid();
+        if (pid) {
+          killProcessTree(pid, codeToSignal(code));
+        }
       } catch {}
     }
     if (this.initialized) {
@@ -200,16 +206,18 @@ export class PseudoTtyProcess implements RunningTask {
     if (this.isAlive) {
       this.isAlive = false;
       const pid = this.childProcess.getPid();
-      try {
-        // Send signal to direct child via PTY
-        this.childProcess.kill(s || 'SIGTERM');
-      } catch {
-        // child may have already exited
-      }
-      // Gracefully kill the entire process tree (catches descendants
-      // in different process groups that wouldn't receive SIGHUP)
+      // Gracefully kill the entire process tree. This snapshots the tree
+      // BEFORE sending signals, so even if the root exits quickly from
+      // the signal, all descendants are already tracked and will be
+      // cleaned up (including any reparented to init/PID 1).
       if (pid) {
         await killProcessTreeGraceful(pid, s || 'SIGTERM');
+      } else {
+        try {
+          this.childProcess.kill(s || 'SIGTERM');
+        } catch {
+          // child may have already exited
+        }
       }
     }
   }
