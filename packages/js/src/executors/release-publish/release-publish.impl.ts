@@ -226,32 +226,34 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             try {
               const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
-            // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-            if (
-              !(
-                stdoutData.error?.code?.includes('E404') &&
-                stdoutData.error?.summary?.includes('no such package available')
-              ) &&
-              !(
-                err.stderr?.toString().includes('E404') &&
-                err.stderr?.toString().includes('no such package available')
-              )
-            ) {
-              console.error('npm dist-tag add error:');
-              // npm returns error.summary and error.detail
-              if (stdoutData.error?.summary) {
-                console.error(stdoutData.error.summary);
-              }
-              if (stdoutData.error?.detail) {
-                console.error(stdoutData.error.detail);
-              }
-              // pnpm returns error.code and error.message
-              if (stdoutData.error?.code && !stdoutData.error?.summary) {
-                console.error(`Error code: ${stdoutData.error.code}`);
-              }
-              if (stdoutData.error?.message && !stdoutData.error?.summary) {
-                console.error(stdoutData.error.message);
-              }
+              // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
+              if (
+                !(
+                  stdoutData.error?.code?.includes('E404') &&
+                  stdoutData.error?.summary?.includes(
+                    'no such package available'
+                  )
+                ) &&
+                !(
+                  err.stderr?.toString().includes('E404') &&
+                  err.stderr?.toString().includes('no such package available')
+                )
+              ) {
+                console.error('npm dist-tag add error:');
+                // npm returns error.summary and error.detail
+                if (stdoutData.error?.summary) {
+                  console.error(stdoutData.error.summary);
+                }
+                if (stdoutData.error?.detail) {
+                  console.error(stdoutData.error.detail);
+                }
+                // pnpm returns error.code and error.message
+                if (stdoutData.error?.code && !stdoutData.error?.summary) {
+                  console.error(`Error code: ${stdoutData.error.code}`);
+                }
+                if (stdoutData.error?.message && !stdoutData.error?.summary) {
+                  console.error(stdoutData.error.message);
+                }
 
                 if (context.isVerbose) {
                   console.error('npm dist-tag add stdout:');
