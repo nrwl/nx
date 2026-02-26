@@ -109,7 +109,7 @@ jsonrpsee = { version = "0.25.1", features = [
 ] }
 
 [lib]
-crate-type = ['cdylib']
+crate-type = ['cdylib', 'rlib']
 
 [build-dependencies]
 napi-build = '2.3.1'
