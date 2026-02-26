@@ -29,8 +29,6 @@ use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
 
-use crate::native::types::StoredExternal;
-
 /// NAPI-compatible struct for returning hash inputs to JavaScript
 #[napi(object)]
 #[derive(Debug, Default, Clone)]
@@ -144,9 +142,9 @@ pub struct HasherOptions {
 #[napi]
 pub struct TaskHasher {
     workspace_root: String,
-    project_graph: StoredExternal<ProjectGraph>,
-    project_file_map: StoredExternal<HashMap<String, Vec<FileData>>>,
-    all_workspace_files: StoredExternal<Vec<FileData>>,
+    project_graph: Arc<ProjectGraph>,
+    project_file_map: Arc<HashMap<String, Vec<FileData>>>,
+    all_workspace_files: Arc<Vec<FileData>>,
     ts_config: Vec<u8>,
     ts_config_paths: HashMap<String, Vec<String>>,
     root_tsconfig_path: Option<String>,
@@ -159,9 +157,15 @@ impl TaskHasher {
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
-        project_graph: &External<ProjectGraph>,
-        project_file_map: &External<ProjectFiles>,
-        all_workspace_files: &External<Vec<FileData>>,
+        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
+            Arc<ProjectGraph>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_file_map: &External<
+            Arc<ProjectFiles>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
+            Arc<Vec<FileData>>,
+        >,
         ts_config: Buffer,
         ts_config_paths: HashMap<String, Vec<String>>,
         root_tsconfig_path: Option<String>,
@@ -169,9 +173,9 @@ impl TaskHasher {
     ) -> Self {
         Self {
             workspace_root,
-            project_graph: StoredExternal::from_ref(project_graph),
-            project_file_map: StoredExternal::from_ref(project_file_map),
-            all_workspace_files: StoredExternal::from_ref(all_workspace_files),
+            project_graph: Arc::clone(project_graph),
+            project_file_map: Arc::clone(project_file_map),
+            all_workspace_files: Arc::clone(all_workspace_files),
             ts_config: ts_config.to_vec(),
             ts_config_paths,
             root_tsconfig_path,

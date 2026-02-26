@@ -7,6 +7,7 @@ use crate::native::{db::connection::NxDbConnection, hasher::hash};
 use napi::bindgen_prelude::External;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::{mem, process};
 use tracing::{trace, trace_span};
 
@@ -15,7 +16,7 @@ pub fn connect_to_nx_db(
     cache_dir: String,
     nx_version: String,
     db_name: Option<String>,
-) -> anyhow::Result<External<NxDbConnection>> {
+) -> anyhow::Result<External<Arc<Mutex<NxDbConnection>>>> {
     enable_logger();
     let cache_dir_buf = PathBuf::from(cache_dir);
     let mut db_file_name = db_name.unwrap_or_else(get_machine_id);
@@ -37,12 +38,16 @@ pub fn connect_to_nx_db(
 
         initialize::unlock_file(&lock_file);
 
-        Ok(External::new(c))
+        Ok(External::new(Arc::new(Mutex::new(c))))
     })
 }
 
 #[napi]
-pub fn close_db_connection(connection: &mut External<NxDbConnection>) -> anyhow::Result<()> {
-    let conn = mem::take(connection.as_mut());
+pub fn close_db_connection(
+    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] connection: &mut External<
+        Arc<Mutex<NxDbConnection>>,
+    >,
+) -> anyhow::Result<()> {
+    let conn = mem::take(&mut *connection.lock().unwrap());
     conn.close()
 }

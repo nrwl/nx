@@ -12,9 +12,9 @@ use sysinfo::Disks;
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
 use crate::native::db::connection::NxDbConnection;
-use crate::native::types::StoredExternal;
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::External;
+use std::sync::{Arc, Mutex};
 
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
@@ -30,7 +30,7 @@ pub struct NxCache {
     pub cache_directory: String,
     workspace_root: PathBuf,
     cache_path: PathBuf,
-    db: StoredExternal<NxDbConnection>,
+    db: Arc<Mutex<NxDbConnection>>,
     link_task_details: bool,
     max_cache_size: i64,
 }
@@ -41,7 +41,9 @@ impl NxCache {
     pub fn new(
         workspace_root: String,
         cache_path: String,
-        db_connection: &External<NxDbConnection>,
+        #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db_connection: &External<
+            Arc<Mutex<NxDbConnection>>,
+        >,
         // TODO: this is unused by Nx but still required by Nx Cloud
         link_task_details: Option<bool>,
         max_cache_size: Option<i64>,
@@ -54,7 +56,7 @@ impl NxCache {
         let max_cache_size = max_cache_size.unwrap_or(0);
 
         let r = Self {
-            db: StoredExternal::from_ref(db_connection),
+            db: Arc::clone(db_connection),
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
@@ -89,7 +91,11 @@ impl NxCache {
             "
         };
 
-        self.db.execute(query, []).map_err(anyhow::Error::from)?;
+        self.db
+            .lock()
+            .unwrap()
+            .execute(query, [])
+            .map_err(anyhow::Error::from)?;
         Ok(())
     }
 
@@ -103,6 +109,8 @@ impl NxCache {
 
         let r = self
             .db
+            .lock()
+            .unwrap()
             .query_row(
                 "UPDATE cache_outputs
                     SET accessed_at = CURRENT_TIMESTAMP
@@ -229,7 +237,7 @@ impl NxCache {
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
-        self.db.execute(
+        self.db.lock().unwrap().execute(
             "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
             params![hash, code, size],
         )?;
@@ -242,6 +250,8 @@ impl NxCache {
     #[napi]
     pub fn get_cache_size(&self) -> anyhow::Result<i64> {
         self.db
+            .lock()
+            .unwrap()
             .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
                 row.get::<_, Option<i64>>(0)
                     // If there are no cache entries, the result is
@@ -270,7 +280,8 @@ impl NxCache {
         let full_cache_size = self.get_cache_size()?;
         if user_specified_max_cache_size < full_cache_size {
             let mut cache_size = full_cache_size;
-            let mut stmt = self.db.prepare(
+            let db = self.db.lock().unwrap();
+            let mut stmt = db.prepare(
                 "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
             )?;
             'outer: while cache_size > target_cache_size {
@@ -282,8 +293,7 @@ impl NxCache {
                 for row in rows {
                     if let Ok((hash, size)) = row {
                         cache_size -= size;
-                        self.db
-                            .execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                        db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
                         remove_items(&[self.cache_path.join(&hash)])?;
                     }
                     // We've deleted enough cache entries to be under the
@@ -346,6 +356,8 @@ impl NxCache {
     pub fn remove_old_cache_records(&self) -> anyhow::Result<()> {
         let outdated_cache = self
             .db
+            .lock()
+            .unwrap()
             .prepare(
                 "DELETE FROM cache_outputs WHERE accessed_at < datetime('now', '-7 days') RETURNING hash",
             )?
@@ -373,6 +385,8 @@ impl NxCache {
         // If they don't match, it means that the cache is out of sync.
         let cache_records_exist = self
             .db
+            .lock()
+            .unwrap()
             .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
                 let exists: bool = row.get(0)?;
                 Ok(exists)
