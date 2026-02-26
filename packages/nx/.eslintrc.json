@@ -144,8 +144,6 @@
               "@nx/conformance",
               // Nx Docker plugin conditionally available dynamically at runtime
               "@nx/docker",
-              // Only used in test-utils at the time of writing
-              "@ltd/j-toml",
               // Used in WASI browser implementation (nx.wasi-browser.js)
               "@napi-rs/wasm-runtime"
             ]
