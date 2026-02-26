@@ -3,14 +3,11 @@ package dev.nx.gradle.runner
 import java.io.OutputStream
 
 /**
- * An OutputStream that writes to two destinations simultaneously.
- * Used to capture Gradle output for JSON results while also
- * forwarding it to stderr for real-time terminal display.
+ * An OutputStream that writes to two destinations simultaneously. Used to capture Gradle output for
+ * JSON results while also forwarding it to stderr for real-time terminal display.
  */
-class TeeOutputStream(
-    private val primary: OutputStream,
-    private val secondary: OutputStream
-) : OutputStream() {
+class TeeOutputStream(private val primary: OutputStream, private val secondary: OutputStream) :
+    OutputStream() {
 
   override fun write(b: Int) {
     primary.write(b)
