@@ -10,11 +10,9 @@ use crate::native::watch::types::{
     EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
 use crate::native::watch::watch_filterer;
+use napi::Env;
 use napi::bindgen_prelude::*;
-use napi::threadsafe_function::{
-    ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
-};
-use napi::{Env, JsFunction, JsObject};
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use parking_lot::Mutex;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
@@ -147,29 +145,13 @@ impl Watcher {
         &mut self,
         env: Env,
         #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
-        callback: JsFunction,
+        mut callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
     ) -> Result<()> {
         _ = tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
             .try_init();
 
-        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, WatchEventInternal>> = callback
-            .create_threadsafe_function(
-            0,
-            |ctx: ThreadSafeCallContext<HashMap<String, WatchEventInternal>>| {
-                let mut watch_events: Vec<WatchEvent> = vec![];
-                trace!(?ctx.value, "Base collection that will be sent");
-
-                for event in ctx.value.values() {
-                    watch_events.push(event.into());
-                }
-
-                trace!(?watch_events, "sending to node");
-
-                Ok(vec![watch_events])
-            },
-        )?;
-
+        #[allow(deprecated)]
         callback_tsfn.unref(&env)?;
 
         // Shared state for dynamic directory registration.
@@ -278,7 +260,10 @@ impl Watcher {
                 trace!(?path, r#type = ?ev.r#type, "callback event");
             }
 
-            callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
+            let watch_events: Vec<WatchEvent> = group_events.values().map(|e| e.into()).collect();
+            trace!(?watch_events, "sending to node");
+
+            callback_tsfn.call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
 
             action
         });
@@ -335,25 +320,21 @@ impl Watcher {
         Ok(())
     }
 
-    #[napi(ts_return_type = "Promise<void>")]
-    pub fn stop(&mut self, env: Env) -> Result<JsObject> {
+    #[napi]
+    pub async fn stop(&self) -> Result<()> {
         trace!("stopping the watch process");
         let watch_exec = self.watch_exec.clone();
-        let send_terminate = async move {
-            watch_exec
-                .send_event(
-                    Event {
-                        tags: vec![Tag::Signal(Signal::Terminate)],
-                        metadata: HashMap::new(),
-                    },
-                    Priority::Urgent,
-                )
-                .await
-                .map_err(anyhow::Error::from)?;
+        watch_exec
+            .send_event(
+                Event {
+                    tags: vec![Tag::Signal(Signal::Terminate)],
+                    metadata: HashMap::new(),
+                },
+                Priority::Urgent,
+            )
+            .await
+            .map_err(anyhow::Error::from)?;
 
-            Ok(())
-        };
-
-        env.spawn_future(send_terminate)
+        Ok(())
     }
 }

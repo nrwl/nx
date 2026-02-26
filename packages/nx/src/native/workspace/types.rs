@@ -1,5 +1,5 @@
 use crate::native::types::FileData;
-use napi::bindgen_prelude::External;
+use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -10,7 +10,7 @@ pub enum FileLocation {
 
 pub type ProjectFiles = HashMap<String, Vec<FileData>>;
 
-#[napi(object)]
+#[napi(object, object_from_js = false)]
 #[derive(Default)]
 pub struct NxWorkspaceFiles {
     pub project_file_map: ProjectFiles,
@@ -18,14 +18,16 @@ pub struct NxWorkspaceFiles {
     pub external_references: Option<NxWorkspaceFilesExternals>,
 }
 
-#[napi(object)]
+/// Return-only struct (Rust → JS). `object_from_js = false` skips generating
+/// `FromNapiValue` since `External<T>` only supports `FromNapiRef` in napi v3.
+#[napi(object, object_from_js = false)]
 pub struct NxWorkspaceFilesExternals {
     pub project_files: External<ProjectFiles>,
     pub global_files: External<Vec<FileData>>,
     pub all_workspace_files: External<Vec<FileData>>,
 }
 
-#[napi(object)]
+#[napi(object, object_from_js = false)]
 pub struct UpdatedWorkspaceFiles {
     pub file_map: FileMap,
     pub external_references: NxWorkspaceFilesExternals,

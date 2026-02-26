@@ -12,7 +12,9 @@ use sysinfo::Disks;
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
 use crate::native::db::connection::NxDbConnection;
+use crate::native::types::StoredExternal;
 use crate::native::utils::Normalize;
+use napi::bindgen_prelude::External;
 
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
@@ -28,7 +30,7 @@ pub struct NxCache {
     pub cache_directory: String,
     workspace_root: PathBuf,
     cache_path: PathBuf,
-    db: External<NxDbConnection>,
+    db: StoredExternal<NxDbConnection>,
     link_task_details: bool,
     max_cache_size: i64,
 }
@@ -39,7 +41,7 @@ impl NxCache {
     pub fn new(
         workspace_root: String,
         cache_path: String,
-        db_connection: External<NxDbConnection>,
+        db_connection: &External<NxDbConnection>,
         // TODO: this is unused by Nx but still required by Nx Cloud
         link_task_details: Option<bool>,
         max_cache_size: Option<i64>,
@@ -52,7 +54,7 @@ impl NxCache {
         let max_cache_size = max_cache_size.unwrap_or(0);
 
         let r = Self {
-            db: db_connection,
+            db: StoredExternal::from_ref(db_connection),
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,

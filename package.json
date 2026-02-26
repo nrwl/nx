@@ -72,7 +72,7 @@
     "@module-federation/enhanced": "0.21.6",
     "@module-federation/sdk": "0.21.6",
     "@monodon/rust": "2.3.0",
-    "@napi-rs/cli": "3.0.0-alpha.56",
+    "@napi-rs/cli": "3.5.1",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@nestjs/cli": "^10.0.2",
     "@nestjs/common": "^9.0.0",

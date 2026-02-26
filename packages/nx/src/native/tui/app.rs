@@ -1,8 +1,9 @@
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use napi::bindgen_prelude::External;
 #[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use napi::threadsafe_function::ThreadsafeFunction;
+#[cfg(not(test))]
+use napi::{Status, bindgen_prelude::Unknown};
 use parking_lot::Mutex;
 use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
@@ -574,7 +575,7 @@ impl App {
     pub fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         debug!("Registering interactive task: {}", task_id);
         let pty =
@@ -1412,7 +1413,7 @@ impl App {
     #[cfg(not(test))]
     pub fn set_done_callback(
         &mut self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) {
         self.core.state().lock().set_done_callback(done_callback);
     }
@@ -1420,7 +1421,7 @@ impl App {
     #[cfg(not(test))]
     pub fn set_forced_shutdown_callback(
         &mut self,
-        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        forced_shutdown_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) {
         self.core
             .state()

@@ -1,4 +1,5 @@
 use crate::native::db::connection::NxDbConnection;
+use crate::native::types::StoredExternal;
 use crate::native::utils::Normalize;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
@@ -16,16 +17,16 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
 
 #[napi]
 struct RunningTasksService {
-    db: External<NxDbConnection>,
+    db: StoredExternal<NxDbConnection>,
     added_tasks: HashSet<String>,
 }
 
 #[napi]
 impl RunningTasksService {
     #[napi(constructor)]
-    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
+    pub fn new(db: &External<NxDbConnection>) -> anyhow::Result<Self> {
         Ok(Self {
-            db,
+            db: StoredExternal::from_ref(db),
             added_tasks: Default::default(),
         })
     }

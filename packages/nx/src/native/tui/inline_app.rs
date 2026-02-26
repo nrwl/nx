@@ -2,7 +2,6 @@ use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
-use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
 use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
@@ -621,7 +620,7 @@ impl TuiApp for InlineApp {
     fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         let mut pty =
             PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());

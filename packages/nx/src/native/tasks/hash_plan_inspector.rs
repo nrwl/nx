@@ -4,17 +4,18 @@ use crate::native::tasks::hashers::{
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::HashInstruction;
-use crate::native::types::FileData;
+use crate::native::types::{FileData, StoredExternal};
 use hashbrown::HashSet;
+use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::collections::HashMap;
 
 #[napi]
 pub struct HashPlanInspector {
-    all_workspace_files: External<Vec<FileData>>,
-    project_graph: External<ProjectGraph>,
-    project_file_map: External<HashMap<String, Vec<FileData>>>,
+    all_workspace_files: StoredExternal<Vec<FileData>>,
+    project_graph: StoredExternal<ProjectGraph>,
+    project_file_map: StoredExternal<HashMap<String, Vec<FileData>>>,
     workspace_root: String,
 }
 
@@ -22,15 +23,15 @@ pub struct HashPlanInspector {
 impl HashPlanInspector {
     #[napi(constructor)]
     pub fn new(
-        all_workspace_files: External<Vec<FileData>>,
-        project_graph: External<ProjectGraph>,
-        project_file_map: External<HashMap<String, Vec<FileData>>>,
+        all_workspace_files: &External<Vec<FileData>>,
+        project_graph: &External<ProjectGraph>,
+        project_file_map: &External<HashMap<String, Vec<FileData>>>,
         workspace_root: String,
     ) -> Self {
         Self {
-            all_workspace_files,
-            project_graph,
-            project_file_map,
+            all_workspace_files: StoredExternal::from_ref(all_workspace_files),
+            project_graph: StoredExternal::from_ref(project_graph),
+            project_file_map: StoredExternal::from_ref(project_file_map),
             workspace_root,
         }
     }
@@ -39,7 +40,7 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn inspect(
         &self,
-        hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
     ) -> anyhow::Result<HashMap<String, Vec<String>>> {
         let results: Vec<(&String, Vec<String>)> = hash_plans
             .iter()
@@ -83,7 +84,7 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, HashInputs>")]
     pub fn inspect_inputs(
         &self,
-        hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
     ) -> anyhow::Result<HashMap<String, HashInputs>> {
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
             .iter()
