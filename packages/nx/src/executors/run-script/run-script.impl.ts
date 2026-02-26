@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import * as path from 'path';
-import { killProcessTree } from '../../native';
+import { killProcessTreeGraceful } from '../../native';
 import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -72,8 +72,9 @@ function nodeProcess(
 
     const exitHandler = (signal: NodeJS.Signals) => {
       if (cp && cp.pid && !cp.killed) {
-        killProcessTree(cp.pid, signal);
-        res();
+        killProcessTreeGraceful(cp.pid, signal).finally(() => {
+          res();
+        });
       }
     };
 

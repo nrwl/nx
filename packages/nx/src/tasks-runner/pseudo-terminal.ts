@@ -1,7 +1,12 @@
 import { Serializable } from 'child_process';
 import * as os from 'os';
 import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
-import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
+import {
+  ChildProcess,
+  IS_WASM,
+  RustPseudoTerminal,
+  killProcessTreeGraceful,
+} from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal, messageToCode } from '../utils/exit-codes';
@@ -191,15 +196,20 @@ export class PseudoTtyProcess implements RunningTask {
     return this.childProcess.getPid();
   }
 
-  kill(s?: NodeJS.Signals): void {
+  async kill(s?: NodeJS.Signals): Promise<void> {
     if (this.isAlive) {
+      this.isAlive = false;
+      const pid = this.childProcess.getPid();
       try {
+        // Send signal to direct child via PTY
         this.childProcess.kill(s || 'SIGTERM');
       } catch {
-        // when the child process completes before we explicitly call kill, this will throw
-        // do nothing
-      } finally {
-        this.isAlive = false;
+        // child may have already exited
+      }
+      // Gracefully kill the entire process tree (catches descendants
+      // in different process groups that wouldn't receive SIGHUP)
+      if (pid) {
+        await killProcessTreeGraceful(pid, s || 'SIGTERM');
       }
     }
   }
