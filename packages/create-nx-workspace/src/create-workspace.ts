@@ -17,6 +17,7 @@ import {
   getNxCloudInfo,
   getSkippedNxCloudInfo,
   readNxCloudToken,
+  setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
@@ -135,8 +136,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     // Connect to Nx Cloud for template flow
-    // For variant 1 (NXC-3628): Skip connection, use GitHub flow for URL generation
-    if (nxCloud !== 'skip' && !options.skipCloudConnect) {
+    if (
+      nxCloud !== 'skip' &&
+      nxCloud !== 'never' &&
+      !options.skipCloudConnect
+    ) {
       await connectToNxCloudForTemplate(
         directory,
         'create-nx-workspace',
@@ -184,9 +188,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   // Generate CI for preset flow (not template)
   // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
-  if (nxCloud !== 'skip' && !isTemplate) {
+  if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
+  }
+
+  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
+  if (options.neverConnectToCloud) {
+    setNeverConnectToCloud(directory);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
@@ -234,17 +243,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
 
-  if (nxCloud !== 'skip') {
+  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+    // "Yes" or "Maybe later" — generate URL, update README, show banner
     const aiModeForCloud = isAiAgent();
     if (aiModeForCloud) {
       logProgress('configuring', 'Configuring Nx Cloud...');
     }
-    // For variant 1 (skipCloudConnect=true): Skip readNxCloudToken() entirely
-    // - We didn't call connectToNxCloudForTemplate(), so no token exists
-    // - The spinner message "Checking Nx Cloud setup" would be misleading
-    // - createNxCloudOnboardingUrl() uses GitHub flow which sends accessToken: null
-    //
-    // For variant 0: Read the token as before (cloud was connected)
+    // skipCloudConnect=true (Maybe later): Skip readNxCloudToken() since no token exists
+    // skipCloudConnect=false (Yes): Read the token as before (cloud was connected)
     const token = options.skipCloudConnect
       ? undefined
       : readNxCloudToken(directory);
@@ -275,17 +281,18 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       options.completionMessageKey,
       name
     );
-  } else if (isTemplate && nxCloud === 'skip') {
-    // Strip marker comments from README even when cloud is skipped
-    // so users don't see raw <!-- BEGIN/END: nx-cloud --> markers
+  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+    // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
     if (readmeUpdated && !skipGit && commit) {
       const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
       await amendOrCommitReadme(directory, alreadyPushed);
     }
 
-    // Show nx connect message when user skips cloud in template flow
-    nxCloudInfo = getSkippedNxCloudInfo();
+    // Only show "nx connect" message for 'skip', not 'never'
+    if (nxCloud === 'skip') {
+      nxCloudInfo = getSkippedNxCloudInfo();
+    }
   }
 
   return {

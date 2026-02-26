@@ -27,7 +27,7 @@ use watchexec_events::{Event, FileType, Priority, Tag};
 use watchexec_signals::Signal;
 
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
-fn build_ignore_glob_set() -> NxGlobSet {
+fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
@@ -180,7 +180,7 @@ impl Watcher {
         // Hardcoded ignore patterns for dynamic directory registration.
         // These are always applied regardless of use_ignore - we never want to watch
         // node_modules, .git, etc. even when watching task outputs.
-        let ignore_globs: Arc<NxGlobSet> = Arc::new(build_ignore_glob_set());
+        let ignore_globs: Arc<NxGlobSet> = build_ignore_glob_set();
 
         let origin = self.origin.clone();
         let watch_exec_for_action = self.watch_exec.clone();
@@ -201,20 +201,26 @@ impl Watcher {
                 return action;
             }
 
-            // Check for new directory creation events and dynamically register watches.
-            // Without this, non-recursive watches would miss changes in newly created dirs.
-            let new_directories = extract_new_directories(&action.events, &ignore_globs_for_action);
+            // On macOS, FSEvents watches the entire tree recursively from the root,
+            // so we don't need to dynamically register new directories.
+            #[cfg(not(target_os = "macos"))]
+            {
+                // Check for new directory creation events and dynamically register watches.
+                // Without this, non-recursive watches would miss changes in newly created dirs.
+                let new_directories =
+                    extract_new_directories(&action.events, &ignore_globs_for_action);
 
-            if !new_directories.is_empty() {
-                let mut path_set = watched_path_set_for_action.lock();
-                path_set.extend(new_directories);
-                trace!(
-                    count = path_set.len(),
-                    "updating pathset with new directories"
-                );
-                watch_exec_for_action
-                    .config
-                    .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                if !new_directories.is_empty() {
+                    let mut path_set = watched_path_set_for_action.lock();
+                    path_set.extend(new_directories);
+                    trace!(
+                        count = path_set.len(),
+                        "updating pathset with new directories"
+                    );
+                    watch_exec_for_action
+                        .config
+                        .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                }
             }
 
             let mut origin_path = origin.clone();
@@ -284,16 +290,35 @@ impl Watcher {
         let start = async move {
             trace!("configuring watch exec");
 
-            // Enumerate non-ignored directories and watch each one non-recursively.
-            // This prevents inotify watches on node_modules and other ignored trees.
-            let path_set = enumerate_watch_paths(&origin, use_ignore);
-            trace!(count = path_set.len(), "setting watched paths");
-
-            // Store the initial path set so the on_action handler can append to it
-            watch_exec
-                .config
-                .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
-            *watched_path_set.lock() = path_set;
+            // On macOS, FSEvents handles recursive watching natively from a single
+            // root path. No need to enumerate individual directories — this avoids
+            // kqueue (used for non-recursive watches) which silently fails at scale
+            // due to vnode table pressure. See #34522.
+            #[cfg(target_os = "macos")]
+            {
+                let mut path_set = HashSet::new();
+                path_set.insert(PathBuf::from(&origin));
+                trace!(
+                    count = path_set.len(),
+                    "macOS: watching root recursively via FSEvents"
+                );
+                watch_exec
+                    .config
+                    .pathset(path_set.iter().map(|p| WatchedPath::recursive(p)));
+                *watched_path_set.lock() = path_set;
+            }
+            // On Linux/Windows, enumerate non-ignored directories and watch each one
+            // non-recursively. This prevents inotify watches on node_modules and other
+            // ignored trees (fixing #33781).
+            #[cfg(not(target_os = "macos"))]
+            {
+                let path_set = enumerate_watch_paths(&origin, use_ignore);
+                trace!(count = path_set.len(), "setting watched paths");
+                watch_exec
+                    .config
+                    .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                *watched_path_set.lock() = path_set;
+            }
 
             watch_exec.config.filterer(watch_filterer::create_filter(
                 &origin,

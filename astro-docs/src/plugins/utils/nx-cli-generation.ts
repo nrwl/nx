@@ -213,11 +213,12 @@ The Nx command line has various subcommands and options to help you manage your 
 Below is a complete reference for all available commands and their options.
 You can run nx --help to view all available options.
 
-## Available Commands
-
 ${flattenedCommands
   .map(({ fullName, cmd, parentOptions }) => {
-    let section = `### \`nx ${fullName}\`\n`;
+    const isSubCommand = parentOptions !== undefined;
+    const headingLevel = isSubCommand ? '###' : '##';
+
+    let section = `${headingLevel} \`nx ${fullName}\`\n`;
 
     section += cmd.description || 'No description available';
 
@@ -228,9 +229,20 @@ ${flattenedCommands
     }
 
     // Build the usage command string
-    const usageCmd = cmd.command
-      ? cmd.command.replace('$0', fullName)
-      : fullName;
+    let usageCmd: string;
+    if (cmd.command && cmd.command.includes('$0')) {
+      // Has $0 placeholder - replace with full name
+      usageCmd = cmd.command.replace('$0', fullName);
+    } else if (cmd.command && parentOptions !== undefined) {
+      // Sub-command without $0: use fullName, append positional args from cmd.command
+      const firstSpaceIdx = cmd.command.indexOf(' ');
+      usageCmd =
+        firstSpaceIdx !== -1
+          ? fullName + cmd.command.substring(firstSpaceIdx)
+          : fullName;
+    } else {
+      usageCmd = cmd.command || fullName;
+    }
 
     section += `\n\n**Usage:**
 \`\`\`bash

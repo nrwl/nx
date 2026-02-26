@@ -20,7 +20,7 @@
       "dependsOn": [
         "^build-base",
         "build-native",
-        "gradle-batch-runner:assemble"
+        ":gradle-batch-runner:assemble"
       ]
     },
     "legacy-post-build": {
@@ -70,5 +70,5 @@
     }
   },
   "tags": [],
-  "implicitDependencies": ["gradle-project-graph"]
+  "implicitDependencies": [":gradle-project-graph"]
 }
