@@ -260,14 +260,9 @@ describe('useAutoSave', () => {
     // - "{buildVariables}: (p:" instead of "{ buildVariables: (p:"
     // - Missing opening braces after arrow functions
     // - Collapsed/merged code blocks
-    expect(result).toContain('toHaveBeenCalled');
-    expect(result).toContain('toHaveBeenCalledWith');
-    expect(result).toContain('toHaveBeenCalledTimes');
-    expect(result).not.toContain('toBeCalled');
+    //     expect(result).not.toContain('toBeCalled');
     expect(result).not.toContain('toBeCalledWith');
     expect(result).not.toContain('toBeCalledTimes');
-
-    // Verify destructuring patterns are preserved (not corrupted to "{prop}: value")
     expect(result).toContain('{ payGroupId, value }');
     expect(result).toContain('{ result }');
     expect(result).not.toMatch(/\{payGroupId\}:/);
@@ -276,6 +271,55 @@ describe('useAutoSave', () => {
     // Verify interface syntax is preserved
     expect(result).toContain('{ payGroupId: string; value: T }');
     expect(result).not.toMatch(/\{payGroupId\}: string/);
+
+    // Snapshot test to verify the overall structure and formatting is preserved
+    expect(result).toMatchInlineSnapshot(`
+      "interface Config<T> {
+        buildVariables: (p: { payGroupId: string; value: T }) => unknown;
+        initialValue: number;
+      }
+
+      const mockAutoSave = jest.fn();
+
+      function useAutoSave<T>(config: Config<T>) {
+        return { autoSave: mockAutoSave, lastAttemptedValue: config.initialValue };
+      }
+
+      describe('useAutoSave', () => {
+        beforeEach(() => {
+          mockAutoSave.mockClear();
+        });
+
+        it('should handle complex callback patterns', async () => {
+          const { result } = useAutoSave({
+            buildVariables: ({ payGroupId, value }) => ({ payGroupId, value }),
+            initialValue: 0,
+          });
+
+          expect(mockAutoSave).not.toHaveBeenCalled();
+
+          mockAutoSave.mockImplementation(async (value: number) => {
+            return { autoSave: mockAutoSave, lastAttemptedValue: value };
+          });
+
+          await result.autoSave(42);
+          expect(mockAutoSave).toHaveBeenCalledWith(42);
+          expect(mockAutoSave).toHaveBeenCalledTimes(1);
+        });
+
+        it('should work with nested arrow functions', () => {
+          const config = {
+            buildVariables: (p: { id: string }) => p,
+            initialValue: 0,
+          };
+
+          const { result } = useAutoSave(config);
+
+          expect(mockAutoSave).not.toHaveBeenCalled();
+        });
+      });
+      "
+    `);
   });
 
   function writeFile(tree: Tree, path: string, content: string): void {
