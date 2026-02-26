@@ -1,6 +1,8 @@
 use hashbrown::{HashMap as HashbrownHashMap, HashSet};
 #[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode};
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
+#[cfg(not(test))]
+use napi::{Status, bindgen_prelude::Unknown};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -26,9 +28,9 @@ pub type DoneCallback = ();
 pub type ForcedShutdownCallback = ();
 
 #[cfg(not(test))]
-pub type DoneCallback = ThreadsafeFunction<(), ErrorStrategy::Fatal>;
+pub type DoneCallback = ThreadsafeFunction<(), Unknown<'static>, (), Status, false>;
 #[cfg(not(test))]
-pub type ForcedShutdownCallback = ThreadsafeFunction<(), ErrorStrategy::Fatal>;
+pub type ForcedShutdownCallback = ThreadsafeFunction<(), Unknown<'static>, (), Status, false>;
 
 /// Batch metadata stored for mode switching persistence
 #[derive(Debug, Clone)]

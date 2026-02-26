@@ -17,22 +17,23 @@ use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
 use crate::native::tasks::utils;
+use crate::native::types::StoredExternal;
 use crate::native::utils::find_matching_projects;
 
 #[napi]
 pub struct HashPlanner {
     nx_json: NxJson,
-    project_graph: External<ProjectGraph>,
+    project_graph: StoredExternal<ProjectGraph>,
 }
 
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
-    pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
+    pub fn new(nx_json: NxJson, project_graph: &External<ProjectGraph>) -> Self {
         enable_logger();
         Self {
             nx_json,
-            project_graph,
+            project_graph: StoredExternal::from_ref(project_graph),
         }
     }
 
@@ -122,18 +123,20 @@ impl HashPlanner {
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn get_plans(
         &self,
-        task_ids: Vec<&str>,
+        task_ids: Vec<String>,
         task_graph: TaskGraph,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
+        let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         self.get_plans_internal(task_ids, task_graph)
     }
 
     #[napi]
     pub fn get_plans_reference(
         &self,
-        task_ids: Vec<&str>,
+        task_ids: Vec<String>,
         task_graph: TaskGraph,
     ) -> anyhow::Result<External<HashMap<String, Vec<HashInstruction>>>> {
+        let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         let plans = self.get_plans_internal(task_ids, task_graph)?;
         Ok(External::new(plans))
     }

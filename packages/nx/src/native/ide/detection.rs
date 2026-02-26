@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 #[napi]
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SupportedEditor {
     VSCode,
     VSCodeInsiders,

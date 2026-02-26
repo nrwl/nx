@@ -1,4 +1,5 @@
 use napi::JsObject;
+use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::io::Write;
@@ -6,7 +7,9 @@ use std::sync::Arc;
 use tracing::{debug, trace};
 
 #[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use napi::threadsafe_function::ThreadsafeFunction;
+#[cfg(not(test))]
+use napi::{Status, bindgen_prelude::Unknown};
 
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
@@ -72,6 +75,7 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
 }
 
 #[napi]
+#[derive(Clone, Copy)]
 pub enum RunMode {
     RunOne,
     RunMany,
@@ -85,7 +89,7 @@ pub struct BatchInfo {
 }
 
 #[napi(string_enum)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BatchStatus {
     Running,
     Success,
@@ -411,7 +415,7 @@ impl AppLifeCycle {
     #[napi(js_name = "__init")]
     pub fn __init(
         &self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         debug!("AppLifeCycle::__init called");
 
@@ -633,9 +637,9 @@ impl AppLifeCycle {
     pub fn register_running_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &External<(ParserArc, WriterArc)>,
     ) {
-        self.with_app(|app| app.register_running_interactive_task(task_id, parser_and_writer));
+        self.with_app(|app| app.register_running_interactive_task(task_id, &**parser_and_writer));
     }
 
     #[napi]
@@ -662,7 +666,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn register_forced_shutdown_callback(
         &self,
-        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        forced_shutdown_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_forced_shutdown_callback(forced_shutdown_callback));
         Ok(())

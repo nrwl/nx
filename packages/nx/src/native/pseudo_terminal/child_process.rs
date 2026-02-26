@@ -3,12 +3,8 @@ use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
 use napi::bindgen_prelude::External;
-use napi::{
-    Env, JsFunction,
-    threadsafe_function::{
-        ErrorStrategy::Fatal, ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking,
-    },
-};
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking};
+use napi::{Env, Status, bindgen_prelude::Unknown};
 use parking_lot::{Mutex, RwLock};
 use std::io::Write;
 use std::sync::Arc;
@@ -61,23 +57,28 @@ impl ChildProcess {
     }
 
     #[napi(ts_args_type = "signal?: NodeJS.Signals")]
-    pub fn kill(&mut self, signal: Option<&str>) -> anyhow::Result<()> {
+    pub fn kill(&mut self, signal: Option<String>) -> anyhow::Result<()> {
+        let signal = signal.as_deref();
         self.process_killer.kill(signal)
     }
 
     #[napi]
     pub fn on_exit(
         &mut self,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: ThreadsafeFunction<
+            String,
+            Unknown<'static>,
+            String,
+            Status,
+            false,
+        >,
     ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let callback_tsfn: ThreadsafeFunction<String, Fatal> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         std::thread::spawn(move || {
             // we will only get one exit_code here, so we dont need to do a while loop
             if let Ok(exit_code) = wait.recv() {
-                callback_tsfn.call(exit_code, NonBlocking);
+                callback.call(exit_code, NonBlocking);
             }
         });
 
@@ -88,14 +89,18 @@ impl ChildProcess {
     pub fn on_output(
         &mut self,
         env: Env,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] mut callback: ThreadsafeFunction<
+            String,
+            Unknown<'static>,
+            String,
+            Status,
+            false,
+        >,
     ) -> napi::Result<()> {
         let rx = self.message_receiver.clone();
 
-        let mut callback_tsfn: ThreadsafeFunction<String, Fatal> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
-
-        callback_tsfn.unref(&env)?;
+        #[allow(deprecated)]
+        callback.unref(&env)?;
 
         let (kill_tx, kill_rx) = bounded::<()>(1);
 
@@ -113,7 +118,7 @@ impl ChildProcess {
                                 // remove it before sending it to js
                                 #[cfg(windows)]
                                 let content = content.replace("\x1B[6n", "");
-                                callback_tsfn.call(content, NonBlocking);
+                                callback.call(content, NonBlocking);
                             },
                             Err(_) => {
                                 break;

@@ -77,7 +77,7 @@ pub struct ProcessMetrics {
 
 /// Group type discriminator
 #[napi(string_enum)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GroupType {
     MainCLI,
     MainCliSubprocesses,

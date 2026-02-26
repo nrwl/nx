@@ -42,7 +42,7 @@ pub fn connect_to_nx_db(
 }
 
 #[napi]
-pub fn close_db_connection(mut connection: External<NxDbConnection>) -> anyhow::Result<()> {
+pub fn close_db_connection(connection: &mut External<NxDbConnection>) -> anyhow::Result<()> {
     let conn = mem::take(connection.as_mut());
     conn.close()
 }

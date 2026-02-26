@@ -1,5 +1,7 @@
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::types::TaskTarget;
+use crate::native::types::StoredExternal;
+use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use rusqlite::{params, types::Value};
 use std::collections::HashMap;
@@ -29,20 +31,22 @@ pub struct TaskRun {
 
 #[napi]
 pub struct NxTaskHistory {
-    db: External<NxDbConnection>,
+    db: StoredExternal<NxDbConnection>,
 }
 
 #[napi]
 impl NxTaskHistory {
     #[napi(constructor)]
-    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        Ok(Self { db })
+    pub fn new(db: &External<NxDbConnection>) -> anyhow::Result<Self> {
+        Ok(Self {
+            db: StoredExternal::from_ref(db),
+        })
     }
 
     #[napi]
     pub fn record_task_runs(&mut self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
         trace!("Recording task runs");
-        self.db.transaction(|conn| {
+        self.db.deref_mut().transaction(|conn| {
             let mut stmt = conn.prepare(
                 "INSERT OR REPLACE INTO task_history
         (hash, status, code, start, end)

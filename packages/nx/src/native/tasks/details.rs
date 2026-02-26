@@ -1,4 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
+use crate::native::types::StoredExternal;
+use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use rusqlite::params;
 use tracing::trace;
@@ -21,20 +23,22 @@ pub struct HashedTask {
 
 #[napi]
 pub struct TaskDetails {
-    db: External<NxDbConnection>,
+    db: StoredExternal<NxDbConnection>,
 }
 
 #[napi]
 impl TaskDetails {
     #[napi(constructor)]
-    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        Ok(Self { db })
+    pub fn new(db: &External<NxDbConnection>) -> anyhow::Result<Self> {
+        Ok(Self {
+            db: StoredExternal::from_ref(db),
+        })
     }
 
     #[napi]
     pub fn record_task_details(&mut self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
         trace!("Recording task details");
-        self.db.transaction(|conn| {
+        self.db.deref_mut().transaction(|conn| {
             let mut stmt = conn.prepare("INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)")?;
             for task in tasks.iter() {
                 stmt.execute(
