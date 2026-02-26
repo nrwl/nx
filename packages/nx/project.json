@@ -43,9 +43,6 @@
       "configurations": {
         "local": {
           "release": false
-        },
-        "dev": {
-          "release": false
         }
       }
     },
