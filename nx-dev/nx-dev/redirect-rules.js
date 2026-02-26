@@ -865,29 +865,29 @@ const nxApiRedirects = {
   '/nx-api/angular-rspack/documents/create-server':
     '/docs/technologies/angular/angular-rspack/create-server',
   '/nx-api/angular-rsbuild/documents/create-config':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/nx-api/angular-rsbuild/documents/create-server':
     '/docs/technologies/angular/angular-rsbuild/create-server',
   '/nx-api/angular-rspack/documents':
     '/docs/technologies/angular/angular-rspack/introduction',
   '/nx-api/angular-rsbuild/documents':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/nx-api/angular-rspack/executors':
     '/docs/technologies/angular/angular-rspack/guides/getting-started',
   '/nx-api/angular-rsbuild/executors':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/nx-api/angular-rspack':
     '/docs/technologies/angular/angular-rspack/introduction',
   '/nx-api/angular-rsbuild':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/nx-api/angular-rspack/migrations':
     '/docs/technologies/angular/angular-rspack/guides/getting-started',
   '/nx-api/angular-rsbuild/migrations':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   '/nx-api/angular-rspack/generators':
     '/docs/technologies/angular/angular-rspack/guides/getting-started',
   '/nx-api/angular-rsbuild/generators':
-    '/docs/technologies/angular/angular-rsbuild/create-config',
+    '/docs/technologies/angular/angular-rsbuild/introduction',
   // Technologies
   '/nx-api/angular/documents/overview':
     '/docs/technologies/angular/introduction',

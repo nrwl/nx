@@ -12,6 +12,16 @@ The React plugin for Nx, `@nx/react`, provides generators for [applications and 
 
 You don't need the plugin to use React with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin simplifies scaffolding and code generation.
 
+## Requirements
+
+The `@nx/react` plugin supports the following package versions.
+
+| Package | Supported Versions   |
+| ------- | -------------------- |
+| `react` | ^18.0.0 \|\| ^19.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
 {% aside type="tip" title="Using a React Meta-Framework?" %}
 If you're building with **Next.js** or **Remix**, use their dedicated plugins which include inferred task support. See the [Next.js plugin](/docs/technologies/react/next/introduction) or [Remix plugin](/docs/technologies/react/remix/introduction) hub pages. For **React Router** in framework mode, see the [React Router guide](/docs/technologies/react/guides/react-router).
 {% /aside %}

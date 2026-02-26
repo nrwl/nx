@@ -8,6 +8,26 @@ filter: 'type:References'
 
 The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
 
+## Requirements
+
+Below is a reference table that matches the most recent major versions of Nx to the versions of Node.js that they officially support, and are tested against.
+
+The Nx policy is to support the LTS versions (i.e. actively maintained even numbered versions) of Node.js, but we will only remove support for older versions in a major version of Nx to avoid unexpected disruption. We may add support for newer LTS versions in a minor version of Nx as long as it would not break existing projects.
+
+{% aside type="note" title="Other Node.js versions" %}
+Other versions of Node.js **may** still work without issue for these versions of Nx. Those include versions which are already EOL, or odd version numbers (e.g. 23), which Node.js actively discourages using in production.
+{% /aside %}
+
+| Nx Version     | Node Version             |
+| -------------- | ------------------------ |
+| 22.x (current) | 24.x, ^22.12.0, ^20.19.0 |
+| 21.x           | 24.x, ^22.12.0, ^20.19.0 |
+| 20.x           | 22.x, 20.x, 18.x         |
+
+We intentionally do not include an `"engines"` field in the `package.json` file for Nx in order to allow for user flexibility, but this table should be considered the official compatibility matrix.
+
+This table will be updated from time to time to reflect the latest versions of Node.js that are supported. If you encounter issues with Nx, please make sure you are using a supported version of Node.js before filing an issue.
+
 ## Setting Up @nx/node
 
 ### Installation
@@ -92,7 +112,7 @@ nx g @nx/node:application apps/my-new-app \
 
 #### VSCode Integration
 
-When generating Node applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
+When generating Node applications, Nx automatically creates a VSCode debugging configuration:
 
 - **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
 - **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.

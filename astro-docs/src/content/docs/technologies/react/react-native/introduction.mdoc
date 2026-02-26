@@ -1,18 +1,29 @@
 ---
-title: Overview of the Nx React Native Plugin
-description: The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. This page also explains how to configure React Native on your Nx workspace.
+title: React Native Plugin for Nx
+description: The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace, including setup and configuration.
 sidebar:
   label: 'Introduction'
 filter: 'type:References'
 ---
 
-React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
+React Native brings the React declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
 
 The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Detox, and Storybook.
 - Scaffolding for creating buildable libraries that can be published to npm.
 - Utilities for automatic workspace refactoring.
+
+## Requirements
+
+The `@nx/react-native` plugin supports the following package versions.
+
+| Package        | Supported Versions |
+| -------------- | ------------------ |
+| `metro-config` | >= 0.82.0          |
+| `react-native` | ~0.79.3            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setting Up React Native
 
