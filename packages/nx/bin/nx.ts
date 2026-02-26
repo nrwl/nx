@@ -21,8 +21,8 @@ import {
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
-import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
+import { createRequire } from 'module';
 import { join } from 'path';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
@@ -172,18 +172,20 @@ function determineNxVersions(
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   // root relative to location of the nx bin
   const globalsRoot = join(__dirname, '../../../../');
+  const root = workspace ? workspace.dir : globalsRoot;
 
+  // Use createRequire to resolve from outside the nx package,
+  // avoiding self-referencing caused by the exports field
   // prefer Nx installed in .nx/installation
   try {
-    return require.resolve('nx/bin/nx.js', {
-      paths: [getNxInstallationPath(workspace ? workspace.dir : globalsRoot)],
-    });
+    const installPath = getNxInstallationPath(root);
+    const installRequire = createRequire(join(installPath, 'index.js'));
+    return installRequire.resolve('nx/bin/nx.js');
   } catch {}
 
   // check for root install
-  return require.resolve('nx/bin/nx.js', {
-    paths: [workspace ? workspace.dir : globalsRoot],
-  });
+  const rootRequire = createRequire(join(root, 'index.js'));
+  return rootRequire.resolve('nx/bin/nx.js');
 }
 
 function isNxCloudCommand(command: string): boolean {
@@ -273,12 +275,16 @@ function checkOutdatedGlobalInstallation(
 
 function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
   try {
-    const { packageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(workspace.dir)
-    );
-    return packageJson.version;
+    const searchPaths = getNxRequirePaths(workspace.dir);
+    for (const searchPath of searchPaths) {
+      try {
+        const externalRequire = createRequire(join(searchPath, 'index.js'));
+        const pkgJsonPath = externalRequire.resolve('nx/package.json');
+        return require(pkgJsonPath).version;
+      } catch {}
+    }
   } catch {}
+  return null;
 }
 
 function _getLatestVersionOfNx(): string {
