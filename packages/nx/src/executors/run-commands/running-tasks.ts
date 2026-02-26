@@ -485,23 +485,18 @@ class RunningNodeProcess implements RunningTask {
         killProcessTree(this.childProcess.pid);
       }
     });
+    // Per-child signal handlers only kill their own child process.
+    // They do NOT call process.exit() — that's handled by the parent-level
+    // registerProcessListener to avoid a race where the first child to
+    // finish shutdown exits the parent before others complete.
     process.on('SIGINT', () => {
-      // Gracefully kill then exit. Keeping this process alive during the
-      // grace period prevents the PTY master from closing prematurely,
-      // which would send SIGHUP to children before they finish cleanup.
-      this.kill('SIGTERM').finally(() => {
-        process.exit(signalToCode('SIGINT'));
-      });
+      this.kill('SIGTERM');
     });
     process.on('SIGTERM', () => {
       this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
     });
     process.on('SIGHUP', () => {
       this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
     });
   }
 }
@@ -669,7 +664,14 @@ function registerProcessListener(
     }
   });
 
-  // Terminate any task processes on exit (sync, last resort)
+  // Terminate any task processes on exit (sync, last resort).
+  // The per-child exit handlers and PseudoTerminal.shutdown() use the
+  // sync killProcessTree for this path. We call kill() here as a
+  // best-effort fallback — it returns a Promise but on 'exit' only
+  // synchronous work runs, so the initial signal is sent but the
+  // grace period won't be awaited. That's acceptable: 'exit' is the
+  // last resort after SIGINT/SIGTERM handlers have already had their
+  // chance to do graceful shutdown.
   process.on('exit', () => {
     runningTask.kill();
   });
