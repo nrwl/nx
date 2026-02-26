@@ -38,6 +38,10 @@
       "type": "string",
       "pattern": "^\\d+x\\d+$"
     },
+    "headless": {
+      "type": "boolean",
+      "description": "Forces all configured browsers to run in headless mode. When using the Vitest runner, this option is ignored if no browsers are configured. The Karma runner does not support this option. _Note: this is only supported in Angular versions >= 21.2.0_."
+    },
     "include": {
       "type": "array",
       "items": {

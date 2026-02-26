@@ -23,6 +23,14 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
     }
   }
 
+  if (lt(angularVersion, '21.2.0')) {
+    if (options.security?.allowedHosts) {
+      throw new Error(
+        `The "security.allowedHosts" option requires Angular version 21.2.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
+
   if (lt(angularVersion, '20.1.0')) {
     if (options.loader) {
       const invalidLoaders = Array.from(
