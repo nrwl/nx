@@ -525,8 +525,6 @@ class RunningNodeProcess implements RunningTask {
     });
     process.on('SIGINT', () => {
       this.kill('SIGTERM');
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
     });
     process.on('SIGTERM', () => {
       this.kill('SIGTERM');
@@ -707,8 +705,6 @@ function registerProcessListener(
   });
   process.on('SIGINT', () => {
     runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');
