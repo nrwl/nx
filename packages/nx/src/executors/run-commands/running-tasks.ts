@@ -3,7 +3,7 @@ import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import { killProcessTree } from '../../native';
+import { killProcessTree, killProcessTreeGraceful } from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -77,10 +77,8 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  kill(signal?: NodeJS.Signals): void {
-    for (const p of this.childProcesses) {
-      p.kill(signal);
-    }
+  async kill(signal?: NodeJS.Signals): Promise<void> {
+    await Promise.all(this.childProcesses.map((p) => p.kill(signal)));
   }
 
   private async run() {
@@ -404,10 +402,11 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
-  kill(signal?: NodeJS.Signals): void {
+  kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.childProcess.pid) {
-      killProcessTree(this.childProcess.pid, signal);
+      return killProcessTreeGraceful(this.childProcess.pid, signal);
     }
+    return Promise.resolve();
   }
 
   private triggerOutputListeners(output: string) {
@@ -480,14 +479,19 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
-    // Terminate any task processes on exit
+    // Terminate any task processes on exit (sync, last resort)
     process.on('exit', () => {
-      this.kill();
+      if (this.childProcess.pid) {
+        killProcessTree(this.childProcess.pid);
+      }
     });
     process.on('SIGINT', () => {
-      this.kill('SIGTERM');
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
+      // Gracefully kill then exit. Keeping this process alive during the
+      // grace period prevents the PTY master from closing prematurely,
+      // which would send SIGHUP to children before they finish cleanup.
+      this.kill('SIGTERM').finally(() => {
+        process.exit(signalToCode('SIGINT'));
+      });
     });
     process.on('SIGTERM', () => {
       this.kill('SIGTERM');
@@ -665,14 +669,22 @@ function registerProcessListener(
     }
   });
 
-  // Terminate any task processes on exit
+  // Terminate any task processes on exit (sync, last resort)
   process.on('exit', () => {
     runningTask.kill();
   });
   process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
+    // Gracefully kill then exit. Keeping this process alive during the
+    // grace period prevents the PTY master from closing prematurely,
+    // which would send SIGHUP to children before they finish cleanup.
+    const result = runningTask.kill('SIGTERM');
+    if (result && typeof result.then === 'function') {
+      result.finally(() => {
+        process.exit(signalToCode('SIGINT'));
+      });
+    } else {
+      process.exit(signalToCode('SIGINT'));
+    }
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');
