@@ -183,16 +183,10 @@ fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal) {
                     debug!("Sent {} to process {}", signal, pid);
                 }
                 Some(false) => {
-                    debug!(
-                        "Process {} already exited or insufficient permissions",
-                        pid
-                    );
+                    debug!("Process {} already exited or insufficient permissions", pid);
                 }
                 None => {
-                    debug!(
-                        "Signal {} not supported for process {}",
-                        signal, pid
-                    );
+                    debug!("Signal {} not supported for process {}", signal, pid);
                 }
             }
         }
@@ -216,11 +210,7 @@ fn get_alive_pids(pids: &[Pid]) -> Vec<Pid> {
 /// Snapshot all processes and signal the tree. Returns targeted PIDs.
 fn snapshot_and_signal(root_pid: i32, signal: Signal) -> Vec<Pid> {
     let mut sys = System::new();
-    sys.refresh_processes_specifics(
-        ProcessesToUpdate::All,
-        true,
-        ProcessRefreshKind::nothing(),
-    );
+    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
 
     let to_kill = collect_process_tree(&sys, root_pid);
     if to_kill.is_empty() {
