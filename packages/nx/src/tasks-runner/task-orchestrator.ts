@@ -417,7 +417,7 @@ export class TaskOrchestrator {
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
-      await this.postRunSteps(results, doNotSkipCache, { groupId });
+      const cachedResults = results;
 
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
@@ -479,6 +479,11 @@ export class TaskOrchestrator {
           }
         }
       }
+
+      // Merge cached results with batch results. Record fingerprints for ALL
+      // tasks AFTER the batch completes so fingerprints reflect the final
+      // state of shared output directories (e.g. nx-build-state.json).
+      results = [...cachedResults, ...results];
     }
 
     await this.postRunSteps(results, doNotSkipCache, { groupId });
@@ -1303,6 +1308,23 @@ export class TaskOrchestrator {
         if (!outputsFresh) {
           staleTaskIds.add(task.id);
           break;
+        }
+      }
+    }
+
+    // Propagate staleness: any task that depends (transitively) on a stale
+    // task should also skip cache, since its hash may be based on outputs
+    // that will change once the stale dependency re-runs.
+    if (staleTaskIds.size > 0) {
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const [taskId, deps] of Object.entries(taskGraph.dependencies)) {
+          if (staleTaskIds.has(taskId)) continue;
+          if (deps.some((dep) => staleTaskIds.has(dep))) {
+            staleTaskIds.add(taskId);
+            changed = true;
+          }
         }
       }
     }
