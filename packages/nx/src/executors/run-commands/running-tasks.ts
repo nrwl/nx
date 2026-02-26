@@ -3,7 +3,7 @@ import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import { killProcessTree } from '../../native';
+import { killProcessTree, killProcessTreeGraceful } from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -76,10 +76,8 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  kill(signal?: NodeJS.Signals): void {
-    for (const p of this.childProcesses) {
-      p.kill(signal);
-    }
+  async kill(signal?: NodeJS.Signals): Promise<void> {
+    await Promise.all(this.childProcesses.map((p) => p.kill(signal)));
   }
 
   private async run() {
@@ -405,10 +403,11 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
-  kill(signal?: NodeJS.Signals): void {
+  kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.childProcess.pid) {
-      killProcessTree(this.childProcess.pid, signal);
+      return killProcessTreeGraceful(this.childProcess.pid, signal);
     }
+    return Promise.resolve();
   }
 
   private triggerOutputListeners(output: string) {
@@ -465,41 +464,14 @@ class RunningNodeProcess implements RunningTask {
       }
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
-      removeProcessListeners();
       for (const cb of this.exitCallbacks) {
         cb(1, terminalOutput);
       }
     });
-
-    // Store signal/exit handlers so they can be removed when the child exits.
-    // Without cleanup, each RunningNodeProcess leaks 4 process listeners.
-    // In a large monorepo (2600+ run-commands tasks), these accumulate and
-    // cause a multi-minute synchronous hang at process.exit() as each handler
-    // calls treeKill on an already-dead PID.
-    const onExit = () => {
-      this.kill();
-    };
-    const onSigInt = () => {
-      this.kill('SIGTERM');
-    };
-    const onSigTerm = () => {
-      this.kill('SIGTERM');
-    };
-    const onSigHup = () => {
-      this.kill('SIGTERM');
-    };
-    const removeProcessListeners = () => {
-      process.removeListener('exit', onExit);
-      process.removeListener('SIGINT', onSigInt);
-      process.removeListener('SIGTERM', onSigTerm);
-      process.removeListener('SIGHUP', onSigHup);
-    };
-
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
-      removeProcessListeners();
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
@@ -508,12 +480,30 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
-
-    // Terminate any task processes on exit
-    process.on('exit', onExit);
-    process.on('SIGINT', onSigInt);
-    process.on('SIGTERM', onSigTerm);
-    process.on('SIGHUP', onSigHup);
+    // Terminate any task processes on exit (sync, last resort)
+    process.on('exit', () => {
+      if (this.childProcess.pid) {
+        killProcessTree(this.childProcess.pid);
+      }
+    });
+    process.on('SIGINT', () => {
+      // Gracefully kill then exit. Keeping this process alive during the
+      // grace period prevents the PTY master from closing prematurely,
+      // which would send SIGHUP to children before they finish cleanup.
+      this.kill('SIGTERM').finally(() => {
+        process.exit(signalToCode('SIGINT'));
+      });
+    });
+    process.on('SIGTERM', () => {
+      this.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.on('SIGHUP', () => {
+      this.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
   }
 }
 
@@ -680,12 +670,22 @@ function registerProcessListener(
     }
   });
 
-  // Terminate any task processes on exit
+  // Terminate any task processes on exit (sync, last resort)
   process.on('exit', () => {
     runningTask.kill();
   });
   process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
+    // Gracefully kill then exit. Keeping this process alive during the
+    // grace period prevents the PTY master from closing prematurely,
+    // which would send SIGHUP to children before they finish cleanup.
+    const result = runningTask.kill('SIGTERM');
+    if (result && typeof result.then === 'function') {
+      result.finally(() => {
+        process.exit(signalToCode('SIGINT'));
+      });
+    } else {
+      process.exit(signalToCode('SIGINT'));
+    }
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');
