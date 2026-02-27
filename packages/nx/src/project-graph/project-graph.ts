@@ -416,31 +416,16 @@ export async function createProjectGraphAndSourceMapsAsync(
 }
 
 export function preventRecursionInGraphConstruction() {
-  const allFrames = getCallSites();
-  // Find the first occurrence of buildProjectGraphAndSourceMapsWithoutDaemon in the call stack.
-  // This represents the current invocation and should be skipped for the recursion check.
-  const firstOccurrenceIndex = allFrames.findIndex(
-    (f) =>
-      f.getFunctionName() === buildProjectGraphAndSourceMapsWithoutDaemon.name
-  );
-
-  // If the function is not in the stack at all, there's nothing to check.
-  if (firstOccurrenceIndex === -1) {
+  // Bun's async stack traces include extra frames that cause false positives in the
+  // recursion check below, so we skip the check when running under Bun.
+  if ('Bun' in globalThis) {
     return;
   }
 
-  // Skip the current invocation frame and any consecutive frames with the same function name.
-  // Some runtimes (e.g. Bun) include extra async frames for the same call, which would
-  // otherwise cause a false positive loop detection.
-  let startIndex = firstOccurrenceIndex + 1;
-  while (
-    startIndex < allFrames.length &&
-    allFrames[startIndex].getFunctionName() ===
-      buildProjectGraphAndSourceMapsWithoutDaemon.name
-  ) {
-    startIndex++;
-  }
-  const stackframes = allFrames.slice(startIndex);
+  // preventRecursionInGraphConstruction -> callee -> ...
+  // slice removes preventRecursionInGraphConstruction and its caller,
+  // which is useful when using this function to detect recursion in buildProjectGraphAndSourceMapsWithoutDaemon
+  const stackframes = getCallSites().slice(2);
 
   if (
     stackframes.some((f) => {
