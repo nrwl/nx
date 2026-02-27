@@ -564,7 +564,11 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      (new Function('return import("open")')() as Promise<typeof import('open')>)
+      (
+        new Function('return import("open")')() as Promise<
+          typeof import('open')
+        >
+      )
         .then((m) => m.default(url.toString()))
         .catch(() => {
           // Ignore errors when opening browser (e.g. no browser available)
