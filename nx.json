@@ -381,7 +381,7 @@
     {
       "plugin": "@nx/maven",
       "options": {
-        "targetNamePrefix": "mvn-"
+        "targetNamePrefix": "mvn:"
       }
     }
   ],

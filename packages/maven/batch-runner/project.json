@@ -2,7 +2,7 @@
   "name": "dev.nx.maven:maven-batch-runner",
   "projectType": "application",
   "targets": {
-    "mvn-package": {
+    "mvn:package": {
       "options": {
         "goals": ["jar:jar@default-jar", "shade:shade@default"]
       }
