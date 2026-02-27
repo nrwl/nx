@@ -255,9 +255,7 @@ impl HashPlanner {
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let project_deps = &self.project_graph.dependencies[project_name]
-            .iter()
-            .collect::<Vec<_>>();
+        let project_deps = &self.project_graph.dependencies[project_name];
         let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
         let deps_inputs = self.gather_dependency_inputs(
             task,
@@ -303,11 +301,12 @@ impl HashPlanner {
         task: &Task,
         inputs: &[Input],
         task_graph: &TaskGraph,
-        project_deps: &[&'a String],
+        project_deps: &'a [String],
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let mut deps_inputs: Vec<HashInstruction> = vec![];
+        let mut deps_inputs: Vec<HashInstruction> =
+            Vec::with_capacity(inputs.len() * project_deps.len());
 
         for input in inputs {
             for dep in project_deps {
@@ -316,9 +315,9 @@ impl HashPlanner {
                 }
                 visited.insert(dep.as_str());
 
-                if self.project_graph.nodes.contains_key(*dep) {
+                if self.project_graph.nodes.contains_key(dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
-                        &self.project_graph.nodes[*dep],
+                        &self.project_graph.nodes[dep],
                         &self.nx_json,
                         input,
                     )?
