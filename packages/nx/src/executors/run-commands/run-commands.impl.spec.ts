@@ -584,6 +584,103 @@ describe('Run Commands', () => {
         )
       ).toEqual(`echo --hello="test 123" "hello world" "random config" 456`); // should wrap aroound __unparsed__ args with key value
     });
+
+    it.each([
+      ['pipe (|)', '--grep=@tag1|@tag2', 'echo --grep="@tag1|@tag2"'],
+      ['ampersand (&)', '--flag=a&b', 'echo --flag="a&b"'],
+      ['dollar sign ($)', '--path=$HOME/dir', 'echo --path="$HOME/dir"'],
+      ['semicolon (;)', '--cmd=echo;ls', 'echo --cmd="echo;ls"'],
+      ['parentheses', '--expr=(a+b)', 'echo --expr="(a+b)"'],
+      ['asterisk (*)', '--pattern=*.txt', 'echo --pattern="*.txt"'],
+      ['backtick (`)', '--cmd=`pwd`', 'echo --cmd="`pwd`"'],
+      ['angle brackets (>)', '--compare=a>b', 'echo --compare="a>b"'],
+      [
+        'question mark (?)',
+        '--pattern=file?.txt',
+        'echo --pattern="file?.txt"',
+      ],
+      [
+        'square brackets ([])',
+        '--pattern=[abc].txt',
+        'echo --pattern="[abc].txt"',
+      ],
+      ['hash (#)', '--tag=#important', 'echo --tag="#important"'],
+      ['tilde (~)', '--path=~/documents', 'echo --path="~/documents"'],
+      ['newline', '--msg=hello\nworld', 'echo --msg="hello\nworld"'],
+      ['tab', '--msg=hello\tworld', 'echo --msg="hello\tworld"'],
+    ])('should wrap shell metacharacter %s in quotes', (_, input, expected) => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: [input] } as any,
+          true
+        )
+      ).toEqual(expected);
+    });
+
+    it('should handle positional args with shell metacharacters', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['tag1|tag2', 'a&b', '$HOME'] } as any,
+          true
+        )
+      ).toEqual('echo "tag1|tag2" "a&b" "$HOME"');
+    });
+
+    it('should not double-wrap already quoted values with shell metacharacters', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['"@tag1|@tag2"', "'a&b'"] } as any,
+          true
+        )
+      ).toEqual('echo "@tag1|@tag2" \'a&b\'');
+    });
+
+    it('should escape existing double quotes when wrapping', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['--msg=hello "world"'] } as any,
+          true
+        )
+      ).toEqual('echo --msg="hello \\"world\\""');
+    });
+
+    it('should handle values containing equals signs', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['--define=FOO=bar|baz'] } as any,
+          true
+        )
+      ).toEqual('echo --define="FOO=bar|baz"');
+    });
+
+    it('should not re-quote word-split fragments of a single-quoted JSON value', () => {
+      // Simulates what happens when the shell word-splits:
+      //   --config \'{"env":{"cliArg":"i am from the cli args"}}\'
+      // The shell produces these separate argv entries because \" makes "
+      // literal but doesn't prevent word splitting:
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: [
+              '--config',
+              '\'{"env":{"cliArg":"i',
+              'am',
+              'from',
+              'the',
+              'cli',
+              'args"}}\'',
+            ],
+          } as any,
+          true
+        )
+      ).toEqual(`echo --config '{"env":{"cliArg":"i am from the cli args"}}'`);
+    });
   });
 
   describe('--color', () => {
