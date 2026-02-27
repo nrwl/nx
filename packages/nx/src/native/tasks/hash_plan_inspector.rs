@@ -7,7 +7,6 @@ use crate::native::tasks::types::HashInstruction;
 use crate::native::types::FileData;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
-use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;

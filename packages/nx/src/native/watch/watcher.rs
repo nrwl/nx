@@ -20,7 +20,6 @@ use tracing::trace;
 use tracing_subscriber::EnvFilter;
 use watchexec::WatchedPath;
 use watchexec::Watchexec;
-use watchexec_events::filekind::{CreateKind, FileEventKind};
 use watchexec_events::{Event, FileType, Priority, Tag};
 use watchexec_signals::Signal;
 
@@ -145,7 +144,7 @@ impl Watcher {
         &mut self,
         env: Env,
         #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
-        mut callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
+        callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
     ) -> Result<()> {
         _ = tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
@@ -162,9 +161,9 @@ impl Watcher {
         let ignore_globs: Arc<NxGlobSet> = build_ignore_glob_set();
 
         let origin = self.origin.clone();
-        let watch_exec_for_action = self.watch_exec.clone();
-        let watched_path_set_for_action = watched_path_set.clone();
-        let ignore_globs_for_action = ignore_globs.clone();
+        let _watch_exec_for_action = self.watch_exec.clone();
+        let _watched_path_set_for_action = watched_path_set.clone();
+        let _ignore_globs_for_action = ignore_globs.clone();
         self.watch_exec.config.on_action(move |mut action| {
             let signals: Vec<Signal> = action.signals().collect();
 

@@ -1,4 +1,3 @@
-use napi::JsObject;
 use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, MutexGuard};
@@ -375,7 +374,7 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: JsObject) -> napi::Result<()> {
+    pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: Object) -> napi::Result<()> {
         self.with_app(|app| app.start_tasks(tasks));
         Ok(())
     }
@@ -396,7 +395,7 @@ impl AppLifeCycle {
     pub fn end_tasks(
         &mut self,
         task_results: Vec<TaskResult>,
-        _metadata: JsObject,
+        _metadata: Object,
     ) -> napi::Result<()> {
         self.with_app(|app| app.end_tasks(task_results));
         Ok(())

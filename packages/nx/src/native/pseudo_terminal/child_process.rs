@@ -4,7 +4,7 @@ use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking};
-use napi::{Env, Status, bindgen_prelude::Unknown};
+use napi::{Status, bindgen_prelude::Unknown};
 use parking_lot::{Mutex, RwLock};
 use std::io::Write;
 use std::sync::Arc;
@@ -88,7 +88,7 @@ impl ChildProcess {
     #[napi]
     pub fn on_output(
         &mut self,
-        #[napi(ts_arg_type = "(message: string) => void")] mut callback: ThreadsafeFunction<
+        #[napi(ts_arg_type = "(message: string) => void")] callback: ThreadsafeFunction<
             String,
             Unknown<'static>,
             String,

@@ -3,7 +3,6 @@ use anyhow::Result;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::{Sender, unbounded};
 use dashmap::{DashMap, DashSet};
-use napi::Env;
 use napi_derive::napi;
 use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
@@ -1174,10 +1173,7 @@ impl ProcessMetricsCollector {
 
     /// Subscribe to push-based metrics notifications from TypeScript
     #[napi(ts_args_type = "callback: (err: Error | null, event: MetricsUpdate) => void")]
-    pub fn subscribe(
-        &self,
-        mut callback: ThreadsafeFunction<MetricsUpdate>,
-    ) -> anyhow::Result<()> {
+    pub fn subscribe(&self, callback: ThreadsafeFunction<MetricsUpdate>) -> anyhow::Result<()> {
         // Store callback for future updates
         // The subscriber will receive full metadata on first update via needs_full_metadata flag
         let mut subscribers = self.subscribers.lock();

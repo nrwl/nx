@@ -1,7 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::External;
-use napi::bindgen_prelude::*;
 use rusqlite::{params, types::Value};
 use std::collections::HashMap;
 use std::rc::Rc;

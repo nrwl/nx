@@ -4,7 +4,6 @@ use std::time::Instant;
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
-use napi::bindgen_prelude::*;
 use regex::Regex;
 use rusqlite::params;
 use sysinfo::Disks;
