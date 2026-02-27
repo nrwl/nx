@@ -73,11 +73,8 @@ export async function showTargetInputsHandler(
   const graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
 
-  const { projectName, targetName, configurationName } = resolveTargetIdentifier(
-    args,
-    graph,
-    nxJson
-  );
+  const { projectName, targetName, configurationName } =
+    resolveTargetIdentifier(args, graph, nxJson);
 
   const node = resolveProjectNode(projectName, graph);
   const targetConfig = node.data.targets?.[targetName];
