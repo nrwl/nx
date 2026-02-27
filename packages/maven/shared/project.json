@@ -5,6 +5,5 @@
     "maven:test": {
       "command": "./mvnw clean verify -am -pl dev.nx.maven:maven-shared"
     }
-  },
-  "tags": ["maven:dev.nx.maven"]
+  }
 }
