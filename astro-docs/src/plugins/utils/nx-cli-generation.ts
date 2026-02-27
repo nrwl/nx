@@ -88,6 +88,7 @@ export async function loadNxCliPackage(
       docType: 'cli',
       description: 'Complete reference for Nx CLI commands',
       filter: 'type:References',
+      weight: 4,
     },
     rendered: await renderMarkdown(markdown),
     collection: 'nx-reference-packages',
@@ -187,13 +188,14 @@ function generateOptionsTable(
 }
 
 function generateExamplesSection(
-  examples: ParsedCliCommand['examples']
+  examples: ParsedCliCommand['examples'],
+  commandName: string
 ): string {
   if (!examples || examples.length === 0) {
     return '';
   }
 
-  let section = `\n#### Examples\n\n`;
+  let section = `\n#### \`nx ${commandName}\` Examples\n\n`;
 
   for (const example of examples) {
     section += `${example.description}:\n\n`;
@@ -251,7 +253,7 @@ nx ${usageCmd}
 `;
 
     // Add examples section if available
-    section += generateExamplesSection(cmd.examples);
+    section += generateExamplesSection(cmd.examples, fullName);
 
     // If this is a parent command with subcommands, label options as "Shared Options"
     const hasSubcommands = cmd.subcommands && cmd.subcommands.length > 0;
