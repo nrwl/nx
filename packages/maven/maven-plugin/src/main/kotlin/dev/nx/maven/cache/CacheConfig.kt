@@ -110,9 +110,6 @@ data class CacheConfig(
                         Parameter("testClassesDirectory", null),
                         Parameter("suiteXmlFiles", null),
                     ),
-                    dependentTaskOutputs = setOf(
-                        DependentTaskOutput("**/*", transitive = true),
-                    ),
                     outputParameters = setOf(
                         Parameter("reportsDirectory", null),
                     )
@@ -124,9 +121,6 @@ data class CacheConfig(
                         Parameter("testSourceDirectory", null),
                         Parameter("suiteXmlFiles", null),
                     ),
-                    dependentTaskOutputs = setOf(
-                        DependentTaskOutput("**/*", transitive = true),
-                    ),
                     outputParameters = setOf(
                         Parameter("summaryFile", null),
                     )
@@ -136,9 +130,6 @@ data class CacheConfig(
                         Parameter("summaryFile", null),
                         Parameter("summaryFiles", null),
                         Parameter("testClassesDirectory", null),
-                    ),
-                    dependentTaskOutputs = setOf(
-                        DependentTaskOutput("**/*", transitive = true),
                     ),
                     outputParameters = emptySet()
                 ),
