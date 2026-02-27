@@ -1,6 +1,7 @@
 import '../../internal-testing-utils/mock-fs';
 
 import { vol } from 'memfs';
+import { PluginCache } from '../../utils/plugin-cache-utils';
 import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
 
 describe('nx package.json workspaces plugin', () => {
@@ -47,8 +48,14 @@ describe('nx package.json workspaces plugin', () => {
       '/root'
     );
 
-    expect(createNodeFromPackageJson('package.json', '/root', {}, false))
-      .toMatchInlineSnapshot(`
+    expect(
+      createNodeFromPackageJson(
+        'package.json',
+        '/root',
+        new PluginCache(),
+        false
+      )
+    ).toMatchInlineSnapshot(`
       {
         "projects": {
           ".": {
@@ -99,7 +106,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/lib-a/package.json',
         '/root',
-        {},
+        new PluginCache(),
         false
       )
     ).toMatchInlineSnapshot(`
@@ -153,7 +160,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/lib-b/package.json',
         '/root',
-        {},
+        new PluginCache(),
         false
       )
     ).toMatchInlineSnapshot(`
@@ -794,15 +801,19 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson('apps/myapp/package.json', '/root', {}, false)
-        .projects['apps/myapp'].projectType
+      createNodeFromPackageJson(
+        'apps/myapp/package.json',
+        '/root',
+        new PluginCache(),
+        false
+      ).projects['apps/myapp'].projectType
     ).toEqual('application');
 
     expect(
       createNodeFromPackageJson(
         'packages/mylib/package.json',
         '/root',
-        {},
+        new PluginCache(),
         false
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
@@ -826,9 +837,12 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson('package.json', '/root', {}, false).projects[
-        '.'
-      ].projectType
+      createNodeFromPackageJson(
+        'package.json',
+        '/root',
+        new PluginCache(),
+        false
+      ).projects['.'].projectType
     ).toEqual('library');
   });
 
@@ -856,13 +870,17 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/mylib/package.json',
         '/root',
-        {},
+        new PluginCache(),
         false
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
     expect(
-      createNodeFromPackageJson('example/package.json', '/root', {}, false)
-        .projects['example'].projectType
+      createNodeFromPackageJson(
+        'example/package.json',
+        '/root',
+        new PluginCache(),
+        false
+      ).projects['example'].projectType
     ).toBeUndefined();
   });
 
