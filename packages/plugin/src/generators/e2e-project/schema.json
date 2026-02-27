@@ -30,6 +30,12 @@
       "type": "string",
       "description": "Jest config file."
     },
+    "testRunner": {
+      "type": "string",
+      "enum": ["jest", "vitest"],
+      "description": "Test runner to use for the e2e tests.",
+      "default": "jest"
+    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",

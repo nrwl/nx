@@ -1,0 +1,449 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createOrEditViteConfig test environment options should default to jsdom when testEnvironment is not specified 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig test environment options should set test environment to edge-runtime 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'edge-runtime',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig test environment options should set test environment to happy-dom 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'happy-dom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig test environment options should set test environment to jsdom 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig test environment options should set test environment to node 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vite config generation (not vitest-only) should generate vite.config.ts with vitest reference when not onlyVitest 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  server:{
+    port: 4200,
+    host: 'localhost',
+  },
+  preview:{
+    port: 4300,
+    host: 'localhost',
+  },
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //   plugins: () => [ nxViteTsPaths() ],
+  // },
+  build: {
+    outDir: '../../dist/apps/my-app',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vite config generation (not vitest-only) should include library build config when includeLib is true 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+import * as path from 'path';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/my-lib',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //   plugins: () => [ nxViteTsPaths() ],
+  // },
+  // Configuration for building your library.
+  // See: https://vite.dev/guide/build.html#library-mode
+  build: {
+    outDir: '../../dist/libs/my-lib',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    lib: {
+      // Could also be a dictionary or array of multiple entry points.
+      entry: 'src/index.ts',
+      name: 'my-lib',
+      fileName: 'index',
+      // Change this to the formats you want to support.
+      // Don't forget to update your package.json as well.
+      formats: ['es' as const]
+    },
+    rollupOptions: {
+      // External packages that should not be bundled into your library.
+      external: []
+    },
+  },
+  test: {
+    name: 'my-lib',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/libs/my-lib',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/test-project',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'test-project',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/test-project',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 2`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/test-project',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'test-project',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/test-project',
+      provider: 'istanbul' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 3`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/test-project',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'test-project',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/test-project',
+      provider: 'custom' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 4`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/test-project',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'test-project',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default']
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate vitest config with istanbul coverage provider 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'istanbul' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate vitest config with v8 coverage provider 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should generate vitest config without coverage when coverageProvider is none 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default']
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should include includeSource when inSourceTests is true 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  define: {
+    'import.meta.vitest': undefined
+  },
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
+
+exports[`createOrEditViteConfig vitest config generation should include setupFiles when setupFile option is provided 1`] = `
+"import { defineConfig } from 'vitest/config';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-app',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'node',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['./src/test-setup.ts'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-app',
+      provider: 'v8' as const,
+    }
+  },
+}));
+"
+`;
