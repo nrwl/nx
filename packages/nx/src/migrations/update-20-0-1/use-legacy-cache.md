@@ -6,24 +6,19 @@ Set `useLegacyCache` to true for migrating workspaces
 
 Add `useLegacyCache` to `nx.json` unless `enableDbCache` was set to true.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {}
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {},
   "useLegacyCache": true
 }
 ```
-
-{% /tab %}
-{% /tabs %}

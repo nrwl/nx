@@ -91,10 +91,7 @@ export function callAutomigrate(
           {
             stdio: 'inherit',
             windowsHide: false,
-            env: {
-              ...process.env,
-              STORYBOOK_PROJECT_ROOT: storybookProjectInfo.configDir,
-            },
+            env: process.env,
           }
         );
 

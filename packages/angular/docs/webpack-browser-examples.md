@@ -5,14 +5,13 @@ In addition to the features provided by the Angular CLI builder, the `@nx/angula
 - Providing a custom webpack configuration
 - Incremental builds
 
-{% callout type="check" title="Dev Server" %}
+:::tip[Dev Server]
 The [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:webpack-browser` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Webpack when using the `@nx/angular:webpack-browser` executor.
-{% /callout %}
+:::
 
 ## Examples
 
-{% tabs %}
-{% tab label="Using a custom webpack configuration" %}
+##### Using a custom webpack configuration
 
 The executor supports providing a path to a custom webpack configuration. This allows you to customize how your Angular application is built. It currently supports the following types of webpack configurations:
 
@@ -27,7 +26,7 @@ The executor will merge the provided configuration with the webpack configuratio
 
 To use a custom webpack configuration when building your Angular application, change the `build` target in your `project.json` to match the following:
 
-```json {% fileName="project.json" highlightLines=[5,"8-10"] %}
+```json title="project.json" {5,8-10}
 {
     ...
     "targets": {
@@ -45,21 +44,19 @@ To use a custom webpack configuration when building your Angular application, ch
 }
 ```
 
-{% /tab %}
-
-{% tab label="Incrementally Building your Application" %}
+##### Incrementally Building your Application
 
 The executor supports incrementally building your Angular application by building the workspace libraries it depends on _(that have been marked as buildable)_ and then building your application using the built source of the libraries.
 
 This can improve build time as the building of the workspace libraries can be cached, meaning they only have to be rebuilt if they have changed.
 
-{% callout type="note" title="Performance" %}
+:::note[Performance]
 There may be some additional overhead in the linking of the built libraries' sources which may reduce the overall improvement in build time. Therefore this approach only benefits large applications and would likely have a negative impact on small and medium applications.
-{% /callout %}
+:::
 
 To allow your Angular application to take advantage of incremental building, change the `build` target in your `project.json` to match the following:
 
-```json {% fileName="project.json" highlightLines=[5,8] %}
+```json title="project.json" {5,8}
 {
     ...
     "targets": {
@@ -75,15 +72,13 @@ To allow your Angular application to take advantage of incremental building, cha
 }
 ```
 
-{% /tab %}
-
-{% tab label="Using a custom index.html transformer" %}
+##### Using a custom index.html transformer
 
 The executor supports providing a custom function to transform the `index.html` file after it has been generated. This allows you to modify the HTML content before it is written to disk.
 
 To use a custom index.html transformer, create a file with a function that exports the transformer:
 
-```javascript {% fileName="apps/appName/index-html-transformer.js" %}
+```javascript title="apps/appName/index-html-transformer.js"
 module.exports = (target, indexHtml) => {
   // Add a custom meta tag
   const customMeta = `<meta name="custom-meta" content="Custom value">`;
@@ -98,7 +93,7 @@ The transformer function receives two parameters:
 
 Then update your `project.json` to use the transformer:
 
-```json {% fileName="project.json" highlightLines=[5,8] %}
+```json title="project.json" {5,8}
 {
     ...
     "targets": {
@@ -113,6 +108,3 @@ Then update your `project.json` to use the transformer:
     }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

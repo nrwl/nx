@@ -128,13 +128,55 @@ Plugins use config files to infer tasks for projects. You can specify which conf
     {
       "plugin": "@nx/jest/plugin",
       "include": ["packages/**/*"], // include any projects in the packages folder
-      "exclude": ["**/*-e2e/**/*"] // exclude any projects in a *-e2e folder
-    }
-  ]
+      "exclude": ["**/*-e2e/**/*"], // exclude any projects in a *-e2e folder
+    },
+  ],
 }
 ```
 
 The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
+
+#### Using Negation Patterns
+
+You can use negation patterns (patterns starting with `!`) to create more precise include/exclude rules. Patterns are processed in order, with later patterns overriding earlier ones.
+
+**Example: Excluding all e2e projects except one**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": ["**/*-e2e/**/*", "!**/toolkit-workspace-e2e/**/*"],
+    },
+  ],
+}
+```
+
+This will exclude all e2e projects except `toolkit-workspace-e2e`.
+
+**Example: Including packages except legacy ones**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["packages/**/*", "!packages/legacy/**/*"],
+    },
+  ],
+}
+```
+
+**How negation patterns work:**
+
+- Patterns are processed in order from first to last
+- A pattern starting with `!` removes files from the match set
+- A pattern without `!` adds files to the match set
+- The last matching pattern determines if a file is included
+- If the first pattern is a negation, all files are matched initially
 
 ## Task Options
 
@@ -388,8 +430,8 @@ If you want to limit the projects that `nx release` targets, you can use the `pr
   "release": {
     // Here we are configuring nx release to target all projects
     // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"]
-  }
+    "projects": ["*", "!ignore-me"],
+  },
 }
 ```
 
@@ -403,8 +445,8 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
   "release": {
     // Here we are configuring nx release to release projects
     // independently, as opposed to the default of "fixed"
-    "projectsRelationship": "independent"
-  }
+    "projectsRelationship": "independent",
+  },
 }
 ```
 
@@ -422,13 +464,27 @@ Release tag configuration now uses a nested `releaseTag` object. Old flat proper
 
 #### Configuration Options
 
-| Property                 | Type    | Default                                                           | Description                                                                                                  |
-| ------------------------ | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **pattern**              | string  | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}` |
-| **requireSemver**        | boolean | `false`                                                           | Whether to require that all tags match semantic versioning                                                   |
-| **strictPreid**          | boolean | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                              |
-| **preferDockerVersion**  | boolean | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                               |
-| **checkAllBranchesWhen** | string  | undefined                                                         | Branch to check when resolving current versions from git tags                                                |
+| Property                 | Type                | Default                                                           | Description                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **pattern**              | string              | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}`                                                                                                                                                                                          |
+| **requireSemver**        | boolean             | `false`                                                           | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
+| **strictPreid**          | boolean             | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
+| **preferDockerVersion**  | boolean             | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                                                                                                                                                                                                                        |
+| **checkAllBranchesWhen** | boolean \| string[] | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
+
+#### Branch Resolution for Git Tags
+
+The `checkAllBranchesWhen` option controls how Nx resolves existing git tags to determine the current version of your projects.
+
+By default, Nx checks for matching tags on the current branch. If no tags are found, it falls back to checking all branches.
+
+| Value      | Behavior                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`     | Always check all branches for the latest matching tag                                                                                                                     |
+| `false`    | Only check the current branch (no fallback to all branches)                                                                                                               |
+| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/isaacs/minimatch). Otherwise, use the default behavior |
+
+This option is useful when release tags may exist on multiple branches. Setting `checkAllBranchesWhen` to `true` or to a list of branch patterns ensures Nx finds the latest tag regardless of which branch it was created on.
 
 #### Tag Pattern Syntax
 
@@ -459,9 +515,9 @@ Example patterns and their results:
       "requireSemver": true,
       "strictPreid": true,
       "preferDockerVersion": false,
-      "checkAllBranchesWhen": "main"
-    }
-  }
+      "checkAllBranchesWhen": ["main", "release/*"],
+    },
+  },
 }
 ```
 
@@ -476,8 +532,8 @@ Example patterns and their results:
     "releaseTagPatternRequireSemver": true,
     "releaseTagPatternStrictPreid": true,
     "releaseTagPatternPreferDockerVersion": false,
-    "releaseTagPatternCheckAllBranchesWhen": "main"
-  }
+    "releaseTagPatternCheckAllBranchesWhen": ["main", "release/*"],
+  },
 }
 ```
 
@@ -513,10 +569,10 @@ Core version options are therefore directly at the top level of the `version` pr
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       // Ecosystem-specific options
       "versionActionsOptions": {
-        "skipLockFileUpdate": true
-      }
-    }
-  }
+        "skipLockFileUpdate": true,
+      },
+    },
+  },
 }
 ```
 
@@ -556,9 +612,9 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
   "release": {
     "changelog": {
       // This disables the workspace changelog
-      "workspaceChangelog": false
-    }
-  }
+      "workspaceChangelog": false,
+    },
+  },
 }
 ```
 
@@ -572,10 +628,10 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
         // changelog contents
         "createRelease": "github",
         // This will disable creating a workspace CHANGELOG.md file
-        "file": false
-      }
-    }
-  }
+        "file": false,
+      },
+    },
+  },
 }
 ```
 
@@ -589,9 +645,9 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
   "release": {
     "changelog": {
       // This enables project changelogs with the default options
-      "projectChangelogs": true
-    }
-  }
+      "projectChangelogs": true,
+    },
+  },
 }
 ```
 
@@ -606,10 +662,10 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
         "createRelease": "github",
         // This will disable creating any project level CHANGELOG.md
         // files
-        "file": false
-      }
-    }
-  }
+        "file": false,
+      },
+    },
+  },
 }
 ```
 
@@ -624,10 +680,10 @@ By default, changelog entries are prepended to existing changelog files. To comp
     "changelog": {
       "workspaceChangelog": {
         // Replaces the entire CHANGELOG.md file with the new content
-        "replaceExistingContents": true
-      }
-    }
-  }
+        "replaceExistingContents": true,
+      },
+    },
+  },
 }
 ```
 
@@ -647,9 +703,9 @@ The `git` property configures the automated git operations that take place as pa
       "commit": true,
       // This will enable create a git for the overall release, or
       // one tag per project for independent project releases
-      "tag": false
-    }
-  }
+      "tag": false,
+    },
+  },
 }
 ```
 
@@ -666,8 +722,8 @@ The `docker` property configures Docker image versioning and publishing when usi
 {
   "release": {
     // Simple configuration - enables Docker with defaults
-    "docker": true
-  }
+    "docker": true,
+  },
 }
 ```
 
@@ -684,7 +740,7 @@ The `docker` property configures Docker image versioning and publishing when usi
         "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
         "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
         "staging": "{currentDate|YYMM.DD}-staging",
-        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}"
+        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}",
       },
 
       // Skip Docker versioning for these projects to prevent versioning with other tools like NPM
@@ -695,9 +751,9 @@ The `docker` property configures Docker image versioning and publishing when usi
       "repositoryName": "myorg",
 
       // Docker registry URL
-      "registryUrl": "docker.io"
-    }
-  }
+      "registryUrl": "docker.io",
+    },
+  },
 }
 ```
 
@@ -719,11 +775,11 @@ When configuring the `@nx/docker` plugin in `nx.json`, you can customize the beh
           // Skip the default --tag argument
           "skipDefaultTag": true,
           // You must provide your own tags via args
-          "args": ["--tag myorg/myapp:latest", "--tag myorg/myapp:1.0.0"]
-        }
-      }
-    }
-  ]
+          "args": ["--tag myorg/myapp:latest", "--tag myorg/myapp:1.0.0"],
+        },
+      },
+    },
+  ],
 }
 ```
 
@@ -797,11 +853,11 @@ These are global configuration options for the [`nx sync`](/docs/reference/nx-co
     "globalGenerators": ["my-plugin:my-sync-generator"],
     "generatorOptions": {
       "my-plugin:my-sync-generator": {
-        "verbose": true
-      }
+        "verbose": true,
+      },
     },
-    "disabledTaskSyncGenerators": ["other-plugin:problematic-generator"]
-  }
+    "disabledTaskSyncGenerators": ["other-plugin:problematic-generator"],
+  },
 }
 ```
 
@@ -906,7 +962,7 @@ The `tui` property in `nx.json` configures the [Terminal UI](/docs/guides/tasks-
 
 ## Conformance
 
-The `conformance` property in `nx.json` configures the usage of [Nx Conformance](/docs/enterprise/powerpack/conformance).
+The `conformance` property in `nx.json` configures the usage of [Nx Conformance](/docs/enterprise/conformance).
 
 ```jsonc
 // nx.json
@@ -917,14 +973,14 @@ The `conformance` property in `nx.json` configures the usage of [Nx Conformance]
       {
         "rule": "@nx/conformance/enforce-module-boundaries",
         "status": "evaluated",
-        "explanation": "This rule ensures proper module boundaries are maintained across the workspace"
+        "explanation": "This rule ensures proper module boundaries are maintained across the workspace",
       },
       {
         "rule": "./tools/local-conformance-rules/check-project.ts",
         "projects": ["*"],
         "options": {
-          "strictMode": true
-        }
+          "strictMode": true,
+        },
       },
       {
         "rule": "nx-cloud://my-custom-rule",
@@ -932,13 +988,13 @@ The `conformance` property in `nx.json` configures the usage of [Nx Conformance]
           "frontend-*",
           {
             "matcher": "backend-legacy",
-            "explanation": "Legacy backend project is exempt until migration is complete"
-          }
+            "explanation": "Legacy backend project is exempt until migration is complete",
+          },
         ],
-        "status": "enforced"
-      }
-    ]
-  }
+        "status": "enforced",
+      },
+    ],
+  },
 }
 ```
 
@@ -974,7 +1030,7 @@ You can also use objects with `matcher` and `explanation` properties to document
   "rule": "my-rule",
   // Here we are configuring the rule to apply to all frontend projects
   // except the one called "frontend-legacy"
-  "projects": ["frontend-*", "!frontend-legacy"]
+  "projects": ["frontend-*", "!frontend-legacy"],
 }
 ```
 
@@ -985,9 +1041,9 @@ You can also use objects with `matcher` and `explanation` properties to document
     "frontend-*",
     {
       "matcher": "!frontend-legacy",
-      "explanation": "Exempt until migration to new architecture is complete"
-    }
-  ]
+      "explanation": "Exempt until migration to new architecture is complete",
+    },
+  ],
 }
 ```
 

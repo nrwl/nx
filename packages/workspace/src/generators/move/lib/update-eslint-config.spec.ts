@@ -405,8 +405,8 @@ function convertToFlat(
     const paths = options.anotherProject
       ? `["${path}/tsconfig.*?.json", "${path}/${options.anotherProject}"]`
       : options.isString
-      ? `"${path}/tsconfig.*?.json"`
-      : `["${path}/tsconfig.*?.json"]`;
+        ? `"${path}/tsconfig.*?.json"`
+        : `["${path}/tsconfig.*?.json"]`;
     parserOptions = `languageOptions: {
       parserOptions: {
         project: ${paths}

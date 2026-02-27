@@ -57,12 +57,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.type).toBe('custom-app-name');
@@ -81,12 +76,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.priority).toBe(10);
@@ -105,12 +95,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.isPublic).toBe(true);
@@ -129,12 +114,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.tags).toEqual(['api', 'backend', 'tier:1']);
@@ -153,12 +133,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.generators['@nx/react:component']).toBe('components');
@@ -178,12 +153,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.type).toBe('my-custom-app');
@@ -210,12 +180,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.config.level1.level2.value).toBe('deep');
@@ -234,12 +199,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.generators.frameworks).toEqual([
@@ -265,12 +225,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.targets.myBuild.cache).toBe(false);
@@ -289,12 +244,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.targets.myTest.inputs).toContain('src/**/*');
@@ -314,12 +264,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(
@@ -340,12 +285,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.targets.e2e.cache).toBe(false);
@@ -367,12 +307,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           expect(config.targets.customBuild.cache).toBe(true);
@@ -396,12 +331,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           // Project-level config
@@ -426,12 +356,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
 
           // Project-level
@@ -483,20 +408,10 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
 
           const appConfig = JSON.parse(
-            runCLI('show project app --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project app --json', { verbose: false })
           );
           const listConfig = JSON.parse(
-            runCLI('show project list --json', {
-              env: {
-                NX_VERBOSE_LOGGING: 'false',
-                NX_GRADLE_VERBOSE_LOGGING: 'false',
-              },
-            })
+            runCLI('show project list --json', { verbose: false })
           );
 
           expect(appConfig.type).toBe('app-project');

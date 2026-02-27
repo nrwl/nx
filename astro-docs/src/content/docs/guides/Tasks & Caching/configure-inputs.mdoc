@@ -12,6 +12,10 @@ Nx errs on the side of caution when using inputs. Ideally, the "perfect" configu
 
 For an overview of all the possible [types of inputs](/docs/reference/inputs) and how to reuse sets of inputs as [named inputs](/docs/reference/inputs#named-inputs), see the reference documentation.
 
+{% aside type="caution" title="Directory Paths Require Trailing Slash or Glob" %}
+When specifying a directory as an input, you must use a trailing slash (`/`) or a glob pattern. For example, `{projectRoot}/src/` or `{projectRoot}/src/**/*` will match all files in the `src` directory, but `{projectRoot}/src` (without trailing slash) will not match any files. This differs from `outputs`, which support naked directory paths.
+{% /aside %}
+
 Throughout this recipe, the following project structure of a simple workspace will be used as an example to help understand inputs better.
 
 {% graph height="450px" %}
@@ -340,9 +344,9 @@ As you configure `inputs`, keep the project details screen open and it will refr
 {
   "targetDefaults": {
     "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+      "inputs": ["production", "^production"],
+    },
+  },
 }
 ```
 
@@ -364,9 +368,9 @@ Defining `inputs` of a target in `project.json` or `package.json` will apply onl
   "name": "myreactapp",
   "targets": {
     "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+      "inputs": ["production", "^production"],
+    },
+  },
 }
 ```
 
@@ -432,9 +436,9 @@ Given the above configurations, exclude the test and config files from the `prod
     "production": [
       "default",
       "!{projectRoot}/jest.config.ts",
-      "!{projectRoot}/**/?(*.)+(spec|test).ts"
-    ]
-  }
+      "!{projectRoot}/**/?(*.)+(spec|test).ts",
+    ],
+  },
 }
 ```
 
@@ -442,6 +446,37 @@ With the above named inputs, Nx will behave in the following way:
 
 - When only test files are changed, Nx will restore previous compilation results from the cache and re-run the tests for the projects containing the test files
 - When any production files are changed, Nx will re-run the tests for the project as well as any projects which depend on it
+
+### Specifying Dependency File Patterns Directly
+
+Instead of defining a named input and referencing it with `^`, you can directly specify file patterns to consider from dependency projects using the `^{projectRoot}` syntax:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "inputs": [
+        "production",
+        "^{projectRoot}/src/**/*.ts", // Only consider .ts source files from dependencies
+      ],
+    },
+  },
+}
+```
+
+This is useful when you want fine-grained control over which files from dependencies affect a task's cache without creating a named input. For example, a `build` task might only need to consider `.ts` files from its dependencies rather than all production files.
+
+You can also use the object format with the `dependencies` property:
+
+```jsonc
+{
+  "inputs": [
+    "production",
+    { "fileset": "{projectRoot}/src/**/*.ts", "dependencies": true },
+  ],
+}
+```
 
 ### Consider the Version of a Language for all Tasks
 
@@ -455,7 +490,7 @@ For example, to consider the version of Node.js in the hash of every task, add `
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [{ "runtime": "node --version" }]
-  }
+    "sharedGlobals": [{ "runtime": "node --version" }],
+  },
 }
 ```

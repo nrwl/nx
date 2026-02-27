@@ -1,0 +1,277 @@
+---
+title: Custom Workspace ESLint Rules
+description: Learn how to create and configure custom ESLint rules specific to your Nx workspace, enabling team-wide code conventions and project-specific linting.
+sidebar:
+  label: Custom Workspace ESLint Rules
+filter: 'type:Guides'
+---
+
+Custom ESLint rules allow you to enforce team-specific conventions, project architectural patterns, and codebase-specific best practices that aren't covered by existing ESLint plugins. Nx provides two main approaches for creating and using custom ESLint rules in your workspace.
+
+<!-- TODO: Add "Quick Start with the Generator" section once @nx/eslint:workspace-rule supports ESLint v9 -->
+
+## Understanding the Two Approaches
+
+There are two main approaches for custom ESLint rules in Nx workspaces:
+
+1. **Package Manager Workspaces (npm/yarn/pnpm/bun)**: Create a dedicated ESLint plugin package (e.g., `nx g @nx/js:lib packages/eslint-rules`) that's symlinked via your package manager. Import rules as you would any npm package.
+
+2. **`loadWorkspaceRules` Utility**: Use the `@nx/eslint-plugin` utility to load rules from any directory. This works whether or not you use package manager workspaces.
+
+Choose the approach that fits your workspace setup:
+
+| Scenario                             | Recommended Approach       |
+| ------------------------------------ | -------------------------- |
+| Using npm/yarn/pnpm/bun workspaces   | Package Manager Workspaces |
+| Not using package manager workspaces | `loadWorkspaceRules`       |
+| Want rules as a publishable package  | Package Manager Workspaces |
+| TypeScript rules with minimal config | `loadWorkspaceRules`       |
+
+## Approach 1: Package Manager Workspaces
+
+If your workspace uses npm, yarn, pnpm, or bun workspaces, you can create custom ESLint rules as a regular package. This approach treats your custom rules like any other internal dependency.
+
+### Step 1: Create the ESLint Plugin Package
+
+Create a new library for your ESLint plugin:
+
+```shell
+nx g @nx/js:lib packages/eslint-rules
+```
+
+{% aside type="note" %}
+If you don't use `nx g @nx/js:lib` to create your package, make sure your package is included in your workspace configuration (e.g., `packages/*` in `pnpm-workspace.yaml` or the `workspaces` field in `package.json`).
+{% /aside %}
+
+### Step 2: Structure the Plugin
+
+Your plugin package should export rules following the ESLint plugin format:
+
+```typescript
+// packages/eslint-rules/src/index.ts
+import { noFooConst, RULE_NAME as noFooConstName } from './rules/no-foo-const';
+
+export default {
+  rules: {
+    [noFooConstName]: noFooConst,
+  },
+};
+```
+
+### Step 3: Create a Rule
+
+Each rule should follow the ESLint rule structure. Using `@typescript-eslint/utils` provides excellent TypeScript support:
+
+```typescript
+// packages/eslint-rules/src/rules/no-foo-const.ts
+import { ESLintUtils } from '@typescript-eslint/utils';
+
+export const RULE_NAME = 'no-foo-const';
+
+export const noFooConst = ESLintUtils.RuleCreator(() => __filename)({
+  name: RULE_NAME,
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Disallow variables named "foo"',
+    },
+    schema: [],
+    messages: {
+      noFoo: 'Variables named "foo" are not allowed.',
+    },
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      VariableDeclarator(node) {
+        if (node.id.type === 'Identifier' && node.id.name === 'foo') {
+          context.report({
+            node: node.id,
+            messageId: 'noFoo',
+          });
+        }
+      },
+    };
+  },
+});
+```
+
+### Step 4: Install and Use the Plugin
+
+After creating your plugin package, install dependencies to ensure it's symlinked:
+
+```shell
+npm install
+# or: yarn install
+# or: pnpm install
+# or: bun install
+```
+
+Then use the plugin in your ESLint configuration:
+
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+import eslintRules from '@acme/eslint-rules';
+
+export default [
+  {
+    plugins: {
+      '@acme/eslint-rules': eslintRules,
+    },
+    rules: {
+      '@acme/eslint-rules/no-foo-const': 'error',
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
+
+```json
+{
+  "plugins": ["@acme/eslint-rules"],
+  "rules": {
+    "@acme/eslint-rules/no-foo-const": "error"
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Running TypeScript Rules
+
+When using TypeScript for your ESLint rules, the TypeScript code must be transpiled or interpreted before ESLint can use it. There are several options:
+
+Node.js 22.6+ supports TypeScript natively through type stripping. As of Node 22.18.0 and Node 24, this is enabled by default.
+
+For older versions in the 22.x series, enable it with:
+
+```shell
+NODE_OPTIONS="--experimental-strip-types" nx lint myproject
+```
+
+<!-- TODO(v23): Remove Node 20 since it will be out of LTS -->
+
+Alternatively, if you are on Node 20 or do not want to use Node's strip-types feature, the `tsx` package provides fast TypeScript execution with ESM support:
+
+```shell
+npm install -D tsx
+```
+
+Then you can register `tsx` in your `eslint.config.mjs` file prior to importing the custom rules.
+
+```js
+import { register } from 'tsx/esm/api';
+
+const unregister = register();
+
+const eslintRules = await import('@acme/eslint-rules');
+
+export default [
+  {
+    plugins: {
+      '@acme/eslint-rules': eslintRules,
+    },
+    rules: {
+      '@acme/eslint-rules/no-foo-const': 'error',
+    },
+  },
+];
+
+// cleanup
+unregister();
+```
+
+See the [ESM Register API](https://tsx.is/dev-api/register-esm) docs for `tsx` for more information.
+
+## Approach 2: Using loadWorkspaceRules
+
+The `loadWorkspaceRules` utility from `@nx/eslint-plugin` lets you load ESLint rules from any directory in your workspace. This is particularly useful when:
+
+- You're not using package manager workspaces
+- You want rules in a non-standard location
+- You need automatic TypeScript transpilation
+
+### Basic Usage
+
+```javascript
+// eslint.config.mjs
+import baseConfig from './eslint.base.config.mjs';
+import { loadWorkspaceRules } from '@nx/eslint-plugin';
+
+// Load rules from a directory relative to workspace root
+const customRules = await loadWorkspaceRules('tools/my-eslint-rules');
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    plugins: {
+      custom: { rules: customRules },
+    },
+    rules: {
+      'custom/my-custom-rule': 'error',
+    },
+  },
+];
+```
+
+### How `loadWorkspaceRules` Works
+
+The utility:
+
+1. Accepts a directory path (relative to workspace root or absolute)
+2. Looks for an `index.ts`, `index.mts`, `index.cts`, `index.js`, `index.mjs`, or `index.cjs` file
+3. Automatically finds and uses a `tsconfig.json` for TypeScript transpilation
+4. Returns the exported rules object
+
+### Specifying a Custom `tsconfig`
+
+You can provide a specific `tsconfig.json` path:
+
+```javascript
+const customRules = await loadWorkspaceRules(
+  'tools/my-eslint-rules',
+  'tools/my-eslint-rules/tsconfig.lib.json'
+);
+```
+
+If not provided, `loadWorkspaceRules` searches for `tsconfig.json` starting from the rules directory and traversing up to the workspace root.
+
+### Example: Project-Specific Rules
+
+You can load rules from within a project:
+
+```javascript
+// apps/my-app/eslint.config.mjs
+import baseConfig from '../../eslint.base.config.mjs';
+import { loadWorkspaceRules } from '@nx/eslint-plugin';
+
+// Load rules specific to this project
+const projectRules = await loadWorkspaceRules('apps/my-app/eslint-rules');
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts'],
+    plugins: {
+      project: { rules: projectRules },
+    },
+    rules: {
+      'project/component-naming': 'error',
+    },
+  },
+];
+```
+
+<!-- TODO: Add section for @nx/eslint:workspace-rule once it supports ESLint v9 -->
+
+## Related Resources
+
+- [ESLint Developer Guide](https://eslint.org/docs/developer-guide/working-with-rules)
+- [TypeScript ESLint Custom Rules](https://typescript-eslint.io/developers/custom-rules)

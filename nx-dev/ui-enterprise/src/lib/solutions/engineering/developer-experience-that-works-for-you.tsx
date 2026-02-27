@@ -36,7 +36,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/getting-started/editor-setup"
+            href="/docs/getting-started/editor-setup"
             title="Learn about Nx Console"
             className="text-sm/6 font-semibold"
           >
@@ -78,7 +78,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/plugin-registry"
+            href="/docs/plugin-registry"
             title="View our Plugin Registry"
             className="text-sm/6 font-semibold"
           >

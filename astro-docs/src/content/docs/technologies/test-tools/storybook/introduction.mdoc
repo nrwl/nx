@@ -1,14 +1,29 @@
 ---
-title: Nx Storybook Plugin Overview
+title: Storybook Plugin for Nx
 description: This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.
 sidebar:
   label: Introduction
 filter: 'type:References'
 ---
 
-[Storybook](https://storybook.js.org) is a development environment for UI components. It allows you to browse a component library, view the different states of each component, and interactively develop and test components.
+[Storybook](https://storybook.js.org) is a development environment for UI components. Browse a component library, view the different states of each component, and interactively develop and test components.
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
+
+## Requirements
+
+The `@nx/storybook` plugin supports the following package versions.
+
+| Package     | Supported Versions |
+| ----------- | ------------------ |
+| `storybook` | >=8.0.0 <11.0.0    |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+<!-- The peerDependencies in @nx/storybook's package.json declares >=7.0.0 so that
+     users who still have Storybook 7 installed get a friendlier error from Nx
+     rather than a cryptic package-manager resolution failure. Storybook 7 is
+     no longer actively supported. -->
 
 ## Setting Up Storybook
 
@@ -169,7 +184,7 @@ nx test-storybook project-name
 
 ### Anatomy of the Storybook setup
 
-When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create a project specific Storybook configuration.
+When running the Nx Storybook generator, it configures the Nx workspace to run Storybook and creates a project-specific Storybook configuration.
 
 The project-specific Storybook configuration is pretty much similar to what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 
@@ -234,5 +249,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Storybook 9 migration generator](/docs/technologies/test-tools/storybook/generators#migrate-9)
-- [Storybook 9 setup guide](/docs/technologies/test-tools/storybook/guides/storybook-9-setup)
+- [Upgrading Storybook guide](/docs/technologies/test-tools/storybook/guides/upgrading-storybook)
+- [Storybook 10 migration generator](/docs/technologies/test-tools/storybook/generators#migrate-10)

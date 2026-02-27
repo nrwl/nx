@@ -6,10 +6,9 @@ Remove Angular ESLint rules that were removed in v19.0.0.
 
 Removes `@angular-eslint/no-host-metadata-property`, `@angular-eslint/sort-ngmodule-metadata-arrays` and `@angular-eslint/prefer-standalone-component` from any ESLint config file. Files to be searched include `.eslintrc.json`, `.eslintrc.base.json`, `.eslint.config.js` and `.eslint.config.base.js`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/.eslintrc.json" %}
+```json title="apps/app1/.eslintrc.json"
 {
   "overrides": [
     {
@@ -24,10 +23,9 @@ Removes `@angular-eslint/no-host-metadata-property`, `@angular-eslint/sort-ngmod
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="apps/app1/.eslintrc.json" %}
+```json title="apps/app1/.eslintrc.json"
 {
   "overrides": [
     {
@@ -37,6 +35,3 @@ Removes `@angular-eslint/no-host-metadata-property`, `@angular-eslint/sort-ngmod
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}

@@ -1,3 +1,5 @@
+import { existsSync, unlinkSync } from 'node:fs';
+import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { createSandbox } from './create-sandbox';
@@ -10,16 +12,41 @@ import {
   VcsPushStatus,
 } from './utils/git/git';
 import {
+  connectToNxCloudForTemplate,
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
+  getSkippedNxCloudInfo,
   readNxCloudToken,
+  setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
+import { cloneTemplate } from './utils/template/clone-template';
+import {
+  addConnectUrlToReadme,
+  amendOrCommitReadme,
+} from './utils/template/update-readme';
+import { execAndWait } from './utils/child-process-utils';
+import {
+  generatePackageManagerFiles,
+  getPackageManagerCommand,
+} from './utils/package-manager';
+import { isAiAgent, logProgress } from './utils/ai/ai-output';
+
+// State for SIGINT handler - only set after workspace is fully installed
+let workspaceDirectory: string | undefined;
+let cloudConnectUrl: string | undefined;
+
+export function getInterruptedWorkspaceState(): {
+  directory: string | undefined;
+  connectUrl: string | undefined;
+} {
+  return { directory: workspaceDirectory, connectUrl: cloudConnectUrl };
+}
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
-  preset: string,
+  preset: string | undefined,
   options: T,
   rawArgs?: T
 ) {
@@ -40,56 +67,156 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
-  const tmpDir = await createSandbox(packageManager);
+  let directory: string;
 
-  const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+  if (options.template) {
+    if (!options.template.startsWith('nrwl/'))
+      throw new Error(
+        `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
+      );
+    const templateUrl = `https://github.com/${options.template}`;
+    const workingDir = process.cwd().replace(/\\/g, '/');
+    directory = join(workingDir, name);
 
-  // nx new requires a preset currently. We should probably make it optional.
-  const directory = await createEmptyWorkspace<T>(
-    tmpDir,
-    name,
-    packageManager,
-    { ...options, preset, workspaceGlobs }
-  );
+    const aiMode = isAiAgent();
 
-  // If the preset is a third-party preset, we need to call createPreset to install it
-  // For first-party presets, it will be created by createEmptyWorkspace instead.
-  // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
-  const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
-  if (thirdPartyPackageName) {
-    await createPreset(
-      thirdPartyPackageName,
-      options,
-      packageManager,
-      directory
-    );
-  }
-
-  let connectUrl: string | undefined;
-  let nxCloudInfo: string | undefined;
-  if (nxCloud !== 'skip') {
-    const token = readNxCloudToken(directory) as string;
-
-    if (nxCloud !== 'yes') {
-      await setupCI(directory, nxCloud, packageManager);
+    // Use spinner for human mode, progress logs for AI mode
+    let workspaceSetupSpinner: any;
+    if (aiMode) {
+      logProgress('cloning', `Cloning template ${options.template}...`);
+    } else {
+      const ora = require('ora');
+      workspaceSetupSpinner = ora(`Creating workspace from template`).start();
     }
 
-    connectUrl = await createNxCloudOnboardingUrl(
-      nxCloud,
-      token,
-      directory,
-      useGitHub
-    );
+    try {
+      await cloneTemplate(templateUrl, name);
+
+      // Remove npm lockfile from template since we'll generate the correct one
+      const npmLockPath = join(directory, 'package-lock.json');
+      if (existsSync(npmLockPath)) {
+        unlinkSync(npmLockPath);
+      }
+
+      // Generate package manager specific files (e.g., .yarnrc.yml for Yarn Berry)
+      generatePackageManagerFiles(directory, packageManager);
+
+      // Install dependencies with the user's package manager
+      if (aiMode) {
+        logProgress(
+          'installing',
+          `Installing dependencies with ${packageManager}...`
+        );
+      }
+
+      const pmc = getPackageManagerCommand(packageManager);
+      if (pmc.preInstall) {
+        await execAndWait(pmc.preInstall, directory);
+      }
+      await execAndWait(pmc.install, directory);
+
+      // Mark workspace as ready for SIGINT handler
+      workspaceDirectory = directory;
+
+      if (aiMode) {
+        logProgress(
+          'configuring',
+          `Successfully created the workspace: ${directory}`
+        );
+      } else {
+        workspaceSetupSpinner.succeed(
+          `Successfully created the workspace: ${directory}`
+        );
+      }
+    } catch (e) {
+      if (!aiMode) {
+        workspaceSetupSpinner.fail();
+      }
+      throw e;
+    }
+
+    // Connect to Nx Cloud for template flow
+    if (
+      nxCloud !== 'skip' &&
+      nxCloud !== 'never' &&
+      !options.skipCloudConnect
+    ) {
+      await connectToNxCloudForTemplate(
+        directory,
+        'create-nx-workspace',
+        useGitHub
+      );
+    }
+  } else {
+    // Preset flow - existing behavior
+    if (!preset) {
+      throw new Error(
+        'Preset is required when not using a template. Please provide --preset or --template.'
+      );
+    }
+    const tmpDir = await createSandbox(packageManager);
+    const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+
+    // nx new requires a preset currently. We should probably make it optional.
+    directory = await createEmptyWorkspace<T>(tmpDir, name, packageManager, {
+      ...options,
+      preset,
+      workspaceGlobs,
+      // We want new workspaces to have a short URL to finish Cloud onboarding, but not have nxCloudId set up since it will be handled as part of the onboarding flow.
+      // This is skipping nxCloudId for the "custom" flow.
+      nxCloud: 'skip',
+    });
+
+    // Mark workspace as ready for SIGINT handler
+    workspaceDirectory = directory;
+
+    // If the preset is a third-party preset, we need to call createPreset to install it
+    // For first-party presets, it will be created by createEmptyWorkspace instead.
+    // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
+    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
+    if (thirdPartyPackageName) {
+      await createPreset(
+        thirdPartyPackageName,
+        options,
+        packageManager,
+        directory
+      );
+    }
+  }
+
+  const isTemplate = !!options.template;
+
+  // Generate CI for preset flow (not template)
+  // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
+  if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
+    const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
+    await setupCI(directory, ciProvider, packageManager);
+  }
+
+  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
+  if (options.neverConnectToCloud) {
+    setNeverConnectToCloud(directory);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
 
   if (!skipGit) {
-    try {
-      await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
+    const aiMode = isAiAgent();
+    if (aiMode) {
+      logProgress('initializing', 'Initializing git repository...');
+    }
 
-      // Push to GitHub if commit was made, GitHub push is not skipped, and CI provider is GitHub
-      if (commit && !skipGitHubPush && nxCloud === 'github') {
+    try {
+      await initializeGitRepo(directory, { defaultBase, commit });
+
+      // Push to GitHub if commit was made, GitHub push is not skipped, and:
+      // - CI provider is GitHub (preset flow with CLI arg), OR
+      // - Nx Cloud enabled via simplified prompt (nxCloud === 'yes')
+      if (
+        commit &&
+        !skipGitHubPush &&
+        (nxCloud === 'github' || nxCloud === 'yes')
+      ) {
         pushedToVcs = await pushToGitHub(directory, {
           skipGitHubPush,
           name,
@@ -99,29 +226,80 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       }
     } catch (e) {
       if (e instanceof Error) {
-        output.error({
-          title: 'Could not initialize git repository',
-          bodyLines: mapErrorToBodyLines(e),
-        });
+        if (!aiMode) {
+          output.error({
+            title: 'Could not initialize git repository',
+            bodyLines: mapErrorToBodyLines(e),
+          });
+        }
+        // In AI mode, error will be handled by the caller
       } else {
         console.error(e);
       }
     }
   }
 
-  if (connectUrl) {
-    nxCloudInfo = await getNxCloudInfo(
+  // Create onboarding URL AFTER git operations so getVcsRemoteInfo() can detect the repo
+  let connectUrl: string | undefined;
+  let nxCloudInfo: string | undefined;
+
+  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+    // "Yes" or "Maybe later" — generate URL, update README, show banner
+    const aiModeForCloud = isAiAgent();
+    if (aiModeForCloud) {
+      logProgress('configuring', 'Configuring Nx Cloud...');
+    }
+    // skipCloudConnect=true (Maybe later): Skip readNxCloudToken() since no token exists
+    // skipCloudConnect=false (Yes): Read the token as before (cloud was connected)
+    const token = options.skipCloudConnect
+      ? undefined
+      : readNxCloudToken(directory);
+
+    connectUrl = await createNxCloudOnboardingUrl(
       nxCloud,
+      token,
+      directory,
+      useGitHub
+    );
+
+    // Store for SIGINT handler
+    cloudConnectUrl = connectUrl;
+
+    // Update README with connect URL (strips markers, adds connect section)
+    // Then commit the change - amend if not pushed, new commit if already pushed
+    if (isTemplate) {
+      const readmeUpdated = addConnectUrlToReadme(directory, connectUrl);
+      if (readmeUpdated && !skipGit && commit) {
+        const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
+        await amendOrCommitReadme(directory, alreadyPushed);
+      }
+    }
+
+    nxCloudInfo = await getNxCloudInfo(
       connectUrl,
       pushedToVcs,
-      rawArgs?.nxCloud
+      options.completionMessageKey,
+      name
     );
+  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+    // Strip marker comments from README
+    const readmeUpdated = addConnectUrlToReadme(directory, undefined);
+    if (readmeUpdated && !skipGit && commit) {
+      const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
+      await amendOrCommitReadme(directory, alreadyPushed);
+    }
+
+    // Only show "nx connect" message for 'skip', not 'never'
+    if (nxCloud === 'skip') {
+      nxCloudInfo = getSkippedNxCloudInfo();
+    }
   }
 
   return {
     nxCloudInfo,
     directory,
     pushedToVcs,
+    connectUrl,
   };
 }
 

@@ -267,7 +267,7 @@ export function EnterpriseCustomers(): ReactElement {
           <CustomerIconGrid icons={firstCustomerIcons} />
         </div>
 
-        <div className="col-span-2 border-y border-slate-200 bg-slate-50 py-24 sm:py-32 md:col-span-4 dark:border-slate-800 dark:bg-slate-900">
+        <div className="col-span-2 border-y border-zinc-200 bg-zinc-50 py-24 sm:py-32 md:col-span-4 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mx-auto">
             <CustomerTestimonialCarousel />
           </div>

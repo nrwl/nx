@@ -198,14 +198,14 @@ export function Fence({
               <button
                 type="button"
                 className={
-                  'not-prose flex border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800/60' +
+                  'not-prose flex border border-zinc-200 bg-zinc-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-zinc-700 dark:bg-zinc-800/60' +
                   ((highlightOptions && highlightOptions[0]) || isWithinTab
                     ? ''
                     : ' rounded-tr-lg')
                 }
               >
                 {copied ? (
-                  <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
+                  <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-blue-500" />
                 ) : (
                   <ClipboardDocumentIcon className="h-5 w-5" />
                 )}

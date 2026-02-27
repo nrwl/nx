@@ -173,7 +173,6 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { createOrEditViteConfig } = ensurePackage('@nx/vite', nxVersion);
     ensurePackage('@nx/vitest', nxVersion);
     // nx-ignore-next-line
     const { configurationGenerator } = require('@nx/vitest/generators');
@@ -188,16 +187,6 @@ export async function libraryGeneratorInternal(
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
-    createOrEditViteConfig(
-      tree,
-      {
-        project: options.name,
-        includeLib: false,
-        includeVitest: true,
-        testEnvironment: options.testEnvironment,
-      },
-      true
-    );
   }
 
   if (!schema.skipTsConfig && !options.isUsingTsSolutionConfig) {
@@ -738,8 +727,8 @@ async function addJest(
     compiler: options.shouldUseSwcJest
       ? 'swc'
       : options.bundler === 'tsc'
-      ? 'tsc'
-      : undefined,
+        ? 'tsc'
+        : undefined,
     runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }

@@ -2,8 +2,7 @@ import { Component<% if(viewEncapsulation) { %>, ViewEncapsulation<% } %> } from
 import { RouterModule } from '@angular/router';<% } %><% if(!minimal) { %>
 import { NxWelcome<%= componentType %> } from './nx-welcome<%= componentFileSuffix %>';<% } %>
 
-@Component({<% if (setStandaloneTrue) { %>
-  standalone: true,<% } %>
+@Component({
   imports: [<% if(!minimal) { %>NxWelcome<%= componentType %>, <% } %><% if(routing) { %>RouterModule<% } %>],
   selector: '<%= rootSelector %>',<% if(!inlineTemplate) { %>
   templateUrl: './app<%= componentFileSuffix %>.html',<% } else { %>

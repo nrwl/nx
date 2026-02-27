@@ -69,6 +69,8 @@ function createValidRunBuilderOptions(
     reportUnusedDisableDirectives: null,
     printConfig: null,
     errorOnUnmatchedPattern: true,
+    suppressAll: false,
+    suppressRule: [],
     ...additionalOptions,
   };
 }
@@ -160,7 +162,7 @@ describe('Linter Builder', () => {
         force: false,
         silent: false,
         ignorePath: null,
-        maxWarnings: null,
+        maxWarnings: -1,
         outputFile: null,
         quiet: false,
         reportUnusedDisableDirectives: null,
@@ -180,13 +182,15 @@ describe('Linter Builder', () => {
         force: false,
         silent: false,
         ignorePath: null,
-        maxWarnings: null,
+        maxWarnings: -1,
         outputFile: null,
         quiet: false,
         noEslintrc: false,
         rulesdir: [],
         resolvePluginsRelativeTo: null,
         reportUnusedDisableDirectives: null,
+        suppressAll: false,
+        suppressRule: [],
       },
       false
     );
@@ -894,7 +898,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
         force: false,
         silent: false,
         ignorePath: null,
-        maxWarnings: null,
+        maxWarnings: -1,
         outputFile: null,
         quiet: false,
         reportUnusedDisableDirectives: null,
@@ -930,8 +934,85 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
         rulesdir: [],
         resolvePluginsRelativeTo: null,
         reportUnusedDisableDirectives: null,
+        suppressAll: false,
+        suppressRule: [],
       },
       true
     );
+  });
+
+  describe('Bulk Suppression Support', () => {
+    it('should pass suppressAll option to ESLint when enabled', async () => {
+      setupMocks();
+      MockESLint.version = '9.24.0';
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          suppressAll: true,
+        }),
+        mockContext
+      );
+      expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          suppressAll: true,
+        }),
+        expect.any(Boolean)
+      );
+    });
+
+    it('should pass suppressRule option to ESLint when specified', async () => {
+      setupMocks();
+      MockESLint.version = '9.24.0';
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          suppressRule: ['no-console', 'no-unused-vars'],
+        }),
+        mockContext
+      );
+      expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          suppressRule: ['no-console', 'no-unused-vars'],
+        }),
+        expect.any(Boolean)
+      );
+    });
+
+    it('should throw error when using suppression options with ESLint < 9.24.0', async () => {
+      setupMocks();
+      MockESLint.version = '9.23.0';
+
+      // Mock the resolveAndInstantiateESLint to throw the error
+      mockResolveAndInstantiateESLint.mockRejectedValueOnce(
+        new Error(
+          'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation) require ESLint v9.24.0 or higher. Current version: 9.23.0'
+        )
+      );
+
+      await expect(
+        lintExecutor(
+          createValidRunBuilderOptions({
+            suppressAll: true,
+          }),
+          mockContext
+        )
+      ).rejects.toThrow(
+        'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation) require ESLint v9.24.0 or higher. Current version: 9.23.0'
+      );
+    });
+
+    it('should not pass suppression options when not specified', async () => {
+      setupMocks();
+      MockESLint.version = '9.24.0';
+      await lintExecutor(createValidRunBuilderOptions(), mockContext);
+      expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          suppressAll: false,
+          suppressRule: [],
+        }),
+        expect.any(Boolean)
+      );
+    });
   });
 });

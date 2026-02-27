@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks';
 import { serializeResult } from '../socket-utils';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { HandlerResult } from './server';
 

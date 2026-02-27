@@ -90,7 +90,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         export default [
             {
                 ignores: [
-                    "**/dist"
+                    "**/dist",
+                    "**/out-tsc"
                 ]
             },
             { plugins: { "@nx": nxEslintPlugin } },
@@ -239,87 +240,88 @@ describe('convertEslintJsonToFlatConfig', () => {
       );
 
       expect(content).toMatchInlineSnapshot(`
-              "import { FlatCompat } from "@eslint/eslintrc";
-              import { dirname } from "path";
-              import { fileURLToPath } from "url";
-              import js from "@eslint/js";
-              import baseConfig from "../../eslint.config.mjs";
-              import globals from "globals";
+        "import { FlatCompat } from "@eslint/eslintrc";
+        import { dirname } from "path";
+        import { fileURLToPath } from "url";
+        import js from "@eslint/js";
+        import baseConfig from "../../eslint.config.mjs";
+        import globals from "globals";
 
-              const compat = new FlatCompat({
-                baseDirectory: dirname(fileURLToPath(import.meta.url)),
-                recommendedConfig: js.configs.recommended,
-              });
+        const compat = new FlatCompat({
+          baseDirectory: dirname(fileURLToPath(import.meta.url)),
+          recommendedConfig: js.configs.recommended,
+        });
 
 
-              export default [
-                  {
-                      ignores: [
-                          "**/dist"
-                      ]
-                  },
-                  ...baseConfig,
-                  ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
-                  { languageOptions: { globals: { ...globals.jest } } },
-                  {
-                      rules: {
-                          "@next/next/no-html-link-for-pages": "off"
-                      }
-                  },
-                  {
-                      files: [
-                          "**/*.ts",
-                          "**/*.tsx",
-                          "**/*.js",
-                          "**/*.jsx"
-                      ],
-                      rules: {
-                          "@next/next/no-html-link-for-pages": [
-                              "error",
-                              "apps/test-next/pages"
-                          ]
-                      }
-                  },
-                  {
-                      files: [
-                          "**/*.ts",
-                          "**/*.tsx"
-                      ],
-                      // Override or add rules here
-                      rules: {}
-                  },
-                  {
-                      files: [
-                          "**/*.js",
-                          "**/*.jsx"
-                      ],
-                      // Override or add rules here
-                      rules: {}
-                  },
-                  {
-                      files: [
-                          "**/*.json"
-                      ],
-                      rules: {
-                          "@nx/dependency-checks": "error"
-                      },
-                      languageOptions: {
-                          parser: await import("jsonc-eslint-parser")
-                      }
-                  },
-                  {
-                      ignores: [
-                          ".next/**/*"
-                      ]
-                  },
-                  {
-                      ignores: [
-                          "something/else"
-                      ]
-                  }
-              ];
-              "
-          `);
+        export default [
+            {
+                ignores: [
+                    "**/dist",
+                    "**/out-tsc"
+                ]
+            },
+            ...baseConfig,
+            ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
+            { languageOptions: { globals: { ...globals.jest } } },
+            {
+                rules: {
+                    "@next/next/no-html-link-for-pages": "off"
+                }
+            },
+            {
+                files: [
+                    "**/*.ts",
+                    "**/*.tsx",
+                    "**/*.js",
+                    "**/*.jsx"
+                ],
+                rules: {
+                    "@next/next/no-html-link-for-pages": [
+                        "error",
+                        "apps/test-next/pages"
+                    ]
+                }
+            },
+            {
+                files: [
+                    "**/*.ts",
+                    "**/*.tsx"
+                ],
+                // Override or add rules here
+                rules: {}
+            },
+            {
+                files: [
+                    "**/*.js",
+                    "**/*.jsx"
+                ],
+                // Override or add rules here
+                rules: {}
+            },
+            {
+                files: [
+                    "**/*.json"
+                ],
+                rules: {
+                    "@nx/dependency-checks": "error"
+                },
+                languageOptions: {
+                    parser: await import("jsonc-eslint-parser")
+                }
+            },
+            {
+                ignores: [
+                    ".next/**/*"
+                ]
+            },
+            {
+                ignores: [
+                    "something/else"
+                ]
+            }
+        ];
+        "
+      `);
     });
   });
 
@@ -400,7 +402,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         module.exports = [
             {
                 ignores: [
-                    "**/dist"
+                    "**/dist",
+                    "**/out-tsc"
                 ]
             },
             { plugins: { "@nx": nxEslintPlugin } },
@@ -562,7 +565,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         module.exports = [
             {
                 ignores: [
-                    "**/dist"
+                    "**/dist",
+                    "**/out-tsc"
                 ]
             },
             ...baseConfig,

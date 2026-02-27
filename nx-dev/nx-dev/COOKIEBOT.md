@@ -248,9 +248,12 @@ You can copy the HTML, CSS, and JavaScript from the following template to use in
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
   opacity: 0;
   transform: translateY(20px);
   animation: slideUp 0.3s ease-out forwards;
@@ -462,7 +465,9 @@ You can copy the HTML, CSS, and JavaScript from the following template to use in
   height: 20px;
   background-color: #666;
   border-radius: 50%;
-  transition: transform 0.2s, background-color 0.2s;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
 }
 
 input[type='checkbox'] {

@@ -44,9 +44,8 @@ export async function runTypeCheckWatch(
     errorCount?: number
   ) => void | Promise<void>
 ) {
-  const { ts, workspaceRoot, config, compilerOptions } = await setupTypeScript(
-    options
-  );
+  const { ts, workspaceRoot, config, compilerOptions } =
+    await setupTypeScript(options);
 
   const host = ts.createWatchCompilerHost(
     config.fileNames,
@@ -141,7 +140,7 @@ async function setupTypeScript(options: TypeCheckOptions) {
               ? options.outDir.replace(projectRoot, '')
               : undefined,
         }
-      : { noEmit: true };
+      : { noEmit: true, composite: false };
 
   const compilerOptions = {
     ...config.options,

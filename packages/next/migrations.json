@@ -5,6 +5,15 @@
       "version": "22.0.0-beta.0",
       "description": "Updates next.config.js files to add SVGR webpack configuration directly instead of using the nx.svgr option in withNx.",
       "factory": "./src/migrations/update-22-0-0/add-svgr-to-next-config"
+    },
+    "update-22-2-0-create-ai-instructions-for-next-16": {
+      "cli": "nx",
+      "version": "22.2.0-beta.1",
+      "requires": {
+        "next": ">=16.0.0"
+      },
+      "description": "Create AI Instructions to help migrate users workspaces to Next.js 16.",
+      "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-next-16"
     }
   },
   "packageJsonUpdates": {
@@ -37,6 +46,22 @@
       "packages": {
         "next": {
           "version": "~15.2.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.2.0-beta.1": {
+      "version": "22.2.0-beta.1",
+      "requires": {
+        "next": "^15.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~16.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "^16.0.1",
           "alwaysAddToPackageJson": false
         }
       }

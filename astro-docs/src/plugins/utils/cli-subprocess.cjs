@@ -18,6 +18,10 @@ require('ts-node').register({
 
 // TypeScript paths are now handled by pnpm workspaces, no need for tsconfig-paths
 
+const { examples: cliExamples } = importFresh(
+  join(workspaceRoot, 'packages/nx/src/command-line/examples')
+);
+
 // Inline command parser functions
 const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
 
@@ -42,6 +46,7 @@ async function parseCommand(name, command) {
         command.description || command.describe || command.desc || '',
       aliases: [],
       options: [],
+      examples: cliExamples[name] || [],
     };
   }
 
@@ -81,12 +86,37 @@ async function parseCommand(name, command) {
     }))
     .filter((option) => !option.hidden);
 
+  // Extract subcommands recursively
+  const subcommandHandlers = getCommands(builder);
+  const subcommands = [];
+
+  for (const [subName, subConfig] of Object.entries(subcommandHandlers)) {
+    // Skip $0 (default command) as it duplicates the parent
+    if (subName === '$0') {
+      continue;
+    }
+
+    // Skip commands without descriptions
+    if (!(subConfig.description || subConfig.describe || subConfig.desc)) {
+      continue;
+    }
+
+    try {
+      const parsedSub = await parseCommand(subName, subConfig);
+      subcommands.push(parsedSub);
+    } catch (error) {
+      console.warn(`⚠️ Could not parse subcommand ${subName}:`, error.message);
+    }
+  }
+
   return {
     name,
     command: command.original ? command.original.replace('$0', name) : name,
     description: command.description || command.describe || command.desc || '',
-    aliases: [],
+    aliases: command.aliases || [],
     options,
+    subcommands: subcommands.length > 0 ? subcommands : undefined,
+    examples: cliExamples[name] || [],
   };
 }
 

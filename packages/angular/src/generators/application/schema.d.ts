@@ -31,4 +31,5 @@ export interface Schema {
   serverRouting?: boolean;
   nxCloudToken?: string;
   addPlugin?: boolean;
+  zoneless?: boolean;
 }

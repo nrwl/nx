@@ -12,11 +12,16 @@ import {
   listPlugins,
 } from '../../utils/plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { listPowerpackPlugins } from '../../utils/plugins/output';
+import {
+  formatPluginsAsJson,
+  listPowerpackPlugins,
+} from '../../utils/plugins/output';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */
   plugin?: string | undefined;
+  /** Output as JSON */
+  json?: boolean;
 }
 
 /**
@@ -32,7 +37,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
   const projects = readProjectsConfigurationFromProjectGraph(projectGraph);
 
   if (args.plugin) {
-    await listPluginCapabilities(args.plugin, projects.projects);
+    await listPluginCapabilities(args.plugin, projects.projects, args.json);
   } else {
     const nxJson = readNxJson();
 
@@ -41,6 +46,17 @@ export async function listHandler(args: ListArgs): Promise<void> {
       workspaceRoot,
       projects.projects
     );
+
+    if (args.json) {
+      console.log(
+        JSON.stringify(
+          formatPluginsAsJson(localPlugins, installedPlugins),
+          null,
+          2
+        )
+      );
+      return;
+    }
 
     if (localPlugins.size) {
       listPlugins(localPlugins, 'Local workspace plugins:');

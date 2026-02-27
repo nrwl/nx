@@ -6,7 +6,7 @@ import { rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
-import { ReleaseType, inc, major, parse } from 'semver';
+import { ReleaseType, major, parse } from 'semver';
 import * as yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
@@ -73,55 +73,6 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
   };
 
-  // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NODE_AUTH_TOKEN) {
-    // For this important use-case it makes sense to always have full logs
-    isVerboseLogging = true;
-
-    execSync('git status --ahead-behind', {
-      windowsHide: false,
-    });
-
-    if (isRelativeVersionKeyword(options.version)) {
-      throw new Error(
-        'When creating actual releases, you must use an exact semver version'
-      );
-    }
-
-    runNxReleaseVersion();
-
-    execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
-      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-      maxBuffer: LARGE_BUFFER,
-      windowsHide: false,
-    });
-
-    let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
-    if (options.from) {
-      changelogCommand += ` --from ${options.from}`;
-    }
-    if (options.gitRemote) {
-      changelogCommand += ` --git-remote ${options.gitRemote}`;
-    }
-    if (options.dryRun) {
-      changelogCommand += ' --dry-run';
-    }
-    if (isVerboseLogging) {
-      changelogCommand += ' --verbose';
-    }
-    console.log(`> ${changelogCommand}`);
-    execSync(changelogCommand, {
-      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-      maxBuffer: LARGE_BUFFER,
-      windowsHide: false,
-    });
-
-    console.log(
-      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
-    );
-    process.exit(0);
-  }
-
   const packagesToReset = [
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
@@ -134,6 +85,75 @@ const VALID_AUTHORS_FOR_LATEST = [
     const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
     const packageJson = readFileSync(packageJsonPath, 'utf-8');
     packageSnapshots[packagePath] = packageJson;
+  }
+
+  const resetPackageJsons = () => {
+    for (const packagePath of packagesToReset) {
+      const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
+      writeFileSync(packageJsonPath, packageSnapshots[packagePath]);
+    }
+  };
+
+  // Reset package.json files even on ctrl+C
+  process.on('SIGINT', () => {
+    console.log('\nReceived SIGINT, restoring package.json files...');
+    resetPackageJsons();
+    process.exit(1);
+  });
+
+  // Intended for creating a github release which triggers the publishing workflow
+  // This runs locally (not in CI) to create the GitHub release that triggers the actual publish workflow
+  if (!options.local && !process.env.GITHUB_ACTIONS) {
+    // For this important use-case it makes sense to always have full logs
+    isVerboseLogging = true;
+
+    execSync('git status --ahead-behind', {
+      windowsHide: false,
+    });
+
+    if (isRelativeVersionKeyword(options.version)) {
+      resetPackageJsons();
+      throw new Error(
+        'When creating actual releases, you must use an exact semver version'
+      );
+    }
+
+    try {
+      runNxReleaseVersion();
+
+      execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
+        stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+        maxBuffer: LARGE_BUFFER,
+        windowsHide: false,
+      });
+
+      let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
+      if (options.from) {
+        changelogCommand += ` --from ${options.from}`;
+      }
+      if (options.gitRemote) {
+        changelogCommand += ` --git-remote ${options.gitRemote}`;
+      }
+      if (options.dryRun) {
+        changelogCommand += ' --dry-run';
+      }
+      if (isVerboseLogging) {
+        changelogCommand += ' --verbose';
+      }
+      console.log(`> ${changelogCommand}`);
+      execSync(changelogCommand, {
+        stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+        maxBuffer: LARGE_BUFFER,
+        windowsHide: false,
+      });
+
+      console.log(
+        'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
+      );
+    } finally {
+      resetPackageJsons();
+    }
+    process.exit(0);
   }
 
   runNxReleaseVersion();
@@ -227,22 +247,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   // TODO(colum): Remove when we have a better way to handle this
-
-  console.log(
-    'Resetting angular-rspack package.json versions to previous versions'
-  );
-
-  for (const packagePath of packagesToReset) {
-    const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
-    writeFileSync(packageJsonPath, packageSnapshots[packagePath]);
-  }
-
-  execSync(
-    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
-    {
-      cwd: workspaceRoot,
-    }
-  );
+  resetPackageJsons();
 
   process.exit(0);
 })();
@@ -310,37 +315,25 @@ function parseArgs() {
         }
         /**
          * Handle the special case of `canary`
+         *
+         * Use the base version from nx@next so that canary versions
+         * are always aligned with the current next/beta release line.
          */
 
-        const currentLatestVersion = execSync('npm view nx@latest version', {
-          windowsHide: false,
-        })
-          .toString()
-          .trim();
         const currentNextVersion = execSync('npm view nx@next version', {
           windowsHide: false,
         })
           .toString()
           .trim();
 
-        let canaryBaseVersion: string | null = null;
-
-        // If the latest and next are not on the same major version, then we need to publish a canary version of the next major
-        if (major(currentLatestVersion) !== major(currentNextVersion)) {
-          canaryBaseVersion = `${major(currentNextVersion)}.0.0`;
-        } else {
-          // Determine next minor version above the currentLatestVersion
-          const nextMinorRelease = inc(
-            currentLatestVersion,
-            'minor',
-            undefined
+        const parsedNext = parse(currentNextVersion);
+        if (!parsedNext) {
+          throw new Error(
+            `Unable to parse the current next version from the npm registry: "${currentNextVersion}"`
           );
-          canaryBaseVersion = nextMinorRelease;
         }
 
-        if (!canaryBaseVersion) {
-          throw new Error(`Unable to determine a base for the canary version.`);
-        }
+        const canaryBaseVersion = `${parsedNext.major}.${parsedNext.minor}.${parsedNext.patch}`;
 
         // Create YYYYMMDD string
         const date = new Date();
@@ -359,7 +352,6 @@ function parseArgs() {
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
         console.log(`\nDerived canary version dynamically`, {
-          currentLatestVersion,
           currentNextVersion,
           canaryVersion,
         });
@@ -439,8 +431,8 @@ function determineDistTag(
     return 'canary';
   }
 
-  // Special case of PR release
-  if (newVersion.startsWith('0.0.0-pr-')) {
+  // Special case of PR release (e.g. 22.5.0-pr.1234.abc1234)
+  if (/^\d+\.\d+\.\d+-pr\./.test(newVersion)) {
     return 'pull-request';
   }
 
@@ -478,8 +470,8 @@ function determineDistTag(
     parsedGivenVersion.prerelease.length > 0
       ? 'next'
       : parsedGivenVersion.major < parsedCurrentLatestVersion.major
-      ? 'previous'
-      : 'latest';
+        ? 'previous'
+        : 'latest';
 
   return distTag;
 }

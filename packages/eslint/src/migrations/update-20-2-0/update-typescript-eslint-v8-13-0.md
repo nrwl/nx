@@ -6,10 +6,9 @@ Update TypeScript ESLint packages to v8.13.0 if they are already on v8
 
 This migration will update `typescript-eslint`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser` and `@typescript-eslint/utils` to `8.13.0` if they are between version `8.0.0` and `8.13.0`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "devDependencies": {
     "typescript-eslint": "^8.0.0",
@@ -20,10 +19,9 @@ This migration will update `typescript-eslint`, `@typescript-eslint/eslint-plugi
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "devDependencies": {
     "typescript-eslint": "^8.13.0",
@@ -33,6 +31,3 @@ This migration will update `typescript-eslint`, `@typescript-eslint/eslint-plugi
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

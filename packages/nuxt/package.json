@@ -43,19 +43,20 @@
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "@nuxt/kit": "^3.10.0",
+    "@nuxt/kit": "^3.10.0 || ^4.0.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/vue": "workspace:*",
     "@nx/vite": "workspace:*",
-    "@nx/vitest": "workspace:*"
+    "@nx/vitest": "workspace:*",
+    "semver": "^7.5.3"
   },
   "devDependencies": {
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@nuxt/schema": "^3.10.0"
+    "@nuxt/schema": "^3.10.0 || ^4.0.0"
   },
   "publishConfig": {
     "access": "public"

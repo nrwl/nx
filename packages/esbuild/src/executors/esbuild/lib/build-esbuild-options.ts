@@ -275,10 +275,10 @@ export function getOutExtension(
   return userDefinedExt === '.js' && format === 'cjs'
     ? '.js'
     : userDefinedExt === '.mjs' && format === 'esm'
-    ? '.mjs'
-    : format === 'esm'
-    ? ESM_FILE_EXTENSION
-    : CJS_FILE_EXTENSION;
+      ? '.mjs'
+      : format === 'esm'
+        ? ESM_FILE_EXTENSION
+        : CJS_FILE_EXTENSION;
 }
 
 export function getOutfile(

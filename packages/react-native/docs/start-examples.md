@@ -22,8 +22,8 @@ nx run mobile:start
 
 ## Examples
 
-{% tabs %}
-{% tab label="Starts the server non-interactively" %}
+##### Starts the server non-interactively
+
 The `interactive` option allows you to specify whether to use interactive mode:
 
 ```json
@@ -36,8 +36,7 @@ The `interactive` option allows you to specify whether to use interactive mode:
     }
 ```
 
-{% /tab %}
-{% tab label="Starts the server with cache reset" %}
+##### Starts the server with cache reset
 
 The `resetCache` option allows you to remove cached files.
 
@@ -50,8 +49,5 @@ The `resetCache` option allows you to remove cached files.
       }
     }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

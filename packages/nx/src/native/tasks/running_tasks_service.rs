@@ -7,6 +7,13 @@ use std::ffi::OsString;
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
 use tracing::debug;
 
+pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
+    task_id TEXT PRIMARY KEY NOT NULL,
+    pid INTEGER NOT NULL,
+    command TEXT NOT NULL,
+    cwd TEXT NOT NULL
+);";
+
 #[napi]
 struct RunningTasksService {
     db: External<NxDbConnection>,
@@ -17,14 +24,10 @@ struct RunningTasksService {
 impl RunningTasksService {
     #[napi(constructor)]
     pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        let s = Self {
+        Ok(Self {
             db,
             added_tasks: Default::default(),
-        };
-
-        s.setup()?;
-
-        Ok(s)
+        })
     }
 
     #[napi]
@@ -113,21 +116,6 @@ impl RunningTasksService {
         self.db
             .execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
         debug!("Removed {} from running tasks", task_id);
-        Ok(())
-    }
-
-    fn setup(&self) -> anyhow::Result<()> {
-        self.db.execute_batch(
-            "
-            CREATE TABLE IF NOT EXISTS running_tasks (
-                task_id TEXT PRIMARY KEY NOT NULL,
-                pid INTEGER NOT NULL,
-                command TEXT NOT NULL,
-                cwd TEXT NOT NULL
-            );
-            ",
-        )?;
-        debug!("Setup running tasks service");
         Ok(())
     }
 }

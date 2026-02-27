@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import {
   checkFilesExist,
   cleanupProject,
@@ -6,7 +7,9 @@ import {
   newProject,
   readJson,
   runCLI,
+  runCommand,
   runE2ETests,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
@@ -28,6 +31,13 @@ describe('Cypress E2E Test runner', () => {
       runCLI(
         `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
       );
+
+      // Ensure project typechecks (See: https://github.com/nrwl/nx/issues/32930)
+      expect(() =>
+        runCommand(`npx tsc --noEmit`, {
+          cwd: join(tmpProjPath(), 'apps', `${myapp}-e2e`),
+        })
+      ).not.toThrow();
 
       // Making sure the package.json file contains the Cypress dependency
       const packageJson = readJson('package.json');
@@ -179,7 +189,7 @@ export default defineConfig({
     async () => {
       let appName = uniq(`angular-cy-app`);
       runCLI(
-        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack`
+        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack --no-zoneless`
       );
       runCLI(
         `generate @nx/angular:component apps/${appName}/src/app/btn/btn --no-interactive`

@@ -448,13 +448,6 @@ const currentVersion = versions.find((v) => v.current);
 
     <div class="h-6 w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
     <a
-      id="header-ai-link"
-      href={`${nxDevUrl}/ai`}
-      class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
-    >
-      AI
-    </a>
-    <a
       id="header-nx-cloud-link"
       href={`${nxDevUrl}/nx-cloud`}
       class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
@@ -474,7 +467,7 @@ const currentVersion = versions.find((v) => v.current);
       href={`${nxDevUrl}/enterprise`}
       class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
     >
-      Nx Enterprise
+      Enterprise
     </a>
   </nav>
   <div class="flex-1 max-w-sm mx-4 print:hidden">
@@ -516,7 +509,7 @@ const currentVersion = versions.find((v) => v.current);
 </div>
 
 <script>
-  import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+  import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
   function setupAnalyticsTracking() {
     const docsHomeLink = document.getElementById('header-docs-home-link');
@@ -528,7 +521,7 @@ const currentVersion = versions.find((v) => v.current);
     const tryNxCloudBtn = document.getElementById('header-try-nx-cloud-btn');
 
     docsHomeLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'documentation-click',
         'header-navigation',
         'documentation-header'
@@ -536,7 +529,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     aiLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'ai-click',
         'header-navigation',
         'documentation-header'
@@ -544,7 +537,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     nxCloudLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'nx-cloud-click',
         'header-navigation',
         'documentation-header'
@@ -552,7 +545,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     pricingLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'pricing-click',
         'header-navigation',
         'documentation-header'
@@ -560,7 +553,7 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     enterpriseLink?.addEventListener('click', () => {
-      sendCustomEvent(
+      sendCustomEventViaGtm(
         'enterprise-click',
         'header-navigation',
         'documentation-header'
@@ -568,11 +561,19 @@ const currentVersion = versions.find((v) => v.current);
     });
 
     contactBtn?.addEventListener('click', () => {
-      sendCustomEvent('contact-click', 'header-cta', 'documentation-header');
+      sendCustomEventViaGtm(
+        'contact-click',
+        'header-cta',
+        'documentation-header'
+      );
     });
 
     tryNxCloudBtn?.addEventListener('click', () => {
-      sendCustomEvent('login-click', 'header-cta', 'documentation-header');
+      sendCustomEventViaGtm(
+        'login-click',
+        'header-cta',
+        'documentation-header'
+      );
     });
   }
 

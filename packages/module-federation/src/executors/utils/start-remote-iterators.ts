@@ -100,7 +100,7 @@ export async function startRemoteIterators(
     : startStaticRemotesFileServer(staticRemotesConfig, context, options);
 
   isServer
-    ? startSsrRemoteProxies(
+    ? await startSsrRemoteProxies(
         staticRemotesConfig,
         mappedLocationsOfStaticRemotes,
         options.ssl
@@ -108,9 +108,10 @@ export async function startRemoteIterators(
               pathToCert: options.sslCert,
               pathToKey: options.sslKey,
             }
-          : undefined
+          : undefined,
+        options.host
       )
-    : startRemoteProxies(
+    : await startRemoteProxies(
         staticRemotesConfig,
         mappedLocationsOfStaticRemotes,
         options.ssl
@@ -118,7 +119,8 @@ export async function startRemoteIterators(
               pathToCert: options.sslCert,
               pathToKey: options.sslKey,
             }
-          : undefined
+          : undefined,
+        options.host
       );
 
   return {

@@ -1,7 +1,8 @@
+<% if(uiFramework !== '@storybook/angular') { %>
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
-import type { StorybookConfig } from '<%= uiFramework %>';
+<% } %>import type { StorybookConfig } from '<%= uiFramework %>';
 <% if (usesVite && !viteConfigFilePath) { %>
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';

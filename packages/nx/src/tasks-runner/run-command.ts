@@ -40,7 +40,7 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { isTuiEnabled } from './is-tui-enabled';
+import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
   LifeCycle,
@@ -60,14 +60,13 @@ import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-c
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
-  getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -94,7 +93,7 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
-  if (tasks.length === 1) {
+  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
     process.env.NX_TUI = 'false';
   }
 
@@ -248,6 +247,7 @@ async function getTerminalOutputLifeCycle(
             const trimmedChunk = chunk.toString().trim();
             if (trimmedChunk.length) {
               // Remove ANSI escape codes, the TUI will control the formatting
+              // NOTE: this shows any message from the Nx Cloud client, including errors
               appLifeCycle?.__setCloudMessage(
                 stripVTControlCharacters(trimmedChunk)
               );
@@ -295,6 +295,7 @@ async function getTerminalOutputLifeCycle(
         // Print the intercepted Nx Cloud logs
         for (const log of interceptedNxCloudLogs) {
           const logString = log.toString().trimStart();
+
           process.stdout.write(logString);
           if (logString) {
             process.stdout.write('\n');
@@ -306,13 +307,6 @@ async function getTerminalOutputLifeCycle(
         appLifeCycle.__init(() => {
           resolve();
         });
-      }).finally(() => {
-        restoreTerminal();
-        // Revert the patched methods
-        process.stdout.write = originalStdoutWrite;
-        process.stderr.write = originalStderrWrite;
-        console.log = originalConsoleLog;
-        console.error = originalConsoleError;
       });
     }
 
@@ -325,7 +319,7 @@ async function getTerminalOutputLifeCycle(
         console.error = originalConsoleError;
         restoreTerminal();
       },
-      printSummary,
+      printSummary: () => printSummary(),
       renderIsDone,
     };
   }
@@ -471,11 +465,12 @@ export async function runCommand(
       const exitCode = !completed
         ? signalToCode('SIGINT')
         : Object.values(taskResults).some(
-            (taskResult) =>
-              taskResult.status === 'failure' || taskResult.status === 'skipped'
-          )
-        ? 1
-        : 0;
+              (taskResult) =>
+                taskResult.status === 'failure' ||
+                taskResult.status === 'skipped'
+            )
+          ? 1
+          : 0;
 
       await runPostTasksExecution({
         id,
@@ -516,6 +511,7 @@ export async function runCommandForTasks(
     extraTargetDependencies,
     extraOptions
   );
+
   const tasks = Object.values(taskGraph.tasks);
 
   const initiatingTasks = tasks.filter(
@@ -549,54 +545,56 @@ export async function runCommandForTasks(
       initiatingTasks,
     });
 
-    await renderIsDone;
+    await renderIsDone.finally(() => restoreTerminal?.());
 
     if (printSummary) {
       printSummary();
     }
 
+    await printConfigureAiAgentsDisclaimer();
+
     await printNxKey();
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskGraph, taskResults),
+      completed: didCommandComplete(tasks, taskResults),
     };
   } catch (e) {
-    if (restoreTerminal) {
-      restoreTerminal();
-    }
+    restoreTerminal?.();
     throw e;
   }
 }
 
-function didCommandComplete(
-  tasks: Task[],
-  taskGraph: TaskGraph,
-  taskResults: TaskResults
-): boolean {
-  // If no tasks, then we can consider it complete
-  if (tasks.length === 0) {
-    return true;
+async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+  try {
+    if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
+      return;
+    }
+    const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
+    if (outdatedAgents.length > 0) {
+      output.logRawLine(
+        output.dim(
+          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+        )
+      );
+    }
+  } catch {
+    // Silently ignore errors
   }
+}
 
-  let continousLeafTasks = false;
-  const leafTasks = getLeafTasks(taskGraph);
+function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
+  if (tasks.length === 0) return true;
+
   for (const task of tasks) {
     if (!task.continuous) {
-      // If any discrete task does not have a result then it did not run
-      if (!taskResults[task.id]) {
-        return false;
-      }
-    } else {
-      if (leafTasks.has(task.id)) {
-        continousLeafTasks = true;
-      }
+      // Discrete task must have a result (was started and finished)
+      if (!taskResults[task.id]) return false;
     }
   }
 
-  // If a leaf task is continous, we must have cancelled it.
-  // Otherwise, we've looped through all the discrete tasks and they have results
-  return !continousLeafTasks;
+  // Any stopped task means the run was interrupted
+  return !Object.values(taskResults).some((r) => r.status === 'stopped');
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -854,7 +852,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
         },
       ],
       footer: () =>
-        chalk.dim(
+        pc.dim(
           '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
         ),
     };
@@ -885,7 +883,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
         },
       ],
       footer: () =>
-        chalk.dim(
+        pc.dim(
           `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
         ),
     };
@@ -917,6 +915,11 @@ export function setEnvVarsBasedOnArgs(
   if (nxArgs.outputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
+  }
+  // Force streaming only when the TUI is active, so it can capture and
+  // render task output. Other output styles manage their own streaming.
+  if (isTuiEnabled()) {
+    process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';

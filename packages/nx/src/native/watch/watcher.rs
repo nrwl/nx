@@ -1,8 +1,11 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
+use crate::native::glob::{NxGlobSet, build_glob_set};
+use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, create_walker};
 use crate::native::watch::types::{
     EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
@@ -12,12 +15,79 @@ use napi::threadsafe_function::{
     ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
 use napi::{Env, JsFunction, JsObject};
+use parking_lot::Mutex;
 use rayon::prelude::*;
+use std::path::{Path, PathBuf};
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
+use watchexec::WatchedPath;
 use watchexec::Watchexec;
-use watchexec_events::{Event, Priority, Tag};
+use watchexec_events::filekind::{CreateKind, FileEventKind};
+use watchexec_events::{Event, FileType, Priority, Tag};
 use watchexec_signals::Signal;
+
+/// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
+fn build_ignore_glob_set() -> Arc<NxGlobSet> {
+    build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
+}
+
+/// Extract new, non-ignored directory paths from creation events.
+///
+/// Pure function — does not mutate shared state. The caller is responsible
+/// for deduplicating against the existing watched path set.
+fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
+    events
+        .iter()
+        .filter(|event| {
+            // On Linux/Windows: only keep directory creation events.
+            // Linux emits CreateKind::Folder, Windows emits CreateKind::Any.
+            // On macOS: FSEvents doesn't always provide FileEventKind tags,
+            // so we accept all events and rely on the is_dir check below.
+            #[cfg(not(target_os = "macos"))]
+            {
+                event.tags.iter().any(|tag| {
+                    matches!(
+                        tag,
+                        Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
+                            | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
+                    )
+                })
+            }
+            #[cfg(target_os = "macos")]
+            {
+                let _ = event;
+                true
+            }
+        })
+        .flat_map(|event| event.paths())
+        .filter(|(path, file_type)| {
+            let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
+            is_dir && !ignore_globs.is_match(path)
+        })
+        .map(|(path, _)| path.to_path_buf())
+        .collect()
+}
+
+/// Enumerate all non-ignored directories to watch individually (non-recursively).
+/// This avoids registering inotify watches on node_modules and other ignored trees.
+fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
+    let walker = create_walker(&directory, use_ignores);
+    let mut path_set: HashSet<PathBuf> = HashSet::new();
+
+    for entry in walker.build() {
+        if let Ok(entry) = entry {
+            if entry.file_type().map_or(false, |ft| ft.is_dir()) {
+                path_set.insert(entry.into_path());
+            }
+        }
+    }
+
+    // Always include the root directory itself
+    path_set.insert(directory.as_ref().to_path_buf());
+
+    trace!(count = path_set.len(), "enumerated watch paths");
+    path_set
+}
 
 #[napi]
 pub struct Watcher {
@@ -30,36 +100,43 @@ pub struct Watcher {
 #[napi]
 impl Watcher {
     /// Creates a new Watcher instance.
-    /// Will always ignore the following directories:
-    /// * .git/
-    /// * node_modules/
-    /// * .nx/
+    /// Will always ignore directories from HARDCODED_IGNORE_PATTERNS plus
+    /// watcher-specific patterns like vite/vitest timestamp files.
     #[napi(constructor)]
     pub fn new(
         origin: String,
         additional_globs: Option<Vec<String>>,
         use_ignore: Option<bool>,
     ) -> Watcher {
-        // always have these globs come before the additional globs
-        let mut globs = vec![
-            ".git/".into(),
-            "node_modules/".into(),
-            ".nx/".into(),
+        // Start with hardcoded ignore patterns (same as walker.rs)
+        let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
+            .iter()
+            .map(|p| (*p).to_string())
+            .collect();
+
+        // Add watcher-specific patterns (temporary files from build tools)
+        globs.extend([
             "vitest.config.ts.timestamp*.mjs".into(),
             "vite.config.ts.timestamp*.mjs".into(),
-            ".yarn/cache/".into(),
-        ];
+        ]);
+
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);
         }
 
+        let origin = if cfg!(windows) {
+            origin.replace('/', "\\")
+        } else {
+            origin
+        };
+
+        // Create Watchexec with a no-op action handler initially.
+        // The real handler is set in watch() via config.on_action().
+        let watch_exec = Watchexec::default();
+
         Watcher {
-            origin: if cfg!(windows) {
-                origin.replace('/', "\\")
-            } else {
-                origin
-            },
-            watch_exec: Arc::new(Watchexec::default()),
+            origin,
+            watch_exec: Arc::new(watch_exec),
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
         }
@@ -95,7 +172,20 @@ impl Watcher {
 
         callback_tsfn.unref(&env)?;
 
+        // Shared state for dynamic directory registration.
+        // When a new non-ignored directory is created, we add it to the watch set
+        // so future file changes inside it are detected.
+        let watched_path_set: Arc<Mutex<HashSet<PathBuf>>> = Arc::new(Mutex::new(HashSet::new()));
+
+        // Hardcoded ignore patterns for dynamic directory registration.
+        // These are always applied regardless of use_ignore - we never want to watch
+        // node_modules, .git, etc. even when watching task outputs.
+        let ignore_globs: Arc<NxGlobSet> = build_ignore_glob_set();
+
         let origin = self.origin.clone();
+        let watch_exec_for_action = self.watch_exec.clone();
+        let watched_path_set_for_action = watched_path_set.clone();
+        let ignore_globs_for_action = ignore_globs.clone();
         self.watch_exec.config.on_action(move |mut action| {
             let signals: Vec<Signal> = action.signals().collect();
 
@@ -111,16 +201,48 @@ impl Watcher {
                 return action;
             }
 
+            // On macOS, FSEvents watches the entire tree recursively from the root,
+            // so we don't need to dynamically register new directories.
+            #[cfg(not(target_os = "macos"))]
+            {
+                // Check for new directory creation events and dynamically register watches.
+                // Without this, non-recursive watches would miss changes in newly created dirs.
+                let new_directories =
+                    extract_new_directories(&action.events, &ignore_globs_for_action);
+
+                if !new_directories.is_empty() {
+                    let mut path_set = watched_path_set_for_action.lock();
+                    path_set.extend(new_directories);
+                    trace!(
+                        count = path_set.len(),
+                        "updating pathset with new directories"
+                    );
+                    watch_exec_for_action
+                        .config
+                        .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                }
+            }
+
             let mut origin_path = origin.clone();
             if !origin_path.ends_with(MAIN_SEPARATOR) {
                 origin_path.push(MAIN_SEPARATOR);
             }
             trace!(?origin_path);
 
+            trace!(
+                event_count = action.events.len(),
+                "on_action received events"
+            );
+
             let events = action
                 .events
                 .par_iter()
-                .filter_map(|ev| transform_event_to_watch_events(ev, &origin_path).ok())
+                .filter_map(|ev| {
+                    trace!(?ev, "raw event");
+                    let result = transform_event_to_watch_events(ev, &origin_path);
+                    trace!(?result, "transform result");
+                    result.ok()
+                })
                 .flatten()
                 .collect::<Vec<WatchEventInternal>>();
 
@@ -148,6 +270,14 @@ impl Watcher {
                     }
                 }
             }
+            trace!(
+                event_count = group_events.len(),
+                "sending events to callback"
+            );
+            for (path, ev) in group_events.iter() {
+                trace!(?path, r#type = ?ev.r#type, "callback event");
+            }
+
             callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
 
             action
@@ -159,10 +289,42 @@ impl Watcher {
         let watch_exec = self.watch_exec.clone();
         let start = async move {
             trace!("configuring watch exec");
-            watch_exec.config.pathset([&origin.as_str()]);
-            watch_exec.config.filterer(
-                watch_filterer::create_filter(&origin, &additional_globs, use_ignore).await?,
-            );
+
+            // On macOS, FSEvents handles recursive watching natively from a single
+            // root path. No need to enumerate individual directories — this avoids
+            // kqueue (used for non-recursive watches) which silently fails at scale
+            // due to vnode table pressure. See #34522.
+            #[cfg(target_os = "macos")]
+            {
+                let mut path_set = HashSet::new();
+                path_set.insert(PathBuf::from(&origin));
+                trace!(
+                    count = path_set.len(),
+                    "macOS: watching root recursively via FSEvents"
+                );
+                watch_exec
+                    .config
+                    .pathset(path_set.iter().map(|p| WatchedPath::recursive(p)));
+                *watched_path_set.lock() = path_set;
+            }
+            // On Linux/Windows, enumerate non-ignored directories and watch each one
+            // non-recursively. This prevents inotify watches on node_modules and other
+            // ignored trees (fixing #33781).
+            #[cfg(not(target_os = "macos"))]
+            {
+                let path_set = enumerate_watch_paths(&origin, use_ignore);
+                trace!(count = path_set.len(), "setting watched paths");
+                watch_exec
+                    .config
+                    .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                *watched_path_set.lock() = path_set;
+            }
+
+            watch_exec.config.filterer(watch_filterer::create_filter(
+                &origin,
+                &additional_globs,
+                use_ignore,
+            )?);
             trace!("starting watch exec");
             watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
             Ok(())

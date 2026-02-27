@@ -1,0 +1,29 @@
+---
+title: '@nx/owners - Generators'
+description: Generators for Nx Owners configuration
+sidebar:
+  label: Generators
+weight: .5
+filter: 'type:References'
+---
+
+## `init`
+
+Initialize the owners plugin
+
+**Usage:**
+
+```shell
+nx g @nx/owners:init
+
+```
+
+## `sync-codeowners-file`
+
+Sync Nx Owners config to a `CODEOWNERS` file
+
+**Usage:**
+
+```shell
+nx g @nx/owners:sync-codeowners-file
+```

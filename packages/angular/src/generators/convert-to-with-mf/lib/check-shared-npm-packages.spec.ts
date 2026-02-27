@@ -1,4 +1,4 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast } from '@phenomnomnominal/tsquery';
 import { checkSharedNpmPackagesMatchExpected } from './check-shared-npm-packages';
 
 describe('checkSharedNpmPackagesMatchExpected', () => {
@@ -31,10 +31,10 @@ describe('checkSharedNpmPackagesMatchExpected', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkSharedNpmPackagesMatchExpected(ast);
+    const result = checkSharedNpmPackagesMatchExpected(sourceFile);
 
     // ASSERT
     expect(result).toBeTruthy();
@@ -63,10 +63,10 @@ describe('checkSharedNpmPackagesMatchExpected', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkSharedNpmPackagesMatchExpected(ast);
+    const result = checkSharedNpmPackagesMatchExpected(sourceFile);
 
     // ASSERT
     expect(result).toBeTruthy();
@@ -95,10 +95,10 @@ describe('checkSharedNpmPackagesMatchExpected', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkSharedNpmPackagesMatchExpected(ast);
+    const result = checkSharedNpmPackagesMatchExpected(sourceFile);
 
     // ASSERT
     expect(result).toBeFalsy();
@@ -114,10 +114,10 @@ describe('checkSharedNpmPackagesMatchExpected', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkSharedNpmPackagesMatchExpected(ast);
+    const result = checkSharedNpmPackagesMatchExpected(sourceFile);
 
     // ASSERT
     expect(result).toBeTruthy();
@@ -133,10 +133,10 @@ describe('checkSharedNpmPackagesMatchExpected', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkSharedNpmPackagesMatchExpected(ast);
+    const result = checkSharedNpmPackagesMatchExpected(sourceFile);
 
     // ASSERT
     expect(result).toBeTruthy();
@@ -171,10 +171,10 @@ describe('checkSharedNpmPackagesMatchExpected', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = checkSharedNpmPackagesMatchExpected(ast);
+    const result = checkSharedNpmPackagesMatchExpected(sourceFile);
 
     // ASSERT
     expect(result).toBeFalsy();

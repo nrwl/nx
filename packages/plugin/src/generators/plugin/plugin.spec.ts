@@ -86,6 +86,22 @@ describe('NxPlugin Plugin Generator', () => {
     expect(projectE2e.root).toEqual('plugins/my-plugin-e2e');
   });
 
+  it('should place the e2e project in the specified directory', async () => {
+    await pluginGenerator(
+      tree,
+      getSchema({
+        name: 'my-plugin',
+        directory: 'packages/my-plugin',
+        e2eTestRunner: 'jest',
+        e2eProjectDirectory: 'my-plugin',
+      })
+    );
+    const project = readProjectConfiguration(tree, 'my-plugin');
+    const projectE2e = readProjectConfiguration(tree, 'my-plugin-e2e');
+    expect(project.root).toEqual('packages/my-plugin');
+    expect(projectE2e.root).toEqual('my-plugin-e2e');
+  });
+
   describe('asset paths', () => {
     it('should generate normalized asset paths for plugin in monorepo', async () => {
       await pluginGenerator(
@@ -220,7 +236,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
 
     describe('vitest', () => {
-      it('should generate test files with vite.config.ts', async () => {
+      it('should generate test files with vitest.config.mts', async () => {
         await pluginGenerator(
           tree,
           getSchema({
@@ -229,7 +245,8 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        ['my-plugin/vite.config.ts'].forEach((path) =>
+        expect(tree.exists('my-plugin/vite.config.ts')).toBeFalsy();
+        ['my-plugin/vitest.config.mts'].forEach((path) =>
           expect(tree.exists(path)).toBeTruthy()
         );
 
@@ -366,7 +383,7 @@ describe('NxPlugin Plugin Generator', () => {
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves

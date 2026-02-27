@@ -4,25 +4,20 @@ If workspace includes Module Federation projects, ensure the new `@nx/module-fed
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "dependencies": {}
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "dependencies": {
     "@nx/module-federation": "20.3.0"
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

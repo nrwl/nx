@@ -13,7 +13,7 @@ export function MakeYourCiFast(): ReactElement {
         </SectionHeading>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6">
           <div className="relative lg:col-span-2">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tl-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tl-[calc(2rem+1px)] dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx Replay: remote caching"
                 src="/images/enterprise/nx-replay.avif"
@@ -21,11 +21,11 @@ export function MakeYourCiFast(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Nx Replay
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   Never build the same code twice
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
@@ -37,7 +37,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-2">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx flaky task detection & rerun"
                 src="/images/enterprise/nx-flaky-tasks-detection.avif"
@@ -45,11 +45,11 @@ export function MakeYourCiFast(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Flaky task retries
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   One less thing to debug
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
@@ -61,7 +61,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-2">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tr-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tr-[calc(2rem+1px)] dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx Atomizer: split large tasks & E2E in chunks"
                 src="/images/enterprise/nx-atomizer.avif"
@@ -69,11 +69,11 @@ export function MakeYourCiFast(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Atomizer
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   Break tasks down, to speed tests up
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
@@ -86,7 +86,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-3">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Nx Agents: simple & fast task distribution"
                 src="/images/enterprise/nx-agents.avif"
@@ -94,11 +94,11 @@ export function MakeYourCiFast(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Nx Agents
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   Machines, make it fast!
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
@@ -111,7 +111,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-3">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-br-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-br-[calc(2rem+1px)] dark:bg-zinc-950 dark:ring-white/10">
               <img
                 alt="Partner with the Nx Team for guidances"
                 src="/images/enterprise/nx-partnership.avif"
@@ -119,11 +119,11 @@ export function MakeYourCiFast(): ReactElement {
               />
               <div className="relative p-10 pt-4">
                 <div className="absolute -top-10 left-10">
-                  <span className="inline-flex items-center rounded-md bg-slate-400/10 px-2 py-1 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-400/20">
+                  <span className="inline-flex items-center rounded-md bg-zinc-400/10 px-2 py-1 text-xs font-medium text-zinc-400 ring-1 ring-inset ring-zinc-400/20">
                     Partnership
                   </span>
                 </div>
-                <h3 className="text-lg font-medium tracking-tight text-slate-950 dark:text-white">
+                <h3 className="text-lg font-medium tracking-tight text-zinc-950 dark:text-white">
                   Always thinking a step ahead for you
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">

@@ -1,54 +1,174 @@
 ---
-title: Overview of the Nx Remix Plugin
-description: The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries within an Nx workspace.
+title: Remix Plugin for Nx
+description: Create and manage Remix applications in your Nx workspace with inferred build, dev, start, and typecheck tasks, plus generators for apps, libraries, routes, loaders, and actions.
+keywords: [remix, react]
 sidebar:
   label: 'Introduction'
+  order: 1
 filter: 'type:References'
 ---
 
-The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries
-within an Nx workspace. It provides:
+The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications).
 
-- Integration with libraries such as Storybook, Jest, Vitest, Playwright and Cypress.
-- Generators to help scaffold code quickly, including:
-  - Libraries, both internal to your codebase and publishable to npm
-  - Routes
-  - Loaders
-  - Actions
-  - Meta
-- Utilities for automatic workspace refactoring.
+You don't need the plugin to use Remix with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, route scaffolding, and simplified configuration.
 
-## Setting up @nx/remix
+{% aside type="note" %}
+React Router is the successor to Remix. For new projects, consider using [React Router](/docs/technologies/react/guides/react-router) instead. Existing Remix projects continue to work with `@nx/remix`.
+{% /aside %}
 
-### Installation
+## Requirements
+
+The `@nx/remix` plugin supports the following package versions.
+
+| Package          | Supported Versions |
+| ---------------- | ------------------ |
+| `@remix-run/dev` | ^2.17.3            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting Up @nx/remix
+
+### Add to an Existing Nx Workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
-
-In any Nx workspace, you can install `@nx/remix` by running the following command:
 
 ```shell
 nx add @nx/remix
 ```
 
-This will install the correct version of `@nx/remix`.
+Verify the plugin is setup:
+
+{% steps %}
+
+1. Check for `@nx/remix` listed as a plugin:
+
+   ```shell
+   nx report
+   ```
+
+2. Ensure inferred project targets are working:
+
+   ```shell
+   nx show projects --with-target=build
+   ```
+
+3. Inspect a specific project configuration for the inferred targets:
+
+   ```shell
+   nx show project my-remix-app
+   ```
+
+{% /steps %}
+
+### Generate a New Application
+
+```shell
+nx g @nx/remix:app apps/my-app
+```
+
+To start the application in development mode, run `nx dev my-app`. Read more about the options available for the [application generator](/docs/technologies/react/remix/generators#application).
+
+### Generate a Library
+
+When developing your application, it often makes sense to split your codebase into smaller, more focused libraries.
+
+```shell
+nx g @nx/remix:lib libs/my-lib
+```
+
+Read more about the options available for the [library generator](/docs/technologies/react/remix/generators#library). Libraries let you share code between applications, enforce architectural boundaries with the [project graph](/docs/features/explore-graph), and speed up CI by only rebuilding what changed.
+
+## Develop Remix Applications
+
+### Generate Routes
+
+```shell
+nx g @nx/remix:route apps/my-app/app/routes/admin
+```
+
+This creates a new route file in your application's `routes` directory following Remix's file-based routing conventions. Read more about the options available for the [route generator](/docs/technologies/react/remix/generators#route).
+
+### Add Loaders, Actions, and Meta
+
+```shell
+nx g @nx/remix:loader apps/my-app/app/routes/admin
+nx g @nx/remix:action apps/my-app/app/routes/admin
+nx g @nx/remix:meta apps/my-app/app/routes/admin
+```
+
+These generators add loader, action, and meta functions to existing route files. Read more about the options available for the [loader](/docs/technologies/react/remix/generators#loader), [action](/docs/technologies/react/remix/generators#action), and [meta](/docs/technologies/react/remix/generators#meta) generators.
+
+### Serve for Development
+
+```shell
+nx dev my-app
+```
+
+This starts the Remix development server with hot module replacement at `http://localhost:3000`.
+
+### Build for Production
+
+```shell
+nx build my-app
+```
+
+Compiles the application for production deployment. The output is written to the `build` directory inside your project folder by default.
+
+### Start Production Server
+
+```shell
+nx start my-app
+```
+
+Serves the production build using `remix-serve`. Depends on `build` completing first.
+
+### Use Libraries in Your Application
+
+Import library code directly into your route files:
+
+```tsx
+// apps/my-app/app/routes/_index.tsx
+import { MyComponent } from '@myorg/my-lib';
+
+export default function Index() {
+  return <MyComponent />;
+}
+```
+
+You can also use library code in loaders by exporting from a separate server entry point:
+
+```ts
+// libs/my-lib/src/server.ts
+export { myLoader } from './lib/my-loader';
+```
+
+```tsx
+// apps/my-app/app/routes/admin.tsx
+import { myLoader } from '@myorg/my-lib/server';
+
+export const loader = myLoader;
+```
+
+## Configure @nx/remix
 
 ### How @nx/remix Infers Tasks
 
-The `@nx/remix` plugin will create a task for any project that has a Remix configuration file present. Any of the following files will be recognized as a Remix configuration file:
+The `@nx/remix` plugin creates tasks for any project that has a Remix configuration file. The plugin recognizes two setups:
+
+**Classic Remix Compiler** -- looks for any of the following files:
 
 - `remix.config.js`
 - `remix.config.mjs`
 - `remix.config.cjs`
 
-### View Inferred Tasks
+**Remix with Vite** -- looks for `vite.config.{js,ts,mjs,mts,cjs,cts}` files that import the Remix plugin from `@remix-run/dev`.
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+### Plugin Options
 
-### @nx/remix Configuration
-
-The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
+Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
 
 ```json
 // nx.json
@@ -67,217 +187,73 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-The `buildTargetName`, `devTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `dev`, `start` and `typecheck`.
+| Option                | Description                         | Default     |
+| --------------------- | ----------------------------------- | ----------- |
+| `buildTargetName`     | Name of the production build task   | `build`     |
+| `devTargetName`       | Name of the development server task | `dev`       |
+| `startTargetName`     | Name of the production server task  | `start`     |
+| `typecheckTargetName` | Name of the typecheck task          | `typecheck` |
 
-## Using the Remix Plugin
+### Exclude or Include Specific Projects
 
-## Generate a Remix Application
+Use `include`/`exclude` glob patterns in the plugin configuration:
 
-```text {% frame="terminal" title="nx g @nx/remix:app apps/myapp" %}
-NX  Generating @nx/remix:application
-
-✔ What unit test runner should be used? · vitest
-✔ Which E2E test runner would you like to use? · playwright
-
-UPDATE package.json
-UPDATE nx.json
-CREATE apps/myapp/project.json
-CREATE apps/myapp/README.md
-CREATE apps/myapp/app/nx-welcome.tsx
-CREATE apps/myapp/app/root.tsx
-CREATE apps/myapp/app/routes/_index.tsx
-CREATE apps/myapp/public/favicon.ico
-CREATE apps/myapp/remix.config.js
-CREATE apps/myapp/remix.env.d.ts
-CREATE apps/myapp/tests/routes/_index.spec.tsx
-CREATE apps/myapp/tsconfig.app.json
-CREATE apps/myapp/tsconfig.json
-CREATE apps/myapp/.gitignore
-CREATE apps/myapp/package.json
-CREATE apps/myapp/tsconfig.spec.json
-CREATE apps/myapp/vitest.config.ts
-CREATE apps/myapp/test-setup.ts
-CREATE apps/myapp/.eslintrc.json
-CREATE apps/myapp/.eslintignore
-CREATE apps/myapp-e2e/project.json
-CREATE apps/myapp-e2e/src/example.spec.ts
-CREATE apps/myapp-e2e/playwright.config.ts
-CREATE apps/myapp-e2e/tsconfig.json
-CREATE apps/myapp-e2e/.eslintrc.json
-```
-
-## Build, Serve and Test your Application
-
-1. To build your application run:
-
-```text {% frame="terminal" title="nx build myapp" %}
-> nx run myapp:build
-
-Building Remix app in production mode...
-
-Built in 857ms
-
-——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-NX   Successfully ran target build for project myapp (3s)
-```
-
-2. To serve your application for use during development run:
-
-```text {% frame="terminal" title="nx dev myapp" %}
-> nx run myapp:dev
-
-> remix dev --manual
-
-💿  remix dev
-
-info  building...
-info  built (388ms)
-[remix-serve] http://localhost:3000 (http://192.168.0.12:3000)
-```
-
-3. To test the application using vitest run:
-
-```text {% frame="terminal" title="nx test myapp" %}
-> nx run myapp:test
-
-> vitest
-
-
- RUN  v1.6.0 /Users/columferry/dev/nrwl/issues/gh_issues/nx26943/apps/myapp
-
- ✓ tests/routes/_index.spec.tsx (1)
-   ✓ renders loader data
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  13:22:54
-   Duration  533ms (transform 47ms, setup 68ms, collect 123ms, tests 36ms, environment 204ms, prepare 35ms)
-
-
-———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
- NX   Successfully ran target test for project myapp (950ms)
-```
-
-## Generating an Nx Library
-
-When developing your application, it often makes sense to split your codebase into smaller more focused libraries.
-
-To generate a library to use in your Remix application run:
-
-```text {% frame="terminal" title="nx g @nx/remix:lib libs/login" %}
-NX  Generating @nx/remix:library
-
-✔ What test runner should be used? · vitest
-UPDATE nx.json
-UPDATE package.json
-CREATE babel.config.json
-CREATE libs/login/project.json
-CREATE libs/login/.eslintrc.json
-CREATE libs/login/README.md
-CREATE libs/login/src/index.ts
-CREATE libs/login/tsconfig.lib.json
-CREATE libs/login/tsconfig.json
-CREATE libs/login/vite.config.ts
-CREATE libs/login/tsconfig.spec.json
-CREATE libs/login/src/lib/login.module.css
-CREATE libs/login/src/lib/login.spec.tsx
-CREATE libs/login/src/lib/login.tsx
-UPDATE tsconfig.base.json
-CREATE libs/login/src/test-setup.ts
-CREATE libs/login/src/server.ts
-```
-
-You can then use the library by importing one of the exports into your application:
-
-`apps/myapp/app/routes/index.tsx`
-
-```tsx
-// apps/myapp/app/routes/index.tsx
-import { Login } from '@acme/login';
-
-export default function Index() {
-  return (
-    <div>
-      <Login />
-    </div>
-  );
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/remix/plugin",
+      "include": ["apps/**/*"],
+      "exclude": ["apps/legacy-app/**/*"],
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "typecheckTargetName": "typecheck"
+      }
+    }
+  ]
 }
 ```
 
-You can also run test on your library:
+### View Inferred Tasks
 
-`nx test login`
+To see what tasks Nx inferred for a project:
 
-## Generating a Route
-
-To generate a route for your application:
-
-```text {% frame="terminal" title="nx g @nx/remix:route apps/myapp/app/routes/admin" %}
-NX  Generating @nx/remix:route
-
-CREATE apps/myapp/app/routes/admin.tsx
-CREATE apps/myapp/app/styles/admin.css
+```shell
+nx show project my-app
 ```
 
-## Using a loader from your Library
+Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-To use a Route Loader where the logic lives in your library, follow the steps below.
+## CI Considerations
 
-1. Generate a loader for your route:
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-```text {% frame="terminal" title="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx" %}
-NX  Generating @nx/remix:loader
+### Build and Test Only What Changed
 
-UPDATE apps/myapp/app/routes/admin.tsx
+```shell
+nx affected -t build test typecheck lint
 ```
 
-2. Add a new file in your `login` lib
+This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
+Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-`libs/login/src/lib/admin/admin.loader.ts`
+### Remote Caching
 
-```ts
-// libs/login/src/lib/admin/admin.loader.ts
-import { json, LoaderFunctionArgs } from '@remix-run/node';
+Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
-export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
-  return json({
-    message: 'Hello, world!',
-  });
-};
+```shell
+nx connect
 ```
 
-Export the function from the `libs/login/src/server.ts` file:
+## What's Next
 
-```ts
-// libs/login/src/server.ts
-export * from './lib/admin/admin.loader';
-```
-
-3. Use the loader in your `apps/myapp/app/routes/admin.tsx`
-
-Replace the default loader code:
-
-```tsx
-// apps/myapp/app/routes/admin.tsx
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({
-    message: 'Hello, world!',
-  });
-};
-```
-
-with
-
-```tsx
-import { adminLoader } from '@acme/login/server';
-
-export const loader = adminLoader;
-```
-
-## GitHub Repository with Example
-
-You can see an example of an Nx Workspace using Remix by clicking below.
-
-{% github_repository url="https://github.com/nrwl/nx-recipes/tree/main/remix" /%}
+{% cardgrid %}
+{% linkcard title="React Router Guide" description="React Router is the successor to Remix. Learn how to use it with Nx." href="/docs/technologies/react/guides/react-router" /%}
+{% linkcard title="React Monorepo Tutorial" description="Build a React monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/react-monorepo-tutorial" /%}
+{% linkcard title="Generators Reference" description="Full API reference for @nx/remix generators." href="/docs/technologies/react/remix/generators" /%}
+{% linkcard title="Executors Reference" description="Full API reference for @nx/remix executors." href="/docs/technologies/react/remix/executors" /%}
+{% linkcard title="Migrations Reference" description="Full reference for @nx/remix migrations." href="/docs/technologies/react/remix/migrations" /%}
+{% /cardgrid %}

@@ -1,32 +1,46 @@
 (function () {
+  // Open search modal if signaled via sessionStorage (e.g., from Cmd+K on non-docs pages)
+  var SEARCH_STORAGE_KEY = 'nx-open-search';
+  var SEARCH_EXPIRY_MS = 30000; // 30 seconds
+
+  function openSearchFromStorage() {
+    var timestamp = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+    if (!timestamp) return;
+
+    // Clear immediately to prevent re-triggering
+    sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+
+    // Check if expired (older than 30 seconds)
+    var age = Date.now() - parseInt(timestamp, 10);
+    if (age > SEARCH_EXPIRY_MS) return;
+
+    var openSearchBtn = document.querySelector('button[data-open-modal]');
+    if (openSearchBtn) {
+      openSearchBtn.click();
+      // Focus the search input after modal opens
+      setTimeout(function () {
+        var searchInput = document.querySelector('dialog[open] input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 100);
+    }
+  }
+
+  // Check on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', openSearchFromStorage);
+  } else {
+    // Small delay to ensure search component is initialized
+    setTimeout(openSearchFromStorage, 100);
+  }
+
   const config = window.__CONFIG || {};
   if (!config.isProd) return;
 
-  const isCookiebotDisabled = config.cookiebotDisabled ?? false;
-  const gaMeasurementId = config.gaMeasurementId ?? 'UA-88380372-10';
   const gtmMeasurementId = config.gtmMeasurementId ?? 'GTM-KW8423B6';
 
-  // Initialize global objects
-  window.Cookiebot = window.Cookiebot || {};
   window.dataLayer = window.dataLayer || [];
-  window.gtag =
-    window.gtag ||
-    function () {
-      window.dataLayer.push(arguments);
-    };
-
-  const loadGoogleAnalytics = () => {
-    const script = document.createElement('script');
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Initialize gtag
-    window.gtag('js', new Date());
-    window.gtag('config', gaMeasurementId, {
-      page_path: window.location.pathname,
-    });
-  };
 
   const loadGTM = () => {
     if (!gtmMeasurementId) return;
@@ -43,70 +57,82 @@
     })(window, document, 'script', 'dataLayer', gtmMeasurementId);
   };
 
-  const loadHubSpot = () => {
-    const hsScript = document.createElement('script');
-    hsScript.src = 'https://js.hs-scripts.com/2757427.js';
-    hsScript.async = true;
-    hsScript.defer = true;
-    document.head.appendChild(hsScript);
-
-    // Load HubSpot Forms
-    const hsFormsScript = document.createElement('script');
-    hsFormsScript.src = '//js.hsforms.net/forms/v2.js';
-    hsFormsScript.async = true;
-    hsFormsScript.defer = true;
-    document.head.appendChild(hsFormsScript);
+  // GA4 events are dispatched via GTM dataLayer.
+  const pushGtmEvent = (eventName, payload) => {
+    window.dataLayer.push({ event: eventName, ...payload });
   };
 
-  const loadApollo = () => {
-    const n = Math.random().toString(36).substring(7);
-    const script = document.createElement('script');
-    script.src = `https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache=${n}`;
-    script.async = true;
-    script.defer = true;
-    script.onload = function () {
-      if (window.trackingFunctions?.onLoad) {
-        window.trackingFunctions.onLoad({
-          appId: '65e1db2f1976f30300fd8b26',
+  // Scroll depth tracking
+  const SCROLL_THRESHOLDS = [10, 25, 50, 75, 90];
+  let firedThresholds = new Set();
+  let scrollTrackingEnabled = false;
+  let scrollRafId = null;
+
+  function getScrollPercentage() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
+    return (scrollTop + clientHeight) / scrollHeight;
+  }
+
+  function handleScrollTracking() {
+    if (!scrollTrackingEnabled) return;
+
+    const scrollPercentage = getScrollPercentage() * 100;
+
+    // Fire events for all thresholds we've passed but haven't fired yet
+    for (const threshold of SCROLL_THRESHOLDS) {
+      if (scrollPercentage >= threshold && !firedThresholds.has(threshold)) {
+        firedThresholds.add(threshold);
+        sendSearchEvent(`scroll_${threshold}`, {
+          event_category: 'scroll',
+          event_label: window.location.pathname,
         });
       }
-    };
-    document.head.appendChild(script);
-  };
+    }
+  }
 
-  const loadHotjar = () => {
-    (function (h, o, t, j, a, r) {
-      h.hj =
-        h.hj ||
-        function () {
-          (h.hj.q = h.hj.q || []).push(arguments);
-        };
-      h._hjSettings = { hjid: 2774127, hjsv: 6 };
-      a = o.getElementsByTagName('head')[0];
-      r = o.createElement('script');
-      r.async = 1;
-      r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
-      a.appendChild(r);
-    })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
-  };
+  function throttledScrollHandler() {
+    if (scrollRafId !== null) return;
 
-  const loadTwitterPixel = () => {
-    !(function (e, t, n, s, u, a) {
-      e.twq ||
-        ((s = e.twq =
-          function () {
-            s.exe ? s.exe.apply(s, arguments) : s.queue.push(arguments);
-          }),
-        (s.version = '1.1'),
-        (s.queue = []),
-        (u = t.createElement(n)),
-        (u.async = !0),
-        (u.src = 'https://static.ads-twitter.com/uwt.js'),
-        (a = t.getElementsByTagName(n)[0]),
-        a.parentNode.insertBefore(u, a));
-    })(window, document, 'script');
-    window.twq('config', 'obtp4');
-  };
+    scrollRafId = requestAnimationFrame(() => {
+      handleScrollTracking();
+      scrollRafId = null;
+    });
+  }
+
+  function attachScrollListener() {
+    window.addEventListener('scroll', throttledScrollHandler, {
+      passive: true,
+    });
+  }
+
+  function setupScrollTracking() {
+    // Reset scroll depth on navigation (for SPA-like behavior via View Transitions)
+    firedThresholds = new Set();
+    scrollTrackingEnabled = false;
+
+    // Delay tracking start to avoid false triggers during navigation
+    setTimeout(() => {
+      scrollTrackingEnabled = true;
+      // Immediately check current scroll position to capture thresholds
+      // that may have been passed during the delay
+      handleScrollTracking();
+    }, 500);
+
+    attachScrollListener();
+
+    // Handle Astro View Transitions - reset on navigation
+    document.addEventListener('astro:after-swap', () => {
+      firedThresholds = new Set();
+      scrollTrackingEnabled = false;
+      setTimeout(() => {
+        scrollTrackingEnabled = true;
+        // Immediately check current scroll position after navigation
+        handleScrollTracking();
+      }, 500);
+    });
+  }
 
   const SEARCH_DEBOUNCE_MS = 1000;
   let searchDebounceTimer;
@@ -115,8 +141,7 @@
   let inputHandler = null;
 
   function sendSearchEvent(eventType, data) {
-    if (typeof window.gtag !== 'undefined')
-      window.gtag('event', eventType, data);
+    pushGtmEvent(eventType, data);
   }
 
   function trackSearchQuery(query) {
@@ -167,31 +192,11 @@
     });
   }
 
-  const checkAndLoadScripts = () => {
-    if (isCookiebotDisabled) {
-      loadGoogleAnalytics();
-      loadGTM();
-      loadHubSpot();
-      setupSearchTracking();
-    } else if (window.Cookiebot && window.Cookiebot.consent) {
-      // Statistics cookies (Google Analytics, GTM, Search Tracking)
-      if (window.Cookiebot.consent.statistics) {
-        loadGoogleAnalytics();
-        loadGTM();
-        setupSearchTracking();
-      }
-
-      // Marketing cookies (HubSpot, Apollo, Hotjar, Twitter)
-      if (window.Cookiebot.consent.marketing) {
-        loadHubSpot();
-        loadApollo();
-        loadHotjar();
-        loadTwitterPixel();
-      }
-    } else {
-      // Wait for Cookiebot to load
-      setTimeout(checkAndLoadScripts, 100);
-    }
+  const initializeAnalytics = () => {
+    if (!gtmMeasurementId) return;
+    loadGTM();
+    setupSearchTracking();
+    setupScrollTracking();
   };
 
   // Add GTM noscript iframe to body
@@ -208,11 +213,8 @@
     document.body.insertBefore(noscript, document.body.firstChild);
   };
 
-  // Listen for user consent to cookies
-  window.addEventListener('CookiebotOnAccept', checkAndLoadScripts);
-
   // Initial check
-  checkAndLoadScripts();
+  initializeAnalytics();
 
   // Add GTM noscript on DOM ready
   if (document.readyState === 'loading') {

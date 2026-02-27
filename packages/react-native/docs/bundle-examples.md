@@ -34,8 +34,8 @@ nx run mobile:bundle-android
 
 ## Examples
 
-{% tabs %}
-{% tab label="Bundle with sourcemap" %}
+##### Bundle with sourcemap
+
 The `sourcemapOutput` option allows you to specify the path of the source map relative to app folder:
 
 ```json
@@ -59,8 +59,7 @@ The `sourcemapOutput` option allows you to specify the path of the source map re
     }
 ```
 
-{% /tab %}
-{% tab label="Create a dev/release bundle" %}
+##### Create a dev/release bundle
 
 The `dev` option determines whether to create a dev or release bundle. The default value is `true`, by setting it as `false`, warnings are disabled and the bundle is minified.
 
@@ -85,8 +84,7 @@ The `dev` option determines whether to create a dev or release bundle. The defau
     }
 ```
 
-{% /tab %}
-{% tab label="Create a minified bundle" %}
+##### Create a minified bundle
 
 The `minify` option allows you to create a minified bundle:
 
@@ -110,8 +108,5 @@ The `minify` option allows you to create a minified bundle:
       }
     }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

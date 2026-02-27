@@ -16,11 +16,10 @@ export function convertScamToStandalone(
   let newComponentContents = '';
   const COMPONENT_PROPERTY_SELECTOR =
     'ClassDeclaration > Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression';
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const componentDecoratorMetadataNode = tsquery(
+  const { query } = require('@phenomnomnominal/tsquery');
+  const componentDecoratorMetadataNode = query(
     componentAST,
-    COMPONENT_PROPERTY_SELECTOR,
-    { visitAllChildren: true }
+    COMPONENT_PROPERTY_SELECTOR
   )[0];
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
@@ -28,13 +27,15 @@ export function convertScamToStandalone(
   newComponentContents = `${componentFileContents.slice(
     0,
     componentDecoratorMetadataNode.getStart() - 1
-  )}({${angularMajorVersion < 19 ? `\nstandalone: true,` : ''}
+  )}({
     imports: [${importsArray.join(',')}],${
-    providersArray.length > 0 ? `providers: [${providersArray.join(',')}],` : ''
-  }${componentFileContents.slice(
-    componentDecoratorMetadataNode.getStart() + 1,
-    moduleNodes[0].getStart() - 1
-  )}`;
+      providersArray.length > 0
+        ? `providers: [${providersArray.join(',')}],`
+        : ''
+    }${componentFileContents.slice(
+      componentDecoratorMetadataNode.getStart() + 1,
+      moduleNodes[0].getStart() - 1
+    )}`;
 
   tree.write(normalizedComponentPath, newComponentContents);
 

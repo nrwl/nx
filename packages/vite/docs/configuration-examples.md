@@ -7,9 +7,9 @@ This generator is used for converting an existing React or Web project to use [V
 
 It will create a `vite.config.ts` file at the root of your project with the correct settings, or if there's already a `vite.config.ts` file, it will modify it to include the correct settings.
 
-{% callout type="caution" title="Your code will be modified!" %}
+:::caution[Your code will be modified!]
 This generator will modify your code, so make sure to commit your changes before running it.
-{% /callout %}
+:::
 
 ```bash
 nx g @nx/vite:configuration
@@ -24,9 +24,9 @@ You must provide a `project` and a `uiFramework` for the generator to work.
 
 You may also pass the `includeVitest` flag. This will also configure your project for testing with [Vitest](https://vitest.dev/), by adding the `test` configuration in your `vite.config.ts` file.
 
-{% callout type="note" title="Vitest-only configuration" %}
+:::note[Vitest-only configuration]
 If you only need to add Vitest to a project (without Vite build configuration), use the `@nx/vitest:configuration` generator instead. See the [@nx/vitest package](/packages/vitest) for more information.
-{% /callout %}
+:::
 
 ## How to use
 

@@ -1,20 +1,20 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
-import { output } from '../../../../utils/output';
+import { orange, output } from '../../../../utils/output';
 import { joinPathFragments } from '../../../../utils/path';
 import type { PostGitTask } from '../../changelog';
 import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import { Reference } from '../git';
 import { ReleaseVersion } from '../shared';
+import { extractGitHubRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
-  RemoteRepoSlug,
 } from './remote-release-client';
 
 // axios types and values don't seem to match
@@ -66,29 +66,22 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         createReleaseConfig !== false &&
         typeof createReleaseConfig !== 'string'
       ) {
-        hostname = createReleaseConfig.hostname;
+        hostname = createReleaseConfig.hostname || hostname;
         apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
-      // Extract the 'user/repo' part from the URL
-      const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexString = `${escapedHostname}[/:]([\\w.-]+/[\\w.-]+)(\\.git)?`;
-      const regex = new RegExp(regexString);
-      const match = remoteUrl.match(regex);
-
-      if (match && match[1]) {
-        return {
-          hostname,
-          apiBaseUrl,
-          // Ensure any trailing .git is stripped
-          slug: match[1].replace(/\.git$/, '') as RemoteRepoSlug,
-        };
+      const slug = extractGitHubRepoSlug(remoteUrl, hostname);
+      if (slug) {
+        return { hostname, apiBaseUrl, slug };
       } else {
         throw new Error(
           `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`
         );
       }
     } catch (error) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(error);
+      }
       return null;
     }
   }
@@ -175,9 +168,10 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             }
           }
           const { data } = await axios
-            .get<any, { data?: { user?: { username: string } } }>(
-              `https://ungh.cc/users/find/${email}`
-            )
+            .get<
+              any,
+              { data?: { user?: { username: string } } }
+            >(`https://ungh.cc/users/find/${email}`)
             .catch(() => ({ data: { user: null } }));
           if (data?.user) {
             meta.username = data.user.username;
@@ -262,15 +256,11 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     const logTitle = `https://${githubRepoData.hostname}/${githubRepoData.slug}/releases/tag/${gitTag}`;
     if (existingRelease) {
       console.error(
-        `${chalk.white('UPDATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.white('UPDATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     } else {
       console.error(
-        `${chalk.green('CREATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.green('CREATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     }
   }
@@ -313,14 +303,14 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             '\n'
         );
       });

@@ -47,25 +47,49 @@ pub(super) fn get_inputs_for_dependency<'a>(
     nx_json: &'a NxJson,
     named_input: &'a Input,
 ) -> anyhow::Result<Option<SplitInputs<'a>>> {
-    let Input::Inputs { input, .. } = named_input else {
-        return Ok(None);
-    };
+    match named_input {
+        Input::Inputs { input, .. } => {
+            let inputs = get_named_inputs(nx_json, project);
+            let (self_inputs, deps_outputs): (Vec<Input>, Vec<Input>) =
+                expand_named_input(input, &inputs)?
+                    .into_iter()
+                    .partition(|i| !(matches!(i, Input::DepsOutputs { .. })));
+            let deps_inputs = vec![Input::Inputs {
+                input,
+                dependencies: true,
+            }];
 
-    let inputs = get_named_inputs(nx_json, project);
-    let (self_inputs, deps_outputs): (Vec<Input>, Vec<Input>) = expand_named_input(input, &inputs)?
-        .into_iter()
-        .partition(|i| !(matches!(i, Input::DepsOutputs { .. })));
-    let deps_inputs = vec![Input::Inputs {
-        input,
-        dependencies: true,
-    }];
+            Ok(Some(SplitInputs {
+                deps_outputs,
+                deps_inputs,
+                self_inputs,
+                project_inputs: vec![],
+            }))
+        }
+        Input::FileSet {
+            fileset,
+            dependencies: true,
+        } => {
+            // For dependency filesets, we apply the same fileset to the dependency
+            // and continue recursively with the same pattern
+            let self_inputs = vec![Input::FileSet {
+                fileset,
+                dependencies: false,
+            }];
+            let deps_inputs = vec![Input::FileSet {
+                fileset,
+                dependencies: true,
+            }];
 
-    Ok(Some(SplitInputs {
-        deps_outputs,
-        deps_inputs,
-        self_inputs,
-        project_inputs: vec![],
-    }))
+            Ok(Some(SplitInputs {
+                deps_outputs: vec![],
+                deps_inputs,
+                self_inputs,
+                project_inputs: vec![],
+            }))
+        }
+        _ => Ok(None),
+    }
 }
 
 fn split_inputs_into_self_and_deps<'a>(
@@ -74,7 +98,10 @@ fn split_inputs_into_self_and_deps<'a>(
 ) -> anyhow::Result<SplitInputs<'a>> {
     let inputs = inputs.unwrap_or_else(|| {
         vec![
-            Input::FileSet("{projectRoot}/**/*"),
+            Input::FileSet {
+                fileset: "{projectRoot}/**/*",
+                dependencies: false,
+            },
             Input::Inputs {
                 input: "default",
                 dependencies: true,
@@ -96,16 +123,23 @@ fn split_inputs_into_self_and_deps<'a>(
                 Input::Inputs {
                     dependencies: true, ..
                 } => acc.0.push(input),
+                Input::FileSet {
+                    dependencies: true, ..
+                } => acc.0.push(input),
                 Input::Inputs {
                     dependencies: false,
                     ..
                 }
                 | Input::String(_)
-                | Input::FileSet(_)
+                | Input::FileSet {
+                    dependencies: false,
+                    ..
+                }
                 | Input::Runtime(_)
                 | Input::Environment(_)
                 | Input::DepsOutputs { .. }
-                | Input::ExternalDependency(_) => {
+                | Input::ExternalDependency(_)
+                | Input::WorkingDirectory(_) => {
                     acc.1.push(input);
                 }
                 Input::Projects { .. } => {
@@ -148,16 +182,25 @@ pub(super) fn expand_single_project_inputs<'a>(
                     expanded.extend(expand_named_input(s, named_inputs)?);
                 } else {
                     validate_file_set(s)?;
-                    expanded.push(Input::FileSet(s));
+                    expanded.push(Input::FileSet {
+                        fileset: s,
+                        dependencies: false,
+                    });
                 }
             }
             Input::Inputs {
                 input,
                 dependencies: false,
             } => expanded.extend(expand_named_input(input, named_inputs)?),
-            Input::FileSet(fileset) => {
+            Input::FileSet {
+                fileset,
+                dependencies: false,
+            } => {
                 validate_file_set(fileset)?;
-                expanded.push(Input::FileSet(fileset));
+                expanded.push(Input::FileSet {
+                    fileset,
+                    dependencies: false,
+                });
             }
             Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
             Input::Environment(env) => expanded.push(Input::Environment(env)),
@@ -171,8 +214,12 @@ pub(super) fn expand_single_project_inputs<'a>(
                 transitive: *transitive,
                 dependent_tasks_output_files,
             }),
+            Input::WorkingDirectory(mode) => expanded.push(Input::WorkingDirectory(mode)),
             Input::Projects { .. }
             | Input::Inputs {
+                dependencies: true, ..
+            }
+            | Input::FileSet {
                 dependencies: true, ..
             } => {
                 anyhow::bail!(
@@ -223,7 +270,13 @@ pub(super) fn get_named_inputs<'a>(
 ) -> HashMap<&'a str, Vec<Input<'a>>> {
     let mut collected_named_inputs: HashMap<&str, Vec<Input>> = HashMap::new();
 
-    collected_named_inputs.insert("default", vec![Input::FileSet("{projectRoot}/**/*")]);
+    collected_named_inputs.insert(
+        "default",
+        vec![Input::FileSet {
+            fileset: "{projectRoot}/**/*",
+            dependencies: false,
+        }],
+    );
 
     let iterable_structs = [&nx_json.named_inputs, &project.named_inputs];
     for named_inputs in iterable_structs.into_iter().flatten() {

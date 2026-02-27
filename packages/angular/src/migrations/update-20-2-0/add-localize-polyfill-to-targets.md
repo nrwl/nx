@@ -12,10 +12,9 @@ Add the `@angular/localize/init` polyfill to any of these executors:
 - `@angular-devkit/build-angular:browser-esbuild`
 - `@nx/angular:browser-esbuild`
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/project.json" %}
+```json title="apps/app1/project.json"
 {
   "targets": {
     "build": {
@@ -28,10 +27,9 @@ Add the `@angular/localize/init` polyfill to any of these executors:
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="apps/app1/project.json" %}
+```json title="apps/app1/project.json"
 {
   "targets": {
     "build": {
@@ -44,6 +42,3 @@ Add the `@angular/localize/init` polyfill to any of these executors:
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

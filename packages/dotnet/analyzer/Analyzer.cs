@@ -59,40 +59,68 @@ public static class Analyzer
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
 
-        using (var analyzeProjectsPerf = PerfLogger.Start($"analyze workspace > transform {projectGraph.ProjectNodes.Count} projects"))
+        // Group nodes by project file path to handle multi-targeting projects.
+        // Multi-targeting projects (using TargetFrameworks plural) create multiple nodes:
+        // - An "outer build" with TargetFrameworks set but TargetFramework empty
+        // - "Inner builds" for each target framework with TargetFramework set
+        // We need to aggregate references from all builds and use an inner build for config.
+        var nodesByPath = new Dictionary<string, List<ProjectGraphNode>>();
+        foreach (var node in projectGraph.ProjectNodes)
         {
-            foreach (var node in projectGraph.ProjectNodes)
+            if (node.ProjectInstance?.FullPath is null)
             {
+                continue;
+            }
+            var path = node.ProjectInstance.FullPath;
+            if (!nodesByPath.TryGetValue(path, out var nodes))
+            {
+                nodes = new List<ProjectGraphNode>();
+                nodesByPath[path] = nodes;
+            }
+            nodes.Add(node);
+        }
+
+        using (var analyzeProjectsPerf = PerfLogger.Start($"analyze workspace > transform {nodesByPath.Count} projects"))
+        {
+            foreach (var kvp in nodesByPath)
+            {
+                var projectPath = kvp.Key;
+                var nodes = kvp.Value;
+
                 try
                 {
-                    if (node.ProjectInstance is null)
+                    // For multi-targeting projects, prefer an inner build (has TargetFramework set)
+                    // over the outer build (has TargetFrameworks but no TargetFramework).
+                    // Inner builds have the actual project references.
+                    var primaryNode = nodes.FirstOrDefault(n =>
+                        !string.IsNullOrEmpty(n.ProjectInstance?.GetPropertyValue("TargetFramework")))
+                        ?? nodes.First();
+
+                    if (primaryNode.ProjectInstance is null)
                     {
                         throw new InvalidOperationException("ProjectInstance is null.");
-                    }
-                    var projectPath = node.ProjectInstance.FullPath;
-                    if (string.IsNullOrEmpty(projectPath))
-                    {
-                        continue;
                     }
 
                     var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
                     var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
 
-                    // Collect package references
-                    var packageRefs = CollectPackageReferences(node.ProjectInstance!);
+                    // Collect package references from primary node
+                    var packageRefs = CollectPackageReferences(primaryNode.ProjectInstance!);
 
-                    // Collect project references
-                    var projectRefs = CollectProjectReferences(node, projectPath, workspaceRoot);
+                    // Collect direct project references from the primary node's ProjectInstance.
+                    // Uses GetItems("ProjectReference") which returns only DIRECT references,
+                    // with glob patterns already evaluated by MSBuild during project loading.
+                    var projectRefs = CollectProjectReferences(primaryNode.ProjectInstance!, projectPath, workspaceRoot);
 
-                    // Collect MSBuild properties
-                    var properties = CollectProperties(node.ProjectInstance!);
+                    // Collect MSBuild properties from primary node
+                    var properties = CollectProperties(primaryNode.ProjectInstance!);
 
                     // Determine project type
                     var isTest = IsTestProject(properties, packageRefs);
                     var isExe = IsExecutableProject(properties);
 
                     // Build targets
-                    var projectName = ProjectUtilities.GetProjectName(node.ProjectInstance);
+                    var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -127,7 +155,7 @@ public static class Analyzer
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Error analyzing {node.ProjectInstance?.FullPath}: {ex.Message}");
+                    Console.Error.WriteLine($"Error analyzing {projectPath}: {ex.Message}");
                 }
             }
         }
@@ -155,24 +183,32 @@ public static class Analyzer
         return packageRefs;
     }
 
+    /// <summary>
+    /// Collects direct project references from the ProjectInstance.
+    /// Uses GetItems("ProjectReference") to get only direct references defined in the project file.
+    /// MSBuild evaluates glob patterns during project loading, so EvaluatedInclude contains
+    /// resolved paths even when the original ProjectReference used globs.
+    /// </summary>
     private static List<string> CollectProjectReferences(
-        ProjectGraphNode project,
+        ProjectInstance project,
         string projectPath,
         string workspaceRoot)
     {
         var projectRefs = new List<string>();
+        var projectDir = Path.GetDirectoryName(projectPath)!;
 
-        foreach (var referencedProject in project.ProjectReferences)
+        foreach (var item in project.GetItems("ProjectReference"))
         {
-            var refPath = referencedProject.ProjectInstance?.FullPath;
+            var refPath = item.EvaluatedInclude;
             if (string.IsNullOrEmpty(refPath))
             {
-                throw new InvalidOperationException(
-                    $"Project reference in {projectPath} is missing a valid path.");
+                continue;
             }
+
+            // Resolve the path relative to the project directory
             var absoluteRefPath = Path.IsPathRooted(refPath)
                 ? refPath
-                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projectPath)!, refPath));
+                : Path.GetFullPath(Path.Combine(projectDir, refPath));
 
             var relativeRefRoot = ProjectUtilities.GetRelativeProjectRoot(absoluteRefPath, workspaceRoot);
             projectRefs.Add(relativeRefRoot);

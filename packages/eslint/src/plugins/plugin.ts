@@ -80,6 +80,17 @@ const internalCreateNodesV2 = async (
   const configDir = dirname(configFilePath);
   const eslintVersion = ESLint.version;
 
+  let sharedEslint: ESLintType;
+  const getEslint = (projectRoot: string) => {
+    if (existsSync(join(context.workspaceRoot, projectRoot, '.eslintignore'))) {
+      return new ESLint({ cwd: join(context.workspaceRoot, projectRoot) });
+    }
+    sharedEslint ??= new ESLint({
+      cwd: join(context.workspaceRoot, configDir),
+    });
+    return sharedEslint;
+  };
+
   const projects: CreateNodesResult['projects'] = {};
   await Promise.all(
     projectRootsByEslintRoots.get(configDir).map(async (projectRoot) => {
@@ -93,9 +104,7 @@ const internalCreateNodesV2 = async (
 
       let hasNonIgnoredLintableFiles = false;
       if (configDir !== projectRoot || projectRoot === '.') {
-        const eslint = new ESLint({
-          cwd: join(context.workspaceRoot, projectRoot),
-        });
+        const eslint = getEslint(projectRoot);
         for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
           if (
             !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))

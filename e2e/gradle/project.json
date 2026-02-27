@@ -5,8 +5,8 @@
   "projectType": "application",
   "implicitDependencies": [
     "gradle",
-    "gradle-project-graph",
-    "gradle-batch-runner"
+    ":gradle-project-graph",
+    ":gradle-batch-runner"
   ],
   "// targets": "to see all targets run: nx show project e2e-gradle --web",
   "targets": {}

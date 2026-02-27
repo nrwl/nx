@@ -3,8 +3,8 @@ import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
-import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
+import { isGitAvailable } from '../utils/git/git';
 import {
   detectInvokedPackageManager,
   PackageManager,
@@ -18,6 +18,8 @@ import {
   agentDisplayMap,
   supportedAgents,
 } from '../create-workspace-options';
+import { detectAiAgentName } from '../utils/ai/ai-output';
+import { CnwError } from '../utils/error-utils';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -29,6 +31,27 @@ export async function determineNxCloud(
   } else {
     return nxCloudPrompt('setupCI');
   }
+}
+
+export async function determineNxCloudV2(
+  parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
+): Promise<'yes' | 'skip' | 'never'> {
+  // Provided via flag
+  if (parsedArgs.nxCloud) {
+    if (parsedArgs.nxCloud === 'skip') return 'skip';
+    if (parsedArgs.nxCloud === 'never') return 'never';
+    return 'yes';
+  }
+
+  // Non-interactive mode
+  if (!parsedArgs.interactive || isCI()) {
+    return 'skip';
+  }
+
+  const result = await nxCloudPrompt('setupNxCloudV2');
+  if (result === 'never') return 'never';
+  if (result === 'skip') return 'skip';
+  return 'yes';
 }
 
 export async function determineIfGitHubWillBeUsed(
@@ -76,10 +99,69 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
   });
 }
 
+export async function determineTemplate(
+  parsedArgs: yargs.Arguments<{
+    template?: string;
+    preset?: string;
+    interactive?: boolean;
+  }>
+): Promise<string | 'custom'> {
+  if (parsedArgs.template) return parsedArgs.template;
+  if (parsedArgs.preset) return 'custom';
+  if (!parsedArgs.interactive || isCI()) return 'custom';
+  // Docs generation needs preset flow to document all presets
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
+  // Template flow requires git for cloning - fall back to custom preset if git is not available
+  if (!isGitAvailable()) return 'custom';
+  const { template } = await enquirer.prompt<{ template: string }>([
+    {
+      name: 'template',
+      message: 'Which starter do you want to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'nrwl/empty-template',
+          message: 'Minimal           (empty monorepo without projects)',
+        },
+        {
+          name: 'nrwl/react-template',
+          message:
+            'React             (fullstack monorepo with React and Express)',
+        },
+        {
+          name: 'nrwl/angular-template',
+          message:
+            'Angular           (fullstack monorepo with Angular and Express)',
+        },
+        {
+          name: 'nrwl/typescript-template',
+          message:
+            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+        },
+        {
+          name: 'custom',
+          message:
+            'Custom            (advanced setup with additional frameworks)',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+
+  return template;
+}
+
 export async function determineAiAgents(
   parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
 ): Promise<Agent[]> {
-  return parsedArgs.aiAgents ?? [];
+  if (parsedArgs.aiAgents) {
+    return parsedArgs.aiAgents;
+  }
+  const detected = detectAiAgentName();
+  if (detected) {
+    return [detected as Agent];
+  }
+  return [];
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
@@ -118,11 +200,10 @@ export async function determineDefaultBase(
       ])
       .then((a) => {
         if (!a.DefaultBase) {
-          output.error({
-            title: 'Invalid branch name',
-            bodyLines: [`Branch name cannot be empty`],
-          });
-          process.exit(1);
+          throw new CnwError(
+            'INVALID_BRANCH_NAME',
+            'Branch name cannot be empty'
+          );
         }
         return a.DefaultBase;
       });
@@ -139,15 +220,12 @@ export async function determinePackageManager(
     if (packageManagerList.includes(packageManager as PackageManager)) {
       return packageManager as PackageManager;
     }
-    output.error({
-      title: 'Invalid package manager',
-      bodyLines: [
-        `Package manager must be one of ${stringifyCollection([
-          ...packageManagerList,
-        ])}`,
-      ],
-    });
-    process.exit(1);
+    throw new CnwError(
+      'INVALID_PACKAGE_MANAGER',
+      `Package manager must be one of ${stringifyCollection([
+        ...packageManagerList,
+      ])}`
+    );
   } else if (parsedArgs.allPrompts) {
     return enquirer
       .prompt<{ packageManager: PackageManager }>([

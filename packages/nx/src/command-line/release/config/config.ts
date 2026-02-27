@@ -378,6 +378,9 @@ export async function createNxReleaseConfig(
         userConfig.version?.preserveMatchingDependencyRanges ?? true,
       logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
       updateDependents: userConfig.version?.updateDependents ?? 'always',
+      // TODO(v23): change the default value of this to true
+      adjustSemverBumpsForZeroMajorVersion:
+        userConfig.version?.adjustSemverBumpsForZeroMajorVersion ?? false,
     } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
       git: changelogGitDefaults,
@@ -724,9 +727,9 @@ export async function createNxReleaseConfig(
           ? WORKSPACE_DEFAULTS.releaseTag.pattern?.includes('{projectName}')
             ? WORKSPACE_DEFAULTS.releaseTag.pattern
             : defaultIndependentReleaseTagPattern
-          : userConfig?.releaseTag?.pattern ??
+          : (userConfig?.releaseTag?.pattern ??
             userConfig?.releaseTagPattern ??
-            defaultFixedGroupReleaseTagPattern;
+            defaultFixedGroupReleaseTagPattern);
 
       // Initialize releaseTag object if it doesn't exist
       if (!releaseGroup.releaseTag) {
@@ -917,7 +920,7 @@ export async function createNxReleaseConfig(
       // If any project in the group has docker configuration, disable semver requirement
       releaseGroup.releaseTag.requireSemver = false;
 
-      // Set preferDockerVersion to true by default when docker projects exist,
+      // Set preferDockerVersion by default when docker projects exist,
       // unless user has explicitly configured it
       if (
         releaseGroup.releaseTag.preferDockerVersion === false &&
@@ -928,7 +931,19 @@ export async function createNxReleaseConfig(
         userConfig.releaseTag?.preferDockerVersion === undefined &&
         userConfig.releaseTagPatternPreferDockerVersion === undefined
       ) {
-        releaseGroup.releaseTag.preferDockerVersion = true;
+        // Check if ALL projects have docker config, or just some
+        const allProjectsHaveDocker = releaseGroup.projects.every(
+          (projectName) => {
+            const projectNode = projectGraph.nodes[projectName];
+            const projectDockerConfig = projectNode?.data.release?.docker;
+            return projectDockerConfig !== undefined || !!releaseGroup.docker;
+          }
+        );
+
+        // Use 'both' for mixed groups so non-docker projects fall back correctly
+        releaseGroup.releaseTag.preferDockerVersion = allProjectsHaveDocker
+          ? true
+          : 'both';
       }
     }
   }

@@ -35,8 +35,7 @@ nx run acme:serve
 
 ### For Next.js Standalone projects
 
-{% tabs %}
-{% tab label="Default configuration" %}
+##### Default configuration
 
 This is the default configuration for Next.js standalone projects. Our `@nx/next:server` executor is integrated to use Next.js' CLI. You can read more about the serve options at [Next.js CLI Options](https://nextjs.org/docs/app/api-reference/next-cli)
 
@@ -61,8 +60,7 @@ This is the default configuration for Next.js standalone projects. Our `@nx/next
     },
 ```
 
-{% /tab %}
-{% tab label="Choosing your bundler" %}
+##### Choosing your bundler
 
 Turbopack is a cutting-edge bundler designed for JavaScript and TypeScript. To read more about supported features see [Next.js Turbopack Documentation](https://turbo.build/pack/docs/features)
 
@@ -127,9 +125,7 @@ Or update the serve options to include `webpack`:
     }
 ```
 
-{% /tab %}
-
-{% tab label="Adding keep alive timeout" %}
+##### Adding keep alive timeout
 
 When using Nx with Next.js behind a downstream proxy, it's important to make sure that the `keep-alive timeouts` of Next.js' HTTP server are set to longer durations than the timeouts of the proxy. If you don't do this, Node.js will unexpectedly end TCP connections without notifying the proxy when the `keep-alive timeout` is reached. This can lead to a proxy error when the proxy tries to reuse a connection that Node.js has already terminated.
 
@@ -165,7 +161,3 @@ Updating the serve options to include `keepAliveTimeout`.
 ```shell
 nx run acme:serve
 ```
-
-{% /tab %}
-
-{% /tabs %}

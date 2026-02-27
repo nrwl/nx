@@ -4,10 +4,9 @@ Add NX_MF_DEV_REMOTES to inputs for task hashing when `@nx/webpack:webpack` or `
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "@nx/webpack:webpack": {
@@ -17,10 +16,9 @@ Add NX_MF_DEV_REMOTES to inputs for task hashing when `@nx/webpack:webpack` or `
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[4,5,6] fileName="nx.json" %}
+```json title="nx.json" {4-6}
 {
   "targetDefaults": {
     "@nx/webpack:webpack": {
@@ -36,6 +34,3 @@ Add NX_MF_DEV_REMOTES to inputs for task hashing when `@nx/webpack:webpack` or `
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

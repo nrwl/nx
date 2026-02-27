@@ -332,7 +332,11 @@ It is also possible that the project is being processed because of a dependency 
     const newVersion = deriveNewSemverVersion(
       currentVersion,
       newVersionInput,
-      preid
+      preid,
+      {
+        adjustSemverBumpsForZeroMajorVersion:
+          this.finalConfigForProject.adjustSemverBumpsForZeroMajorVersion,
+      }
     );
 
     const newVersionInputText = isRelativeVersionKeyword(newVersionInput)

@@ -6,10 +6,9 @@ Removes Karma configuration files that match the default configuration generated
 
 The migration will remove `karma.conf.js` files that contain only default settings and update the project configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```javascript {% fileName="apps/my-app/karma.conf.js" %}
+```javascript title="apps/my-app/karma.conf.js"
 // Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
 
@@ -47,7 +46,7 @@ module.exports = function (config) {
 };
 ```
 
-```json {% fileName="apps/my-app/project.json" highlightLines=[7] %}
+```json title="apps/my-app/project.json" {7}
 {
   "name": "my-app",
   "targets": {
@@ -62,13 +61,11 @@ module.exports = function (config) {
 }
 ```
 
-{% /tab %}
-
-{% tab label="After" %}
+##### After
 
 File `apps/my-app/karma.conf.js` is removed.
 
-```json {% fileName="apps/my-app/project.json" %}
+```json title="apps/my-app/project.json"
 {
   "name": "my-app",
   "targets": {
@@ -82,15 +79,11 @@ File `apps/my-app/karma.conf.js` is removed.
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If the Karma configuration contains customizations, the migration will preserve the file and configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```javascript {% fileName="apps/custom-app/karma.conf.js" %}
+```javascript title="apps/custom-app/karma.conf.js"
 module.exports = function (config) {
   config.set({
     basePath: '',
@@ -108,11 +101,9 @@ module.exports = function (config) {
 };
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```javascript {% fileName="apps/custom-app/karma.conf.js" %}
+```javascript title="apps/custom-app/karma.conf.js"
 module.exports = function (config) {
   config.set({
     basePath: '',
@@ -129,6 +120,3 @@ module.exports = function (config) {
   });
 };
 ```
-
-{% /tab %}
-{% /tabs %}

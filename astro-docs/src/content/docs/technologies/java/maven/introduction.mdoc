@@ -1,5 +1,5 @@
 ---
-title: Overview of the Nx Plugin for Maven
+title: Maven Plugin for Nx
 description: This plugin allows Maven tasks to be run through Nx.
 sidebar:
   label: 'Introduction'
@@ -10,40 +10,28 @@ filter: 'type:References'
 The `@nx/maven` plugin is currently experimental. Features and APIs may change.
 {% /aside %}
 
-[Apache Maven](https://maven.apache.org/) is a build tool for Java projects. Using a project object model (POM), Maven manages a project's compilation, testing, and documentation.
+[Apache Maven](https://maven.apache.org/) is a build tool for Java projects that uses a project object model (POM) to manage builds.
 
-The Nx plugin for Maven registers Maven projects in your Nx workspace. It allows Maven tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
+The `@nx/maven` plugin registers Maven modules as Nx projects so you can [set up Maven with Nx](#setup), [run daily Maven tasks](#local-development), [configure task inference](#configuration), and [run in CI](#ci-considerations).
 
-Nx adds the following features to your workspace:
+You can use Maven with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-- [Cache task results](/docs/features/cache-task-results)
-- [Distribute task execution](/docs/features/ci-features/distribute-task-execution)
-- [Run only tasks affected by a PR](/docs/features/ci-features/affected)
-- [Interactively explore your workspace](/docs/features/explore-graph)
+## Requirements
 
-{% aside type="note" title="Java and Maven Compatibility" %}
-This plugin requires:
+| Dependency | Supported Versions |
+| ---------- | ------------------ |
+| Java       | >= 17              |
+| Maven      | >= 3.6.0           |
 
-- **Java 17 or newer** - Using older Java versions is unsupported and may lead to issues.
-- **Maven 3.6.0 or newer** - Older Maven versions are not supported.
+Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx).
 
-If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
-{% /aside %}
-
-## Setup @nx/maven
+## Setup
 
 ### Install Nx
 
 You can install Nx globally. Depending on your package manager, use one of the following commands:
 
 {% tabs syncKey="package-manager" %}
-{% tabitem label="npm" %}
-
-```shell
-npm add --global nx@latest
-```
-
-{% /tabitem %}
 {% tabitem label="Homebrew (macOS, Linux)" %}
 
 ```shell
@@ -67,53 +55,158 @@ sudo apt install nx
 ```
 
 {% /tabitem %}
+{% tabitem label="npm" %}
+
+```shell
+npm install --global nx@latest
+```
+
+> You can use `pnpm`, `yarn`, or `bun` if you prefer as well.
+
+{% /tabitem %}
 {% /tabs %}
 
 ### Add Nx to a Maven Workspace
 
-In any Maven workspace, run the following command to add Nx and the `@nx/maven` plugin:
+If you are in a Maven workspace without Nx, start here. This command adds Nx and configures `@nx/maven`:
 
 ```shell
 nx init
 ```
 
-After initialization, you can view all Maven projects in your workspace:
+Verify that Nx discovered your Maven modules:
 
 ```shell
 nx show projects
 ```
 
-Then, you can run Maven tasks using Nx. For example:
-
 ```shell
-nx verify <your maven module>
+nx show project my-app --web
 ```
 
-## How @nx/maven Infers Tasks
+Replace `my-app` with a module name from your workspace.
 
-The `@nx/maven` plugin automatically detects Maven projects in your workspace by scanning for `pom.xml` files. It analyzes your Maven build structure to create Nx targets for common Maven lifecycle phases and plugin goals.
+### Add @nx/maven to an Existing Nx Workspace
 
-## View Inferred Tasks
-
-To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
-
-## Setting Up @nx/maven in a Nx Workspace
-
-In any Nx workspace, you can install `@nx/maven` by running the following command:
+If you already have an Nx workspace, add the Maven plugin:
 
 ```shell
 nx add @nx/maven
 ```
 
-## @nx/maven Configuration
+Verify the plugin is active by inspecting a module:
 
-The `@nx/maven` is configured in the `plugins` array in `nx.json`.
+```shell
+nx show project my-app --web
+```
+
+Replace `my-app` with a module name from your workspace.
+
+## Local Development
+
+The plugin infers targets from Maven phases and plugin goals defined in your `pom.xml` files. By default, the target names are the Maven phase names:
+
+```shell
+nx compile my-module
+nx test my-module
+nx package my-module
+nx verify my-module
+```
+
+If you configure a `targetNamePrefix` (for example `mvn-`), use the prefixed targets instead:
+
+```shell
+nx mvn-test my-module
+```
+
+## Configuration
+
+### How @nx/maven Infers Tasks
+
+The plugin scans your workspace for `pom.xml` files and analyzes the Maven build to create Nx targets for phases and plugin goals. A root `pom.xml` at the workspace root is required so the analyzer can resolve the Maven project tree.
+
+To view the inferred tasks for a module, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run:
+
+```shell
+nx show project my-module --web
+```
+
+### @nx/maven Configuration
+
+Configure the plugin in the `plugins` array of `nx.json`.
 
 ```json
 // nx.json
 {
-  "plugins": ["@nx/maven"]
+  "plugins": [
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn-",
+        "verbose": false
+      }
+    }
+  ]
 }
 ```
 
-Once the plugin has been added, `@nx/maven` will automatically retrieve information about projects from Maven and create targets for each phase, goal, and some additional targets for CI.
+| Option             | Type    | Default     | Description                                                                                 |
+| ------------------ | ------- | ----------- | ------------------------------------------------------------------------------------------- |
+| `targetNamePrefix` | string  | `undefined` | Prefix all inferred Maven targets to avoid name collisions in polyglot workspaces.          |
+| `verbose`          | boolean | `false`     | Enable verbose logging for the Maven analyzer. Also settable via `NX_VERBOSE_LOGGING=true`. |
+
+### Exclude or Include Specific Projects
+
+Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
+
+```json {% meta="{5-6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/maven",
+      "include": ["apps/**/*"],
+      "exclude": ["apps/legacy-app/**/*"],
+      "options": { ... }
+    }
+  ]
+}
+```
+
+There is no per-project disable for `@nx/maven`. To stop inference entirely, remove `@nx/maven` from the `plugins` array in `nx.json`.
+
+## CI Considerations
+
+Build and test only what changed using the project graph:
+
+```shell
+nx affected -t test package
+```
+
+Connect Nx Cloud to share cache results and speed up Maven builds in CI:
+
+```shell
+nx connect
+```
+
+### Batch Mode
+
+Batch mode runs multiple Maven tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
+
+```shell
+NX_BATCH_MODE=true nx run-many -t build test
+```
+
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete configuration guide.
+
+If you use Maven profiles or parallel builds in CI, define them in `.mvn/maven.config` (for example `-Pci` or `-T1C`) so Nx runs the same settings consistently.
+
+## What's Next
+
+{% cardgrid %}
+{% linkcard title="Java with Nx" description="Learn how Nx supports Maven and Gradle together." href="/docs/technologies/java/introduction" /%}
+{% linkcard title="Gradle Plugin" description="See the Nx plugin for Gradle." href="/docs/technologies/java/gradle/introduction" /%}
+{% linkcard title="Set Up CI" description="Configure fast, reliable CI for Nx workspaces." href="/docs/guides/nx-cloud/setup-ci" /%}
+{% linkcard title="Maven Generators Reference" description="Full reference for @nx/maven generators." href="/docs/technologies/java/maven/generators" /%}
+{% linkcard title="Maven Executors Reference" description="Full reference for @nx/maven executors." href="/docs/technologies/java/maven/executors" /%}
+{% /cardgrid %}

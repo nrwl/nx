@@ -6,25 +6,19 @@ Read more in the [migration guide](https://docs.cypress.io/app/references/migrat
 
 #### Examples
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/web-e2e/src/support/selector.ts" %}
+```ts title="apps/web-e2e/src/support/selector.ts"
 Cypress.SelectorPlayground.defaults({
   selectorPriority: ['data-cy'],
   onElement: (el) => el,
 });
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/web-e2e/src/support/selector.ts" %}
+```ts title="apps/web-e2e/src/support/selector.ts"
 Cypress.ElementSelector.defaults({
   selectorPriority: ['data-cy'],
 });
 ```
-
-{% /tab %}
-{% /tabs %}

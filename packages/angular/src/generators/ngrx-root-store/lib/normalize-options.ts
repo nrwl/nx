@@ -62,8 +62,8 @@ export function normalizeOptions(
     !isStandalone && tree.exists(ngModulePath)
       ? ngModulePath
       : tree.exists(appConfigPath)
-      ? appConfigPath
-      : appMainPath;
+        ? appConfigPath
+        : appMainPath;
 
   options.directory = options.directory ?? '+state';
 

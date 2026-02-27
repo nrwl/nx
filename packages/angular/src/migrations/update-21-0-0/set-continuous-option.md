@@ -12,10 +12,9 @@ Specifically, it updates Angular targets using the following executors:
 
 #### Examples
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/project.json" %}
+```json title="apps/app1/project.json"
 {
   // ...
   "targets": {
@@ -31,11 +30,9 @@ Specifically, it updates Angular targets using the following executors:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/app1/project.json" highlightLines=[6] %}
+```json title="apps/app1/project.json" {6}
 {
   // ...
   "targets": {
@@ -52,15 +49,11 @@ Specifically, it updates Angular targets using the following executors:
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 When a target is already explicitly configured with a `continuous` option, the migration will not modify it:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/project.json" highlightLines=[6] %}
+```json title="apps/app1/project.json" {6}
 {
   // ...
   "targets": {
@@ -77,11 +70,9 @@ When a target is already explicitly configured with a `continuous` option, the m
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/app1/project.json" highlightLines=[6] %}
+```json title="apps/app1/project.json" {6}
 {
   // ...
   "targets": {
@@ -97,6 +88,3 @@ When a target is already explicitly configured with a `continuous` option, the m
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

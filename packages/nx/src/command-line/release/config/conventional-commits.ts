@@ -2,6 +2,7 @@ import { NxReleaseConfig } from './config';
 
 export const DEFAULT_CONVENTIONAL_COMMITS_CONFIG: NxReleaseConfig['conventionalCommits'] =
   {
+    useCommitScope: true,
     types: {
       feat: {
         semverBump: 'minor',

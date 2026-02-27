@@ -261,11 +261,14 @@ export class ReleaseGroupProcessor {
   ) {
     const dockerProjects = new Map<string, FinalConfigForProject>();
     for (const project of this.versionData.keys()) {
-      const finalConfigForProject =
-        this.releaseGraph.finalConfigsByProject.get(project);
-      if (Object.keys(finalConfigForProject.dockerOptions).length === 0) {
+      const hasDockerTechnology = Object.values(
+        this.projectGraph.nodes[project]?.data?.targets ?? []
+      ).some(({ metadata }) => metadata?.technologies?.includes('docker'));
+      if (!hasDockerTechnology) {
         continue;
       }
+      const finalConfigForProject =
+        this.releaseGraph.finalConfigsByProject.get(project);
       dockerProjects.set(project, finalConfigForProject);
     }
     // If no docker projects to process, exit early to avoid unnecessary loading of docker handling
@@ -372,9 +375,8 @@ export class ReleaseGroupProcessor {
             depGroup !== releaseGroup.name &&
             this.processedGroups.has(depGroup)
           ) {
-            const depGroupBumpType = await this.getFixedReleaseGroupBumpType(
-              depGroup
-            );
+            const depGroupBumpType =
+              await this.getFixedReleaseGroupBumpType(depGroup);
 
             // If a dependency group has been bumped, determine if it should trigger a bump in this group
             if (depGroupBumpType !== 'none') {
@@ -609,6 +611,7 @@ export class ReleaseGroupProcessor {
         projectGraphNode,
         !!semver.prerelease(currentVersion ?? ''),
         this.releaseGraph.cachedLatestMatchingGitTag.get(projectName),
+        this.releaseGraph,
         cachedFinalConfigForProject.fallbackCurrentVersionResolver,
         this.options.preid
       );

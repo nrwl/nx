@@ -89,4 +89,4 @@ UKG's experience has created strong confidence in their technology stack and fut
 
 This level of satisfaction demonstrates not just immediate problem-solving, but a foundation for long-term scalable development practices that will support UKG's continued growth and innovation.
 
-{% call-to-action title="Ready to eliminate build bottlenecks?" url="/enterprise" icon="nxcloud" description="Learn how Nx Enterprise can help your team achieve similar productivity gains." /%}
+{% call-to-action title="Ready to eliminate build bottlenecks?" url="/enterprise" icon="nxcloud" description="Learn how Nx Enterprise can help your team achieve similar productivity gains." size="lg" /%}

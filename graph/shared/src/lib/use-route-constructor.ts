@@ -60,6 +60,6 @@ function getSearchParams(
   return typeof retainSearchParams === 'function'
     ? retainSearchParams(searchParams).toString()
     : retainSearchParams
-    ? searchParams.toString()
-    : '';
+      ? searchParams.toString()
+      : '';
 }

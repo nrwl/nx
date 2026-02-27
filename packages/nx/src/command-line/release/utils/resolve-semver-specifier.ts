@@ -4,6 +4,7 @@ import { ProjectGraph } from '../../../config/project-graph';
 import { NxReleaseConfig } from '../config/config';
 import { SemverBumpType } from '../version/version-actions';
 import { getGitDiff, parseCommits } from './git';
+import { ReleaseGraph } from './release-graph';
 import { determineSemverChange, SemverSpecifier } from './semver';
 import { getCommitsRelevantToProjects } from './shared';
 
@@ -11,7 +12,8 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
   projectGraph: ProjectGraph,
   projectNames: string[],
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+  releaseConfig: NxReleaseConfig,
+  releaseGraph: ReleaseGraph
 ): // Map of projectName to semver bump type
 Promise<Map<string, SemverSpecifier | null>> {
   const commits = await getGitDiff(from);
@@ -19,9 +21,14 @@ Promise<Map<string, SemverSpecifier | null>> {
   const relevantCommits = await getCommitsRelevantToProjects(
     projectGraph,
     parsedCommits,
-    projectNames
+    projectNames,
+    releaseConfig,
+    releaseGraph
   );
-  return determineSemverChange(relevantCommits, conventionalCommitsConfig);
+  return determineSemverChange(
+    relevantCommits,
+    releaseConfig.conventionalCommits
+  );
 }
 
 export async function resolveSemverSpecifierFromPrompt(

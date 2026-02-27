@@ -33,6 +33,12 @@ export interface VitestPluginOptions {
    * The name that should be used to group atomized tasks on CI
    */
   ciGroupName?: string;
+  /**
+   * Default mode for running tests.
+   * - 'watch': Tests run in watch mode locally, auto-run in CI (default)
+   * - 'run': Tests run once and exit
+   */
+  testMode?: 'watch' | 'run';
 }
 
 type VitestTargets = Pick<
@@ -178,6 +184,19 @@ async function buildVitestTargets(
     // Plugin not installed or not needed, ignore
   }
 
+  // Workaround for race condition with vitest/node on Node 24+
+  // When multiple vitest.config files are processed in parallel, Node can throw:
+  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
+  // because it is not yet fully loaded.
+  // See: https://github.com/nrwl/nx/issues/34028
+  try {
+    const importVitestNode = () =>
+      new Function('return import("vitest/node")')();
+    await importVitestNode();
+  } catch {
+    // vitest/node not available or not needed, ignore
+  }
+
   const { resolveConfig } = await loadViteDynamicImport();
   const viteBuildConfig = await resolveConfig(
     {
@@ -186,6 +205,14 @@ async function buildVitestTargets(
     },
     'build'
   );
+
+  // If this is a root workspace config file with projects property, don't infer targets.
+  // The root config is just an orchestrator - the actual tests live in the individual project configs.
+  const isWorkspaceRoot = projectRoot === '.';
+  const hasProjectsProperty = Array.isArray(viteBuildConfig?.test?.projects);
+  if (isWorkspaceRoot && hasProjectsProperty) {
+    return { targets: {}, metadata: {}, projectType: 'library' };
+  }
 
   let metadata: ProjectConfiguration['metadata'] = {};
 
@@ -204,7 +231,8 @@ async function buildVitestTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot
+      projectRoot,
+      options.testMode
     );
 
     if (options.ciTargetName) {
@@ -303,10 +331,12 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  testMode: 'watch' | 'run' = 'watch'
 ) {
+  const command = testMode === 'run' ? 'vitest run' : 'vitest';
   return {
-    command: `vitest`,
+    command,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
@@ -386,6 +416,7 @@ function normalizeOutputPath(
 function normalizeOptions(options: VitestPluginOptions): VitestPluginOptions {
   options ??= {};
   options.testTargetName ??= 'test';
+  options.testMode ??= 'watch';
   return options;
 }
 

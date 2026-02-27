@@ -13,8 +13,8 @@ import {
   moduleFederationNodeVersion,
   typesCorsVersion,
 } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function updateSsrSetup(
   tree: Tree,
@@ -22,7 +22,6 @@ export async function updateSsrSetup(
   appName: string,
   typescriptConfiguration: boolean
 ) {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   let project = readProjectConfiguration(tree, appName);
   const sourceRoot = getProjectSourceRoot(project, tree);
 
@@ -30,21 +29,17 @@ export async function updateSsrSetup(
     joinPathFragments(sourceRoot, 'main.server.ts'),
     joinPathFragments(sourceRoot, 'bootstrap.server.ts')
   );
-  const pathToServerEntry = joinPathFragments(
-    angularMajorVersion >= 19 ? sourceRoot : project.root,
-    'server.ts'
-  );
-  tree.write(
-    pathToServerEntry,
-    `import('./${angularMajorVersion >= 19 ? '' : 'src/'}main.server');`
-  );
+  const pathToServerEntry = joinPathFragments(sourceRoot, 'server.ts');
+  tree.write(pathToServerEntry, `import('./main.server');`);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   generateFiles(tree, join(__dirname, '../files/common'), project.root, {
     appName,
     browserBundleOutput: project.targets.build.options.outputPath,
     standalone: options.standalone,
-    commonEngineEntryPoint:
-      angularMajorVersion >= 19 ? '@angular/ssr/node' : '@angular/ssr',
+    zoneless: options.zoneless,
+    useDefaultImport: angularMajorVersion >= 21,
+    angularMajorVersion,
     tmpl: '',
   });
 

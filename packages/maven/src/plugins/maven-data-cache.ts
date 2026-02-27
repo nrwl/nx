@@ -41,3 +41,17 @@ export function getCachePath(
     `maven-${optionsHash}.hash`
   );
 }
+
+/**
+ * Module-level variable to pass Maven analysis data from createNodes to createDependencies
+ * without relying on hash matching (which can differ when projects use <includes>/<excludes>).
+ */
+let currentMavenData: MavenAnalysisData | null = null;
+
+export function setCurrentMavenData(data: MavenAnalysisData): void {
+  currentMavenData = data;
+}
+
+export function getCurrentMavenData(): MavenAnalysisData | null {
+  return currentMavenData;
+}

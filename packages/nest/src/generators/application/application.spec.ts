@@ -157,6 +157,7 @@ describe('application generator', () => {
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
       'jest.config.cts',

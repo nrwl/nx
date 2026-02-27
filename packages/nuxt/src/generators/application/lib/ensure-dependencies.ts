@@ -6,23 +6,23 @@ import {
   vueTscVersion,
   vueVersion,
 } from '@nx/vue';
-import {
-  h3Version,
-  nuxtDevtoolsVersion,
-  nuxtUiTemplatesVersion,
-  nuxtVersion,
-  nxVersion,
-} from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions';
+import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import type { NormalizedSchema } from '../schema';
 
-export function ensureDependencies(host: Tree, options: NormalizedSchema) {
+export async function ensureDependencies(
+  host: Tree,
+  options: NormalizedSchema
+) {
+  const nuxtVersions = await getNuxtDependenciesVersionsToInstall(host);
+
   const devDependencies: Record<string, string> = {
     '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin and @nx/vite/plugin
-    '@nuxt/devtools': nuxtDevtoolsVersion,
-    '@nuxt/kit': nuxtVersion,
-    '@nuxt/ui-templates': nuxtUiTemplatesVersion,
-    nuxt: nuxtVersion,
-    h3: h3Version,
+    '@nuxt/devtools': nuxtVersions.nuxtDevtools,
+    '@nuxt/kit': nuxtVersions.nuxtKit,
+    '@nuxt/ui-templates': nuxtVersions.nuxtUiTemplates,
+    nuxt: nuxtVersions.nuxt,
+    h3: nuxtVersions.h3,
     vue: vueVersion,
     'vue-router': vueRouterVersion,
     'vue-tsc': vueTscVersion,

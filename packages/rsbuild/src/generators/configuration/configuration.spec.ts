@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-prettier';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { type Tree } from '@nx/devkit';
 import configurationGenerator from './configuration';

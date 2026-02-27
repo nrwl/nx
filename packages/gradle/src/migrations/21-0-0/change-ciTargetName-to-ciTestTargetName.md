@@ -4,10 +4,9 @@ Change @nx/gradle plugin option ciTargetName to ciTestTargetName in nx.json
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "plugins": [
     "plugin": "@nx/gradle",
@@ -18,10 +17,9 @@ Change @nx/gradle plugin option ciTargetName to ciTestTargetName in nx.json
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[5] fileName="nx.json" %}
+```json title="nx.json" {5}
 {
   "plugins": [
     "plugin": "@nx/gradle",
@@ -31,6 +29,3 @@ Change @nx/gradle plugin option ciTargetName to ciTestTargetName in nx.json
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}

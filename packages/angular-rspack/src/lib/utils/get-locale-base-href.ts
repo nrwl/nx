@@ -1,5 +1,5 @@
 import { I18nOptions } from '../models';
-import { urlJoin } from './url-join';
+import { addTrailingSlash, joinUrlParts, stripLeadingSlash } from './url';
 
 export function getLocaleBaseHref(
   i18n: I18nOptions,
@@ -17,7 +17,16 @@ export function getLocaleBaseHref(
 
   const baseHrefSuffix = localeData.baseHref ?? localeData.subPath + '/';
 
-  return baseHrefSuffix !== ''
-    ? urlJoin(baseHref || '', baseHrefSuffix)
-    : undefined;
+  let joinedBaseHref: string | undefined;
+  if (baseHrefSuffix !== '') {
+    joinedBaseHref = addTrailingSlash(
+      joinUrlParts(baseHref || '', baseHrefSuffix)
+    );
+
+    if (baseHref && baseHref[0] !== '/') {
+      joinedBaseHref = stripLeadingSlash(joinedBaseHref);
+    }
+  }
+
+  return joinedBaseHref;
 }

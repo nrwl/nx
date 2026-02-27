@@ -34,7 +34,7 @@ export function convertEslintJsonToFlatConfig(
   // exclude dist and eslint config from being linted, which matches the default for new workspaces
   exportElements.push(
     generateAst({
-      ignores: ['**/dist'],
+      ignores: ['**/dist', '**/out-tsc'],
     })
   );
 

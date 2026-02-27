@@ -7,14 +7,13 @@ This executor is a drop-in replacement for the `@angular-devkit/build-angular:de
 
 ## Examples
 
-{% tabs %}
-{% tab label="Using a custom webpack configuration" %}
+##### Using a custom webpack configuration
 
 This executor should be used along with `@nx/angular:webpack-browser` to serve an application using a custom webpack configuration.
 
 Add the `serve` target using the `@nx/angular:dev-server` executor, set the `build` target executor as `@nx/angular:webpack-browser` and set the `customWebpackConfig` option as shown below:
 
-```json {% fileName="apps/my-app/project.json" highlightLines=[2,"5-7","10-20"] %}
+```json title="apps/my-app/project.json" {2,5-7,10-20}
 "build": {
   "executor": "@nx/angular:webpack-browser",
   "options": {
@@ -38,7 +37,7 @@ Add the `serve` target using the `@nx/angular:dev-server` executor, set the `bui
 }
 ```
 
-```js {% fileName="apps/my-app/webpack.config.js" %}
+```js title="apps/my-app/webpack.config.js"
 module.exports = (config) => {
   // update the config with your custom configuration
 
@@ -46,13 +45,11 @@ module.exports = (config) => {
 };
 ```
 
-{% /tab %}
-
-{% tab label="Providing HTTP request middleware function" %}
+##### Providing HTTP request middleware function
 
 The executor accepts an `esbuildMiddleware` option that allows you to provide HTTP require middleware functions that will be used by the Vite development server.
 
-```json {% fileName="apps/my-app/project.json" highlightLines=[8] %}
+```json title="apps/my-app/project.json" {8}
 {
   ...
   "targets": {
@@ -68,7 +65,7 @@ The executor accepts an `esbuildMiddleware` option that allows you to provide HT
 }
 ```
 
-```ts {% fileName="apps/my-app/hello-world.middleware.ts" %}
+```ts title="apps/my-app/hello-world.middleware.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const helloWorldMiddleware = (
@@ -85,6 +82,3 @@ const helloWorldMiddleware = (
 
 export default helloWorldMiddleware;
 ```
-
-{% /tab %}
-{% /tabs %}

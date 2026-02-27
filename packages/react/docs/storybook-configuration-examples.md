@@ -1,4 +1,4 @@
-This generator will set up Storybook for your **React** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, starting Nx 16, Storybook v7 is used.
+This generator will set up Storybook for your **React** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, Storybook v10 is used.
 
 ```bash
 nx g @nx/react:storybook-configuration project-name

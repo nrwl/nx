@@ -48,6 +48,10 @@ export interface OptimizationOptions {
   styles: boolean;
 }
 
+export interface TypeCheckOptions {
+  async: boolean;
+}
+
 export interface NxAppRspackPluginOptions {
   /**
    * The tsconfig file for the project. e.g. `tsconfig.json`
@@ -107,6 +111,10 @@ export interface NxAppRspackPluginOptions {
    * Generate a `package.json` file for the bundle. Useful for Node applications.
    */
   generatePackageJson?: boolean;
+  /**
+   * Add runtime dependencies to the generated `package.json` file. Useful for Docker installs. Only works in conjunction with `generatePackageJson` option.
+   */
+  runtimeDependencies?: string[];
   /**
    * Path to the `index.html`.
    */
@@ -173,12 +181,23 @@ export interface NxAppRspackPluginOptions {
   skipPackageManager?: boolean;
   /**
    * Skip type checking. Default is `false`.
+   * @deprecated Use `typeCheckOptions` option instead. This option will be removed in Nx 24.
    */
   skipTypeChecking?: boolean;
   /**
    * Skip type checking. Default is `false`.
+   * @deprecated Use `typeCheckOptions` option instead. This option will be removed in Nx 24.
    */
   typeCheck?: boolean;
+  /**
+   * Configure type checking during the build.
+   * - Set to `true` to enable type checking with default options (async: true).
+   * - Set to `false` to disable type checking entirely.
+   * - Use `{ async: true }` to run type checking in a separate process without blocking the build.
+   * - Use `{ async: false }` to run type checking synchronously.
+   * Default is `{ async: true }`.
+   */
+  typeCheckOptions?: boolean | TypeCheckOptions;
   /**
    * Generate source maps.
    */
@@ -240,6 +259,10 @@ export interface NxAppRspackPluginOptions {
    * Watch for file changes.
    */
   watch?: boolean;
+  /**
+   * Configure rspack caching behavior. When not specified, defaults to `true` for Node targets in watch mode, and `undefined` otherwise.
+   */
+  cache?: boolean;
   /**
    * Set a public path for assets resources with absolute paths.
    */

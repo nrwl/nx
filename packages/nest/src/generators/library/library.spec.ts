@@ -525,21 +525,6 @@ describe('lib', () => {
                 "options": {
                   "jestConfig": "mylib/jest.config.cts"
                 }
-              },
-              "build": {
-                "executor": "@nx/js:tsc",
-                "outputs": [
-                  "{options.outputPath}"
-                ],
-                "options": {
-                  "outputPath": "dist/mylib",
-                  "tsConfig": "mylib/tsconfig.lib.json",
-                  "packageJson": "mylib/package.json",
-                  "main": "mylib/src/index.ts",
-                  "assets": [
-                    "mylib/*.md"
-                  ]
-                }
               }
             }
           },
@@ -645,6 +630,58 @@ describe('lib', () => {
         }
       `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+  });
+
+  describe('non-TS solution setup', () => {
+    beforeEach(() => {
+      // Create a workspace without TS solution setup
+      tree = createTreeWithEmptyWorkspace();
+      // Remove workspaces to disable package manager workspaces
+      devkit.updateJson(tree, 'package.json', (json) => {
+        delete json.workspaces;
+        return json;
+      });
+      // Remove tsconfig.json to prevent TS solution detection
+      tree.delete('tsconfig.json');
+      // Create tsconfig.base.json without composite (non-TS solution)
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          target: 'es2015',
+          module: 'commonjs',
+        },
+      });
+    });
+
+    it('should add build target with correct output path for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        buildable: true,
+        unitTestRunner: 'none',
+        linter: 'none',
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(tree, 'mylib');
+      expect(project.targets?.build).toBeDefined();
+      expect(project.targets?.build?.executor).toBe('@nx/js:tsc');
+      expect(project.targets?.build?.options?.outputPath).toBe('dist/mylib');
+    });
+
+    it('should add build target with correct output path for publishable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        publishable: true,
+        importPath: '@proj/mylib',
+        unitTestRunner: 'none',
+        linter: 'none',
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(tree, 'mylib');
+      expect(project.targets?.build).toBeDefined();
+      expect(project.targets?.build?.executor).toBe('@nx/js:tsc');
+      expect(project.targets?.build?.options?.outputPath).toBe('dist/mylib');
     });
   });
 });

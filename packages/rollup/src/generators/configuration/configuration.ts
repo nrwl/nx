@@ -246,7 +246,7 @@ function addBuildTarget(
     compiler: options.compiler ?? 'babel',
     project: `${project.root}/package.json`,
     external: options.external,
-    format: options.format ?? isTsSolutionSetup ? ['esm'] : undefined,
+    format: (options.format ?? isTsSolutionSetup) ? ['esm'] : undefined,
   };
 
   if (options.rollupConfig) {

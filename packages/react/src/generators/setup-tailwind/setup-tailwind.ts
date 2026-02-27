@@ -23,6 +23,10 @@ export async function setupTailwindGenerator(
   tree: Tree,
   options: SetupTailwindOptions
 ) {
+  logger.warn(
+    `The 'setup-tailwind' generator is deprecated. Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23.`
+  );
+
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
 

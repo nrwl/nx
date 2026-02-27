@@ -8,8 +8,14 @@ import {
 } from '@nx/devkit';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { type CopyWorkspaceModulesOptions } from './schema';
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'path';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
@@ -37,25 +43,92 @@ function handleWorkspaceModules(
   if (!packageJson.dependencies) {
     return;
   }
-  const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
 
-  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
-    if (workspaceModules.has(pkgName)) {
-      logger.verbose(`Copying ${pkgName}.`);
-      const workspaceModuleProject = workspaceModules.get(pkgName);
-      const workspaceModuleRoot = workspaceModuleProject.data.root;
-      const newWorkspaceModulePath = join(
-        outputDirectory,
-        'workspace_modules',
-        pkgName
-      );
-      mkdirSync(newWorkspaceModulePath, { recursive: true });
-      cpSync(workspaceModuleRoot, newWorkspaceModulePath, {
-        filter: (src) => !src.includes('node_modules'),
-        recursive: true,
-      });
-      logger.verbose(`Copied ${pkgName} successfully.`);
+  const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
+  const processedModules = new Set<string>();
+  const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
+
+  function calculateRelativePath(
+    fromPkgName: string,
+    toPkgName: string
+  ): string {
+    const fromPath = join(workspaceModulesDir, fromPkgName);
+    const toPath = join(workspaceModulesDir, toPkgName);
+    const relativePath = relative(fromPath, toPath);
+
+    // Ensure forward slashes for file: protocol (Windows compatibility)
+    return relativePath.split(sep).join('/');
+  }
+
+  function processModule(pkgName: string): void {
+    if (processedModules.has(pkgName)) {
+      logger.verbose(`Skipping ${pkgName} (already processed).`);
+      return;
     }
+
+    if (!workspaceModules.has(pkgName)) {
+      return;
+    }
+
+    processedModules.add(pkgName);
+
+    logger.verbose(`Copying ${pkgName}.`);
+
+    const workspaceModuleProject = workspaceModules.get(pkgName);
+    const workspaceModuleRoot = workspaceModuleProject.data.root;
+    const newWorkspaceModulePath = join(workspaceModulesDir, pkgName);
+
+    // Copy the module
+    mkdirSync(newWorkspaceModulePath, { recursive: true });
+    cpSync(workspaceModuleRoot, newWorkspaceModulePath, {
+      filter: (src) => !src.includes('node_modules'),
+      recursive: true,
+    });
+
+    logger.verbose(`Copied ${pkgName} successfully.`);
+
+    // Read the copied module's package.json to process its dependencies
+    const copiedPackageJsonPath = join(newWorkspaceModulePath, 'package.json');
+    let copiedPackageJson: { dependencies?: Record<string, string> };
+    try {
+      copiedPackageJson = JSON.parse(
+        readFileSync(copiedPackageJsonPath, 'utf-8')
+      );
+    } catch (e) {
+      logger.warn(`Could not read package.json for ${pkgName}: ${e.message}`);
+      return;
+    }
+
+    // Process and update dependencies
+    if (copiedPackageJson.dependencies) {
+      let packageJsonModified = false;
+
+      for (const [depName, depVersion] of Object.entries(
+        copiedPackageJson.dependencies
+      )) {
+        if (workspaceModules.has(depName)) {
+          const relativePath = calculateRelativePath(pkgName, depName);
+          copiedPackageJson.dependencies[depName] = `file:${relativePath}`;
+          packageJsonModified = true;
+          processModule(depName);
+        }
+      }
+
+      if (packageJsonModified) {
+        writeFileSync(
+          copiedPackageJsonPath,
+          JSON.stringify(copiedPackageJson, null, 2)
+        );
+        logger.verbose(
+          `Updated package.json for ${pkgName} with relative workspace module paths.`
+        );
+      }
+    }
+  }
+
+  // Process all top-level dependencies
+  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
+    processModule(pkgName);
   }
 }
 

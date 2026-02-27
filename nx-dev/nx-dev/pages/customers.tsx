@@ -10,7 +10,7 @@ import {
   Hero,
   OssProjects,
 } from '@nx/nx-dev-ui-customers';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function Customers(): JSX.Element {
   const router = useRouter();
@@ -18,13 +18,13 @@ export function Customers(): JSX.Element {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/contact/sales',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       target: '_blank',
       title: 'Book a demo',
       children: 'Book a demo',
       onClick: () =>
-        sendCustomEvent(
+        sendCustomEventViaGtm(
           'contact-sales-click',
           'scrolling-header-cta-book-demo',
           'customers'
@@ -47,7 +47,7 @@ export function Customers(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files 1`] = `
 "const { composePlugins, withNx } = require('@nx/webpack');
@@ -92,7 +92,7 @@ const config = {
 export default composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(config, { dts: false })
+  withModuleFederation(config, { dts: false }),
 );
 "
 `;
@@ -173,7 +173,7 @@ const defaultConfig = {
 export default composePlugins(
   withNx(),
   withReact({ ssr: true }),
-  withModuleFederationForSSR(defaultConfig, { dts: false })
+  withModuleFederationForSSR(defaultConfig, { dts: false }),
 );
 "
 `;

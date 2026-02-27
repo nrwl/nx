@@ -17,7 +17,7 @@ export function CustomLink(props: any) {
       rel={target === '_blank' ? 'noreferrer' : undefined}
       className={cx(
         props.className,
-        'text-blue-600 transition-colors ease-out hover:text-blue-700 dark:text-sky-500 dark:hover:text-sky-400'
+        'text-blue-600 transition-colors ease-out hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400'
       )}
     >
       {props.children}

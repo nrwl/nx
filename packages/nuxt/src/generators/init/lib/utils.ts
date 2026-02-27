@@ -4,16 +4,19 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { nuxtVersion, nxVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions';
+import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import { InitSchema } from '../schema';
 
-export function updateDependencies(host: Tree, schema: InitSchema) {
+export async function updateDependencies(host: Tree, schema: InitSchema) {
+  const nuxtVersions = await getNuxtDependenciesVersionsToInstall(host);
+
   return addDependenciesToPackageJson(
     host,
     {},
     {
       '@nx/nuxt': nxVersion,
-      nuxt: nuxtVersion,
+      nuxt: nuxtVersions.nuxt,
       '@nx/vite': nxVersion,
     },
     undefined,

@@ -22,6 +22,6 @@ const config: ConfigArray = tseslint.config({
     ...angular.configs.templateAccessibility,
   ],
   rules: {},
-});
+} as any);
 
 export default config;

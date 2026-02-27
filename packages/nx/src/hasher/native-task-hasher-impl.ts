@@ -6,15 +6,15 @@ import {
   FileData,
   HasherOptions,
   HashPlanner,
-  NxWorkspaceFilesExternals,
   ProjectGraph as NativeProjectGraph,
+  NxWorkspaceFilesExternals,
   TaskHasher,
   transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
-import { PartialHash, TaskHasherImpl } from './task-hasher';
-import { readJsonFile } from '../utils/fileutils';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import { readJsonFile } from '../utils/fileutils';
+import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
@@ -58,6 +58,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       this.allWorkspaceFilesRef,
       Buffer.from(JSON.stringify(tsconfig)),
       paths,
+      rootTsConfigPath,
       options
     );
   }
@@ -65,10 +66,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   async hashTask(
     task: Task,
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<PartialHash> {
     const plans = this.planner.getPlansReference([task.id], taskGraph);
-    const hashes = this.hasher.hashPlans(plans, env);
+    const hashes = this.hasher.hashPlans(plans, env, cwd ?? process.cwd());
 
     return hashes[task.id];
   }
@@ -76,13 +78,14 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   async hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    cwd?: string
   ): Promise<PartialHash[]> {
     const plans = this.planner.getPlansReference(
       tasks.map((t) => t.id),
       taskGraph
     );
-    const hashes = this.hasher.hashPlans(plans, env);
+    const hashes = this.hasher.hashPlans(plans, env, cwd ?? process.cwd());
     return tasks.map((t) => hashes[t.id]);
   }
 }

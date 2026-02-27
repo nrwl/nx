@@ -52,12 +52,21 @@ export async function getBrowserConfig(
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
       chunkFilename: `[name]${hashFormat.chunk}.js`,
-      scriptType: 'module',
-      module: true,
+      ...(isDevServer
+        ? {}
+        : {
+            scriptType: 'module',
+            module: true,
+            chunkFormat: 'module',
+            chunkLoading: 'import',
+            workerChunkLoading: 'import',
+          }),
     },
-    experiments: {
-      outputModule: true,
-    },
+    experiments: isDevServer
+      ? {}
+      : {
+          outputModule: true,
+        },
     resolve: {
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],

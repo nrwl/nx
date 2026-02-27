@@ -11,12 +11,19 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
           as="h3"
           variant="subtitle"
           id="features-while-scaling-your-organization"
-          className="scroll-mt-24 text-2xl font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+          className="scroll-mt-24 text-2xl font-medium tracking-tight text-zinc-950 sm:text-3xl dark:text-white"
         >
           While Scaling
         </SectionHeading>
         <div className="flex flex-col items-start gap-8 md:flex-row">
           <div className="prose-lg mt-6 w-full md:w-1/2">
+            <p>
+              Scattered repositories force AI agents to rebuild their
+              understanding every session—turning 30-minute tasks into 2-hour
+              frustrations. Nx monorepos limit unnecessary manual coordination
+              by giving AI agents full codebase awareness to be accurate,
+              efficient, and autonomous— at scale.
+            </p>
             <p>
               <strong>
                 Tangled codebases end up crushing team velocity and product
@@ -34,14 +41,14 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               and leverages monorepo concepts—shared tooling, atomic changes,
               and coordinated releases—so code stays easy to maintain.{' '}
               <TextLink
-                href={'/docs/enterprise/powerpack/owners'}
+                href={'/docs/enterprise/owners'}
                 className="decoration-2"
               >
                 Ownership
               </TextLink>{' '}
               is defined at the project level, while{' '}
               <TextLink
-                href={'/docs/enterprise/powerpack/conformance'}
+                href={'/docs/enterprise/conformance'}
                 className="decoration-2"
               >
                 conformance rules

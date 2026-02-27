@@ -5,5 +5,6 @@
 declare namespace App {
   interface Locals {
     githubStarsCount?: number;
+    rawContent?: string;
   }
 }

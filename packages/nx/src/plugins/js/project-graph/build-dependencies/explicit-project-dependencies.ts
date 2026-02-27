@@ -56,12 +56,8 @@ export function buildExplicitTypeScriptDependencies(
     '.mjs',
     '.cjs',
     '.cts',
+    '.vue',
   ];
-
-  // TODO: This can be removed when vue is stable
-  if (isVuePluginInstalled()) {
-    moduleExtensions.push('.vue');
-  }
 
   for (const [project, fileData] of Object.entries(
     ctx.filesToProcess.projectFileMap
@@ -75,7 +71,6 @@ export function buildExplicitTypeScriptDependencies(
   }
 
   const { findImports } = require('../../../../native');
-
   const imports = findImports(filesToProcess);
 
   for (const {
@@ -151,14 +146,4 @@ export function buildExplicitTypeScriptDependencies(
   }
 
   return res;
-}
-
-function isVuePluginInstalled() {
-  try {
-    // nx-ignore-next-line
-    require.resolve('@nx/vue');
-    return true;
-  } catch {
-    return false;
-  }
 }

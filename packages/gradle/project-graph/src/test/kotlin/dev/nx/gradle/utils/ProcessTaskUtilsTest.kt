@@ -102,7 +102,8 @@ class ProcessTaskUtilsTest {
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = gitIgnoreClassifier)
+            gitIgnoreClassifier = gitIgnoreClassifier,
+            project = project)
 
     assertEquals(true, result["cache"])
     assertEquals(result["executor"], "@nx/gradle:gradle")
@@ -151,25 +152,22 @@ class ProcessTaskUtilsTest {
 
       assertNotNull(result)
 
-      // Should contain dependentTasksOutputFiles for the output
-      assertTrue(
-          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar" })
+      // Should contain consolidated dependentTasksOutputFiles glob pattern for jar extension
+      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
 
       // Should contain the non-conflicting input file
       assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
     }
 
     @Test
-    fun `test getInputsForTask directory vs file patterns`() {
+    fun `test getInputsForTask consolidates by extension`() {
       val dependentTask = project.tasks.register("dependentTask").get()
 
-      // Add file output (should get exact path)
-      val outputFile = java.io.File("$workspaceRoot/dist/app.jar")
-      dependentTask.outputs.file(outputFile)
-
-      // Add directory output (should get /**/* pattern)
-      val outputDir = java.io.File("$workspaceRoot/dist/classes")
-      dependentTask.outputs.dir(outputDir)
+      // Add file outputs with different extensions
+      val jarFile = java.io.File("$workspaceRoot/dist/app.jar")
+      val classFile = java.io.File("$workspaceRoot/dist/classes/Main.class")
+      dependentTask.outputs.file(jarFile)
+      dependentTask.outputs.file(classFile)
 
       val mainTask = project.tasks.register("mainTask").get()
       mainTask.dependsOn(dependentTask)
@@ -181,15 +179,14 @@ class ProcessTaskUtilsTest {
 
       assertNotNull(result)
 
-      // File should get exact path
-      assertTrue(
-          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/app.jar" })
+      // Should have consolidated glob patterns by extension
+      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
 
-      // Directory should get glob pattern
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).endsWith("/**/*")
-          })
+      // Should only have 2 dependentTasksOutputFiles entries (one per extension)
+      val dependentTasksOutputFilesCount =
+          result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
+      assertEquals(2, dependentTasksOutputFilesCount)
     }
 
     @Test
@@ -231,14 +228,14 @@ class ProcessTaskUtilsTest {
       assertNotNull(resultWithoutPreComputed)
       assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
 
-      // Should contain dependentTasksOutputFiles for the dependent task output
+      // Should contain consolidated dependentTasksOutputFiles glob pattern
       assertTrue(
           resultWithPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar"
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
           })
       assertTrue(
           resultWithoutPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar"
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
           })
 
       // Should contain the input file
@@ -284,7 +281,7 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test dependentTasksOutputFiles generation with reused dependsOnTasks`() {
+    fun `test dependentTasksOutputFiles consolidation with multiple tasks`() {
       val project = ProjectBuilder.builder().build()
       val workspaceRoot = project.rootDir.path
       val projectRoot = project.projectDir.path
@@ -295,14 +292,14 @@ class ProcessTaskUtilsTest {
       dependentTask1.outputs.file(fileOutput)
 
       val dependentTask2 = project.tasks.register("dependentTask2").get()
-      val dirOutput = java.io.File("$workspaceRoot/build/classes")
-      dependentTask2.outputs.dir(dirOutput)
+      val classFile = java.io.File("$workspaceRoot/build/classes/Main.class")
+      dependentTask2.outputs.file(classFile)
 
       val dependentTask3 = project.tasks.register("dependentTask3").get()
       val multipleOutputs =
           listOf(
               java.io.File("$workspaceRoot/reports/test.xml"),
-              java.io.File("$workspaceRoot/reports/coverage"))
+              java.io.File("$workspaceRoot/reports/another.jar"))
       dependentTask3.outputs.files(multipleOutputs)
 
       // Create main task that depends on all three
@@ -330,36 +327,20 @@ class ProcessTaskUtilsTest {
 
       assertNotNull(result)
 
-      // Should contain dependentTasksOutputFiles for file output (exact path)
-      assertTrue(
-          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/app.jar" })
-
-      // Should contain dependentTasksOutputFiles for directory output (with /**/* pattern)
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
-          })
-
-      // Should contain dependentTasksOutputFiles for test report file
-      assertTrue(
-          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "reports/test.xml" })
-
-      // Should contain dependentTasksOutputFiles for coverage directory (with /**/* pattern)
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                (it["dependentTasksOutputFiles"] as String) == "reports/coverage/**/*"
-          })
+      // Should have consolidated glob patterns by extension
+      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.xml" })
 
       // Should contain regular input files
       assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
       assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
 
-      // Verify we have the expected number of dependentTasksOutputFiles entries (4 outputs from 3
-      // tasks)
+      // Verify we have exactly 3 dependentTasksOutputFiles entries (one per unique extension: jar,
+      // class, xml)
       val dependentTasksOutputFilesCount =
           result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
-      assertEquals(4, dependentTasksOutputFilesCount)
+      assertEquals(3, dependentTasksOutputFilesCount)
 
       // Verify we have the expected number of regular input files (2)
       val regularInputsCount = result.count { it is String && it.startsWith("{projectRoot}") }
@@ -409,17 +390,11 @@ class ProcessTaskUtilsTest {
       // Config file should be regular input
       assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
 
-      // Build file should be dependentTasksOutputFiles (matches gitignore)
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("build")
-          })
+      // Build file (class extension) should be consolidated into dependentTasksOutputFiles glob
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
 
-      // Log file should be dependentTasksOutputFiles (matches gitignore)
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log")
-          })
+      // Log file should be consolidated into dependentTasksOutputFiles glob
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.log" })
     }
 
     @Test
@@ -442,8 +417,8 @@ class ProcessTaskUtilsTest {
       // Add inputs
       val javaSource = java.io.File("$workspaceRoot/src/Main.java") // Not ignored
       val compiledClass =
-          java.io.File("$workspaceRoot/dist/production/Main.class") // Ignored (*.class pattern)
-      val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Ignored (target)
+          java.io.File("$workspaceRoot/dist/production/Main.class") // Ignored (dist directory)
+      val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Ignored (dist directory)
 
       mainTask.inputs.files(javaSource, compiledClass, jarTarget)
 
@@ -456,15 +431,10 @@ class ProcessTaskUtilsTest {
 
       assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
 
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("Main.class")
-          })
+      // Both ignored files should be consolidated into glob patterns by extension
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
 
-      assertTrue(
-          result.any {
-            it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("dist")
-          })
+      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
     }
   }
 
@@ -476,8 +446,8 @@ class ProcessTaskUtilsTest {
     buildFile.writeText("// test build file")
 
     val dependentTask = project.tasks.register("compile").get()
-    val outputFile = java.io.File("${project.rootDir.path}/build/classes")
-    dependentTask.outputs.dir(outputFile)
+    val outputFile = java.io.File("${project.rootDir.path}/build/classes/Main.class")
+    dependentTask.outputs.file(outputFile)
 
     val mainTask = project.tasks.register("test").get()
     mainTask.dependsOn(dependentTask)
@@ -497,7 +467,8 @@ class ProcessTaskUtilsTest {
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = gitIgnoreClassifier)
+            gitIgnoreClassifier = gitIgnoreClassifier,
+            project = project)
 
     assertNotNull(result)
 
@@ -513,13 +484,161 @@ class ProcessTaskUtilsTest {
     assertEquals(1, dependsOn!!.size)
     assertEquals("testProject:compile", dependsOn[0])
 
-    // Verify inputs contain both regular inputs and dependentTasksOutputFiles
+    // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
     assertNotNull(inputs)
     assertTrue(inputs!!.any { it == "{projectRoot}/src/test.kt" })
-    assertTrue(
-        inputs.any {
-          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
-        })
+    assertTrue(inputs.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+  }
+
+  @Nested
+  inner class ProviderBasedDependenciesTests {
+
+    @Test
+    fun `returns empty set when task has no dependencies`() {
+      val task = project.tasks.register("standalone").get()
+      assertTrue(findProviderBasedDependencies(task).isEmpty())
+    }
+
+    @Test
+    fun `identifies TaskProvider dependencies`() {
+      val producerProvider = project.tasks.register("producer")
+      val consumerProvider = project.tasks.register("consumer")
+      consumerProvider.configure { it.dependsOn(producerProvider) }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertTrue(result.any { it.contains("producer") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies ProviderInternal from task output files`() {
+      val producerProvider =
+          project.tasks.register("producer") { task ->
+            task.outputs.file(
+                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
+          }
+      val consumerProvider = project.tasks.register("consumer")
+      consumerProvider.configure { it.dependsOn(producerProvider.map { p -> p.outputs.files }) }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertTrue(result.any { it.contains("producer") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies ProviderInternal from task output directory`() {
+      val compileProvider =
+          project.tasks.register("compile") { task ->
+            task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
+          }
+      val jarProvider = project.tasks.register("jar")
+      jarProvider.configure { it.dependsOn(compileProvider.map { p -> p.outputs.files }) }
+
+      val result = findProviderBasedDependencies(jarProvider.get())
+
+      assertTrue(result.any { it.contains("compile") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies multiple TaskProvider dependencies`() {
+      val provider1 = project.tasks.register("task1")
+      val provider2 = project.tasks.register("task2")
+      val provider3 = project.tasks.register("task3")
+
+      val consumerProvider = project.tasks.register("consumer")
+      consumerProvider.configure { task ->
+        task.dependsOn(provider1)
+        task.dependsOn(provider2)
+        task.dependsOn(provider3)
+      }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertEquals(3, result.size)
+      assertTrue(result.any { it.contains("task1") }, "Found: $result")
+      assertTrue(result.any { it.contains("task2") }, "Found: $result")
+      assertTrue(result.any { it.contains("task3") }, "Found: $result")
+    }
+  }
+
+  @Nested
+  inner class SubprojectNamingTests {
+
+    @Test
+    fun `getNxProjectName returns correct name for root and subprojects`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val childDir = java.io.File(appDir, "child").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val childProject =
+            ProjectBuilder.builder()
+                .withParent(appProject)
+                .withProjectDir(childDir)
+                .withName("child")
+                .build()
+
+        assertEquals("root", getNxProjectName(rootProject))
+        assertEquals(":app", getNxProjectName(appProject))
+        assertEquals(":app:child", getNxProjectName(childProject))
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getDependsOnForTask uses buildTreePath for cross-subproject dependencies`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val libDir = java.io.File(rootDir, "lib").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val libProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(libDir)
+                .withName("lib")
+                .build()
+
+        java.io.File(appDir, "build.gradle").writeText("// app")
+        java.io.File(libDir, "build.gradle").writeText("// lib")
+
+        val libTask = libProject.tasks.register("compileJava").get()
+        val appTask = appProject.tasks.register("build").get().apply { dependsOn(libTask) }
+
+        val dependencies = mutableSetOf<Dependency>()
+        val dependsOn = getDependsOnForTask(null, appTask, dependencies)
+
+        assertNotNull(dependsOn)
+        assertTrue(
+            dependsOn!!.contains(":lib:compileJava"),
+            "Expected ':lib:compileJava' but got $dependsOn")
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
   }
 }

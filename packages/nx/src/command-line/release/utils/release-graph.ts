@@ -7,6 +7,9 @@ import type {
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
+import { NxArgs } from '../../../utils/command-line-utils';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
@@ -21,7 +24,13 @@ import {
   type AfterAllProjectsVersioned,
   type VersionActions,
 } from '../version/version-actions';
-import { getLatestGitTagForPattern } from './git';
+import {
+  getLatestGitTagForPattern,
+  GetLatestGitTagForPatternOptions,
+  GitCommit,
+  sanitizeProjectNameForGitTag,
+} from './git';
+import { RepoGitTags } from './repository-git-tags';
 import { shouldSkipVersionActions, type VersionDataEntry } from './shared';
 
 /**
@@ -35,6 +44,7 @@ export interface FinalConfigForProject {
   versionPrefix: NxReleaseVersionConfiguration['versionPrefix'];
   preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
   preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
+  adjustSemverBumpsForZeroMajorVersion: NxReleaseVersionConfiguration['adjustSemverBumpsForZeroMajorVersion'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   manifestRootsToUpdate: Array<
     Exclude<
@@ -123,6 +133,15 @@ export class ReleaseGraph {
     Set<string>
   >();
   private originalFilteredProjects = new Set<string>();
+
+  /**
+   * Store the affected graph per commit per project
+   * to avoid recomputation of the graph on workspace
+   * with multiple projects
+   */
+  private affectedGraphPerCommit = new Map<string, ProjectGraph>();
+
+  private repositoryGitTags = RepoGitTags.create();
 
   /**
    * User-friendly log describing what the filter matched.
@@ -627,8 +646,10 @@ export class ReleaseGraph {
           latestMatchingGitTag = await getLatestGitTagForPattern(
             releaseTagPattern,
             {
-              projectName: projectGraphNode.name,
+              projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
+              releaseGroupName: releaseGroupNode.group.name,
             },
+            this.resolveRepositoryTags.bind(this),
             {
               checkAllBranchesWhen:
                 releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
@@ -887,6 +908,17 @@ Valid values are: ${validReleaseVersionPrefixes
       true;
 
     /**
+     * adjustSemverBumpsForZeroMajorVersion
+     *
+     * TODO(v23): change the default value of this to true
+     * This is false by default for backward compatibility.
+     */
+    const adjustSemverBumpsForZeroMajorVersion =
+      projectVersionConfig?.adjustSemverBumpsForZeroMajorVersion ??
+      releaseGroupVersionConfig?.adjustSemverBumpsForZeroMajorVersion ??
+      false;
+
+    /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined
      */
     const fallbackCurrentVersionResolver =
@@ -930,6 +962,7 @@ Valid values are: ${validReleaseVersionPrefixes
       versionPrefix,
       preserveLocalDependencyProtocols,
       preserveMatchingDependencyRanges,
+      adjustSemverBumpsForZeroMajorVersion,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,
@@ -979,6 +1012,38 @@ Valid values are: ${validReleaseVersionPrefixes
    */
   isProjectToProcess(projectName: string): boolean {
     return this.allProjectsToProcess.has(projectName);
+  }
+
+  async resolveAffectedFilesPerCommitInProjectGraph(
+    commit: GitCommit,
+    projectGraph: ProjectGraph
+  ) {
+    // Try to get the graph associated with the commit shortHash
+    // if not available, calculate it and store it in the cache
+    const { shortHash } = commit;
+    let affectedGraph = this.affectedGraphPerCommit.get(shortHash);
+
+    if (affectedGraph) {
+      return affectedGraph;
+    }
+
+    // Convert affectedFiles to FileChange[] format with proper diff computation
+    const touchedFiles = calculateFileChanges(commit.affectedFiles, {
+      base: `${commit.shortHash}^`,
+      head: commit.shortHash,
+    } as NxArgs);
+
+    // Use the same affected detection logic as `nx affected`
+    affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    this.affectedGraphPerCommit.set(shortHash, affectedGraph);
+
+    return affectedGraph;
+  }
+
+  async resolveRepositoryTags(
+    resolveTagsWhen: GetLatestGitTagForPatternOptions['checkAllBranchesWhen']
+  ) {
+    return this.repositoryGitTags.resolveTags(resolveTagsWhen);
   }
 
   /**

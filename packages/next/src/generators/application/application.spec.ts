@@ -817,7 +817,7 @@ describe('app', () => {
             ...nx.configs['flat/typescript'],
             ...nx.configs['flat/javascript'],
             {
-              ignores: ['**/dist', '.next/**/*'],
+              ignores: ['**/dist', '**/out-tsc', '.next/**/*'],
             },
             {
               files: [
@@ -830,6 +830,7 @@ describe('app', () => {
                 '**/*.cjs',
                 '**/*.mjs',
               ],
+              // Override or add rules here
               rules: {
                 '@next/next/no-html-link-for-pages': ['error', './pages'],
               },

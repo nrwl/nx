@@ -3,12 +3,14 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { output, type Tree } from 'nx/src/devkit-exports';
 import { readYamlFile } from 'nx/src/devkit-internals';
+import { formatCatalogError, type CatalogManager } from './manager';
 import type {
-  PnpmCatalogEntry,
-  PnpmWorkspaceYaml,
-} from 'nx/src/utils/pnpm-workspace';
-import type { CatalogManager } from './manager';
-import { type CatalogReference } from './types';
+  CatalogDefinitions,
+  CatalogEntry,
+  CatalogReference,
+} from './types';
+
+const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
 
 /**
  * PNPM-specific catalog manager implementation
@@ -36,18 +38,22 @@ export class PnpmCatalogManager implements CatalogManager {
     };
   }
 
-  getCatalogDefinitions(treeOrRoot: Tree | string): PnpmWorkspaceYaml | null {
+  getCatalogDefinitionFilePaths(): string[] {
+    return [PNPM_WORKSPACE_FILENAME];
+  }
+
+  getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
     if (typeof treeOrRoot === 'string') {
-      const pnpmWorkspacePath = join(treeOrRoot, 'pnpm-workspace.yaml');
-      if (!existsSync(pnpmWorkspacePath)) {
+      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
+      if (!existsSync(configPath)) {
         return null;
       }
-      return readYamlFileFromFs(pnpmWorkspacePath);
+      return readConfigFromFs(configPath);
     } else {
-      if (!treeOrRoot.exists('pnpm-workspace.yaml')) {
+      if (!treeOrRoot.exists(PNPM_WORKSPACE_FILENAME)) {
         return null;
       }
-      return readYamlFileFromTree(treeOrRoot, 'pnpm-workspace.yaml');
+      return readConfigFromTree(treeOrRoot, PNPM_WORKSPACE_FILENAME);
     }
   }
 
@@ -61,18 +67,17 @@ export class PnpmCatalogManager implements CatalogManager {
       return null;
     }
 
-    const workspaceConfig = this.getCatalogDefinitions(treeOrRoot);
-    if (!workspaceConfig) {
+    const catalogDefs = this.getCatalogDefinitions(treeOrRoot);
+    if (!catalogDefs) {
       return null;
     }
 
-    let catalogToUse: PnpmCatalogEntry | undefined;
+    let catalogToUse: CatalogEntry | undefined;
     if (catalogRef.isDefaultCatalog) {
       // Check both locations for default catalog
-      catalogToUse =
-        workspaceConfig.catalog ?? workspaceConfig.catalogs?.default;
+      catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
     } else if (catalogRef.catalogName) {
-      catalogToUse = workspaceConfig.catalogs?.[catalogRef.catalogName];
+      catalogToUse = catalogDefs.catalogs?.[catalogRef.catalogName];
     }
 
     return catalogToUse?.[packageName] || null;
@@ -90,21 +95,21 @@ export class PnpmCatalogManager implements CatalogManager {
       );
     }
 
-    const workspaceConfig = this.getCatalogDefinitions(treeOrRoot);
-    if (!workspaceConfig) {
+    const catalogDefs = this.getCatalogDefinitions(treeOrRoot);
+    if (!catalogDefs) {
       throw new Error(
         formatCatalogError(
-          'Cannot get Pnpm Catalog definitions. No pnpm-workspace.yaml found in workspace root.',
-          ['Create a pnpm-workspace.yaml file in your workspace root']
+          `Cannot get Pnpm catalog definitions. No ${PNPM_WORKSPACE_FILENAME} found in workspace root.`,
+          [`Create a ${PNPM_WORKSPACE_FILENAME} file in your workspace root`]
         )
       );
     }
 
-    let catalogToUse: PnpmCatalogEntry | undefined;
+    let catalogToUse: CatalogEntry | undefined;
 
     if (catalogRef.isDefaultCatalog) {
-      const hasCatalog = !!workspaceConfig.catalog;
-      const hasCatalogsDefault = !!workspaceConfig.catalogs?.default;
+      const hasCatalog = !!catalogDefs.catalog;
+      const hasCatalogsDefault = !!catalogDefs.catalogs?.default;
 
       // Error if both defined (matches pnpm behavior)
       if (hasCatalog && hasCatalogsDefault) {
@@ -113,13 +118,12 @@ export class PnpmCatalogManager implements CatalogManager {
         );
       }
 
-      catalogToUse =
-        workspaceConfig.catalog ?? workspaceConfig.catalogs?.default;
+      catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
       if (!catalogToUse) {
-        const availableCatalogs = Object.keys(workspaceConfig.catalogs || {});
+        const availableCatalogs = Object.keys(catalogDefs.catalogs || {});
 
         const suggestions = [
-          'Define a default catalog in pnpm-workspace.yaml under the "catalog" key',
+          `Define a default catalog in ${PNPM_WORKSPACE_FILENAME} under the "catalog" key`,
         ];
         if (availableCatalogs.length > 0) {
           suggestions.push(
@@ -131,25 +135,25 @@ export class PnpmCatalogManager implements CatalogManager {
 
         throw new Error(
           formatCatalogError(
-            'No default catalog defined in pnpm-workspace.yaml',
+            `No default catalog defined in ${PNPM_WORKSPACE_FILENAME}`,
             suggestions
           )
         );
       }
     } else if (catalogRef.catalogName) {
-      catalogToUse = workspaceConfig.catalogs?.[catalogRef.catalogName];
+      catalogToUse = catalogDefs.catalogs?.[catalogRef.catalogName];
       if (!catalogToUse) {
         const availableCatalogs = Object.keys(
-          workspaceConfig.catalogs || {}
+          catalogDefs.catalogs || {}
         ).filter((c) => c !== 'default');
-        const defaultCatalog = !!workspaceConfig.catalog
+        const defaultCatalog = !!catalogDefs.catalog
           ? 'catalog'
-          : !workspaceConfig.catalogs?.default
-          ? 'catalogs.default'
-          : null;
+          : !catalogDefs.catalogs?.default
+            ? 'catalogs.default'
+            : null;
 
         const suggestions = [
-          'Define the catalog in pnpm-workspace.yaml under the "catalogs" key',
+          `Define the catalog in ${PNPM_WORKSPACE_FILENAME} under the "catalogs" key`,
         ];
         if (availableCatalogs.length > 0) {
           suggestions.push(
@@ -164,7 +168,7 @@ export class PnpmCatalogManager implements CatalogManager {
 
         throw new Error(
           formatCatalogError(
-            `Catalog "${catalogRef.catalogName}" not found in pnpm-workspace.yaml`,
+            `Catalog "${catalogRef.catalogName}" not found in ${PNPM_WORKSPACE_FILENAME}`,
             suggestions
           )
         );
@@ -175,7 +179,7 @@ export class PnpmCatalogManager implements CatalogManager {
       let catalogName: string;
       if (catalogRef.isDefaultCatalog) {
         // Context-aware messaging based on which location exists
-        const hasCatalog = !!workspaceConfig.catalog;
+        const hasCatalog = !!catalogDefs.catalog;
         catalogName = hasCatalog
           ? 'default catalog ("catalog")'
           : 'default catalog ("catalogs.default")';
@@ -185,7 +189,7 @@ export class PnpmCatalogManager implements CatalogManager {
 
       const availablePackages = Object.keys(catalogToUse!);
       const suggestions = [
-        `Add "${packageName}" to ${catalogName} in pnpm-workspace.yaml`,
+        `Add "${packageName}" to ${catalogName} in ${PNPM_WORKSPACE_FILENAME}`,
       ];
       if (availablePackages.length > 0) {
         suggestions.push(
@@ -217,31 +221,31 @@ export class PnpmCatalogManager implements CatalogManager {
     let writeYaml: (content: string) => void;
 
     if (typeof treeOrRoot === 'string') {
-      const workspaceYamlPath = join(treeOrRoot, 'pnpm-workspace.yaml');
-      checkExists = () => existsSync(workspaceYamlPath);
-      readYaml = () => readFileSync(workspaceYamlPath, 'utf-8');
-      writeYaml = (content) =>
-        writeFileSync(workspaceYamlPath, content, 'utf-8');
+      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
+      checkExists = () => existsSync(configPath);
+      readYaml = () => readFileSync(configPath, 'utf-8');
+      writeYaml = (content) => writeFileSync(configPath, content, 'utf-8');
     } else {
-      checkExists = () => treeOrRoot.exists('pnpm-workspace.yaml');
-      readYaml = () => treeOrRoot.read('pnpm-workspace.yaml', 'utf-8');
-      writeYaml = (content) => treeOrRoot.write('pnpm-workspace.yaml', content);
+      checkExists = () => treeOrRoot.exists(PNPM_WORKSPACE_FILENAME);
+      readYaml = () => treeOrRoot.read(PNPM_WORKSPACE_FILENAME, 'utf-8');
+      writeYaml = (content) =>
+        treeOrRoot.write(PNPM_WORKSPACE_FILENAME, content);
     }
 
     if (!checkExists()) {
       output.warn({
-        title: 'No pnpm-workspace.yaml found',
+        title: `No ${PNPM_WORKSPACE_FILENAME} found`,
         bodyLines: [
-          'Cannot update catalog versions without a pnpm-workspace.yaml file.',
-          'Create a pnpm-workspace.yaml file to use catalogs.',
+          `Cannot update catalog versions without a ${PNPM_WORKSPACE_FILENAME} file.`,
+          `Create a ${PNPM_WORKSPACE_FILENAME} file to use catalogs.`,
         ],
       });
       return;
     }
 
     try {
-      const workspaceContent = readYaml();
-      const workspaceData = load(workspaceContent) || {};
+      const configContent = readYaml();
+      const configData = load(configContent) || {};
 
       let hasChanges = false;
       for (const update of updates) {
@@ -249,23 +253,23 @@ export class PnpmCatalogManager implements CatalogManager {
         const normalizedCatalogName =
           catalogName === 'default' ? undefined : catalogName;
 
-        let targetCatalog: PnpmCatalogEntry;
+        let targetCatalog: CatalogEntry;
         if (!normalizedCatalogName) {
           // Default catalog - update whichever exists, prefer catalog over catalogs.default
-          if (workspaceData.catalog) {
-            targetCatalog = workspaceData.catalog;
-          } else if (workspaceData.catalogs?.default) {
-            targetCatalog = workspaceData.catalogs.default;
+          if (configData.catalog) {
+            targetCatalog = configData.catalog;
+          } else if (configData.catalogs?.default) {
+            targetCatalog = configData.catalogs.default;
           } else {
             // Neither exists, create catalog (shorthand syntax)
-            workspaceData.catalog ??= {};
-            targetCatalog = workspaceData.catalog;
+            configData.catalog ??= {};
+            targetCatalog = configData.catalog;
           }
         } else {
           // Named catalog
-          workspaceData.catalogs ??= {};
-          workspaceData.catalogs[normalizedCatalogName] ??= {};
-          targetCatalog = workspaceData.catalogs[normalizedCatalogName];
+          configData.catalogs ??= {};
+          configData.catalogs[normalizedCatalogName] ??= {};
+          targetCatalog = configData.catalogs[normalizedCatalogName];
         }
 
         if (targetCatalog[packageName] !== version) {
@@ -276,7 +280,7 @@ export class PnpmCatalogManager implements CatalogManager {
 
       if (hasChanges) {
         writeYaml(
-          dump(workspaceData, {
+          dump(configData, {
             indent: 2,
             quotingType: '"',
             forceQuotes: true,
@@ -293,42 +297,31 @@ export class PnpmCatalogManager implements CatalogManager {
   }
 }
 
-function readYamlFileFromFs(path: string): PnpmWorkspaceYaml | null {
+function readConfigFromFs(path: string): CatalogDefinitions | null {
   try {
-    return readYamlFile<PnpmWorkspaceYaml>(path);
+    return readYamlFile<CatalogDefinitions>(path);
   } catch (error) {
     output.warn({
-      title: 'Unable to parse pnpm-workspace.yaml',
+      title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
       bodyLines: [error.toString()],
     });
     return null;
   }
 }
 
-function readYamlFileFromTree(tree: Tree, path: string): PnpmWorkspaceYaml {
+function readConfigFromTree(
+  tree: Tree,
+  path: string
+): CatalogDefinitions | null {
   const content = tree.read(path, 'utf-8');
-  const { load } = require('@zkochan/js-yaml');
 
   try {
-    return load(content, { filename: path }) as PnpmWorkspaceYaml;
+    return load(content, { filename: path }) as CatalogDefinitions;
   } catch (error) {
     output.warn({
-      title: 'Unable to parse pnpm-workspace.yaml',
+      title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
       bodyLines: [error.toString()],
     });
     return null;
   }
-}
-
-function formatCatalogError(error: string, suggestions: string[]): string {
-  let message = error;
-
-  if (suggestions && suggestions.length > 0) {
-    message += '\n\nSuggestions:';
-    suggestions.forEach((suggestion) => {
-      message += `\n  • ${suggestion}`;
-    });
-  }
-
-  return message;
 }

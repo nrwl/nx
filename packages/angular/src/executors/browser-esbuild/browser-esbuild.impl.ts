@@ -38,7 +38,7 @@ export default async function* esbuildExecutor(
 
   const builderContext = await createBuilderContext(
     {
-      builderName: 'browser-esbuild',
+      builderName: '@nx/angular:browser-esbuild',
       description: 'Build a browser application',
       optionSchema: require('@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'),
     },

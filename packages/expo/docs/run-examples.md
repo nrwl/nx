@@ -32,8 +32,8 @@ nx run mobile:run-android
 
 ## Examples
 
-{% tabs %}
-{% tab label="Compile Android with Different Variants" %}
+##### Compile Android with Different Variants
+
 The `variant` option allows you to specify the compile Android app with variants defined in `build.gradle` file (e.g. debug, release).
 
 ```json
@@ -46,8 +46,7 @@ The `variant` option allows you to specify the compile Android app with variants
     }
 ```
 
-{% /tab %}
-{% tab label="Compile iOS with Different Configurations" %}
+##### Compile iOS with Different Configurations
 
 The `xcodeConfiguration` option allows you to specify Xcode configuration to use (e.g. Debug or Release).
 
@@ -61,8 +60,7 @@ The `xcodeConfiguration` option allows you to specify Xcode configuration to use
     }
 ```
 
-{% /tab %}
-{% tab label="Run on a device" %}
+##### Run on a device
 
 The `device` option allows you to launch your app in a specific device name or UDID.
 To see all your iOS simulators: run `xcrun simctl list devices available`.
@@ -84,8 +82,5 @@ To see all your Android emulators, run: `emulator -list-avds`.
       }
     }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

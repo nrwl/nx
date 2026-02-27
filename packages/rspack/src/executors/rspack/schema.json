@@ -29,7 +29,27 @@
     "skipTypeChecking": {
       "alias": "typeCheck",
       "type": "boolean",
-      "description": "Skip the type checking. Default is `false`."
+      "description": "Skip the type checking. Default is `false`.",
+      "x-deprecated": "Use `typeCheckOptions` instead. This option will be removed in Nx 24."
+    },
+    "typeCheckOptions": {
+      "description": "Configure type checking during the build. Set to `true` to enable with defaults (async: true). Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "async": {
+              "type": "boolean",
+              "description": "Run type checking in a separate process without blocking the build.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "index": {
       "alias": "indexHtml",
@@ -129,6 +149,13 @@
     "generatePackageJson": {
       "type": "boolean",
       "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
+    },
+    "runtimeDependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Add runtime dependencies to the generated `package.json` file. Useful for Docker installs. Only works in conjunction with `generatePackageJson` option."
     },
     "additionalEntryPoints": {
       "type": "array",
@@ -275,6 +302,10 @@
     "vendorChunk": {
       "type": "boolean",
       "description": "Use a separate bundle containing only vendor libraries."
+    },
+    "cache": {
+      "type": "boolean",
+      "description": "Configure rspack caching behavior. When not specified, defaults to `true` for Node targets in watch mode, and `undefined` otherwise."
     }
   },
   "required": ["rspackConfig"],

@@ -1,8 +1,6 @@
 ## Examples
 
-{% tabs %}
-
-{% tab label="Basic Usage" %}
+##### Basic Usage
 
 This generator allows you to convert an Inline SCAM to a Standalone Component. It's important that the SCAM you wish to convert has it's NgModule within the same file for the generator to be able to correctly convert the component to Standalone.
 
@@ -11,7 +9,3 @@ This generator allows you to convert an Inline SCAM to a Standalone Component. I
 nx g @nx/angular:scam-to-standalone --component=libs/mylib/src/lib/myscam/myscam.ts --project=mylib
 
 ```
-
-{% /tab %}
-
-{% /tabs %}

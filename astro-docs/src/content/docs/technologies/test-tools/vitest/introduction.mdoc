@@ -1,42 +1,142 @@
 ---
-title: Overview of the Nx Vitest Plugin
-description: The Nx Plugin for Vitest contains executors and generators that support testing projects using Vitest. This page also explains how to configure Vitest on your Nx workspace.
+title: Vitest Plugin for Nx
+description: The Nx Plugin for Vitest contains executors and generators that support testing projects using Vitest, including setup and configuration for your Nx workspace.
 sidebar:
   label: Introduction
 filter: 'type:References'
 ---
 
-[Vitest](https://vitest.dev/) is a fast unit test framework powered by Vite. It provides a modern testing experience with:
+[Vitest](https://vitest.dev) is a fast test runner built on Vite.
 
-- Lightning fast test execution powered by Vite
-- Native ESM, TypeScript, and JSX support out of the box
-- Jest-compatible API for easy migration
-- Smart instant watch mode
-- Component testing for UI frameworks
+The `@nx/vitest` plugin adds [inferred Vitest targets](#configuration), a [project configuration generator](#add-vitest-to-a-project), and CI-friendly [test splitting](#ci-considerations).
 
-## Setting Up @nx/vitest
+You can use Vitest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-### Installation
+## Requirements
+
+The `@nx/vite` plugin supports the following package versions.
+
+| Package  | Supported Versions                         |
+| -------- | ------------------------------------------ |
+| `vitest` | ^1.0.0 \|\| ^2.0.0 \|\| ^3.0.0 \|\| ^4.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setup
+
+### Add to an existing workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/vitest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Install the `@nx/vitest` version that matches the version of `nx` in your workspace. If the version numbers get out of sync, you can encounter difficult to debug errors. Use the [version sync recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync) to fix mismatches.
+Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
-
-In any Nx workspace, you can install `@nx/vitest` by running the following command:
 
 ```shell
 nx add @nx/vitest
 ```
 
-This will install the correct version of `@nx/vitest`.
+### Verify inferred tasks
 
-### How @nx/vitest Infers Tasks
+Nx infers Vitest tasks from your Vitest or Vite config files. To confirm which targets were created, open the project details view in Nx Console or run:
 
-{% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+```shell
+nx show project my-app
+```
+
+### Add Vitest to a project
+
+Use the configuration generator to set up a project with Vitest:
+
+```shell
+nx g @nx/vitest:configuration --project=my-app
+```
+
+The generator accepts framework-specific options. Pass the right flags for your project type:
+
+{% tabs syncKey="framework" %}
+{% tabitem label="React" %}
+
+```shell
+nx g @nx/vitest:configuration --project=my-react-lib --uiFramework=react
+```
+
+Sets up Vitest with React JSX support and `jsdom` test environment.
+
+{% /tabitem %}
+{% tabitem label="Vue" %}
+
+```shell
+nx g @nx/vitest:configuration --project=my-vue-lib --uiFramework=vue
+```
+
+Sets up Vitest with Vue SFC support and `jsdom` test environment.
+
+{% /tabitem %}
+{% tabitem label="Angular" %}
+
+```shell
+nx g @nx/vitest:configuration --project=my-angular-lib --uiFramework=angular
+```
+
+Configures Vitest for Angular with the appropriate test setup.
+
+{% /tabitem %}
+{% tabitem label="Node / TypeScript" %}
+
+```shell
+nx g @nx/vitest:configuration --project=my-node-lib --testEnvironment=node
+```
+
+Uses the `node` test environment instead of the default `jsdom`.
+
+{% /tabitem %}
+{% /tabs %}
+
+See the full [configuration generator reference](/docs/technologies/test-tools/vitest/generators#configuration) for all options.
+
+{% aside type="tip" title="Framework generators handle this automatically" %}
+When generating a new project with a framework generator, you can specify Vitest as the test runner and Nx passes the correct options automatically:
+
+```shell
+nx g @nx/react:lib libs/my-react-lib --unitTestRunner=vitest
+nx g @nx/vue:lib libs/my-vue-lib --unitTestRunner=vitest
+```
+
 {% /aside %}
 
-The `@nx/vitest` plugin will create a task for any project that has a Vitest configuration file present. Any of the following files will be recognized as a Vitest configuration file:
+## Local Development
+
+Run Vitest through Nx so caching and the project graph work together.
+
+```shell
+nx test my-app
+```
+
+```shell
+nx test my-app --watch
+```
+
+```shell
+nx test my-app -- MyComponent.spec.ts
+```
+
+```shell
+nx test my-app --ui
+```
+
+```shell
+nx test my-app --coverage
+```
+
+{% aside type="note" title="Replace the project name" %}
+Replace `my-app` with the name of your project and the test file pattern with the file you want to run.
+{% /aside %}
+
+## Configuration
+
+### How tasks are inferred
+
+The `@nx/vitest` plugin creates a target for any project that has a Vitest or Vite config file with test settings. The plugin looks for:
 
 - `vitest.config.js`
 - `vitest.config.ts`
@@ -44,20 +144,18 @@ The `@nx/vitest` plugin will create a task for any project that has a Vitest con
 - `vitest.config.mts`
 - `vitest.config.cjs`
 - `vitest.config.cts`
-- `vite.config.js` (with test configuration)
-- `vite.config.ts` (with test configuration)
-- `vite.config.mjs` (with test configuration)
-- `vite.config.mts` (with test configuration)
-- `vite.config.cjs` (with test configuration)
-- `vite.config.cts` (with test configuration)
+- `vite.config.js` (with `test` configuration)
+- `vite.config.ts` (with `test` configuration)
+- `vite.config.mjs` (with `test` configuration)
+- `vite.config.mts` (with `test` configuration)
+- `vite.config.cjs` (with `test` configuration)
+- `vite.config.cts` (with `test` configuration)
 
-### View Inferred Tasks
+To view inferred tasks, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-app`.
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+### Plugin options
 
-### @nx/vitest Configuration
-
-The `@nx/vitest` plugin is configured in the `plugins` array in `nx.json`.
+Configure the plugin in `nx.json`:
 
 ```json
 // nx.json
@@ -66,98 +164,93 @@ The `@nx/vitest` plugin is configured in the `plugins` array in `nx.json`.
     {
       "plugin": "@nx/vitest",
       "options": {
-        "targetName": "test"
+        "testTargetName": "test",
+        "ciTargetName": "test-ci",
+        "ciGroupName": "Unit Tests (CI)",
+        "testMode": "watch"
       }
     }
   ]
 }
 ```
 
-- The `targetName` option controls the name of the inferred Vitest tasks. The default name is `test`.
+| Option           | Type             | Default                     | Description                                                               |
+| ---------------- | ---------------- | --------------------------- | ------------------------------------------------------------------------- |
+| `testTargetName` | string           | `test`                      | Name of the inferred local target.                                        |
+| `ciTargetName`   | string           | none                        | Creates a CI-only target used for atomized runs.                          |
+| `ciGroupName`    | string           | derived from `ciTargetName` | Display name for the atomized CI group.                                   |
+| `testMode`       | `watch` or `run` | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run). |
 
-## Using Vitest
+There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
 
-### Add Vitest to a Project
+### Configure unit and e2e separately
 
-Run the `configuration` generator to add Vitest to an existing project:
+If you use Vitest for unit and e2e tests, configure the plugin twice with different include and exclude patterns.
 
-```shell
-nx g @nx/vitest:configuration --project=<project-name>
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vitest",
+      "exclude": ["e2e/**/*"],
+      "options": {
+        "testTargetName": "test",
+        "testMode": "watch"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "include": ["e2e/**/*"],
+      "options": {
+        "testTargetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "ciGroupName": "E2E Tests (CI)",
+        "testMode": "run"
+      }
+    }
+  ]
+}
 ```
 
-> Hint: You can use the `--dry-run` flag to see what will be generated.
+## CI Considerations
 
-Replace `<project-name>` with the name of the project you're wanting to add Vitest to.
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-### Testing Applications
-
-The recommended way to run/debug Vitest tests is via an editor:
-
-- [VSCode Vitest Extension](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
-- [WebStorm](https://www.jetbrains.com/help/webstorm/vitest.html)
-
-To run Vitest tests via Nx use:
+### Build and Test Only What Changed
 
 ```shell
-nx test frontend
+nx affected -t test
 ```
 
-### Testing Specific Files
+This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
+Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-You can test specific files by passing a pattern:
+### Remote Caching
+
+Share test and e2e cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
 ```shell
-nx test frontend -- HomePage.spec.ts
+nx connect
 ```
 
-### Watching for Changes
+### Task Splitting for Slow Tests
 
-Using the `--watch` flag will run the tests in watch mode:
+For slow test suites (e.g. E2E or integration tests), set `ciTargetName` to split tests by file for distributed CI runs. Each test file becomes its own cacheable CI task with better caching and retries. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
 
-```shell
-nx test frontend --watch
-```
+If you use `testMode: "watch"` locally, use `testMode: "run"` for CI to keep runs deterministic.
 
-### Testing UI Mode
+### Feature-Based Testing
 
-Vitest provides a UI for interacting with your tests. You can run tests in UI mode with:
+Organize tests by feature to get better cache hits and more targeted CI runs. See the [feature-based testing guide](/docs/guides/tips-n-tricks/feature-based-testing) for strategies on structuring tests in a monorepo.
 
-```shell
-nx test frontend --ui
-```
+## What's Next
 
-### Code Coverage
-
-Enable code coverage with the `--coverage` flag:
-
-```shell
-nx test frontend --coverage
-```
-
-By default, coverage reports will be generated in the `coverage/` directory under the project root.
-
-### Performance in CI
-
-Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs]` for the best performance.
-
-This allows Nx to run tests across multiple projects in parallel while leveraging caching to skip tests for unchanged projects.
-
-## Configurations
-
-### Vitest
-
-Primary configurations for Vitest will be via the `vitest.config.ts` or `vite.config.ts` file that is generated for your project. Learn more about [Vitest configurations](https://vitest.dev/config/).
-
-### Nx
-
-The Nx task options can be configured via the [project config file](/docs/reference/project-configuration) or via the command line flags.
-
-If you're using [inferred tasks](/docs/concepts/inferred-tasks), you can [provide the Vitest args](/docs/guides/tasks--caching/pass-args-to-commands) for the command you're running.
-
-## Migrating from @nx/vite
-
-If you're currently using `@nx/vite` for Vitest testing, see the [migration guide](/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite) for instructions on switching to `@nx/vitest`.
-
-## More Documentation
-
-- [Vitest Docs](https://vitest.dev/)
+{% cardgrid %}
+{% linkcard title="Vitest Config Reference" description="Learn about Vitest configuration options and defaults." href="https://vitest.dev/config/" /%}
+{% linkcard title="Migrate from @nx/vite" description="Move Vitest tasks from the Vite plugin to @nx/vitest." href="/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite" /%}
+{% linkcard title="Split E2E Tasks" description="Distribute E2E tests by file with atomized tasks." href="/docs/features/ci-features/split-e2e-tasks" /%}
+{% linkcard title="Feature-Based Testing" description="Organize tests by feature for better caching and targeted CI." href="/docs/guides/tips-n-tricks/feature-based-testing" /%}
+{% linkcard title="Vitest Generators Reference" description="Reference for @nx/vitest generators." href="/docs/technologies/test-tools/vitest/generators" /%}
+{% linkcard title="Vitest Executors Reference" description="Reference for @nx/vitest executors." href="/docs/technologies/test-tools/vitest/executors" /%}
+{% /cardgrid %}

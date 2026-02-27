@@ -8,7 +8,11 @@ jest.mock('nx/src/devkit-exports', () => {
   };
 });
 import * as nxFileutils from 'nx/src/devkit-exports';
-import { sharePackages, shareWorkspaceLibraries } from './share';
+import {
+  getNpmPackageSharedConfig,
+  sharePackages,
+  shareWorkspaceLibraries,
+} from './share';
 
 describe('MF Share Utils', () => {
   afterEach(() => jest.clearAllMocks());
@@ -714,6 +718,307 @@ describe('MF Share Utils', () => {
         requiredVersion: '1.0.0',
         singleton: true,
       },
+    });
+  });
+
+  describe('Workspace Protocol Version Normalization', () => {
+    it('should normalize workspace:* version to actual version from library package.json', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest
+        .spyOn(nxFileutils, 'readJsonFile')
+        .mockImplementation((file: string) => {
+          if (file.endsWith('libs/shared/package.json')) {
+            return {
+              version: '2.0.0',
+            };
+          }
+          // Project package.json with workspace:* version
+          return {
+            dependencies: {
+              '@myorg/shared': 'workspace:*',
+            },
+          };
+        });
+
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries(
+        [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+        '/'
+      );
+
+      // ASSERT
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          eager: undefined,
+          requiredVersion: '2.0.0',
+          singleton: true,
+        },
+      });
+    });
+
+    it('should normalize workspace:^ version to actual version from library package.json', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest
+        .spyOn(nxFileutils, 'readJsonFile')
+        .mockImplementation((file: string) => {
+          if (file.endsWith('libs/shared/package.json')) {
+            return {
+              version: '3.0.0',
+            };
+          }
+          // Project package.json with workspace:^ version
+          return {
+            dependencies: {
+              '@myorg/shared': 'workspace:^',
+            },
+          };
+        });
+
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries(
+        [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+        '/'
+      );
+
+      // ASSERT
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          eager: undefined,
+          requiredVersion: '3.0.0',
+          singleton: true,
+        },
+      });
+    });
+
+    it('should normalize file: protocol version to actual version from library package.json', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest
+        .spyOn(nxFileutils, 'readJsonFile')
+        .mockImplementation((file: string) => {
+          if (file.endsWith('libs/shared/package.json')) {
+            return {
+              version: '4.0.0',
+            };
+          }
+          // Project package.json with file: protocol version
+          return {
+            dependencies: {
+              '@myorg/shared': 'file:../libs/shared',
+            },
+          };
+        });
+
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries(
+        [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+        '/'
+      );
+
+      // ASSERT
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          eager: undefined,
+          requiredVersion: '4.0.0',
+          singleton: true,
+        },
+      });
+    });
+
+    it('should normalize bare * version to actual version from library package.json', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest
+        .spyOn(nxFileutils, 'readJsonFile')
+        .mockImplementation((file: string) => {
+          if (file.endsWith('libs/shared/package.json')) {
+            return {
+              version: '5.0.0',
+            };
+          }
+          // Project package.json with bare * version
+          return {
+            dependencies: {
+              '@myorg/shared': '*',
+            },
+          };
+        });
+
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries(
+        [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+        '/'
+      );
+
+      // ASSERT
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          eager: undefined,
+          requiredVersion: '5.0.0',
+          singleton: true,
+        },
+      });
+    });
+
+    it('should set requiredVersion to false when workspace protocol version cannot be resolved', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => {
+        // Library package.json does not exist
+        if (file.endsWith('libs/shared/package.json')) {
+          return false;
+        }
+        return true;
+      });
+      jest
+        .spyOn(nxFileutils, 'readJsonFile')
+        .mockImplementation((file: string) => {
+          // Project package.json with workspace:* version
+          return {
+            dependencies: {
+              '@myorg/shared': 'workspace:*',
+            },
+          };
+        });
+
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries(
+        [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+        '/'
+      );
+
+      // ASSERT
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          eager: undefined,
+          requiredVersion: false,
+        },
+      });
+    });
+
+    it('should set requiredVersion to false when library package.json has no version field', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest
+        .spyOn(nxFileutils, 'readJsonFile')
+        .mockImplementation((file: string) => {
+          if (file.endsWith('libs/shared/package.json')) {
+            // Library package.json exists but has no version
+            return {
+              name: '@myorg/shared',
+            };
+          }
+          // Project package.json with workspace:* version
+          return {
+            dependencies: {
+              '@myorg/shared': 'workspace:*',
+            },
+          };
+        });
+
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries(
+        [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+        '/'
+      );
+
+      // ASSERT
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          eager: undefined,
+          requiredVersion: false,
+        },
+      });
+    });
+  });
+
+  describe('getNpmPackageSharedConfig', () => {
+    it('should return config with valid semver version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig('@angular/core', '~13.2.0');
+
+      // ASSERT
+      expect(config).toEqual({
+        singleton: true,
+        strictVersion: true,
+        requiredVersion: '~13.2.0',
+      });
+    });
+
+    it('should return undefined and warn for workspace:* version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig('@myorg/shared', 'workspace:*');
+
+      // ASSERT
+      expect(config).toBeUndefined();
+    });
+
+    it('should return undefined and warn for workspace:^ version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig('@myorg/shared', 'workspace:^');
+
+      // ASSERT
+      expect(config).toBeUndefined();
+    });
+
+    it('should return undefined and warn for file: protocol version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig(
+        '@myorg/shared',
+        'file:../libs/shared'
+      );
+
+      // ASSERT
+      expect(config).toBeUndefined();
+    });
+
+    it('should return undefined and warn for bare * version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig('@myorg/shared', '*');
+
+      // ASSERT
+      expect(config).toBeUndefined();
+    });
+
+    it('should return undefined for null version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig('@myorg/shared', null);
+
+      // ASSERT
+      expect(config).toBeUndefined();
+    });
+
+    it('should return undefined for empty string version', () => {
+      // ACT
+      const config = getNpmPackageSharedConfig('@myorg/shared', '');
+
+      // ASSERT
+      expect(config).toBeUndefined();
     });
   });
 });

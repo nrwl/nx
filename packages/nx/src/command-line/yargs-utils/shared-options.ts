@@ -107,8 +107,8 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
         value === '' || value === 'true' || value === true
           ? true
           : value === 'false' || value === false
-          ? false
-          : value,
+            ? false
+            : value,
     })
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task.',
@@ -201,9 +201,11 @@ export function withBatch(yargs: Argv) {
     type: 'boolean',
     describe: 'Run task(s) in batches for executors which support batches.',
     coerce: (v) => {
-      return v || process.env.NX_BATCH_MODE === 'true';
+      if (v !== undefined) return v;
+      if (process.env.NX_BATCH_MODE === 'true') return true;
+      return undefined; // Let preferBatch decide
     },
-    default: false,
+    default: undefined,
   }) as any;
 }
 
@@ -216,6 +218,11 @@ export function withAffectedOptions(yargs: Argv) {
       type: 'string',
       requiresArg: true,
       coerce: parseCSV,
+    })
+    .option('stdin', {
+      describe:
+        'Change the way Nx is calculating the affected command by providing directly changed files from stdin, one file per line.',
+      type: 'boolean',
     })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
@@ -247,9 +254,27 @@ export function withAffectedOptions(yargs: Argv) {
     .implies('head', 'base')
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head'],
+      stdin: ['uncommitted', 'untracked', 'base', 'head'],
       untracked: ['uncommitted', 'files', 'base', 'head'],
       uncommitted: ['files', 'untracked', 'base', 'head'],
-    });
+    })
+    .middleware(async (args) => {
+      if (args.stdin) {
+        if (process.stdin.isTTY) {
+          throw new Error(
+            'The --stdin option requires piped input (e.g., `git diff --name-only | nx affected --stdin`). It cannot be used when stdin is a terminal.'
+          );
+        }
+        const chunks: Buffer[] = [];
+        for await (const chunk of process.stdin) {
+          chunks.push(chunk);
+        }
+        const files = parseNewlines(Buffer.concat(chunks).toString());
+        if (Array.isArray(args.files)) files.push(...args.files);
+        else if (typeof args.files === 'string') files.push(args.files);
+        args.files = files as any; // Yargs types don't reflect the coerce option
+      }
+    }, true);
 }
 
 export interface RunManyOptions extends RunOptions {
@@ -325,6 +350,15 @@ export function withOutputStyleOption<T>(
     })
     .middleware([
       (args) => {
+        if (
+          !args.outputStyle &&
+          process.env.NX_DEFAULT_OUTPUT_STYLE &&
+          choices.includes(process.env.NX_DEFAULT_OUTPUT_STYLE as OutputStyle)
+        ) {
+          args.outputStyle = process.env.NX_DEFAULT_OUTPUT_STYLE;
+        }
+      },
+      (args) => {
         const useTui = shouldUseTui(readNxJson(), args as NxArgs);
         if (useTui) {
           // We have to set both of these because `check` runs after the normalization that
@@ -362,6 +396,13 @@ export function withRunOneOptions(yargs: Argv) {
       `Run "nx run myapp:mytarget --help" to see information about the executor's schema.`
     );
   }
+}
+
+export function parseNewlines(input: string): string[] {
+  if (!input) {
+    return [];
+  }
+  return input.split('\n').filter((line) => line.length > 0);
 }
 
 export function parseCSV(args: string[] | string): string[] {

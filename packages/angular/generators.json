@@ -161,7 +161,8 @@
     "setup-tailwind": {
       "factory": "./src/generators/setup-tailwind/setup-tailwind",
       "schema": "./src/generators/setup-tailwind/schema.json",
-      "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
+      "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+      "x-deprecated": "Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",

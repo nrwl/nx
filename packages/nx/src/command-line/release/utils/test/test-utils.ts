@@ -17,5 +17,6 @@ export function createVersionConfig() {
     logUnchangedProjects: undefined,
     versionActions: undefined,
     versionActionsOptions: undefined,
+    adjustSemverBumpsForZeroMajorVersion: undefined,
   };
 }

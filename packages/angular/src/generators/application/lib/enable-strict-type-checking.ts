@@ -26,7 +26,7 @@ export function enableStrictTypeChecking(
         ...json.angularCompilerOptions,
         strictInjectionParameters: true,
         strictInputAccessModifiers: true,
-        typeCheckHostBindings: angularMajorVersion >= 20 ? true : undefined,
+        typeCheckHostBindings: angularMajorVersion === 20 ? true : undefined,
         strictTemplates: true,
       };
       return json;

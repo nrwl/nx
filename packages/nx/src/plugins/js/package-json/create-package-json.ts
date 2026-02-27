@@ -332,7 +332,7 @@ function findAllNpmDeps(
     projectFileMap[projectNode.name] || [],
     isTransitiveDependency
       ? ['{projectRoot}/**/*']
-      : rootPatterns ?? dependencyPatterns
+      : (rootPatterns ?? dependencyPatterns)
   );
 
   const projectDependencies = new Set<string>();

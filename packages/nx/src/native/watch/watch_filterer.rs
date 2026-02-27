@@ -1,4 +1,6 @@
 use ignore::Match;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
+use std::path::PathBuf;
 use tracing::trace;
 use watchexec::error::RuntimeError;
 use watchexec::filter::Filterer;
@@ -6,24 +8,29 @@ use watchexec_events::filekind::{CreateKind, FileEventKind, ModifyKind, RemoveKi
 
 use crate::native::watch::git_utils::get_gitignore_files;
 use crate::native::watch::utils::{get_nx_ignore, transform_event};
-use ignore_files::IgnoreFilter;
 use watchexec_events::{Event, FileType, Priority, Source, Tag};
-use watchexec_filterer_ignore::IgnoreFilterer;
 
 #[derive(Debug)]
 pub struct WatchFilterer {
-    pub nx_ignore: Option<IgnoreFilter>,
-    pub git_ignore: IgnoreFilterer,
+    origin: PathBuf,
+    nx_ignore: Option<Gitignore>,
+    /// Per-directory gitignore instances, sorted deepest-first (most path components first).
+    /// Each entry is (directory the .gitignore applies in, compiled Gitignore).
+    git_ignores: Vec<(PathBuf, Gitignore)>,
 }
 
 impl WatchFilterer {
-    fn filter_event(&self, event: &Event, priority: Priority) -> bool {
+    fn filter_event(&self, event: &Event) -> bool {
         let mut pass = true;
         for (path, file_type) in event.paths() {
             let path = dunce::simplified(path);
-            let is_dir = file_type.map_or(false, |t| matches!(t, FileType::Dir));
+            let is_dir = file_type.is_some_and(|t| matches!(t, FileType::Dir));
             let nx_ignore_match_type = if let Some(nx_ignore) = &self.nx_ignore {
-                nx_ignore.match_path(path, is_dir)
+                if path.starts_with(&self.origin) {
+                    nx_ignore.matched_path_or_any_parents(path, is_dir)
+                } else {
+                    Match::None
+                }
             } else {
                 Match::None
             };
@@ -39,10 +46,32 @@ impl WatchFilterer {
                 trace!(?path, "nxignore ignore match, ignoring gitignore");
                 pass &= false;
             } else {
-                pass &= self
-                    .git_ignore
-                    .check_event(event, priority)
-                    .expect("git ignore check never errors")
+                // Check gitignores deepest-first; first match wins
+                let git_match = self
+                    .git_ignores
+                    .iter()
+                    .filter(|(dir, _)| path.starts_with(dir))
+                    .find_map(|(_, gitignore)| {
+                        match gitignore.matched_path_or_any_parents(path, is_dir) {
+                            Match::None => None,
+                            m => Some(m),
+                        }
+                    });
+
+                match git_match {
+                    Some(Match::Ignore(_)) => {
+                        trace!(?path, "gitignore match - blocked");
+                        pass &= false;
+                    }
+                    Some(Match::Whitelist(_)) => {
+                        trace!(?path, "gitignore whitelist match - allowed");
+                        pass &= true;
+                    }
+                    _ => {
+                        // No gitignore matched — allow through
+                        pass &= true;
+                    }
+                }
             }
         }
 
@@ -57,7 +86,7 @@ impl Filterer for WatchFilterer {
         let event = transformed.as_ref().unwrap_or(watch_event);
 
         trace!(?event, "checking if event is valid");
-        if !self.filter_event(event, priority) {
+        if !self.filter_event(event) {
             return Ok(false);
         }
 
@@ -79,14 +108,19 @@ impl Filterer for WatchFilterer {
                     FileEventKind::Remove(RemoveKind::File) => continue,
 
                     #[cfg(target_os = "linux")]
-                    FileEventKind::Create(CreateKind::Folder) => continue,
+                    FileEventKind::Create(CreateKind::Folder)
+                    | FileEventKind::Create(CreateKind::Any)
+                    | FileEventKind::Remove(RemoveKind::Any)
+                    | FileEventKind::Modify(ModifyKind::Any) => continue,
+
+                    #[cfg(target_os = "macos")]
+                    FileEventKind::Create(CreateKind::Folder)
+                    | FileEventKind::Modify(ModifyKind::Metadata(_)) => continue,
 
                     #[cfg(windows)]
-                    FileEventKind::Modify(ModifyKind::Any) => continue,
-                    #[cfg(windows)]
-                    FileEventKind::Create(CreateKind::Any) => continue,
-                    #[cfg(windows)]
-                    FileEventKind::Remove(RemoveKind::Any) => continue,
+                    FileEventKind::Modify(ModifyKind::Any)
+                    | FileEventKind::Create(CreateKind::Any)
+                    | FileEventKind::Remove(RemoveKind::Any) => continue,
 
                     _ => return Ok(false),
                 },
@@ -96,14 +130,19 @@ impl Filterer for WatchFilterer {
                     file_type: Some(FileType::File) | None,
                 } if !path.display().to_string().ends_with('~') => continue,
 
-                #[cfg(target_os = "linux")]
+                // Allow directory events through on Linux, Windows, and macOS so that the
+                // action handler can dynamically register watches for new directories.
+                #[cfg(any(target_os = "linux", target_os = "macos", windows))]
                 Tag::Path {
                     path: _,
                     file_type: Some(FileType::Dir),
                 } => continue,
 
                 Tag::Source(Source::Filesystem) => continue,
-                _ => return Ok(false),
+                _ => {
+                    trace!(?tag, "tag rejected event");
+                    return Ok(false);
+                }
             }
         }
 
@@ -113,13 +152,13 @@ impl Filterer for WatchFilterer {
     }
 }
 
-pub(super) async fn create_filter(
+pub(super) fn create_filter(
     origin: &str,
     additional_globs: &[String],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
-    let nx_ignore_file = get_nx_ignore(origin);
+    let nx_ignore_path = get_nx_ignore(origin);
 
     trace!(
         ?use_ignore,
@@ -127,36 +166,63 @@ pub(super) async fn create_filter(
         ?ignore_files,
         "Using these ignore files for the watcher"
     );
-    let mut git_ignore = if let Some(ignore_files) = ignore_files {
-        IgnoreFilter::new(origin, &ignore_files)
-            .await
-            .map_err(anyhow::Error::from)?
-    } else {
-        IgnoreFilter::empty(origin)
-    };
 
-    git_ignore
-        .add_globs(
-            &additional_globs
-                .iter()
-                .map(String::as_ref)
-                .collect::<Vec<_>>(),
-            Some(&origin.into()),
-        )
-        .map_err(anyhow::Error::from)?;
+    let mut git_ignores: Vec<(PathBuf, Gitignore)> = Vec::new();
 
-    let nx_ignore = if let Some(nx_ignore_file) = nx_ignore_file {
-        Some(
-            IgnoreFilter::new(origin, &[nx_ignore_file])
-                .await
-                .map_err(anyhow::Error::from)?,
-        )
+    // Build per-directory Gitignore instances from .gitignore files
+    if let Some(paths) = ignore_files {
+        for gitignore_path in paths {
+            let (gitignore, err) = Gitignore::new(&gitignore_path);
+            if let Some(err) = err {
+                trace!(
+                    ?err,
+                    ?gitignore_path,
+                    "error parsing gitignore, using partial result"
+                );
+            }
+            let dir = gitignore_path
+                .parent()
+                .unwrap_or(&gitignore_path)
+                .to_path_buf();
+            git_ignores.push((dir, gitignore));
+        }
+    }
+
+    // Build additional globs as a synthetic gitignore rooted at origin
+    if !additional_globs.is_empty() {
+        let mut builder = GitignoreBuilder::new(origin);
+        for glob in additional_globs {
+            builder.add_line(None, glob)?;
+        }
+        let gitignore = builder.build()?;
+        git_ignores.push((PathBuf::from(origin), gitignore));
+    }
+
+    // Sort deepest-first (most path components first) so deeper gitignores take priority
+    git_ignores.sort_by(|(a, _), (b, _)| {
+        let a_depth = a.components().count();
+        let b_depth = b.components().count();
+        b_depth.cmp(&a_depth)
+    });
+
+    // Build .nxignore
+    let nx_ignore = if let Some(nxignore_path) = nx_ignore_path {
+        let (gitignore, err) = Gitignore::new(&nxignore_path);
+        if let Some(err) = err {
+            trace!(
+                ?err,
+                ?nxignore_path,
+                "error parsing nxignore, using partial result"
+            );
+        }
+        Some(gitignore)
     } else {
         None
     };
 
     Ok(WatchFilterer {
-        git_ignore: IgnoreFilterer(git_ignore),
+        origin: PathBuf::from(origin),
+        git_ignores,
         nx_ignore,
     })
 }

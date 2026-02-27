@@ -71,5 +71,11 @@ export async function ensureDependencies(
     devDependencies['@vitest/ui'] = vitestUi;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

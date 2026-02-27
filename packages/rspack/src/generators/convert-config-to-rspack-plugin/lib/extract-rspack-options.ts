@@ -1,20 +1,23 @@
 import { Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query, replace } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
 export function extractRspackOptions(tree: Tree, rspackConfigPath: string) {
   const source = tree.read(rspackConfigPath).toString('utf-8');
-  const ast = tsquery.ast(source);
+  const sourceFile = ast(source);
 
   const withNxQuery = 'CallExpression:has(Identifier[name="withNx"])';
   const withReactQuery = 'CallExpression:has(Identifier[name="withReact"])';
   const withWebQuery = 'CallExpression:has(Identifier[name="withWeb"])';
 
-  const withNxCall = tsquery(ast, withNxQuery) as ts.CallExpression[];
+  const withNxCall = query(sourceFile, withNxQuery) as ts.CallExpression[];
 
-  const withReactCall = tsquery(ast, withReactQuery) as ts.CallExpression[];
+  const withReactCall = query(
+    sourceFile,
+    withReactQuery
+  ) as ts.CallExpression[];
 
-  const withWebCall = tsquery(ast, withWebQuery) as ts.CallExpression[];
+  const withWebCall = query(sourceFile, withWebQuery) as ts.CallExpression[];
 
   // If the config is empty set to empty string to avoid undefined. Undefined is used to check if the withNx exists inside of the config file.
   let withNxConfig: ts.Node | '' | undefined,
@@ -72,13 +75,9 @@ function removeCallExpressions(
   functionNames.forEach((functionName) => {
     const callExpressionQuery = `CallExpression:has(Identifier[name="composePlugins"]) > CallExpression:has(Identifier[name="${functionName}"])`;
 
-    modifiedSource = tsquery.replace(
-      modifiedSource,
-      callExpressionQuery,
-      () => {
-        return ''; // Removes the entire CallExpression
-      }
-    );
+    modifiedSource = replace(modifiedSource, callExpressionQuery, () => {
+      return ''; // Removes the entire CallExpression
+    });
   });
 
   return modifiedSource;
@@ -89,7 +88,7 @@ function removeImportDeclarations(
   importName: string,
   moduleName: string
 ) {
-  const sourceFile = tsquery.ast(source);
+  const sourceFile = ast(source);
 
   const modifiedStatements = sourceFile.statements
     .map((statement) => {

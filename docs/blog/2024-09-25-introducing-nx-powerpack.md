@@ -7,9 +7,9 @@ cover_image: /blog/images/introducing-powerpack/thumbnail.avif
 description: Introducing Nx Powerpack, a paid extension suite for enterprise use cases, ensuring Nx remains open source and existing features are free.
 ---
 
-{% callout type="info" title="Update - March 31st, 2025" %}
+{% callout type="info" title="Update - December 10, 2025" %}
 
-Self-hosted caching is now free for everyone. Read more [in our blog post](/blog/custom-runners-and-self-hosted-caching) and in our documentation about [remote caching options with Nx](/remote-cache).
+Nx Powerpack is no longer available as a standalone product. Self-hosted caching remains free for everyone — [see all our remote caching solutions](/remote-cache). All packages, including Conformance and Owners, are still maintained and are now included as part of the [Enterprise plan](/enterprise).
 
 {% /callout %}
 
@@ -26,8 +26,6 @@ Open source projects can continue to use Nx Cloud for **free** the same way they
 So this leaves us with:
 ![Nx products and their licenses](/blog/images/evolving-nx/nx-products-licenses.avif)
 
-> But why are we releasing Nx Powerpack under a commercial license? Read all about our strategy, the reasoning behind Powerpack and OSS funding in the **blog post from our CEO, Jeff Cross**: [Evolving Nx](/blog/evolving-nx).
-
 But now to the fun, technical part! Nx Powerpack is a bundle that - in this very first release - comes with these major features:
 
 - [Codeowners for monorepos](#codeowners-for-monorepos)
@@ -37,7 +35,7 @@ Let's dive in!
 
 ## Get an Nx Powerpack License
 
-All Powerpack features require a dedicated commercial license. You can get one here: [Nx Powerpack](/powerpack).
+All Powerpack features require a dedicated commercial license. You can get one here: [Nx Powerpack](/enterprise).
 
 Once you have your license, run the following command
 
@@ -124,14 +122,14 @@ A dedicated `nx sync` command automatically synchronizes these definitions to a 
 ...
 ```
 
-Read all about how to [configure Codeowners for your project in our docs](/docs/enterprise/powerpack/owners).
+Read all about how to [configure Codeowners for your project in our docs](/docs/enterprise/owners).
 
 ## Workspace Conformance (Beta)
 
 We're releasing the `@nx/conformance` plugin in an early preview. This new package focuses specifically on the maintainability of your monorepo. It allows you to encode your organization's standards so they can be enforced automatically. In this first version, the workspace conformance package ships with:
 
-- [Enforce Module Boundaries](/docs/reference/powerpack/conformance#enforce-module-boundaries): Similar to the Nx ESLint [Enforce Module Boundaries rule](/docs/features/enforce-module-boundaries), but enforces boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
-- [Ensure Owners](/docs/reference/powerpack/conformance#ensure-owners): Requires every project to have an owner defined for the `@nx/owners` plugin.
+- [Enforce Module Boundaries](/docs/reference/conformance#enforce-module-boundaries): Similar to the Nx ESLint [Enforce Module Boundaries rule](/docs/features/enforce-module-boundaries), but enforces boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- [Ensure Owners](/docs/reference/conformance#ensure-owners): Requires every project to have an owner defined for the `@nx/owners` plugin.
 
 To get started, install the following package:
 
@@ -191,7 +189,7 @@ You can then run `nx conformance` to execute the conformance checks:
 
 In this first preview release, you'll only be able to run workspace conformance rules on a single workspace. In future iterations, you **will be able to connect it to your existing Nx Cloud organization**, allowing you to upload conformance rules and run them across connected workspaces.
 
-Read all the details on how to [get started with workspace conformance rules in our docs](/docs/enterprise/powerpack/conformance).
+Read all the details on how to [get started with workspace conformance rules in our docs](/docs/enterprise/conformance).
 
 ## Learn More
 

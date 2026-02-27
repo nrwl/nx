@@ -1,11 +1,10 @@
 ## Examples
 
-{% tabs %}
-{% tab label="Custom swcrc" %}
+##### Custom swcrc
 
 `@nx/js:swc` can compile your code with a custom `.swcrc`
 
-```json {% fileName="libs/ts-lib/project.json" %}
+```json title="libs/ts-lib/project.json"
 {
   "build": {
     "executor": "@nx/js:swc",
@@ -24,6 +23,3 @@
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

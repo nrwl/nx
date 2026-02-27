@@ -15,5 +15,6 @@
       "description": "Directory(ies) where to load Storybook configurations from. Use this if you want to customize the Storybook projects you'd like to migrate.",
       "default": []
     }
-  }
+  },
+  "examplesFile": "../../../docs/migrate-10-generator-examples.md"
 }

@@ -4,6 +4,134 @@ description: 'Release notes for Nx Cloud Enterprise'
 filter: 'type:References'
 ---
 
+### 2026.01
+
+##### Self-Healing CI
+
+- Feat: Azure DevOps support for Self-Healing CI, bringing it to feature parity with GitHub and GitLab for automated fix proposals
+  - Automated fix application: Nx Cloud can now automatically create commits on Azure DevOps pull requests to apply AI-generated fixes
+  - Interactive PR comments: Self-healing proposals appear as comments on Azure DevOps PRs with actions to apply, reject, or revert fixes
+- Feat: Self-Healing CI fixes are now generated for draft PRs/MRs by default (configurable via workspace settings)
+- Feat: Self-Healing CI now supports Bitbucket workspaces
+  - Enable Self-Healing CI for PRs
+  - Configure PR comment notifications
+  - Set up automatic flaky task reruns
+  - Define eligible task patterns and auto-apply rules
+- Feat: Enable Self-Healing CI directly from the Nx Cloud UI with a single-click setup wizard
+  - Automatically detects your CI provider (GitHub Actions, GitLab CI, or Azure DevOps)
+  - Adds the `nx-cloud fix-ci` step to your CI configuration
+  - Creates a pull request with the changes for you to review and merge
+- Feat: Add support for triggering a CI rerun when Self-Healing CI determines that failures are caused by environment issues
+- Feat: Allow users to configure branch patterns to ignore for AI fix generation
+- Feat: Configure Self-Healing CI functionality, including task filtering and auto-apply fixes logic, from the Self-Healing settings tab under Workspace settings
+- Feat: Display AI provider status banner on Self-Healing page when Claude API is experiencing issues
+- Feat: Self-healing now uses affected project information to prevent misclassifying persistent failures as flaky tasks
+- Feat: Updated Self-Healing CI UI within the CIPE screen for a richer, more detailed experience
+  - Improved messaging and support to show why a fix was not started in the cloud UI
+- Feat: Add `--no-interactive` flag to `nx-cloud apply-locally` command to improve compatibility with AI agents
+- Fix: Self-Healing CI now uses the workspace's package manager (pnpm, yarn, bun) instead of hardcoded npx for task verification
+- Fix: Update classification prompts to determine environmental vs flaky tasks better
+- Fix: Update git operations during Self-Healing CI to be more resilient whenever there are additional commits, or branch becomes outdated
+- Fix: Self-healing now correctly resolves the merge commit SHA when run as part of a GitLab Merged Results Pipeline
+- Fix: Limit the amount of consecutive flaky reruns that Self-Healing CI will trigger
+- Fix: In cases where auto-apply does not proceed (e.g., Nx Cloud was the previous CIPE author), a consistent message is now shown across the PR/MR review comment and the Nx Cloud UI
+- Fix: Improved clarity of messages when Self-Healing CI times out or is cancelled part way through
+- Fix: For suggested fix diffs consisting only of a trailing newline removal, the full diff now correctly renders in the UI
+- Fix: Fixed an issue which prevented auto application of fix suggestions for configured tasks
+- Fix: Ensure Self-Healing CI accurately prints information about the tasks that were run for verification
+- Fix: Fixes an issue where Self-Healing CI could fail to fetch git SHAs when GitHub App tokens expire during long-running CI jobs
+- Fix: No longer adds the warning about an in-flight CIPE to review comments for fixes which have already had action taken on them
+- Fix: Avoid overly verbose explanations inline in review comments when issues are classified as `environment_state`
+
+##### CI Pipeline Executions
+
+- Feat: AI fix status badges and filtering for CI Pipeline Executions
+  - Badges show: Generating Fix, Fix Ready, and Fix Applied
+  - Filter the CIPE list by fix status (Fix Ready, Fix Applied, or Fix Rejected)
+  - Click on any fix badge to navigate directly to the self-healing page
+- Feat: New Configuration tab on the CI Pipeline Execution page to help verify settings and debug issues
+  - Shows: explicit completion, VCS context, cache status, distribution setup, auto-stop conditions, and self-healing CI settings
+
+  ![CIPE configuration view](../../../../assets/nx-cloud/cipe-configuration-view.png)
+
+- Feat: Display CIPE credit usage summary under CIPE Analysis area including compute credits and AI credits
+- Feat: Branch filter allows fuzzy matching by opt-in via a toggle
+- Feat: Run tasks list filter supports sort by retries
+- Fix: Add loading feedback when navigating between different CIPEs
+- Fix: Author filter now allows searching by text input with enter
+- Fix: Adjust cache status multi-select filter in Tasks list to use logical OR instead of AND
+- Fix: Defer loading of the run list with a loading animation
+- Fix: When using `nx affected:test` rather than `nx affected -t test`, the `--stop-agents-after` condition is now correctly matched
+
+##### Analytics & Reporting
+
+- Feat: Workspace analytics now features a collapsible sidebar navigation
+
+  ![Analytics sidebar layout](../../../../assets/nx-cloud/analytics-sidebar-layout.avif)
+  - Range selectors are now in a dropdown
+
+    ![New range selector dropdown](../../../../assets/nx-cloud/analytics-range-selector.avif)
+
+  - Custom range utilizes a date-range calendar
+
+    ![New date range picker](../../../../assets/nx-cloud/analytics-date-range-picker.avif)
+
+- Feat: Remove non-cacheable tasks from flaky task analytics
+- Feat: Added ability to filter by status in "recent executions" within flaky task analytics drawer
+- Fix: Fixed issue that was errantly filtering out too much data from the flaky task view
+- Fix: Improved performance of flaky task analytics queries
+- Fix: Average task duration in flaky tasks analytics drawer is now fixed to 2 decimal places
+- Fix: Do not show AI Credits if it's 0
+- Fix: Fix enterprise usage periods for mid-month license starts — usage data now correctly starts from the actual license start date
+
+##### Onboarding & Workspace Setup
+
+- Feat: New `/welcome` page to help orient new users to Nx Cloud
+
+  ![Welcome splash page](../../../../assets/nx-cloud/welcome-splash.avif)
+
+- Feat: New landing page for connecting workspaces, allowing users to navigate to the right flow from their repo URL
+- Feat: When creating a workspace, you will now see a description of a template before you clone it, including technologies used and Nx features demoed
+
+  ![Template info sheet](../../../../assets/nx-cloud/template-info.avif)
+
+- Feat: Allow members of GitHub organizations to connect existing repos to Nx Cloud
+- Feat: Made the "default branch" workspace setting available for all plans
+- Feat: Quickly configure recommended access control settings from the "Access control" workspace settings page
+- Feat: Updated the "Connect your GitHub/GitLab user account" prompt with improved styling and doc links
+- Feat: Add a prompt to remind users to set up notification settings
+- Fix: Minor style and description adjustments for the manual onboarding flow
+- Fix: Manual onboarding flow shows `NX_CLOUD_API` variable for instances other than Managed US
+- Fix: The GitHub integration configuration view now allows authenticating through a Personal Access Token or by connecting your GitHub user account
+- Fix: Fix onboarding redirect for users without their GitHub account connected
+
+##### Developer Experience
+
+- Feat: Add a "Jump to top" button to agent and task logs
+- Feat: Add tip to pull request message to run `generate ci-workflow`
+- Feat: Refreshed application error views with more friendly and helpful error messages and illustrations
+- Feat: Updated the permission error illustration
+- Fix: A reasonable fallback image will be shown when a user avatar cannot be rendered
+- Fix: Agent utilization visualization correctly visualizes agent restarts
+- Fix: Compare tasks diff view correctly displays `.` in paths (applies to new hash details data)
+- Fix: Fixed npm dependency hashing in the Compare Tasks view to include package names
+- Fix: Updated a few outdated links to the docs
+
+##### Workspace Data & Caching
+
+- Feat: Fine-grained control over workspace data caching
+  - `NX_CLOUD_SKIP_WORKSPACE_DATA_CACHE_UPLOAD` — skip the upload step
+  - `NX_CLOUD_SKIP_WORKSPACE_DATA_CACHE_DOWNLOAD` — skip the download step
+  - Existing `NX_CLOUD_SKIP_WORKSPACE_DATA_CACHE=true` takes precedence and skips both actions
+
+##### Task Distribution & Hooks
+
+- Fix: Resolves an issue where 'target group' name metadata was only persisted on DTE tasks that had been retried, causing inconsistent viewing on Task Analytics and Time Saved screens
+- Fix: Post task execution hook no longer errors when distributed tasks are skipped due to upstream dependency failures
+- Fix: Unified task timing data between DTE and local execution modes when using the post task execution hook (startTime and endTime fields now attached directly to `context.TaskResult.task`)
+- Fix: Fixed a bug where a distributed task execution could slow or hang when processing a completed graph
+- Fix: Fix non-Nx Agents detection for resource usage metrics upload prompt
+
 ### 2025.10
 
 ##### Self-Healing CI / AI Fixes
@@ -57,6 +185,16 @@ filter: 'type:References'
 
 - Chore: Released Helm chart `1.0.0` for Nx Cloud
   - Review the [migration guide](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/MIGRATION.md) before upgrading
+
+### 2025.07.7
+
+- Fix: Resolve zod dependency issues caused by Docker images being built without package-lock file
+- Fix: Normalize S3 bucket configuration to support assumedRole authentication for workspace data and conformance rule buckets
+- Feat: CIPE summary table updated to display CIPE link outside the table for improved readability
+
+### 2025.07.4 - 2025.07.6
+
+- Note: These versions had issues and should be skipped. Please use 2025.07.7 or later.
 
 ### 2025.07.3
 
@@ -172,12 +310,10 @@ nxApi:
 ### 2025.03.2
 
 - Feat: Nx Agents "bundled executors"
-
   - up until now, the "executor" binaries that run on each Nx Agent (and know how to parse your agents.yaml and run each step) had to be downloaded separately from an external bucket
   - this made the on-prem upgrade process more difficult, as it required a separate step to download the executor and then upload it in the correct folder on an internally available repository
   - now, the executors are available as Docker images that can be imported alongside all your other NxCloud images
   - to get started:
-
     - when upgrading to this version, make sure you also pull in the executor image `nxprivatecloud/nx-cloud-workflow-executor:2025.03.2`([link](https://hub.docker.com/repository/docker/nxprivatecloud/nx-cloud-workflow-executor/tags/2025.03.2/sha256-a42835a3126f21178af87f02b68d68fec1ff0654d37a57855a762c01e7795a6b))
     - as part of your controller [args](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L76) pass this option:
 
@@ -530,7 +666,7 @@ This includes events such as when a workspace was created, when a new VCS integr
 
 ### 2402.27.3
 
-With this version you can take advantage of most features announced during our recent [launch week](/launch-nx).
+With this version you can take advantage of most features announced during our recent [launch week](/blog/launch-nx-week-recap).
 
 ##### Nx Agents
 

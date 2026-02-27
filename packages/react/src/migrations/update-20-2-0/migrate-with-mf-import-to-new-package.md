@@ -6,25 +6,20 @@ Update the withModuleFederation import to use @nx/module-federation/webpack.
 
 Update import paths for `withModuleFederation` and `withModuleFederationForSSR`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/shell/webpack.config.ts" %}
+```ts title="apps/shell/webpack.config.ts"
 import {
   withModuleFederation,
   withModuleFederationForSSR,
 } from '@nx/react/module-federation';
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```ts {% fileName="apps/shell/webpack.config.ts" %}
+```ts title="apps/shell/webpack.config.ts"
 import {
   withModuleFederation,
   withModuleFederationForSSR,
 } from '@nx/module-federation/webpack';
 ```
-
-{% /tab %}
-{% /tabs %}

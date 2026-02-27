@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
+import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
 
 export interface WatchArguments {
@@ -47,11 +48,11 @@ export class BatchFunctionRunner {
       this.pendingFiles.add(fileChange.path);
     });
 
-    return this.process();
+    return this.process(true);
   }
 
-  private async process() {
-    if (!this.running && this.hasPending) {
+  private async process(runAnyway: boolean) {
+    if (!this.running && (this.hasPending || runAnyway)) {
       this.running = true;
 
       // Clone the pending projects and files before clearing
@@ -64,7 +65,7 @@ export class BatchFunctionRunner {
 
       return this.callback(projects, files).then(() => {
         this.running = false;
-        this.process();
+        this.process(false);
       });
     } else {
       this._verbose &&
@@ -210,13 +211,21 @@ export async function watch(args: WatchArguments) {
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
     },
     async (err, data) => {
-      if (err === 'closed') {
+      if (err === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (err === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (err === 'closed') {
         output.error({
-          title: 'Watch connection closed',
-          bodyLines: [
-            'The daemon has closed the connection to this watch process.',
-            'Please restart your watch command.',
-          ],
+          title: 'Failed to reconnect to daemon after multiple attempts',
+          bodyLines: ['Please restart your watch command.'],
+        });
+        process.exit(1);
+      } else if (err instanceof VersionMismatchError) {
+        output.error({
+          title: 'Nx version changed. Please restart your command.',
         });
         process.exit(1);
       } else if (err !== null) {
@@ -238,4 +247,9 @@ export async function watch(args: WatchArguments) {
     }
   );
   args.verbose && output.logSingleLine('watch process waiting...');
+
+  // Keep the process alive while watching for file changes
+  // The file watcher callbacks will handle incoming events
+  // The process will exit when Ctrl+C is pressed or if the connection closes
+  await new Promise(() => {});
 }

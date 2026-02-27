@@ -1,6 +1,6 @@
 import { ComponentProps, ReactElement, useState } from 'react';
 import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev-ui-common';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { EnvelopeIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { MovingBorder } from '@nx/nx-dev-ui-animations';
@@ -62,7 +62,7 @@ function PlayButton({
         initial="initial"
         whileHover="hover"
         variants={parent}
-        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-slate-100 bg-white/10 p-6 text-white antialiased backdrop-blur-xl"
+        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-zinc-100 bg-white/10 p-6 text-white antialiased backdrop-blur-xl"
       >
         <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
         <motion.div variants={child} className="absolute left-20 top-4 w-48">
@@ -90,7 +90,7 @@ export function SolutionsLeadershipHero(): ReactElement {
           >
             Fast Delivery <br className="lg:block" /> Low Risk
             <br className="lg:block" />
-            <span className="rounded-lg bg-gradient-to-r from-blue-500 to-sky-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent">
               High ROI
             </span>
           </SectionHeading>
@@ -107,10 +107,10 @@ export function SolutionsLeadershipHero(): ReactElement {
             <ButtonLink
               href="/contact/sales"
               title="Talk to our team"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-sales-click',
                   'solutions-leadership-hero',
                   'solutions-leadership'
@@ -126,7 +126,7 @@ export function SolutionsLeadershipHero(): ReactElement {
               variant="secondary"
               size="default"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'subscribe-newsletter-click',
                   'solutions-leadership-hero',
                   'solutions-leadership'
@@ -155,7 +155,7 @@ export function SolutionsLeadershipHero(): ReactElement {
                 <PlayButton
                   onClick={() => {
                     setIsOpen(true);
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'caseware-testimonial-video-click',
                       'caseware-testimonial-solutions',
                       'solutions'

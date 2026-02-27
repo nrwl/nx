@@ -10,6 +10,7 @@ import type {
 import { convertToNxProject } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
 import {
+  AngularBuildUnitTestMigrator,
   AngularDevkitKarmaMigrator,
   AngularDevkitNgPackagrMigrator,
   AngularEslintLintMigrator,
@@ -18,6 +19,7 @@ import { ProjectMigrator } from './project.migrator';
 
 const supportedBuilderMigrators: BuilderMigratorClassType[] = [
   AngularDevkitNgPackagrMigrator,
+  AngularBuildUnitTestMigrator,
   AngularDevkitKarmaMigrator,
   AngularEslintLintMigrator,
 ];

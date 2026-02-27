@@ -23,14 +23,14 @@ describe('Gradle', () => {
       });
       afterAll(() => cleanupProject());
 
-      it('should build', () => {
+      it('should build without batch mode', () => {
         const projects = runCLI(`show projects`);
         expect(projects).toContain('app');
         expect(projects).toContain('list');
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        let buildOutput = runCLI('build app', { verbose: true });
+        let buildOutput = runCLI('build app --no-batch', { verbose: true });
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
 
@@ -48,7 +48,7 @@ describe('Gradle', () => {
         expect(bootJarOutput).toContain(':app:bootJar');
       });
 
-      it('should track dependencies for new app', () => {
+      it('should track dependencies for new app without batch mode', () => {
         if (type === 'groovy') {
           createFile(
             `app2/build.gradle`,
@@ -86,7 +86,7 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2', { verbose: true });
+        let buildOutput = runCLI('build app2 --no-batch', { verbose: true });
         // app2 depends on app
         expect(buildOutput).toContain(':app:classes');
         expect(buildOutput).toContain(':list:classes');
@@ -109,9 +109,114 @@ dependencies {
         });
 
         expect(() => {
-          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
-          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
+          runCLI('run app:test-ci--MessageUtilsTest --no-batch', {
+            verbose: true,
+          });
+          runCLI('run list:test-ci--LinkedListTest --no-batch', {
+            verbose: true,
+          });
         }).not.toThrow();
+      });
+
+      it('should support targetNamePrefix option', () => {
+        // Update nx.json to add targetNamePrefix
+        updateJson('nx.json', (nxJson) => {
+          // Find the Gradle plugin - it could be a string or an object
+          const pluginIndex = nxJson.plugins.findIndex(
+            (p: string | { plugin: string }) =>
+              p === '@nx/gradle' ||
+              (typeof p === 'object' && p.plugin === '@nx/gradle')
+          );
+
+          if (pluginIndex !== -1) {
+            // Convert string plugin to object with options, or update existing options
+            if (typeof nxJson.plugins[pluginIndex] === 'string') {
+              nxJson.plugins[pluginIndex] = {
+                plugin: '@nx/gradle',
+                options: {
+                  targetNamePrefix: 'gradle-',
+                },
+              };
+            } else {
+              nxJson.plugins[pluginIndex].options = {
+                ...nxJson.plugins[pluginIndex].options,
+                targetNamePrefix: 'gradle-',
+              };
+            }
+          }
+          return nxJson;
+        });
+
+        // Reset daemon to pick up nx.json changes
+        runCLI('reset');
+
+        // Verify prefixed targets exist
+        const output = runCLI('show project app --json=false');
+        expect(output).toContain('gradle-build');
+        expect(output).toContain('gradle-test');
+        expect(output).toContain('gradle-classes');
+
+        // Verify prefixed target works
+        const buildOutput = runCLI('run app:gradle-build --no-batch');
+        expect(buildOutput).toContain('BUILD SUCCESSFUL');
+      });
+
+      it('should not double-prefix CI test targets when using targetNamePrefix with ciTestTargetName', () => {
+        // Update nx.json to add both targetNamePrefix and ciTestTargetName
+        updateJson('nx.json', (nxJson) => {
+          const pluginIndex = nxJson.plugins.findIndex(
+            (p: string | { plugin: string }) =>
+              p === '@nx/gradle' ||
+              (typeof p === 'object' && p.plugin === '@nx/gradle')
+          );
+
+          if (pluginIndex !== -1) {
+            if (typeof nxJson.plugins[pluginIndex] === 'string') {
+              nxJson.plugins[pluginIndex] = {
+                plugin: '@nx/gradle',
+                options: {
+                  targetNamePrefix: 'gradle-',
+                  ciTestTargetName: 'test-ci',
+                },
+              };
+            } else {
+              nxJson.plugins[pluginIndex].options = {
+                ...nxJson.plugins[pluginIndex].options,
+                targetNamePrefix: 'gradle-',
+                ciTestTargetName: 'test-ci',
+              };
+            }
+          }
+          return nxJson;
+        });
+
+        // Reset daemon to pick up nx.json changes
+        runCLI('reset');
+
+        // Verify the CI test target has correct prefixing (not double-prefixed)
+        const appOutput = runCLI('show project app --json', { verbose: false });
+        const appProject = JSON.parse(appOutput);
+
+        // The CI test target should be prefixed once: 'gradle-test-ci'
+        // NOT double-prefixed like 'gradle-test-ci-gradle-MessageUtilsTest'
+        const targetNames = Object.keys(appProject.targets);
+        const ciTestTargets = targetNames.filter((t) => t.includes('test-ci'));
+
+        // Should have gradle-test-ci target(s)
+        expect(ciTestTargets.some((t) => t.startsWith('gradle-test-ci'))).toBe(
+          true
+        );
+
+        // Should NOT have any double-prefixed targets
+        const doublePrefixed = ciTestTargets.filter((t) =>
+          t.includes('gradle-test-ci-gradle-')
+        );
+        expect(doublePrefixed).toEqual([]);
+
+        // Verify the correctly prefixed CI test target exists (e.g., gradle-test-ci--MessageUtilsTest)
+        expect(
+          targetNames.some((t) => t === 'gradle-test-ci--MessageUtilsTest')
+        ).toBe(true);
       });
     }
   );

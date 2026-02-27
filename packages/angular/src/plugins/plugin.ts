@@ -15,10 +15,12 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { targetFromTargetString } from '../utils/targets';
+import { findVitestBaseConfig, loadVite } from './utils/vitest';
 
 export interface AngularPluginOptions {
   targetNamePrefix?: string;
@@ -74,6 +76,7 @@ const knownExecutors = {
   test: new Set([
     '@angular-devkit/build-angular:karma',
     '@angular/build:karma',
+    '@angular/build:unit-test',
   ]),
 };
 
@@ -225,7 +228,8 @@ async function buildAngularProjects(
           format: 'json',
         };
       } else if (knownExecutors.test.has(angularTarget.builder)) {
-        updateTestTarget(
+        await updateTestTarget(
+          projectName,
           targets[nxTargetName],
           angularTarget,
           context,
@@ -418,7 +422,8 @@ async function updateBuildTarget(
   }
 }
 
-function updateTestTarget(
+async function updateTestTarget(
+  projectName: string,
   target: TargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContextV2,
@@ -426,21 +431,41 @@ function updateTestTarget(
   projectRoot: string,
   namedInputs: ReturnType<typeof getNamedInputs>,
   externalDependencies: string[]
-): void {
+): Promise<void> {
   target.cache = true;
   target.inputs =
     'production' in namedInputs
       ? ['default', '^production']
       : ['default', '^default'];
-  target.outputs = getKarmaTargetOutputs(
-    angularTarget,
-    angularWorkspaceRoot,
-    projectRoot,
-    context
-  );
-  externalDependencies.push('karma');
 
-  target.metadata.help.example.options = { codeCoverage: true };
+  const isKarmaRunner =
+    angularTarget.builder === '@angular-devkit/build-angular:karma' ||
+    angularTarget.builder === '@angular/build:karma' ||
+    angularTarget.options?.runner === 'karma';
+
+  if (isKarmaRunner) {
+    target.outputs = getKarmaTargetOutputs(
+      angularTarget,
+      angularWorkspaceRoot,
+      projectRoot,
+      context
+    );
+    externalDependencies.push('karma');
+  } else {
+    target.outputs = await getVitestTargetOutputs(
+      angularTarget,
+      angularWorkspaceRoot,
+      projectRoot,
+      context
+    );
+    externalDependencies.push('vitest');
+  }
+
+  if (angularTarget.builder === '@angular/build:unit-test') {
+    target.metadata.help.example.options = { coverage: true };
+  } else {
+    target.metadata.help.example.options = { codeCoverage: true };
+  }
 }
 
 function updateServerTarget(
@@ -588,20 +613,33 @@ function getKarmaTargetOutputs(
     angularWorkspaceRoot,
     'coverage/{projectName}'
   );
-  if (!target.options?.karmaConfig) {
+
+  let karmaConfigPath: string | undefined;
+  if (target.builder === '@angular/build:unit-test') {
+    karmaConfigPath =
+      typeof target.options?.runnerConfig === 'string'
+        ? target.options?.runnerConfig
+        : target.options?.runnerConfig === true
+          ? 'karma.conf.js'
+          : undefined;
+  } else {
+    karmaConfigPath = target.options?.karmaConfig;
+  }
+
+  if (!karmaConfigPath) {
     return [defaultOutput];
   }
 
   try {
     const { parseConfig } = require('karma/lib/config');
 
-    const karmaConfigPath = join(
+    const karmaConfigFullPath = join(
       context.workspaceRoot,
       angularWorkspaceRoot,
       projectRoot,
-      target.options.karmaConfig
+      karmaConfigPath
     );
-    const config = parseConfig(karmaConfigPath);
+    const config = parseConfig(karmaConfigFullPath);
 
     if (config.coverageReporter.dir) {
       return [
@@ -618,6 +656,160 @@ function getKarmaTargetOutputs(
   }
 
   return [defaultOutput];
+}
+
+function normalizeVitestOutputPath(
+  outputPath: string,
+  workspaceRoot: string,
+  angularWorkspaceRoot: string,
+  projectRoot: string
+): string {
+  const fullPath = isAbsolute(outputPath)
+    ? outputPath
+    : join(workspaceRoot, angularWorkspaceRoot, projectRoot, outputPath);
+
+  return getOutput(fullPath, workspaceRoot, angularWorkspaceRoot, projectRoot);
+}
+
+async function getVitestTargetOutputs(
+  target: AngularTargetConfiguration,
+  angularWorkspaceRoot: string,
+  projectRoot: string,
+  context: CreateNodesContextV2
+): Promise<string[]> {
+  // https://github.com/angular/angular-cli/blob/d9cd609c5d13fe492b1f31973d9be518f8529387/packages/angular/build/src/builders/unit-test/runners/vitest/plugins.ts#L365
+  const defaultOutput = posix.join(
+    '{workspaceRoot}',
+    angularWorkspaceRoot,
+    'coverage/{projectName}'
+  );
+  const outputs: string[] = [];
+
+  try {
+    const runnerConfig = target.options?.runnerConfig;
+    let vitestConfigPath: string | false = false;
+
+    if (typeof runnerConfig === 'string') {
+      vitestConfigPath = join(
+        context.workspaceRoot,
+        angularWorkspaceRoot,
+        projectRoot,
+        runnerConfig
+      );
+    } else if (runnerConfig === true) {
+      vitestConfigPath = await findVitestBaseConfig([
+        join(context.workspaceRoot, angularWorkspaceRoot, projectRoot),
+        join(context.workspaceRoot, angularWorkspaceRoot),
+      ]);
+    }
+
+    let vitestConfig: Record<string, unknown> | undefined;
+    if (vitestConfigPath) {
+      const { resolveConfig } = await loadVite();
+      vitestConfig = await resolveConfig(
+        { configFile: vitestConfigPath, mode: 'development' },
+        'build'
+      );
+    }
+
+    // coverage.reportsDirectory from config
+    const configReportsDir = (
+      vitestConfig?.test as { coverage?: { reportsDirectory?: string } }
+    )?.coverage?.reportsDirectory;
+    if (configReportsDir) {
+      outputs.push(
+        normalizeVitestOutputPath(
+          configReportsDir,
+          context.workspaceRoot,
+          angularWorkspaceRoot,
+          projectRoot
+        )
+      );
+    } else {
+      outputs.push(defaultOutput);
+    }
+
+    // outputFile - executor wins over config
+    if (target.options?.outputFile) {
+      outputs.push(
+        normalizeVitestOutputPath(
+          target.options.outputFile,
+          context.workspaceRoot,
+          angularWorkspaceRoot,
+          projectRoot
+        )
+      );
+    } else {
+      const configOutputFile = (vitestConfig?.test as { outputFile?: unknown })
+        ?.outputFile;
+      if (typeof configOutputFile === 'string') {
+        outputs.push(
+          normalizeVitestOutputPath(
+            configOutputFile,
+            context.workspaceRoot,
+            angularWorkspaceRoot,
+            projectRoot
+          )
+        );
+      } else if (typeof configOutputFile === 'object' && configOutputFile) {
+        for (const path of Object.values(
+          configOutputFile as Record<string, unknown>
+        )) {
+          if (typeof path === 'string') {
+            outputs.push(
+              normalizeVitestOutputPath(
+                path,
+                context.workspaceRoot,
+                angularWorkspaceRoot,
+                projectRoot
+              )
+            );
+          }
+        }
+      }
+    }
+
+    // reporters outputFile - executor wins over config
+    if (Array.isArray(target.options?.reporters)) {
+      for (const reporter of target.options.reporters) {
+        if (Array.isArray(reporter) && reporter[1]?.outputFile) {
+          outputs.push(
+            normalizeVitestOutputPath(
+              reporter[1].outputFile,
+              context.workspaceRoot,
+              angularWorkspaceRoot,
+              projectRoot
+            )
+          );
+        }
+      }
+    } else {
+      const configReporters = (vitestConfig?.test as { reporters?: unknown[] })
+        ?.reporters;
+      if (Array.isArray(configReporters)) {
+        for (const reporter of configReporters) {
+          if (
+            Array.isArray(reporter) &&
+            (reporter[1] as { outputFile?: string })?.outputFile
+          ) {
+            outputs.push(
+              normalizeVitestOutputPath(
+                (reporter[1] as { outputFile: string }).outputFile,
+                context.workspaceRoot,
+                angularWorkspaceRoot,
+                projectRoot
+              )
+            );
+          }
+        }
+      }
+    }
+  } catch {
+    // Silent fallback to defaults on any error
+  }
+
+  const uniqueOutputs = [...new Set(outputs)];
+  return uniqueOutputs.length > 0 ? uniqueOutputs : [defaultOutput];
 }
 
 function getBrowserAndServerTargetInputsAndOutputs(
@@ -732,26 +924,6 @@ function mergeInputs(
       ? [{ externalDependencies: Array.from(externalDependencies) }]
       : []),
   ];
-}
-
-// angular support abbreviated target specifiers, this is adapter from:
-// https://github.com/angular/angular-cli/blob/7d9ce246a33c60ec96eb4bf99520f5475716a910/packages/angular_devkit/architect/src/api.ts#L336
-function targetFromTargetString(
-  specifier: string,
-  abbreviatedProjectName?: string,
-  abbreviatedTargetName?: string
-) {
-  const tuple = specifier.split(':', 3);
-  if (tuple.length < 2) {
-    // invalid target, ignore
-    return undefined;
-  }
-
-  // we only care about project and target
-  return {
-    project: tuple[0] || abbreviatedProjectName || '',
-    target: tuple[1] || abbreviatedTargetName || '',
-  };
 }
 
 function getOutput(

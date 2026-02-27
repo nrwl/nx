@@ -34,7 +34,6 @@ import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { major } from 'semver';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const pmc = getPackageManagerCommand();
@@ -240,23 +239,9 @@ async function buildJestTargets(
     customConditions: null,
   });
 
-  // Jest 30 + Node.js 24 can't parse TS configs with imports.
-  // This flag does not exist in Node 20/22.
-  // https://github.com/jestjs/jest/issues/15682
-  const nodeVersion = major(process.version);
-
   const env: Record<string, string> = {
     TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions,
   };
-
-  if (nodeVersion >= 24) {
-    const currentOptions = process.env.NODE_OPTIONS || '';
-    if (!currentOptions.includes('--no-experimental-strip-types')) {
-      env.NODE_OPTIONS = (
-        currentOptions + ' --no-experimental-strip-types'
-      ).trim();
-    }
-  }
 
   const target: TargetConfiguration = (targets[options.targetName] = {
     command: 'jest',
@@ -316,7 +301,7 @@ async function buildJestTargets(
         presetCache
       );
       const targetGroup = [];
-      const dependsOn: string[] = [];
+      const dependsOn: TargetConfiguration['dependsOn'] = [];
       metadata = {
         targetGroups: {
           [groupName]: targetGroup,
@@ -355,7 +340,13 @@ async function buildJestTargets(
         }
 
         const targetName = `${options.ciTargetName}--${relativePath}`;
-        dependsOn.push(targetName);
+        dependsOn.push({
+          target: targetName,
+          projects: 'self',
+          params: 'forward',
+          options: 'forward',
+        });
+
         targets[targetName] = {
           command: `jest ${relativePath}`,
           cache,
@@ -445,10 +436,9 @@ async function buildJestTargets(
         watchman: false,
       });
 
-      const jest = require(resolveJestPath(
-        projectRoot,
-        context.workspaceRoot
-      )) as typeof import('jest');
+      const jest = require(
+        resolveJestPath(projectRoot, context.workspaceRoot)
+      ) as typeof import('jest');
       const source = new jest.SearchSource(jestContext);
 
       const jestVersion = getInstalledJestMajorVersion()!;
@@ -467,29 +457,7 @@ async function buildJestTargets(
             [groupName]: targetGroup,
           },
         };
-        const dependsOn: string[] = [];
-
-        targets[options.ciTargetName] = {
-          executor: 'nx:noop',
-          cache: true,
-          inputs,
-          outputs,
-          dependsOn,
-          metadata: {
-            technologies: ['jest'],
-            description: 'Run Jest Tests in CI',
-            nonAtomizedTarget: options.targetName,
-            help: {
-              command: `${pmc.exec} jest --help`,
-              example: {
-                options: {
-                  coverage: true,
-                },
-              },
-            },
-          },
-        };
-        targetGroup.push(options.ciTargetName);
+        const dependsOn: TargetConfiguration['dependsOn'] = [];
 
         for (const testPath of testPaths) {
           const relativePath = normalizePath(
@@ -513,7 +481,12 @@ async function buildJestTargets(
           }
 
           const targetName = `${options.ciTargetName}--${relativePath}`;
-          dependsOn.push(targetName);
+          dependsOn.push({
+            target: targetName,
+            projects: 'self',
+            params: 'forward',
+            options: 'forward',
+          });
           targets[targetName] = {
             command: `jest ${relativePath}`,
             cache,
@@ -538,6 +511,27 @@ async function buildJestTargets(
           };
           targetGroup.push(targetName);
         }
+        targets[options.ciTargetName] = {
+          executor: 'nx:noop',
+          cache: true,
+          inputs,
+          outputs,
+          dependsOn,
+          metadata: {
+            technologies: ['jest'],
+            description: 'Run Jest Tests in CI',
+            nonAtomizedTarget: options.targetName,
+            help: {
+              command: `${pmc.exec} jest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.unshift(options.ciTargetName);
       }
     }
   }
@@ -716,9 +710,11 @@ function requireJestUtil<T>(
     });
   }
 
-  return require(require.resolve(packageName, {
-    paths: [dirname(resolvedJestCorePaths[jestPath])],
-  }));
+  return require(
+    require.resolve(packageName, {
+      paths: [dirname(resolvedJestCorePaths[jestPath])],
+    })
+  );
 }
 
 async function getTestPaths(

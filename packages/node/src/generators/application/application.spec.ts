@@ -127,7 +127,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMaps: true,
+              sourceMap: true,
             }),
           ],
         };
@@ -890,7 +890,7 @@ describe('app', () => {
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
@@ -967,8 +967,8 @@ describe('app', () => {
               assets: ["./src/assets"],
               optimization: false,
               outputHashing: 'none',
-              generatePackageJson: true,
-              sourceMaps: true,
+              generatePackageJson: false,
+              sourceMap: true,
             })
           ],
         };

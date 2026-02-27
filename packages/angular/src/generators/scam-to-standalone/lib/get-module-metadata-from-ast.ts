@@ -6,10 +6,8 @@ export function getModuleMetadataFromAST(
 ) {
   const NGMODULE_CONTENT_SELECTOR =
     'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=NgModule]))';
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const moduleNodes = tsquery(componentAST, NGMODULE_CONTENT_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const moduleNodes = query(componentAST, NGMODULE_CONTENT_SELECTOR);
   const moduleContents = componentFileContents.slice(
     moduleNodes[0].getStart(),
     moduleNodes[0].getEnd()
@@ -27,19 +25,11 @@ export function getModuleMetadataFromAST(
   const NGMODULE_NAME_SELECTOR =
     'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=NgModule])) > Identifier';
 
-  const moduleAST = tsquery.ast(moduleContents);
-  const importsNode = tsquery(moduleAST, NGMODULE_IMPORTS_SELECTOR, {
-    visitAllChildren: true,
-  })[0];
-  const exportsNode = tsquery(moduleAST, NGMODULE_EXPORTS_SELECTOR, {
-    visitAllChildren: true,
-  })[0];
-  const declarationsNode = tsquery(moduleAST, NGMODULE_DECLARATIONS_SELECTOR, {
-    visitAllChildren: true,
-  })[0];
-  const providersNodes = tsquery(moduleAST, NGMODULE_PROVIDERS_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const moduleAST = ast(moduleContents);
+  const importsNode = query(moduleAST, NGMODULE_IMPORTS_SELECTOR)[0];
+  const exportsNode = query(moduleAST, NGMODULE_EXPORTS_SELECTOR)[0];
+  const declarationsNode = query(moduleAST, NGMODULE_DECLARATIONS_SELECTOR)[0];
+  const providersNodes = query(moduleAST, NGMODULE_PROVIDERS_SELECTOR);
 
   const exportsArray = moduleContents
     .slice(exportsNode.getStart(), exportsNode.getEnd())
@@ -64,9 +54,7 @@ export function getModuleMetadataFromAST(
           .replace(']', '')
           .split(',')
       : [];
-  const moduleName = tsquery(moduleAST, NGMODULE_NAME_SELECTOR, {
-    visitAllChildren: true,
-  })[0].getText();
+  const moduleName = query(moduleAST, NGMODULE_NAME_SELECTOR)[0].getText();
   return {
     moduleNodes,
     exportsArray,

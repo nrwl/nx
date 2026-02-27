@@ -13,14 +13,11 @@ function _getMfProjects(
       return;
     }
     const webpackConfig = tree.read(webpackPath, 'utf-8');
-    const { tsquery } = require('@phenomnomnominal/tsquery');
-    const ast = tsquery.ast(webpackConfig);
-    const moduleFederationWebpackConfig = tsquery(
-      ast,
-      MODULE_FEDERATION_IDENTIFIER,
-      {
-        visitAllChildren: true,
-      }
+    const { ast, query } = require('@phenomnomnominal/tsquery');
+    const sourceFile = ast(webpackConfig);
+    const moduleFederationWebpackConfig = query(
+      sourceFile,
+      MODULE_FEDERATION_IDENTIFIER
     );
     if (
       !moduleFederationWebpackConfig ||

@@ -6,18 +6,17 @@ In addition to the features provided by the Angular CLI builder, the `@nx/angula
 - Providing a function to transform the application's `index.html` file
 - Incremental builds
 
-{% callout type="check" title="Dev Server" %}
+:::tip[Dev Server]
 The [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.
-{% /callout %}
+:::
 
 ## Examples
 
-{% tabs %}
-{% tab label="Providing esbuild plugins" %}
+##### Providing esbuild plugins
 
 The executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.
 
-```json {% fileName="apps/my-app/project.json" highlightLines=["8-16"] %}
+```json title="apps/my-app/project.json" {8-16}
 {
   ...
   "targets": {
@@ -41,7 +40,7 @@ The executor accepts a `plugins` option that allows you to provide esbuild plugi
 }
 ```
 
-```ts {% fileName="apps/my-app/plugins/plugin1.js" %}
+```ts title="apps/my-app/plugins/plugin1.js"
 const plugin1 = {
   name: 'plugin1',
   setup(build) {
@@ -53,7 +52,7 @@ const plugin1 = {
 module.exports = plugin1;
 ```
 
-```ts {% fileName="apps/my-app/plugins/plugin2.js" %}
+```ts title="apps/my-app/plugins/plugin2.js"
 function plugin2({ someOption }) {
   return {
     name: 'plugin2',
@@ -69,18 +68,16 @@ module.exports = plugin2;
 
 Additionally, we need to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this by creating or updating a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with the following content:
 
-```ts {% fileName="apps/my-app/src/types.d.ts" %}
+```ts title="apps/my-app/src/types.d.ts"
 declare const PLUGIN1_TEXT: number;
 declare const PLUGIN2_TEXT: string;
 ```
 
-{% /tab %}
-
-{% tab label="Transforming the 'index.html' file" %}
+##### Transforming the 'index.html' file
 
 The executor accepts an `indexHtmlTransformer` option to provide a path to a file with a default export for a function that receives the application's `index.html` file contents and outputs the updated contents.
 
-```json {% fileName="apps/my-app/project.json" highlightLines=[8] %}
+```json title="apps/my-app/project.json" {8}
 {
   ...
   "targets": {
@@ -96,7 +93,7 @@ The executor accepts an `indexHtmlTransformer` option to provide a path to a fil
 }
 ```
 
-```ts {% fileName="apps/my-app/index-html.transformer.ts" %}
+```ts title="apps/my-app/index-html.transformer.ts"
 export default function (indexContent: string) {
   return indexContent.replace(
     '<title>my-app</title>',
@@ -104,6 +101,3 @@ export default function (indexContent: string) {
   );
 }
 ```
-
-{% /tab %}
-{% /tabs %}

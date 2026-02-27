@@ -1,7 +1,6 @@
 ## Examples
 
-{% tabs %}
-{% tab label="Simple Library" %}
+##### Simple Library
 
 Creates the `my-ui-lib` library with an `ui` tag:
 
@@ -9,9 +8,7 @@ Creates the `my-ui-lib` library with an `ui` tag:
 nx g @nx/angular:library libs/my-ui-lib --tags=ui
 ```
 
-{% /tab %}
-
-{% tab label="Publishable Library" %}
+##### Publishable Library
 
 Creates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:
 
@@ -19,9 +16,7 @@ Creates the `my-lib` library that can be built producing an output following the
 nx g @nx/angular:library libs/my-lib --publishable --import-path=@my-org/my-lib
 ```
 
-{% /tab %}
-
-{% tab label="Buildable Library" %}
+##### Buildable Library
 
 Creates the `my-lib` library with support for incremental builds:
 
@@ -29,14 +24,10 @@ Creates the `my-lib` library with support for incremental builds:
 nx g @nx/angular:library libs/my-lib --buildable
 ```
 
-{% /tab %}
+##### Nested Folder & Import
 
-{% tab label="Nested Folder & Import"%}
 Creates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:
 
 ```bash
 nx g @nx/angular:library libs/nested/my-lib --importPath=@myorg/nested/my-lib
 ```
-
-{% /tab %}
-{% /tabs %}

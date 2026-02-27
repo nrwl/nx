@@ -6,10 +6,9 @@ If this option is set in `project.json`, then it will be removed in favor of an 
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="project.json" %}
+```json title="project.json"
 {
   "targets": {
     "build": {
@@ -22,10 +21,9 @@ If this option is set in `project.json`, then it will be removed in favor of an 
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[6] fileName="project.json" %}
+```json title="project.json" {6}
 {
   "targets": {
     "build": {
@@ -37,6 +35,3 @@ If this option is set in `project.json`, then it will be removed in favor of an 
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
