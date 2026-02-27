@@ -4,15 +4,17 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   createNodesFromFiles,
-  readJsonFile,
-  writeJsonFile,
   logger,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { findProjectForPath } from 'nx/src/devkit-internals';
+import {
+  PluginCache,
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 
 import {
   populateGradleReport,
@@ -59,14 +61,6 @@ function normalizeOptions(options: GradlePluginOptions): GradlePluginOptions {
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
 
-function readTargetsCache(cachePath: string): GradleTargets {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
@@ -77,7 +71,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const cache = readPluginCache<Partial<ProjectConfiguration>>(cachePath);
 
     await populateGradleReport(
       context.workspaceRoot,
@@ -93,7 +87,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       return createNodesFromFiles(
         makeCreateNodesForGradleConfigFile(
           gradleReport,
-          targetsCache,
+          cache,
           gradleProjectRootToTestFilesMap
         ),
         buildFiles,
@@ -101,7 +95,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      safeWritePluginCache(cachePath, cache);
     }
   },
 ];
@@ -109,7 +103,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 export const makeCreateNodesForGradleConfigFile =
   (
     gradleReport: GradleReport,
-    targetsCache: GradleTargets = {},
+    cache: PluginCache<Partial<ProjectConfiguration>> = new PluginCache(),
     gradleProjectRootToTestFilesMap: Record<string, string[]> = {}
   ) =>
   async (
@@ -125,14 +119,19 @@ export const makeCreateNodesForGradleConfigFile =
       options ?? {},
       context
     );
-    targetsCache[hash] ??= await createGradleProject(
-      gradleReport,
-      gradleFilePath,
-      options,
-      context,
-      gradleProjectRootToTestFilesMap[projectRoot]
-    );
-    const project = targetsCache[hash];
+    if (!cache.has(hash)) {
+      cache.set(
+        hash,
+        await createGradleProject(
+          gradleReport,
+          gradleFilePath,
+          options,
+          context,
+          gradleProjectRootToTestFilesMap[projectRoot]
+        )
+      );
+    }
+    const project = cache.get(hash);
     if (!project) {
       return {};
     }

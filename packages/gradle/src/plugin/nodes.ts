@@ -2,16 +2,18 @@ import {
   CreateNodesV2,
   CreateNodesContextV2,
   ProjectConfiguration,
-  readJsonFile,
-  writeJsonFile,
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import {
+  PluginCache,
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -28,10 +30,6 @@ import {
 } from './utils/gradle-plugin-options';
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
-
-function readProjectsCache(cachePath: string): GradleTargets {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
 
 /**
  * Strips nxConfig from project and all targets, returning only Gradle-detected configuration.
@@ -111,10 +109,6 @@ function extractNxConfigOnly(
   return result;
 }
 
-export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
@@ -125,7 +119,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const projectsCache = readProjectsCache(cachePath);
+    const cache = readPluginCache<Partial<ProjectConfiguration>>(cachePath);
 
     await populateProjectGraph(
       context.workspaceRoot,
@@ -153,9 +147,14 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
         );
 
         // Get project from cache or nodes
-        projectsCache[hash] ??=
-          nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
-        const project = projectsCache[hash];
+        if (!cache.has(hash)) {
+          const nodeProject =
+            nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
+          if (nodeProject) {
+            cache.set(hash, nodeProject);
+          }
+        }
+        const project = cache.get(hash);
 
         if (!project) {
           continue;
@@ -195,7 +194,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 
       return results;
     } finally {
-      writeTargetsToCache(cachePath, projectsCache);
+      safeWritePluginCache(cachePath, cache);
     }
   },
 ];
@@ -203,7 +202,9 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 export const makeCreateNodesForGradleConfigFile =
   (
     projects: Record<string, Partial<ProjectConfiguration>>,
-    projectsCache: GradleTargets = {},
+    projectsCache: PluginCache<
+      Partial<ProjectConfiguration>
+    > = new PluginCache(),
     externalNodes: Record<string, ProjectGraphExternalNode> = {}
   ) =>
   async (
@@ -219,9 +220,14 @@ export const makeCreateNodesForGradleConfigFile =
       options ?? {},
       context
     );
-    projectsCache[hash] ??=
-      projects[projectRoot] ?? projects[join(workspaceRoot, projectRoot)];
-    const project = projectsCache[hash];
+    if (!projectsCache.has(hash)) {
+      const nodeProject =
+        projects[projectRoot] ?? projects[join(workspaceRoot, projectRoot)];
+      if (nodeProject) {
+        projectsCache.set(hash, nodeProject);
+      }
+    }
+    const project = projectsCache.get(hash);
     if (!project) {
       return {};
     }

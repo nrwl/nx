@@ -1,16 +1,16 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import {
-  logger,
-  workspaceRoot,
-  ProjectConfiguration,
-  writeJsonFile,
-} from '@nx/devkit';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import {
+  PluginCache,
+  readPluginCache,
+  safeWritePluginCache,
+} from 'nx/src/utils/plugin-cache-utils';
 
 export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration
@@ -26,7 +26,7 @@ export interface AnalysisErrorResult {
 }
 export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
 
-const analyzerCaches = new Map<string, Record<string, AnalysisSuccessResult>>();
+const analyzerCaches = new Map<string, PluginCache<AnalysisSuccessResult>>();
 
 function getCachePathForOptionsHash(optionsHash: string): string {
   return join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`);
@@ -34,37 +34,21 @@ function getCachePathForOptionsHash(optionsHash: string): string {
 
 function readAnalyzerCache(
   optionsHash: string
-): Record<string, AnalysisSuccessResult> {
+): PluginCache<AnalysisSuccessResult> {
   if (analyzerCaches.has(optionsHash)) {
     return analyzerCaches.get(optionsHash)!;
   }
   const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  try {
-    return JSON.parse(readFileSync(cacheFilePath, 'utf-8'));
-  } catch {
-    return {};
-  }
+  return readPluginCache<AnalysisSuccessResult>(cacheFilePath);
 }
 
 function writeAnalyzerCache(
   optionsHash: string,
-  cache: Record<string, AnalysisSuccessResult>
+  cache: PluginCache<AnalysisSuccessResult>
 ): void {
   analyzerCaches.set(optionsHash, cache);
   const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  const cacheDir = dirname(cacheFilePath);
-  if (!existsSync(cacheDir)) {
-    mkdirSync(cacheDir, { recursive: true });
-  }
-  try {
-    writeJsonFile(cacheFilePath, cache);
-  } catch (error) {
-    logger.warn(
-      `Failed to write .NET analyzer cache to ${cacheFilePath}: ${
-        (error as Error).message
-      }`
-    );
-  }
+  safeWritePluginCache(cacheFilePath, cache);
 }
 
 /**
@@ -247,7 +231,7 @@ export async function analyzeProjects(
 
   const optionsHash = hashObject(options);
   const analyzerCache = readAnalyzerCache(optionsHash);
-  const cachedResult = analyzerCache[filesHash];
+  const cachedResult = analyzerCache.get(filesHash);
   if (cachedResult) {
     // Update cache
     cache = {
@@ -267,10 +251,8 @@ export async function analyzeProjects(
       result,
     };
     // Update persistent cache
-    writeAnalyzerCache(optionsHash, {
-      ...analyzerCache,
-      [filesHash]: result,
-    });
+    analyzerCache.set(filesHash, result);
+    writeAnalyzerCache(optionsHash, analyzerCache);
 
     return result;
   } catch (error) {

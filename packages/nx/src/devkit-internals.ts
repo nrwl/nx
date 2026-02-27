@@ -47,3 +47,9 @@ export { isUsingPrettierInTree } from './utils/is-using-prettier';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
+export {
+  PluginCache,
+  readPluginCache,
+  safeWritePluginCache,
+  safeWriteFileCache,
+} from './utils/plugin-cache-utils';

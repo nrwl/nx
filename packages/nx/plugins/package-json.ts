@@ -8,24 +8,19 @@ import {
 import { workspaceDataDirectory } from '../src/utils/cache-directory';
 import { join } from 'path';
 import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
-import { readJsonFile, writeJsonFile } from '../src/utils/fileutils';
+import { readJsonFile } from '../src/utils/fileutils';
+import {
+  PluginCache,
+  readPluginCache,
+  safeWritePluginCache,
+} from '../src/utils/plugin-cache-utils';
 
-export type PackageJsonConfigurationCache = {
-  [hash: string]: ProjectConfiguration;
-};
+export type PackageJsonConfigurationCache = PluginCache<ProjectConfiguration>;
 
 const cachePath = join(workspaceDataDirectory, 'package-json.hash');
 
-export function readPackageJsonConfigurationCache() {
-  try {
-    return readJsonFile<PackageJsonConfigurationCache>(cachePath);
-  } catch (e) {
-    return {};
-  }
-}
-
-function writeCache(cache: PackageJsonConfigurationCache) {
-  writeJsonFile(cachePath, cache);
+export function readPackageJsonConfigurationCache(): PackageJsonConfigurationCache {
+  return readPluginCache<ProjectConfiguration>(cachePath);
 }
 
 const plugin: NxPluginV2 = {
@@ -54,7 +49,7 @@ const plugin: NxPluginV2 = {
         context
       );
 
-      writeCache(cache);
+      safeWritePluginCache(cachePath, cache);
 
       return result;
     },

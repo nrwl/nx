@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import {
@@ -19,6 +19,7 @@ import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import { detectPackageManager } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
+import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { readBunLockFile } from './lock-file/bun-parser';
 import {
@@ -206,11 +207,10 @@ function writeExternalNodesCache(
   nodes: ProjectGraph['externalNodes'],
   keyMap: Map<string, any>
 ) {
-  mkdirSync(dirname(externalNodesHashFile), { recursive: true });
   const serializedKeyMap = serializeKeyMap(keyMap);
   const cacheData = { nodes, keyMap: serializedKeyMap };
-  writeFileSync(externalNodesCache, JSON.stringify(cacheData, null, 2));
-  writeFileSync(externalNodesHashFile, hash);
+  safeWriteFileCache(externalNodesCache, JSON.stringify(cacheData, null, 2));
+  safeWriteFileCache(externalNodesHashFile, hash);
 }
 
 function readCachedExternalNodes(): {
@@ -228,9 +228,8 @@ function writeDependenciesCache(
   hash: string,
   dependencies: RawProjectGraphDependency[]
 ) {
-  mkdirSync(dirname(dependenciesHashFile), { recursive: true });
-  writeFileSync(dependenciesCache, JSON.stringify(dependencies, null, 2));
-  writeFileSync(dependenciesHashFile, hash);
+  safeWriteFileCache(dependenciesCache, JSON.stringify(dependencies, null, 2));
+  safeWriteFileCache(dependenciesHashFile, hash);
 }
 
 function readCachedDependencies(): RawProjectGraphDependency[] {
