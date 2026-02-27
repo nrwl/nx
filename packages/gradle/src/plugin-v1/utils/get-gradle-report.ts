@@ -3,6 +3,7 @@ import { join, relative } from 'node:path';
 
 import {
   AggregateCreateNodesError,
+  logger,
   normalizePath,
   readJsonFile,
   workspaceRoot,
@@ -130,7 +131,15 @@ export function writeGradleReportToCache(
     ),
   };
 
-  writeJsonFile(cachePath, gradleReportJson);
+  try {
+    writeJsonFile(cachePath, gradleReportJson);
+  } catch (e) {
+    logger.warn(
+      `Failed to write Gradle report cache to ${cachePath}: ${
+        e instanceof Error ? e.message : 'unknown error'
+      }`
+    );
+  }
 }
 
 let gradleReportCache: GradleReport;

@@ -8,24 +8,24 @@ import {
 import { workspaceDataDirectory } from '../src/utils/cache-directory';
 import { join } from 'path';
 import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
-import { readJsonFile, writeJsonFile } from '../src/utils/fileutils';
+import { readJsonFile } from '../src/utils/fileutils';
+import { PluginCache, readPluginCache } from '../src/utils/plugin-cache-utils';
 
-export type PackageJsonConfigurationCache = {
-  [hash: string]: ProjectConfiguration;
-};
+export type PackageJsonConfigurationCache = PluginCache<ProjectConfiguration>;
 
 const cachePath = join(workspaceDataDirectory, 'package-json.hash');
 
-export function readPackageJsonConfigurationCache() {
-  try {
-    return readJsonFile<PackageJsonConfigurationCache>(cachePath);
-  } catch (e) {
-    return {};
-  }
+let packageJsonPluginCache: PluginCache<ProjectConfiguration> | null = null;
+
+export function readPackageJsonConfigurationCache(): PackageJsonConfigurationCache {
+  packageJsonPluginCache = readPluginCache<ProjectConfiguration>(cachePath);
+  return packageJsonPluginCache;
 }
 
-function writeCache(cache: PackageJsonConfigurationCache) {
-  writeJsonFile(cachePath, cache);
+function writeCache() {
+  if (packageJsonPluginCache) {
+    packageJsonPluginCache.writeToDisk(cachePath);
+  }
 }
 
 const plugin: NxPluginV2 = {
@@ -54,7 +54,7 @@ const plugin: NxPluginV2 = {
         context
       );
 
-      writeCache(cache);
+      writeCache();
 
       return result;
     },

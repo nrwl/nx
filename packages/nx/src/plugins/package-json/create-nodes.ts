@@ -186,7 +186,7 @@ export function createNodeFromPackageJson(
     nxVersion,
   });
 
-  const cached = cache[hash];
+  const cached = cache.get(hash);
   if (cached) {
     return {
       projects: {
@@ -203,7 +203,7 @@ export function createNodeFromPackageJson(
     isInPackageManagerWorkspaces
   );
 
-  cache[hash] = project;
+  cache.set(hash, project);
   return {
     projects: {
       [project.root]: project,
