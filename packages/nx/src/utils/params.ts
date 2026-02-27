@@ -493,16 +493,10 @@ function validateProperty(
     }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
-    if (
-      typeof schema.minItems === 'number' &&
-      value.length < schema.minItems
-    ) {
+    if (typeof schema.minItems === 'number' && value.length < schema.minItems) {
       throwInvalidSchema(propName, schema);
     }
-    if (
-      typeof schema.maxItems === 'number' &&
-      value.length > schema.maxItems
-    ) {
+    if (typeof schema.maxItems === 'number' && value.length > schema.maxItems) {
       throwInvalidSchema(propName, schema);
     }
     if (Array.isArray(schema.items)) {
