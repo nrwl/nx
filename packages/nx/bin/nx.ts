@@ -29,6 +29,7 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
+import { readJsonFile } from '../src/utils/fileutils';
 
 async function main() {
   if (
@@ -280,7 +281,7 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
       try {
         const externalRequire = createRequire(join(searchPath, 'index.js'));
         const pkgJsonPath = externalRequire.resolve('nx/package.json');
-        return require(pkgJsonPath).version;
+        return readJsonFile(pkgJsonPath).version;
       } catch {}
     }
   } catch {}
