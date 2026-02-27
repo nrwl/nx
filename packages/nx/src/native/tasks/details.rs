@@ -1,6 +1,5 @@
 use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::External;
-use napi::bindgen_prelude::*;
 use rusqlite::params;
 use std::sync::{Arc, Mutex};
 use tracing::trace;

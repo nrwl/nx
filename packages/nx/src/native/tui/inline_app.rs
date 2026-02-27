@@ -219,7 +219,7 @@ impl InlineApp {
     /// into scrollback.
     fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) -> Option<()> {
         let (rows, cols) = terminal_dimensions;
-        let mut state = self.core.state().lock();
+        let state = self.core.state().lock();
 
         let task_id = self.selected_item.as_ref()?.id();
         let pty_arc = state.get_pty_instance(task_id)?;
