@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, renameSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -10,6 +10,7 @@ import type {
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { workspaceDataDirectory } from '../utils/cache-directory';
+import { logger } from '../utils/logger';
 import {
   directoryExists,
   fileExists,
@@ -261,9 +262,12 @@ export function writeCache(
     }
   } while (!done && retry < 5);
   if (!done) {
-    throw new Error(
-      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts.`
+    logger.warn(
+      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts. Continuing without cache.`
     );
+    tryRemoveFile(nxProjectGraph);
+    tryRemoveFile(nxFileMap);
+    tryRemoveFile(nxSourceMaps);
   }
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
@@ -438,6 +442,16 @@ type PluginData = {
   version: string;
   options?: unknown;
 };
+
+function tryRemoveFile(path: string): void {
+  try {
+    if (existsSync(path)) {
+      rmSync(path);
+    }
+  } catch {
+    // Best effort
+  }
+}
 
 function getNxJsonPluginsData(
   nxJson: NxJsonConfiguration,

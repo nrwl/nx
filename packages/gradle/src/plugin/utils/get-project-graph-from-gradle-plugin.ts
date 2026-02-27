@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   AggregateCreateNodesError,
   hashArray,
+  logger,
   ProjectConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
@@ -56,7 +57,15 @@ export function writeProjectGraphReportToCache(
     ...results,
   };
 
-  writeJsonFile(cachePath, projectGraphReportJson);
+  try {
+    writeJsonFile(cachePath, projectGraphReportJson);
+  } catch (e) {
+    logger.warn(
+      `Failed to write Gradle project graph report cache to ${cachePath}: ${
+        e instanceof Error ? e.message : 'unknown error'
+      }`
+    );
+  }
 }
 
 let projectGraphReportCache: ProjectGraphReport;
