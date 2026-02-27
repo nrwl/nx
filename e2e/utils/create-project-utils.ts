@@ -1,5 +1,4 @@
 import { copySync, ensureDirSync, moveSync, removeSync } from 'fs-extra';
-import * as isCI from 'is-ci';
 import {
   createFile,
   directoryExists,
@@ -10,6 +9,7 @@ import {
 } from './file-utils';
 import {
   e2eCwd,
+  isCI,
   getLatestLernaVersion,
   getPublishedVersion,
   getSelectedPackageManager,

@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { existsSync } from 'fs-extra';
-import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { gte } from 'semver';
@@ -18,6 +17,7 @@ import {
 import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
+  isCI,
   getNpmMajorVersion,
   getPnpmVersion,
   getPublishedVersion,

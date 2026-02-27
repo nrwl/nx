@@ -4,7 +4,7 @@ import { ReportData, ScopeData, TrendData } from './model';
 import { scrapeIssues } from './scrape-issues';
 import { formatGhReport, getSlackMessageJson } from './format-slack-message';
 import { setOutput } from '@actions/core';
-import isCI from 'is-ci';
+const isCI = !!process.env.CI;
 
 const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 
