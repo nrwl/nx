@@ -1,0 +1,2 @@
+exclude-reads:
+  - '**/node_modules/**'
