@@ -1,13 +1,10 @@
 {
   "name": "dev.nx.maven:maven-batch-runner",
-  "projectType": "application",
   "targets": {
     "mvn:package": {
       "options": {
         "goals": ["jar:jar@default-jar", "shade:shade@default"]
       }
     }
-  },
-  "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["dev.nx.maven:nx-maven-shared"]
+  }
 }
