@@ -29,12 +29,14 @@ pub struct ImportResult {
     pub source_project: String,
     pub dynamic_import_expressions: Vec<String>,
     pub static_import_expressions: Vec<String>,
+    pub type_import_expressions: Vec<String>,
 }
 
 #[derive(Debug)]
 enum ImportType {
     Static,
     Dynamic,
+    Type,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum BlockType {
@@ -351,6 +353,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                                 return match &state.import_type {
                                     ImportType::Static => Some((import, ImportType::Static)),
                                     ImportType::Dynamic => Some((import, ImportType::Dynamic)),
+                                    ImportType::Type => Some((import, ImportType::Type)),
                                 };
                             }
                         }
@@ -370,14 +373,22 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                 // Ex: import type { } from 'a';
                 Ident(i) if i == "type" => {
                     if let Some(next) = state.next() {
-                        // What follows a type import is pretty strict, otherwise ignore it
                         match &next.token {
-                            // Matches import type {} from 'a';
-                            Token::LBrace => {}
-                            // Matches import type * from 'a';
-                            Token::BinOp(op) if *op == BinOpToken::Mul => {}
-                            // Matches import type Cat from 'a';
-                            Token::Word(Ident(_)) => {}
+                            Token::LBrace
+                            | Token::BinOp(BinOpToken::Mul)
+                            | Token::Word(Ident(_)) => {
+                                // Look ahead for the 'from' keyword and then a string literal
+                                while let Some(token) = state.next() {
+                                    match &token.token {
+                                        Token::Word(Keyword(Export))
+                                        | Token::Word(Keyword(Import)) => break,
+                                        Token::Str { value, .. } => {
+                                            return Some((value.to_string(), ImportType::Type));
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
                             _ => {
                                 return None;
                             }
@@ -428,6 +439,17 @@ fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
                         }
                     }
                 }
+                // Look for the 'from' and a string literal
+                while let Some(token) = state.next() {
+                    match &token.token {
+                        Token::Str { value, .. } => {
+                            return Some((value.to_string(), ImportType::Type));
+                        }
+                        Token::Word(Keyword(Export)) | Token::Word(Keyword(Import)) => break,
+                        _ => {}
+                    }
+                }
+                return None;
             }
             // Matches export * from 'a';
             Token::BinOp(op) if *op == BinOpToken::Mul => {}
@@ -568,6 +590,7 @@ fn process_file(
 
     let mut static_import_expressions: Vec<(String, BytePos)> = vec![];
     let mut dynamic_import_expressions: Vec<(String, BytePos)> = vec![];
+    let mut type_import_expressions: Vec<(String, BytePos)> = vec![];
 
     loop {
         let current_token = state.next();
@@ -612,6 +635,9 @@ fn process_file(
                     }
                     ImportType::Dynamic => {
                         dynamic_import_expressions.push((specifier, pos));
+                    }
+                    ImportType::Type => {
+                        type_import_expressions.push((specifier, pos));
                     }
                 }
             }
@@ -670,12 +696,17 @@ fn process_file(
         .into_iter()
         .filter_map(code_is_not_ignored)
         .collect();
+    let type_import_expressions = type_import_expressions
+        .into_iter()
+        .filter_map(code_is_not_ignored)
+        .collect();
 
     Ok(Some(ImportResult {
         file: file_path.clone(),
         source_project: source_project.clone(),
         static_import_expressions,
         dynamic_import_expressions,
+        type_import_expressions,
     }))
 }
 
@@ -720,6 +751,7 @@ mod find_imports {
     use std::env;
     use std::path::PathBuf;
     use swc_common::comments::NoopComments;
+    use swc_ecma_dep_graph::DependencyKind;
 
     #[test]
     fn should_not_include_ignored_imports() {
@@ -1546,6 +1578,7 @@ import(myTag`react@${version}`);
 
         let mut static_import_expressions = vec![];
         let mut dynamic_import_expressions = vec![];
+        let mut type_import_expressions = vec![];
         for dep in deps {
             let line_with_dep = cm.lookup_line(dep.span.lo).expect("The dep is on a line");
 
@@ -1562,6 +1595,8 @@ import(myTag`react@${version}`);
 
             if dep.is_dynamic {
                 dynamic_import_expressions.push(dep.specifier.to_string());
+            } else if dep.kind == DependencyKind::ImportType {
+                type_import_expressions.push(dep.specifier.to_string());
             } else {
                 static_import_expressions.push(dep.specifier.to_string());
             }
@@ -1571,6 +1606,7 @@ import(myTag`react@${version}`);
             file: file_path,
             static_import_expressions,
             dynamic_import_expressions,
+            type_import_expressions,
         })
     }
 }
