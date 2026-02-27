@@ -4,8 +4,11 @@ use std::collections::hash_map::Entry;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
+#[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, create_walker};
+use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
+#[cfg(not(target_os = "macos"))]
+use crate::native::walker::create_walker;
 use crate::native::watch::types::{
     EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
@@ -15,15 +18,22 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use parking_lot::Mutex;
 use rayon::prelude::*;
-use std::path::{Path, PathBuf};
+#[cfg(not(target_os = "macos"))]
+use std::path::Path;
+use std::path::PathBuf;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
 use watchexec::WatchedPath;
 use watchexec::Watchexec;
-use watchexec_events::{Event, FileType, Priority, Tag};
+#[cfg(not(target_os = "macos"))]
+use watchexec_events::FileType;
+#[cfg(not(target_os = "macos"))]
+use watchexec_events::filekind::{CreateKind, FileEventKind};
+use watchexec_events::{Event, Priority, Tag};
 use watchexec_signals::Signal;
 
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
+#[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
@@ -32,6 +42,7 @@ fn build_ignore_glob_set() -> Arc<NxGlobSet> {
 ///
 /// Pure function — does not mutate shared state. The caller is responsible
 /// for deduplicating against the existing watched path set.
+#[cfg(not(target_os = "macos"))]
 fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
     events
         .iter()
@@ -67,6 +78,7 @@ fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<Pa
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
 /// This avoids registering inotify watches on node_modules and other ignored trees.
+#[cfg(not(target_os = "macos"))]
 fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
     let walker = create_walker(&directory, use_ignores);
     let mut path_set: HashSet<PathBuf> = HashSet::new();
@@ -155,15 +167,18 @@ impl Watcher {
         // so future file changes inside it are detected.
         let watched_path_set: Arc<Mutex<HashSet<PathBuf>>> = Arc::new(Mutex::new(HashSet::new()));
 
-        // Hardcoded ignore patterns for dynamic directory registration.
-        // These are always applied regardless of use_ignore - we never want to watch
-        // node_modules, .git, etc. even when watching task outputs.
+        // On Linux/Windows, we need ignore patterns and extra clones for dynamic
+        // directory registration. On macOS, FSEvents handles this natively.
+        #[cfg(not(target_os = "macos"))]
         let ignore_globs: Arc<NxGlobSet> = build_ignore_glob_set();
 
         let origin = self.origin.clone();
-        let _watch_exec_for_action = self.watch_exec.clone();
-        let _watched_path_set_for_action = watched_path_set.clone();
-        let _ignore_globs_for_action = ignore_globs.clone();
+        #[cfg(not(target_os = "macos"))]
+        let watch_exec_for_action = self.watch_exec.clone();
+        #[cfg(not(target_os = "macos"))]
+        let watched_path_set_for_action = watched_path_set.clone();
+        #[cfg(not(target_os = "macos"))]
+        let ignore_globs_for_action = ignore_globs.clone();
         self.watch_exec.config.on_action(move |mut action| {
             let signals: Vec<Signal> = action.signals().collect();
 
