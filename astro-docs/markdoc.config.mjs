@@ -441,11 +441,7 @@ export default defineMarkdocConfig({
           return '';
         }
         const promptText = node.children.map(extractText).join('\n').trim();
-        return new Markdoc.Tag(
-          this.render,
-          { ...attributes, promptText },
-          []
-        );
+        return new Markdoc.Tag(this.render, { ...attributes, promptText }, []);
       },
     },
     llm_only: {
