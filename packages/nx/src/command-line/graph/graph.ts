@@ -12,7 +12,6 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import * as open from 'open';
 import {
   basename,
   dirname,
@@ -112,30 +111,6 @@ const mimeType = {
   '.eot': 'appliaction/vnd.ms-fontobject',
   '.ttf': 'aplication/font-sfnt',
 };
-
-function isInsideContainer(): boolean {
-  if (process.platform !== 'linux') {
-    return false;
-  }
-  // Docker
-  if (existsSync('/.dockerenv')) {
-    return true;
-  }
-  // Podman
-  if (existsSync('/run/.containerenv')) {
-    return true;
-  }
-  // cgroup-based detection
-  try {
-    const cgroup = readFileSync('/proc/1/cgroup', 'utf8');
-    if (cgroup.includes('docker') || cgroup.includes('kubepods')) {
-      return true;
-    }
-  } catch {
-    // Ignore read errors
-  }
-  return false;
-}
 
 function buildEnvironmentJs(
   exclude: string[],
@@ -588,10 +563,12 @@ export async function generateGraph(
       title: `Project graph started at ${url.toString()}`,
     });
 
-    if (args.open && !isInsideContainer()) {
-      open(url.toString()).catch(() => {
-        // Ignore errors when opening browser (e.g. no browser available)
-      });
+    if (args.open) {
+      (new Function('return import("open")')() as Promise<typeof import('open')>)
+        .then((m) => m.default(url.toString()))
+        .catch(() => {
+          // Ignore errors when opening browser (e.g. no browser available)
+        });
     }
 
     return new Promise((res) => {
