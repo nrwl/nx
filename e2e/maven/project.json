@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/maven",
   "projectType": "application",
-  "implicitDependencies": ["maven", "dev.nx.maven:nx-maven-plugin"],
+  "implicitDependencies": ["@nx/maven"],
   "// targets": "to see all targets run: nx show project e2e-maven --web",
   "targets": {
     "e2e-local": {

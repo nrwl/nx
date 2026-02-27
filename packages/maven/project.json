@@ -27,9 +27,7 @@
       "outputs": ["{options.outputPath}"],
       "dependsOn": [
         "build-base",
-        "dev.nx.maven:maven-batch-runner:mvn:package",
-        "dev.nx.maven:maven3-adapter:mvn:package",
-        "dev.nx.maven:maven4-adapter:mvn:package"
+        "^mvn:package"
       ],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
