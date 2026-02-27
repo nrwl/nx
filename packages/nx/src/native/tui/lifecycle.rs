@@ -122,7 +122,7 @@ pub enum TuiAppInstance {
 /// directly call trait methods on the guard:
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// app.lock().start_command(None);
 /// ```
 pub enum TuiAppGuard<'a> {
@@ -154,7 +154,7 @@ impl TuiAppInstance {
     /// Lock and get a guard that derefs to `&mut dyn TuiApp`
     ///
     /// This allows direct method calls on the trait without closures:
-    /// ```
+    /// ```ignore
     /// app.lock().start_command(None);
     /// ```
     fn lock(&self) -> TuiAppGuard<'_> {
