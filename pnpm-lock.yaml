@@ -34337,7 +34337,7 @@ snapshots:
       '@module-federation/runtime-tools': 0.21.2
       '@module-federation/sdk': 0.21.2
       btoa: 1.2.1
-      schema-utils: 4.3.3
+      schema-utils: 4.3.2
       upath: 2.0.1
     optionalDependencies:
       typescript: 5.9.2
