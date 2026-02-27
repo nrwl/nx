@@ -1,16 +1,16 @@
 ---
 title: Switch to Workspaces and Project References
-description: Learn how to migrate from TypeScript path aliases to package manager workspaces for project linking, enabling TypeScript project references for better performance.
+description: Migrate from TypeScript path aliases to package manager workspaces for project linking, enabling TypeScript project references for better performance.
 sidebar:
   label: Switch to Workspaces and TS Project References
 filter: 'type:Guides'
 ---
 
-If you want to take advantage of the [performance benefits](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits) of TypeScript project references, it is recommended to use package manager workspaces for local [project linking](/docs/concepts/typescript-project-linking). If you are currently using TypeScript path aliases for project linking, follow the steps in this guide to switch to workspaces project linking and enable TypeScript project references.
+To get the [performance benefits](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits) of TypeScript project references, use package manager workspaces for [project linking](/docs/concepts/typescript-project-linking) instead of TypeScript path aliases.
 
-## Enable Package Manager Workspaces
+## Enable package manager workspaces
 
-Follow the specific instructions for your package manager to enable workspaces project linking.
+Configure your package manager to use workspaces for project linking.
 
 {% tabs %}
 {% tabitem label="npm" %}
@@ -22,12 +22,12 @@ Follow the specific instructions for your package manager to enable workspaces p
 }
 ```
 
-Defining the `workspaces` property in the root `package.json` file lets npm know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `npm install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
+The `workspaces` property tells npm to look for `package.json` files in the specified folders. Running `npm install` installs all project dependencies in the root `node_modules` and symlinks the local projects so they can be imported like npm packages.
 
-If you reference a local library project, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available. This applies to both buildable and non-buildable libraries.
+Include local libraries in `devDependencies` of the consuming project's `package.json` with `*` as the version. `*` tells npm to use whatever local version is available. This applies to both buildable and non-buildable libraries.
 
 ```json
-// /apps/my-app/package.json
+// apps/my-app/package.json
 {
   "devDependencies": {
     "@my-org/some-project": "*"
@@ -45,15 +45,15 @@ If you reference a local library project, you should include the library in the 
 }
 ```
 
-Defining the `workspaces` property in the root `package.json` file lets yarn know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `yarn` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
+The `workspaces` property tells yarn to look for `package.json` files in the specified folders. Running `yarn` installs all project dependencies in the root `node_modules` and symlinks the local projects so they can be imported like npm packages.
 
-If you reference a local library project, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application. This applies to both buildable and non-buildable libraries.
+Include local libraries in `devDependencies` of the consuming project's `package.json` with `workspace:*` as the version. [`workspace:*` tells yarn the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. Use `devDependencies` instead of `dependencies` so the library isn't bundled twice in production. This applies to both buildable and non-buildable libraries.
 
 ```json
-// /apps/my-app/package.json
+// apps/my-app/package.json
 {
   "devDependencies": {
-    "@my-org/some-project": "*"
+    "@my-org/some-project": "workspace:*"
   }
 }
 ```
@@ -68,12 +68,12 @@ If you reference a local library project, you should include the library in the 
 }
 ```
 
-Defining the `workspaces` property in the root `package.json` file lets bun know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `bun install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
+The `workspaces` property tells bun to look for `package.json` files in the specified folders. Running `bun install` installs all project dependencies in the root `node_modules` and symlinks the local projects so they can be imported like npm packages.
 
-If you reference a local library project, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application. This applies to both buildable and non-buildable libraries.
+Include local libraries in `devDependencies` of the consuming project's `package.json` with `workspace:*` as the version. [`workspace:*` tells bun the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. Use `devDependencies` instead of `dependencies` so the library isn't bundled twice in production. This applies to both buildable and non-buildable libraries.
 
 ```json
-// /apps/my-app/package.json
+// apps/my-app/package.json
 {
   "devDependencies": {
     "@my-org/some-project": "workspace:*"
@@ -91,12 +91,12 @@ packages:
   - 'libs/*'
 ```
 
-Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
+The `packages` property tells pnpm to look for `package.json` files in the specified folders. Running `pnpm install` installs all project dependencies in the root `node_modules`.
 
-If you reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells pnpm that the project is in the same repository](https://pnpm.io/workspaces#workspace-protocol-workspace) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application. This applies to both buildable and non-buildable libraries.
+Include local libraries in `devDependencies` of the consuming project's `package.json` with `workspace:*` as the version. [`workspace:*` tells pnpm the project is in the same repository](https://pnpm.io/workspaces#workspace-protocol-workspace) and not an npm package. Use `devDependencies` instead of `dependencies` so the library isn't bundled twice in production. This applies to both buildable and non-buildable libraries.
 
 ```json
-// /apps/my-app/package.json
+// apps/my-app/package.json
 {
   "devDependencies": {
     "@my-org/some-project": "workspace:*"
@@ -107,11 +107,37 @@ If you reference a local library project from an application, you need to includ
 {% /tabitem %}
 {% /tabs %}
 
-## Update Root TypeScript Configuration
+{% aside type="caution" title="Non-standard project locations" %}
+The patterns above (`apps/*`, `libs/*`) only match projects directly inside those folders. If you have projects in other directories (e.g. `tools/*`, `packages/*`) or nested deeper (e.g. `libs/shared/ui`), add the appropriate patterns. Root-level projects (where the project root is `.`) don't need a workspace pattern but can't be added as a workspace entry.
+{% /aside %}
 
-The root `tsconfig.base.json` should contain a `compilerOptions` property and no other properties. `compilerOptions.composite` and `compilerOptions.declaration` should be set to `true`. `compilerOptions.paths` and `compilerOptions.rootDir` should not be set.
+## Update .gitignore
 
-Note: Before you delete the `paths` property, copy the project paths for use as `references` in the `tsconfig.json` file.
+With TypeScript project references, build artifacts are output within each project's directory rather than a shared root `dist` folder. Add these patterns to your root `.gitignore`:
+
+```
+out-tsc
+dist
+test-output
+```
+
+Use root-level entries (not path-prefixed like `/dist`) so they match in nested project directories.
+
+## Update root TypeScript configuration
+
+The root `tsconfig.base.json` should contain only `compilerOptions`, not top-level properties like `include`, `exclude`, or `files`. If yours has any of these, move them to the appropriate project-level tsconfig files before proceeding.
+
+Set `compilerOptions.composite` to `true`. `compilerOptions.declaration` can be omitted since it defaults to `true` when `composite` is `true`. Delete `compilerOptions.paths` entirely (not set to `{}`), and remove `compilerOptions.rootDir` and `compilerOptions.baseUrl` if present. These aren't needed in TS solution mode since imports resolve through `node_modules` symlinks.
+
+{% aside type="caution" title="Order of operations" %}
+Run your package manager's install command (e.g. `npm install`) **before** deleting `compilerOptions.paths`. The workspace symlinks in `node_modules` must be in place before path aliases are removed, otherwise Jest, Vite, and webpack resolvers won't find local projects.
+{% /aside %}
+
+{% aside type="note" title="pnpm requires explicit workspace dependencies" %}
+Unlike npm and yarn, pnpm only symlinks workspace packages that are listed as dependencies in a project's `package.json`. Each project must declare its workspace dependencies explicitly. As a quick workaround, you can add all workspace packages to the root `package.json` under `devDependencies`, but the recommended long-term approach is to list them in each project's own `package.json`.
+{% /aside %}
+
+Copy the `paths` entries before deleting them. You'll need them as a reference for creating project `package.json` files and `references` in `tsconfig.json`.
 
 {% tabs %}
 {% tabitem label="Before" %}
@@ -138,11 +164,9 @@ Note: Before you delete the `paths` property, copy the project paths for use as 
 // tsconfig.base.json
 {
   "compilerOptions": {
-    // Required compiler options
     "composite": true,
-    "declaration": true, // defaults to true when composite is true
-    // Delete the paths property
-    // Other options...
+    // declaration defaults to true when composite is true
+    // paths, rootDir, and baseUrl have been removed
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
   },
@@ -152,7 +176,7 @@ Note: Before you delete the `paths` property, copy the project paths for use as 
 {% /tabitem %}
 {% /tabs %}
 
-The root `tsconfig.json` file should extend `tsconfig.base.json` and not include any files. It needs to have `references` for every project in the repository so that editor tooling works correctly.
+The root `tsconfig.json` should extend `tsconfig.base.json`, include no files, and list `references` for every project so editor tooling works correctly.
 
 {% tabs %}
 {% tabitem label="Before" %}
@@ -175,14 +199,13 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
   "extends": "./tsconfig.base.json",
   "files": [], // intentionally empty
   "references": [
-    // All projects in the repository
     {
       "path": "./libs/utils",
     },
     {
       "path": "./libs/ui",
     },
-    // Future generated projects will automatically be added here by the generator
+    // Generated projects are added here automatically
   ],
 }
 ```
@@ -190,9 +213,9 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
 {% /tabitem %}
 {% /tabs %}
 
-## Register Nx Typescript Plugin
+## Register Nx TypeScript plugin
 
-Make sure that the `@nx/js` plugin is installed in your repository and `@nx/js/typescript` is registered as a plugin in the `nx.json` file.
+Install `@nx/js` and register `@nx/js/typescript` as a plugin in `nx.json`:
 
 ```jsonc
 // nx.json
@@ -216,11 +239,56 @@ Make sure that the `@nx/js` plugin is installed in your repository and `@nx/js/t
 }
 ```
 
-This plugin will register a [sync generator](/docs/concepts/sync-generators) to automatically maintain the project references across the repository.
+This plugin registers a [sync generator](/docs/concepts/sync-generators) that automatically maintains project references across the workspace.
 
-## Create Individual Project package.json files
+## Update build targets
 
-When using package manager project linking, every project needs to have a `package.json` file. You can leave all the task configuration in the existing `project.json` file. For application projects, you only need to specify the `name` property. For library projects, you should add an `exports` property that accounts for any TypeScript path aliases that referenced the project. A typical configuration is shown below:
+The `@nx/js/typescript` plugin infers both `typecheck` and `build` targets, so explicit `@nx/js:tsc` build targets in `project.json` (or `package.json`) can be removed. For non-buildable libraries, this is required since their `package.json` exports point directly to source files and consumers compile the source themselves.
+
+For buildable libraries, the plugin can also infer the build target, but removing explicit build targets for buildable libraries may require additional configuration changes. Consider keeping buildable library build targets during the initial migration and addressing them as a follow-up.
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```jsonc
+// libs/ui/project.json
+{
+  "name": "ui",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/ui",
+        "main": "libs/ui/src/index.ts",
+        "tsConfig": "libs/ui/tsconfig.lib.json",
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```jsonc
+// libs/ui/project.json
+{
+  "name": "ui",
+  // build target removed — typecheck and build are inferred by @nx/js/typescript plugin
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Create individual project package.json files
+
+Every project needs a `package.json` for workspaces project linking. Task configuration can remain in `project.json`, or you can move it to `package.json` under the `nx` property if you want to remove `project.json`. For applications, specify the `name` property. For libraries, add an `exports` property that maps to the source entry points.
+
+{% aside type="note" title="Existing package.json files" %}
+If a project already has a `package.json` (e.g. a published library with `main`, `module`, or `types` fields), preserve the existing configuration and only add `exports` if not already defined.
+{% /aside %}
 
 {% tabs %}
 {% tabitem label="Non-buildable library" %}
@@ -229,7 +297,11 @@ When using package manager project linking, every project needs to have a `packa
 // libs/ui/package.json
 {
   "name": "@myorg/ui",
+  "devDependencies": {
+    "@myorg/utils": "*"
+  },
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts",
@@ -240,13 +312,17 @@ When using package manager project linking, every project needs to have a `packa
 ```
 
 {% /tabitem %}
-{% tabitem label="Buildable Library" %}
+{% tabitem label="Buildable library" %}
 
 ```json
 // libs/ui/package.json
 {
   "name": "@myorg/ui",
+  "devDependencies": {
+    "@myorg/utils": "*"
+  },
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./src/index.d.ts",
       "import": "./dist/index.js",
@@ -262,26 +338,99 @@ When using package manager project linking, every project needs to have a `packa
 ```json
 // apps/my-app/package.json
 {
-  "name": "@myorg/my-app"
+  "name": "@myorg/my-app",
+  "devDependencies": {
+    "@myorg/ui": "*",
+    "@myorg/utils": "*"
+  }
 }
 ```
 
 {% /tabitem %}
 {% /tabs %}
 
-{% aside type="caution" title="Package Names with Multiple Slashes" %}
-The `package.json` name can only have one `/` character in it. This is more restrictive than the TypeScript path aliases. So if you have a project that you have been referencing with `@myorg/shared/ui`, you'll need to make the `package.json` name be something like `@myorg/shared-ui` and update all the import statements in your codebase to reference the new name.
+After creating or updating project `package.json` files, run your package manager's install command again (e.g. `npm install`) so that new workspace symlinks are created in `node_modules`.
+
+{% aside type="caution" title="Package names with multiple slashes" %}
+A `package.json` name can only have one `/` (the scope separator), so a name like `@myorg/shared/ui` is invalid. This is more restrictive than TypeScript path aliases. You have two main options for flattening nested aliases:
+
+1. **Drop the original scope:** `@myorg/shared/ui` becomes `@shared/ui`
+2. **Combine scope segments with a dash:** `@myorg/shared/ui` becomes `@myorg-shared/ui`
+
+| Old path alias       | Option 1 (drop scope) | Option 2 (combine with dash) |
+| -------------------- | --------------------- | ---------------------------- |
+| `@myorg/shared/ui`   | `@shared/ui`          | `@myorg-shared/ui`           |
+| `@myorg/foo/bar`     | `@foo/bar`            | `@myorg-foo/bar`             |
+| `@myorg/foo/bar/baz` | `@foo/bar-baz`        | `@myorg-foo/bar-baz`         |
+
+Choose a convention and apply it consistently. Update all import statements to match the new names.
+
+If multiple path aliases point to different entry points within the same library (e.g. `@myorg/utils` and `@myorg/utils/testing`), you could use the `exports` field to map multiple entry points from a single package:
+
+```json
+{
+  "name": "@myorg/utils",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./testing": {
+      "types": "./src/testing.ts",
+      "default": "./src/testing.ts"
+    }
+  }
+}
+```
+
+However, this approach requires consolidating code from separate libraries into one, which adds complexity. For the initial migration, prefer the renaming strategies above and tackle library consolidation separately.
+
 {% /aside %}
 
-## Update Individual Project TypeScript Configuration
+## Update individual project TypeScript configuration
 
-{% aside type="note" title="Applications and Libraries" %}
-The TypeScript configuration requirements described in this section apply to both application and library projects. While the examples below show library projects, the same principles apply to applications, except applications typically use `tsconfig.app.json` instead of `tsconfig.lib.json`.
+{% aside type="note" title="Applications and libraries" %}
+These requirements apply to both application and library projects. The examples show libraries, but the same applies to applications using `tsconfig.app.json` instead of `tsconfig.lib.json`.
 {% /aside %}
 
-Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies. Remove any `compilerOptions` listed and combine them with the options listed in the `tsconfig.lib.json` (for libraries) or `tsconfig.app.json` (for applications) and `tsconfig.spec.json` files.
+Each project's `tsconfig.json` should extend `tsconfig.base.json` and list `references` to its dependencies. If the project `tsconfig.json` has `compilerOptions`, move them into the solution files (any `tsconfig.*.json` files, such as `tsconfig.lib.json`/`tsconfig.app.json` and `tsconfig.spec.json`), merging with any existing options. Then remove `compilerOptions` from the project `tsconfig.json`.
 
-The `tsconfig.json` file's purpose is to provide your IDE with `references` to the `tsconfig.*.json` files that define the compilation settings for all the files in the project. In this case, `tsconfig.spec.json` handles the compilation of the test files and `tsconfig.lib.json` or `tsconfig.app.json` handles the compilation of the production code.
+When merging, also remove `module` and `moduleResolution` from individual project tsconfigs. Let these inherit from `tsconfig.base.json` for consistency. If `typecheck` or `build` fails for specific projects after this change, add `module` and `moduleResolution` back to that project's solution files with the values it needs.
+
+{% aside type="caution" title="moduleResolution and import extensions" %}
+The `moduleResolution` value in `tsconfig.base.json` affects how imports are resolved across all projects. If your root config uses `node` (Node10) or `bundler`, extensionless imports like `import { foo } from './bar'` work as expected. If you plan to switch to `nodenext`, all relative imports must include file extensions (e.g. `import { foo } from './bar.js'`). This is a significant codebase-wide change, so consider it a follow-up task after the initial migration rather than doing both at once.
+{% /aside %}
+
+The project `tsconfig.json` provides your IDE with `references` to the `tsconfig.*.json` files that define compilation settings. `tsconfig.spec.json` handles test files, and `tsconfig.lib.json` (or `tsconfig.app.json`) handles production code.
+
+{% aside type="note" title="Extends chain" %}
+Each `tsconfig.lib.json`, `tsconfig.app.json`, and `tsconfig.spec.json` should extend `tsconfig.base.json` directly (via a relative path like `../../tsconfig.base.json`), not the project's own `tsconfig.json`. This avoids circular reference issues and ensures each solution file inherits only the shared compiler options.
+{% /aside %}
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```jsonc
+// libs/ui/tsconfig.json
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./tsconfig.lib.json" },
+    { "path": "./tsconfig.spec.json" },
+  ],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
 
 ```jsonc
 // libs/ui/tsconfig.json
@@ -289,111 +438,274 @@ The `tsconfig.json` file's purpose is to provide your IDE with `references` to t
   "extends": "../../tsconfig.base.json",
   "files": [], // intentionally empty
   "references": [
-    // All project dependencies
-    // UPDATED BY NX SYNC
-    // This project's other tsconfig.*.json files
-    {
-      "path": "./tsconfig.lib.json",
-    },
-    {
-      "path": "./tsconfig.spec.json",
-    },
+    // Project dependencies are added by nx sync
+    { "path": "./tsconfig.lib.json" },
+    { "path": "./tsconfig.spec.json" },
   ],
 }
 ```
 
-Each project's `tsconfig.lib.json` (for libraries) or `tsconfig.app.json` (for applications) file extends the root `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies. This file should not extend the project's `tsconfig.json` file because the `tsconfig.json` file includes a reference to the `tsconfig.spec.json` file. Keeping the `tsconfig.spec.json` file unreferenced from the `tsconfig.lib.json` or `tsconfig.app.json` file makes the `typecheck` and `build` tasks faster because the test files do not need to be analyzed. Note that the `outDir` location needs to be unique across all `tsconfig.*.json` files so that one task's cached output does not interfere with another task's cached output.
+{% /tabitem %}
+{% /tabs %}
 
-{% aside type="note" title="Shared Compiler Options" %}
-If there are a lot of shared `compilerOptions` between `tsconfig.lib.json` and `tsconfig.spec.json`, you could create a `tsconfig.project.json` that contains those shared settings. `tsconfig.project.json` would extend `tsconfig.base.json` while `tsconfig.lib.json` and `tsconfig.spec.json` would each extend `tsconfig.project.json`.
+Each solution file (`tsconfig.lib.json`, `tsconfig.app.json`, `tsconfig.spec.json`, or any other `tsconfig.*.json`) should extend `tsconfig.base.json` directly, not the project's `tsconfig.json`. This is because `tsconfig.json` references `tsconfig.spec.json`, and keeping test files unreferenced from the lib/app config makes `typecheck` and `build` faster.
+
+The solution files that handle production code (`tsconfig.lib.json` or `tsconfig.app.json`) also need `references` to the solution files of their dependency projects. These are added automatically by `nx sync`. Each `outDir` must be unique across solution files so cached outputs don't interfere with each other.
+
+{% aside type="note" title="Shared compiler options" %}
+If `tsconfig.lib.json` and `tsconfig.spec.json` share many `compilerOptions`, create a `tsconfig.project.json` with those shared settings. Have `tsconfig.project.json` extend `tsconfig.base.json`, then both `tsconfig.lib.json` and `tsconfig.spec.json` extend `tsconfig.project.json`.
 {% /aside %}
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```jsonc
+// libs/ui/tsconfig.lib.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
 
 ```jsonc
 // libs/ui/tsconfig.lib.json
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    // outDir should be local to the project and not in the same folder as any other tsconfig.*.json
+    // Merged from project tsconfig.json (module/moduleResolution removed)
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    // Original options from tsconfig.lib.json
+    "declaration": true,
+    "types": ["node"],
+    // outDir is now local to the project
     "outDir": "./out-tsc/lib",
-    // Any overrides
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    // exclude config and test files
-  ],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
-    // tsconfig.lib.json files for project dependencies
-    // UPDATED BY NX SYNC
+    // References to dependency projects — added by nx sync
+    // e.g. if ui depends on utils:
+    { "path": "../utils/tsconfig.lib.json" },
   ],
 }
 ```
 
-{% aside type="note" title="Task Outputs Within the Project" %}
-As part of this migration process, we are moving the task outputs for `typecheck` and `build` to be local to the project instead of being output to a root `dist` folder. This structure is more consistent with a workspaces style repository and helps to keep projects self-contained. It should be possible to continue to send task outputs to a root `dist` folder, but you'll need to make sure that the `outDir` and `exports` paths work correctly for your folder structure.
+{% /tabitem %}
+{% /tabs %}
+
+{% aside type="note" title="Task outputs within the project" %}
+This migration moves `typecheck` and `build` outputs to be local to the project instead of a root `dist` folder. This keeps projects self-contained and is more consistent with a workspaces-style repository. You can still output to a root `dist` folder if you ensure the `outDir` and `exports` paths work correctly for your folder structure.
 {% /aside %}
 
-The project's `tsconfig.spec.json` does not need to reference project dependencies.
+The `tsconfig.spec.json` doesn't need to reference project dependencies.
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```jsonc
+// libs/ui/tsconfig.spec.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["jest", "node"],
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.d.ts"],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
 
 ```jsonc
 // libs/ui/tsconfig.spec.json
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    // outDir should be local to the project and not in the same folder as any other tsconfig.*.json
+    // Merged from project tsconfig.json (module/moduleResolution removed)
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    // Original options from tsconfig.spec.json
+    "types": ["jest", "node"],
+    // outDir is now local to the project
     "outDir": "./out-tsc/spec",
-    // Any overrides
   },
-  "include": [
-    // test files
-  ],
-  "references": [
-    // tsconfig.lib.json for this project
-    {
-      "path": "./tsconfig.lib.json",
-    },
-  ],
+  "include": ["src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.d.ts"],
+  "references": [{ "path": "./tsconfig.lib.json" }],
 }
 ```
 
-After creating these `tsconfig.*.json` files, run `nx sync` to have Nx automatically add the correct references for each project.
+{% /tabitem %}
+{% /tabs %}
 
-### Vite Configuration Updates
+After updating the tsconfig files, run `nx sync` to have Nx add the correct project references.
 
-If you are using Vite to build a project, you need to update the `vite.config.ts` file for each project.
+{% aside type="caution" title="Circular dependencies" %}
+TypeScript project references don't support circular dependencies. If project A depends on project B and B depends on A, `tsc --build` will fail. Run `nx graph` to visualize your dependency graph and resolve any cycles before migrating. This may require extracting shared code into a new library.
+{% /aside %}
 
-1. Remove the `nxViteTsPaths` plugin from the `plugins` array.
-2. Set the `build.outDir` to `./dist` relative to the project's folder.
-3. Make sure the `build.lib.name` matches the full name of the project, including the organization.
+### E2E projects
+
+End-to-end test projects (Cypress, Playwright) typically have a `tsconfig.json` but no `tsconfig.lib.json`. These projects don't need a `build` target or `tsconfig.lib.json`. They only need `tsconfig.json` to extend `tsconfig.base.json` with `references` to the projects they test. The `@nx/js/typescript` plugin adds the correct references via `nx sync`.
+
+### Verify `include`/`exclude` patterns
+
+Since `tsconfig.lib.json` and `tsconfig.spec.json` now extend `tsconfig.base.json` directly instead of the project's `tsconfig.json`, any `include` or `exclude` patterns that were defined in the project `tsconfig.json` are no longer inherited. Check that each solution file has the correct `include` and `exclude` patterns, and add any that were previously inherited.
+
+For example, if your project `tsconfig.json` had an `include` that the solution files relied on:
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```jsonc
+// libs/ui/tsconfig.json (had include that solution files inherited)
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
+
+// libs/ui/tsconfig.lib.json (inherited include from tsconfig.json)
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.spec.ts"]
+}
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```jsonc
+// libs/ui/tsconfig.json (no include — just references)
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./tsconfig.lib.json" },
+    { "path": "./tsconfig.spec.json" }
+  ]
+}
+
+// libs/ui/tsconfig.lib.json (include must be explicit now)
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.spec.ts"]
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Update import paths
+
+If your new package names match the old TypeScript path aliases exactly, no import changes are needed. If you renamed packages (e.g. to resolve the multiple-slash restriction), update all import statements across the codebase.
+
+Search and replace in files with these extensions: `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, `.cts`, `.mjs`, `.cjs`.
+
+For example, if you renamed `@myorg/shared/ui` to `@myorg/shared-ui`:
+
+```diff
+- import { Button } from '@myorg/shared/ui';
++ import { Button } from '@myorg/shared-ui';
+```
+
+{% aside type="tip" title="Automating import updates" %}
+Use your IDE's global find-and-replace or a tool like `sed` for bulk replacements. Verify the replacements don't affect string literals or comments that contain the old path.
+{% /aside %}
+
+## Bundler configuration updates
+
+### Webpack and Rspack
+
+If your applications use `NxAppWebpackPlugin` from `@nx/webpack` or `NxAppRspackPlugin` from `@nx/rspack`, no changes are needed. Both plugins detect TS solution workspaces and disable `TsconfigPathsPlugin`, relying on `node_modules` symlinks instead.
+
+### Jest
+
+If your projects use Jest with the `@nx/jest` resolver (`@nx/jest/plugins/resolver`), no changes are needed. The resolver falls back to TypeScript module resolution when the default Node resolver fails, finding local projects through `node_modules` symlinks.
+
+### Vite
+
+Update `vite.config.ts` for each Vite project:
+
+1. Remove `nxViteTsPaths` from `plugins` (if present). This plugin resolved TypeScript path aliases in older Nx versions. After migration, Vite's built-in resolver finds local projects through `node_modules` symlinks. Newer Nx versions may not include this plugin.
+2. Set `build.outDir` to `./dist` relative to the project folder.
+3. Set `build.lib.name` to the full project name, including the scope.
+
+{% aside type="note" title="Vitest" %}
+If your `vitest.config.ts` or `vitest.config.mts` also uses `nxViteTsPaths`, remove it there as well.
+{% /aside %}
+
+{% tabs %}
+{% tabitem label="Before" %}
 
 ```ts
 // libs/ui/vite.config.ts
-import react from '@vitejs/plugin-react';
-import dts from 'vite-plugin-dts';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   // ...
-  plugins: [
-    // any needed plugins, but remove nxViteTsPaths
-    react(),
-    nxCopyAssetsPlugin(['*.md', 'package.json']),
-    dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
-    }),
-  ],
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   build: {
+    outDir: '../../dist/libs/ui',
     // ...
-    outDir: './dist',
-    // ...
-    lib: {
-      name: '@myorg/ui',
-      // ...
-    },
   },
 });
 ```
 
-## Future Plans
+{% /tabitem %}
+{% tabitem label="After" %}
 
-We realize that this manual migration process is tedious. We are investigating automating parts of this process with generators.
+```ts
+// libs/ui/vite.config.ts
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig({
+  // ...
+  plugins: [react(), nxCopyAssetsPlugin(['*.md'])],
+  build: {
+    outDir: './dist',
+    // ...
+  },
+});
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Verify the migration
+
+Run the full target suite to confirm everything works:
+
+```shell
+nx run-many -t typecheck,build,lint,test
+```
+
+Fix any issues that come up before continuing. Common problems at this stage include:
+
+- **Missing `references`**: Run `nx sync` to populate project references automatically.
+- **`module`/`moduleResolution` mismatch**: Add overrides in individual solution files if a project needs different settings than the root `tsconfig.base.json`.
+- **Import path errors**: Ensure all import paths match the `name` field in each project's `package.json`.
+- **Missing `exports` in `package.json`**: Verify each library has an `exports` field pointing to its source entry point.
+
+Once the above passes, run end-to-end tests:
+
+```shell
+nx run-many -t e2e
+```
+
+Fix any e2e failures before considering the migration complete. Common e2e issues include:
+
+- **Vite/webpack dev server resolution failures**: Confirm `nxViteTsPaths` was removed and workspace symlinks are in place (`node_modules/@myorg/lib` should be a symlink to the library directory).
+- **Cypress/Playwright projects missing tsconfig changes**: E2e projects need the same tsconfig restructuring as other projects. Their solution files should extend `tsconfig.base.json` directly.
