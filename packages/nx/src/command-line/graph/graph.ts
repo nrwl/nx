@@ -114,6 +114,30 @@ const mimeType = {
   '.ttf': 'aplication/font-sfnt',
 };
 
+function isInsideContainer(): boolean {
+  if (process.platform !== 'linux') {
+    return false;
+  }
+  // Docker
+  if (existsSync('/.dockerenv')) {
+    return true;
+  }
+  // Podman
+  if (existsSync('/run/.containerenv')) {
+    return true;
+  }
+  // cgroup-based detection
+  try {
+    const cgroup = readFileSync('/proc/1/cgroup', 'utf8');
+    if (cgroup.includes('docker') || cgroup.includes('kubepods')) {
+      return true;
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return false;
+}
+
 function buildEnvironmentJs(
   exclude: string[],
   watchMode: boolean,
@@ -565,8 +589,10 @@ export async function generateGraph(
       title: `Project graph started at ${url.toString()}`,
     });
 
-    if (args.open) {
-      open(url.toString());
+    if (args.open && !isInsideContainer()) {
+      open(url.toString()).catch(() => {
+        // Ignore errors when opening browser (e.g. no browser available)
+      });
     }
 
     return new Promise((res) => {
