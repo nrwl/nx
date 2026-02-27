@@ -10,14 +10,14 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry",
-        "dev.nx.maven:nx-maven-plugin:mvn-install-with-retries"
+        "dev.nx.maven:nx-maven-plugin:mvn:install-with-retries"
       ]
     },
     "e2e-ci--**/**": {
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry",
-        "dev.nx.maven:nx-maven-plugin:mvn-install-with-retries"
+        "dev.nx.maven:nx-maven-plugin:mvn:install-with-retries"
       ]
     }
   }

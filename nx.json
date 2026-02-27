@@ -95,11 +95,6 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     },
-    "mvn-*": {
-      "options": {
-        "forwardAllArgs": false
-      }
-    },
     "build": {
       "dependsOn": [
         "^build",
@@ -349,7 +344,7 @@
     {
       "plugin": "@nx/maven",
       "options": {
-        "targetNamePrefix": "mvn-"
+        "targetNamePrefix": "mvn:"
       }
     }
   ],

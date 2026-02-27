@@ -6,7 +6,7 @@
     "nx-release-publish": {
       "dependsOn": [
         "^nx-release-publish",
-        "dev.nx.maven:nx-maven-plugin:mvn-install-with-retries"
+        "dev.nx.maven:nx-maven-plugin:mvn:install-with-retries"
       ],
       "executor": "@nx/js:release-publish",
       "options": {
@@ -27,9 +27,9 @@
       "outputs": ["{options.outputPath}"],
       "dependsOn": [
         "build-base",
-        "dev.nx.maven:maven-batch-runner:mvn-package",
-        "dev.nx.maven:maven3-adapter:mvn-package",
-        "dev.nx.maven:maven4-adapter:mvn-package"
+        "dev.nx.maven:maven-batch-runner:mvn:package",
+        "dev.nx.maven:maven3-adapter:mvn:package",
+        "dev.nx.maven:maven4-adapter:mvn:package"
       ],
       "options": {
         "tsConfig": "./tsconfig.lib.json",

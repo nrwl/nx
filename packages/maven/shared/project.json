@@ -6,6 +6,5 @@
       "command": "./mvnw clean verify -am -pl dev.nx.maven:maven-shared"
     }
   },
-  "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": []
+  "tags": ["maven:dev.nx.maven"]
 }
