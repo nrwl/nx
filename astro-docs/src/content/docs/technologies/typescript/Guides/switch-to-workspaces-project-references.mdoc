@@ -6,6 +6,21 @@ sidebar:
 filter: 'type:Guides'
 ---
 
+{% llm_copy_prompt title="Migrate to TS solution setup" %}
+Migrate this Nx workspace from TypeScript path aliases to workspaces and project references.
+
+1. Enable package manager workspaces
+2. Update root TypeScript configuration
+3. Create project package.json files
+4. Update project TypeScript configurations
+5. Update bundler configurations
+6. Verify the migration
+
+Analyze my repository and walk me through each step. Adapt the instructions to my specific workspace setup.
+
+Guide: {pageUrl}
+{% /llm_copy_prompt %}
+
 To get the [performance benefits](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits) of TypeScript project references, use package manager workspaces for [project linking](/docs/concepts/typescript-project-linking) instead of TypeScript path aliases.
 
 ## Enable package manager workspaces
@@ -686,6 +701,10 @@ export default defineConfig({
 
 ## Verify the migration
 
+{% llm_only %}
+Before running verification, clear the Nx daemon cache with `nx reset` to avoid stale state. Also run `nx sync` first to ensure all project references are up to date.
+{% /llm_only %}
+
 Run the full target suite to confirm everything works:
 
 ```shell
@@ -709,3 +728,9 @@ Fix any e2e failures before considering the migration complete. Common e2e issue
 
 - **Vite/webpack dev server resolution failures**: Confirm `nxViteTsPaths` was removed and workspace symlinks are in place (`node_modules/@myorg/lib` should be a symlink to the library directory).
 - **Cypress/Playwright projects missing tsconfig changes**: E2e projects need the same tsconfig restructuring as other projects. Their solution files should extend `tsconfig.base.json` directly.
+
+{% llm_only %}
+If `typecheck` fails with TS6305 ("Output file has not been built from source file"), the project references are missing or stale. Run `nx sync` and retry. If errors persist, check that each `tsconfig.lib.json` has `"composite": true` inherited from `tsconfig.base.json` and that `outDir` is set to a unique path per solution file.
+
+If you encounter TS2307 ("Cannot find module") after removing `paths`, verify that: (1) `npm install`/`pnpm install` was run to create workspace symlinks, (2) the `name` field in the library's `package.json` matches the import path, and (3) the consuming project lists the library in its `devDependencies`.
+{% /llm_only %}
