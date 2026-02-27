@@ -384,8 +384,15 @@ impl HashPlanner {
         let workspace_file_set_inputs = if workspace_file_sets.is_empty() {
             vec![]
         } else {
+            let project_root = &self.project_graph.nodes[project_name].root;
             vec![HashInstruction::WorkspaceFileSet(
-                workspace_file_sets.iter().map(|f| f.to_string()).collect(),
+                workspace_file_sets
+                    .iter()
+                    .map(|f| {
+                        f.replace("{projectRoot}", project_root)
+                            .replace("{projectName}", project_name)
+                    })
+                    .collect(),
             )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
