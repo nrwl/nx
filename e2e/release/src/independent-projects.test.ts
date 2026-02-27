@@ -67,8 +67,13 @@ describe('nx release - independent projects', () => {
   let pkg2: string;
   let pkg3: string;
   let e2eRegistryUrl: string;
+  let previousPackageManager: string | undefined;
 
   beforeAll(() => {
+    previousPackageManager = process.env.SELECTED_PM;
+    // Ensure consistent package manager usage in all environments for this file
+    process.env.SELECTED_PM = 'npm';
+
     newProject({
       packages: ['@nx/js'],
     });
@@ -102,7 +107,10 @@ describe('nx release - independent projects', () => {
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
   });
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    cleanupProject();
+    process.env.SELECTED_PM = previousPackageManager;
+  });
 
   describe('version', () => {
     beforeEach(() => {
