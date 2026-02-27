@@ -3245,8 +3245,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       open:
-        specifier: ^8.4.0
-        version: 8.4.2
+        specifier: ^10.1.0
+        version: 10.1.0
       ora:
         specifier: 'catalog:'
         version: 5.4.1
