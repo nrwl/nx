@@ -73,7 +73,7 @@ export async function showTargetInputsHandler(
   const graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
 
-  const { projectName, targetName } = resolveTargetIdentifier(
+  const { projectName, targetName, configurationName } = resolveTargetIdentifier(
     args,
     graph,
     nxJson
@@ -86,10 +86,11 @@ export async function showTargetInputsHandler(
     return reportTargetNotFound(projectName, targetName, node);
   }
 
+  const configuration = configurationName ?? args.configuration;
   const hashInputs = await resolveInputFiles(
     projectName,
     targetName,
-    undefined,
+    configuration,
     graph,
     nxJson
   );
@@ -396,19 +397,17 @@ async function resolveInputFiles(
   });
 
   const targetConfig = graph.nodes[projectName]?.data?.targets?.[targetName];
-  const defaultConfig = targetConfig?.defaultConfiguration;
-  const taskId = defaultConfig
-    ? `${projectName}:${targetName}:${defaultConfig}`
+  const effectiveConfig = configuration ?? targetConfig?.defaultConfiguration;
+  const taskId = effectiveConfig
+    ? `${projectName}:${targetName}:${effectiveConfig}`
     : `${projectName}:${targetName}`;
-  return (
-    plan[taskId] ?? {
-      files: [],
-      runtime: [],
-      environment: [],
-      depOutputs: [],
-      external: [],
-    }
-  );
+  const result = plan[taskId];
+  if (!result) {
+    throw new Error(
+      `Could not find hash plan for task "${taskId}". Available tasks: ${Object.keys(plan).join(', ')}`
+    );
+  }
+  return result;
 }
 
 function resolveCheckFromInputs(
