@@ -1,6 +1,6 @@
 {
   "targets": {
-    "mvn-package": {
+    "mvn:package": {
       "options": {
         "goals": ["jar:jar@default-jar", "shade:shade@default"]
       }
