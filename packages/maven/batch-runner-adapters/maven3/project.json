@@ -4,6 +4,11 @@
       "options": {
         "goals": ["jar:jar@default-jar", "shade:shade@default"]
       }
+    },
+    "mvn:package-ci": {
+      "options": {
+        "goals": ["jar:jar@default-jar", "shade:shade@default"]
+      }
     }
   }
 }
