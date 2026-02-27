@@ -112,7 +112,6 @@
     },
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
-      "inputs": ["production", "^production"],
       "cache": true
     },
     "test-native": {
