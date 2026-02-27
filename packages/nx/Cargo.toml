@@ -41,7 +41,6 @@ napi = { version = "3.8.3", default-features = false, features = [
     "tokio_rt",
     "async",
     "chrono_date",
-    "compat-mode",
 ] }
 napi-derive = '3.5.2'
 nom = '7.1.3'

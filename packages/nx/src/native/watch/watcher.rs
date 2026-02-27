@@ -151,9 +151,6 @@ impl Watcher {
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
             .try_init();
 
-        #[allow(deprecated)]
-        callback_tsfn.unref(&env)?;
-
         // Shared state for dynamic directory registration.
         // When a new non-ignored directory is created, we add it to the watch set
         // so future file changes inside it are detected.

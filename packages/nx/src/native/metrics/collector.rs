@@ -1176,12 +1176,8 @@ impl ProcessMetricsCollector {
     #[napi(ts_args_type = "callback: (err: Error | null, event: MetricsUpdate) => void")]
     pub fn subscribe(
         &self,
-        env: Env,
         mut callback: ThreadsafeFunction<MetricsUpdate>,
     ) -> anyhow::Result<()> {
-        #[allow(deprecated)]
-        callback.unref(&env)?;
-
         // Store callback for future updates
         // The subscriber will receive full metadata on first update via needs_full_metadata flag
         let mut subscribers = self.subscribers.lock();

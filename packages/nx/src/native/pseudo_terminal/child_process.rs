@@ -88,7 +88,6 @@ impl ChildProcess {
     #[napi]
     pub fn on_output(
         &mut self,
-        env: Env,
         #[napi(ts_arg_type = "(message: string) => void")] mut callback: ThreadsafeFunction<
             String,
             Unknown<'static>,
@@ -98,9 +97,6 @@ impl ChildProcess {
         >,
     ) -> napi::Result<()> {
         let rx = self.message_receiver.clone();
-
-        #[allow(deprecated)]
-        callback.unref(&env)?;
 
         let (kill_tx, kill_rx) = bounded::<()>(1);
 
