@@ -9,7 +9,7 @@ import {
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
 } from './running-tasks';
-import { needsShellQuoting } from '../../utils/shell-quoting';
+import { isAlreadyQuoted, needsShellQuoting } from '../../utils/shell-quoting';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {
@@ -326,9 +326,56 @@ function unparsedOptionsToArgsArray(
     opts.parsedArgs
   );
   if (filteredParsedOptions.length > 0) {
-    return filteredParsedOptions.map(wrapArgIntoQuotesIfNeeded);
+    return rejoinQuotedFragments(filteredParsedOptions).map(
+      wrapArgIntoQuotesIfNeeded
+    );
   }
   return [];
+}
+
+/**
+ * Rejoin shell word-split fragments of quoted values.
+ *
+ * When a CLI arg like --config \'{"env":"val"}\' is passed through execSync,
+ * the shell word-splits on spaces, producing separate argv entries:
+ *   ['--config', '\'{"env":"i', 'am', 'here"}\'']
+ *
+ * These fragments need to be rejoined before quoting logic processes them,
+ * otherwise individual fragments get incorrectly re-quoted.
+ */
+function rejoinQuotedFragments(args: string[]): string[] {
+  const result: string[] = [];
+  let i = 0;
+  while (i < args.length) {
+    const arg = args[i];
+    const quoteChar =
+      arg.length > 1 && (arg[0] === "'" || arg[0] === '"') ? arg[0] : null;
+    if (quoteChar && !arg.endsWith(quoteChar)) {
+      // Start of a word-split quoted value — collect until closing quote
+      const fragments = [arg];
+      let found = false;
+      i++;
+      while (i < args.length) {
+        fragments.push(args[i]);
+        if (args[i].endsWith(quoteChar)) {
+          found = true;
+          i++;
+          break;
+        }
+        i++;
+      }
+      if (found) {
+        result.push(fragments.join(' '));
+      } else {
+        // No matching close quote — push fragments as-is
+        result.push(...fragments);
+      }
+    } else {
+      result.push(arg);
+      i++;
+    }
+  }
+  return result;
 }
 
 function parseArgs(
@@ -402,15 +449,15 @@ function wrapArgIntoQuotesIfNeeded(arg: string): string {
     if (
       key.startsWith('--') &&
       needsShellQuoting(value) &&
-      !(value[0] === "'" || value[0] === '"')
+      !isAlreadyQuoted(value)
     ) {
-      // Escape any existing double quotes in the value
+      // Escape any existing double quotes in the value before wrapping
       const escaped = value.replace(/"/g, '\\"');
       return `${key}="${escaped}"`;
     }
     return arg;
-  } else if (needsShellQuoting(arg) && !(arg[0] === "'" || arg[0] === '"')) {
-    // Escape any existing double quotes in the value
+  } else if (needsShellQuoting(arg) && !isAlreadyQuoted(arg)) {
+    // Escape any existing double quotes in the value before wrapping
     const escaped = arg.replace(/"/g, '\\"');
     return `"${escaped}"`;
   } else {

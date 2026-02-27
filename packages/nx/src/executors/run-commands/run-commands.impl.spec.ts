@@ -657,6 +657,30 @@ describe('Run Commands', () => {
         )
       ).toEqual('echo --define="FOO=bar|baz"');
     });
+
+    it('should not re-quote word-split fragments of a single-quoted JSON value', () => {
+      // Simulates what happens when the shell word-splits:
+      //   --config \'{"env":{"cliArg":"i am from the cli args"}}\'
+      // The shell produces these separate argv entries because \" makes "
+      // literal but doesn't prevent word splitting:
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: [
+              '--config',
+              '\'{"env":{"cliArg":"i',
+              'am',
+              'from',
+              'the',
+              'cli',
+              'args"}}\'',
+            ],
+          } as any,
+          true
+        )
+      ).toEqual(`echo --config '{"env":{"cliArg":"i am from the cli args"}}'`);
+    });
   });
 
   describe('--color', () => {

@@ -28,3 +28,14 @@ const SHELL_META_CHARS = /[|&;<>()$`\\!"'*?[\]{}~#\s]/;
 export function needsShellQuoting(str: string): boolean {
   return SHELL_META_CHARS.test(str);
 }
+
+/**
+ * Check if a string is already wrapped in matching quotes (single or double).
+ */
+export function isAlreadyQuoted(str: string): boolean {
+  return (
+    str.length >= 2 &&
+    ((str[0] === "'" && str[str.length - 1] === "'") ||
+      (str[0] === '"' && str[str.length - 1] === '"'))
+  );
+}

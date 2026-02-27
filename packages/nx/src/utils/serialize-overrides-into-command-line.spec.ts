@@ -62,6 +62,22 @@ describe('serializeOverridesIntoCommandLine', () => {
       ]);
     });
 
+    it('should not re-quote single-quoted values', () => {
+      expect(
+        serializeOverridesIntoCommandLine({
+          config: '\'{"env":{"cliArg":"i am from the cli args"}}\'',
+        })
+      ).toEqual(['--config=\'{"env":{"cliArg":"i am from the cli args"}}\'']);
+    });
+
+    it('should not re-quote double-quoted values', () => {
+      expect(
+        serializeOverridesIntoCommandLine({
+          config: '"some value with spaces"',
+        })
+      ).toEqual(['--config="some value with spaces"']);
+    });
+
     it('should not wrap values without special characters', () => {
       expect(serializeOverridesIntoCommandLine({ key: 'simplevalue' })).toEqual(
         ['--key=simplevalue']
