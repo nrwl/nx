@@ -13,7 +13,8 @@ type PropertyDescription = {
   oneOf?: PropertyDescription[];
   anyOf?: PropertyDescription[];
   allOf?: PropertyDescription[];
-  items?: any;
+  items?: PropertyDescription | PropertyDescription[];
+  additionalItems?: boolean | PropertyDescription;
   alias?: string;
   aliases?: string[];
   description?: string;
@@ -52,6 +53,10 @@ type PropertyDescription = {
   pattern?: string;
   minLength?: number;
   maxLength?: number;
+
+  // Arrays Only
+  minItems?: number;
+  maxItems?: number;
 
   // Objects Only
   patternProperties?: {
@@ -156,7 +161,8 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
   ) {
     return Number(value);
   } else if (prop.type == 'array') {
-    return value.split(',').map((v) => coerceType(prop.items, v));
+    const itemSchema = Array.isArray(prop.items) ? undefined : prop.items;
+    return value.split(',').map((v) => coerceType(itemSchema, v));
   } else {
     return value;
   }
@@ -487,9 +493,41 @@ function validateProperty(
     }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
-    value.forEach((valueInArray) =>
-      validateProperty(propName, valueInArray, schema.items || {}, definitions)
-    );
+    if (Array.isArray(schema.items)) {
+      // Tuple validation: each item is validated against the corresponding positional schema
+      value.forEach((valueInArray, index) => {
+        if (index < (schema.items as PropertyDescription[]).length) {
+          validateProperty(
+            propName,
+            valueInArray,
+            (schema.items as PropertyDescription[])[index],
+            definitions
+          );
+        } else if (schema.additionalItems === false) {
+          throwInvalidSchema(propName, schema);
+        } else if (
+          schema.additionalItems &&
+          typeof schema.additionalItems === 'object'
+        ) {
+          validateProperty(
+            propName,
+            valueInArray,
+            schema.additionalItems,
+            definitions
+          );
+        }
+        // If additionalItems is not specified or true, additional items are allowed
+      });
+    } else {
+      value.forEach((valueInArray) =>
+        validateProperty(
+          propName,
+          valueInArray,
+          (schema.items as PropertyDescription) || {},
+          definitions
+        )
+      );
+    }
   } else if (value === null) {
     // Special handling for null since typeof null === 'object' in JavaScript
     // null is valid if schema.type is 'null' or if it's an array containing 'null'
@@ -841,7 +879,11 @@ export function getPromptsForSchema(
             type: 'confirm',
             message,
           };
-        } else if (v.type === 'array' && v.items?.enum) {
+        } else if (
+          v.type === 'array' &&
+          !Array.isArray(v.items) &&
+          v.items?.enum
+        ) {
           v['x-prompt'] = {
             type: 'multiselect',
             items: v.items.enum,

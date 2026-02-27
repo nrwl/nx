@@ -1590,6 +1590,78 @@ describe('params', () => {
       );
     });
 
+    it('should validate arrays with tuple items (items as array)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: ['junit', { suiteName: 'MyApp' }] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should throw when tuple item type does not match (items as array)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: [123, { suiteName: 'MyApp' }] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).toThrow("Property 'a' does not match the schema.");
+    });
+
+    it('should validate reporters with oneOf including tuple items (issue scenario)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { reporters: [['junit', { suiteName: 'MyApp' }]] },
+          {
+            properties: {
+              reporters: {
+                type: 'array',
+                items: {
+                  oneOf: [
+                    {
+                      anyOf: [{ type: 'string' }, { enum: ['junit', 'html'] }],
+                    },
+                    {
+                      type: 'array',
+                      minItems: 1,
+                      maxItems: 2,
+                      items: [
+                        {
+                          anyOf: [
+                            { type: 'string' },
+                            { enum: ['junit', 'html'] },
+                          ],
+                        },
+                        { type: 'object' },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
     it("should throw if the type doesn't match (objects)", () => {
       expect(() =>
         validateOptsAgainstSchema(
