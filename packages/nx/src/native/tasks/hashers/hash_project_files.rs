@@ -12,19 +12,11 @@ pub struct ProjectFilesHashResult {
     pub files: Vec<String>,
 }
 
-/// Expands project file set patterns by replacing `{projectRoot}` with the actual project root.
-/// For root projects (project_root == "."), strips `{projectRoot}/` instead.
-pub fn globs_from_project_globs(project_root: &str, file_sets: &[String]) -> Vec<String> {
-    file_sets
-        .iter()
-        .map(|f| {
-            if project_root == "." {
-                f.replace("{projectRoot}/", "")
-            } else {
-                f.replace("{projectRoot}", project_root)
-            }
-        })
-        .collect()
+/// Returns the file set patterns for glob matching.
+/// Token resolution ({projectRoot}, {projectName}) is handled upstream by the HashPlanner,
+/// so file_sets are expected to contain already-resolved paths.
+pub fn globs_from_project_globs(_project_root: &str, file_sets: &[String]) -> Vec<String> {
+    file_sets.to_vec()
 }
 
 /// Hashes project files and returns both the hash and the list of matched file paths.
@@ -92,9 +84,10 @@ mod tests {
     fn test_collect_files() {
         let proj_name = "test_project";
         let proj_root = "test/root";
+        // Tokens are pre-resolved by the HashPlanner before reaching these functions
         let file_sets = &[
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
-            "{projectRoot}/**/*".to_string(),
+            "!test/root/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "test/root/**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let tsfile_1 = FileData {
@@ -130,7 +123,7 @@ mod tests {
         let result = collect_project_files(
             proj_name,
             proj_root,
-            &["!{projectRoot}/**/*.spec.ts".into()],
+            &["!test/root/**/*.spec.ts".into()],
             &file_map,
         )
         .unwrap();
@@ -149,8 +142,8 @@ mod tests {
         let proj_name = "test_project";
         let proj_root = "test/root";
         let file_sets = &[
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
-            "{projectRoot}/**/*".to_string(),
+            "!test/root/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "test/root/**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let file_data1 = FileData {
@@ -198,10 +191,11 @@ mod tests {
     fn should_hash_projects_with_root_as_dot() {
         let proj_name = "test_project";
         // having "." as the project root means that this would be a standalone project
+        // When project_root is ".", the HashPlanner strips "{projectRoot}/" entirely
         let proj_root = ".";
         let file_sets = &[
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
-            "{projectRoot}/**/*".to_string(),
+            "!**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let file_data1 = FileData {
