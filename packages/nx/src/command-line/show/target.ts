@@ -395,7 +395,11 @@ async function resolveInputFiles(
     configuration,
   });
 
-  const taskId = `${projectName}:${targetName}`;
+  const targetConfig = graph.nodes[projectName]?.data?.targets?.[targetName];
+  const defaultConfig = targetConfig?.defaultConfiguration;
+  const taskId = defaultConfig
+    ? `${projectName}:${targetName}:${defaultConfig}`
+    : `${projectName}:${targetName}`;
   return (
     plan[taskId] ?? {
       files: [],

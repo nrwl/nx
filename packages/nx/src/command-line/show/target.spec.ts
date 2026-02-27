@@ -481,6 +481,49 @@ describe('show target', () => {
     expect(parsed.environment).toContain('NX_CLOUD_ENCRYPTION_KEY');
   });
 
+  it('should resolve input files when target has defaultConfiguration', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: {
+              executor: '@nx/web:build',
+              inputs: ['{projectRoot}/**/*.ts'],
+              configurations: {
+                local: {},
+                production: {},
+              },
+              defaultConfiguration: 'local',
+            },
+          },
+        },
+        'app'
+      )
+      .build();
+
+    mockHashInputs = {
+      'my-app:build:local': {
+        files: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
+    };
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      json: true,
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const parsed = JSON.parse(logged);
+    expect(parsed.files).toContain('apps/my-app/src/main.ts');
+    expect(parsed.files).toContain('apps/my-app/src/app.ts');
+  });
+
   it('should identify matching file with --check', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration(
