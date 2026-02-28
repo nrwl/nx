@@ -75,8 +75,11 @@ describe('project-configuration-utils', () => {
     it('should return longest matching target', () => {
       expect(
         // This matches both 'e2e-ci--*' and 'e2e-ci--file-*', we expect the first match to be returned.
-        readTargetDefaultsForTarget('e2e-ci--file-foo', targetDefaults, null)
-          .options['key']
+        readTargetDefaultsForTarget(
+          'e2e-ci--file-foo',
+          targetDefaults,
+          undefined
+        ).options['key']
       ).toEqual('default-value-for-e2e-ci-file');
     });
 
@@ -457,6 +460,583 @@ describe('project-configuration-utils', () => {
       });
     });
 
+    describe('spread syntax in merging', () => {
+      describe('array spread with "..."', () => {
+        it('should spread base array at the position of "..."', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input-1', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            }
+          );
+          expect(result.inputs).toEqual([
+            'new-input-1',
+            'base-input-1',
+            'base-input-2',
+            'new-input-2',
+          ]);
+        });
+
+        it('should spread base array at the beginning when "..." is first', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              outputs: ['...', 'new-output'],
+            },
+            {
+              executor: 'target',
+              outputs: ['base-output-1', 'base-output-2'],
+            }
+          );
+          expect(result.outputs).toEqual([
+            'base-output-1',
+            'base-output-2',
+            'new-output',
+          ]);
+        });
+
+        it('should spread base array at the end when "..." is last', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input', '...'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            }
+          );
+          expect(result.inputs).toEqual([
+            'new-input',
+            'base-input-1',
+            'base-input-2',
+          ]);
+        });
+
+        it('should handle "..." when base array is empty', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input-1', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+              inputs: [],
+            }
+          );
+          expect(result.inputs).toEqual(['new-input-1', 'new-input-2']);
+        });
+
+        it('should handle "..." when base array is undefined', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input-1', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+            }
+          );
+          expect(result.inputs).toEqual(['new-input-1', 'new-input-2']);
+        });
+
+        it('should spread in dependsOn array', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              dependsOn: ['new-dep', '...'],
+            },
+            {
+              executor: 'target',
+              dependsOn: ['^build', 'test'],
+            }
+          );
+          expect(result.dependsOn).toEqual(['new-dep', '^build', 'test']);
+        });
+
+        it('should spread array option values within options', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                assets: ['new-asset', '...'],
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                assets: ['base-asset-1', 'base-asset-2'],
+              },
+            }
+          );
+          expect(result.options).toEqual({
+            assets: ['new-asset', 'base-asset-1', 'base-asset-2'],
+          });
+        });
+      });
+
+      describe('object spread with "..." in nested options', () => {
+        it('should spread base object properties in nested option objects', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                  '...': true,
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  BASE_VAR: 'base',
+                  EXISTING: 'existing',
+                },
+              },
+            }
+          );
+          expect(result.options?.env).toEqual({
+            NEW_VAR: 'new',
+            BASE_VAR: 'base',
+            EXISTING: 'existing',
+          });
+        });
+
+        it('should allow new values to override spread base values when defined after "..."', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  '...': true,
+                  sharedKey: 'new-value',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'base-value',
+                  baseOnly: 'base',
+                },
+              },
+            }
+          );
+          expect(result.options?.config).toEqual({
+            sharedKey: 'new-value',
+            baseOnly: 'base',
+          });
+        });
+
+        it('should preserve base values when "..." comes after in object iteration', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'new-value',
+                  '...': true,
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'base-value',
+                  baseOnly: 'base',
+                },
+              },
+            }
+          );
+          // The order of spread determines which value wins
+          // When "..." comes after sharedKey, the base value overwrites
+          expect(result.options?.config).toEqual({
+            sharedKey: 'base-value',
+            baseOnly: 'base',
+          });
+        });
+        it('should keep "..." with a comment string value as a regular property', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                  '...': 'This is a comment',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  BASE_VAR: 'base',
+                },
+              },
+            }
+          );
+          // String value for '...' should NOT trigger spread - only `true` triggers it
+          expect(result.options?.env).toEqual({
+            NEW_VAR: 'new',
+            '...': 'This is a comment',
+          });
+        });
+      });
+
+      describe('spread in configurations', () => {
+        it('should spread arrays in configuration options', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'new.ts', with: 'new.prod.ts' },
+                    '...',
+                  ],
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'base.ts', with: 'base.prod.ts' },
+                  ],
+                },
+              },
+            }
+          );
+          expect(result.configurations?.prod.fileReplacements).toEqual([
+            { replace: 'new.ts', with: 'new.prod.ts' },
+            { replace: 'base.ts', with: 'base.prod.ts' },
+          ]);
+        });
+
+        it('should spread objects in configuration options', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  env: {
+                    NEW_VAR: 'new',
+                    '...': true,
+                  },
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  env: {
+                    BASE_VAR: 'base',
+                  },
+                },
+              },
+            }
+          );
+          expect(result.configurations?.prod.env).toEqual({
+            NEW_VAR: 'new',
+            BASE_VAR: 'base',
+          });
+        });
+
+        it('should spread arrays in multiple configurations', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                dev: {
+                  scripts: ['dev-script', '...'],
+                },
+                prod: {
+                  scripts: ['...', 'prod-script'],
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                dev: {
+                  scripts: ['base-dev-1', 'base-dev-2'],
+                },
+                prod: {
+                  scripts: ['base-prod'],
+                },
+              },
+            }
+          );
+          expect(result.configurations?.dev.scripts).toEqual([
+            'dev-script',
+            'base-dev-1',
+            'base-dev-2',
+          ]);
+          expect(result.configurations?.prod.scripts).toEqual([
+            'base-prod',
+            'prod-script',
+          ]);
+        });
+      });
+
+      describe('"..." in base target should not affect result', () => {
+        it('should ignore "..." in base array when target overrides without spread', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['override-1', 'override-2'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-1', '...', 'base-2'],
+            }
+          );
+          expect(result.inputs).toEqual(['override-1', 'override-2']);
+        });
+
+        it('should ignore "..." in base object option when target overrides without spread', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  '...': true,
+                  BASE_VAR: 'base',
+                },
+              },
+            }
+          );
+          expect(result.options?.env).toEqual({
+            NEW_VAR: 'new',
+          });
+        });
+
+        it('should ignore "..." in base configuration array when target overrides without spread', () => {
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'new.ts', with: 'new.prod.ts' },
+                  ],
+                },
+              },
+            },
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'base.ts', with: 'base.prod.ts' },
+                    '...',
+                  ],
+                },
+              },
+            }
+          );
+          expect(result.configurations?.prod.fileReplacements).toEqual([
+            { replace: 'new.ts', with: 'new.prod.ts' },
+          ]);
+        });
+      });
+
+      describe('source map tracking with spread', () => {
+        it('should track per-element source for array spread in top-level properties', () => {
+          const sourceMap: Record<string, SourceInformation> = {};
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input', '...'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          expect(result.inputs).toEqual([
+            'new-input',
+            'base-input-1',
+            'base-input-2',
+          ]);
+          // new-input came from the overriding target
+          expect(sourceMap['targets.build.inputs.0']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          // base elements retain the base source (looked up from parent key)
+          // Since there was no prior source map entry, base elements won't have entries
+          // The parent key should be attributed to the new source
+          expect(sourceMap['targets.build.inputs']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+        });
+
+        it('should track per-element source for array spread with existing source map', () => {
+          const sourceMap: Record<string, SourceInformation> = {
+            'targets.build.inputs': ['base-file', 'base-plugin'],
+          };
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              inputs: ['new-input', '...', 'new-input-2'],
+            },
+            {
+              executor: 'target',
+              inputs: ['base-input-1', 'base-input-2'],
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          expect(result.inputs).toEqual([
+            'new-input',
+            'base-input-1',
+            'base-input-2',
+            'new-input-2',
+          ]);
+          expect(sourceMap['targets.build.inputs']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.0']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.1']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.2']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          expect(sourceMap['targets.build.inputs.3']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+        });
+
+        it('should track per-property source for object spread in options', () => {
+          const sourceMap: Record<string, SourceInformation> = {
+            'targets.build.options.env': ['base-file', 'base-plugin'],
+          };
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  NEW_VAR: 'new',
+                  '...': true,
+                  OVERRIDE: 'new-value',
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                env: {
+                  BASE_VAR: 'base',
+                  OVERRIDE: 'base-value',
+                },
+              },
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          expect(result.options.env).toEqual({
+            NEW_VAR: 'new',
+            BASE_VAR: 'base',
+            OVERRIDE: 'new-value',
+          });
+          expect(sourceMap['targets.build.options.env']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.options.env.NEW_VAR']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+          expect(sourceMap['targets.build.options.env.BASE_VAR']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          // OVERRIDE appears before '...' AND after '...' — new value wins because
+          // it's defined after the spread token in the new object
+          expect(sourceMap['targets.build.options.env.OVERRIDE']).toEqual([
+            'new-file',
+            'new-plugin',
+          ]);
+        });
+
+        it('should track base source for object properties overwritten by spread', () => {
+          const sourceMap: Record<string, SourceInformation> = {
+            'targets.build.options.config': ['base-file', 'base-plugin'],
+          };
+          const result = mergeTargetConfigurations(
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'new-value',
+                  '...': true,
+                },
+              },
+            },
+            {
+              executor: 'target',
+              options: {
+                config: {
+                  sharedKey: 'base-value',
+                  baseOnly: 'base',
+                },
+              },
+            },
+            sourceMap,
+            ['new-file', 'new-plugin'],
+            'targets.build'
+          );
+          // sharedKey defined before '...', base spread overwrites it
+          expect(result.options.config).toEqual({
+            sharedKey: 'base-value',
+            baseOnly: 'base',
+          });
+          // Both properties came from base (spread overwrote the new value)
+          expect(sourceMap['targets.build.options.config.sharedKey']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+          expect(sourceMap['targets.build.options.config.baseOnly']).toEqual([
+            'base-file',
+            'base-plugin',
+          ]);
+        });
+      });
+    });
+
     describe('metadata', () => {
       it('should be added', () => {
         const rootMap = new RootMapBuilder()
@@ -486,7 +1066,7 @@ describe('project-configuration-utils', () => {
           ['dummy', 'dummy.ts']
         );
 
-        expect(rootMap['libs/lib-a'].targets.build.metadata).toEqual({
+        expect(rootMap['libs/lib-a'].targets!.build.metadata).toEqual({
           description: 'do stuff',
           technologies: ['tech'],
         });
@@ -539,7 +1119,7 @@ describe('project-configuration-utils', () => {
           ['dummy', 'dummy.ts']
         );
 
-        expect(rootMap['libs/lib-a'].targets.build.metadata).toEqual({
+        expect(rootMap['libs/lib-a'].targets!.build.metadata).toEqual({
           description: 'do cool stuff',
           technologies: ['tech', 'tech2'],
         });
@@ -670,10 +1250,10 @@ describe('project-configuration-utils', () => {
         },
       });
       const merged = rootMap['libs/lib-a'];
-      expect(merged.targets['existingTarget']).toEqual(
+      expect(merged.targets!['existingTarget']).toEqual(
         existingTargetConfiguration
       );
-      expect(merged.targets['shouldMerge']).toMatchInlineSnapshot(`
+      expect(merged.targets!['shouldMerge']).toMatchInlineSnapshot(`
         {
           "configurations": {
             "dev": {
@@ -694,10 +1274,10 @@ describe('project-configuration-utils', () => {
           },
         }
       `);
-      expect(merged.targets['shouldntMerge']).toEqual(
+      expect(merged.targets!['shouldntMerge']).toEqual(
         shouldntMergeConfigurationB
       );
-      expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
+      expect(merged.targets!['newTarget']).toEqual(newTargetConfiguration);
     });
 
     it('should merge target configurations with glob pattern matching', () => {
@@ -744,7 +1324,7 @@ describe('project-configuration-utils', () => {
         },
       });
       const merged = rootMap['libs/lib-a'];
-      expect(merged.targets['partial-path/a']).toMatchInlineSnapshot(`
+      expect(merged.targets!['partial-path/a']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -756,7 +1336,7 @@ describe('project-configuration-utils', () => {
           "executor": "build",
         }
       `);
-      expect(merged.targets['partial-path/b']).toMatchInlineSnapshot(`
+      expect(merged.targets!['partial-path/b']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -768,7 +1348,7 @@ describe('project-configuration-utils', () => {
           "executor": "build",
         }
       `);
-      expect(merged.targets['partial-path/c']).toMatchInlineSnapshot(`
+      expect(merged.targets!['partial-path/c']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -781,7 +1361,7 @@ describe('project-configuration-utils', () => {
         }
       `);
       // if the glob pattern doesn't match, the target is not merged
-      expect(merged.targets['ci-*']).toMatchInlineSnapshot(`
+      expect(merged.targets!['ci-*']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^production",
@@ -790,7 +1370,7 @@ describe('project-configuration-utils', () => {
         }
       `);
       // if the glob pattern matches, the target is merged
-      expect(merged.targets['partial-**/*']).toBeUndefined();
+      expect(merged.targets!['partial-**/*']).toBeUndefined();
     });
 
     it('should concatenate tags and implicitDependencies', () => {
@@ -1727,8 +2307,8 @@ describe('project-configuration-utils', () => {
               };
             },
             vitestConfigPaths,
-            null,
-            null
+            {} as any,
+            {} as any
           ),
       ],
     };
@@ -1758,8 +2338,8 @@ describe('project-configuration-utils', () => {
               };
             },
             projectJsonPaths,
-            null,
-            null
+            {} as any,
+            {} as any
           ),
       ],
     };
@@ -1782,8 +2362,8 @@ describe('project-configuration-utils', () => {
               };
             },
             projectJsonPaths,
-            null,
-            null
+            {} as any,
+            {} as any
           ),
       ],
     };
@@ -1793,12 +2373,20 @@ describe('project-configuration-utils', () => {
         await createProjectConfigurationsWithPlugins(
           undefined,
           {},
-          [['libs/a/project.json', 'libs/b/project.json']],
-          [
-            new LoadedNxPlugin(fakeTagPlugin, {
-              plugin: fakeTagPlugin.name,
-            }),
-          ]
+          {
+            specifiedPluginFiles: [],
+            defaultPluginFiles: [
+              ['libs/a/project.json', 'libs/b/project.json'],
+            ],
+          },
+          {
+            specifiedPlugins: [],
+            defaultPlugins: [
+              new LoadedNxPlugin(fakeTagPlugin, {
+                plugin: fakeTagPlugin.name,
+              }),
+            ],
+          }
         );
 
       expect(projectConfigurations.projects).toEqual({
@@ -1820,13 +2408,21 @@ describe('project-configuration-utils', () => {
         await createProjectConfigurationsWithPlugins(
           undefined,
           {},
-          [['libs/a/project.json', 'libs/b/project.json']],
-          [
-            new LoadedNxPlugin(fakeTagPlugin, {
-              plugin: fakeTagPlugin.name,
-              include: ['libs/a/**'],
-            }),
-          ]
+          {
+            specifiedPluginFiles: [],
+            defaultPluginFiles: [
+              ['libs/a/project.json', 'libs/b/project.json'],
+            ],
+          },
+          {
+            specifiedPlugins: [],
+            defaultPlugins: [
+              new LoadedNxPlugin(fakeTagPlugin, {
+                plugin: fakeTagPlugin.name,
+                include: ['libs/a/**'],
+              }),
+            ],
+          }
         );
 
       expect(projectConfigurations.projects).toEqual({
@@ -1843,13 +2439,21 @@ describe('project-configuration-utils', () => {
         await createProjectConfigurationsWithPlugins(
           undefined,
           {},
-          [['libs/a/project.json', 'libs/b/project.json']],
-          [
-            new LoadedNxPlugin(fakeTagPlugin, {
-              plugin: fakeTagPlugin.name,
-              exclude: ['libs/b/**'],
-            }),
-          ]
+          {
+            specifiedPluginFiles: [],
+            defaultPluginFiles: [
+              ['libs/a/project.json', 'libs/b/project.json'],
+            ],
+          },
+          {
+            specifiedPlugins: [],
+            defaultPlugins: [
+              new LoadedNxPlugin(fakeTagPlugin, {
+                plugin: fakeTagPlugin.name,
+                exclude: ['libs/b/**'],
+              }),
+            ],
+          }
         );
 
       expect(projectConfigurations.projects).toEqual({
@@ -1867,19 +2471,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a-e2e/project.json',
-                'libs/b-e2e/project.json',
-                'libs/toolkit-workspace-e2e/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a-e2e/project.json',
+                  'libs/b-e2e/project.json',
+                  'libs/toolkit-workspace-e2e/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['**/*-e2e/**', '!**/toolkit-workspace-e2e/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['**/*-e2e/**', '!**/toolkit-workspace-e2e/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -1896,19 +2506,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/**', '!libs/b/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['libs/**', '!libs/b/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -1930,20 +2546,26 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
-                'libs/d/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                  'libs/d/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['libs/**', '!libs/b/**', '!libs/c/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['libs/**', '!libs/b/**', '!libs/c/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -1965,19 +2587,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['!libs/a/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['!libs/a/**'],
+                }),
+              ],
+            }
           );
 
         // Should exclude everything except libs/a (first pattern is negation)
@@ -1995,19 +2623,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['!libs/b/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['!libs/b/**'],
+                }),
+              ],
+            }
           );
 
         // Should include everything except libs/b (first pattern is negation)
@@ -2030,14 +2664,22 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [['libs/a/project.json', 'libs/b/project.json']],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/a/**'],
-                exclude: ['libs/b/**'],
-              }),
-            ]
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                ['libs/a/project.json', 'libs/b/project.json'],
+              ],
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['libs/a/**'],
+                  exclude: ['libs/b/**'],
+                }),
+              ],
+            }
           );
 
         expect(projectConfigurations.projects).toEqual({
@@ -2054,19 +2696,25 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/a/special/project.json',
-                'libs/b/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/a/special/project.json',
+                  'libs/b/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['libs/**', '!libs/a/**', 'libs/a/special/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  exclude: ['libs/**', '!libs/a/**', 'libs/a/special/**'],
+                }),
+              ],
+            }
           );
 
         // Exclude all libs, except a, but re-exclude a/special (last match wins)
@@ -2084,21 +2732,27 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [
-              [
-                'libs/a/project.json',
-                'libs/b/project.json',
-                'libs/c/project.json',
-                'libs/d/project.json',
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                [
+                  'libs/a/project.json',
+                  'libs/b/project.json',
+                  'libs/c/project.json',
+                  'libs/d/project.json',
+                ],
               ],
-            ],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/**', '!libs/d/**'],
-                exclude: ['libs/b/**', '!libs/c/**'],
-              }),
-            ]
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: ['libs/**', '!libs/d/**'],
+                  exclude: ['libs/b/**', '!libs/c/**'],
+                }),
+              ],
+            }
           );
 
         // Include: a, b, c (all except d)
@@ -2123,14 +2777,22 @@ describe('project-configuration-utils', () => {
           await createProjectConfigurationsWithPlugins(
             undefined,
             {},
-            [['libs/a/project.json', 'libs/b/project.json']],
-            [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: [],
-                exclude: [],
-              }),
-            ]
+            {
+              specifiedPluginFiles: [],
+              defaultPluginFiles: [
+                ['libs/a/project.json', 'libs/b/project.json'],
+              ],
+            },
+            {
+              specifiedPlugins: [],
+              defaultPlugins: [
+                new LoadedNxPlugin(fakeTagPlugin, {
+                  plugin: fakeTagPlugin.name,
+                  include: [],
+                  exclude: [],
+                }),
+              ],
+            }
           );
 
         // Empty arrays should not filter anything
@@ -2153,13 +2815,22 @@ describe('project-configuration-utils', () => {
       const { projects } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json'], ['libs/a/project.json']],
-        [
-          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
-          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
-        ]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            ['libs/a/project.json'],
+            ['libs/a/project.json'],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+            new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+          ],
+        }
       );
-      expect(projects['libs/a'].targets.build).toMatchInlineSnapshot(`
+      expect(projects['libs/a'].targets!.build).toMatchInlineSnapshot(`
         {
           "configurations": {},
           "executor": "nx:run-commands",
@@ -2175,8 +2846,22 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
-        [new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            [
+              'libs/a/project.json',
+              'libs/b/project.json',
+              'libs/c/project.json',
+            ],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin'),
+          ],
+        }
       ).catch((e) => e);
       const isErrorType = isProjectConfigurationsError(error);
       expect(isErrorType).toBe(true);
@@ -2199,8 +2884,22 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
-        [new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            [
+              'libs/a/project.json',
+              'libs/b/project.json',
+              'libs/c/project.json',
+            ],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+          ],
+        }
       ).catch((e) => e);
       const isErrorType = isProjectConfigurationsError(error);
       expect(isErrorType).toBe(true);
@@ -2256,8 +2955,16 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/my-lib/project.json']],
-        [new LoadedNxPlugin(invalidCachePlugin, 'invalid-cache-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [['libs/my-lib/project.json']],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(invalidCachePlugin, 'invalid-cache-plugin'),
+          ],
+        }
       ).catch((e) => e);
 
       const isErrorType = isProjectConfigurationsError(error);
@@ -2277,11 +2984,20 @@ describe('project-configuration-utils', () => {
       const { sourceMaps } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/a/project.json'], ['libs/a/project.json']],
-        [
-          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
-          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
-        ]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [
+            ['libs/a/project.json'],
+            ['libs/a/project.json'],
+          ],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+            new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+          ],
+        }
       );
       expect(sourceMaps).toMatchInlineSnapshot(`
         {
@@ -2355,8 +3071,8 @@ describe('project-configuration-utils', () => {
                 };
               },
               projectJsonPaths,
-              null,
-              null
+              {} as any,
+              {} as any
             ),
         ],
       };
@@ -2364,8 +3080,16 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        [['libs/my-app/project.json']],
-        [new LoadedNxPlugin(invalidTokenPlugin, 'invalid-token-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [['libs/my-app/project.json']],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            new LoadedNxPlugin(invalidTokenPlugin, 'invalid-token-plugin'),
+          ],
+        }
       ).catch((e) => e);
 
       expect(error.message).toContain(
@@ -2402,8 +3126,8 @@ describe('project-configuration-utils', () => {
                 };
               },
               projectJsonPaths,
-              null,
-              null
+              {} as any,
+              {} as any
             ),
         ],
       };
@@ -2421,8 +3145,14 @@ describe('project-configuration-utils', () => {
       const error = await createProjectConfigurationsWithPlugins(
         undefined,
         nxJsonWithInvalidDefaults,
-        [['libs/my-lib/project.json']],
-        [new LoadedNxPlugin(simplePlugin, 'simple-plugin')]
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [['libs/my-lib/project.json']],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [new LoadedNxPlugin(simplePlugin, 'simple-plugin')],
+        }
       ).catch((e) => e);
 
       expect(error.message).toContain(
@@ -2521,6 +3251,1065 @@ describe('project-configuration-utils', () => {
       // not be replaced by target default
       expect(result.dependsOn).toEqual([]);
     });
+
+    describe('spread syntax', () => {
+      it('should spread arrays in target default options using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.assets': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  assets: ['project-asset-1', 'project-asset-2'],
+                },
+              },
+            },
+          },
+          {
+            options: {
+              assets: ['default-asset', '...'],
+            },
+          },
+          sourceMap
+        );
+
+        // Target defaults should override non-core plugin values, and spread should work
+        expect(result.options.assets).toEqual([
+          'default-asset',
+          'project-asset-1',
+          'project-asset-2',
+        ]);
+        // Source map should reflect that target defaults won for this property
+        expect(sourceMap['targets.build.options.assets']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('should spread objects in target default options using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.env': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    PROJECT_VAR: 'project-value',
+                  },
+                },
+              },
+            },
+          },
+          {
+            options: {
+              env: {
+                DEFAULT_VAR: 'default-value',
+                '...': true,
+              },
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.options.env).toEqual({
+          DEFAULT_VAR: 'default-value',
+          PROJECT_VAR: 'project-value',
+        });
+      });
+
+      it('should spread arrays in target default configurations using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.configurations': ['dummy', 'dummy.ts'],
+          'targets.build.configurations.prod': ['dummy', 'dummy.ts'],
+          'targets.build.configurations.prod.fileReplacements': [
+            'dummy',
+            'dummy.ts',
+          ],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                configurations: {
+                  prod: {
+                    fileReplacements: [
+                      { replace: 'env.ts', with: 'env.prod.ts' },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          {
+            configurations: {
+              prod: {
+                fileReplacements: [
+                  { replace: 'default.ts', with: 'default.prod.ts' },
+                  '...',
+                ],
+              },
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.configurations?.prod.fileReplacements).toEqual([
+          { replace: 'default.ts', with: 'default.prod.ts' },
+          { replace: 'env.ts', with: 'env.prod.ts' },
+        ]);
+      });
+
+      it('should spread top-level arrays like inputs using "..."', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.inputs': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                inputs: ['default', '{projectRoot}/**/*'],
+              },
+            },
+          },
+          {
+            inputs: ['production', '...', '{workspaceRoot}/.eslintrc.json'],
+          },
+          sourceMap
+        );
+
+        expect(result.inputs).toEqual([
+          'production',
+          'default',
+          '{projectRoot}/**/*',
+          '{workspaceRoot}/.eslintrc.json',
+        ]);
+      });
+
+      it('should let project.json override target defaults for core plugin targets', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'nx/core/project-json'],
+          'targets.build': ['project.json', 'nx/core/project-json'],
+          'targets.build.options': ['project.json', 'nx/core/project-json'],
+          'targets.build.options.command': [
+            'project.json',
+            'nx/core/project-json',
+          ],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo hello',
+                },
+              },
+            },
+          },
+          {
+            options: {
+              command: 'echo world',
+            },
+          },
+          sourceMap
+        );
+
+        // Core plugin source means project definition takes precedence
+        expect(result.options.command).toEqual('echo hello');
+      });
+
+      it('should let project.json override target default arrays for core plugin targets', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'nx/core/project-json'],
+          'targets.build': ['project.json', 'nx/core/project-json'],
+          'targets.build.inputs': ['project.json', 'nx/core/project-json'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                inputs: ['default', '{projectRoot}/**/*'],
+              },
+            },
+          },
+          {
+            inputs: ['production', '{workspaceRoot}/.eslintrc.json'],
+          },
+          sourceMap
+        );
+
+        // Core plugin source means project definition takes precedence
+        expect(result.inputs).toEqual(['default', '{projectRoot}/**/*']);
+      });
+
+      it('should ignore "..." in base target definition when target default overrides without spread', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.assets': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  assets: ['project-asset', '...'],
+                },
+              },
+            },
+          },
+          {
+            options: {
+              assets: ['default-asset-1', 'default-asset-2'],
+            },
+          },
+          sourceMap
+        );
+
+        // Target defaults override non-core plugin values, and the '...' in the
+        // project definition is irrelevant since the target default has no spread
+        expect(result.options.assets).toEqual([
+          'default-asset-1',
+          'default-asset-2',
+        ]);
+      });
+
+      it('should ignore "..." in base target definition object when target default overrides without spread', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['dummy', 'dummy.ts'],
+          'targets.build': ['dummy', 'dummy.ts'],
+          'targets.build.options': ['dummy', 'dummy.ts'],
+          'targets.build.options.env': ['dummy', 'dummy.ts'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    '...': true,
+                    PROJECT_VAR: 'project',
+                  },
+                },
+              },
+            },
+          },
+          {
+            options: {
+              env: {
+                DEFAULT_VAR: 'default',
+              },
+            },
+          },
+          sourceMap
+        );
+
+        // Target defaults override non-core, and the '...' in project definition
+        // doesn't affect the result since the override has no spread
+        expect(result.options.env).toEqual({
+          DEFAULT_VAR: 'default',
+        });
+      });
+
+      it('should track per-element source for array spread in target default options', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'my-plugin'],
+          'targets.build': ['project.json', 'my-plugin'],
+          'targets.build.options': ['project.json', 'my-plugin'],
+          'targets.build.options.assets': ['project.json', 'my-plugin'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  assets: ['project-asset'],
+                },
+              },
+            },
+          },
+          {
+            options: {
+              assets: ['default-asset-1', '...', 'default-asset-2'],
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.options.assets).toEqual([
+          'default-asset-1',
+          'project-asset',
+          'default-asset-2',
+        ]);
+        // Parent key is attributed to target defaults (new source)
+        expect(sourceMap['targets.build.options.assets']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        // Per-element tracking
+        expect(sourceMap['targets.build.options.assets.0']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        expect(sourceMap['targets.build.options.assets.1']).toEqual([
+          'project.json',
+          'my-plugin',
+        ]);
+        expect(sourceMap['targets.build.options.assets.2']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('should track per-property source for object spread in target default options', () => {
+        const sourceMap: Record<string, SourceInformation> = {
+          targets: ['project.json', 'my-plugin'],
+          'targets.build': ['project.json', 'my-plugin'],
+          'targets.build.options': ['project.json', 'my-plugin'],
+          'targets.build.options.env': ['project.json', 'my-plugin'],
+        };
+        const result = mergeTargetDefaultWithTargetDefinition(
+          'build',
+          {
+            name: 'myapp',
+            root: 'apps/myapp',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    PROJECT_VAR: 'project-value',
+                    SHARED: 'project-shared',
+                  },
+                },
+              },
+            },
+          },
+          {
+            options: {
+              env: {
+                DEFAULT_VAR: 'default-value',
+                '...': true,
+                SHARED: 'default-shared',
+              },
+            },
+          },
+          sourceMap
+        );
+
+        expect(result.options.env).toEqual({
+          DEFAULT_VAR: 'default-value',
+          PROJECT_VAR: 'project-value',
+          SHARED: 'default-shared',
+        });
+        expect(sourceMap['targets.build.options.env']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        expect(sourceMap['targets.build.options.env.DEFAULT_VAR']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+        expect(sourceMap['targets.build.options.env.PROJECT_VAR']).toEqual([
+          'project.json',
+          'my-plugin',
+        ]);
+        // SHARED is defined after '...', so target defaults win
+        expect(sourceMap['targets.build.options.env.SHARED']).toEqual([
+          'nx.json',
+          'nx/target-defaults',
+        ]);
+      });
+    });
+  });
+
+  describe('mergeProjectConfigurationIntoRootMap spread syntax', () => {
+    it('should spread arrays in target options when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                scripts: ['existing-script-1', 'existing-script-2'],
+              },
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            options: {
+              scripts: ['new-script', '...'],
+            },
+          },
+        },
+      });
+
+      expect(rootMap['libs/lib-a'].targets?.build.options.scripts).toEqual([
+        'new-script',
+        'existing-script-1',
+        'existing-script-2',
+      ]);
+    });
+
+    it('should spread objects in target options when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                env: {
+                  EXISTING_VAR: 'existing',
+                  SHARED_VAR: 'existing-shared',
+                },
+              },
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            options: {
+              env: {
+                NEW_VAR: 'new',
+                '...': true,
+                SHARED_VAR: 'new-shared',
+              },
+            },
+          },
+        },
+      });
+
+      expect(rootMap['libs/lib-a'].targets?.build.options.env).toEqual({
+        NEW_VAR: 'new',
+        EXISTING_VAR: 'existing',
+        SHARED_VAR: 'new-shared',
+      });
+    });
+
+    it('should spread arrays in top-level target properties when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: ['default', '{projectRoot}/**/*'],
+              outputs: ['{projectRoot}/dist'],
+              dependsOn: ['^build'],
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            inputs: ['production', '...'],
+            outputs: ['...', '{projectRoot}/coverage'],
+            dependsOn: ['prebuild', '...'],
+          },
+        },
+      });
+
+      expect(rootMap['libs/lib-a'].targets?.build.inputs).toEqual([
+        'production',
+        'default',
+        '{projectRoot}/**/*',
+      ]);
+      expect(rootMap['libs/lib-a'].targets?.build.outputs).toEqual([
+        '{projectRoot}/dist',
+        '{projectRoot}/coverage',
+      ]);
+      expect(rootMap['libs/lib-a'].targets?.build.dependsOn).toEqual([
+        'prebuild',
+        '^build',
+      ]);
+    });
+
+    it('should spread arrays in configuration options when merging projects', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              configurations: {
+                prod: {
+                  fileReplacements: [
+                    { replace: 'env.ts', with: 'env.prod.ts' },
+                  ],
+                },
+              },
+            },
+          },
+        })
+        .getRootMap();
+
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            configurations: {
+              prod: {
+                fileReplacements: [
+                  { replace: 'config.ts', with: 'config.prod.ts' },
+                  '...',
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      expect(
+        rootMap['libs/lib-a'].targets?.build.configurations?.prod
+          .fileReplacements
+      ).toEqual([
+        { replace: 'config.ts', with: 'config.prod.ts' },
+        { replace: 'env.ts', with: 'env.prod.ts' },
+      ]);
+    });
+
+    it('should handle spread with source maps correctly', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                scripts: ['base-script'],
+              },
+            },
+          },
+        })
+        .getRootMap();
+      const sourceMap: ConfigurationSourceMaps = {
+        'libs/lib-a': {
+          'targets.build': ['base', 'base-plugin'],
+          'targets.build.options': ['base', 'base-plugin'],
+          'targets.build.options.scripts': ['base', 'base-plugin'],
+        },
+      };
+
+      mergeProjectConfigurationIntoRootMap(
+        rootMap,
+        {
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            build: {
+              options: {
+                scripts: ['new-script', '...'],
+              },
+            },
+          },
+        },
+        sourceMap,
+        ['new', 'new-plugin']
+      );
+
+      expect(rootMap['libs/lib-a'].targets?.build.options.scripts).toEqual([
+        'new-script',
+        'base-script',
+      ]);
+      expect(sourceMap['libs/lib-a']['targets.build.options.scripts']).toEqual([
+        'new',
+        'new-plugin',
+      ]);
+      // Per-element source tracking
+      expect(
+        sourceMap['libs/lib-a']['targets.build.options.scripts.0']
+      ).toEqual(['new', 'new-plugin']);
+      expect(
+        sourceMap['libs/lib-a']['targets.build.options.scripts.1']
+      ).toEqual(['base', 'base-plugin']);
+    });
+  });
+
+  describe('two-phase spread: project.json spread includes target defaults', () => {
+    const projectJsonPaths = ['libs/my-lib/project.json'];
+
+    /**
+     * Creates a specified plugin that infers targets for a project.
+     * Simulates plugins like @nx/webpack, @nx/jest, etc.
+     */
+    function makeSpecifiedPlugin(
+      targets: Record<string, TargetConfiguration>,
+      projectRoot = 'libs/my-lib'
+    ): NxPluginV2 {
+      return {
+        name: 'specified-plugin',
+        createNodesV2: [
+          'libs/*/project.json',
+          (configFiles) =>
+            createNodesFromFiles(
+              (configFile) => {
+                const root = dirname(configFile);
+                if (root !== projectRoot) return {};
+                return {
+                  projects: {
+                    [root]: { targets },
+                  },
+                };
+              },
+              configFiles,
+              {} as any,
+              {} as any
+            ),
+        ],
+      };
+    }
+
+    /**
+     * Creates a default plugin (like project.json) that defines targets.
+     */
+    function makeDefaultPlugin(
+      targets: Record<string, TargetConfiguration>,
+      projectRoot = 'libs/my-lib',
+      name = 'default-plugin'
+    ): NxPluginV2 {
+      return {
+        name,
+        createNodesV2: [
+          'libs/*/project.json',
+          (configFiles) =>
+            createNodesFromFiles(
+              (configFile) => {
+                const root = dirname(configFile);
+                if (root !== projectRoot) return {};
+                return {
+                  projects: {
+                    [root]: {
+                      name: 'my-lib',
+                      targets,
+                    },
+                  },
+                };
+              },
+              configFiles,
+              {} as any,
+              {} as any
+            ),
+        ],
+      };
+    }
+
+    it('Case C: spread in project.json target includes target defaults (specified + defaults)', async () => {
+      // Scenario: Specified plugin infers build.inputs, target defaults define
+      // build.inputs, project.json uses spread to include defaults.
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          inputs: ['explicit', '...'],
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // project.json spread expands with (specified + target defaults)
+      // Since target defaults override specified: base is ['default']
+      // project.json merges ['explicit', '...'] on top → ['explicit', 'default']
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'explicit',
+        'default',
+      ]);
+    });
+
+    it('Case B: spread in project.json-only target includes target defaults', async () => {
+      // Scenario: No specified plugin defines the target, only project.json
+      // does. The spread should expand with target defaults.
+      const defaultPlugin = makeDefaultPlugin({
+        deploy: {
+          executor: 'nx:run-commands',
+          inputs: ['explicit', '...'],
+          options: { command: 'echo deploy' },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            deploy: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // project.json spread expands with target defaults (no specified values)
+      // Base is ['default'], project.json merges ['explicit', '...'] on top
+      expect(projects['libs/my-lib'].targets!.deploy.inputs).toEqual([
+        'explicit',
+        'default',
+      ]);
+    });
+
+    it('Case C without spread: project.json fully replaces (existing behavior)', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          inputs: ['explicit'],
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // No spread: project.json fully replaces
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'explicit',
+      ]);
+    });
+
+    it('Case A: target defaults override specified plugin (no project.json target)', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({});
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Target defaults override specified plugin values
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'default',
+      ]);
+    });
+
+    it('Case A: target defaults with spread include specified plugin values', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          inputs: ['inferred'],
+          options: { command: 'echo build' },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({});
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              inputs: ['default', '...'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Target defaults spread includes specified plugin values
+      expect(projects['libs/my-lib'].targets!.build.inputs).toEqual([
+        'default',
+        'inferred',
+      ]);
+    });
+
+    it('Case B without spread: project.json fully replaces target defaults', async () => {
+      const defaultPlugin = makeDefaultPlugin({
+        deploy: {
+          executor: 'nx:run-commands',
+          inputs: ['explicit'],
+          options: { command: 'echo deploy' },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            deploy: {
+              inputs: ['default'],
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // No spread: project.json fully replaces target defaults
+      expect(projects['libs/my-lib'].targets!.deploy.inputs).toEqual([
+        'explicit',
+      ]);
+    });
+
+    it('full three-layer spread chain', async () => {
+      // All three layers have values and use spread
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo build',
+            assets: ['inferred'],
+          },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          options: {
+            assets: ['explicit', '...'],
+          },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              options: {
+                assets: ['default', '...'],
+              },
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Three-layer chain:
+      // 1. Specified: ['inferred']
+      // 2. Target defaults: ['default', '...'] → ['default', 'inferred']
+      // 3. project.json: ['explicit', '...'] → ['explicit', 'default', 'inferred']
+      expect(projects['libs/my-lib'].targets!.build.options.assets).toEqual([
+        'explicit',
+        'default',
+        'inferred',
+      ]);
+    });
+
+    it('spread in project.json options includes target default options', async () => {
+      const specifiedPlugin = makeSpecifiedPlugin({
+        build: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo build',
+            env: { SPECIFIED: 'true' },
+          },
+        },
+      });
+
+      const defaultPlugin = makeDefaultPlugin({
+        build: {
+          options: {
+            env: { PROJECT: 'true', '...': true },
+          },
+        },
+      });
+
+      const { projects } = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {
+          targetDefaults: {
+            build: {
+              options: {
+                env: { DEFAULT: 'true', '...': true },
+              },
+            },
+          },
+        },
+        {
+          specifiedPluginFiles: [projectJsonPaths],
+          defaultPluginFiles: [projectJsonPaths],
+        },
+        {
+          specifiedPlugins: [
+            new LoadedNxPlugin(specifiedPlugin, 'specified-plugin'),
+          ],
+          defaultPlugins: [new LoadedNxPlugin(defaultPlugin, 'default-plugin')],
+        }
+      );
+
+      // Object spread through all three layers:
+      // 1. Specified: { SPECIFIED: 'true' }
+      // 2. Target defaults: { DEFAULT: 'true', '...': true } → { DEFAULT: 'true', SPECIFIED: 'true' }
+      // 3. project.json: { PROJECT: 'true', '...': true } → { PROJECT: 'true', DEFAULT: 'true', SPECIFIED: 'true' }
+      expect(projects['libs/my-lib'].targets!.build.options.env).toEqual({
+        PROJECT: 'true',
+        DEFAULT: 'true',
+        SPECIFIED: 'true',
+      });
+    });
   });
 });
 
@@ -2551,7 +4340,9 @@ function assertCorrectKeysInSourceMap(
       expect(sourceMap[key][0]).toEqual(value);
     } catch (error) {
       // Enhancing the error message with the problematic key
-      throw new Error(`Assertion failed for key '${key}': \n ${error.message}`);
+      throw new Error(
+        `Assertion failed for key '${key}': \n ${(error as Error).message}`
+      );
     }
   });
 }

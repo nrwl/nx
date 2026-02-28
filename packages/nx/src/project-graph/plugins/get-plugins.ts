@@ -19,8 +19,14 @@ import {
  */
 let currentPluginsConfigurationHash: string;
 let loadedPlugins: LoadedNxPlugin[];
+let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
+
+export interface SeparatedPlugins {
+  specifiedPlugins: LoadedNxPlugin[];
+  defaultPlugins: LoadedNxPlugin[];
+}
 
 const loadingMethod = (
   plugin: PluginConfiguration,
@@ -31,18 +37,35 @@ const loadingMethod = (
     ? loadIsolatedNxPlugin(plugin, root, index)
     : loadNxPlugin(plugin, root, index);
 
+/**
+ * Returns all plugins (specified + default) as a flat list.
+ * Specified plugins come first, followed by default plugins.
+ */
 export async function getPlugins(
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
+  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(root);
+  return specifiedPlugins.concat(defaultPlugins);
+}
+
+/**
+ * Returns specified plugins (from nx.json) and default plugins (project.json,
+ * package.json, etc.) as separate arrays. This separation is needed for
+ * two-phase project configuration processing where target defaults are
+ * applied between specified and default plugin results.
+ */
+export async function getPluginsSeparated(
+  root = workspaceRoot
+): Promise<SeparatedPlugins> {
   const pluginsConfiguration = readNxJson(root).plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins
   if (
-    loadedPlugins &&
+    cachedSeparatedPlugins &&
     pluginsConfigurationHash === currentPluginsConfigurationHash
   ) {
-    return loadedPlugins;
+    return cachedSeparatedPlugins;
   }
 
   currentPluginsConfigurationHash = pluginsConfigurationHash;
@@ -75,9 +98,10 @@ export async function getPlugins(
     throw new AggregateError(errors, errors.map((e) => e.message).join('\n'));
   }
 
+  cachedSeparatedPlugins = { specifiedPlugins, defaultPlugins };
   loadedPlugins = specifiedPlugins.concat(defaultPlugins);
 
-  return loadedPlugins;
+  return cachedSeparatedPlugins;
 }
 
 /**
@@ -123,6 +147,7 @@ export function cleanupPlugins() {
   cleanupDefaultPlugins?.();
   pendingPluginsPromise = undefined;
   pendingDefaultPluginPromise = undefined;
+  cachedSeparatedPlugins = undefined;
 }
 
 /**
