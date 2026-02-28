@@ -48,18 +48,15 @@ import { DelayedSpinner } from '../utils/delayed-spinner';
 import { hashObject } from '../hasher/file-hasher';
 
 let storedFileMap: FileMap | null = null;
-let storedAllWorkspaceFiles: FileData[] | null = null;
 let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 
 export function getFileMap(): {
   fileMap: FileMap;
-  allWorkspaceFiles: FileData[];
   rustReferences: NxWorkspaceFilesExternals | null;
 } {
   if (!!storedFileMap) {
     return {
       fileMap: storedFileMap,
-      allWorkspaceFiles: storedAllWorkspaceFiles,
       rustReferences: storedRustReferences,
     };
   } else {
@@ -68,7 +65,6 @@ export function getFileMap(): {
         nonProjectFiles: [],
         projectFileMap: {},
       },
-      allWorkspaceFiles: [],
       rustReferences: null,
     };
   }
@@ -76,11 +72,9 @@ export function getFileMap(): {
 
 export function hydrateFileMap(
   fileMap: FileMap,
-  allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals
 ) {
   storedFileMap = fileMap;
-  storedAllWorkspaceFiles = allWorkspaceFiles;
   storedRustReferences = rustReferences;
 }
 
@@ -88,7 +82,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
-  allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
   plugins: LoadedNxPlugin[],
@@ -98,7 +91,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectFileMapCache: FileMapCache;
 }> {
   storedFileMap = fileMap;
-  storedAllWorkspaceFiles = allWorkspaceFiles;
   storedRustReferences = rustReferences;
 
   const projects: Record<string, ProjectConfiguration> = {};
