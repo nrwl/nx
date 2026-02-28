@@ -5,40 +5,40 @@ import {
   TaskGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import {
-  LARGE_BUFFER,
-  RunCommandsOptions,
-} from 'nx/src/executors/run-commands/run-commands.impl';
-import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
+import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
+import { BatchTaskResult } from 'nx/src/tasks-runner/batch/batch-messages';
+import { TaskResult } from 'nx/src/config/misc-interfaces';
 import { GradleExecutorSchema } from './schema';
 import {
   findGradlewFile,
   getCustomGradleExecutableDirectoryFromPlugin,
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
-import { execSync } from 'child_process';
-import {
-  createPseudoTerminal,
-  PseudoTerminal,
-} from 'nx/src/tasks-runner/pseudo-terminal';
+import { spawn } from 'child_process';
+import { createInterface } from 'readline';
 import {
   getAllDependsOn,
   getExcludeTasks,
   getGradleTaskNameWithNxTaskId,
 } from './get-exclude-task';
-import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export const batchRunnerPath = join(
   __dirname,
   '../../../batch-runner/build/libs/gradle-batch-runner-all.jar'
 );
 
-export default async function gradleBatch(
+/**
+ * Gradle batch executor using Kotlin batch runner with Gradle Tooling API.
+ * Streams task results as they complete via async generator.
+ */
+export default async function* gradleBatchExecutor(
   taskGraph: TaskGraph,
   inputs: Record<string, GradleExecutorSchema>,
   overrides: RunCommandsOptions,
   context: ExecutorContext
-): Promise<BatchResults> {
+): AsyncGenerator<BatchTaskResult> {
+  const taskIds = Object.keys(taskGraph.tasks);
+
   try {
     const projectName = taskGraph.tasks[taskGraph.roots[0]]?.target?.project;
     let projectRoot = context.projectGraph.nodes[projectName]?.data?.root ?? '';
@@ -49,7 +49,7 @@ export default async function gradleBatch(
       join(projectRoot, 'project.json'),
       workspaceRoot,
       customGradleExecutableDirectory
-    ); // find gradlew near project root
+    );
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);
 
@@ -66,8 +66,6 @@ export default async function gradleBatch(
       args.push(...overrides.__overrides_unparsed__);
     }
 
-    const taskIds = Object.keys(taskGraph.tasks);
-
     const { gradlewTasksToRun, excludeTasks, excludeTestTasks } =
       getGradlewTasksToRun(
         taskIds,
@@ -76,33 +74,43 @@ export default async function gradleBatch(
         context.projectGraph.nodes
       );
 
-    const batchResults = await runTasksInBatch(
+    // Stream results as they complete
+    const receivedTasks = new Set<string>();
+    for await (const result of runTasksInBatchStreaming(
       gradlewTasksToRun,
       excludeTasks,
       excludeTestTasks,
       args,
       root
-    );
+    )) {
+      receivedTasks.add(result.task);
+      yield result;
+    }
 
-    taskIds.forEach((taskId) => {
-      if (!batchResults[taskId]) {
-        batchResults[taskId] = {
-          success: false,
-          terminalOutput: `Gradlew batch failed`,
+    // Emit failures for any tasks that didn't report results
+    for (const taskId of taskIds) {
+      if (!receivedTasks.has(taskId)) {
+        yield {
+          task: taskId,
+          result: {
+            success: false,
+            terminalOutput: `Gradlew batch failed - task did not report result`,
+          },
         };
       }
-    });
-
-    return batchResults;
+    }
   } catch (e) {
     output.error({
       title: `Gradlew batch failed`,
       bodyLines: [e.toString()],
     });
-    return taskGraph.roots.reduce((acc, key) => {
-      acc[key] = { success: false, terminalOutput: e.toString() };
-      return acc;
-    }, {} as BatchResults);
+    // Emit failures for all tasks
+    for (const taskId of taskIds) {
+      yield {
+        task: taskId,
+        result: { success: false, terminalOutput: e.toString() },
+      };
+    }
   }
 }
 
@@ -180,62 +188,110 @@ export function getGradlewTasksToRun(
   };
 }
 
-async function runTasksInBatch(
+/**
+ * Run tasks in batch with streaming results.
+ * - stdout is inherited (Gradle output streams to terminal in real-time)
+ * - stderr is piped to read NX_RESULT:{json} lines for task completion
+ */
+async function* runTasksInBatchStreaming(
   gradlewTasksToRun: Record<string, GradleExecutorSchema>,
   excludeTasks: Set<string>,
   excludeTestTasks: Set<string>,
   args: string[],
   root: string
-): Promise<BatchResults> {
+): AsyncGenerator<BatchTaskResult> {
   const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
-  const usePseudoTerminal =
-    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    PseudoTerminal.isSupported();
-  const debugOptions = ' ' + (process.env.NX_GRADLE_BATCH_DEBUG ?? '');
-  const command = `java${debugOptions} -jar ${batchRunnerPath} --tasks='${JSON.stringify(
-    gradlewTasksToRun
-  )}' --workspaceRoot=${root} --args='${args
-    .join(' ')
-    .replaceAll("'", '"')}' --excludeTasks='${Array.from(excludeTasks).join(
-    ','
-  )}' --excludeTestTasks='${Array.from(excludeTestTasks).join(',')}' ${
-    process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
-  }`;
-  let batchResults;
-  if (usePseudoTerminal && process.env.NX_VERBOSE_LOGGING !== 'true') {
-    const terminal = createPseudoTerminal();
-    await terminal.init();
+  // Build command arguments
+  const debugArgs = (process.env.NX_GRADLE_BATCH_DEBUG ?? '')
+    .trim()
+    .split(' ')
+    .filter(Boolean);
+  const javaArgs = [
+    ...debugArgs,
+    '-jar',
+    batchRunnerPath,
+    `--tasks=${JSON.stringify(gradlewTasksToRun)}`,
+    `--workspaceRoot=${root}`,
+    `--args=${args.join(' ').replaceAll("'", '"')}`,
+    `--excludeTasks=${Array.from(excludeTasks).join(',')}`,
+    `--excludeTestTasks=${Array.from(excludeTestTasks).join(',')}`,
+  ];
 
-    const cp = terminal.runCommand(command, {
-      cwd: workspaceRoot,
-      jsEnv: process.env,
-      quiet: true,
-    });
-    const results = await cp.getResults();
-    terminal.shutdown(0);
-    batchResults = results.terminalOutput;
-
-    batchResults = batchResults.replace(command, '');
-    const startIndex = batchResults.indexOf('{');
-    const endIndex = batchResults.lastIndexOf('}');
-    // only keep the json part
-    batchResults = batchResults.substring(startIndex, endIndex + 1);
-  } else {
-    batchResults = execSync(command, {
-      cwd: workspaceRoot,
-      windowsHide: true,
-      env: process.env,
-      maxBuffer: LARGE_BUFFER,
-    }).toString();
+  if (process.env.NX_VERBOSE_LOGGING !== 'true') {
+    javaArgs.push('--quiet');
   }
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    console.log(`[Gradle Batch] Executing: java ${javaArgs.join(' ')}`);
+  }
+
+  // Spawn batch runner process
+  // stdin: ignore (no input needed)
+  // stdout: inherit (Gradle output streams to terminal in real-time)
+  // stderr: pipe (read NX_RESULT:{json} lines for task completion)
+  const child = spawn('java', javaArgs, {
+    cwd: workspaceRoot,
+    env: process.env,
+    stdio: ['ignore', 'inherit', 'pipe'],
+    windowsHide: true,
+  });
+
+  // Read stderr line by line for NX_RESULT JSON
+  const rl = createInterface({
+    input: child.stderr,
+    crlfDelay: Infinity,
+  });
+
+  // Collect non-result stderr lines for error reporting
+  const stderrLines: string[] = [];
+
+  // Yield results as they stream in
+  for await (const line of rl) {
+    if (line.startsWith('NX_RESULT:')) {
+      try {
+        const jsonStr = line.slice('NX_RESULT:'.length);
+        const data = JSON.parse(jsonStr);
+
+        yield {
+          task: data.task,
+          result: {
+            success: data.result.success ?? false,
+            terminalOutput: data.result.terminalOutput ?? '',
+            startTime: data.result.startTime,
+            endTime: data.result.endTime,
+          } as TaskResult,
+        };
+      } catch (e) {
+        console.error('[Gradle Batch] Failed to parse result line:', line, e);
+      }
+    } else if (line.trim()) {
+      // Collect non-empty stderr lines for error reporting
+      stderrLines.push(line);
+    }
+  }
+
+  // Wait for process to exit
+  await new Promise<void>((resolve, reject) => {
+    child.on('close', (code) => {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.log(`[Gradle Batch] Process exited with code: ${code}`);
+      }
+      if (code !== 0 && stderrLines.length > 0) {
+        console.error(`[Gradle Batch] Stderr output:`);
+        for (const line of stderrLines) {
+          console.error(line);
+        }
+      }
+      resolve();
+    });
+    child.on('error', reject);
+  });
+
   const gradlewBatchEnd = performance.mark(`gradlew-batch:end`);
   performance.measure(
     `gradlew-batch`,
     gradlewBatchStart.name,
     gradlewBatchEnd.name
   );
-  const gradlewBatchResults = JSON.parse(batchResults) as BatchResults;
-
-  return gradlewBatchResults;
 }

@@ -174,8 +174,10 @@ export declare class Watcher {
   origin: string
   /**
    * Creates a new Watcher instance.
-   * Will always ignore directories from HARDCODED_IGNORE_PATTERNS plus
-   * watcher-specific patterns like vite/vitest timestamp files.
+   * Will always ignore the following directories:
+   * * .git/
+   * * node_modules/
+   * * .nx/
    */
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callback: (err: string | null, events: WatchEvent[]) => void): void
