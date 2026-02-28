@@ -841,15 +841,35 @@ impl App {
                             }
                             return Ok(false);
                         }
+                        KeyCode::PageUp => {
+                            if let Some(help_popup) = self
+                                .components
+                                .iter_mut()
+                                .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                            {
+                                help_popup.page_up();
+                            }
+                            return Ok(false);
+                        }
+                        KeyCode::PageDown => {
+                            if let Some(help_popup) = self
+                                .components
+                                .iter_mut()
+                                .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                            {
+                                help_popup.page_down();
+                            }
+                            return Ok(false);
+                        }
                         _ => {}
                     }
                     return Ok(false);
                 }
 
-                // Handle Up/Down keys for scrolling first
+                // Handle Up/Down/PageUp/PageDown keys for scrolling first
                 if matches!(self.focus, Focus::MultipleOutput(_)) {
                     match key.code {
-                        KeyCode::Up | KeyCode::Down => {
+                        KeyCode::Up | KeyCode::Down | KeyCode::PageUp | KeyCode::PageDown => {
                             self.handle_key_event(key).ok();
                             return Ok(false);
                         }
