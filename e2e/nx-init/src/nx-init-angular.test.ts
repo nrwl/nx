@@ -56,7 +56,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(cachedBuildOutput).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`
+      `> nx run ${project}:build:production --outputHashing none  [existing outputs match the cache, left as is]`
     );
     expect(cachedBuildOutput).toContain('Nx read the output from the cache');
     expect(cachedBuildOutput).toContain(
@@ -90,7 +90,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(cachedBuildOutput).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`
+      `> nx run ${project}:build:production --outputHashing none  [existing outputs match the cache, left as is]`
     );
     expect(cachedBuildOutput).toContain('Nx read the output from the cache');
     expect(cachedBuildOutput).toContain(

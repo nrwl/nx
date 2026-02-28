@@ -8,10 +8,12 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
-import { TaskHasher } from '../hasher/task-hasher';
+import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
+  hashTaskOutput,
   IS_WASM,
+  OutputFingerprints,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
@@ -64,6 +66,9 @@ export class TaskOrchestrator {
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getDbConnection())
     : null;
+  private outputFingerprints = !IS_WASM
+    ? new OutputFingerprints(getDbConnection())
+    : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
@@ -111,6 +116,8 @@ export class TaskOrchestrator {
   private cleanupDone = false;
 
   private batchTaskResultsStreamed = new Set<string>();
+
+  private batchStaleHashTasks = new Map<Batch, Set<string>>();
 
   // endregion internal state
 
@@ -297,6 +304,18 @@ export class TaskOrchestrator {
       this.taskDetails
     );
 
+    // Identify tasks whose hashes may be based on stale dependency outputs.
+    // When a task with depsOutputs is co-batched with its dependency, the hash
+    // was computed using outputs from a previous run that may no longer be valid.
+    try {
+      const staleHashTasks = await this.identifyTasksWithStaleDepsOutputs(
+        batch.taskGraph
+      );
+      this.batchStaleHashTasks.set(batch, staleHashTasks);
+    } catch {
+      // If stale detection fails, proceed without it (conservative: skip no cache reads)
+    }
+
     await Promise.all(
       Object.values(batch.taskGraph.tasks).map((task) =>
         this.options.lifeCycle.scheduleTask(task)
@@ -387,13 +406,18 @@ export class TaskOrchestrator {
 
     await this.preRunSteps(tasks, { groupId });
 
+    // Skip cache reads for tasks whose hashes may be based on stale dep outputs.
+    const staleHashTasks =
+      this.batchStaleHashTasks.get(batch) ?? new Set<string>();
+    const cacheableTasks = tasks.filter((t) => !staleHashTasks.has(t.id));
+
     let results: TaskResult[] = doNotSkipCache
-      ? await this.applyCachedResults(tasks)
+      ? await this.applyCachedResults(cacheableTasks)
       : [];
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
-      await this.postRunSteps(results, doNotSkipCache, { groupId });
+      const cachedResults = results;
 
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
@@ -409,9 +433,62 @@ export class TaskOrchestrator {
         this.batchEnv,
         groupId
       );
+
+      // Re-hash tasks that had stale dependency outputs. Now that the batch
+      // has run, fresh outputs are on disk and we can compute correct hashes
+      // so postRunSteps stores cache entries under the right key.
+      if (staleHashTasks.size > 0) {
+        // Collect task IDs that need re-hashing
+        const taskIdsToRehash = new Set<string>();
+        for (const result of results) {
+          if (
+            staleHashTasks.has(result.task.id) &&
+            result.status === 'success'
+          ) {
+            taskIdsToRehash.add(result.task.id);
+          }
+        }
+
+        // Clear hashes on the ORIGINAL task objects in batch.taskGraph so
+        // hashTasks (which filters out tasks that already have a hash) will
+        // actually re-hash them with the now-fresh dependency outputs.
+        for (const taskId of taskIdsToRehash) {
+          const original = batch.taskGraph.tasks[taskId];
+          if (original) {
+            original.hash = undefined;
+            original.hashDetails = undefined;
+          }
+        }
+
+        await hashTasks(
+          this.hasher,
+          this.projectGraph,
+          batch.taskGraph,
+          this.batchEnv,
+          this.taskDetails
+        );
+
+        // Sync fresh hashes from the originals back to the result copies
+        for (const result of results) {
+          if (taskIdsToRehash.has(result.task.id)) {
+            const original = batch.taskGraph.tasks[result.task.id];
+            if (original) {
+              result.task.hash = original.hash;
+              result.task.hashDetails = original.hashDetails;
+            }
+          }
+        }
+      }
+
+      // Merge cached results with batch results. Record fingerprints for ALL
+      // tasks AFTER the batch completes so fingerprints reflect the final
+      // state of shared output directories (e.g. nx-build-state.json).
+      results = [...cachedResults, ...results];
     }
 
     await this.postRunSteps(results, doNotSkipCache, { groupId });
+
+    this.batchStaleHashTasks.delete(batch);
 
     // Update batch status based on all task results
     const hasFailures = taskEntries.some(([taskId]) => {
@@ -1166,17 +1243,93 @@ export class TaskOrchestrator {
   }
 
   private async shouldCopyOutputsFromCache(outputs: string[], hash: string) {
+    return !(await this.outputsHashesMatch(outputs, hash));
+  }
+
+  private async outputsHashesMatch(
+    outputs: string[],
+    hash: string
+  ): Promise<boolean> {
     if (this.daemon?.enabled()) {
-      return !(await this.daemon.outputsHashesMatch(outputs, hash));
-    } else {
-      return true;
+      return this.daemon.outputsHashesMatch(outputs, hash);
     }
+    if (!this.outputFingerprints || !outputs?.length) return false;
+    const stored = this.outputFingerprints.get(hash);
+    if (!stored) return false;
+    return hashTaskOutput(workspaceRoot, outputs) === stored;
   }
 
   private async recordOutputsHash(task: Task) {
     if (this.daemon?.enabled()) {
-      return this.daemon.recordOutputsHash(task.outputs, task.hash);
+      await this.daemon.recordOutputsHash(task.outputs, task.hash);
     }
+    if (this.outputFingerprints && task.outputs?.length && task.hash) {
+      const fingerprint = hashTaskOutput(workspaceRoot, task.outputs);
+      this.outputFingerprints.record(task.hash, fingerprint);
+    }
+  }
+
+  /**
+   * Identifies tasks in a batch whose hashes may be based on stale dependency
+   * outputs. When a task with `depsOutputs` is co-batched with its dependency,
+   * the hash was computed using outputs from a previous run that may no longer
+   * match the dependency's current hash.
+   */
+  private async identifyTasksWithStaleDepsOutputs(
+    taskGraph: TaskGraph
+  ): Promise<Set<string>> {
+    const staleTaskIds = new Set<string>();
+    const batchTaskIds = new Set(Object.keys(taskGraph.tasks));
+
+    for (const task of Object.values(taskGraph.tasks)) {
+      const deps = taskGraph.dependencies[task.id];
+      if (deps.length === 0) continue;
+
+      let depsOutputs;
+      try {
+        ({ depsOutputs } = getInputs(task, this.projectGraph, this.nxJson));
+      } catch {
+        // Target may not have inputs configured (e.g. inferred targets)
+        continue;
+      }
+      if (depsOutputs.length === 0) continue;
+
+      // Check each co-batched dependency's outputs
+      for (const depTaskId of deps) {
+        if (!batchTaskIds.has(depTaskId)) continue;
+
+        const depTask = taskGraph.tasks[depTaskId];
+        if (!depTask.hash || !depTask.outputs?.length) continue;
+
+        const outputsFresh = await this.outputsHashesMatch(
+          depTask.outputs,
+          depTask.hash
+        );
+        if (!outputsFresh) {
+          staleTaskIds.add(task.id);
+          break;
+        }
+      }
+    }
+
+    // Propagate staleness: any task that depends (transitively) on a stale
+    // task should also skip cache, since its hash may be based on outputs
+    // that will change once the stale dependency re-runs.
+    if (staleTaskIds.size > 0) {
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const [taskId, deps] of Object.entries(taskGraph.dependencies)) {
+          if (staleTaskIds.has(taskId)) continue;
+          if (deps.some((dep) => staleTaskIds.has(dep))) {
+            staleTaskIds.add(taskId);
+            changed = true;
+          }
+        }
+      }
+    }
+
+    return staleTaskIds;
   }
 
   // endregion utils

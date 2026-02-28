@@ -2,6 +2,7 @@ package dev.nx.maven.utils
 
 import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.cache.CacheConfig
+import dev.nx.maven.cache.DependentTaskOutput
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
@@ -83,19 +84,24 @@ class MojoAnalyzer(
       val paths = expressionResolver.resolveParameter(parameter, project)
 
       paths.forEach { path ->
-        val pathWithGlob = paramConfig.glob?.let { "$path/$it" } ?: path
-        val pathFile = File(pathWithGlob);
+        val pathFile = File(path)
         val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
         if (isIgnored) {
           log.warn("Input path is gitignored: ${pathFile.path}")
-          val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-          dependentTaskOutputInputs.add(input)
+          // Use the parameter's glob pattern if provided, otherwise use **/*
+          val globPattern = paramConfig.glob ?: "**/*"
+          dependentTaskOutputInputs.add(DependentTaskOutputs(globPattern, transitive = true))
         } else {
-          val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
+          val pathWithGlob = paramConfig.glob?.let { "$path/$it" } ?: path
+          val input = pathResolver.formatInputPath(File(pathWithGlob), projectRoot = project.basedir)
 
           inputs.add(input)
         }
       }
+    }
+
+    mojoConfig?.dependentTaskOutputs?.forEach { dto ->
+      dependentTaskOutputInputs.add(DependentTaskOutputs(dto.path, dto.transitive))
     }
 
     mojoConfig?.inputProperties?.forEach { propertyPath ->
@@ -106,8 +112,8 @@ class MojoAnalyzer(
         val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
         if (isIgnored) {
           log.warn("Input path is gitignored: ${pathFile.path}")
-          val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-          dependentTaskOutputInputs.add(input)
+          // For properties, always use **/* pattern
+          dependentTaskOutputInputs.add(DependentTaskOutputs("**/*", transitive = true))
         } else {
           val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
@@ -122,8 +128,8 @@ class MojoAnalyzer(
         val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
         if (isIgnored) {
           log.warn("Input path is gitignored: ${pathFile.path}")
-          val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-          dependentTaskOutputInputs.add(input)
+          // For default inputs, always use **/* pattern
+          dependentTaskOutputInputs.add(DependentTaskOutputs("**/*", transitive = true))
         } else {
           val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
