@@ -281,50 +281,67 @@ impl Watcher {
         let additional_globs = self.additional_globs.clone();
         let use_ignore = self.use_ignore;
         let watch_exec = self.watch_exec.clone();
-        let start = async move {
-            trace!("configuring watch exec");
 
-            // On macOS, FSEvents handles recursive watching natively from a single
-            // root path. No need to enumerate individual directories — this avoids
-            // kqueue (used for non-recursive watches) which silently fails at scale
-            // due to vnode table pressure. See #34522.
-            #[cfg(target_os = "macos")]
-            {
-                let mut path_set = HashSet::new();
-                path_set.insert(PathBuf::from(&origin));
-                trace!(
-                    count = path_set.len(),
-                    "macOS: watching root recursively via FSEvents"
-                );
-                watch_exec
-                    .config
-                    .pathset(path_set.iter().map(|p| WatchedPath::recursive(p)));
-                *watched_path_set.lock() = path_set;
-            }
-            // On Linux/Windows, enumerate non-ignored directories and watch each one
-            // non-recursively. This prevents inotify watches on node_modules and other
-            // ignored trees (fixing #33781).
-            #[cfg(not(target_os = "macos"))]
-            {
-                let path_set = enumerate_watch_paths(&origin, use_ignore);
-                trace!(count = path_set.len(), "setting watched paths");
-                watch_exec
-                    .config
-                    .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
-                *watched_path_set.lock() = path_set;
-            }
+        // Spawn the watcher task in the napi-provided Tokio runtime.
+        // The tokio_rt feature ensures a runtime is available.
+        std::thread::spawn(move || {
+            // Create a new Tokio runtime for watchexec, which requires a full reactor.
+            // This is necessary because watchexec needs access to the Tokio reactor
+            // for file system watching, which isn't provided by napi's minimal runtime.
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("Failed to create Tokio runtime for watcher");
 
-            watch_exec.config.filterer(watch_filterer::create_filter(
-                &origin,
-                &additional_globs,
-                use_ignore,
-            )?);
-            trace!("starting watch exec");
-            watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
-            Ok::<(), anyhow::Error>(())
-        };
+            rt.block_on(async move {
+                trace!("configuring watch exec");
 
-        napi::tokio::spawn(start);
+                // On macOS, FSEvents handles recursive watching natively from a single
+                // root path. No need to enumerate individual directories — this avoids
+                // kqueue (used for non-recursive watches) which silently fails at scale
+                // due to vnode table pressure. See #34522.
+                #[cfg(target_os = "macos")]
+                {
+                    let mut path_set = HashSet::new();
+                    path_set.insert(PathBuf::from(&origin));
+                    trace!(
+                        count = path_set.len(),
+                        "macOS: watching root recursively via FSEvents"
+                    );
+                    watch_exec
+                        .config
+                        .pathset(path_set.iter().map(|p| WatchedPath::recursive(p)));
+                    *watched_path_set.lock() = path_set;
+                }
+                // On Linux/Windows, enumerate non-ignored directories and watch each one
+                // non-recursively. This prevents inotify watches on node_modules and other
+                // ignored trees (fixing #33781).
+                #[cfg(not(target_os = "macos"))]
+                {
+                    let path_set = enumerate_watch_paths(&origin, use_ignore);
+                    trace!(count = path_set.len(), "setting watched paths");
+                    watch_exec
+                        .config
+                        .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                    *watched_path_set.lock() = path_set;
+                }
+
+                if let Err(e) = watch_exec.config.filterer(watch_filterer::create_filter(
+                    &origin,
+                    &additional_globs,
+                    use_ignore,
+                )) {
+                    tracing::error!("Failed to configure filterer: {:?}", e);
+                    return;
+                }
+
+                trace!("starting watch exec");
+                if let Err(e) = watch_exec.main().await {
+                    tracing::error!("Watchexec error: {:?}", e);
+                }
+            });
+        });
+
         trace!("started watch exec");
         Ok(())
     }
