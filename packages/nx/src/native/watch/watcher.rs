@@ -68,8 +68,7 @@ fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<Pa
         })
         .flat_map(|event| event.paths())
         .filter(|(path, file_type)| {
-            let is_dir =
-                file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
+            let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
             is_dir && !ignore_globs.is_match(path)
         })
         .map(|(path, _)| path.to_path_buf())
