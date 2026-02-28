@@ -118,7 +118,7 @@ describe('Maven', () => {
     expect(output).toContain('- mvn:install-ci:');
 
     // Verify prefixed target works
-    const buildOutput = runCLI('run app:mvn:compile --no-batch');
+    const buildOutput = runCLI('mvn:compile com.example:app --no-batch');
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });
