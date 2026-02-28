@@ -326,13 +326,14 @@ impl Watcher {
                     *watched_path_set.lock() = path_set;
                 }
 
-                if let Err(e) = watch_exec.config.filterer(watch_filterer::create_filter(
-                    &origin,
-                    &additional_globs,
-                    use_ignore,
-                )) {
-                    tracing::error!("Failed to configure filterer: {:?}", e);
-                    return;
+                match watch_filterer::create_filter(&origin, &additional_globs, use_ignore) {
+                    Ok(filterer) => {
+                        watch_exec.config.filterer(filterer);
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to configure filterer: {:?}", e);
+                        return;
+                    }
                 }
 
                 trace!("starting watch exec");
