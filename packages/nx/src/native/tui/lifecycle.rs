@@ -1,4 +1,4 @@
-use napi::JsObject;
+use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::io::Write;
@@ -6,7 +6,9 @@ use std::sync::Arc;
 use tracing::{debug, trace};
 
 #[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use napi::threadsafe_function::ThreadsafeFunction;
+#[cfg(not(test))]
+use napi::{Status, bindgen_prelude::Unknown};
 
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
@@ -72,6 +74,7 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
 }
 
 #[napi]
+#[derive(Clone, Copy)]
 pub enum RunMode {
     RunOne,
     RunMany,
@@ -85,7 +88,7 @@ pub struct BatchInfo {
 }
 
 #[napi(string_enum)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BatchStatus {
     Running,
     Success,
@@ -119,7 +122,7 @@ pub enum TuiAppInstance {
 /// directly call trait methods on the guard:
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// app.lock().start_command(None);
 /// ```
 pub enum TuiAppGuard<'a> {
@@ -151,7 +154,7 @@ impl TuiAppInstance {
     /// Lock and get a guard that derefs to `&mut dyn TuiApp`
     ///
     /// This allows direct method calls on the trait without closures:
-    /// ```
+    /// ```ignore
     /// app.lock().start_command(None);
     /// ```
     fn lock(&self) -> TuiAppGuard<'_> {
@@ -371,7 +374,7 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: JsObject) -> napi::Result<()> {
+    pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: Object) -> napi::Result<()> {
         self.with_app(|app| app.start_tasks(tasks));
         Ok(())
     }
@@ -392,7 +395,7 @@ impl AppLifeCycle {
     pub fn end_tasks(
         &mut self,
         task_results: Vec<TaskResult>,
-        _metadata: JsObject,
+        _metadata: Object,
     ) -> napi::Result<()> {
         self.with_app(|app| app.end_tasks(task_results));
         Ok(())
@@ -411,7 +414,7 @@ impl AppLifeCycle {
     #[napi(js_name = "__init")]
     pub fn __init(
         &self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         debug!("AppLifeCycle::__init called");
 
@@ -633,9 +636,9 @@ impl AppLifeCycle {
     pub fn register_running_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &External<(ParserArc, WriterArc)>,
     ) {
-        self.with_app(|app| app.register_running_interactive_task(task_id, parser_and_writer));
+        self.with_app(|app| app.register_running_interactive_task(task_id, &**parser_and_writer));
     }
 
     #[napi]
@@ -662,7 +665,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn register_forced_shutdown_callback(
         &self,
-        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        forced_shutdown_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_forced_shutdown_callback(forced_shutdown_callback));
         Ok(())

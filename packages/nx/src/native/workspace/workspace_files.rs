@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
@@ -67,9 +68,9 @@ pub(super) fn get_files(
         project_files.par_sort();
     }
 
-    let project_files_external = External::new(project_file_map.clone());
-    let global_files_external = External::new(global_files.clone());
-    let all_workspace_files = External::new(files);
+    let project_files_external = External::new(Arc::new(project_file_map.clone()));
+    let global_files_external = External::new(Arc::new(global_files.clone()));
+    let all_workspace_files = External::new(Arc::new(files));
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,

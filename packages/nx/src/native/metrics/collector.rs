@@ -3,7 +3,6 @@ use anyhow::Result;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::{Sender, unbounded};
 use dashmap::{DashMap, DashSet};
-use napi::{Env, JsFunction};
 use napi_derive::napi;
 use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
@@ -21,9 +20,7 @@ use crate::native::metrics::types::{
     MetricsUpdate, ProcessMetadata, ProcessMetrics, SystemInfo,
 };
 use crate::native::utils::time::current_timestamp_millis;
-use napi::threadsafe_function::{
-    ErrorStrategy::CalleeHandled, ThreadsafeFunction, ThreadsafeFunctionCallMode,
-};
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 
 type ParentToChildrenMap = HashMap<i32, Vec<i32>>;
 
@@ -63,7 +60,7 @@ struct MetricsCollectionResult {
 
 /// Subscriber state for tracking metadata delivery
 pub(crate) struct SubscriberState {
-    pub callback: ThreadsafeFunction<MetricsUpdate, CalleeHandled>,
+    pub callback: Arc<ThreadsafeFunction<MetricsUpdate>>,
     pub needs_full_metadata: bool,
 }
 
@@ -1176,17 +1173,12 @@ impl ProcessMetricsCollector {
 
     /// Subscribe to push-based metrics notifications from TypeScript
     #[napi(ts_args_type = "callback: (err: Error | null, event: MetricsUpdate) => void")]
-    pub fn subscribe(&self, env: Env, callback: JsFunction) -> anyhow::Result<()> {
-        // Create threadsafe function for updates
-        let mut tsfn: ThreadsafeFunction<MetricsUpdate, CalleeHandled> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
-        tsfn.unref(&env)?;
-
+    pub fn subscribe(&self, callback: ThreadsafeFunction<MetricsUpdate>) -> anyhow::Result<()> {
         // Store callback for future updates
         // The subscriber will receive full metadata on first update via needs_full_metadata flag
         let mut subscribers = self.subscribers.lock();
         subscribers.push(SubscriberState {
-            callback: tsfn,
+            callback: Arc::new(callback),
             needs_full_metadata: true,
         });
 

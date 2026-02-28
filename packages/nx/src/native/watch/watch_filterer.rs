@@ -81,7 +81,7 @@ impl WatchFilterer {
 
 /// Used to filter out events that that come from watchexec
 impl Filterer for WatchFilterer {
-    fn check_event(&self, watch_event: &Event, priority: Priority) -> Result<bool, RuntimeError> {
+    fn check_event(&self, watch_event: &Event, _priority: Priority) -> Result<bool, RuntimeError> {
         let transformed = transform_event(watch_event);
         let event = transformed.as_ref().unwrap_or(watch_event);
 

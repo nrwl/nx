@@ -137,7 +137,7 @@ impl TaskItem {
 }
 
 #[napi]
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TaskStatus {
     // Explicit statuses that can come from the task runner
     Success,

@@ -2,7 +2,6 @@ use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
-use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
 use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
@@ -220,7 +219,7 @@ impl InlineApp {
     /// into scrollback.
     fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) -> Option<()> {
         let (rows, cols) = terminal_dimensions;
-        let mut state = self.core.state().lock();
+        let state = self.core.state().lock();
 
         let task_id = self.selected_item.as_ref()?.id();
         let pty_arc = state.get_pty_instance(task_id)?;
@@ -621,7 +620,7 @@ impl TuiApp for InlineApp {
     fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         let mut pty =
             PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());

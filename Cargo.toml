@@ -6,4 +6,8 @@ members = [
 ]
 
 [profile.release]
-lto = true
+lto = true  # Full optimization for production builds
+
+[profile.dev]
+lto = "thin"  # Faster dev builds with good optimization
+split-debuginfo = "unpacked"  # Faster linking on macOS
