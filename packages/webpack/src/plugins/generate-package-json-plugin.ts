@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
 import {
   createLockFile,
@@ -35,7 +36,24 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
     const runtimeDependencies: Record<string, string> = {};
     if (this.options.runtimeDependencies) {
       for (const dep of this.options.runtimeDependencies) {
-        const depPkgJson = require.resolve(`${dep}/package.json`);
+        let depPkgJson: string;
+        try {
+          depPkgJson = require.resolve(`${dep}/package.json`);
+        } catch (e) {
+          if (!('code' in e && e.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED')) {
+            throw e;
+          }
+          // Fallback for packages with strict exports that don't expose ./package.json
+          const depMain = require.resolve(dep);
+          const nodeModulesIndex = depMain.lastIndexOf('node_modules');
+          if (nodeModulesIndex === -1) continue;
+          depPkgJson = path.join(
+            depMain.slice(0, nodeModulesIndex),
+            'node_modules',
+            dep,
+            'package.json'
+          );
+        }
         if (!fs.existsSync(depPkgJson)) continue;
         const { name, version } = readJsonFile(depPkgJson);
         runtimeDependencies[name] = version;
