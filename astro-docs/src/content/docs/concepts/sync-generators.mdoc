@@ -42,7 +42,7 @@ In CI, the sync generator is run in `--dry-run` mode and if files would be chang
   "$schema": "packages/nx/schemas/nx-schema.json",
   ...
   "sync": {
-    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync", "@nx/js:deps-sync"]
   }
 }
 
@@ -54,7 +54,7 @@ Use the project details view to **find registered sync generators** for a given 
 nx show project <name>
 ```
 
-The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/docs/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
+The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/docs/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` and `@nx/js:deps-sync` generator on `build` and `typecheck` targets.
 
 {% project_details title="Project Details View" expandedTargets=["build"] %}
 
@@ -75,7 +75,7 @@ The above command opens up the project details view, and the registered sync gen
             "{projectRoot}/src/**/*.ts"
           ],
           "outputs": ["{workspaceRoot}/packages/foo/dist"],
-          "syncGenerators": ["@nx/js:typescript-sync"],
+          "syncGenerators": ["@nx/js:typescript-sync", "@nx/js:deps-sync"],
           "executor": "nx:run-commands",
           "options": {
             "command": "tsc --build tsconfig.lib.json --pretty --verbose"

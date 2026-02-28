@@ -213,7 +213,7 @@ describe('@nx/vite/plugin', () => {
       ]);
       expect(
         nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toEqual(['@nx/js:typescript-sync']);
+      ).toEqual(['@nx/js:typescript-sync', '@nx/js:deps-sync']);
     });
 
     it('should infer the sync generator when using TS solution setup', async () => {
@@ -234,10 +234,11 @@ describe('@nx/vite/plugin', () => {
 
       expect(nodes[0][1].projects['.'].targets.build.syncGenerators).toEqual([
         '@nx/js:typescript-sync',
+        '@nx/js:deps-sync',
       ]);
       expect(
         nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toEqual(['@nx/js:typescript-sync']);
+      ).toEqual(['@nx/js:typescript-sync', '@nx/js:deps-sync']);
     });
   });
 
