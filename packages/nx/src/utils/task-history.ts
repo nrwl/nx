@@ -3,34 +3,56 @@ import { isOnDaemon } from '../daemon/is-on-daemon';
 import { IS_WASM, NxTaskHistory, TaskRun, TaskTarget } from '../native';
 import { getDbConnection } from './db-connection';
 
-export class TaskHistory {
-  taskHistory = new NxTaskHistory(getDbConnection());
-
+export interface TaskHistory {
   /**
    * This function returns estimated timings per task
    * @param targets
    * @returns a map where key is task id (project:target:configuration), value is average time of historical runs
    */
+  getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>>;
+  getFlakyTasks(hashes: string[]): Promise<string[]>;
+  recordTaskRuns(taskRuns: TaskRun[]): Promise<void>;
+}
+
+export class InProcessTaskHistory implements TaskHistory {
+  private _taskHistory?: NxTaskHistory;
+
+  private get taskHistory(): NxTaskHistory {
+    if (!this._taskHistory) {
+      this._taskHistory = new NxTaskHistory(getDbConnection());
+    }
+    return this._taskHistory;
+  }
+
   async getEstimatedTaskTimings(
     targets: TaskTarget[]
   ): Promise<Record<string, number>> {
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      return this.taskHistory.getEstimatedTaskTimings(targets);
-    }
-    return await daemonClient.getEstimatedTaskTimings(targets);
+    return this.taskHistory.getEstimatedTaskTimings(targets);
   }
 
-  async getFlakyTasks(hashes: string[]) {
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      return this.taskHistory.getFlakyTasks(hashes);
-    }
-    return await daemonClient.getFlakyTasks(hashes);
+  async getFlakyTasks(hashes: string[]): Promise<string[]> {
+    return this.taskHistory.getFlakyTasks(hashes);
   }
 
-  async recordTaskRuns(taskRuns: TaskRun[]) {
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      return this.taskHistory.recordTaskRuns(taskRuns);
-    }
+  async recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
+    this.taskHistory.recordTaskRuns(taskRuns);
+  }
+}
+
+export class DaemonTaskHistory implements TaskHistory {
+  async getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>> {
+    return daemonClient.getEstimatedTaskTimings(targets);
+  }
+
+  async getFlakyTasks(hashes: string[]): Promise<string[]> {
+    return daemonClient.getFlakyTasks(hashes);
+  }
+
+  async recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
     return daemonClient.recordTaskRuns(taskRuns);
   }
 }
@@ -47,7 +69,10 @@ export function getTaskHistory(): TaskHistory | null {
   }
 
   if (!taskHistory) {
-    taskHistory = new TaskHistory();
+    taskHistory =
+      isOnDaemon() || !daemonClient.enabled()
+        ? new InProcessTaskHistory()
+        : new DaemonTaskHistory();
   }
   return taskHistory;
 }

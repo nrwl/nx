@@ -1,32 +1,17 @@
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { IS_WASM, TaskDetails } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getCustomHasher } from '../tasks-runner/utils';
-import { getDbConnection } from '../utils/db-connection';
 import { getInputs, TaskHasher } from './task-hasher';
-
-let taskDetails: TaskDetails;
-
-export function getTaskDetails(): TaskDetails | null {
-  // TODO: Remove when wasm supports sqlite
-  if (IS_WASM) {
-    return null;
-  }
-  if (!taskDetails) {
-    taskDetails = new TaskDetails(getDbConnection());
-  }
-  return taskDetails;
-}
+import { getTaskDetails } from './task-details-recorder';
 
 export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration,
-  tasksDetails: TaskDetails | null
+  nxJson: NxJsonConfiguration
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -63,16 +48,14 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
       ioService.notifyTaskInputs(tasksToHash[i].id, hashes[i].inputs);
     }
   }
-  if (tasksDetails?.recordTaskDetails) {
-    tasksDetails.recordTaskDetails(
-      tasksToHash.map((task) => ({
-        hash: task.hash,
-        project: task.target.project,
-        target: task.target.target,
-        configuration: task.target.configuration,
-      }))
-    );
-  }
+  await getTaskDetails()?.recordTaskDetails(
+    tasksToHash.map((task) => ({
+      hash: task.hash,
+      project: task.target.project,
+      target: task.target.target,
+      configuration: task.target.configuration,
+    }))
+  );
 
   performance.mark('hashMultipleTasks:end');
   performance.measure(
@@ -87,8 +70,7 @@ export async function hashTask(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   task: Task,
-  env: NodeJS.ProcessEnv,
-  taskDetails: TaskDetails | null
+  env: NodeJS.ProcessEnv
 ) {
   performance.mark('hashSingleTask:start');
 
@@ -115,16 +97,14 @@ export async function hashTask(
     getTaskIOService().notifyTaskInputs(task.id, inputs);
   }
 
-  if (taskDetails?.recordTaskDetails) {
-    taskDetails.recordTaskDetails([
-      {
-        hash: task.hash,
-        project: task.target.project,
-        target: task.target.target,
-        configuration: task.target.configuration,
-      },
-    ]);
-  }
+  await getTaskDetails()?.recordTaskDetails([
+    {
+      hash: task.hash,
+      project: task.target.project,
+      target: task.target.target,
+      configuration: task.target.configuration,
+    },
+  ]);
 
   performance.mark('hashSingleTask:end');
   performance.measure(
@@ -138,8 +118,7 @@ export async function hashTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  env: NodeJS.ProcessEnv,
-  taskDetails: TaskDetails | null
+  env: NodeJS.ProcessEnv
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -207,16 +186,14 @@ export async function hashTasks(
 
   await Promise.all([...customHasherPromises, batchHashPromise]);
 
-  if (taskDetails?.recordTaskDetails) {
-    taskDetails.recordTaskDetails(
-      tasks.map((task) => ({
-        hash: task.hash,
-        project: task.target.project,
-        target: task.target.target,
-        configuration: task.target.configuration,
-      }))
-    );
-  }
+  await getTaskDetails()?.recordTaskDetails(
+    tasks.map((task) => ({
+      hash: task.hash,
+      project: task.target.project,
+      target: task.target.target,
+      configuration: task.target.configuration,
+    }))
+  );
 
   performance.mark('hashMultipleTasks:end');
   performance.measure(
