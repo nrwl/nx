@@ -69,6 +69,7 @@ function startAsync(
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: 'inherit',
+        windowsHide: true,
       }
     );
 

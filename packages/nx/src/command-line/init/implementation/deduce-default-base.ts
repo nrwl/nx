@@ -5,35 +5,35 @@ export function deduceDefaultBase() {
   try {
     execSync(`git rev-parse --verify main`, {
       stdio: ['ignore', 'ignore', 'ignore'],
-      windowsHide: false,
+      windowsHide: true,
     });
     return 'main';
   } catch {
     try {
       execSync(`git rev-parse --verify dev`, {
         stdio: ['ignore', 'ignore', 'ignore'],
-        windowsHide: false,
+        windowsHide: true,
       });
       return 'dev';
     } catch {
       try {
         execSync(`git rev-parse --verify develop`, {
           stdio: ['ignore', 'ignore', 'ignore'],
-          windowsHide: false,
+          windowsHide: true,
         });
         return 'develop';
       } catch {
         try {
           execSync(`git rev-parse --verify next`, {
             stdio: ['ignore', 'ignore', 'ignore'],
-            windowsHide: false,
+            windowsHide: true,
           });
           return 'next';
         } catch {
           try {
             execSync(`git rev-parse --verify master`, {
               stdio: ['ignore', 'ignore', 'ignore'],
-              windowsHide: false,
+              windowsHide: true,
             });
             return 'master';
           } catch {

@@ -17,6 +17,7 @@ export default createConformanceRule({
       const result = execSync('git ls-files -i --exclude-standard -c', {
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
       }).trim();
 
       if (result) {

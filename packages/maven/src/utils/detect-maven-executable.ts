@@ -49,7 +49,7 @@ export function isMaven4(workspaceRoot: string): boolean {
 export function detectMavenExecutable(workspaceRoot: string): string {
   // First priority: Check for Maven Daemon
   try {
-    execSync('mvnd --version', { stdio: 'pipe' });
+    execSync('mvnd --version', { stdio: 'pipe', windowsHide: true });
     logger.verbose(`[Maven] Found Maven Daemon, using: mvnd`);
     return 'mvnd';
   } catch {

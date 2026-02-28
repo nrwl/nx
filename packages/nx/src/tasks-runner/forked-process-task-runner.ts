@@ -71,6 +71,7 @@ export class ForkedProcessTaskRunner {
         ...env,
         NX_FORKED_TASK_EXECUTOR: 'true',
       },
+      windowsHide: true,
     });
 
     // Register batch worker process with all tasks
@@ -217,6 +218,7 @@ export class ForkedProcessTaskRunner {
     const childId = task.id;
     const pseudoTerminal = await this.createPseudoTerminal();
     this.pseudoTerminals.add(pseudoTerminal);
+    // eslint-disable-next-line @nx/workspace/require-windows-hide -- this is the Rust pseudo-terminal fork, not child_process.fork
     const p = await pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
       execArgv: process.execArgv,
@@ -287,6 +289,7 @@ export class ForkedProcessTaskRunner {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
         },
+        windowsHide: true,
       });
 
       // Register forked process for metrics collection
@@ -353,6 +356,7 @@ export class ForkedProcessTaskRunner {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
         },
+        windowsHide: true,
       });
 
       // Register forked process for metrics collection

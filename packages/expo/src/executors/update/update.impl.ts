@@ -43,7 +43,11 @@ function runCliUpdate(
     childProcess = fork(
       resolveEas(workspaceRoot),
       ['update', ...createUpdateOptions(options)],
-      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
+        windowsHide: true,
+      }
     );
 
     // Ensure the child process is killed when the parent exits

@@ -370,7 +370,7 @@ function shouldRecordStats(): boolean {
     // Use npm to check registry - this works regardless of which package manager invoked us
     const stdout = execSync('npm config get registry', {
       encoding: 'utf-8',
-      windowsHide: false,
+      windowsHide: true,
     });
     const url = new URL(stdout.trim());
 

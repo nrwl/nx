@@ -55,7 +55,7 @@ async function startNewDaemonInBackground() {
     cwd: workspaceRoot,
     stdio: ['ignore', out.fd, err.fd],
     detached: true,
-    windowsHide: false,
+    windowsHide: true,
     shell: false,
     env: process.env,
   });

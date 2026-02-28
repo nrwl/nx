@@ -27,6 +27,7 @@ export default async function update(tree: Tree) {
       execSync(command, {
         stdio: 'inherit',
         cwd: process.cwd(),
+        windowsHide: true,
       });
     } catch (error) {
       logger.warn(

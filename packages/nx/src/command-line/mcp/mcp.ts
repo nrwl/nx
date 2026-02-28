@@ -32,6 +32,7 @@ export async function mcpHandler(args: any) {
   spawnSync(executable, execArgs, {
     stdio: 'inherit',
     cwd: workspaceRoot,
+    windowsHide: true,
   });
 }
 
@@ -57,6 +58,7 @@ export async function showHelp() {
   const helpOutput = spawnSync(executable, execArgs, {
     cwd: workspaceRoot,
     encoding: 'utf-8',
+    windowsHide: true,
   });
 
   console.log(helpOutput.stdout?.toString().replaceAll('nx-mcp', 'nx mcp'));

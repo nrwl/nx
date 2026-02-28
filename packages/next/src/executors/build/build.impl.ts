@@ -195,6 +195,7 @@ function runCliBuild(
         cwd: pathResolve(workspaceRoot, projectRoot),
         stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
         env: process.env,
+        windowsHide: true,
       }
     );
 
