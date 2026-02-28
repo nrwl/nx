@@ -37,13 +37,18 @@ describe('Gradle Plugin V1', () => {
       afterAll(() => cleanupProject());
 
       it('should build without batch mode', () => {
-        const projects = runCLI(`show projects`);
+        const projects = runCLI(`show projects`, {
+          redirectStderr: true,
+        });
         expect(projects).toContain('app');
         expect(projects).toContain('list');
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app --no-batch', { verbose: true });
+        const buildOutput = runCLI('build app --no-batch', {
+          verbose: true,
+          redirectStderr: true,
+        });
         expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain('nx run utilities:build');
@@ -94,7 +99,10 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2 --no-batch', { verbose: true });
+        let buildOutput = runCLI('build app2 --no-batch', {
+          verbose: true,
+          redirectStderr: true,
+        });
         // app2 depends on app
         expect(buildOutput).toContain('nx run app:build');
         expect(buildOutput).toContain(':app:classes');
@@ -120,8 +128,14 @@ dependencies {
         });
 
         expect(() => {
-          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
-          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
+          runCLI('run app:test-ci--MessageUtilsTest', {
+            verbose: true,
+            redirectStderr: true,
+          });
+          runCLI('run list:test-ci--LinkedListTest', {
+            verbose: true,
+            redirectStderr: true,
+          });
         }).not.toThrow();
       });
     }

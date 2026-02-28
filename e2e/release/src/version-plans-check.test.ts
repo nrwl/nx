@@ -204,8 +204,14 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'))
-      .toMatchInlineSnapshot(`
+    const verboseResult = runCLI(
+      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose',
+      { redirectStderr: true }
+    );
+    expect(verboseResult).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
+    expect(verboseResult).toMatchInlineSnapshot(`
 
       NX   No changed files found based on resolved "base" and "head"
 
@@ -239,11 +245,14 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(
-      runCLI('release plan:check --verbose', {
-        env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
-      })
-    ).toMatchInlineSnapshot(`
+    const verboseEnvResult = runCLI('release plan:check --verbose', {
+      env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
+      redirectStderr: true,
+    });
+    expect(verboseEnvResult).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
+    expect(verboseEnvResult).toMatchInlineSnapshot(`
 
       NX   No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: HEAD~1
 
@@ -619,8 +628,18 @@ describe('nx release version plans check command', () => {
     writeFileSync(join(pkg3Dir, 'file.css'), '.foo { color: red; }');
 
     // it should show information about the missing version plans and show an error message
-    expect(runCLI('release plan:check', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    const planCheckResult = runCLI('release plan:check', {
+      silenceError: true,
+      redirectStderr: true,
+    });
+    expect(planCheckResult).toContain('Touched projects missing version plans');
+    expect(planCheckResult).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult).toMatchInlineSnapshot(`
 
       NX   Touched projects based on changed files under release group "fixed-group"
 
@@ -657,8 +676,20 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --verbose', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    const verbosePlanCheckResult = runCLI('release plan:check --verbose', {
+      silenceError: true,
+      redirectStderr: true,
+    });
+    expect(verbosePlanCheckResult).toContain(
+      'Touched projects missing version plans'
+    );
+    expect(verbosePlanCheckResult).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(verbosePlanCheckResult).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
+    expect(verbosePlanCheckResult).toMatchInlineSnapshot(`
 
       NX   Affected criteria defaulted to --base=main --head=HEAD
 
