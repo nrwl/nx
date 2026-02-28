@@ -46,6 +46,7 @@ class Maven4AdapterInvoker(
         log.debug("Maven4AdapterInvoker ready")
     }
 
+    @Synchronized
     override fun invoke(
         args: List<String>,
         workingDir: File,

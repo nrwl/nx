@@ -577,7 +577,6 @@
 /nx/affected /docs/reference/nx-commands#nx-affected 301
 
 # --- canonicalSiteRedirects ---
-/blog/ /blog 301
 /technologies/java/gradle/introduction /docs/technologies/java/gradle/introduction 301
 /technologies/java/maven/introduction /docs/technologies/java/maven/introduction 301
 

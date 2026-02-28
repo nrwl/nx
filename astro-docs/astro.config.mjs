@@ -130,7 +130,7 @@ export default defineConfig({
           // Once a term has appeared on a page many times,
           // further appearances have a reduced impact on the page rank.
           // default: 1.4
-          // termSaturation: 1.4,
+          termSaturation: 1.2,
           // termSimilarity changes the ranking based on
           // similarity of terms to the search query.
           // Currently this only takes the length of the term into account.
