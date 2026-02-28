@@ -1,5 +1,6 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsStartAgentCommand: CommandModule = {
   command: 'start-agent [options]',
@@ -11,6 +12,8 @@ export const yargsStartAgentCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await import('./start-agent')).startAgentHandler(args));
+    exitAndFlushAnalytics(
+      await (await import('./start-agent')).startAgentHandler(args)
+    );
   },
 };

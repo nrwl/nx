@@ -5,6 +5,7 @@ import {
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
 import { withGraphOptions } from '../graph/command-object';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 const affectedGraphDeprecationMessage =
   'Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command has been removed in Nx 19.';
@@ -23,7 +24,7 @@ export const yargsAffectedGraphCommand: CommandModule = {
     const exitCode = await handleErrors(false, () => {
       throw new Error(affectedGraphDeprecationMessage);
     });
-    process.exit(exitCode);
+    exitAndFlushAnalytics(exitCode);
   },
   deprecated: affectedGraphDeprecationMessage,
 };
@@ -51,7 +52,7 @@ export const yargsPrintAffectedCommand: CommandModule = {
     const exitCode = await handleErrors(false, () => {
       throw new Error(printAffectedDeprecationMessage);
     });
-    process.exit(exitCode);
+    exitAndFlushAnalytics(exitCode);
   },
   deprecated: printAffectedDeprecationMessage,
 };

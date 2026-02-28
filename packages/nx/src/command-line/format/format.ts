@@ -25,11 +25,14 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
+  reportCommandRunEvent('format', undefined, { command, ...args });
   let prettier: typeof import('prettier');
   try {
     prettier = await import('prettier');
@@ -40,7 +43,7 @@ export async function format(
         `Please install "prettier" and try again, or don't run the "nx format:${command}" command.`,
       ],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
@@ -89,7 +92,7 @@ export async function format(
         } else {
           console.log(filesWithDifferentFormatting.join('\n'));
         }
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       }
       break;
     }

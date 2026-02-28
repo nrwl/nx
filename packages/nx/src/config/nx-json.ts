@@ -880,6 +880,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   neverConnectToCloud?: boolean;
 
   /**
+   * Set this to false to disable Nx from collecting anonymous usage analytics.
+   * When enabled, contains a unique anonymous identifier.
+   */
+  analytics?: string | false;
+
+  /**
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;

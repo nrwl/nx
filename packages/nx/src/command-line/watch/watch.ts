@@ -2,6 +2,8 @@ import { spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface WatchArguments {
   projects?: string[];
@@ -153,6 +155,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
 }
 
 export async function watch(args: WatchArguments) {
+  reportCommandRunEvent('watch', undefined, args);
   const projectReplacementRegex = new RegExp(
     args.projectNameEnvName ?? DEFAULT_PROJECT_NAME_ENV,
     'g'
@@ -163,7 +166,7 @@ export async function watch(args: WatchArguments) {
       title:
         'Daemon is not running. The watch command is not supported without the Nx Daemon.',
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   if (
@@ -177,7 +180,7 @@ export async function watch(args: WatchArguments) {
         'You cannot use a replacement for projects when including global workspace files because there will be scenarios where there are file changes not associated with a project.',
       ],
     });
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   }
 
   args.verbose &&
@@ -222,12 +225,12 @@ export async function watch(args: WatchArguments) {
           title: 'Failed to reconnect to daemon after multiple attempts',
           bodyLines: ['Please restart your watch command.'],
         });
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       } else if (err instanceof VersionMismatchError) {
         output.error({
           title: 'Nx version changed. Please restart your command.',
         });
-        process.exit(1);
+        exitAndFlushAnalytics(1);
       } else if (err !== null) {
         output.error({
           title: 'Watch error',

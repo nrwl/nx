@@ -44,6 +44,8 @@ import {
   determineErrorCode,
   DetectedPlugin,
 } from './utils/ai-output';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface InitArgs {
   interactive: boolean;
@@ -61,6 +63,7 @@ export async function initHandler(
   options: InitArgs,
   inner = false
 ): Promise<void> {
+  reportCommandRunEvent('init-v2');
   // Use environment variable to force local execution
   if (process.env.NX_USE_LOCAL === 'true' || inner) {
     return await initHandlerImpl(options);
@@ -290,7 +293,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
           `Detected ${detectedPluginNames.length} plugin(s): ${detectedPluginNames.join(', ')}`
         );
         writeAiOutput(buildNeedsInputResult(detectedPlugins));
-        process.exit(0);
+        exitAndFlushAnalytics(0);
       }
       // else: no plugins flag and no plugins detected, proceed with empty array
     }

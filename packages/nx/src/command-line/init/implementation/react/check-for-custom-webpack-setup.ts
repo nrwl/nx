@@ -1,4 +1,5 @@
 import { readJsonFile } from '../../../../utils/fileutils';
+import { exitAndFlushAnalytics } from '../../../../analytics/analytics';
 
 export function checkForCustomWebpackSetup() {
   const packageJson = readJsonFile('package.json');
@@ -11,7 +12,7 @@ export function checkForCustomWebpackSetup() {
       console.log(
         `Skipping migration due to custom webpack setup. Found "${pkg}" usage. Use --force to continue anyway.`
       );
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   });
 }

@@ -61,6 +61,8 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tokio-util = "0.7.9"
 tracing-appender = "0.2"
 tui-logger = { version = "0.17.2", features = ["tracing-support"] }
+urlencoding = "2.1"
+uuid = { version = "1.0", features = ["v4"] }
 tui-term = { git = "https://github.com/JamesHenry/tui-term", rev = "88e3b61425c97220c528ef76c188df10032a75dd" }
 walkdir = '2.3.3'
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }

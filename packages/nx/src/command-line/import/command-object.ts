@@ -9,6 +9,7 @@ import {
 } from './utils/ai-output';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',
@@ -74,6 +75,6 @@ export const yargsImportCommand: CommandModule = {
         throw error;
       }
     });
-    process.exit(exitCode);
+    exitAndFlushAnalytics(exitCode);
   },
 };

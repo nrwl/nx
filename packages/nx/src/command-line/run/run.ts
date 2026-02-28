@@ -24,6 +24,7 @@ import {
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { exec } from 'child_process';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface Target {
   project: string;
@@ -128,7 +129,7 @@ async function printTargetRunHelpInternal(
       await new Promise(() => {
         const cp = terminal.runCommand(helpCommand, { jsEnv: env });
         cp.onExit((code) => {
-          process.exit(code);
+          exitAndFlushAnalytics(code);
         });
       });
     } else {
@@ -137,11 +138,11 @@ async function printTargetRunHelpInternal(
         windowsHide: false,
       });
       cp.on('exit', (code) => {
-        process.exit(code);
+        exitAndFlushAnalytics(code);
       });
     }
   } else {
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 }
 

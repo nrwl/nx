@@ -1,5 +1,6 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
+import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsStopAllAgentsCommand: CommandModule = {
   command: 'stop-all-agents [options]',
@@ -12,7 +13,7 @@ export const yargsStopAllAgentsCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(
+    exitAndFlushAnalytics(
       await (await import('./stop-all-agents')).stopAllAgentsHandler(args)
     );
   },

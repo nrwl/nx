@@ -41,6 +41,8 @@ import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { getCallSites } from '../utils/call-sites';
+import { reportProjectGraphCreationEvent } from '../analytics';
+import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -213,7 +215,7 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
     } else {
       console.error(e);
     }
-    process.exit(1);
+    exitAndFlushAnalytics(1);
   } else {
     throw e;
   }
@@ -260,6 +262,7 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  const startTime = performance.now();
   if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
     try {
       // If no cached graph is found, we will fall through to the normal flow
@@ -275,6 +278,8 @@ export async function createProjectGraphAsync(
 
   const projectGraphAndSourceMaps =
     await createProjectGraphAndSourceMapsAsync(opts);
+  const endTime = performance.now();
+  reportProjectGraphCreationEvent(endTime - startTime);
   return projectGraphAndSourceMaps.projectGraph;
 }
 

@@ -17,6 +17,8 @@ import { readNxJson } from '../../config/configuration';
 import { output } from '../../utils/output';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
+import { reportCommandRunEvent } from '../../analytics';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -51,6 +53,7 @@ export async function runMany(
   const projects = projectsToRun(nxArgs, projectGraph);
 
   if (nxArgs.graph) {
+    reportCommandRunEvent('run-many --graph');
     const file = readGraphFileFromGraphArg(nxArgs);
     const projectNames = projects.map((t) => t.name);
     return await generateGraph(
@@ -66,6 +69,7 @@ export async function runMany(
       projectNames
     );
   } else {
+    reportCommandRunEvent('run-many', undefined, args);
     const status = await runCommand(
       projects,
       projectGraph,
@@ -76,7 +80,7 @@ export async function runMany(
       extraTargetDependencies,
       extraOptions
     );
-    process.exit(status);
+    exitAndFlushAnalytics(status);
   }
 }
 

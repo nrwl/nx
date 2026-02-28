@@ -19,11 +19,13 @@ import {
 } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { ShowProjectsOptions } from './command-object';
+import { reportCommandRunEvent } from '../../analytics';
 
 export async function showProjectsHandler(
   args: ShowProjectsOptions
 ): Promise<void> {
   performance.mark('code-loading:end');
+  reportCommandRunEvent('show projects', undefined, args);
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   let graph = await createProjectGraphAsync();
   const nxJson = readNxJson();

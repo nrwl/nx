@@ -1,0 +1,90 @@
+import { randomUUID } from 'crypto';
+import { prompt } from 'enquirer';
+import { join } from 'path';
+import { output } from './output';
+import { isCI } from './is-ci';
+import { readNxJson } from '../config/nx-json';
+import { writeJsonFile } from './fileutils';
+import { workspaceRoot } from './workspace-root';
+
+/**
+ * Prompts user for analytics preference if not already set in nx.json.
+ * Only prompts in interactive terminals, not in CI.
+ */
+export async function ensureAnalyticsPreferenceSet(): Promise<void> {
+  if (isCI()) {
+    return;
+  }
+
+  // Only prompt in interactive terminals
+  const isInteractive = process.stdin.isTTY && process.stdout.isTTY;
+  if (!isInteractive) {
+    return;
+  }
+
+  const nxJson = readNxJson(workspaceRoot);
+  // Check if already set (string = enabled with UUID, false = disabled)
+  if (typeof nxJson?.analytics === 'string' || nxJson?.analytics === false) {
+    return;
+  }
+
+  const analyticsEnabled = await promptForAnalyticsPreference();
+
+  saveAnalyticsPreference(analyticsEnabled);
+}
+
+async function promptForAnalyticsPreference(): Promise<boolean> {
+  try {
+    output.log({
+      title: 'Help improve Nx by sharing usage data',
+      bodyLines: [
+        'Nx collects usage analytics to help improve the developer experience.',
+        'No project-specific information is collected.',
+        'Learn more: https://cloud.nx.app/privacy',
+      ],
+    });
+
+    const { enableAnalytics } = await prompt<{ enableAnalytics: boolean }>({
+      type: 'confirm',
+      name: 'enableAnalytics',
+      message: 'Share usage data with the Nx team?',
+      initial: true,
+    });
+
+    return enableAnalytics;
+  } catch {
+    // User cancelled - default to false
+    return false;
+  }
+}
+
+function saveAnalyticsPreference(enabled: boolean): void {
+  try {
+    const nxJsonPath = join(workspaceRoot, 'nx.json');
+    const nxJson = readNxJson(workspaceRoot);
+    nxJson.analytics = enabled ? randomUUID() : false;
+    writeJsonFile(nxJsonPath, nxJson);
+
+    if (enabled) {
+      output.success({ title: 'Thank you for helping improve Nx!' });
+    } else {
+      output.log({
+        title: 'Analytics disabled.',
+        bodyLines: [
+          'You can change this anytime by setting "analytics" in nx.json.',
+        ],
+      });
+    }
+  } catch {
+    // Silently fail - don't block user's command
+  }
+}
+
+/**
+ * Returns the analytics ID if analytics is enabled, false if disabled,
+ * or undefined if not yet set.
+ */
+export function getAnalyticsId(): string | false | undefined {
+  const nxJson = readNxJson(workspaceRoot);
+  return nxJson?.analytics;
+}

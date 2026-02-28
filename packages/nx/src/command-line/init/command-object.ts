@@ -7,6 +7,7 @@ import {
   writeErrorLog,
   determineErrorCode,
 } from './utils/ai-output';
+import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -19,7 +20,7 @@ export const yargsInitCommand: CommandModule = {
     if (wantsHelp) {
       const y = await withInitOptions(yargs);
       y.showHelp();
-      process.exit(0);
+      exitAndFlushAnalytics(0);
     }
     return withInitOptions(yargs);
   },
@@ -44,7 +45,7 @@ export const yargsInitCommand: CommandModule = {
       } else {
         await require('./init-v1').initHandler(args);
       }
-      process.exit(0);
+      exitAndFlushAnalytics(0);
     } catch (error) {
       // Output structured error for AI agents
       if (isAiAgent()) {
@@ -58,7 +59,7 @@ export const yargsInitCommand: CommandModule = {
         // Skip for AI agents to avoid corrupting NDJSON output
         process.stdout.write('\x1b[?25h');
       }
-      process.exit(1);
+      exitAndFlushAnalytics(1);
     }
   },
 };

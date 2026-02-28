@@ -29,6 +29,8 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
+import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
+import { flushAnalytics, startAnalytics } from '../src/analytics';
 
 async function main() {
   if (
@@ -101,6 +103,12 @@ async function main() {
     if (!localNx && !isNxCloudCommand(process.argv[2])) {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
+
+    // Prompt for analytics preference if not set
+    try {
+      await ensureAnalyticsPreferenceSet();
+    } catch {}
+    await startAnalytics();
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
@@ -312,5 +320,6 @@ process.on('exit', () => {
 
 main().catch((error) => {
   console.error(error);
+  flushAnalytics();
   process.exit(1);
 });

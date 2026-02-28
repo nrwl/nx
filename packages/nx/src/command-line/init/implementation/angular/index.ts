@@ -19,6 +19,7 @@ import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-version
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
+import { exitAndFlushAnalytics } from '../../../../analytics/analytics';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -41,7 +42,7 @@ export async function addNxToAngularCliRepo(options: Options) {
   if (legacyMigrationFn) {
     output.log({ title: '💽 Running migration for a legacy Angular version' });
     await legacyMigrationFn();
-    process.exit(0);
+    exitAndFlushAnalytics(0);
   }
 
   output.success({

@@ -26,6 +26,7 @@ import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
+import { exitAndFlushAnalytics } from '../analytics/analytics';
 import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -51,6 +52,7 @@ import {
   shouldStreamOutput,
 } from './utils';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
+import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -236,7 +238,7 @@ export class TaskOrchestrator {
             runningTask.onExit((code) => {
               if (!this.tuiEnabled) {
                 if (code > 128) {
-                  process.exit(code);
+                  exitAndFlushAnalytics(code);
                 }
               }
               res();
@@ -1322,7 +1324,7 @@ export class TaskOrchestrator {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
         } else {
-          process.exit(signalToCode('SIGINT'));
+          exitAndFlushAnalytics(signalToCode('SIGINT'));
         }
       });
     });
