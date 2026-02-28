@@ -3762,4 +3762,372 @@ describe('getNonDummyDeps', () => {
       'app21:build',
     ]);
   });
+
+  describe('dependents', () => {
+    it('should handle simple reverse dependency', () => {
+      // lib1 depends on lib2, so lib2 has lib1 as a dependent
+      const projectGraph = {
+        nodes: {
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [
+                    {
+                      dependents: true,
+                      target: 'destroy',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [
+                    {
+                      dependents: true,
+                      target: 'destroy',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+          lib2: [],
+        },
+      } as any;
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['lib2'],
+        ['destroy'],
+        null,
+        {}
+      );
+
+      // lib1:destroy should run before lib2:destroy (lib1 depends on lib2, so lib1 must be destroyed first)
+      expect(taskGraph).toEqual({
+        roots: ['lib1:destroy'],
+        tasks: {
+          'lib2:destroy': {
+            id: 'lib2:destroy',
+            target: {
+              project: 'lib2',
+              target: 'destroy',
+            },
+            outputs: [],
+            overrides: {},
+            projectRoot: 'lib2-root',
+            parallelism: true,
+            continuous: false,
+          },
+          'lib1:destroy': {
+            id: 'lib1:destroy',
+            target: {
+              project: 'lib1',
+              target: 'destroy',
+            },
+            outputs: [],
+            overrides: {
+              __overrides_unparsed__: [],
+            },
+            projectRoot: 'lib1-root',
+            parallelism: true,
+            continuous: false,
+          },
+        },
+        dependencies: {
+          'lib1:destroy': [],
+          'lib2:destroy': ['lib1:destroy'],
+        },
+        continuousDependencies: {
+          'lib2:destroy': [],
+          'lib1:destroy': [],
+        },
+      });
+    });
+
+    it('should handle multiple dependents', () => {
+      // lib2 and lib3 both depend on lib1
+      const projectGraph = {
+        nodes: {
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [
+                    {
+                      dependents: true,
+                      target: 'destroy',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                },
+              },
+            },
+          },
+          lib3: {
+            name: 'lib3',
+            type: 'lib',
+            data: {
+              root: 'lib3-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          lib1: [],
+          lib2: [{ source: 'lib2', target: 'lib1', type: 'static' }],
+          lib3: [{ source: 'lib3', target: 'lib1', type: 'static' }],
+        },
+      } as any;
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['lib1'],
+        ['destroy'],
+        null,
+        {}
+      );
+
+      // lib2 and lib3 must be destroyed before lib1 (since they depend on lib1)
+      expect(taskGraph.roots).toEqual(
+        expect.arrayContaining(['lib2:destroy', 'lib3:destroy'])
+      );
+      expect(taskGraph.roots).toHaveLength(2);
+      expect(taskGraph.dependencies['lib2:destroy']).toEqual([]);
+      expect(taskGraph.dependencies['lib3:destroy']).toEqual([]);
+      expect(taskGraph.dependencies['lib1:destroy']).toEqual(
+        expect.arrayContaining(['lib2:destroy', 'lib3:destroy'])
+      );
+    });
+
+    it('should handle multi-level reverse dependencies', () => {
+      // app1 → lib1 → lib2 (dependency chain)
+      // When destroying, should go: app1 → lib1 → lib2
+      const projectGraph = {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ dependents: true, target: 'destroy' }],
+                },
+              },
+            },
+          },
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ dependents: true, target: 'destroy' }],
+                },
+              },
+            },
+          },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ dependents: true, target: 'destroy' }],
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+          lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+          lib2: [],
+        },
+      } as any;
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['lib2'],
+        ['destroy'],
+        null,
+        {}
+      );
+
+      // app1 must be destroyed first (it depends on lib1), then lib1, then lib2
+      expect(taskGraph.roots).toEqual(['app1:destroy']);
+      expect(taskGraph.dependencies['app1:destroy']).toEqual([]);
+      expect(taskGraph.dependencies['lib1:destroy']).toEqual(['app1:destroy']);
+      expect(taskGraph.dependencies['lib2:destroy']).toEqual(['lib1:destroy']);
+    });
+
+    it('should handle mix of dependencies and dependents', () => {
+      const projectGraph = {
+        nodes: {
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['^build'],
+                },
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ dependents: true, target: 'destroy' }],
+                },
+              },
+            },
+          },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                },
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ dependents: true, target: 'destroy' }],
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+          lib2: [],
+        },
+      } as any;
+
+      // Building: lib2:build runs before lib1:build (forward dependency)
+      const buildGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['lib1'],
+        ['build'],
+        null,
+        {}
+      );
+
+      expect(buildGraph.roots).toEqual(['lib2:build']);
+      expect(buildGraph.dependencies['lib1:build']).toEqual(['lib2:build']);
+
+      // Destroying: lib1:destroy runs before lib2:destroy (lib1 depends on lib2, so lib1 is destroyed first)
+      const destroyGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['lib2'],
+        ['destroy'],
+        null,
+        {}
+      );
+
+      expect(destroyGraph.roots).toEqual(['lib1:destroy']);
+      expect(destroyGraph.dependencies['lib1:destroy']).toEqual([]);
+      expect(destroyGraph.dependencies['lib2:destroy']).toEqual([
+        'lib1:destroy',
+      ]);
+    });
+
+    it('should handle dependents when dependent does not have the target', () => {
+      const projectGraph = {
+        nodes: {
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                destroy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ dependents: true, target: 'destroy' }],
+                },
+              },
+            },
+          },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                // lib2 doesn't have a destroy target
+                build: {
+                  executor: 'nx:run-commands',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          lib1: [],
+          lib2: [{ source: 'lib2', target: 'lib1', type: 'static' }],
+        },
+      } as any;
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['lib1'],
+        ['destroy'],
+        null,
+        {}
+      );
+
+      // Should only have lib1:destroy since lib2 doesn't have destroy target
+      expect(taskGraph.tasks).toEqual({
+        'lib1:destroy': expect.any(Object),
+      });
+      expect(taskGraph.roots).toEqual(['lib1:destroy']);
+    });
+  });
 });

@@ -176,18 +176,26 @@ export interface TargetMetadata {
 export interface TargetDependencyConfig {
   /**
    * A list of projects that have `target`.
-   * Should not be specified together with `dependencies`.
+   * Should not be specified together with `dependencies` or `dependents`.
    */
   projects?: string[] | string;
 
   /**
    * If true, the target will be executed for each project that this project depends on.
-   * Should not be specified together with `projects`.
+   * Should not be specified together with `projects` or `dependents`.
    */
   dependencies?: boolean;
 
   /**
-   * The name of the target to run. If `projects` and `dependencies` are not specified,
+   * If true, the target will be executed for each project that depends on this project (reverse dependencies).
+   * This is useful for operations that must be performed in reverse dependency order, such as
+   * destroying infrastructure where dependent resources must be removed before their dependencies.
+   * Should not be specified together with `projects` or `dependencies`.
+   */
+  dependents?: boolean;
+
+  /**
+   * The name of the target to run. If `projects`, `dependencies`, and `dependents` are not specified,
    * the target will be executed for the same project the the current target is running on`.
    */
   target: string;

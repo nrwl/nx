@@ -76,12 +76,27 @@ export function normalizeDependencyConfigProjects(
   const noStringConfig =
     normalizeTargetDependencyWithStringProjects(dependencyConfig);
 
+  // Validate that projects, dependencies, and dependents are mutually exclusive
+  const definedOptions = [
+    noStringConfig.projects ? 'projects' : null,
+    noStringConfig.dependencies ? 'dependencies' : null,
+    noStringConfig.dependents ? 'dependents' : null,
+  ].filter(Boolean);
+
+  if (definedOptions.length > 1) {
+    throw new Error(
+      `TargetDependencyConfig cannot specify multiple of: ${definedOptions.join(
+        ', '
+      )}. Please specify only one.`
+    );
+  }
+
   if (noStringConfig.projects) {
     dependencyConfig.projects = findMatchingProjects(
       noStringConfig.projects,
       graph.nodes
     );
-  } else if (!noStringConfig.dependencies) {
+  } else if (!noStringConfig.dependencies && !noStringConfig.dependents) {
     dependencyConfig.projects = [currentProject];
   }
   return dependencyConfig as NormalizedTargetDependencyConfig;
@@ -159,6 +174,7 @@ export function expandWildcardTargetConfiguration(
     target: t,
     projects: dependencyConfig.projects,
     dependencies: dependencyConfig.dependencies,
+    dependents: dependencyConfig.dependents,
   }));
 }
 
