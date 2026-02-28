@@ -13,7 +13,6 @@ use crate::native::watch::types::{
     EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
 use crate::native::watch::watch_filterer;
-use napi::Env;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use parking_lot::Mutex;
@@ -154,7 +153,6 @@ impl Watcher {
     #[napi]
     pub fn watch(
         &mut self,
-        env: Env,
         #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
         callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
     ) -> Result<()> {
@@ -323,10 +321,10 @@ impl Watcher {
             )?);
             trace!("starting watch exec");
             watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
-            Ok(())
+            Ok::<(), anyhow::Error>(())
         };
 
-        env.spawn_future(start)?;
+        napi::tokio::spawn(start);
         trace!("started watch exec");
         Ok(())
     }
