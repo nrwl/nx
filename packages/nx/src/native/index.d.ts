@@ -31,7 +31,7 @@ export declare class AppLifeCycle {
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   getPid(): number
-  kill(signal?: NodeJS.Signals): void
+  kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
   cleanup(): void
@@ -370,6 +370,9 @@ export const IS_WASM: boolean
 export declare export declare function isAiAgent(): boolean
 
 export declare export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
+
+/** Kill a process and all its descendants. */
+export declare export declare function killProcessTree(rootPid: number, signal?: string | number | undefined | null): void
 
 export declare export declare function logDebug(message: string): void
 

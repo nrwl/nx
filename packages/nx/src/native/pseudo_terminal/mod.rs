@@ -11,6 +11,4 @@ pub mod child_process;
 #[cfg_attr(not(target_os = "macos"), path = "non_mac.rs")]
 pub mod rust_pseudo_terminal;
 
-#[cfg_attr(windows, path = "process_killer/windows.rs")]
-#[cfg_attr(not(windows), path = "process_killer/unix.rs")]
-mod process_killer;
+pub mod process_killer;
