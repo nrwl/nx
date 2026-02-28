@@ -1,14 +1,16 @@
 use itertools::Itertools;
 use regex::Regex;
+use std::sync::LazyLock;
 
 use crate::native::glob::{contains_glob_pattern, glob_transform::partition_glob};
 
 const ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES: [&str; 2] = ["!{workspaceRoot}", "{workspaceRoot}"];
 
-fn is_missing_prefix(output: &str) -> bool {
-    let re = Regex::new(r"^!?\{[\s\S]+\}").expect("Output pattern regex should compile");
+static OUTPUT_PREFIX_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^!?\{[\s\S]+\}").expect("Output pattern regex should compile"));
 
-    !re.is_match(output)
+fn is_missing_prefix(output: &str) -> bool {
+    !OUTPUT_PREFIX_RE.is_match(output)
 }
 
 #[napi]

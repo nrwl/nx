@@ -73,7 +73,7 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     &external_deps_mapped,
-                    &mut Box::new(hashbrown::HashSet::from([task.target.project.to_string()])),
+                    &mut Box::new(hashbrown::HashSet::from([task.target.project.as_str()])),
                 )?;
 
                 let mut inputs: Vec<HashInstruction> = target
@@ -246,18 +246,16 @@ impl HashPlanner {
         }
     }
 
-    fn self_and_deps_inputs(
-        &self,
+    fn self_and_deps_inputs<'a>(
+        &'a self,
         project_name: &str,
         task: &Task,
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
-        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&String>>,
-        visited: &mut Box<hashbrown::HashSet<String>>,
+        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let project_deps = &self.project_graph.dependencies[project_name]
-            .iter()
-            .collect::<Vec<_>>();
+        let project_deps = &self.project_graph.dependencies[project_name];
         let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
         let deps_inputs = self.gather_dependency_inputs(
             task,
@@ -303,22 +301,23 @@ impl HashPlanner {
         task: &Task,
         inputs: &[Input],
         task_graph: &TaskGraph,
-        project_deps: &[&'a String],
+        project_deps: &'a [String],
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
-        visited: &mut Box<hashbrown::HashSet<String>>,
+        visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let mut deps_inputs: Vec<HashInstruction> = vec![];
+        let mut deps_inputs: Vec<HashInstruction> =
+            Vec::with_capacity(inputs.len() * project_deps.len());
 
         for input in inputs {
             for dep in project_deps {
-                if visited.contains(*dep) {
+                if visited.contains(dep.as_str()) {
                     continue;
                 }
-                visited.insert(dep.to_string());
+                visited.insert(dep.as_str());
 
-                if self.project_graph.nodes.contains_key(*dep) {
+                if self.project_graph.nodes.contains_key(dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
-                        &self.project_graph.nodes[*dep],
+                        &self.project_graph.nodes[dep],
                         &self.nx_json,
                         input,
                     )?

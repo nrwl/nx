@@ -908,7 +908,7 @@ function targetDefaultShouldBeApplied(
 }
 
 function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
+  return structuredClone(obj);
 }
 
 export function mergeTargetDefaultWithTargetDefinition(

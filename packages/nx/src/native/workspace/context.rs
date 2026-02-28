@@ -165,10 +165,8 @@ impl FilesWorker {
             let removal = map.remove(&PathBuf::from(deleted_path));
             if removal.is_none() {
                 // If the path is a directory, this retains only files not in the directory.
-                map.retain(|path, _| {
-                    let owned_deleted_path = deleted_path.to_owned();
-                    !path.starts_with(owned_deleted_path + "/")
-                });
+                let prefix = Path::new(deleted_path);
+                map.retain(|path, _| !path.starts_with(prefix));
             };
         }
 
@@ -309,14 +307,13 @@ impl WorkspaceContext {
     pub fn update_project_files(
         &self,
         project_root_mappings: ProjectRootMappings,
-        project_files: External<ProjectFiles>,
+        mut project_files: External<ProjectFiles>,
         global_files: External<Vec<FileData>>,
         updated_files: HashMap<String, String>,
         deleted_files: Vec<&str>,
     ) -> UpdatedWorkspaceFiles {
         trace!("updating project files");
         trace!("{project_root_mappings:?}");
-        let mut project_files_map = project_files.clone();
         let mut global_files = global_files
             .iter()
             .map(|f| (f.file.clone(), f.hash.clone()))
@@ -332,8 +329,7 @@ impl WorkspaceContext {
             let file = updated_file.0;
             let hash = updated_file.1;
             let project = find_project_for_path(&file, &project_root_mappings);
-            if let Some(project_files) =
-                project.and_then(|project| project_files_map.get_mut(project))
+            if let Some(project_files) = project.and_then(|project| project_files.get_mut(project))
             {
                 trace!("{file:?} was found in a project");
                 if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
@@ -359,7 +355,7 @@ impl WorkspaceContext {
         );
         for deleted_file in deleted_files.into_iter() {
             if let Some(project_files) = find_project_for_path(deleted_file, &project_root_mappings)
-                .and_then(|project| project_files_map.get_mut(project))
+                .and_then(|project| project_files.get_mut(project))
             {
                 if let Some(pos) = project_files.iter().position(|f| f.file == deleted_file) {
                     trace!("removing file: {deleted_file:?} from project");
@@ -378,7 +374,7 @@ impl WorkspaceContext {
         // but if there were any files deleted from projects, the sort should be faster becaues there potentially could be less files to sort
         for updated_project in updated_projects {
             trace!(updated_project, "sorting updated project");
-            if let Some(project_files) = project_files_map.get_mut(updated_project) {
+            if let Some(project_files) = project_files.get_mut(updated_project) {
                 // if the project files are less than 500, then parallel sort has too much overhead to actually be faster
                 if cfg!(target_arch = "wasm32") || project_files.len() < 500 {
                     project_files.sort();
@@ -393,13 +389,14 @@ impl WorkspaceContext {
             .map(|(file, hash)| FileData { file, hash })
             .collect::<Vec<_>>();
 
+        let project_file_map = (*project_files).clone();
         UpdatedWorkspaceFiles {
             file_map: FileMap {
-                project_file_map: project_files_map.clone(),
+                project_file_map,
                 non_project_files: non_project_files.clone(),
             },
             external_references: NxWorkspaceFilesExternals {
-                project_files: External::new(project_files_map),
+                project_files,
                 global_files: External::new(non_project_files),
                 all_workspace_files: External::new(self.all_file_data()),
             },
