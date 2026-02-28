@@ -109,6 +109,88 @@ describe('Extra Nx Misc Tests', () => {
         }
       );
     });
+
+    it('should resolve stable project refs in dependsOn when a later plugin renames the referenced project', () => {
+      // Scenario:
+      // - A plugin infers two projects (project-a and project-b-original) from marker files.
+      // - project-a has a dependsOn on "project-b-original" (the name the plugin used).
+      // - A project.json at project-b's root renames it to "project-b-renamed".
+      // - After all plugins run, project-a's dependsOn should reference the renamed project.
+
+      const nxJson = readJson('nx.json');
+      nxJson.plugins = ['./tools/stable-refs-plugin'];
+      updateFile('nx.json', JSON.stringify(nxJson));
+
+      // Marker files for the plugin to discover
+      updateFile('proj-a/plugin-project.txt', 'project-a-original');
+      updateFile('proj-b/plugin-project.txt', 'project-b-original');
+
+      // project.json at proj-b's root renames the project — this simulates a
+      // later plugin (or the project.json plugin) overwriting the name.
+      updateFile(
+        'proj-b/project.json',
+        JSON.stringify({
+          name: 'project-b-renamed',
+          root: 'proj-b',
+        })
+      );
+
+      // Plugin that reads the name from the marker file and creates projects with
+      // a dependsOn cross-reference using the plugin-assigned name.
+      updateFile(
+        'tools/stable-refs-plugin.js',
+        `
+        const { readFileSync } = require('fs');
+        const { dirname } = require('path');
+        module.exports = {
+          createNodesV2: ['**/plugin-project.txt', (configFiles) => {
+            const results = [];
+            // Collect all plugin-assigned names first so we can build cross-references.
+            const byRoot = {};
+            for (const configFile of configFiles) {
+              const root = dirname(configFile);
+              const name = readFileSync(configFile, 'utf8').trim();
+              byRoot[root] = name;
+            }
+            for (const configFile of configFiles) {
+              const root = dirname(configFile);
+              const name = byRoot[root];
+              const project = {
+                root,
+                name,
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    options: { command: 'echo built ' + name },
+                  },
+                },
+              };
+              // project-a depends on project-b using the plugin-assigned name.
+              if (name === 'project-a-original') {
+                project.targets.build.dependsOn = [
+                  { projects: 'project-b-original', target: 'build' },
+                ];
+              }
+              results.push([configFile, { projects: { [root]: project } }]);
+            }
+            return results;
+          }],
+        };
+      `
+      );
+
+      runCLI('graph --file project-graph.json');
+      const projectGraphJson = readJson('project-graph.json');
+
+      // The plugin-created project at proj-a should still appear under its plugin name,
+      // but project-b should now be known by the name from project.json.
+      expect(projectGraphJson.graph.nodes['project-b-renamed']).toBeDefined();
+
+      // Run project-a's build; if dependsOn was resolved correctly, project-b-renamed:build
+      // will also be executed.
+      const output = runCLI('build project-a-original');
+      expect(output).toContain('project-b-renamed');
+    });
   });
 
   describe('Run Commands', () => {
