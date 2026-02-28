@@ -106,9 +106,9 @@ describe('task planner', () => {
             "env:NONEXISTENTENV",
             "env:NX_CLOUD_ENCRYPTION_KEY",
             "env:TESTENV",
-            "parent:{projectRoot}/**/*",
-            "tagged:{projectRoot}/**/*",
-            "unrelated:{projectRoot}/**/*",
+            "parent:parent/**/*",
+            "tagged:libs/tagged/**/*",
+            "unrelated:libs/unrelated/**/*",
             "parent:ProjectConfiguration",
             "tagged:ProjectConfiguration",
             "unrelated:ProjectConfiguration",
@@ -581,6 +581,57 @@ describe('task planner', () => {
 
     const plans = planner.getPlans(['app:build'], taskGraph);
     expect(plans).toMatchSnapshot();
+  });
+
+  it('should interpolate {projectRoot} and {projectName} in {workspaceRoot} input patterns', async () => {
+    let projectFileMap = {
+      parent: [
+        { file: 'libs/parent/file.go', hash: 'go.hash' },
+        { file: 'libs/parent/file.ts', hash: 'ts.hash' },
+      ],
+    };
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            inputs: ['goSource'],
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    let nxJson = {
+      namedInputs: {
+        goSource: ['{workspaceRoot}/{projectRoot}/**/*.go'],
+      },
+    };
+    const planner = new HashPlanner(
+      nxJson as any,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+    const plans = planner.getPlans(['parent:build'], taskGraph);
+    // {projectRoot} should be interpolated to 'libs/parent', so the workspace fileset
+    // should have '{projectRoot}' replaced in the instruction ('{workspaceRoot}/' is stripped later during hashing)
+    expect(plans['parent:build']).toContain(
+      'workspace:[{workspaceRoot}/libs/parent/**/*.go]'
+    );
+    // The original pattern with uninterpolated {projectRoot} should NOT be present
+    expect(plans['parent:build']).not.toContain(
+      'workspace:[{workspaceRoot}/{projectRoot}/**/*.go]'
+    );
   });
 
   describe('dependentTasksOutputFiles', () => {

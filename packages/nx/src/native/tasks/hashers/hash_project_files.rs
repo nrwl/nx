@@ -12,32 +12,17 @@ pub struct ProjectFilesHashResult {
     pub files: Vec<String>,
 }
 
-/// Expands project file set patterns by replacing `{projectRoot}` with the actual project root.
-/// For root projects (project_root == "."), strips `{projectRoot}/` instead.
-pub fn globs_from_project_globs(project_root: &str, file_sets: &[String]) -> Vec<String> {
-    file_sets
-        .iter()
-        .map(|f| {
-            if project_root == "." {
-                f.replace("{projectRoot}/", "")
-            } else {
-                f.replace("{projectRoot}", project_root)
-            }
-        })
-        .collect()
-}
-
 /// Hashes project files and returns both the hash and the list of matched file paths.
 /// This allows callers to reuse the file list without re-globbing.
+/// Token resolution ({projectRoot}, {projectName}) is handled upstream by the HashPlanner,
+/// so file_sets are expected to contain already-resolved paths.
 pub fn hash_project_files_with_inputs(
     project_name: &str,
-    project_root: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<ProjectFilesHashResult> {
     let _span = trace_span!("hash_project_files", project_name).entered();
-    let collected_files =
-        collect_project_files(project_name, project_root, file_sets, project_file_map)?;
+    let collected_files = collect_project_files(project_name, file_sets, project_file_map)?;
     trace!("collected_files: {:?}", collected_files.len());
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
@@ -58,13 +43,11 @@ pub fn hash_project_files_with_inputs(
 /// base function that should be testable (to make sure that we're getting the proper files back)
 pub fn collect_project_files<'a>(
     project_name: &str,
-    project_root: &str,
     file_sets: &[String],
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
-    let globs = globs_from_project_globs(project_root, file_sets);
     let now = std::time::Instant::now();
-    let glob_set = build_glob_set(&globs)?;
+    let glob_set = build_glob_set(file_sets)?;
     trace!("build_glob_set for {:?}", now.elapsed());
 
     project_file_map.get(project_name).map_or_else(
@@ -91,10 +74,10 @@ mod tests {
     #[test]
     fn test_collect_files() {
         let proj_name = "test_project";
-        let proj_root = "test/root";
+        // Tokens are pre-resolved by the HashPlanner before reaching these functions
         let file_sets = &[
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
-            "{projectRoot}/**/*".to_string(),
+            "!test/root/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "test/root/**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let tsfile_1 = FileData {
@@ -123,17 +106,13 @@ mod tests {
             ],
         );
 
-        let result = collect_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result = collect_project_files(proj_name, file_sets, &file_map).unwrap();
 
         assert_eq!(result, vec![&tsfile_1, &tsfile_2]);
 
-        let result = collect_project_files(
-            proj_name,
-            proj_root,
-            &["!{projectRoot}/**/*.spec.ts".into()],
-            &file_map,
-        )
-        .unwrap();
+        let result =
+            collect_project_files(proj_name, &["!test/root/**/*.spec.ts".into()], &file_map)
+                .unwrap();
         assert_eq!(
             result,
             vec![
@@ -147,10 +126,9 @@ mod tests {
     #[test]
     fn should_hash_deterministically() {
         let proj_name = "test_project";
-        let proj_root = "test/root";
         let file_sets = &[
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
-            "{projectRoot}/**/*".to_string(),
+            "!test/root/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "test/root/**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let file_data1 = FileData {
@@ -178,8 +156,7 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let result =
-            hash_project_files_with_inputs(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result = hash_project_files_with_inputs(proj_name, file_sets, &file_map).unwrap();
         assert_eq!(
             result.hash,
             hash(
@@ -197,11 +174,12 @@ mod tests {
     #[test]
     fn should_hash_projects_with_root_as_dot() {
         let proj_name = "test_project";
-        // having "." as the project root means that this would be a standalone project
-        let proj_root = ".";
+        // Having "." as the project root means a standalone project.
+        // The HashPlanner strips "{projectRoot}/" entirely for these projects,
+        // so file_sets arrive here with bare glob patterns.
         let file_sets = &[
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
-            "{projectRoot}/**/*".to_string(),
+            "!**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let file_data1 = FileData {
@@ -229,8 +207,7 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let result =
-            hash_project_files_with_inputs(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result = hash_project_files_with_inputs(proj_name, file_sets, &file_map).unwrap();
         assert_eq!(
             result.hash,
             hash(

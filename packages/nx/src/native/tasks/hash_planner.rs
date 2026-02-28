@@ -365,6 +365,8 @@ impl HashPlanner {
                 file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
             });
 
+        let project_root = &self.project_graph.nodes[project_name].root;
+
         let project_inputs = if project_file_sets.is_empty() {
             vec![
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
@@ -374,7 +376,10 @@ impl HashPlanner {
             vec![
                 HashInstruction::ProjectFileSet(
                     project_name.to_string(),
-                    project_file_sets.iter().map(|f| f.to_string()).collect(),
+                    project_file_sets
+                        .iter()
+                        .map(|f| resolve_tokens(f, project_root, project_name))
+                        .collect(),
                 ),
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
@@ -385,7 +390,10 @@ impl HashPlanner {
             vec![]
         } else {
             vec![HashInstruction::WorkspaceFileSet(
-                workspace_file_sets.iter().map(|f| f.to_string()).collect(),
+                workspace_file_sets
+                    .iter()
+                    .map(|f| resolve_tokens(f, project_root, project_name))
+                    .collect(),
             )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
@@ -464,6 +472,18 @@ impl HashPlanner {
         }
         Ok(result)
     }
+}
+
+/// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.
+/// For root-level projects (project_root == "."), strips `{projectRoot}/` instead of
+/// replacing with "." to avoid producing invalid paths like `./**/*`.
+fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> String {
+    let resolved = if project_root == "." {
+        fileset.replace("{projectRoot}/", "")
+    } else {
+        fileset.replace("{projectRoot}", project_root)
+    };
+    resolved.replace("{projectName}", project_name)
 }
 
 fn find_external_dependency_node_name<'a>(

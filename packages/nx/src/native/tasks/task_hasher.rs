@@ -353,14 +353,8 @@ impl TaskHasher {
                 (hashed_cwd, instruction.into())
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let project = self
-                    .project_graph
-                    .nodes
-                    .get(project_name)
-                    .ok_or_else(|| anyhow!("project {} not found", project_name))?;
                 let result = hash_project_files_with_inputs(
                     project_name,
-                    &project.root,
                     file_sets,
                     &self.project_file_map,
                 )?;
