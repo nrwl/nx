@@ -162,6 +162,7 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
     if (result.status === 'fulfilled') {
       defaultPluginResults.push(result.value);
     } else {
+      console.log('result', result);
       errors.push({
         pluginName: plugins[i],
         error:

@@ -1,14 +1,16 @@
-const mockExistsSync = jest.fn();
 jest.mock('node:fs', () => {
   return {
     ...jest.requireActual('node:fs'),
-    existsSync: mockExistsSync,
   };
 });
-
+import * as fs from 'node:fs';
 import { validateMigrations } from './index';
 
 describe('migration-groups', () => {
+  let mockExistsSync: jest.SpyInstance;
+  beforeEach(() => {
+    mockExistsSync = jest.spyOn(fs, 'existsSync');
+  });
   afterEach(() => {
     jest.resetAllMocks();
   });

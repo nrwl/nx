@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { signalToCode } from '../../utils/exit-codes';
 import type { RunningTask } from './running-task';
 
@@ -107,6 +107,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       this.childProcess.send(message);
     }
   }
+
   public kill(signal?: NodeJS.Signals) {
     if (this.childProcess?.pid) {
       treeKill(this.childProcess.pid, signal, () => {

@@ -1,4 +1,3 @@
-import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -217,30 +216,43 @@ describe('setupTailwind generator', () => {
       `);
     });
 
-    it('should format files', async () => {
-      const projectConfig = readProjectConfiguration(tree, project);
-      projectConfig.targets = {
-        build: { executor: '@nx/angular:package', options: {} },
-      };
-      updateProjectConfiguration(tree, project, projectConfig);
-      jest.spyOn(devkit, 'formatFiles');
+    describe('--skipFormat', () => {
+      let formatFilesSpy: jest.SpyInstance;
 
-      await setupTailwindGenerator(tree, { project });
+      beforeEach(() => {
+        const devkitModule = require('@nx/devkit');
+        formatFilesSpy = jest
+          .spyOn(devkitModule, 'formatFiles')
+          .mockImplementation(() => Promise.resolve());
+      });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
-    });
+      afterAll(() => {
+        jest.restoreAllMocks();
+      });
 
-    it('should not format files when "skipFormat: true"', async () => {
-      const projectConfig = readProjectConfiguration(tree, project);
-      projectConfig.targets = {
-        build: { executor: '@nx/angular:package', options: {} },
-      };
-      updateProjectConfiguration(tree, project, projectConfig);
-      jest.spyOn(devkit, 'formatFiles');
+      it('should format files', async () => {
+        const projectConfig = readProjectConfiguration(tree, project);
+        projectConfig.targets = {
+          build: { executor: '@nx/angular:package', options: {} },
+        };
+        updateProjectConfiguration(tree, project, projectConfig);
 
-      await setupTailwindGenerator(tree, { project, skipFormat: true });
+        await setupTailwindGenerator(tree, { project });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+        expect(formatFilesSpy).toHaveBeenCalled();
+      });
+
+      it('should not format files when "skipFormat: true"', async () => {
+        const projectConfig = readProjectConfiguration(tree, project);
+        projectConfig.targets = {
+          build: { executor: '@nx/angular:package', options: {} },
+        };
+        updateProjectConfiguration(tree, project, projectConfig);
+
+        await setupTailwindGenerator(tree, { project, skipFormat: true });
+
+        expect(formatFilesSpy).not.toHaveBeenCalled();
+      });
     });
   });
 });

@@ -51,7 +51,7 @@ export function setMaxWorkers(projectJsonPath: string) {
       };
 
       if (!build) {
-        return;
+        return project;
       }
 
       const executor = build.executor as string;

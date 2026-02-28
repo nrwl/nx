@@ -17,10 +17,8 @@ import {
   RemoteRepoData,
 } from './remote-release-client';
 
-// axios types and values don't seem to match
-import _axios = require('axios');
-
-const axios = _axios as any as (typeof _axios)['default'];
+// Use default import with esModuleInterop
+import axios from 'axios';
 
 export interface GithubRepoData extends RemoteRepoData {}
 

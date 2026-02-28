@@ -145,7 +145,9 @@
               // Nx Docker plugin conditionally available dynamically at runtime
               "@nx/docker",
               // Only used in test-utils at the time of writing
-              "@ltd/j-toml"
+              "@ltd/j-toml",
+              // Only used for testing
+              "enhanced-resolve"
             ]
           }
         ]

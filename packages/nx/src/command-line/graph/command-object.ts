@@ -5,6 +5,7 @@ import {
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export const yargsGraphCommand: CommandModule = {
   command: 'graph',
@@ -25,7 +26,9 @@ export const yargsGraphCommand: CommandModule = {
       .implies('base', 'affected')
       .implies('head', 'affected'),
   handler: async (args) =>
-    await (await import('./graph')).generateGraph(args as any, []),
+    await (
+      await handleImport('./graph.js', __dirname)
+    ).generateGraph(args as any, []),
 };
 
 export function withGraphOptions(yargs: Argv) {

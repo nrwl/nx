@@ -200,7 +200,7 @@
       "cache": true
     },
     "legacy-post-build": {
-      "dependsOn": ["build-base"],
+      "dependsOn": ["^build-base", "build-base", "nx:copy-local-native"],
       "cache": true,
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]

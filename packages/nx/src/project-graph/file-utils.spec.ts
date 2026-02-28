@@ -1,3 +1,12 @@
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    existsSync: jest
+      .fn()
+      .mockImplementation((...args) => actual.existsSync(...args)),
+  };
+});
 import {
   calculateFileChanges,
   DeletedFileChange,

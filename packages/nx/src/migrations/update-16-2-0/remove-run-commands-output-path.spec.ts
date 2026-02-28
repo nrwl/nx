@@ -1,3 +1,6 @@
+jest.mock(
+  '../../generators/internal-utils/format-changed-files-with-prettier-if-available'
+);
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { readJson, writeJson } from '../../generators/utils/json';

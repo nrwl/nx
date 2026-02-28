@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { ChildProcess, fork } from 'child_process';
 import {
   ExecutorContext,

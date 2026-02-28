@@ -111,6 +111,13 @@ export interface PackageJson {
   keywords?: string[];
 }
 
+export interface NxPackageJson extends PackageJson {
+  'nx-migrations'?: {
+    migrations?: string;
+    packageGroup?: (string | { package: string; version: string })[];
+  };
+}
+
 export function normalizePackageGroup(
   packageGroup: PackageGroup
 ): ArrayPackageGroup {

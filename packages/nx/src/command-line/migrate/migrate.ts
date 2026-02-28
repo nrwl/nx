@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
+import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
 import {
   clean,
@@ -1631,6 +1632,7 @@ export async function executeMigrations(
 
 class ChangedDepInstaller {
   private initialDeps: string;
+
   constructor(private readonly root: string) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -2053,7 +2055,10 @@ const getNgCompatLayer = (() => {
   let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await import('../../adapter/ngcli-adapter');
+      _ngCliAdapter = await handleImport(
+        '../../adapter/ngcli-adapter.js',
+        __dirname
+      );
       require('../../adapter/compat');
     }
     return _ngCliAdapter;

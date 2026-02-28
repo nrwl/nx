@@ -2,6 +2,7 @@
   "name": "nx",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
   "repository": {
     "type": "git",
@@ -9,7 +10,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/post-install || exit 0"
+    "postinstall": "node ./dist/bin/post-install || exit 0"
   },
   "keywords": [
     "Monorepo",
@@ -27,8 +28,8 @@
     "Mobile"
   ],
   "bin": {
-    "nx": "./bin/nx.js",
-    "nx-cloud": "./bin/nx-cloud.js"
+    "nx": "./dist/bin/nx.js",
+    "nx-cloud": "./dist/bin/nx-cloud.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -173,5 +174,85 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./bin/nx.ts",
+      "types": "./bin/nx.d.ts",
+      "default": "./dist/bin/nx.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./bin/nx": {
+      "@nx/nx-source": "./bin/nx.ts",
+      "types": "./bin/nx.d.ts",
+      "default": "./dist/bin/nx.js"
+    },
+    "./bin/nx.js": {
+      "@nx/nx-source": "./bin/nx.ts",
+      "types": "./bin/nx.d.ts",
+      "default": "./dist/bin/nx.js"
+    },
+    "./src/plugins/js": {
+      "@nx/nx-source": "./src/plugins/js/index.ts",
+      "types": "./src/plugins/js/index.d.ts",
+      "default": "./dist/src/plugins/js/index.js"
+    },
+    "./src/plugins/package-json": {
+      "@nx/nx-source": "./src/plugins/package-json/index.ts",
+      "types": "./src/plugins/package-json/index.d.ts",
+      "default": "./dist/src/plugins/package-json/index.js"
+    },
+    "./src/plugins/**/*": {
+      "@nx/nx-source": "./src/**/*.ts",
+      "types": "./src/**/*.d.ts",
+      "default": "./dist/src/**/*.js"
+    },
+    "./src/utils/plugins": {
+      "@nx/nx-source": "./src/utils/plugins/index.ts",
+      "types": "./src/utils/plugins/index.d.ts",
+      "default": "./dist/src/utils/plugins/index.js"
+    },
+    "./src/utils/plugins/*": {
+      "@nx/nx-source": "./src/utils/plugins/*.ts",
+      "types": "./src/utils/plugins/*.d.ts",
+      "default": "./dist/src/utils/plugins/*.js"
+    },
+    "./src/utils/catalog": {
+      "@nx/nx-source": "./src/utils/catalog/index.ts",
+      "types": "./src/utils/catalog/index.d.ts",
+      "default": "./dist/src/utils/catalog/index.js"
+    },
+    "./src/utils/catalog/*": {
+      "@nx/nx-source": "./src/utils/catalog/*.ts",
+      "types": "./src/utils/catalog/*.d.ts",
+      "default": "./dist/src/utils/catalog/*.js"
+    },
+    "./src/**/*.js": {
+      "@nx/nx-source": "./src/**/*.ts",
+      "types": "./src/**/*.d.ts",
+      "default": "./dist/src/**/*.js"
+    },
+    "./src/**/*": {
+      "@nx/nx-source": "./src/**/*.ts",
+      "types": "./src/**/*.d.ts",
+      "default": "./dist/src/**/*.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./release": {
+      "@nx/nx-source": "./release/index.ts",
+      "types": "./release/index.d.ts",
+      "default": "./dist/release/index.js"
+    },
+    "./presets/*": {
+      "@nx/nx-source": "./presets/*",
+      "default": "./dist/presets/*"
+    }
   }
 }

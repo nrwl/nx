@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
 import { exit } from 'process';
-import * as yargs from 'yargs-parser';
+import yargs from 'yargs-parser';
 import { Arguments } from 'yargs';
 import { existsSync } from 'fs';
 

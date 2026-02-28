@@ -1,4 +1,5 @@
 import { CommandModule } from 'yargs';
+import { handleImport } from '../../../utils/handle-import';
 import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsStopAllAgentsCommand: CommandModule = {
@@ -13,7 +14,9 @@ export const yargsStopAllAgentsCommand: CommandModule = {
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(
-      await (await import('./stop-all-agents')).stopAllAgentsHandler(args)
+      await (
+        await handleImport('./stop-all-agents.js', __dirname)
+      ).stopAllAgentsHandler(args)
     );
   },
 };

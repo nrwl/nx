@@ -12,7 +12,7 @@ import {
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 

@@ -4,6 +4,7 @@ import {
   withRunManyOptions,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export const yargsExecCommand: CommandModule = {
   command: 'exec',
@@ -11,7 +12,9 @@ export const yargsExecCommand: CommandModule = {
   builder: (yargs) => withTuiOptions(withRunManyOptions(yargs)),
   handler: async (args) => {
     try {
-      await (await import('./exec')).nxExecCommand(withOverrides(args) as any);
+      await (
+        await handleImport('./exec.js', __dirname)
+      ).nxExecCommand(withOverrides(args) as any);
       process.exit(0);
     } catch (e) {
       console.error(e);
