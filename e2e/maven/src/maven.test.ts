@@ -127,7 +127,7 @@ describe('Maven', () => {
     // Verify prefixed target works. Same lifecycle-fan-out concern as the
     // app:install case above — give it a 10-minute timeout so CI load
     // doesn't push us past the default 5 minutes.
-    const buildOutput = runCLI('run app:mvn:compile --no-batch', {
+    const buildOutput = runCLI('mvn:compile com.example:app --no-batch', {
       timeout: 10 * 60 * 1000,
     });
     expect(buildOutput).toContain('BUILD SUCCESS');
