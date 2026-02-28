@@ -230,6 +230,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     projects: List<MavenProject>
   ): Map<String, String> =
     projects.associate { project ->
-      "${project.groupId}:${project.artifactId}" to pathFormatter.normalizeRelativePath(project.basedir.canonicalFile.relativeTo(workspaceRoot).path)
+      "${project.groupId}:${project.artifactId}" to project.artifactId
     }
 }
