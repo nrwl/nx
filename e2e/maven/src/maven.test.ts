@@ -37,7 +37,7 @@ describe('Maven', () => {
     const output = runCLI('show project app --json=false');
 
     // Check that the project name appears
-    expect(output).toContain('Name: com.example:app');
+    expect(output).toContain('Name: app');
 
     // Check that install target appears
     expect(output).toContain('- install:');
