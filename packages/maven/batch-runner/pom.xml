@@ -6,7 +6,7 @@
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
         <version>0.0.14</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../parent-pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>maven-batch-runner</artifactId>
@@ -61,6 +61,20 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+
+        <!-- Maven version-specific adapters (loaded at runtime via ClassRealm) -->
+        <dependency>
+            <groupId>dev.nx.maven</groupId>
+            <artifactId>maven3-adapter</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.nx.maven</groupId>
+            <artifactId>maven4-adapter</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Testing -->

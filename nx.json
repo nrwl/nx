@@ -340,6 +340,12 @@
         "testTargetName": "vite:test"
       },
       "include": ["astro-docs/**"]
+    },
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn:"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",

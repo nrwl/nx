@@ -1,5 +1,4 @@
 {
-  "name": "dev.nx.maven:maven-batch-runner",
   "targets": {
     "mvn:package": {
       "options": {

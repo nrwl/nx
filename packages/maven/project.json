@@ -4,7 +4,10 @@
   "projectType": "library",
   "targets": {
     "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:_install"],
+      "dependsOn": [
+        "^nx-release-publish",
+        "dev.nx.maven:nx-maven-plugin:mvn:install-with-retries"
+      ],
       "executor": "@nx/js:release-publish",
       "options": {
         "packageRoot": "packages/maven"
@@ -22,7 +25,7 @@
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": ["build-base", "maven-batch-runner:_package"],
+      "dependsOn": ["build-base", "^mvn:package"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "packages/maven/dist",
@@ -76,6 +79,9 @@
       "manifestRootsToUpdate": ["{projectRoot}"]
     }
   },
-  "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-batch-runner", "nx-maven-plugin"]
+  "implicitDependencies": [
+    "dev.nx.maven:maven-batch-runner",
+    "dev.nx.maven:nx-maven-plugin",
+    "!@nx/nx-source"
+  ]
 }
