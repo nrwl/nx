@@ -591,6 +591,7 @@ describe('CI Workflow generator', () => {
         "image: node:20
         variables:
           CI: 'true'
+          GIT_DEPTH: 0
 
         # Main job
         CI:
@@ -606,8 +607,8 @@ describe('CI Workflow generator', () => {
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci
-            - NX_HEAD=$CI_COMMIT_SHA
-            - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+            - export NX_HEAD=$CI_COMMIT_SHA
+            - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # - npx nx record -- echo Hello World
