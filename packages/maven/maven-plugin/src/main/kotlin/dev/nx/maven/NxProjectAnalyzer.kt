@@ -36,8 +36,7 @@ class NxProjectAnalyzer(
     val canonicalWorkspaceRoot = workspaceRoot.canonicalFile
     val canonicalBasedir = project.basedir.canonicalFile
     val root = pathFormatter.normalizeRelativePath(canonicalBasedir.relativeTo(canonicalWorkspaceRoot).path)
-    val projectName = project.artifactId
-    val mavenCoordinates = "${project.groupId}:${project.artifactId}"
+    val projectName = "${project.groupId}:${project.artifactId}"
     val projectType = determineProjectType(project.packaging)
     val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
     log.info("Path calculation took ${pathCalculationTime}ms for project: ${project.artifactId} ($root)")
@@ -62,7 +61,7 @@ class NxProjectAnalyzer(
     // Project metadata including target groups
     val metadataStart = System.currentTimeMillis()
     val projectMetadata = JsonObject()
-    projectMetadata.addProperty("mavenProject", mavenCoordinates)
+    projectMetadata.addProperty("mavenProject", projectName)
     projectMetadata.add("targetGroups", targetGroups)
     val technologies = JsonArray()
     technologies.add("maven")
@@ -87,7 +86,7 @@ class NxProjectAnalyzer(
     }.map { target ->
       NxDependency(
         NxDependencyType.Static,
-        coordinatesMap.getValue(mavenCoordinates),
+        coordinatesMap.getValue(projectName),
         target,
         project.file
       )
@@ -98,7 +97,7 @@ class NxProjectAnalyzer(
         dependencies.add(
           NxDependency(
             NxDependencyType.Static,
-            coordinatesMap.getValue(mavenCoordinates),
+            coordinatesMap.getValue(projectName),
             parentPath,
             project.file
           )
