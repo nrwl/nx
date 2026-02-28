@@ -16,7 +16,7 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, hash_all_externals, hash_external, hash_project_config,
+        CachedTaskOutput, hash_all_externals, hash_external, hash_json_files, hash_project_config,
         hash_project_files_with_inputs, hash_task_output, hash_tsconfig_selectively,
         hash_workspace_files_with_inputs,
     },
@@ -459,6 +459,34 @@ impl TaskHasher {
                 )?;
                 trace!(parent: &span, "hash_all_externals: {:?}", now.elapsed());
                 (hashed_all_externals, instruction.into())
+            }
+            HashInstruction::JsonFileSet {
+                project_name,
+                json_path,
+                fields,
+                exclude_fields,
+            } => {
+                let project_root = project_name
+                    .as_ref()
+                    .and_then(|name| self.project_graph.nodes.get(name).map(|p| p.root.as_str()));
+                let result = hash_json_files(
+                    &self.workspace_root,
+                    json_path,
+                    project_name.as_deref(),
+                    project_root,
+                    fields.as_deref(),
+                    exclude_fields.as_deref(),
+                    &self.project_file_map,
+                    &self.all_workspace_files,
+                )?;
+                trace!(parent: &span, "hash_json: {:?}", now.elapsed());
+                (
+                    result.hash,
+                    HashInputsBuilder {
+                        files: result.files.into_iter().collect(),
+                        ..Default::default()
+                    },
+                )
             }
         };
         Ok((instruction.to_string(), hash, inputs))

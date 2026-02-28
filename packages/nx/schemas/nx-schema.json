@@ -666,6 +666,31 @@
             },
             "required": ["dependentTasksOutputFiles"],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "json": {
+                "type": "string",
+                "description": "Path to a JSON file. Must start with {workspaceRoot} or {projectRoot}. Supports globs."
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Allowlist of fields to include in the hash. Supports dot notation for nested paths (e.g. 'compilerOptions.target')."
+              },
+              "excludeFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Denylist of fields to exclude from the hash. Supports dot notation for nested paths."
+              }
+            },
+            "required": ["json"],
+            "additionalProperties": false
           }
         ]
       }

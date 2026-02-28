@@ -213,7 +213,8 @@ export type InputDefinition =
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
   | { env: string }
-  | { workingDirectory: 'relative' | 'absolute' };
+  | { workingDirectory: 'relative' | 'absolute' }
+  | { json: string; fields?: string[]; excludeFields?: string[] };
 
 /**
  * Target's configuration
