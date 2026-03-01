@@ -239,12 +239,10 @@ export class DaemonClient {
       if (
         isNxVersionMismatch() ||
         ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
-        isDaemonDisabled() ||
-        nxJsonIsNotPresent() ||
-        (useDaemonProcessOption === undefined && env === 'false') ||
-        (useDaemonProcessOption === true && env === 'false') ||
-        (useDaemonProcessOption === false && env === undefined) ||
-        (useDaemonProcessOption === false && env === 'false')
+        (isDaemonDisabled() && env !== 'true') ||
+        (nxJsonIsNotPresent() && env !== 'true') ||
+        env === 'false' ||
+        (useDaemonProcessOption === false && env !== 'true')
       ) {
         this._enabled = false;
       } else if (IS_WASM) {
@@ -1030,6 +1028,11 @@ export class DaemonClient {
         }
       }
       if (!serverAvailable) {
+        if (!this.enabled()) {
+          // Daemon is disabled, mark as disconnected and return without throwing
+          this._daemonStatus = DaemonStatus.DISCONNECTED;
+          return;
+        }
         daemonPid = await this.startInBackground();
       }
       this.setUpConnection();
