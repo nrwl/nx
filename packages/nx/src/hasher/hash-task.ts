@@ -6,6 +6,7 @@ import { readProjectsConfigurationFromProjectGraph } from '../project-graph/proj
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
+import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getInputs, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
@@ -52,17 +53,25 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
     .map((t) => t.task);
 
-  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, process.env);
+  // Hash each task individually with its specific environment
   const ioService = getTaskIOService();
-  for (let i = 0; i < tasksToHash.length; i++) {
-    tasksToHash[i].hash = hashes[i].value;
-    tasksToHash[i].hashDetails = hashes[i].details;
+  await Promise.all(
+    tasksToHash.map(async (task) => {
+      const taskEnv = getTaskSpecificEnv(task, projectGraph);
+      const { value, details, inputs } = await hasher.hashTask(
+        task,
+        taskGraph,
+        taskEnv
+      );
+      task.hash = value;
+      task.hashDetails = details;
 
-    // Notify TaskIOService of hash inputs
-    if (hashes[i].inputs) {
-      ioService.notifyTaskInputs(tasksToHash[i].id, hashes[i].inputs);
-    }
-  }
+      // Notify TaskIOService of hash inputs
+      if (inputs) {
+        ioService.notifyTaskInputs(task.id, inputs);
+      }
+    })
+  );
   if (tasksDetails?.recordTaskDetails) {
     tasksDetails.recordTaskDetails(
       tasksToHash.map((task) => ({
