@@ -702,54 +702,17 @@ async function normalizeArgsMiddleware(
       const aiAgents = await determineAiAgents(argv);
       const defaultBase = await determineDefaultBase(argv);
 
-      // Check if CLI arg was provided (use rawArgs to check original input)
-      const cliNxCloudArgProvided = rawArgs.nxCloud !== undefined;
-
-      let nxCloud: string;
-      let useGitHub: boolean | undefined;
-      let completionMessageKey: string | undefined;
-      let skipCloudConnect = false;
-      let neverConnectToCloud = false;
-
-      if (argv.skipGit === true) {
-        nxCloud = 'skip';
-        useGitHub = undefined;
-      } else if (cliNxCloudArgProvided) {
-        // CLI arg provided: use existing flow (CI provider selection if needed)
-        nxCloud = await determineNxCloud(argv);
-        useGitHub =
-          nxCloud === 'skip' || nxCloud === 'never'
-            ? undefined
-            : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
-        if (nxCloud === 'never') {
-          neverConnectToCloud = true;
-        }
-      } else {
-        // No CLI arg: use simplified prompt (same as template flow)
-        const cloudChoice = await determineNxCloudV2(argv);
-        if (cloudChoice === 'yes') {
-          nxCloud = 'yes';
-          skipCloudConnect = false;
-        } else if (cloudChoice === 'skip') {
-          nxCloud = 'skip';
-        } else {
-          nxCloud = 'never';
-          neverConnectToCloud = true;
-        }
-        useGitHub =
-          nxCloud !== 'skip' && nxCloud !== 'never' ? true : undefined;
-        completionMessageKey =
-          cloudChoice === 'never'
-            ? undefined
-            : getCompletionMessageKeyForVariant();
-      }
+      // NXC-4020: Restored v22.1.3 simple flow (CI prompt → caching fallback)
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
 
       Object.assign(argv, {
         nxCloud,
         useGitHub,
-        skipCloudConnect,
-        neverConnectToCloud,
-        completionMessageKey,
         packageManager,
         defaultBase,
         aiAgents,
