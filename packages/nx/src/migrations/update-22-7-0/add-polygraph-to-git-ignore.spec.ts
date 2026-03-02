@@ -45,4 +45,26 @@ describe('add-polygraph-to-git-ignore migration', () => {
     const gitignore = tree.read('.gitignore')?.toString();
     expect(gitignore).not.toContain('.nx/polygraph');
   });
+
+  it('should skip for lerna workspaces without nx.json', () => {
+    tree.write('.gitignore', 'node_modules\n');
+    tree.write('lerna.json', '{}');
+    tree.delete('nx.json');
+
+    addPolygraphToGitIgnore(tree);
+
+    const gitignore = tree.read('.gitignore')?.toString();
+    expect(gitignore).not.toContain('.nx/polygraph');
+  });
+
+  it('should not skip for lerna workspaces that also have nx.json', () => {
+    tree.write('.gitignore', 'node_modules\n');
+    tree.write('lerna.json', '{}');
+    // nx.json already exists from createTreeWithEmptyWorkspace
+
+    addPolygraphToGitIgnore(tree);
+
+    const gitignore = tree.read('.gitignore')?.toString();
+    expect(gitignore).toContain('.nx/polygraph');
+  });
 });
