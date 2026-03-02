@@ -1436,6 +1436,610 @@ describe('NPM lock file utility', () => {
       );
     });
   });
+
+  describe('npm overrides', () => {
+    // @see https://docs.npmjs.com/cli/v11/configuring-npm/package-json#overrides
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/balanced-match/package.json': '{}',
+        'node_modules/brace-expansion/package.json':
+          '{"dependencies":{"balanced-match":"^1.0.0"}}',
+        'node_modules/glob/package.json':
+          '{"dependencies":{"foreground-child":"^3.1.0","jackspeak":"^2.3.5","minimatch":"^9.0.1","minipass":"^5.0.0 || ^6.0.2 || ^7.0.0","path-scurry":"^1.10.1"}}',
+        'node_modules/foreground-child/package.json':
+          '{"dependencies":{"cross-spawn":"^7.0.0","signal-exit":"^4.0.1"}}',
+        'node_modules/cross-spawn/package.json': '{}',
+        'node_modules/signal-exit/package.json': '{}',
+        'node_modules/jackspeak/package.json': '{}',
+        'node_modules/minimatch/package.json':
+          '{"dependencies":{"brace-expansion":"^2.0.1"}}',
+        'node_modules/minipass/package.json': '{}',
+        'node_modules/path-scurry/package.json': '{}',
+        'node_modules/@scope/scoped-package/package.json': '{}',
+        'node_modules/concat-map/package.json': '{}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should include overridden packages and their transitive dependencies (v3)', () => {
+      const packageJson = require(
+        joinPathFragments(__dirname, '__fixtures__/npm-overrides/package.json')
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      expect(resultLockFile.packages[''].overrides).toEqual({
+        minimatch: '10.0.0',
+        'brace-expansion': '2.0.1',
+        'balanced-match': '2.0.0',
+      });
+
+      expect(resultLockFile.packages['node_modules/minimatch']).toBeDefined();
+      expect(resultLockFile.packages['node_modules/minimatch'].version).toBe(
+        '10.0.0'
+      );
+      expect(
+        resultLockFile.packages['node_modules/brace-expansion']
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages['node_modules/brace-expansion'].version
+      ).toBe('2.0.1');
+      expect(
+        resultLockFile.packages['node_modules/balanced-match']
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages['node_modules/balanced-match'].version
+      ).toBe('2.0.0');
+
+      expect(resultLockFile.packages['node_modules/glob']).toBeDefined();
+
+      expect(
+        resultLockFile.packages['node_modules/minimatch'].dependencies[
+          'brace-expansion'
+        ]
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages['node_modules/brace-expansion'].dependencies[
+          'balanced-match'
+        ]
+      ).toBeDefined();
+    });
+
+    it('should handle overrides with version ranges (v3)', () => {
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-range/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-range/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Check that override with range is preserved
+      expect(resultLockFile.packages[''].overrides).toEqual({
+        minimatch: '^10.0.0',
+      });
+
+      // Check that a version satisfying the range is included
+      expect(resultLockFile.packages['node_modules/minimatch']).toBeDefined();
+      const minimatchVersion =
+        resultLockFile.packages['node_modules/minimatch'].version;
+      expect(minimatchVersion).toMatch(/^10\./);
+
+      // Check transitive dependencies
+      expect(
+        resultLockFile.packages['node_modules/brace-expansion']
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages['node_modules/balanced-match']
+      ).toBeDefined();
+    });
+
+    // Note: Full nested/scoped override semantics (e.g., { "parent": { "child": "version" } })
+    // are complex and depend on npm's resolution algorithm. The current implementation
+    // fully supports global overrides and parses nested syntax. Future enhancements can
+    // improve nested override matching based on real-world usage patterns.
+
+    // Additional test cases for all documented npm override patterns
+    // @see https://docs.npmjs.com/cli/v11/configuring-npm/package-json#overrides
+
+    it('should handle object form with "." key (self-override + nested)', () => {
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-object-form/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-object-form/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Override pattern: {"minimatch": {".": "10.0.0", "brace-expansion": "2.0.1"}}
+      // Should override minimatch itself to 10.0.0 AND brace-expansion within minimatch to 2.0.1
+      expect(resultLockFile.packages['node_modules/minimatch']).toBeDefined();
+      expect(resultLockFile.packages['node_modules/minimatch'].version).toBe(
+        '10.0.0'
+      );
+      expect(
+        resultLockFile.packages['node_modules/brace-expansion']
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages['node_modules/brace-expansion'].version
+      ).toBe('2.0.1');
+    });
+
+    it('should handle nested overrides (child only when under parent)', () => {
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-nested/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-nested/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Override pattern: {"glob": {"minimatch": "9.0.0"}}
+      // Should override minimatch to 9.0.0 only when it's a dependency of glob
+      expect(resultLockFile.packages['node_modules/minimatch']).toBeDefined();
+      expect(resultLockFile.packages['node_modules/minimatch'].version).toBe(
+        '9.0.0'
+      );
+      expect(resultLockFile.packages['node_modules/glob']).toBeDefined();
+    });
+
+    it('should handle parent with version constraint', () => {
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-parent-version/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-parent-version/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Override pattern: {"glob@^10.0.0": {"minimatch": "9.0.0"}}
+      // Should override minimatch to 9.0.0 only when under glob@^10.0.0
+      expect(resultLockFile.packages['node_modules/minimatch']).toBeDefined();
+      expect(resultLockFile.packages['node_modules/minimatch'].version).toBe(
+        '9.0.0'
+      );
+      expect(resultLockFile.packages['node_modules/glob']).toBeDefined();
+      const globVersion = resultLockFile.packages['node_modules/glob'].version;
+      expect(globVersion).toMatch(/^10\./);
+    });
+
+    it('should handle deep nested overrides (3 levels)', () => {
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-deep-nested/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-deep-nested/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Override pattern: {"glob": {"foreground-child": {"cross-spawn": "7.0.6"}}}
+      // Should override cross-spawn to 7.0.6 only when: cross-spawn -> foreground-child -> glob
+      expect(resultLockFile.packages['node_modules/cross-spawn']).toBeDefined();
+      expect(resultLockFile.packages['node_modules/cross-spawn'].version).toBe(
+        '7.0.6'
+      );
+      expect(
+        resultLockFile.packages['node_modules/foreground-child']
+      ).toBeDefined();
+      expect(resultLockFile.packages['node_modules/glob']).toBeDefined();
+    });
+
+    it('should handle dependency reference with $ syntax', () => {
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-dep-reference/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-dep-reference/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Override pattern: dependencies: {"minimatch": "^10.0.0"}, overrides: {"minimatch": "$minimatch"}
+      // Should resolve $minimatch to ^10.0.0 from dependencies
+      expect(resultLockFile.packages['node_modules/minimatch']).toBeDefined();
+      const minimatchVersion =
+        resultLockFile.packages['node_modules/minimatch'].version;
+      // Should satisfy ^10.0.0 range
+      expect(minimatchVersion).toMatch(/^10\./);
+    });
+  });
 });
 
 function uniq(str: string) {

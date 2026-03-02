@@ -1,0 +1,10 @@
+{
+  "name": "test-npm-overrides-range",
+  "version": "1.0.0",
+  "dependencies": {
+    "glob": "^10.0.0"
+  },
+  "overrides": {
+    "minimatch": "^10.0.0"
+  }
+}
