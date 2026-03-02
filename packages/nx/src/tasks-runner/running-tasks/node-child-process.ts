@@ -1,10 +1,10 @@
 import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
-import { EOL } from 'os';
 import { Transform } from 'stream';
 import * as treeKill from 'tree-kill';
 import { signalToCode } from '../../utils/exit-codes';
+import { addPrefixTransformer, getColor } from './output-prefix';
 import type { RunningTask } from './running-task';
 
 export class NodeChildProcessWithNonDirectOutput implements RunningTask {
@@ -115,55 +115,6 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       });
     }
   }
-}
-
-/**
- * Splits a chunk into lines, optionally prepends a prefix, and writes each
- * non-empty line to the given writable (defaults to `process.stdout`).
- */
-export function writePrefixedLines(
-  chunk: string | Buffer,
-  prefix?: string,
-  writable: NodeJS.WritableStream = process.stdout
-) {
-  const lines = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
-  for (const line of lines) {
-    if (line) {
-      writable.write(prefix ? prefix + ' ' + line + EOL : line + EOL);
-    }
-  }
-}
-
-function addPrefixTransformer(prefix?: string) {
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      writePrefixedLines(chunk, prefix, this);
-      callback();
-    },
-  });
-}
-
-const colors = [
-  pc.green,
-  pc.greenBright,
-  pc.blue,
-  pc.blueBright,
-  pc.cyan,
-  pc.cyanBright,
-  pc.yellow,
-  pc.yellowBright,
-  pc.magenta,
-  pc.magentaBright,
-];
-
-export function getColor(projectName: string) {
-  let code = 0;
-  for (let i = 0; i < projectName.length; ++i) {
-    code += projectName.charCodeAt(i);
-  }
-  const colorIndex = code % colors.length;
-
-  return colors[colorIndex];
 }
 
 /**

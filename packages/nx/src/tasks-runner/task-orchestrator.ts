@@ -33,10 +33,7 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
-import {
-  getColor,
-  writePrefixedLines,
-} from './running-tasks/node-child-process';
+import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
 import {
