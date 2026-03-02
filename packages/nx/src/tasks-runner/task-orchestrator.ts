@@ -33,7 +33,10 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
-import { getColor } from './running-tasks/node-child-process';
+import {
+  getColor,
+  writePrefixedLines,
+} from './running-tasks/node-child-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
 import {
@@ -689,8 +692,6 @@ export class TaskOrchestrator {
           const args = getPrintableCommandArgsForTask(task);
           output.logCommand(args.join(' '));
         }
-        // When prefixing, suppress direct output from the PTY/process
-        // so we can intercept it via onOutput and add prefixes ourselves.
         const runCommandsOptions = {
           ...combinedOptions,
           env,
@@ -698,7 +699,7 @@ export class TaskOrchestrator {
             this.tuiEnabled ||
             (!this.tasksSchedule.hasTasks() &&
               this.runningContinuousTasks.size === 0),
-          streamOutput: shouldPrefix ? false : streamOutput,
+          streamOutput: streamOutput && !shouldPrefix,
         };
 
         const runningTask = await runCommands(
@@ -716,21 +717,9 @@ export class TaskOrchestrator {
 
         if (shouldPrefix) {
           const color = getColor(task.target.project);
-          const prefixText = `${task.target.project}:`;
-          const newLineSeparator = process.platform.startsWith('win')
-            ? '\r\n'
-            : '\n';
+          const formattedPrefix = pc.bold(color(`${task.target.project}:`));
           runningTask.onOutput((chunk) => {
-            const lines = chunk
-              .toString()
-              .split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
-            for (const line of lines) {
-              if (line.trim().length > 0) {
-                process.stdout.write(
-                  pc.bold(color(prefixText)) + ' ' + line + newLineSeparator
-                );
-              }
-            }
+            writePrefixedLines(chunk, formattedPrefix);
           });
         } else if (this.tuiEnabled) {
           if (runningTask instanceof PseudoTtyProcess) {
@@ -750,7 +739,7 @@ export class TaskOrchestrator {
           }
         }
 
-        if (!streamOutput && !shouldPrefix) {
+        if (!streamOutput) {
           // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
           runningTask.onExit((code, terminalOutput) => {
             this.options.lifeCycle.printTaskTerminalOutput(

@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
+import { EOL } from 'os';
 import { Transform } from 'stream';
 import * as treeKill from 'tree-kill';
 import { signalToCode } from '../../utils/exit-codes';
@@ -116,18 +117,27 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
   }
 }
 
+/**
+ * Splits a chunk into lines, optionally prepends a prefix, and writes each
+ * non-empty line to the given writable (defaults to `process.stdout`).
+ */
+export function writePrefixedLines(
+  chunk: string | Buffer,
+  prefix?: string,
+  writable: NodeJS.WritableStream = process.stdout
+) {
+  const lines = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
+  for (const line of lines) {
+    if (line) {
+      writable.write(prefix ? prefix + ' ' + line + EOL : line + EOL);
+    }
+  }
+}
+
 function addPrefixTransformer(prefix?: string) {
-  const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
   return new Transform({
     transform(chunk, _encoding, callback) {
-      const list = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
-      list
-        .filter(Boolean)
-        .forEach((m) =>
-          this.push(
-            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
-          )
-        );
+      writePrefixedLines(chunk, prefix, this);
       callback();
     },
   });
