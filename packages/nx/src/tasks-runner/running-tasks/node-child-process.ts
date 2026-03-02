@@ -146,7 +146,7 @@ const colors = [
   pc.magentaBright,
 ];
 
-function getColor(projectName: string) {
+export function getColor(projectName: string) {
   let code = 0;
   for (let i = 0; i < projectName.length; ++i) {
     code += projectName.charCodeAt(i);
