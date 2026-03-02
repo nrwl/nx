@@ -138,3 +138,4 @@ test-results
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
 /*.deb
+.nx/polygraph/
