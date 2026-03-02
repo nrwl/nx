@@ -477,7 +477,11 @@ impl AppLifeCycle {
         let mut tui_mode = initial_mode;
 
         // Spawn unified async task (identical for both modes!)
-        napi::tokio::spawn(async move {
+        spawn(async move {
+            // Start the TUI event loop. This must happen inside the async block
+            // because start() uses tokio::spawn() which requires a runtime context.
+            tui.start();
+
             // Set up console messenger (identical for both modes)
             {
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;
