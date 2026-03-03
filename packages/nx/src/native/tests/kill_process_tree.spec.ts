@@ -6,10 +6,7 @@ import { randomBytes } from 'crypto';
 import { killProcessTree, killProcessTreeGraceful } from '../index';
 
 function tmpFile(prefix: string): string {
-  return join(
-    tmpdir(),
-    `nx-test-${prefix}-${randomBytes(4).toString('hex')}`
-  );
+  return join(tmpdir(), `nx-test-${prefix}-${randomBytes(4).toString('hex')}`);
 }
 
 function isAlive(pid: number): boolean {
@@ -33,8 +30,7 @@ function cleanupPid(pid: number) {
 // sysinfo to enumerate the process table.
 //
 // Skip on Windows: Unix signals don't exist there; Windows uses TerminateProcess.
-const describeUnix =
-  process.platform === 'win32' ? describe.skip : describe;
+const describeUnix = process.platform === 'win32' ? describe.skip : describe;
 
 describeUnix('killProcessTree', () => {
   it('should kill a simple process', (done) => {
@@ -57,10 +53,7 @@ describeUnix('killProcessTree', () => {
     const marker = tmpFile('tree');
     const child = spawn(
       'sh',
-      [
-        '-c',
-        `sleep 30 & CHILD=$!; echo $CHILD > ${marker}; wait`,
-      ],
+      ['-c', `sleep 30 & CHILD=$!; echo $CHILD > ${marker}; wait`],
       { detached: true, stdio: 'ignore' }
     );
     child.unref();
@@ -99,10 +92,7 @@ describeUnix('killProcessTreeGraceful', () => {
     const marker = tmpFile('graceful');
     const child = spawn(
       'sh',
-      [
-        '-c',
-        `trap "echo cleanup > ${marker}; exit 0" TERM; sleep 30`,
-      ],
+      ['-c', `trap "echo cleanup > ${marker}; exit 0" TERM; sleep 30`],
       { detached: true, stdio: 'ignore' }
     );
     child.unref();

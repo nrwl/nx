@@ -63,7 +63,10 @@ fn map_signal(signal: Option<&str>) -> Signal {
     }
 }
 
-/// Kill a process and all its descendants.
+/// Kill a process and all its descendants (fire-and-forget).
+///
+/// Sends the requested signal but does NOT wait for processes to exit.
+/// Use `killProcessTreeGraceful` when cleanup handlers must run.
 #[napi(ts_args_type = "rootPid: number, signal?: string | number | undefined | null")]
 pub fn kill_process_tree(root_pid: i32, signal: Option<Either<String, i32>>) {
     let signal_str = normalize_signal(signal.as_ref());
@@ -74,65 +77,9 @@ pub fn kill_process_tree(root_pid: i32, signal: Option<Either<String, i32>>) {
 ///
 /// Returns the list in BFS order (root first, leaves last).
 /// If the root process has already exited, returns an empty Vec.
-/// Use `collect_process_tree_from_pids` when the root may have exited
-/// but you still want to find surviving descendants.
 fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
     let root = Pid::from(root_pid as usize);
     collect_process_tree_inner(sys, root, true)
-}
-
-/// Collect descendants of `root_pid` even if the root itself has already exited.
-///
-/// Scans all processes whose parent chain includes `root_pid`. This handles the
-/// case where the root exits quickly but its children (now reparented to init/1)
-/// are still alive.
-fn collect_descendants_of(sys: &System, root_pid: i32, known_pids: &[Pid]) -> Vec<Pid> {
-    // Build the parent→children map
-    let mut children: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(sys.processes().len() / 4);
-    for (pid, proc_info) in sys.processes() {
-        if proc_info.thread_kind().is_some() {
-            continue;
-        }
-        if let Some(parent) = proc_info.parent() {
-            children.entry(parent).or_default().push(*pid);
-        }
-    }
-
-    // BFS from each known PID that still exists to find their descendants
-    let mut result = Vec::new();
-    let mut visited = HashSet::new();
-    let root = Pid::from(root_pid as usize);
-    visited.insert(root); // don't re-add root (it may be dead)
-
-    for &pid in known_pids {
-        if visited.insert(pid) {
-            if sys.process(pid).is_some() {
-                result.push(pid);
-            }
-            let mut queue = VecDeque::new();
-            if let Some(kids) = children.get(&pid) {
-                for &kid in kids {
-                    if visited.insert(kid) {
-                        queue.push_back(kid);
-                    }
-                }
-            }
-            while let Some(p) = queue.pop_front() {
-                if sys.process(p).is_some() {
-                    result.push(p);
-                }
-                if let Some(kids) = children.get(&p) {
-                    for &kid in kids {
-                        if visited.insert(kid) {
-                            queue.push_back(kid);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    result
 }
 
 fn collect_process_tree_inner(sys: &System, root: Pid, require_root: bool) -> Vec<Pid> {
@@ -193,20 +140,6 @@ fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal) {
     }
 }
 
-/// Check which PIDs from the list are still alive.
-fn get_alive_pids(pids: &[Pid]) -> Vec<Pid> {
-    let mut sys = System::new();
-    sys.refresh_processes_specifics(
-        ProcessesToUpdate::Some(pids),
-        true,
-        ProcessRefreshKind::nothing(),
-    );
-    pids.iter()
-        .filter(|pid| sys.process(**pid).is_some())
-        .copied()
-        .collect()
-}
-
 /// Snapshot all processes and signal the tree. Returns targeted PIDs.
 fn snapshot_and_signal(root_pid: i32, signal: Signal) -> Vec<Pid> {
     let mut sys = System::new();
@@ -232,84 +165,124 @@ pub(crate) fn kill_process_tree_internal(root_pid: i32, signal: Option<&str>) {
     snapshot_and_signal(root_pid, map_signal(signal));
 }
 
-/// Kill a process and all its descendants (fire-and-forget).
-///
-/// Sends the requested signal to all processes in the tree but does NOT
 /// Kill a process tree gracefully: signal → wait → SIGKILL.
 ///
-/// 1. Sends the requested signal (default SIGTERM) to all descendants
-/// 2. Polls every 100ms, waiting up to `grace_period_ms` (default 5000) for exit
-/// 3. Force-kills any survivors with SIGKILL
-///
-/// Returns a Promise (runs on a background thread via tokio so it doesn't
-/// block the Node.js event loop).
-#[napi]
+/// Signals leaf processes first, waits for them to exit, then signals
+/// their parents (now leaves). Repeats until the tree is empty or the
+/// grace period expires, then force-kills survivors.
+#[napi(
+    ts_args_type = "rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null"
+)]
 pub async fn kill_process_tree_graceful(
     root_pid: i32,
-    signal: Option<String>,
+    signal: Option<Either<String, i32>>,
     grace_period_ms: Option<u32>,
 ) {
     let grace_ms = grace_period_ms.unwrap_or(5000);
-    let signal_clone = signal;
 
     tokio::task::spawn_blocking(move || {
-        let mapped = map_signal(signal_clone.as_deref());
-        let to_kill = snapshot_and_signal(root_pid, mapped);
+        let signal_str = normalize_signal(signal.as_ref());
+        let mapped = map_signal(signal_str);
 
-        if to_kill.is_empty() || mapped == Signal::Kill {
+        // Snapshot full tree
+        let mut sys = System::new();
+        sys.refresh_processes_specifics(
+            ProcessesToUpdate::All,
+            true,
+            ProcessRefreshKind::nothing(),
+        );
+        let tree = collect_process_tree(&sys, root_pid);
+        if tree.is_empty() {
             return;
         }
 
+        // SIGKILL: no point in bottom-up, just kill everything
+        if mapped == Signal::Kill {
+            send_signal_to_pids(&sys, &tree, Signal::Kill);
+            return;
+        }
+
+        // Build parent→children map from snapshot (static — won't change)
+        let mut children_of: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(tree.len());
+        for &pid in &tree {
+            if let Some(proc) = sys.process(pid) {
+                if let Some(parent) = proc.parent() {
+                    children_of.entry(parent).or_default().push(pid);
+                }
+            }
+        }
+
+        let mut remaining: HashSet<Pid> = tree.iter().copied().collect();
+        let mut signaled: HashSet<Pid> = HashSet::with_capacity(tree.len());
+        let mut buf: Vec<Pid> = Vec::with_capacity(tree.len());
         let poll = std::time::Duration::from_millis(100);
         let deadline = std::time::Duration::from_millis(grace_ms as u64);
         let start = std::time::Instant::now();
 
         loop {
+            // Find and signal new leaves in one pass. A leaf is a PID whose
+            // children (per the original snapshot) have all exited.
+            buf.clear();
+            buf.extend(remaining.iter().copied());
+            let mut has_leaves = false;
+            for &pid in &buf {
+                let is_leaf = children_of
+                    .get(&pid)
+                    .map_or(true, |kids| kids.iter().all(|k| !remaining.contains(k)));
+                if !is_leaf {
+                    continue;
+                }
+                has_leaves = true;
+                if !signaled.insert(pid) {
+                    continue;
+                }
+                // Signal directly from cached handle — kill_with sends via
+                // kill(2) syscall, no refresh needed
+                if let Some(proc) = sys.process(pid) {
+                    proc.kill_with(mapped);
+                }
+            }
+
+            if !has_leaves {
+                // Shouldn't happen in a valid tree, but don't leak processes
+                for pid in &remaining {
+                    if let Some(proc) = sys.process(*pid) {
+                        proc.kill_with(Signal::Kill);
+                    }
+                }
+                break;
+            }
+
             std::thread::sleep(poll);
 
-            // Check which originally-signaled PIDs are still alive.
-            // Also scan for any descendants that may have been missed
-            // (e.g. root exited quickly and children were reparented).
-            let mut alive = get_alive_pids(&to_kill);
-            if alive.is_empty() {
-                // Double-check: root may have died, reparenting children.
-                // Do a fresh full scan to catch orphaned descendants.
-                let mut sys = System::new();
-                sys.refresh_processes_specifics(
-                    ProcessesToUpdate::All,
-                    true,
-                    ProcessRefreshKind::nothing(),
-                );
-                let stragglers = collect_descendants_of(&sys, root_pid, &to_kill);
-                if stragglers.is_empty() {
-                    debug!(
-                        "All processes exited gracefully after {}ms",
-                        start.elapsed().as_millis()
-                    );
-                    return;
-                }
-                // Signal the stragglers and continue the grace period
-                debug!(
-                    "Found {} reparented descendants, signaling them",
-                    stragglers.len()
-                );
-                send_signal_to_pids(&sys, &stragglers, mapped);
-                alive = stragglers;
+            // Refresh only remaining PIDs to check who's still alive.
+            // Reuses `sys` — avoids allocating a new System per iteration.
+            buf.clear();
+            buf.extend(remaining.iter().copied());
+            sys.refresh_processes_specifics(
+                ProcessesToUpdate::Some(&buf),
+                true,
+                ProcessRefreshKind::nothing(),
+            );
+            remaining.retain(|pid| sys.process(*pid).is_some());
+
+            if remaining.is_empty() {
+                break;
             }
             if start.elapsed() >= deadline {
                 debug!(
-                    "Grace period expired after {}ms. Force killing {} remaining processes",
+                    "Grace period expired after {}ms for root_pid={}. Force killing {} survivors",
                     start.elapsed().as_millis(),
-                    alive.len()
+                    root_pid,
+                    remaining.len()
                 );
-                let mut sys = System::new();
-                sys.refresh_processes_specifics(
-                    ProcessesToUpdate::Some(&alive),
-                    true,
-                    ProcessRefreshKind::nothing(),
-                );
-                send_signal_to_pids(&sys, &alive, Signal::Kill);
-                return;
+                // Refresh already done above; just SIGKILL survivors
+                for pid in &remaining {
+                    if let Some(proc) = sys.process(*pid) {
+                        proc.kill_with(Signal::Kill);
+                    }
+                }
+                break;
             }
         }
     })
