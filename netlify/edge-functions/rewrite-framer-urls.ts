@@ -84,5 +84,14 @@ export const config = {
     '/webinar',
     '/sitemap.xml',
     '/sitemap-*.xml',
+    // Static asset directories from public/ — must not be proxied to Framer
+    '/documentation/*',
+    '/assets/*',
+    '/images/*',
+    '/fonts/*',
+    '/videos/*',
+    '/data/*',
+    '/socials/*',
+    '/favicon/*',
   ],
 };
