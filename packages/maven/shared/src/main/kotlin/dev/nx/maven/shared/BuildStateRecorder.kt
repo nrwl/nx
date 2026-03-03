@@ -152,6 +152,7 @@ object BuildStateRecorder {
 
     private fun captureMainArtifact(project: MavenProject, basedir: File): ArtifactInfo? {
         val artifactFile = project.artifact?.file
+        log.debug("    Main artifact file for ${project.artifactId}: ${artifactFile?.absolutePath} (exists=${artifactFile?.exists()}, isFile=${artifactFile?.isFile})")
         if (artifactFile != null && artifactFile.isFile) {
             return ArtifactInfo(
                 file = toRelativePathCached(artifactFile.absolutePath, basedir),
