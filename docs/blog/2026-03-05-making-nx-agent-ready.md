@@ -1,5 +1,5 @@
 ---
-title: 'Making Nx Agent-Ready: What We Learned Optimizing CLI Commands for AI'
+title: 'Nx + AX = 10x'
 slug: 'making-nx-agent-ready'
 authors: ['Max Kless']
 tags: [nx, ai, cli]
@@ -8,7 +8,7 @@ description: 'How we redesigned Nx CLI commands like nx import, nx init, and cre
 draft: true
 ---
 
-We just shipped a major round of improvements to Nx's CLI commands — specifically designed to make them work well with AI agents. Commands like `create-nx-workspace`, `nx init`, and `nx import` have all been updated, and I wanted to use the opportunity to give some insight into how we think about agentic experience (AX) and showcase the changes.
+We just shipped a major round of improvements to Nx's CLI commands — specifically designed to make them work well with AI agents. Commands like `create-nx-workspace`, `nx init`, and `nx import` have all been updated, and I wanted to use the opportunity to give some insight into how we think about agentic experience (AX).
 
 ## Agentic Experience Is the New Developer Experience
 
