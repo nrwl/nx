@@ -242,7 +242,7 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals) {
-    return this.currentProcess.kill(signal);
+    return this.currentProcess?.kill(signal);
   }
 
   private async run(
