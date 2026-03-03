@@ -418,23 +418,22 @@ export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
-/** Kill a process and all its descendants. */
-export declare function killProcessTree(rootPid: number, signal?: string | number | undefined | null): void
-
 /**
  * Kill a process and all its descendants (fire-and-forget).
  *
- * Sends the requested signal to all processes in the tree but does NOT
+ * Sends the requested signal but does NOT wait for processes to exit.
+ * Use `killProcessTreeGraceful` when cleanup handlers must run.
+ */
+export declare function killProcessTree(rootPid: number, signal?: string | number | undefined | null): void
+
+/**
  * Kill a process tree gracefully: signal → wait → SIGKILL.
  *
- * 1. Sends the requested signal (default SIGTERM) to all descendants
- * 2. Polls every 100ms, waiting up to `grace_period_ms` (default 5000) for exit
- * 3. Force-kills any survivors with SIGKILL
- *
- * Returns a Promise (runs on a background thread via tokio so it doesn't
- * block the Node.js event loop).
+ * Signals leaf processes first, waits for them to exit, then signals
+ * their parents (now leaves). Repeats until the tree is empty or the
+ * grace period expires, then force-kills survivors.
  */
-export declare function killProcessTreeGraceful(rootPid: number, signal?: string | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
+export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
 
 export declare function logDebug(message: string): void
 
