@@ -4,6 +4,9 @@
 # Netlify processes these top-to-bottom, first match wins.
 # Specific rules MUST come before wildcard rules.
 
+# --- docs ---
+/docs /docs/getting-started/intro 301
+
 # --- cliUrls ---
 /cli/connect-to-nx-cloud /docs/features/ci-features 301
 /cli/affected-dep-graph /docs/reference/deprecated/affected-graph 301
