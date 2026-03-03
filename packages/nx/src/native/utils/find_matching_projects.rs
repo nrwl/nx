@@ -150,8 +150,10 @@ fn add_matching_projects_by_name<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
-    let keys = projects.keys().map(|k| k.as_str()).collect::<Vec<_>>();
-    if let Some(project_name) = keys.iter().find(|k| *k == &pattern.value) {
+    if let Some(project_name) = projects
+        .get_key_value(pattern.value)
+        .map(|(k, _)| k.as_str())
+    {
         if pattern.exclude {
             matched_projects.remove(pattern.value);
         } else {
