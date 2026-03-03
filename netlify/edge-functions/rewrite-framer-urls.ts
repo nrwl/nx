@@ -75,6 +75,7 @@ export const config = {
   // Only process HTML requests to save on compute
   accept: ['text/html'],
   excludedPath: [
+    '/docs',
     '/docs/*',
     '/api/*',
     '/blog/*',
