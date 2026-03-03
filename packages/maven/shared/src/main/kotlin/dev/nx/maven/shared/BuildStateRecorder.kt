@@ -152,7 +152,7 @@ object BuildStateRecorder {
 
     private fun captureMainArtifact(project: MavenProject, basedir: File): ArtifactInfo? {
         val artifactFile = project.artifact?.file
-        if (artifactFile != null && artifactFile.exists()) {
+        if (artifactFile != null && artifactFile.isFile) {
             return ArtifactInfo(
                 file = toRelativePathCached(artifactFile.absolutePath, basedir),
                 type = project.artifact.type,
@@ -162,7 +162,7 @@ object BuildStateRecorder {
                 version = project.artifact.version
             )
         } else if (artifactFile != null) {
-            log.debug("Main artifact file does not exist: ${artifactFile.absolutePath}")
+            log.debug("Main artifact file does not exist or is a directory: ${artifactFile.absolutePath}")
         }
         return null
     }
