@@ -2039,6 +2039,134 @@ describe('NPM lock file utility', () => {
       // Should satisfy ^10.0.0 range
       expect(minimatchVersion).toMatch(/^10\./);
     });
+
+    it('should include transitive dependencies for multiple overridden packages with shared dependencies', () => {
+      const fileSys = {
+        'node_modules/pkg-a/package.json':
+          '{"dependencies":{"shared-dep":"^1.0.0"}}',
+        'node_modules/pkg-b/package.json':
+          '{"dependencies":{"shared-dep":"^2.0.0"}}',
+        'node_modules/pkg-a/node_modules/shared-dep/package.json':
+          '{"dependencies":{"transitive-dep":"^1.0.0"}}',
+        'node_modules/pkg-b/node_modules/shared-dep/package.json':
+          '{"dependencies":{"transitive-dep":"^2.0.0"}}',
+        'node_modules/pkg-a/node_modules/shared-dep/node_modules/transitive-dep/package.json':
+          '{}',
+        'node_modules/pkg-b/node_modules/shared-dep/node_modules/transitive-dep/package.json':
+          '{}',
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const packageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-shared-deps/package.json'
+        )
+      );
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/npm-overrides-shared-deps/package-lock.json'
+        )
+      );
+
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {} as any,
+        workspaceRoot: '/root',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(lockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : undefined
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(lockFile),
+        packageJson
+      );
+
+      const resultLockFile = JSON.parse(result);
+
+      // Both overridden packages should be included
+      expect(resultLockFile.packages['node_modules/pkg-a']).toBeDefined();
+      expect(resultLockFile.packages['node_modules/pkg-b']).toBeDefined();
+
+      // CRITICAL: Both packages should have their shared dependencies included
+      // This test will fail due to the bug where seenPackages is shared across all overrides
+      expect(
+        resultLockFile.packages['node_modules/pkg-a/node_modules/shared-dep']
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages['node_modules/pkg-b/node_modules/shared-dep']
+      ).toBeDefined();
+
+      // Both packages should have their transitive dependencies included
+      expect(
+        resultLockFile.packages[
+          'node_modules/pkg-a/node_modules/shared-dep/node_modules/transitive-dep'
+        ]
+      ).toBeDefined();
+      expect(
+        resultLockFile.packages[
+          'node_modules/pkg-b/node_modules/shared-dep/node_modules/transitive-dep'
+        ]
+      ).toBeDefined();
+
+      // Verify versions are correct for each package's dependencies
+      expect(
+        resultLockFile.packages['node_modules/pkg-a/node_modules/shared-dep']
+          .version
+      ).toBe('1.5.0');
+      expect(
+        resultLockFile.packages['node_modules/pkg-b/node_modules/shared-dep']
+          .version
+      ).toBe('2.3.0');
+      expect(
+        resultLockFile.packages[
+          'node_modules/pkg-a/node_modules/shared-dep/node_modules/transitive-dep'
+        ].version
+      ).toBe('1.2.0');
+      expect(
+        resultLockFile.packages[
+          'node_modules/pkg-b/node_modules/shared-dep/node_modules/transitive-dep'
+        ].version
+      ).toBe('2.1.0');
+    });
   });
 });
 

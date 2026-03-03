@@ -498,7 +498,6 @@ function collectOverriddenSnapshotsV3(
   packageIndex: PackageMapV3
 ) {
   const overriddenSnapshots: Record<string, NpmDependencyV3> = {};
-  const seenPackages = new Set<string>();
 
   overriddenPackages.forEach((versionSpec, packageName) => {
     const snapshots = packageIndex.get(packageName);
@@ -506,6 +505,8 @@ function collectOverriddenSnapshotsV3(
     if (!snapshots) {
       return;
     }
+
+    const seenPackages = new Set<string>();
 
     snapshots.forEach(({ path, snapshot }) => {
       if (
