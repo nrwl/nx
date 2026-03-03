@@ -165,10 +165,8 @@ impl FilesWorker {
             let removal = map.remove(&PathBuf::from(deleted_path));
             if removal.is_none() {
                 // If the path is a directory, this retains only files not in the directory.
-                map.retain(|path, _| {
-                    let owned_deleted_path = deleted_path.to_owned();
-                    !path.starts_with(owned_deleted_path + "/")
-                });
+                let prefix = Path::new(deleted_path);
+                map.retain(|path, _| !path.starts_with(prefix));
             };
         }
 
