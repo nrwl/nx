@@ -55,6 +55,9 @@
     }
   },
   "targetDefaults": {
+    "mvn:*": {
+      "cache": false
+    },
     "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
