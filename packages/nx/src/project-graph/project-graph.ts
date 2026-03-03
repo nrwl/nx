@@ -1,5 +1,6 @@
 import { performance } from 'perf_hooks';
 
+import { join } from 'path';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -8,7 +9,12 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import { FileLock, IS_WASM } from '../native';
+import { workspaceDataDirectory } from '../utils/cache-directory';
+import { getCallSites } from '../utils/call-sites';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 import { fileExists } from '../utils/fileutils';
+import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -29,18 +35,12 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
+import { getPlugins } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import { getPlugins } from './plugins/get-plugins';
-import { logger } from '../utils/logger';
-import { FileLock, IS_WASM } from '../native';
-import { join } from 'path';
-import { workspaceDataDirectory } from '../utils/cache-directory';
-import { DelayedSpinner } from '../utils/delayed-spinner';
-import { getCallSites } from '../utils/call-sites';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
