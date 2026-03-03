@@ -1,4 +1,4 @@
-import { TaskDetails, NxCache } from '../index';
+import { TaskDetails, NxCache, copyFilesFromCache } from '../index';
 import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { rmSync } from 'fs';
@@ -54,8 +54,8 @@ describe('Cache', () => {
 
     tempFs.removeFileSync('dist/output.txt');
 
-    const result2 = cache.get('123');
-    cache.copyFilesFromCache(result2, ['dist']);
+    const result2 = cache.get('123')!;
+    copyFilesFromCache(tempFs.tempDir, result2, ['dist']);
 
     expect(result2.code).toEqual(0);
     expect(result2.terminalOutput).toEqual('output 123');
