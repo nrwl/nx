@@ -111,6 +111,11 @@ You get an audit trail of every file each task touched during execution, warning
 undeclared dependencies, and confidence that your cache configuration is correct rather than just
 "working so far."
 
+In **Warning** mode (recommended when getting started), violations are reported in the Nx Cloud UI
+but tasks continue to completion.
+In **Strict** mode, tasks fail immediately when a violation is detected.
+See [Cloud settings](#cloud-settings) to configure the enforcement mode.
+
 ## Investigating violations
 
 When sandboxing detects undeclared file access, a warning banner appears on the CI Pipeline
@@ -214,7 +219,9 @@ and reports discrepancies.
 ## Enabling sandboxing
 
 Sandboxing is available for [Nx Enterprise](https://nx.dev/enterprise) customers on
-[single-tenant](/docs/enterprise/single-tenant/overview) deployments.
+[single-tenant](/docs/enterprise/single-tenant/overview) deployments using
+[Nx Agents](/docs/features/ci-features/distribute-task-execution).
+It is not supported with [manual distributed task execution](/docs/recipes/ci/ci-setup).
 Contact your Nx Enterprise representative to enable sandboxing for your deployment.
 
 ### Excluding paths
