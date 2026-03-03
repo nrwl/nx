@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { PluginCache, readPluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { MavenAnalysisData } from './types';
 
 /**
@@ -8,7 +8,7 @@ import { MavenAnalysisData } from './types';
 export function readMavenCache(
   cachePath: string
 ): PluginCache<MavenAnalysisData> {
-  return readPluginCache<MavenAnalysisData>(cachePath);
+  return new PluginCache<MavenAnalysisData>(cachePath);
 }
 
 /**

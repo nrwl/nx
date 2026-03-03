@@ -20,7 +20,7 @@ import { readdirSync } from 'node:fs';
 import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache, readPluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
@@ -48,7 +48,7 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
       workspaceDataDirectory,
       `playwright-${optionsHash}.hash`
     );
-    const pluginCache = readPluginCache<PlaywrightTargets>(cachePath);
+    const pluginCache = new PluginCache<PlaywrightTargets>(cachePath);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>

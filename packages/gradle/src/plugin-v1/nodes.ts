@@ -8,7 +8,7 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { basename, dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache, readPluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { findProjectForPath } from 'nx/src/devkit-internals';
 
 import {
@@ -66,8 +66,9 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const pluginCache =
-      readPluginCache<Partial<ProjectConfiguration>>(cachePath);
+    const pluginCache = new PluginCache<Partial<ProjectConfiguration>>(
+      cachePath
+    );
 
     await populateGradleReport(
       context.workspaceRoot,

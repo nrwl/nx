@@ -17,7 +17,7 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache, readPluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname, join, relative } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -52,7 +52,7 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
       workspaceDataDirectory,
       `cypress-${optionsHash}.hash`
     );
-    const pluginCache = readPluginCache<CypressTargets>(cachePath);
+    const pluginCache = new PluginCache<CypressTargets>(cachePath);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>

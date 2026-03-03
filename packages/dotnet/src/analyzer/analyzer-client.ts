@@ -6,7 +6,7 @@ import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
-import { PluginCache, readPluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 
 export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration
@@ -35,7 +35,7 @@ function readAnalyzerCache(
     return analyzerCaches.get(optionsHash)!;
   }
   const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  return readPluginCache<AnalysisSuccessResult>(cacheFilePath);
+  return new PluginCache<AnalysisSuccessResult>(cacheFilePath);
 }
 
 function writeAnalyzerCache(

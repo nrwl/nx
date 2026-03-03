@@ -7,11 +7,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  PluginCache,
-  readPluginCache,
-  safeWriteFileCache,
-} from './plugin-cache-utils';
+import { PluginCache, safeWriteFileCache } from './plugin-cache-utils';
 
 describe('plugin-cache-utils', () => {
   let tempDir: string;
@@ -102,7 +98,7 @@ describe('plugin-cache-utils', () => {
     });
   });
 
-  describe('readPluginCache', () => {
+  describe('PluginCache constructor from cachePath', () => {
     it('should read current format with entries and accessOrder', () => {
       const cachePath = join(tempDir, 'cache.json');
       writeFileSync(
@@ -113,43 +109,22 @@ describe('plugin-cache-utils', () => {
         })
       );
 
-      const cache = readPluginCache<string>(cachePath);
+      const cache = new PluginCache<string>(cachePath);
       expect(cache.get('a')).toBe('1');
       expect(cache.toSerializable().accessOrder).toContain('a');
       expect(cache.toSerializable().accessOrder).toContain('b');
     });
 
-    it('should migrate previous timestamp format', () => {
-      const cachePath = join(tempDir, 'old-ts-cache.json');
-      writeFileSync(
-        cachePath,
-        JSON.stringify({
-          entries: { stale: '1', fresh: '2' },
-          accessedAt: { stale: 100, fresh: 999 },
-        })
-      );
-
-      const cache = readPluginCache<string>(cachePath);
-      const serialized = cache.toSerializable();
-
-      // Should be sorted by accessedAt: stale (100) before fresh (999)
-      expect(serialized.accessOrder).toEqual(['stale', 'fresh']);
-      expect(serialized.entries).toEqual({ stale: '1', fresh: '2' });
-    });
-
-    it('should migrate legacy plain Record format', () => {
+    it('should return empty cache for unrecognized format', () => {
       const cachePath = join(tempDir, 'legacy-cache.json');
       writeFileSync(cachePath, JSON.stringify({ a: '1', b: '2' }));
 
-      const cache = readPluginCache<string>(cachePath);
-      const serialized = cache.toSerializable();
-
-      expect(serialized.entries).toEqual({ a: '1', b: '2' });
-      expect(serialized.accessOrder).toEqual(['a', 'b']);
+      const cache = new PluginCache<string>(cachePath);
+      expect(cache.has('a')).toBe(false);
     });
 
     it('should return empty cache if file does not exist', () => {
-      const cache = readPluginCache<string>(join(tempDir, 'nope.json'));
+      const cache = new PluginCache<string>(join(tempDir, 'nope.json'));
       expect(cache.has('anything')).toBe(false);
     });
 
@@ -157,7 +132,7 @@ describe('plugin-cache-utils', () => {
       const cachePath = join(tempDir, 'bad.json');
       writeFileSync(cachePath, 'not json!!!');
 
-      const cache = readPluginCache<string>(cachePath);
+      const cache = new PluginCache<string>(cachePath);
       expect(cache.has('anything')).toBe(false);
     });
   });

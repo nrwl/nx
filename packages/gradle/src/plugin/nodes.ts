@@ -9,7 +9,7 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache, readPluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -115,8 +115,9 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const pluginCache =
-      readPluginCache<Partial<ProjectConfiguration>>(cachePath);
+    const pluginCache = new PluginCache<Partial<ProjectConfiguration>>(
+      cachePath
+    );
 
     await populateProjectGraph(
       context.workspaceRoot,
