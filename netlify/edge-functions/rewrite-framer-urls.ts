@@ -1,22 +1,29 @@
 import type { Context } from 'https://edge.netlify.com';
 
 const framerUrl = Netlify.env.get('NEXT_PUBLIC_FRAMER_URL');
-const framerPaths = new Set(
-  (Netlify.env.get('NEXT_PUBLIC_FRAMER_REWRITES') || '')
-    .split(',')
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0)
-    .map((p) => (p.startsWith('/') ? p : `/${p}`))
-);
+
+/**
+ * Paths that should be served by the Next.js app instead of Framer.
+ * Everything else is proxied to Framer.
+ */
+const nextjsPaths = new Set([
+  '/blog',
+  '/courses',
+  '/pricing',
+  '/podcast',
+  '/ai-chat',
+  '/changelog',
+  '/resources-library',
+  '/whitepaper-fast-ci',
+  '/500',
+]);
 
 /**
  * Proxies requests to Framer and rewrites URLs in responses.
  *
- * This edge function:
- * 1. Checks if the request path matches a Framer-proxied path
- * 2. If yes, fetches directly from Framer
- * 3. Rewrites Framer URLs to nx.dev in the response
- * 4. If not a Framer path, passes through to Next.js
+ * This edge function proxies all requests to Framer by default.
+ * Only paths explicitly listed in `nextjsPaths` (and those in
+ * the `excludedPath` config) are passed through to Next.js.
  *
  * This ensures canonical URLs and other references point to nx.dev
  * instead of the Framer domain, avoiding duplicate indexing issues.
@@ -28,7 +35,7 @@ export default async function handler(
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  if (!framerUrl || !framerPaths.has(pathname)) return context.next();
+  if (!framerUrl || nextjsPaths.has(pathname)) return context.next();
 
   const framerDestination = new URL(pathname, framerUrl);
   url.searchParams.forEach((value, key) => {
@@ -67,5 +74,15 @@ export const config = {
   path: ['/*'],
   // Only process HTML requests to save on compute
   accept: ['text/html'],
-  excludedPath: ['/docs/*', '/api/*', '/_next/*', '/favicon.ico'],
+  excludedPath: [
+    '/docs/*',
+    '/api/*',
+    '/blog/*',
+    '/courses/*',
+    '/_next/*',
+    '/favicon.ico',
+    '/webinar',
+    '/sitemap.xml',
+    '/sitemap-*.xml',
+  ],
 };

@@ -56,7 +56,7 @@
       ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
       "options": {
-        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js && node ./nx-dev/nx-dev/scripts/patch-sitemap-index.mjs"
       }
     },
     "prebuild-banner": {
