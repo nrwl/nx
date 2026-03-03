@@ -12,5 +12,5 @@ expression: terminal.backend()
 "  ·    app13:test                                              ...        ...  ║"
 "  ·    app14:build                                             ...        ...  ║"
 "  ·    app15:lint                                              ...        ...  ║"
-"                                                                               ↓"
+"  ·    app16:test                                              ...        ...  ↓"
 "                                                                quit: q  help: ?"
