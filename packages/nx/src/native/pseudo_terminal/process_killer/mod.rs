@@ -79,10 +79,7 @@ pub fn kill_process_tree(root_pid: i32, signal: Option<Either<String, i32>>) {
 /// If the root process has already exited, returns an empty Vec.
 fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
     let root = Pid::from(root_pid as usize);
-    collect_process_tree_inner(sys, root, true)
-}
 
-fn collect_process_tree_inner(sys: &System, root: Pid, require_root: bool) -> Vec<Pid> {
     let mut children: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(sys.processes().len() / 4);
     for (pid, proc_info) in sys.processes() {
         // Skip threads (on Linux, threads appear as processes but we only want to kill processes)
@@ -94,7 +91,7 @@ fn collect_process_tree_inner(sys: &System, root: Pid, require_root: bool) -> Ve
         }
     }
 
-    if require_root && sys.process(root).is_none() {
+    if sys.process(root).is_none() {
         debug!("Root process {} not found", root);
         return Vec::new();
     }
@@ -257,8 +254,7 @@ pub async fn kill_process_tree_graceful(
 
             // Refresh only remaining PIDs to check who's still alive.
             // Reuses `sys` — avoids allocating a new System per iteration.
-            buf.clear();
-            buf.extend(remaining.iter().copied());
+            // `buf` already contains remaining PIDs from the leaf-scan above.
             sys.refresh_processes_specifics(
                 ProcessesToUpdate::Some(&buf),
                 true,
@@ -287,7 +283,7 @@ pub async fn kill_process_tree_graceful(
         }
     })
     .await
-    .ok();
+    .unwrap_or_else(|e| tracing::error!("kill_process_tree_graceful task panicked: {}", e));
 }
 
 #[cfg_attr(windows, path = "windows.rs")]
