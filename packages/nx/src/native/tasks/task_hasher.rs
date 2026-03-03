@@ -142,9 +142,9 @@ pub struct HasherOptions {
 #[napi]
 pub struct TaskHasher {
     workspace_root: String,
-    project_graph: External<ProjectGraph>,
-    project_file_map: External<HashMap<String, Vec<FileData>>>,
-    all_workspace_files: External<Vec<FileData>>,
+    project_graph: Arc<ProjectGraph>,
+    project_file_map: Arc<HashMap<String, Vec<FileData>>>,
+    all_workspace_files: Arc<Vec<FileData>>,
     ts_config: Vec<u8>,
     ts_config_paths: HashMap<String, Vec<String>>,
     root_tsconfig_path: Option<String>,
@@ -157,9 +157,15 @@ impl TaskHasher {
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
-        project_graph: External<ProjectGraph>,
-        project_file_map: External<ProjectFiles>,
-        all_workspace_files: External<Vec<FileData>>,
+        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
+            Arc<ProjectGraph>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_file_map: &External<
+            Arc<ProjectFiles>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
+            Arc<Vec<FileData>>,
+        >,
         ts_config: Buffer,
         ts_config_paths: HashMap<String, Vec<String>>,
         root_tsconfig_path: Option<String>,
@@ -167,9 +173,9 @@ impl TaskHasher {
     ) -> Self {
         Self {
             workspace_root,
-            project_graph,
-            project_file_map,
-            all_workspace_files,
+            project_graph: Arc::clone(project_graph),
+            project_file_map: Arc::clone(project_file_map),
+            all_workspace_files: Arc::clone(all_workspace_files),
             ts_config: ts_config.to_vec(),
             ts_config_paths,
             root_tsconfig_path,
@@ -182,7 +188,7 @@ impl TaskHasher {
     #[napi]
     pub fn hash_plans(
         &self,
-        hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
         cwd: String,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
@@ -193,7 +199,7 @@ impl TaskHasher {
 
         let function_start = std::time::Instant::now();
 
-        trace!("hashing plans {:?}", hash_plans.as_ref());
+        trace!("hashing plans {:?}", &**hash_plans);
         trace!("Starting hash_plans with {} plans", hash_plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());

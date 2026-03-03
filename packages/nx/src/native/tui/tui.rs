@@ -45,7 +45,7 @@ pub struct Tui {
     pub fullscreen_terminal: ratatui::Terminal<Backend>,
     /// Terminal configured for inline mode (viewport) - created lazily on first use
     pub inline_terminal: Option<ratatui::Terminal<Backend>>,
-    pub task: JoinHandle<()>,
+    pub task: Option<JoinHandle<()>>,
     pub cancellation_token: CancellationToken,
     pub event_rx: UnboundedReceiver<Event>,
     pub event_tx: UnboundedSender<Event>,
@@ -117,12 +117,11 @@ impl Tui {
 
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let cancellation_token = CancellationToken::new();
-        let task = tokio::spawn(async {});
 
         Ok(Self {
             fullscreen_terminal,
             inline_terminal,
-            task,
+            task: None,
             cancellation_token,
             event_rx,
             event_tx,
@@ -208,7 +207,7 @@ impl Tui {
         let _cancellation_token = self.cancellation_token.clone();
         let _event_tx = self.event_tx.clone();
         debug!("start(): spawning new event task");
-        self.task = tokio::spawn(async move {
+        self.task = Some(tokio::spawn(async move {
             debug!("Event task spawned - inside async block");
             debug!("Event task: creating EventStream");
             let mut reader = crossterm::event::EventStream::new();
@@ -280,7 +279,7 @@ impl Tui {
                 }
             }
             debug!("Crossterm Thread Finished")
-        });
+        }));
     }
 
     /// Stop the event loop task.
@@ -293,25 +292,27 @@ impl Tui {
     pub async fn stop(&self) -> Result<()> {
         debug!("stop(): cancelling event task");
         self.cancel();
-        let mut counter = 0;
-        while !self.task.is_finished() {
-            // IMPORTANT: Use tokio::time::sleep instead of std::thread::sleep!
-            // std::thread::sleep blocks the executor thread, preventing the inner
-            // task from being polled to see the cancellation token.
-            tokio::time::sleep(Duration::from_millis(1)).await;
-            counter += 1;
-            if counter > 50 && counter % 10 == 0 {
-                // Abort periodically after 50ms in case the task is stuck
-                debug!("stop(): aborting task (attempt at {}ms)", counter);
-                self.task.abort();
+        if let Some(ref task) = self.task {
+            let mut counter = 0;
+            while !task.is_finished() {
+                // IMPORTANT: Use tokio::time::sleep instead of std::thread::sleep!
+                // std::thread::sleep blocks the executor thread, preventing the inner
+                // task from being polled to see the cancellation token.
+                tokio::time::sleep(Duration::from_millis(1)).await;
+                counter += 1;
+                if counter > 50 && counter % 10 == 0 {
+                    // Abort periodically after 50ms in case the task is stuck
+                    debug!("stop(): aborting task (attempt at {}ms)", counter);
+                    task.abort();
+                }
+                if counter > 200 {
+                    // Give up after 200ms, but log a warning
+                    debug!("stop(): WARN - task not finished after 200ms, continuing anyway");
+                    break;
+                }
             }
-            if counter > 200 {
-                // Give up after 200ms, but log a warning
-                debug!("stop(): WARN - task not finished after 200ms, continuing anyway");
-                break;
-            }
+            debug!("stop(): event task finished (counter={})", counter);
         }
-        debug!("stop(): event task finished (counter={})", counter);
         Ok(())
     }
 
@@ -322,19 +323,21 @@ impl Tui {
     /// Prefer `stop_async()` when in an async context.
     pub fn stop_sync(&self) -> Result<()> {
         self.cancel();
-        let mut counter = 0;
-        while !self.task.is_finished() {
-            std::thread::sleep(Duration::from_millis(1));
-            counter += 1;
-            if counter > 50 {
-                self.task.abort();
-            }
-            if counter > 100 {
-                // This timeout is expected when called from sync context on single-threaded runtime
-                debug!(
-                    "Failed to abort TUI event loop task after 100ms (expected in sync context)"
-                );
-                break;
+        if let Some(ref task) = self.task {
+            let mut counter = 0;
+            while !task.is_finished() {
+                std::thread::sleep(Duration::from_millis(1));
+                counter += 1;
+                if counter > 50 {
+                    task.abort();
+                }
+                if counter > 100 {
+                    // This timeout is expected when called from sync context on single-threaded runtime
+                    debug!(
+                        "Failed to abort TUI event loop task after 100ms (expected in sync context)"
+                    );
+                    break;
+                }
             }
         }
         Ok(())
@@ -369,7 +372,10 @@ impl Tui {
             }
         }
 
-        self.start();
+        // NOTE: start() is NOT called here. It must be called from within a
+        // Tokio runtime context (e.g., inside napi's spawn() block) because it
+        // uses tokio::spawn() internally. The caller is responsible for calling
+        // start() after entering the runtime.
         Ok(())
     }
 
