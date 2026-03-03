@@ -7,7 +7,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
@@ -288,20 +288,9 @@ export class TaskOrchestrator {
     return taskSpecificEnv;
   }
 
-  private async processScheduledBatch(batch: Batch) {
-    await hashTasks(
-      this.hasher,
-      this.projectGraph,
-      batch.taskGraph,
-      this.batchEnv,
-      this.taskDetails
-    );
-
-    await Promise.all(
-      Object.values(batch.taskGraph.tasks).map((task) =>
-        this.options.lifeCycle.scheduleTask(task)
-      )
-    );
+  private async processScheduledBatch(_batch: Batch) {
+    // Hashing and scheduling moved to applyFromCacheOrRunBatch (layered approach)
+    // so that dependency outputs are on disk before dependent tasks are hashed.
   }
 
   public processAllScheduledTasks() {
@@ -366,6 +355,35 @@ export class TaskOrchestrator {
   // endregion Applying Cache
 
   // region Batch
+
+  /**
+   * Compute topological layers from a TaskGraph.
+   * Layer 0 = roots (no deps within the graph)
+   * Layer N = tasks whose deps are all in layers 0..N-1
+   */
+  private getTopologicalLayers(taskGraph: TaskGraph): string[][] {
+    const layers: string[][] = [];
+    const remaining = new Set(Object.keys(taskGraph.tasks));
+    const placed = new Set<string>();
+
+    while (remaining.size > 0) {
+      const layer: string[] = [];
+      for (const taskId of remaining) {
+        const deps = taskGraph.dependencies[taskId];
+        if (deps.every((dep) => placed.has(dep) || !remaining.has(dep))) {
+          layer.push(taskId);
+        }
+      }
+      if (layer.length === 0) break; // cycle guard
+      for (const id of layer) {
+        remaining.delete(id);
+        placed.add(id);
+      }
+      layers.push(layer);
+    }
+    return layers;
+  }
+
   public async applyFromCacheOrRunBatch(
     doNotSkipCache: boolean,
     batch: Batch,
@@ -377,7 +395,7 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    // Wait for batch to be processed
+    // Wait for batch to be processed (no-op now, hashing moved here)
     await this.processedBatches.get(batch);
 
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
@@ -385,11 +403,64 @@ export class TaskOrchestrator {
       taskIds: Object.keys(batch.taskGraph.tasks),
     });
 
+    // Hash and apply cache in topological layers so that dependency outputs
+    // are restored to disk before dependent tasks are hashed. This ensures
+    // depsOutputs-based hashes are computed against correct (not stale) files.
+    const layers = this.getTopologicalLayers(batch.taskGraph);
+    const allCachedResults: TaskResult[] = [];
+    const cachedTaskIds = new Set<string>();
+
+    for (const layer of layers) {
+      const layerTasks = layer.map((id) => batch.taskGraph.tasks[id]);
+
+      // Only check cache for tasks whose deps all hit cache (or have no deps
+      // in this batch). If a dep missed cache, its outputs aren't on disk yet,
+      // so the dependent's hash would be wrong — skip the wasted work.
+      const cacheEligibleTasks: Task[] = [];
+      for (const task of layerTasks) {
+        const deps = batch.taskGraph.dependencies[task.id];
+        if (
+          deps.every(
+            (dep) => cachedTaskIds.has(dep) || !batch.taskGraph.tasks[dep]
+          )
+        ) {
+          cacheEligibleTasks.push(task);
+        }
+      }
+
+      // Hash cache-eligible tasks (dep outputs are on disk from previous layers)
+      await Promise.all(
+        cacheEligibleTasks.map((task) =>
+          hashTask(
+            this.hasher,
+            this.projectGraph,
+            batch.taskGraph,
+            task,
+            this.batchEnv,
+            this.taskDetails
+          )
+        )
+      );
+
+      // Schedule all tasks (eligible ones have hashes, ineligible ones will
+      // be hashed later before runBatch)
+      await Promise.all(
+        layerTasks.map((t) => this.options.lifeCycle.scheduleTask(t))
+      );
+
+      // Apply cache for eligible tasks (restores outputs to disk for next layer)
+      if (doNotSkipCache) {
+        const cached = await this.applyCachedResults(cacheEligibleTasks);
+        for (const result of cached) {
+          cachedTaskIds.add(result.task.id);
+        }
+        allCachedResults.push(...cached);
+      }
+    }
+
     await this.preRunSteps(tasks, { groupId });
 
-    let results: TaskResult[] = doNotSkipCache
-      ? await this.applyCachedResults(tasks)
-      : [];
+    let results: TaskResult[] = allCachedResults;
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
@@ -409,6 +480,25 @@ export class TaskOrchestrator {
         this.batchEnv,
         groupId
       );
+
+      // Hash any tasks that were cache-ineligible (skipped during layered
+      // hashing). Now that runBatch has completed, dep outputs are on disk
+      // so hashes will be correct. postRunSteps needs hashes to cache results.
+      const unhashedResults = results.filter((r) => !r.task.hash);
+      if (unhashedResults.length > 0) {
+        await Promise.all(
+          unhashedResults.map((r) =>
+            hashTask(
+              this.hasher,
+              this.projectGraph,
+              batch.taskGraph,
+              r.task,
+              this.batchEnv,
+              this.taskDetails
+            )
+          )
+        );
+      }
     }
 
     await this.postRunSteps(results, doNotSkipCache, { groupId });
