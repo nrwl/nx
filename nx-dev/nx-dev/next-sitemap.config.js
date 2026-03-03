@@ -26,6 +26,9 @@ module.exports = {
         policies: [{ userAgent: '*', disallow: '/' }],
       }
     : {
-        additionalSitemaps: [`${siteUrl}/docs/sitemap-index.xml`],
+        additionalSitemaps: [
+          `${siteUrl}/sitemap-1.xml`,
+          `${siteUrl}/docs/sitemap-index.xml`,
+        ],
       },
 };
