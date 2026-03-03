@@ -19,6 +19,7 @@ import {
   installPackageToTmp,
   readModulePackageJson,
 } from '../../utils/package-json';
+import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -291,6 +292,12 @@ export async function setupAiAgentsGeneratorImpl(
       }
     }
   }
+
+  addEntryToGitIgnore(
+    tree,
+    join(options.directory, '.gitignore'),
+    '.nx/polygraph'
+  );
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 
