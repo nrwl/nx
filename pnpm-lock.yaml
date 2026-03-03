@@ -1990,8 +1990,6 @@ importers:
         specifier: 'workspace:'
         version: link:../shared
 
-  nx-dev/data-access-careers: {}
-
   nx-dev/data-access-courses:
     dependencies:
       '@nx/nx-dev-data-access-documents':
@@ -2128,9 +2126,6 @@ importers:
 
   nx-dev/nx-dev:
     dependencies:
-      '@nx/nx-dev-data-access-careers':
-        specifier: workspace:*
-        version: link:../data-access-careers
       '@nx/nx-dev-data-access-courses':
         specifier: workspace:*
         version: link:../data-access-courses
@@ -2155,96 +2150,42 @@ importers:
       '@nx/nx-dev-ui-blog':
         specifier: workspace:*
         version: link:../ui-blog
-      '@nx/nx-dev-ui-brands':
-        specifier: workspace:*
-        version: link:../ui-brands
-      '@nx/nx-dev-ui-careers':
-        specifier: workspace:*
-        version: link:../ui-careers
-      '@nx/nx-dev-ui-cloud':
-        specifier: workspace:*
-        version: link:../ui-cloud
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../ui-common
-      '@nx/nx-dev-ui-community':
-        specifier: workspace:*
-        version: link:../ui-community
-      '@nx/nx-dev-ui-company':
-        specifier: workspace:*
-        version: link:../ui-company
-      '@nx/nx-dev-ui-contact':
-        specifier: workspace:*
-        version: link:../ui-contact
       '@nx/nx-dev-ui-courses':
         specifier: workspace:*
         version: link:../ui-courses
-      '@nx/nx-dev-ui-customers':
-        specifier: workspace:*
-        version: link:../ui-customers
-      '@nx/nx-dev-ui-enterprise':
-        specifier: workspace:*
-        version: link:../ui-enterprise
       '@nx/nx-dev-ui-fence':
         specifier: workspace:*
         version: link:../ui-fence
-      '@nx/nx-dev-ui-gradle':
-        specifier: workspace:*
-        version: link:../ui-gradle
-      '@nx/nx-dev-ui-home':
-        specifier: workspace:*
-        version: link:../ui-home
       '@nx/nx-dev-ui-icons':
         specifier: workspace:*
         version: link:../ui-icons
       '@nx/nx-dev-ui-markdoc':
         specifier: workspace:*
         version: link:../ui-markdoc
-      '@nx/nx-dev-ui-member-card':
-        specifier: workspace:*
-        version: link:../ui-member-card
-      '@nx/nx-dev-ui-partners':
-        specifier: workspace:*
-        version: link:../ui-partners
       '@nx/nx-dev-ui-podcast':
         specifier: workspace:*
         version: link:../ui-podcast
-      '@nx/nx-dev-ui-powerpack':
-        specifier: workspace:*
-        version: link:../ui-powerpack
       '@nx/nx-dev-ui-pricing':
         specifier: workspace:*
         version: link:../ui-pricing
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
-      '@nx/nx-dev-ui-react':
-        specifier: workspace:*
-        version: link:../ui-react
       '@nx/nx-dev-ui-references':
         specifier: workspace:*
         version: link:../ui-references
-      '@nx/nx-dev-ui-remote-cache':
-        specifier: workspace:*
-        version: link:../ui-remote-cache
       '@nx/nx-dev-ui-resources':
         specifier: workspace:*
         version: link:../ui-resources
-      '@nx/nx-dev-ui-scrollable-content':
-        specifier: workspace:*
-        version: link:../ui-scrollable-content
-      '@nx/nx-dev-ui-sponsor-card':
-        specifier: workspace:*
-        version: link:../ui-sponsor-card
       '@nx/nx-dev-ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
       '@nx/nx-dev-ui-video-courses':
         specifier: workspace:*
         version: link:../ui-video-courses
-      '@nx/nx-dev-ui-webinar':
-        specifier: workspace:*
-        version: link:../ui-webinar
       '@nx/nx-dev-util-ai':
         specifier: workspace:*
         version: link:../util-ai
@@ -2279,44 +2220,6 @@ importers:
         specifier: workspace:*
         version: link:../ui-primitives
 
-  nx-dev/ui-brands:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-
-  nx-dev/ui-careers:
-    dependencies:
-      '@nx/nx-dev-data-access-careers':
-        specifier: workspace:*
-        version: link:../data-access-careers
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-
-  nx-dev/ui-cloud:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-animations':
-        specifier: workspace:*
-        version: link:../ui-animations
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
-  nx-dev/ui-commands: {}
-
   nx-dev/ui-common:
     dependencies:
       '@nx/nx-dev-feature-analytics':
@@ -2347,31 +2250,6 @@ importers:
         specifier: workspace:*
         version: link:../ui-theme
 
-  nx-dev/ui-community:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-    devDependencies:
-      jest:
-        specifier: catalog:jest
-        version: 30.0.2(@types/node@20.19.19)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.27.3))(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2))
-
-  nx-dev/ui-company:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-
-  nx-dev/ui-contact:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-
   nx-dev/ui-courses:
     dependencies:
       '@nx/nx-dev-data-access-courses':
@@ -2396,74 +2274,7 @@ importers:
         specifier: workspace:*
         version: link:../ui-primitives
 
-  nx-dev/ui-customers:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-enterprise':
-        specifier: workspace:*
-        version: link:../ui-enterprise
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-
-  nx-dev/ui-enterprise:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-animations':
-        specifier: workspace:*
-        version: link:../ui-animations
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
   nx-dev/ui-fence: {}
-
-  nx-dev/ui-gradle:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
-  nx-dev/ui-home:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-animations':
-        specifier: workspace:*
-        version: link:../ui-animations
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-    devDependencies:
-      jest:
-        specifier: catalog:jest
-        version: 30.0.2(@types/node@20.19.19)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.27.3))(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2))
 
   nx-dev/ui-icons: {}
 
@@ -2500,17 +2311,6 @@ importers:
         specifier: workspace:*
         version: link:../ui-theme
 
-  nx-dev/ui-member-card: {}
-
-  nx-dev/ui-partners:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-
   nx-dev/ui-podcast:
     dependencies:
       '@nx/nx-dev-data-access-documents':
@@ -2525,27 +2325,6 @@ importers:
       '@nx/nx-dev-ui-icons':
         specifier: workspace:*
         version: link:../ui-icons
-
-  nx-dev/ui-powerpack:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-animations':
-        specifier: workspace:*
-        version: link:../ui-animations
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-fence':
-        specifier: workspace:*
-        version: link:../ui-fence
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
 
   nx-dev/ui-pricing:
     dependencies:
@@ -2564,37 +2343,7 @@ importers:
 
   nx-dev/ui-primitives: {}
 
-  nx-dev/ui-react:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-animations':
-        specifier: workspace:*
-        version: link:../ui-animations
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
   nx-dev/ui-references: {}
-
-  nx-dev/ui-remote-cache:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
 
   nx-dev/ui-resources:
     dependencies:
@@ -2604,14 +2353,6 @@ importers:
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
-
-  nx-dev/ui-scrollable-content:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-
-  nx-dev/ui-sponsor-card: {}
 
   nx-dev/ui-theme: {}
 
@@ -2626,21 +2367,6 @@ importers:
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
-
-  nx-dev/ui-webinar:
-    dependencies:
-      '@nx/nx-dev-data-access-documents':
-        specifier: workspace:*
-        version: link:../data-access-documents
-      '@nx/nx-dev-ui-blog':
-        specifier: workspace:*
-        version: link:../ui-blog
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-markdoc':
-        specifier: workspace:*
-        version: link:../ui-markdoc
 
   nx-dev/util-ai:
     dependencies:
