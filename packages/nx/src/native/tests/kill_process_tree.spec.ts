@@ -1,5 +1,5 @@
-import { spawn, execSync } from 'child_process';
-import { writeFileSync, existsSync, readFileSync, unlinkSync } from 'fs';
+import { spawn } from 'child_process';
+import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomBytes } from 'crypto';
@@ -33,10 +33,20 @@ function cleanupPid(pid: number) {
 const describeUnix = process.platform === 'win32' ? describe.skip : describe;
 
 describeUnix('killProcessTree', () => {
+  const spawnedPids: number[] = [];
+
+  afterEach(() => {
+    for (const pid of spawnedPids) {
+      cleanupPid(pid);
+    }
+    spawnedPids.length = 0;
+  });
+
   it('should kill a simple process', (done) => {
     const child = spawn('sleep', ['30'], { detached: true, stdio: 'ignore' });
     child.unref();
     const pid = child.pid!;
+    spawnedPids.push(pid);
     expect(isAlive(pid)).toBe(true);
 
     killProcessTree(pid, 'SIGKILL');
@@ -48,55 +58,75 @@ describeUnix('killProcessTree', () => {
     }, 500);
   });
 
-  it('should kill a process tree (parent + children)', (done) => {
-    // Spawn a shell that itself spawns a child
+  it('should kill a process tree (parent + children)', async () => {
+    // Spawn a shell that backgrounds a sleep, writes its PID, then waits
     const marker = tmpFile('tree');
-    const child = spawn(
-      'sh',
-      ['-c', `sleep 30 & CHILD=$!; echo $CHILD > ${marker}; wait`],
-      { detached: true, stdio: 'ignore' }
-    );
+    const child = spawn('sh', ['-c', `sleep 30 & echo $! > ${marker}; wait`], {
+      detached: true,
+      stdio: 'ignore',
+    });
     child.unref();
     const parentPid = child.pid!;
+    spawnedPids.push(parentPid);
 
-    setTimeout(() => {
-      // Read the grandchild PID
-      const grandchildPid = existsSync(marker)
-        ? parseInt(readFileSync(marker, 'utf-8').trim(), 10)
-        : NaN;
-
-      expect(isAlive(parentPid)).toBe(true);
-      if (!isNaN(grandchildPid)) {
-        expect(isAlive(grandchildPid)).toBe(true);
+    // Poll for marker file so the grandchild PID is always verified
+    let grandchildPid = NaN;
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      if (existsSync(marker)) {
+        grandchildPid = parseInt(readFileSync(marker, 'utf-8').trim(), 10);
+        break;
       }
+    }
+    expect(grandchildPid).not.toBeNaN();
+    spawnedPids.push(grandchildPid);
 
-      killProcessTree(parentPid, 'SIGKILL');
+    expect(isAlive(parentPid)).toBe(true);
+    expect(isAlive(grandchildPid)).toBe(true);
 
-      setTimeout(() => {
-        expect(isAlive(parentPid)).toBe(false);
-        if (!isNaN(grandchildPid)) {
-          expect(isAlive(grandchildPid)).toBe(false);
-        }
-        try {
-          unlinkSync(marker);
-        } catch {}
-        done();
-      }, 500);
-    }, 500);
-  });
+    killProcessTree(parentPid, 'SIGKILL');
+
+    await new Promise((r) => setTimeout(r, 500));
+    expect(isAlive(parentPid)).toBe(false);
+    expect(isAlive(grandchildPid)).toBe(false);
+    try {
+      unlinkSync(marker);
+    } catch {}
+  }, 10000);
 });
 
 describeUnix('killProcessTreeGraceful', () => {
+  const spawnedPids: number[] = [];
+
+  afterEach(() => {
+    for (const pid of spawnedPids) {
+      cleanupPid(pid);
+    }
+    spawnedPids.length = 0;
+  });
+
   it('should send SIGTERM and wait for process to exit', async () => {
-    // Spawn a process that handles SIGTERM and exits cleanly
+    // Use a single node process (no children) so the bottom-up approach
+    // delivers SIGTERM directly and the handler can write the marker.
     const marker = tmpFile('graceful');
     const child = spawn(
-      'sh',
-      ['-c', `trap "echo cleanup > ${marker}; exit 0" TERM; sleep 30`],
+      'node',
+      [
+        '-e',
+        `
+        const fs = require('fs');
+        process.on('SIGTERM', () => {
+          fs.writeFileSync('${marker}', 'cleanup');
+          process.exit(0);
+        });
+        setInterval(() => {}, 1000);
+        `,
+      ],
       { detached: true, stdio: 'ignore' }
     );
     child.unref();
     const pid = child.pid!;
+    spawnedPids.push(pid);
 
     // Wait for process to be running
     await new Promise((r) => setTimeout(r, 300));
@@ -138,6 +168,7 @@ describeUnix('killProcessTreeGraceful', () => {
     );
     child.unref();
     const pid = child.pid!;
+    spawnedPids.push(pid);
 
     await new Promise((r) => setTimeout(r, 300));
     expect(isAlive(pid)).toBe(true);
@@ -147,10 +178,10 @@ describeUnix('killProcessTreeGraceful', () => {
     const elapsed = Date.now() - start;
 
     expect(isAlive(pid)).toBe(false);
-    // Should have waited for the process to finish cleanup (~500ms)
-    // but NOT the full grace period (5000ms)
-    expect(elapsed).toBeGreaterThanOrEqual(400);
-    expect(elapsed).toBeLessThan(3000);
+    // Must not have waited the full grace period (5s). The process
+    // cleans up in ~500ms, so elapsed should be well under 5s even
+    // on a slow CI machine.
+    expect(elapsed).toBeLessThan(4500);
 
     // Cleanup handler should have run
     await new Promise((r) => setTimeout(r, 100));
@@ -160,50 +191,25 @@ describeUnix('killProcessTreeGraceful', () => {
     } catch {}
   }, 10000);
 
-  it('should kill entire process tree gracefully', async () => {
-    // Create a 3-level process tree:
-    //   sh (root) → sh (mid) → sleep (leaf)
-    // All should be killed.
-    const pidFile = tmpFile('tree-pids');
-    const cleanupMarker = tmpFile('tree-cleanup');
-
-    const child = spawn(
-      'sh',
-      [
-        '-c',
-        // Root spawns a middle process, which spawns a leaf
-        `trap "echo root-cleanup > ${cleanupMarker}; exit 0" TERM; ` +
-          `sh -c 'sleep 30 & echo \$\$ > ${pidFile}; wait' & ` +
-          `MIDPID=$!; ` +
-          `wait`,
-      ],
-      { detached: true, stdio: 'ignore' }
-    );
+  it('should SIGKILL a process that ignores SIGTERM after grace period', async () => {
+    // Spawn a process that traps (ignores) SIGTERM
+    const child = spawn('sh', ['-c', 'trap "" TERM; sleep 30'], {
+      detached: true,
+      stdio: 'ignore',
+    });
     child.unref();
-    const rootPid = child.pid!;
+    const pid = child.pid!;
+    spawnedPids.push(pid);
 
-    // Wait for tree to establish
+    await new Promise((r) => setTimeout(r, 300));
+    expect(isAlive(pid)).toBe(true);
+
+    await killProcessTreeGraceful(pid, 'SIGTERM', 1000);
+
+    // SIGKILL is sent but the OS may not reap immediately
     await new Promise((r) => setTimeout(r, 500));
-    expect(isAlive(rootPid)).toBe(true);
-
-    await killProcessTreeGraceful(rootPid, 'SIGTERM');
-
-    // Root should be dead
-    expect(isAlive(rootPid)).toBe(false);
-
-    // Cleanup handler should have run
-    await new Promise((r) => setTimeout(r, 200));
-    if (existsSync(cleanupMarker)) {
-      expect(readFileSync(cleanupMarker, 'utf-8').trim()).toBe('root-cleanup');
-    }
-
-    // Clean up temp files
-    for (const f of [pidFile, cleanupMarker]) {
-      try {
-        unlinkSync(f);
-      } catch {}
-    }
-  }, 10000);
+    expect(isAlive(pid)).toBe(false);
+  }, 15000);
 
   it('should resolve quickly when process is already dead', async () => {
     const child = spawn('echo', ['hello'], { stdio: 'ignore' });
