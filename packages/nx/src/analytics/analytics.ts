@@ -71,6 +71,12 @@ export async function startAnalytics() {
       !!isCI()
     );
     _telemetryInitialized = true;
+
+    // Flush analytics automatically on process exit so every code path
+    // is covered without needing explicit exitAndFlushAnalytics() calls.
+    process.on('exit', () => {
+      flushAnalytics();
+    });
   } catch (error) {
     // If telemetry service fails to initialize, continue without it
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -327,15 +333,6 @@ export function flushAnalytics() {
       }
     }
   }
-}
-
-export function exitAndFlushAnalytics(code: string | number): never {
-  if (_telemetryInitialized) {
-    // Synchronously flush analytics before exit
-    // This is a blocking operation that waits for HTTP requests to complete
-    flushAnalytics();
-  }
-  process.exit(code);
 }
 
 function getPackageManagerInfo() {

@@ -11,7 +11,6 @@ import {
   withTargetAndConfigurationOption,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
@@ -51,7 +50,7 @@ export const yargsAffectedCommand: CommandModule = {
         );
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };
 
@@ -77,7 +76,7 @@ export const yargsAffectedTestCommand: CommandModule = {
         });
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };
 
@@ -103,7 +102,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
         });
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };
 
@@ -129,7 +128,7 @@ export const yargsAffectedLintCommand: CommandModule = {
         });
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };
 
@@ -155,6 +154,6 @@ export const yargsAffectedE2ECommand: CommandModule = {
         });
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };

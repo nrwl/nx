@@ -4,7 +4,6 @@ import {
   withRunManyOptions,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsExecCommand: CommandModule = {
   command: 'exec',
@@ -13,10 +12,10 @@ export const yargsExecCommand: CommandModule = {
   handler: async (args) => {
     try {
       await (await import('./exec')).nxExecCommand(withOverrides(args) as any);
-      exitAndFlushAnalytics(0);
+      process.exit(0);
     } catch (e) {
       console.error(e);
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
   },
 };

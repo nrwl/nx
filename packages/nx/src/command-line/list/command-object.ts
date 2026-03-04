@@ -1,5 +1,4 @@
 import { CommandModule } from 'yargs';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsListCommand: CommandModule = {
   command: 'list [plugin]',
@@ -17,6 +16,6 @@ export const yargsListCommand: CommandModule = {
       }),
   handler: async (args: any) => {
     await (await import('./list')).listHandler(args);
-    exitAndFlushAnalytics(0);
+    process.exit(0);
   },
 };

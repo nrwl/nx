@@ -3,7 +3,6 @@ import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { handleErrors } from '../../utils/handle-errors';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { makeCommandModule } from '../yargs-utils/arguments-of';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 const builder = (yargs: Argv) =>
   linkToNxDevAndExamples(withVerbose(withDaemonOptions(yargs)), 'daemon');
@@ -17,7 +16,7 @@ export const yargsDaemonCommand = makeCommandModule({
     const exitCode = await handleErrors(args.verbose, async () =>
       (await import('./daemon')).daemonHandler(args)
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 });
 

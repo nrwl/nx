@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsLogoutCommand: CommandModule = {
   command: 'logout',
@@ -12,6 +11,6 @@ export const yargsLogoutCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    exitAndFlushAnalytics(await (await import('./logout')).logoutHandler(args));
+    process.exit(await (await import('./logout')).logoutHandler(args));
   },
 };

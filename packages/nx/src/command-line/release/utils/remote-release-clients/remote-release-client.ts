@@ -7,7 +7,6 @@ import { printDiff } from '../print-changes';
 import { noDiffInChangelogMessage, type ReleaseVersion } from '../shared';
 import type { GithubRemoteReleaseClient } from './github';
 import type { GitLabRemoteReleaseClient } from './gitlab';
-import { exitAndFlushAnalytics } from '../../../../analytics/analytics';
 
 export type RemoteRepoSlug = `${string}/${string}`;
 
@@ -122,7 +121,7 @@ export abstract class RemoteReleaseClient<
     } catch (err) {
       if (err.response?.status === 401) {
         this.handleAuthError();
-        exitAndFlushAnalytics(1);
+        process.exit(1);
       }
       if (err.response?.status === 404) {
         // No existing release found, this is fine

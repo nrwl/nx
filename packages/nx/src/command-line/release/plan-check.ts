@@ -23,7 +23,6 @@ import {
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
 import { printConfigAndExit } from './utils/print-config';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
   handleErrors(args.verbose, () => {
@@ -65,7 +64,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     );
     if (filterError) {
       output.error(filterError);
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
 
     // If no release groups have version plans enabled, provide an explicit error

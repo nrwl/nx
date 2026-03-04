@@ -1,6 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsGenerateCommand: CommandModule = {
   command: 'generate <generator> [_..]',
@@ -12,7 +11,7 @@ export const yargsGenerateCommand: CommandModule = {
     // Remove the command from the args
     args._ = args._.slice(1);
 
-    exitAndFlushAnalytics(await (await import('./generate')).generate(args));
+    process.exit(await (await import('./generate')).generate(args));
   },
 };
 

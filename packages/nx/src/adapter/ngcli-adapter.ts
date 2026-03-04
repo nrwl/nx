@@ -57,7 +57,6 @@ import {
   toNewFormat,
   toOldFormat,
 } from './angular-json';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 import { normalizeExecutorSchema } from '../command-line/run/executor-utils';
 import {
   CustomHasher,
@@ -516,7 +515,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       catchError((err) => {
         console.error('Unable to read angular.json');
         console.error(err);
-        exitAndFlushAnalytics(1);
+        process.exit(1);
       })
     );
   }
@@ -727,7 +726,7 @@ export class NxScopedHostForBuilders extends NxScopedHost {
       catchError((err) => {
         console.error('Unable to read angular.json');
         console.error(err);
-        exitAndFlushAnalytics(1);
+        process.exit(1);
       })
     );
   }

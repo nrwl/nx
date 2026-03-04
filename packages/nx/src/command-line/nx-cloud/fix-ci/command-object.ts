@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsFixCiCommand: CommandModule = {
   command: 'fix-ci [options]',
@@ -12,6 +11,6 @@ export const yargsFixCiCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    exitAndFlushAnalytics(await (await import('./fix-ci')).fixCiHandler(args));
+    process.exit(await (await import('./fix-ci')).fixCiHandler(args));
   },
 };

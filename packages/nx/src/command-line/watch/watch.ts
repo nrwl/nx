@@ -3,7 +3,6 @@ import { ChangedFile, daemonClient } from '../../daemon/client/client';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface WatchArguments {
   projects?: string[];
@@ -166,7 +165,7 @@ export async function watch(args: WatchArguments) {
       title:
         'Daemon is not running. The watch command is not supported without the Nx Daemon.',
     });
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 
   if (
@@ -180,7 +179,7 @@ export async function watch(args: WatchArguments) {
         'You cannot use a replacement for projects when including global workspace files because there will be scenarios where there are file changes not associated with a project.',
       ],
     });
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 
   args.verbose &&
@@ -225,12 +224,12 @@ export async function watch(args: WatchArguments) {
           title: 'Failed to reconnect to daemon after multiple attempts',
           bodyLines: ['Please restart your watch command.'],
         });
-        exitAndFlushAnalytics(1);
+        process.exit(1);
       } else if (err instanceof VersionMismatchError) {
         output.error({
           title: 'Nx version changed. Please restart your command.',
         });
-        exitAndFlushAnalytics(1);
+        process.exit(1);
       } else if (err !== null) {
         output.error({
           title: 'Watch error',

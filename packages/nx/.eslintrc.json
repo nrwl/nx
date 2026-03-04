@@ -58,13 +58,6 @@
       }
     },
     {
-      "files": ["*.ts"],
-      "excludedFiles": ["*.spec.ts"],
-      "rules": {
-        "@nx/workspace-use-exit-and-flush-analytics": "error"
-      }
-    },
-    {
       "files": ["*.js", "*.jsx"],
       "rules": {}
     },

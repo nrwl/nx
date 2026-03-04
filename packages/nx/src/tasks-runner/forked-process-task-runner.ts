@@ -22,7 +22,6 @@ import { RunningTask } from './running-tasks/running-task';
 import { registerTaskProcessStart } from './task-io-service';
 import { Batch } from './tasks-schedule';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -245,7 +244,7 @@ export class ForkedProcessTaskRunner {
 
     p.onExit((code, terminalOutput) => {
       if (!this.tuiEnabled && code > 128) {
-        exitAndFlushAnalytics(code);
+        process.exit(code);
       }
       this.pseudoTerminals.delete(pseudoTerminal);
       this.processes.delete(p);

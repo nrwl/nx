@@ -29,7 +29,6 @@ import { launchEditor } from './utils/launch-editor';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => {
@@ -78,7 +77,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     );
     if (filterError) {
       output.error(filterError);
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
 
     // If no release groups have version plans enabled, it doesn't make sense to use the plan command only to set yourself up for an error at release time
@@ -330,7 +329,7 @@ async function promptForVersion(message: string): Promise<string> {
     });
     // Ensure the cursor is always restored before exiting
     process.stdout.write('\u001b[?25h');
-    exitAndFlushAnalytics(0);
+    process.exit(0);
   }
 }
 
@@ -381,6 +380,6 @@ async function _promptForMessage(versionPlanName: string): Promise<string> {
     output.log({
       title: 'Cancelled version plan creation.',
     });
-    exitAndFlushAnalytics(0);
+    process.exit(0);
   }
 }

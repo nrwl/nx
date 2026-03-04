@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import { exitAndFlushAnalytics } from '../../../../analytics/analytics';
 
 export function checkForUncommittedChanges() {
   const gitResult = execSync('git status --porcelain', {
@@ -16,6 +15,6 @@ export function checkForUncommittedChanges() {
     console.log('');
     console.log(filteredResults.join('\n').toString());
     console.log('Please commit your changes before running the migrator!');
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 }

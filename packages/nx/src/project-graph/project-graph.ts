@@ -42,7 +42,6 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { reportProjectGraphCreationEvent } from '../analytics';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -215,7 +214,7 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
     } else {
       console.error(e);
     }
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   } else {
     throw e;
   }

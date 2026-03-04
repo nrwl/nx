@@ -22,7 +22,6 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -93,7 +92,7 @@ export async function affected(
             extraTargetDependencies,
             extraOptions
           );
-          exitAndFlushAnalytics(status);
+          process.exit(status);
         }
         break;
       }
@@ -101,7 +100,7 @@ export async function affected(
     await output.drain();
   } catch (e) {
     printError(e, args.verbose);
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 }
 

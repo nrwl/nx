@@ -7,7 +7,6 @@ import { getGitDiff, parseCommits } from './git';
 import { ReleaseGraph } from './release-graph';
 import { determineSemverChange, SemverSpecifier } from './semver';
 import { getCommitsRelevantToProjects } from './shared';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
@@ -73,6 +72,6 @@ export async function resolveSemverSpecifierFromPrompt(
     // Ensure the cursor is always restored before exiting
     process.stdout.write('\u001b[?25h');
     // We need to catch the error from enquirer prompt, otherwise yargs will print its help
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 }
