@@ -30,7 +30,6 @@ import {
   resolve,
   sep,
 } from 'node:path';
-import * as posix from 'node:path/posix';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import picomatch = require('picomatch');
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -187,7 +186,7 @@ function createConfigContext(
   return {
     originalPath: configFilePath,
     absolutePath,
-    relativePath: posix.relative(workspaceRoot, absolutePath),
+    relativePath: posixRelative(workspaceRoot, absolutePath),
     basename: basename(configFilePath),
     basenameNoExt: basename(configFilePath, '.json'),
     dirname: dirname(absolutePath),
@@ -216,7 +215,7 @@ function getConfigContext(
   if (!cache.projectContexts.has(projectRoot)) {
     cache.projectContexts.set(projectRoot, {
       root: projectRoot,
-      normalized: posix.normalize(projectRoot),
+      normalized: normalizePath(projectRoot),
       absolute: join(workspaceRoot, projectRoot),
     });
   }
@@ -1440,6 +1439,12 @@ function readTsConfig(
     ts = require('typescript');
   }
 
+  // Normalize to forward slashes for TypeScript compatibility on Windows.
+  // TypeScript's parser normalizes paths inconsistently — diagnostics use
+  // normalized paths but the source file retains the original, causing
+  // assertion failures when backslashes are present.
+  tsConfigPath = tsConfigPath.replaceAll('\\', '/');
+
   const tsSys: System = {
     ...ts.sys,
     readFile: (path) => readFile(path, workspaceRoot, cache),
@@ -1683,5 +1688,5 @@ function toRelativePaths(
 }
 
 function posixRelative(workspaceRoot: string, path: string): string {
-  return posix.normalize(relative(workspaceRoot, path));
+  return normalizePath(relative(workspaceRoot, path));
 }
