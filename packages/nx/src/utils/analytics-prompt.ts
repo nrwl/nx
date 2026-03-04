@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'crypto';
+import { createHash } from 'crypto';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
 import { join } from 'path';
@@ -24,8 +24,8 @@ export async function ensureAnalyticsPreferenceSet(): Promise<void> {
   }
 
   const nxJson = readNxJson(workspaceRoot);
-  // Check if already set (string = enabled with UUID, false = disabled)
-  if (typeof nxJson?.analytics === 'string' || nxJson?.analytics === false) {
+  // Check if already set (true = enabled, false = disabled)
+  if (typeof nxJson?.analytics === 'boolean') {
     return;
   }
 
@@ -34,13 +34,13 @@ export async function ensureAnalyticsPreferenceSet(): Promise<void> {
   saveAnalyticsPreference(analyticsEnabled);
 }
 
-async function promptForAnalyticsPreference(): Promise<boolean> {
+export async function promptForAnalyticsPreference(): Promise<boolean> {
   try {
     output.log({
-      title: 'Help improve Nx by sharing anonymous usage data',
+      title: 'Help improve Nx by sharing usage data',
       bodyLines: [
-        'Nx collects anonymous usage analytics to help improve the developer experience.',
-        'No personal or project-specific information is collected.',
+        'Nx collects usage analytics to help improve the developer experience.',
+        'No project-specific information is collected.',
         'Learn more: https://cloud.nx.app/privacy',
       ],
     });
@@ -48,7 +48,7 @@ async function promptForAnalyticsPreference(): Promise<boolean> {
     const { enableAnalytics } = await prompt<{ enableAnalytics: boolean }>({
       type: 'confirm',
       name: 'enableAnalytics',
-      message: 'Share anonymous usage data with the Nx team?',
+      message: 'Share usage data with the Nx team?',
       initial: true,
     });
 
@@ -63,7 +63,7 @@ function saveAnalyticsPreference(enabled: boolean): void {
   try {
     const nxJsonPath = join(workspaceRoot, 'nx.json');
     const nxJson = readNxJson(workspaceRoot);
-    nxJson.analytics = enabled ? generateWorkspaceId() : false;
+    nxJson.analytics = enabled;
     writeJsonFile(nxJsonPath, nxJson);
 
     if (enabled) {
@@ -82,15 +82,18 @@ function saveAnalyticsPreference(enabled: boolean): void {
 }
 
 /**
- * Generates a deterministic workspace ID by hashing the git remote URL.
- * Same repo = same ID across clones, but the actual URL stays private.
- * Falls back to a random UUID if no git remote is available.
+ * Generates a deterministic workspace ID from the git repo.
+ * Tries git remote URL first, then falls back to the first commit SHA.
+ * Returns null if not in a git repo (no telemetry for non-git workspaces).
  */
-export function generateWorkspaceId(): string {
+export function generateWorkspaceId(cwd?: string): string | null {
+  const root = cwd ?? workspaceRoot;
+
+  // Try git remote URL hash first
   try {
     const remoteUrl = execSync('git remote get-url origin', {
       stdio: 'pipe',
-      cwd: workspaceRoot,
+      cwd: root,
     })
       .toString()
       .trim();
@@ -101,14 +104,26 @@ export function generateWorkspaceId(): string {
   } catch {
     // No git remote available
   }
-  return randomUUID();
-}
 
-/**
- * Returns the analytics ID if analytics is enabled, false if disabled,
- * or undefined if not yet set.
- */
-export function getAnalyticsId(): string | false | undefined {
-  const nxJson = readNxJson(workspaceRoot);
-  return nxJson?.analytics;
+  // Fall back to first commit SHA hash
+  try {
+    const firstCommit = execSync('git rev-list --max-parents=0 HEAD', {
+      stdio: 'pipe',
+      cwd: root,
+    })
+      .toString()
+      .trim()
+      .split('\n')[0]; // Take first line in case of multiple roots
+
+    if (firstCommit) {
+      return createHash('sha256')
+        .update(firstCommit)
+        .digest('hex')
+        .slice(0, 32);
+    }
+  } catch {
+    // Not a git repo
+  }
+
+  return null;
 }

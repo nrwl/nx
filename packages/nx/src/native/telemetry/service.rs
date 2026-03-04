@@ -59,14 +59,12 @@ impl TelemetryService {
             .insert(request_param::PROTOCOL_VERSION.to_string(), "2".to_string());
         common_request_parameters
             .insert(request_param::CLIENT_ID.to_string(), workspace_id.clone());
-        common_request_parameters
-            .insert(request_param::USER_ID.to_string(), user_id.clone());
+        common_request_parameters.insert(request_param::USER_ID.to_string(), user_id.clone());
         common_request_parameters.insert(
             request_param::TRACKING_ID.to_string(),
             TRACKING_ID_PROD.to_string(),
         );
-        common_request_parameters
-            .insert(request_param::SESSION_ID.to_string(), session_id);
+        common_request_parameters.insert(request_param::SESSION_ID.to_string(), session_id);
         common_request_parameters.insert(
             request_param::USER_AGENT_ARCHITECTURE.to_string(),
             os_arch.clone(),
@@ -77,8 +75,10 @@ impl TelemetryService {
             request_param::USER_AGENT_PLATFORM_VERSION.to_string(),
             os_release,
         );
-        common_request_parameters
-            .insert(request_param::USER_AGENT_MOBILE.to_string(), "0".to_string());
+        common_request_parameters.insert(
+            request_param::USER_AGENT_MOBILE.to_string(),
+            "0".to_string(),
+        );
         common_request_parameters
             .insert(request_param::SESSION_ENGAGED.to_string(), "1".to_string());
         common_request_parameters.insert(
@@ -352,11 +352,7 @@ async fn send_batches(
             );
             match send_request(client, common_params, chunk.to_vec()).await {
                 Ok(_) => {
-                    tracing::debug!(
-                        "Sent {} events: [{}]",
-                        chunk.len(),
-                        event_names.join(", ")
-                    );
+                    tracing::debug!("Sent {} events: [{}]", chunk.len(), event_names.join(", "));
                 }
                 Err(e) => {
                     tracing::trace!("Telemetry Send Error: {}", e);
