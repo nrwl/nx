@@ -1173,6 +1173,17 @@ describe('app', () => {
       expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
+
+    it('should keep skipLibCheck in tsconfig.json when there is no tsconfig.base.json', async () => {
+      appTree.delete('tsconfig.base.json');
+
+      await generateApp(appTree, '.', {
+        name: 'my-app',
+      });
+
+      const tsconfig = readJson(appTree, 'tsconfig.json');
+      expect(tsconfig.compilerOptions.skipLibCheck).toBe(true);
+    });
   });
 
   describe('--minimal', () => {

@@ -1,5 +1,6 @@
 import { defaultMaxListeners } from 'events';
 import { writeFileSync } from 'fs';
+import * as pc from 'picocolors';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -32,6 +33,7 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
+import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
 import {
@@ -655,15 +657,16 @@ export class TaskOrchestrator {
     pipeOutput: boolean
   ): Promise<RunningTask> {
     const shouldPrefix =
-      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+      streamOutput &&
+      process.env.NX_PREFIX_OUTPUT === 'true' &&
+      !this.tuiEnabled;
     const targetConfiguration = getTargetConfigurationForTask(
       task,
       this.projectGraph
     );
     if (
       process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
-      targetConfiguration.executor === 'nx:run-commands' &&
-      !shouldPrefix
+      targetConfiguration.executor === 'nx:run-commands'
     ) {
       try {
         const { schema } = getExecutorForTask(task, this.projectGraph);
@@ -693,7 +696,7 @@ export class TaskOrchestrator {
             this.tuiEnabled ||
             (!this.tasksSchedule.hasTasks() &&
               this.runningContinuousTasks.size === 0),
-          streamOutput,
+          streamOutput: streamOutput && !shouldPrefix,
         };
 
         const runningTask = await runCommands(
@@ -709,7 +712,13 @@ export class TaskOrchestrator {
           this.runningRunCommandsTasks.delete(task.id);
         });
 
-        if (this.tuiEnabled) {
+        if (shouldPrefix) {
+          const color = getColor(task.target.project);
+          const formattedPrefix = pc.bold(color(`${task.target.project}:`));
+          runningTask.onOutput((chunk) => {
+            writePrefixedLines(chunk, formattedPrefix);
+          });
+        } else if (this.tuiEnabled) {
           if (runningTask instanceof PseudoTtyProcess) {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
             this.options.lifeCycle.registerRunningTask(
@@ -727,7 +736,7 @@ export class TaskOrchestrator {
           }
         }
 
-        if (!streamOutput) {
+        if (!streamOutput && !shouldPrefix) {
           // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
           runningTask.onExit((code, terminalOutput) => {
             this.options.lifeCycle.printTaskTerminalOutput(
