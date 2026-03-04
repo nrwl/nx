@@ -2,7 +2,6 @@ package dev.nx.maven.utils
 
 import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.cache.CacheConfig
-import dev.nx.maven.cache.DependentTaskOutput
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
@@ -98,10 +97,6 @@ class MojoAnalyzer(
           inputs.add(input)
         }
       }
-    }
-
-    mojoConfig?.dependentTaskOutputs?.forEach { dto ->
-      dependentTaskOutputInputs.add(DependentTaskOutputs(dto.path, dto.transitive))
     }
 
     mojoConfig?.inputProperties?.forEach { propertyPath ->
