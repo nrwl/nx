@@ -6,7 +6,7 @@
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
         <version>0.0.14</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../parent-pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>batch-runner-adapters</artifactId>

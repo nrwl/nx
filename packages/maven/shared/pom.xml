@@ -6,7 +6,7 @@
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
         <version>0.0.14</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../parent-pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>nx-maven-shared</artifactId>
@@ -16,8 +16,8 @@
     <description>Shared utilities for Nx Maven plugin and batch runner</description>
 
     <properties>
-        <!-- Install to local repo (needed for reactor builds), but don't deploy to Maven Central -->
-        <maven.install.skip>false</maven.install.skip>
+        <!-- Skip install and deploy - shared is consumed via shade plugin, not from local repo -->
+        <maven.install.skip>true</maven.install.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.gpg.skip>true</maven.gpg.skip>
     </properties>
