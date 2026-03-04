@@ -3,7 +3,7 @@
     "assemble": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:jar"],
+      "dependsOn": [{ "projects": "list", "target": "jar" }],
       "command": "./gradlew :list:assemble",
       "metadata": {
         "description": "Assembles the outputs of this project.",
@@ -15,7 +15,10 @@
     "build": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:check", "list:assemble"],
+      "dependsOn": [
+        { "projects": "list", "target": "check" },
+        { "projects": "list", "target": "assemble" }
+      ],
       "command": "./gradlew :list:build",
       "metadata": {
         "description": "Assembles and tests this project.",
@@ -51,7 +54,7 @@
     "buildNeeded": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:build"],
+      "dependsOn": [{ "projects": "list", "target": "build" }],
       "command": "./gradlew :list:buildNeeded",
       "metadata": {
         "description": "Assembles and tests this project and all projects it depends on.",
@@ -63,7 +66,7 @@
     "check": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:test"],
+      "dependsOn": [{ "projects": "list", "target": "test" }],
       "command": "./gradlew :list:check",
       "metadata": {
         "description": "Runs all checks.",
@@ -75,7 +78,10 @@
     "classes": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:compileJava", "list:processResources"],
+      "dependsOn": [
+        { "projects": "list", "target": "compileJava" },
+        { "projects": "list", "target": "processResources" }
+      ],
       "command": "./gradlew :list:classes",
       "metadata": {
         "description": "Assembles main classes.",
@@ -128,7 +134,10 @@
         "{projectRoot}/build/generated/sources/headers/java/test",
         "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
       ],
-      "dependsOn": ["list:classes", "list:compileJava"],
+      "dependsOn": [
+        { "projects": "list", "target": "classes" },
+        { "projects": "list", "target": "compileJava" }
+      ],
       "command": "./gradlew :list:compileTestJava",
       "metadata": {
         "description": "Compiles test Java source.",
@@ -150,10 +159,10 @@
         "{projectRoot}/src/test/java/org/example/list/LinkedListTest.java"
       ],
       "dependsOn": [
-        "list:compileTestJava",
-        "list:testClasses",
-        "list:classes",
-        "list:compileJava"
+        { "projects": "list", "target": "compileTestJava" },
+        { "projects": "list", "target": "testClasses" },
+        { "projects": "list", "target": "classes" },
+        { "projects": "list", "target": "compileJava" }
       ],
       "outputs": [
         "{projectRoot}/build/test-results/test/binary",
@@ -174,10 +183,10 @@
         "{projectRoot}/src/test/java/org/example/list/LinkedList2Test.java"
       ],
       "dependsOn": [
-        "list:compileTestJava",
-        "list:testClasses",
-        "list:classes",
-        "list:compileJava"
+        { "projects": "list", "target": "compileTestJava" },
+        { "projects": "list", "target": "testClasses" },
+        { "projects": "list", "target": "classes" },
+        { "projects": "list", "target": "compileJava" }
       ],
       "outputs": [
         "{projectRoot}/build/test-results/test/binary",
@@ -221,7 +230,7 @@
     "nxProjectGraph": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:nxProjectGraphLocal"],
+      "dependsOn": [{ "projects": "list", "target": "nxProjectGraphLocal" }],
       "command": "./gradlew :list:nxProjectGraph",
       "metadata": {
         "description": "Print nodes report for Nx",
@@ -325,7 +334,10 @@
       "parallelism": false,
       "inputs": ["{projectRoot}/build/tmp/jar/MANIFEST.MF"],
       "outputs": ["{projectRoot}/build/libs/list.jar"],
-      "dependsOn": ["list:classes", "list:compileJava"],
+      "dependsOn": [
+        { "projects": "list", "target": "classes" },
+        { "projects": "list", "target": "compileJava" }
+      ],
       "command": "./gradlew :list:jar",
       "metadata": {
         "description": "Assembles a jar archive containing the classes of the \u0027main\u0027 feature.",
@@ -352,7 +364,10 @@
         "{projectRoot}/src/main/java/org/example/list/LinkedList.java"
       ],
       "outputs": ["{projectRoot}/build/docs/javadoc"],
-      "dependsOn": ["list:classes", "list:compileJava"],
+      "dependsOn": [
+        { "projects": "list", "target": "classes" },
+        { "projects": "list", "target": "compileJava" }
+      ],
       "command": "./gradlew :list:javadoc",
       "metadata": {
         "description": "Generates Javadoc API documentation for the \u0027main\u0027 feature.",
@@ -430,10 +445,10 @@
       "cache": true,
       "parallelism": false,
       "dependsOn": [
-        "list:taskReport",
-        "list:dependencyReport",
-        "list:propertyReport",
-        "list:htmlDependencyReport"
+        { "projects": "list", "target": "taskReport" },
+        { "projects": "list", "target": "dependencyReport" },
+        { "projects": "list", "target": "propertyReport" },
+        { "projects": "list", "target": "htmlDependencyReport" }
       ],
       "command": "./gradlew :list:projectReport",
       "metadata": {
@@ -522,10 +537,10 @@
         "{projectRoot}/build/test-results/test"
       ],
       "dependsOn": [
-        "list:compileTestJava",
-        "list:testClasses",
-        "list:classes",
-        "list:compileJava"
+        { "projects": "list", "target": "compileTestJava" },
+        { "projects": "list", "target": "testClasses" },
+        { "projects": "list", "target": "classes" },
+        { "projects": "list", "target": "compileJava" }
       ],
       "command": "./gradlew :list:test",
       "metadata": {
@@ -538,7 +553,10 @@
     "testClasses": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:processTestResources", "list:compileTestJava"],
+      "dependsOn": [
+        { "projects": "list", "target": "processTestResources" },
+        { "projects": "list", "target": "compileTestJava" }
+      ],
       "command": "./gradlew :list:testClasses",
       "metadata": {
         "description": "Assembles test classes.",

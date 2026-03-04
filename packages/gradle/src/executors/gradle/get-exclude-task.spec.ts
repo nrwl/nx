@@ -9,7 +9,10 @@ describe('getExcludeTasks', () => {
         root: 'app1',
         targets: {
           test: {
-            dependsOn: ['app1:lint', 'app2:build'],
+            dependsOn: [
+              { projects: 'app1', target: 'lint' },
+              { projects: 'app2', target: 'build' },
+            ],
             options: { taskName: 'testApp1' },
           },
           lint: { options: { taskName: 'lintApp1' } },
@@ -33,7 +36,7 @@ describe('getExcludeTasks', () => {
         root: 'app3',
         targets: {
           deploy: {
-            dependsOn: ['app1:test'],
+            dependsOn: [{ projects: 'app1', target: 'test' }],
             options: { taskName: 'deployApp3' },
           },
         },
@@ -123,13 +126,23 @@ describe('getAllDependsOn', () => {
       type: 'lib',
       data: {
         root: 'a',
-        targets: { build: { dependsOn: ['b:build', 'c:build'] } },
+        targets: {
+          build: {
+            dependsOn: [
+              { projects: 'b', target: 'build' },
+              { projects: 'c', target: 'build' },
+            ],
+          },
+        },
       },
     },
     b: {
       name: 'b',
       type: 'lib',
-      data: { root: 'b', targets: { build: { dependsOn: ['d:build'] } } },
+      data: {
+        root: 'b',
+        targets: { build: { dependsOn: [{ projects: 'd', target: 'build' }] } },
+      },
     },
     c: {
       name: 'c',
@@ -144,12 +157,20 @@ describe('getAllDependsOn', () => {
     e: {
       name: 'e',
       type: 'lib',
-      data: { root: 'e', targets: { build: { dependsOn: ['f:build'] } } },
+      data: {
+        root: 'e',
+        targets: { build: { dependsOn: [{ projects: 'f', target: 'build' }] } },
+      },
     },
     f: {
       name: 'f',
       type: 'lib',
-      data: { root: 'f', targets: { build: { dependsOn: ['e:build'] } } }, // Circular dependency
+      data: {
+        root: 'f',
+        targets: {
+          build: { dependsOn: [{ projects: 'e', target: 'build' }] },
+        },
+      }, // Circular dependency
     },
   };
 

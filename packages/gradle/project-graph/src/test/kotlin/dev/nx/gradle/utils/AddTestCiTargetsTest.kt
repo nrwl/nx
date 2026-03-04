@@ -164,7 +164,7 @@ class AddTestCiTargetsTest {
     assertTrue(dependsOn != null, "dependsOn should be present when test task has dependencies")
     assertTrue(dependsOn!!.isNotEmpty(), "dependsOn should not be empty")
     assertTrue(
-        dependsOn.any { it.toString().contains("compileTestKotlin") },
+        dependsOn.any { it is TargetDependency && it.target.contains("compileTestKotlin") },
         "dependsOn should contain the dependency task name")
   }
 

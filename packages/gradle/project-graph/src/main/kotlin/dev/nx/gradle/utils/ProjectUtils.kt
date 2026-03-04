@@ -207,23 +207,28 @@ fun processTargetsForProject(
         if (task.name == "check") {
           val replacedDependencies =
               (target["dependsOn"] as? List<*>)?.map { dependency ->
-                val dependsOn = dependency.toString()
-
-                when {
-                  hasCiTestTarget && dependsOn == "$nxProjectName:$testTargetName" -> {
-                    "$nxProjectName:$ciTestTargetBaseName"
-                  }
-                  hasCiTestTarget && dependsOn.startsWith("$nxProjectName:") -> {
-                    val taskName = dependsOn.removePrefix("$nxProjectName:")
-                    // Check if it's a test task that's not the default test target
-                    if (testTasks.any { it.name == taskName } &&
-                        applyPrefix(taskName) != testTargetName) {
-                      "$nxProjectName:$ciTestTargetBaseName-$taskName"
-                    } else {
-                      dependency
+                if (dependency !is TargetDependency) {
+                  dependency
+                } else {
+                  when {
+                    hasCiTestTarget &&
+                        dependency.projects == nxProjectName &&
+                        dependency.target == testTargetName -> {
+                      TargetDependency(projects = nxProjectName, target = ciTestTargetBaseName)
                     }
+                    hasCiTestTarget && dependency.projects == nxProjectName -> {
+                      val taskName = dependency.target
+                      // Check if it's a test task that's not the default test target
+                      if (testTasks.any { it.name == taskName } &&
+                          applyPrefix(taskName) != testTargetName) {
+                        TargetDependency(
+                            projects = nxProjectName, target = "$ciTestTargetBaseName-$taskName")
+                      } else {
+                        dependency
+                      }
+                    }
+                    else -> dependency
                   }
-                  else -> dependency
                 }
               } ?: emptyList()
 
@@ -244,9 +249,10 @@ fun processTargetsForProject(
               applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
           val replacedDependencies =
               (target["dependsOn"] as? List<*>)?.map { dep ->
-                val dependsOn = dep.toString()
-                if (dependsOn == "$nxProjectName:${applyPrefix("check")}") {
-                  "$nxProjectName:$ciCheckTargetName"
+                if (dep is TargetDependency &&
+                    dep.projects == nxProjectName &&
+                    dep.target == applyPrefix("check")) {
+                  TargetDependency(projects = nxProjectName, target = ciCheckTargetName)
                 } else {
                   dep
                 }

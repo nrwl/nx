@@ -2,6 +2,7 @@ package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalNode
+import dev.nx.gradle.data.TargetDependency
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
@@ -82,7 +83,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = getDependsOnForTask(null, taskA, dependencies)
 
     assertNotNull(dependsOn)
-    assertTrue(dependsOn!!.contains("myApp:taskB"))
+    assertTrue(dependsOn!!.contains(TargetDependency(projects = "myApp", target = "taskB")))
   }
 
   @Test
@@ -274,10 +275,10 @@ class ProcessTaskUtilsTest {
       assertEquals(2, resultWithPreComputed.size)
 
       // Should contain both dependencies
-      assertTrue(resultWithPreComputed.contains("test:taskB"))
-      assertTrue(resultWithPreComputed.contains("test:taskC"))
-      assertTrue(resultWithoutPreComputed.contains("test:taskB"))
-      assertTrue(resultWithoutPreComputed.contains("test:taskC"))
+      assertTrue(resultWithPreComputed.contains(TargetDependency(projects = "test", target = "taskB")))
+      assertTrue(resultWithPreComputed.contains(TargetDependency(projects = "test", target = "taskC")))
+      assertTrue(resultWithoutPreComputed.contains(TargetDependency(projects = "test", target = "taskB")))
+      assertTrue(resultWithoutPreComputed.contains(TargetDependency(projects = "test", target = "taskC")))
     }
 
     @Test
@@ -482,7 +483,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = result["dependsOn"] as? List<*>
     assertNotNull(dependsOn)
     assertEquals(1, dependsOn!!.size)
-    assertEquals("testProject:compile", dependsOn[0])
+    assertEquals(TargetDependency(projects = "testProject", target = "compile"), dependsOn[0])
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
@@ -634,8 +635,8 @@ class ProcessTaskUtilsTest {
 
         assertNotNull(dependsOn)
         assertTrue(
-            dependsOn!!.contains(":lib:compileJava"),
-            "Expected ':lib:compileJava' but got $dependsOn")
+            dependsOn!!.contains(TargetDependency(projects = ":lib", target = "compileJava")),
+            "Expected TargetDependency(project=':lib', target='compileJava') but got $dependsOn")
       } finally {
         rootDir.deleteRecursively()
       }

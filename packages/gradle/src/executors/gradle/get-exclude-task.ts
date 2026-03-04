@@ -29,9 +29,10 @@ export function getExcludeTasks(
     const taskDeps = nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
 
     for (const dep of taskDeps) {
-      const taskId = typeof dep === 'string' ? dep : dep?.target;
-      if (taskId && !runningTaskIds.has(taskId)) {
-        const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
+      const depTaskId =
+        typeof dep === 'string' ? dep : `${dep.projects}:${dep.target}`;
+      if (depTaskId && !runningTaskIds.has(depTaskId)) {
+        const gradleTaskName = getGradleTaskNameWithNxTaskId(depTaskId, nodes);
         if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
           excludes.add(gradleTaskName);
         }
@@ -71,7 +72,8 @@ export function getAllDependsOn(
           ?.dependsOn ?? [];
 
       for (const dep of directDependencies) {
-        const depTaskId = typeof dep === 'string' ? dep : dep?.target;
+        const depTaskId =
+          typeof dep === 'string' ? dep : `${dep.projects}:${dep.target}`;
         if (depTaskId && !allDependsOn.has(depTaskId)) {
           stack.push(depTaskId);
         }

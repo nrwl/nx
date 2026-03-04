@@ -4,6 +4,7 @@ import dev.nx.gradle.NxTaskExtension
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
+import dev.nx.gradle.data.TargetDependency
 import java.io.File
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -274,7 +275,8 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
-internal val taskDependencyCache = ThreadLocal.withInitial { mutableMapOf<String, List<String>?>() }
+internal val taskDependencyCache =
+    ThreadLocal.withInitial { mutableMapOf<String, List<TargetDependency>?>() }
 
 fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
@@ -282,7 +284,7 @@ fun getDependsOnForTask(
     dependencies: MutableSet<Dependency>? = null,
     targetNameOverrides: Map<String, String> = emptyMap(),
     targetNamePrefix: String = ""
-): List<String>? {
+): List<TargetDependency>? {
 
   // Helper function to apply prefix to target names
   fun applyPrefix(name: String): String =
@@ -297,7 +299,7 @@ fun getDependsOnForTask(
     return cache[taskKey]
   }
 
-  fun mapTasksToNames(tasks: Collection<Task>): List<String> {
+  fun mapTasksToTargetDependencies(tasks: Collection<Task>): List<TargetDependency> {
     return tasks.mapNotNull { depTask ->
       val depProject = depTask.project
       val taskProject = task.project
@@ -321,7 +323,7 @@ fun getDependsOnForTask(
                 } else {
                   depTask.name
                 })
-        "${getNxProjectName(depProject)}:${taskName}"
+        TargetDependency(projects = getNxProjectName(depProject), target = taskName)
       } else {
         null
       }
@@ -336,7 +338,7 @@ fun getDependsOnForTask(
       val combinedDependsOn = getDependsOnTask(task)
       val result =
           if (combinedDependsOn.isNotEmpty()) {
-            mapTasksToNames(combinedDependsOn)
+            mapTasksToTargetDependencies(combinedDependsOn)
           } else {
             null
           }
@@ -358,7 +360,7 @@ fun getDependsOnForTask(
     return try {
       val result =
           if (dependsOnTasks.isNotEmpty()) {
-            mapTasksToNames(dependsOnTasks)
+            mapTasksToTargetDependencies(dependsOnTasks)
           } else {
             null
           }
