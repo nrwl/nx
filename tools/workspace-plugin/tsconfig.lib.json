@@ -8,12 +8,7 @@
     "esModuleInterop": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "jest.config.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "src/**/files/**/*.ts"
-  ],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {
       "path": "../../packages/nx/tsconfig.lib.json"
