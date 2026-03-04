@@ -47,7 +47,6 @@ import {
   type ImportWarning,
 } from './utils/ai-output';
 import { getPluginReason } from '../init/init-v2';
-import { reportCommandRunEvent } from '../../analytics';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -79,7 +78,6 @@ export interface ImportOptions {
 }
 
 export async function importHandler(options: ImportOptions) {
-  reportCommandRunEvent('import');
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
   const aiMode = isAiAgent();

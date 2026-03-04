@@ -21,7 +21,6 @@ import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
-import { reportCommandRunEvent } from '../../analytics';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -32,7 +31,6 @@ export async function configureAiAgentsHandler(
     return await configureAiAgentsHandlerImpl(args);
   }
 
-  reportCommandRunEvent('configure-ai-agents', undefined, args);
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||

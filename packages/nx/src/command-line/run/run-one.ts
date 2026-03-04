@@ -21,7 +21,7 @@ import { splitTarget } from '../../utils/split-target';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
-import { flushAnalytics, reportCommandRunEvent } from '../../analytics';
+import { flushAnalytics } from '../../analytics';
 
 export async function runOne(
   cwd: string,
@@ -60,7 +60,6 @@ export async function runOne(
   const { projects, projectName } = getProjects(projectGraph, opts.project);
 
   if (nxArgs.help) {
-    reportCommandRunEvent('run --help');
     await (
       await import('./run')
     ).printTargetRunHelp(
@@ -76,7 +75,6 @@ export async function runOne(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   if (nxArgs.graph) {
-    reportCommandRunEvent('run --graph');
     const projectNames = projects.map((t) => t.name);
     const file = readGraphFileFromGraphArg(nxArgs);
 
@@ -92,7 +90,6 @@ export async function runOne(
       projectNames
     );
   } else {
-    reportCommandRunEvent('run', undefined, args);
     const status = await runCommand(
       projects,
       projectGraph,

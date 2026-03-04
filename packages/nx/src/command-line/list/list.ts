@@ -16,7 +16,6 @@ import {
   formatPluginsAsJson,
   listPowerpackPlugins,
 } from '../../utils/plugins/output';
-import { reportCommandRunEvent } from '../../analytics';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */
@@ -34,7 +33,6 @@ export interface ListArgs {
  *
  */
 export async function listHandler(args: ListArgs): Promise<void> {
-  reportCommandRunEvent('list');
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = readProjectsConfigurationFromProjectGraph(projectGraph);
 

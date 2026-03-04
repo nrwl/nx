@@ -12,7 +12,6 @@ import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
-import { reportCommandRunEvent } from '../../analytics';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
@@ -21,7 +20,6 @@ const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
 const INCREMENTAL_BACKOFF_FIRST_DELAY = 100;
 
 export async function resetHandler(args: ResetCommandOptions) {
-  reportCommandRunEvent('reset', undefined, args);
   let errors = [];
 
   const all =
