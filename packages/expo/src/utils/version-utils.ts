@@ -21,6 +21,7 @@ import {
   reactNativeV54Version,
   metroV54Version,
   reactNativeWebV54Version,
+  reactTestRendererV54Version,
   // v53 versions
   expoV53Version,
   expoV53SplashScreenVersion,
@@ -37,6 +38,7 @@ import {
   reactNativeV53Version,
   metroV53Version,
   reactNativeWebV53Version,
+  reactTestRendererV53Version,
   // Shared versions
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
@@ -66,6 +68,7 @@ export type ExpoDependenciesVersions = {
   reactNativeSvgTransformer: string;
   reactNativeSvg: string;
   testingLibraryReactNative: string;
+  reactTestRenderer: string;
   babelRuntime: string;
 };
 
@@ -100,6 +103,7 @@ export async function getExpoDependenciesVersionsToInstall(
       reactNative: reactNativeV53Version,
       metro: metroV53Version,
       reactNativeWeb: reactNativeWebV53Version,
+      reactTestRenderer: reactTestRendererV53Version,
       ...sharedVersions,
     };
   }
@@ -121,6 +125,7 @@ export async function getExpoDependenciesVersionsToInstall(
     reactNative: reactNativeV54Version,
     metro: metroV54Version,
     reactNativeWeb: reactNativeWebV54Version,
+    reactTestRenderer: reactTestRendererV54Version,
     ...sharedVersions,
   };
 }
