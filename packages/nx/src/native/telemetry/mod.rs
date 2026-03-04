@@ -38,6 +38,57 @@ const MAX_URL_PARAM_VALUE_LENGTH: usize = 500;
 const MAX_EVENTS_PER_BATCH: usize = 25;
 const MAX_CUSTOM_PARAMS: usize = 25;
 
+// =============================================================================
+// GA4 Measurement Protocol parameter names
+// Centralizing these prevents typos from silently sending data to wrong dimensions.
+// =============================================================================
+
+/// GA4 request-level parameters (sent in the URL query string)
+mod request_param {
+    pub const PROTOCOL_VERSION: &str = "v";
+    pub const CLIENT_ID: &str = "cid";
+    pub const USER_ID: &str = "uid";
+    pub const TRACKING_ID: &str = "tid";
+    pub const SESSION_ID: &str = "sid";
+    pub const USER_AGENT_ARCHITECTURE: &str = "uaa";
+    pub const USER_AGENT_PLATFORM: &str = "uap";
+    pub const USER_AGENT_PLATFORM_VERSION: &str = "uapv";
+    pub const USER_AGENT_MOBILE: &str = "uamb";
+    pub const SESSION_ENGAGED: &str = "seg";
+    pub const USER_AGENT_FULL_VERSION_LIST: &str = "uafvl";
+    pub const DEBUG_VIEW: &str = "_dbg";
+}
+
+/// GA4 event-level parameters (sent in the POST body)
+mod event_param {
+    pub const EVENT_NAME: &str = "en";
+    pub const DOCUMENT_TITLE: &str = "dt";
+    pub const DOCUMENT_LOCATION: &str = "dl";
+}
+
+/// User-scoped custom dimensions (up.* = user property)
+mod user_dimension {
+    pub const OS_ARCHITECTURE: &str = "up.os_architecture";
+    pub const USER_ID: &str = "up.user_id";
+    pub const NODE_VERSION: &str = "up.node_version";
+    pub const PACKAGE_MANAGER: &str = "up.package_manager";
+    pub const PACKAGE_MANAGER_VERSION: &str = "up.package_manager_version";
+    pub const NX_VERSION: &str = "up.nx_version";
+}
+
+/// Event-scoped custom dimensions (ep.* = event parameter string, epn.* = number)
+/// TypeScript (parameter.ts) should import these values rather than redefining them.
+mod event_dimension {
+    pub const IS_AI_AGENT: &str = "ep.is_ai_agent";
+    pub const IS_CI: &str = "ep.is_ci";
+    pub const COMMAND: &str = "ep.nx_command";
+    pub const GENERATOR_NAME: &str = "ep.generator_name";
+    pub const PACKAGE_NAME: &str = "ep.package_name";
+    pub const PACKAGE_VERSION: &str = "ep.package_version";
+    pub const CREATE_PROJECT_GRAPH: &str = "ep.create_project_graph";
+    pub const DURATION: &str = "epn.duration";
+}
+
 type ParameterMap = HashMap<String, String>;
 
 // =============================================================================
@@ -127,6 +178,31 @@ pub fn flush_telemetry() -> Result<()> {
     Ok(())
 }
 
+/// Canonical event dimension and metric names for GA4.
+/// TypeScript imports these from the native module instead of redefining the strings.
+#[napi(object)]
+pub struct EventDimensions {
+    pub command: String,
+    pub generator_name: String,
+    pub package_name: String,
+    pub package_version: String,
+    pub create_project_graph: String,
+    pub duration: String,
+}
+
+/// Returns the canonical event dimension names.
+#[napi]
+pub fn get_event_dimensions() -> EventDimensions {
+    EventDimensions {
+        command: event_dimension::COMMAND.to_string(),
+        generator_name: event_dimension::GENERATOR_NAME.to_string(),
+        package_name: event_dimension::PACKAGE_NAME.to_string(),
+        package_version: event_dimension::PACKAGE_VERSION.to_string(),
+        create_project_graph: event_dimension::CREATE_PROJECT_GRAPH.to_string(),
+        duration: event_dimension::DURATION.to_string(),
+    }
+}
+
 /// Track an event from Rust code
 /// This is a fire-and-forget operation - errors are logged but not returned
 pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
@@ -157,7 +233,7 @@ fn truncate_string(s: &str, max_bytes: usize) -> String {
 
 /// Truncate parameter value based on whether it's a URL parameter
 fn truncate_param_value(key: &str, value: &str) -> String {
-    let max_len = if key == "dl" || key == "dr" {
+    let max_len = if key == event_param::DOCUMENT_LOCATION || key == "dr" {
         // URL parameters (document location, referrer) get more space
         MAX_URL_PARAM_VALUE_LENGTH
     } else {
@@ -254,36 +330,35 @@ impl TelemetryService {
         let session_id = uuid::Uuid::new_v4().to_string();
 
         let mut common_request_parameters = HashMap::new();
-        common_request_parameters.insert("v".to_string(), "2".to_string()); // ProtocolVersion
-        common_request_parameters.insert("cid".to_string(), workspace_id.clone()); // ClientId
-        common_request_parameters.insert("uid".to_string(), user_id.clone()); // UserId
-        common_request_parameters.insert("tid".to_string(), TRACKING_ID_PROD.to_string()); // TrackingId
-        common_request_parameters.insert("sid".to_string(), session_id); // SessionId
-        common_request_parameters.insert("uaa".to_string(), os_arch.clone()); // UserAgentArchitecture
-        common_request_parameters.insert("uap".to_string(), os_platform); // UserAgentPlatform
-        common_request_parameters.insert("uapv".to_string(), os_release); // UserAgentPlatformVersion
-        common_request_parameters.insert("uamb".to_string(), "0".to_string()); // UserAgentMobile
-        common_request_parameters.insert("seg".to_string(), "1".to_string()); // SessionEngaged
+        common_request_parameters.insert(request_param::PROTOCOL_VERSION.to_string(), "2".to_string());
+        common_request_parameters.insert(request_param::CLIENT_ID.to_string(), workspace_id.clone());
+        common_request_parameters.insert(request_param::USER_ID.to_string(), user_id.clone());
+        common_request_parameters.insert(request_param::TRACKING_ID.to_string(), TRACKING_ID_PROD.to_string());
+        common_request_parameters.insert(request_param::SESSION_ID.to_string(), session_id);
+        common_request_parameters.insert(request_param::USER_AGENT_ARCHITECTURE.to_string(), os_arch.clone());
+        common_request_parameters.insert(request_param::USER_AGENT_PLATFORM.to_string(), os_platform);
+        common_request_parameters.insert(request_param::USER_AGENT_PLATFORM_VERSION.to_string(), os_release);
+        common_request_parameters.insert(request_param::USER_AGENT_MOBILE.to_string(), "0".to_string());
+        common_request_parameters.insert(request_param::SESSION_ENGAGED.to_string(), "1".to_string());
         common_request_parameters.insert(
-            "uafvl".to_string(),
-            "Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64"
-                .to_string(),
-        ); // UserAgentFullVersionList
+            request_param::USER_AGENT_FULL_VERSION_LIST.to_string(),
+            "Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64".to_string(),
+        );
         if std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true" {
-            common_request_parameters.insert("_dbg".to_string(), "1".to_string()); // DebugView
+            common_request_parameters.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
         }
 
         let mut user_parameters = HashMap::new();
-        user_parameters.insert("up.os_architecture".to_string(), os_arch); // OsArchitecture
-        user_parameters.insert("up.user_id".to_string(), user_id); // UserId
-        user_parameters.insert("up.node_version".to_string(), node_version); // NodeVersion
-        user_parameters.insert("up.package_manager".to_string(), package_manager_name); // PackageManager
+        user_parameters.insert(user_dimension::OS_ARCHITECTURE.to_string(), os_arch);
+        user_parameters.insert(user_dimension::USER_ID.to_string(), user_id);
+        user_parameters.insert(user_dimension::NODE_VERSION.to_string(), node_version);
+        user_parameters.insert(user_dimension::PACKAGE_MANAGER.to_string(), package_manager_name);
         if let Some(version) = package_manager_version {
-            user_parameters.insert("up.package_manager_version".to_string(), version); // PackageManagerVersion
+            user_parameters.insert(user_dimension::PACKAGE_MANAGER_VERSION.to_string(), version);
         }
-        user_parameters.insert("up.nx_version".to_string(), nx_version); // NxVersion
-        user_parameters.insert("ep.is_ai_agent".to_string(), is_ai_agent.to_string()); // IsAgent
-        user_parameters.insert("ep.is_ci".to_string(), is_ci.to_string()); // IsCI
+        user_parameters.insert(user_dimension::NX_VERSION.to_string(), nx_version);
+        user_parameters.insert(event_dimension::IS_AI_AGENT.to_string(), is_ai_agent.to_string());
+        user_parameters.insert(event_dimension::IS_CI.to_string(), is_ci.to_string());
 
         // Create channels
         let (event_tx, event_rx) = crossbeam_channel::unbounded();
@@ -354,9 +429,9 @@ impl TelemetryService {
                             tracing::trace!("Queuing page view: {}", page_view.title);
                             let mut params = user_params.clone();
                             params.extend(page_view.parameters);
-                            params.insert("en".to_string(), "page_view".to_string());
-                            params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
-                            params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
+                            params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
+                            params.insert(event_param::DOCUMENT_TITLE.to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
+                            params.insert(event_param::DOCUMENT_LOCATION.to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
                             page_view_queue.push(sanitize_params(params));
                         }
                         Err(_) => break, // Channel closed
@@ -368,7 +443,7 @@ impl TelemetryService {
                             tracing::trace!("Queuing event: {}", event.name);
                             let mut params = user_params.clone();
                             params.extend(event.parameters);
-                            params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
+                            params.insert(event_param::EVENT_NAME.to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
                             event_queue.push(sanitize_params(params));
                         }
                         Err(_) => break, // Channel closed
@@ -381,16 +456,16 @@ impl TelemetryService {
                             while let Ok(event) = event_rx.try_recv() {
                                 let mut params = user_params.clone();
                                 params.extend(event.parameters);
-                                params.insert("en".to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
+                                params.insert(event_param::EVENT_NAME.to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
                                 event_queue.push(sanitize_params(params));
                             }
 
                             while let Ok(page_view) = page_view_rx.try_recv() {
                                 let mut params = user_params.clone();
                                 params.extend(page_view.parameters);
-                                params.insert("en".to_string(), "page_view".to_string());
-                                params.insert("dt".to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
-                                params.insert("dl".to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
+                                params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
+                                params.insert(event_param::DOCUMENT_TITLE.to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
+                                params.insert(event_param::DOCUMENT_LOCATION.to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
                                 page_view_queue.push(sanitize_params(params));
                             }
 
@@ -464,7 +539,7 @@ impl TelemetryService {
             for chunk in event_queue.chunks(MAX_EVENTS_PER_BATCH) {
                 let event_names: Vec<String> = chunk
                     .iter()
-                    .filter_map(|params| params.get("en").cloned())
+                    .filter_map(|params| params.get(event_param::EVENT_NAME).cloned())
                     .collect();
                 tracing::trace!(
                     "Sending {} events: [{}]",
@@ -489,17 +564,17 @@ impl TelemetryService {
 
         // Send page views (one per request)
         for page_view in page_view_queue.drain(..) {
-            let title = page_view.get("dt").cloned();
-            let location = page_view.get("dl").cloned();
+            let title = page_view.get(event_param::DOCUMENT_TITLE).cloned();
+            let location = page_view.get(event_param::DOCUMENT_LOCATION).cloned();
 
             Self::log_page_view("trace", "Sending", &title, &location);
 
             let mut request_params = common_params.clone();
             if let Some(ref t) = title {
-                request_params.insert("dt".to_string(), t.clone());
+                request_params.insert(event_param::DOCUMENT_TITLE.to_string(), t.clone());
             }
             if let Some(ref l) = location {
-                request_params.insert("dl".to_string(), l.clone());
+                request_params.insert(event_param::DOCUMENT_LOCATION.to_string(), l.clone());
             }
 
             match Self::send_request(client, &request_params, vec![page_view]).await {
