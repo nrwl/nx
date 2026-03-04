@@ -51,6 +51,8 @@ Nx Cloud stores the following:
 
 Learn more about [how caching works](/docs/concepts/how-caching-works#what-is-cached).
 
+Cache correctness depends on your tasks declaring the right `inputs` and `outputs`. If a task reads a file that isn't in its inputs, cache hits can serve stale results. If it writes outside its declared outputs, those files go missing on a cache restore. [Task sandboxing](/docs/features/ci-features/sandboxing) uses IO tracing to catch these mismatches so you can fix them before they cause problems.
+
 ## Security in Remote Caching
 
 Since we work with many large corporations (including banks, insurance companies, and governments), we take security very seriously. Nx Cloud provides several features to ensure your data remains safe and secure:

@@ -1,0 +1,273 @@
+---
+title: 'Task Sandboxing'
+description: 'Hermetic task execution with IO tracing to catch undeclared dependencies and ensure correct caching.'
+keywords: [sandboxing, CI, hermeticity, IO tracing, caching]
+sidebar:
+  label: Sandboxing
+  order: 15
+  badge: new!
+filter: 'type:Features'
+---
+
+Task sandboxing monitors file system access during task execution and flags any reads or writes
+that fall outside the declared `inputs` and `outputs` in your
+[project configuration](/docs/reference/project-configuration)
+(whether explicit or [inferred](/docs/concepts/inferred-tasks)).
+It doesn't block access to the rest of the file system, but undeclared dependencies have direct
+implications on [caching](/docs/features/cache-task-results) correctness, from false cache hits
+serving stale results to missing output files after a cache restore.
+
+{% aside type="note" title="Enterprise Feature" %}
+Sandboxing is available on the [Nx Enterprise plan](https://nx.dev/enterprise).
+[Reach out to learn more](https://nx.dev/enterprise).
+{% /aside %}
+
+{% aside type="caution" title="Nx 22.5+ Required" %}
+Task sandboxing requires Nx 22.5 or later.
+{% /aside %}
+
+## Why hermeticity matters
+
+A task is _hermetic_ when it only reads from its declared inputs and only writes to its declared
+outputs.
+Hermetic tasks are safe to cache and replay because their behavior is fully described by their
+configuration.
+
+![Diagram showing declared inputs flowing into vite build, producing declared outputs, with a cache key derived from the input hash](../../../../assets/features/sandboxing-cache-flow.svg)
+
+[Computation caching](/docs/features/cache-task-results) relies on declared `inputs` and `outputs`
+to determine when a cache entry is valid.
+If a task reads a file that isn't listed in its inputs, the cache has no way to know that file
+changed, and it'll serve a stale result.
+If a task writes files outside its declared outputs, those files won't be captured in the cache
+and will go missing on a cache hit.
+
+Undeclared dependencies are difficult to catch through code review alone.
+A task might work correctly for months until an unrelated change to an undeclared input causes a
+cache-related failure that's hard to trace back to the root cause.
+
+### Example: undeclared input (false cache hit)
+
+An API app reads `app.yaml` from the project root at startup to configure routes and middleware.
+If `app.yaml` isn't included in the target's `inputs`, changing the configuration won't invalidate
+the cache.
+The next CI run serves stale output built against the old configuration.
+
+Sandboxing catches this because it sees the build process reading `app.yaml` even though it isn't
+declared.
+Add the file to the target's `inputs` in `project.json` to fix it:
+
+```json {% meta="{4}" %}
+{
+  "targets": {
+    "build": {
+      "inputs": ["{projectRoot}/app.yaml"]
+    }
+  }
+}
+```
+
+### Example: undeclared output (missing artifacts on replay)
+
+When using TypeScript `*.d.ts` generation (such as `vite-plugin-dts`) to emit type declarations
+outside of `dist/`, the build produces two output directories:
+
+```text {% meta="{3-4}" %}
+packages/
+  my-package/
+    dist/
+    types/
+    src/
+    package.json
+```
+
+If the target's `outputs` only lists `["{projectRoot}/dist"]`, the `types/` directory isn't
+[stored in the remote cache](/docs/features/ci-features/remote-cache#what-gets-stored).
+On a cache hit, `dist/` is restored but the type declarations are missing, breaking downstream
+library consumers.
+
+Sandboxing catches this because it sees writes to `types/` that aren't covered by the declared
+outputs.
+Include both directories in `outputs` so they can be replayed from cache:
+
+```json {% meta="{4}" %}
+{
+  "targets": {
+    "build": {
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/types"]
+    }
+  }
+}
+```
+
+## How sandboxing works
+
+Sandboxing runs each task in a monitored environment where all file system reads and writes are
+tracked.
+When a task accesses a file outside its declared inputs or writes to a path outside its declared
+outputs, Nx Cloud flags it.
+
+You get an audit trail of every file each task touched during execution, warnings when tasks have
+undeclared dependencies, and confidence that your cache configuration is correct rather than just
+"working so far."
+
+In **Warning** mode (recommended when getting started), violations are reported in the Nx Cloud UI
+but tasks continue to completion.
+In **Strict** mode, tasks fail immediately when a violation is detected.
+See [Cloud settings](#cloud-settings) to configure the enforcement mode.
+
+## Investigating violations
+
+When sandboxing detects undeclared file access, a warning banner appears on the CI Pipeline
+Execution (CIPE) page in Nx Cloud.
+Runs that contain violations are tagged with a "sandbox violation" badge.
+
+![CIPE page showing sandbox violations detected in 109 tasks, with a run tagged as sandbox violation](../../../../assets/features/sandboxing-cipe-violations.png)
+
+Click into a run to see which individual tasks have violations.
+Click the **Sandbox violations** button to filter the task list to only tasks with undeclared reads
+or writes.
+
+![Task list showing individual tasks with sandbox violation badges](../../../../assets/features/sandboxing-task-violations.png)
+
+Open the task details and switch to the **Sandbox analysis** tab.
+The process tree shows every process spawned during the task, along with the files each one read
+and wrote.
+Click a process to see its full file access list.
+Files flagged as "unexpected read" or "unexpected write" are the ones not covered by your declared
+`inputs` and `outputs`.
+
+![Sandbox analysis tab showing process tree with unexpected reads and writes highlighted](../../../../assets/features/sandboxing-analysis.png)
+
+To export the raw trace data for further analysis, click **View raw sandbox report** to download
+the JSON report.
+
+![View raw sandbox report button](../../../../assets/features/sandboxing-raw-report.png)
+
+## Inspecting inputs and outputs
+
+Check what your tasks currently declare before enabling sandboxing.
+Use `nx show target` to inspect a specific target's resolved inputs and outputs:
+
+```shell
+nx show target <project>:<target> --inputs --outputs
+```
+
+Add the `--json` flag for machine-readable output:
+
+```shell
+nx show target <project>:<target> --inputs --outputs --json
+```
+
+For a broader view of the full project configuration, run `nx show project`:
+
+```shell
+nx show project <project>
+```
+
+You can also use the [project details view](/docs/features/explore-graph) in Nx Console:
+
+{% project_details title="Project Details View" expandedTargets=["build"] %}
+
+```json
+{
+  "project": {
+    "name": "myapp",
+    "type": "app",
+    "data": {
+      "root": "apps/myapp",
+      "targets": {
+        "build": {
+          "options": {
+            "cwd": "apps/myapp",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        }
+      },
+      "sourceRoot": "apps/myapp/src",
+      "projectType": "application",
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["apps/myapp/project.json", "nx/core/project-json"],
+    "targets.build": ["apps/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.inputs": ["apps/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.outputs": ["apps/myapp/vite.config.ts", "@nx/vite/plugin"]
+  }
+}
+```
+
+{% /project_details %}
+
+The `inputs` and `outputs` arrays show exactly what the cache tracks.
+Sandboxing compares these declarations against what the task actually reads and writes at runtime
+and reports discrepancies.
+
+## Enabling sandboxing
+
+Sandboxing is available for [Nx Enterprise](https://nx.dev/enterprise) customers on
+[single-tenant](/docs/enterprise/single-tenant/overview) deployments using
+[Nx Agents](/docs/features/ci-features/distribute-task-execution).
+It is not supported with [manual distributed task execution](/docs/guides/nx-cloud/manual-dte).
+Contact your Nx Enterprise representative to enable sandboxing for your deployment.
+
+### Excluding paths
+
+Create a `.nx/workflows/sandboxing-config.yaml` file to exclude paths from sandboxing checks.
+
+```yaml
+# .nx/workflows/sandboxing-config.yaml
+exclude-reads:
+  - '**/vite.config.*.timestamp-*'
+
+task-exclusions:
+  - project: myapp
+    target: build
+    exclude-reads:
+      - .next/cache/**
+    exclude-writes:
+      - logs/**
+  - target: lint
+    exclude-reads:
+      - .eslintcache/**
+```
+
+Global `exclude-reads` and `exclude-writes` apply to all tasks.
+Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
+
+Patterns use glob syntax relative to the workspace root.
+
+## Cloud settings
+
+Enterprise customers with sandboxing enabled can configure the enforcement mode in the Nx Cloud
+workspace settings under **Settings > General**.
+
+![Nx Cloud settings sidebar showing General settings](../../../../assets/features/sandboxing-settings-sidebar.png)
+
+Three enforcement modes are available:
+
+- **Strict** — tasks that violate sandbox isolation fail immediately.
+- **Warning** — tasks complete but violations are reported in the Nx Cloud UI.
+- **Off** — sandboxing is disabled.
+
+![Sandboxing enforcement mode setting with Strict, Warning, and Off options](../../../../assets/features/sandboxing-settings.png)
+
+## Learn more
+
+- [Cache task results](/docs/features/cache-task-results)
+- [Remote cache](/docs/features/ci-features/remote-cache)
+- [Project configuration reference](/docs/reference/project-configuration)
+- [Nx Enterprise](https://nx.dev/enterprise)
