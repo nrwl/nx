@@ -5,7 +5,7 @@ filter: 'type:Guides'
 ---
 
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
-The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
+The `inputs` are a list of file sets, runtime inputs, and environment variables that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
 Nx errs on the side of caution when using inputs. Ideally, the "perfect" configuration of inputs will allow Nx to never re-run something when it does not need to. In practice though, it is better to play it safe and include more than strictly necessary in the inputs of a task. Forgetting to consider something during computation hash calculation may lead to negative consequences for end users. Start safe and fine-tune your inputs when there are clear opportunities to improve the cache hit rate.
@@ -324,7 +324,7 @@ Be sure to [view the existing inputs](#viewing-the-inputs-of-a-task) and start f
 
 Inputs of a task are configured in the `inputs` array on the target. This can be done in several different places:
 
-- As of Nx 18, Nx Plugins often [infer inputs for tasks](/docs/concepts/inferred-tasks) which run other tools.
+- Nx Plugins often [infer inputs for tasks](/docs/concepts/inferred-tasks) which run other tools.
   - In doing so, they will also define some reasonable defaults for the `inputs` of those tasks.
 - The `inputs` array in the `targetDefaults` for a set of targets in `nx.json`.
 - The `inputs` array for a specific target in the project configuration file.
