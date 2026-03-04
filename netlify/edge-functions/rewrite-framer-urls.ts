@@ -81,6 +81,7 @@ export const config = {
     '/blog/*',
     '/courses/*',
     '/_next/*',
+    '/.netlify/*',
     '/favicon.ico',
     '/webinar',
     '/sitemap.xml',
