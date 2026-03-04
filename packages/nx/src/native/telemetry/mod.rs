@@ -269,7 +269,9 @@ impl TelemetryService {
             "Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64"
                 .to_string(),
         ); // UserAgentFullVersionList
-        common_request_parameters.insert("_dbg".to_string(), "1".to_string()); // DebugView
+        if std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true" {
+            common_request_parameters.insert("_dbg".to_string(), "1".to_string()); // DebugView
+        }
 
         let mut user_parameters = HashMap::new();
         user_parameters.insert("up.os_architecture".to_string(), os_arch); // OsArchitecture
