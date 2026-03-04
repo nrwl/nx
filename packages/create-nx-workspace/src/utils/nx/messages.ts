@@ -41,23 +41,17 @@ function getBannerLines(variant: BannerVariant, url: string): string[] {
 
 function getSetupMessage(
   url: string | null,
-  pushedToVcs: VcsPushStatus,
-  workspaceName?: string
+  pushedToVcs: VcsPushStatus
 ): string {
-  const githubUrl = workspaceName
-    ? `https://github.com/new?name=${encodeURIComponent(workspaceName)}`
-    : 'https://github.com/new';
-
   if (pushedToVcs === VcsPushStatus.PushedToVcs) {
     return url
       ? `Go to Nx Cloud and finish the setup: ${url}`
       : 'Return to Nx Cloud and finish the setup.';
   }
 
-  // User needs to push first
   const action = url ? 'go' : 'return';
   const urlSuffix = url ? `: ${url}` : '.';
-  return `Push your repo (${githubUrl}), then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
+  return `Push your repo, then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
 }
 
 /**
@@ -69,7 +63,8 @@ const completionMessages = {
     title: 'Your CI setup is almost complete.',
   },
   'cache-setup': {
-    title: 'Your remote cache setup is almost complete.',
+    // NXC-4020: Restored to v22.1.3 wording (was "Your remote cache setup is almost complete.")
+    title: 'Your remote cache is almost complete.',
   },
   'platform-setup': {
     title: 'Your platform setup is almost complete.',
@@ -105,7 +100,7 @@ export function getCompletionMessage(
   }
 
   // Variant 0 (control) or fallback: plain link message
-  const bodyLines = [getSetupMessage(url, pushedToVcs, workspaceName)];
+  const bodyLines = [getSetupMessage(url, pushedToVcs)];
 
   return {
     title,
