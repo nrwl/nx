@@ -187,6 +187,11 @@ const learnGroups: SidebarItems = [
             link: 'features/ci-features/github-integration',
           },
           {
+            label: 'Sandboxing',
+            link: 'features/ci-features/sandboxing',
+            badge: 'New',
+          },
+          {
             label: 'CIPE Affected Project Graph',
             link: 'guides/nx-cloud/cipe-affected-project-graph',
           },
