@@ -6,6 +6,7 @@ import {
   withAffectedOptions,
   withOutputStyleOption,
   withRunManyOptions,
+  withRunOptions,
   withTuiOptions,
 } from './shared-options';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
@@ -298,6 +299,32 @@ describe('shared-options', () => {
       const result = await command.parseAsync(['--tuiAutoExit=5']);
       expect(result.tuiAutoExit).toEqual(5);
     });
+  });
+
+  describe('withRunOptions nxBail', () => {
+    it('should use NX_BAIL env var if --nxBail is not set', async () =>
+      withEnvironmentVariables(
+        {
+          NX_BAIL: 'true',
+        },
+        async () => {
+          const command = withRunOptions(argv);
+          const result = await command.parseAsync([]);
+          expect(result.nxBail).toEqual(true);
+        }
+      ));
+
+    it('should default nxBail to false when NX_BAIL is not set', async () =>
+      withEnvironmentVariables(
+        {
+          NX_BAIL: undefined,
+        },
+        async () => {
+          const command = withRunOptions(argv);
+          const result = await command.parseAsync([]);
+          expect(result.nxBail).toEqual(false);
+        }
+      ));
   });
 });
 
