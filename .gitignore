@@ -139,3 +139,4 @@ test-results
 /packages/dotnet/analyzer/obj
 /*.deb
 .nx/polygraph/
+.claude/worktrees
