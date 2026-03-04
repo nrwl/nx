@@ -246,6 +246,19 @@ export interface EnvironmentInput {
   env: string
 }
 
+/**
+ * Canonical event dimension and metric names for GA4.
+ * TypeScript imports these from the native module instead of redefining the strings.
+ */
+export interface EventDimensions {
+  command: string
+  generatorName: string
+  packageName: string
+  packageVersion: string
+  createProjectGraph: string
+  duration: string
+}
+
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
@@ -290,6 +303,9 @@ export declare function flushTelemetry(): void
 export declare function getBinaryTarget(): string
 
 export declare function getDefaultMaxCacheSize(cachePath: string): number
+
+/** Returns the canonical event dimension names. */
+export declare function getEventDimensions(): EventDimensions
 
 /**
  * Expands the given outputs into a list of existing files.
