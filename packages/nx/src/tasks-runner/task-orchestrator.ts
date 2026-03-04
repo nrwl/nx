@@ -8,7 +8,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
@@ -361,6 +361,21 @@ export class TaskOrchestrator {
   // endregion Applying Cache
 
   // region Batch
+  private async hashBatchTasks(tasks: Task[]): Promise<void> {
+    await Promise.all(
+      tasks.map((task) =>
+        hashTask(
+          this.hasher,
+          this.projectGraph,
+          this.taskGraphForHashing,
+          task,
+          this.batchEnv,
+          this.taskDetails
+        )
+      )
+    );
+  }
+
   public async applyFromCacheOrRunBatch(
     doNotSkipCache: boolean,
     batch: Batch,
@@ -393,19 +408,7 @@ export class TaskOrchestrator {
       while (remaining.roots.length > 0) {
         const rootTasks = remaining.roots.map((id) => remaining.tasks[id]);
 
-        // Hash root tasks (their deps within the batch are resolved)
-        await Promise.all(
-          rootTasks.map((task) =>
-            hashTask(
-              this.hasher,
-              this.projectGraph,
-              this.taskGraphForHashing,
-              task,
-              this.batchEnv,
-              this.taskDetails
-            )
-          )
-        );
+        await this.hashBatchTasks(rootTasks);
 
         const cacheResults = await this.applyCachedResults(rootTasks);
         const cachedIds = cacheResults.map((r) => r.task.id);
@@ -424,21 +427,9 @@ export class TaskOrchestrator {
     let results: TaskResult[] = allCachedResults;
 
     if (Object.keys(remaining.tasks).length > 0) {
-      // Hash any remaining unhashed tasks
       const unhashed = Object.values(remaining.tasks).filter((t) => !t.hash);
       if (unhashed.length > 0) {
-        await Promise.all(
-          unhashed.map((task) =>
-            hashTask(
-              this.hasher,
-              this.projectGraph,
-              this.taskGraphForHashing,
-              task,
-              this.batchEnv,
-              this.taskDetails
-            )
-          )
-        );
+        await this.hashBatchTasks(unhashed);
       }
 
       const batchResults = await this.runBatch(
@@ -455,37 +446,30 @@ export class TaskOrchestrator {
       // After the batch runs, tasks with depsOutputs pointing at sibling batch
       // tasks now have correct outputs on disk. Re-hash so postRunSteps caches
       // under the correct hash.
-      const ranInBatch = new Set(Object.keys(remaining.tasks));
-      for (const result of batchResults) {
-        if (result.status !== 'success') continue;
-        const task = result.task;
-        const taskDeps = this.taskGraph.dependencies[task.id] ?? [];
-        const hasBatchDep = taskDeps.some((depId) => ranInBatch.has(depId));
-        if (!hasBatchDep) continue;
-
-        try {
-          const { depsOutputs } = getInputs(
-            task,
-            this.projectGraph,
-            this.nxJson
-          );
-          if (depsOutputs.length > 0) {
-            // Clear stale hash so hashTask recomputes it
-            task.hash = undefined;
-            task.hashDetails = undefined;
-            await hashTask(
-              this.hasher,
-              this.projectGraph,
-              this.taskGraphForHashing,
-              task,
-              this.batchEnv,
-              this.taskDetails
+      const batchTaskIds = new Set(Object.keys(remaining.tasks));
+      const tasksToRehash = batchResults
+        .filter((result) => {
+          if (result.status !== 'success') return false;
+          const taskDeps = this.taskGraph.dependencies[result.task.id] ?? [];
+          return taskDeps.some((depId) => batchTaskIds.has(depId));
+        })
+        .filter((result) => {
+          try {
+            return (
+              getInputs(result.task, this.projectGraph, this.nxJson).depsOutputs
+                .length > 0
             );
+          } catch {
+            return false;
           }
-        } catch {
-          // If getInputs fails (e.g. missing target config), keep original hash
-        }
+        })
+        .map((result) => result.task);
+
+      for (const task of tasksToRehash) {
+        task.hash = undefined;
+        task.hashDetails = undefined;
       }
+      await this.hashBatchTasks(tasksToRehash);
 
       results = [...allCachedResults, ...batchResults];
     }
