@@ -880,7 +880,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   neverConnectToCloud?: boolean;
 
   /**
-   * Set this to false to disable Nx from collecting usage analytics.
+   * Set this to true to allow Nx to collect usage analytics.
    */
   analytics?: boolean;
 

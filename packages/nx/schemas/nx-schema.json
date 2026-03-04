@@ -144,7 +144,7 @@
     },
     "analytics": {
       "type": "boolean",
-      "description": "Set this to false to disable Nx from collecting usage analytics."
+      "description": "Set this to true to allow Nx to collect usage analytics."
     },
     "release": {
       "type": "object",

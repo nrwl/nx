@@ -7,16 +7,12 @@ import type {
   flushTelemetry as FlushTelemetryType,
   trackEvent as TrackEventType,
   trackPageView as TrackPageViewType,
+  getEventDimensions as GetEventDimensionsType,
 } from '../native';
 import {
   getPackageManagerVersion,
   detectPackageManager,
 } from '../utils/package-manager';
-import {
-  EventCustomDimension,
-  EventCustomMetric,
-  ParameterValue,
-} from './parameter';
 import { parse } from 'semver';
 import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
@@ -29,13 +25,18 @@ let flushTelemetry: typeof FlushTelemetryType;
 let trackEventNative: typeof TrackEventType;
 let trackPageViewNative: typeof TrackPageViewType;
 
+let getEventDimensions: typeof GetEventDimensionsType;
+
 if (!IS_WASM) {
   const nativeModule = require('../native');
   initializeTelemetry = nativeModule.initializeTelemetry;
   flushTelemetry = nativeModule.flushTelemetry;
   trackEventNative = nativeModule.trackEvent;
   trackPageViewNative = nativeModule.trackPageView;
+  getEventDimensions = nativeModule.getEventDimensions;
 }
+
+const customDimensions = IS_WASM ? null : getEventDimensions();
 
 let _telemetryInitialized = false;
 
@@ -92,20 +93,20 @@ export async function startAnalytics() {
 
 export function reportNxAddCommand(packageName: string, version: string) {
   reportCommandRunEvent('add', {
-    [EventCustomDimension.PackageName]: packageName,
-    [EventCustomDimension.PackageVersion]: version,
+    [customDimensions.packageName]: packageName,
+    [customDimensions.packageVersion]: version,
   });
 }
 
 export function reportNxGenerateCommand(generator: string) {
   reportCommandRunEvent('generate', {
-    [EventCustomDimension.GeneratorName]: generator,
+    [customDimensions.generatorName]: generator,
   });
 }
 
 export function reportCommandRunEvent(
   command: string,
-  parameters?: Record<string, ParameterValue | any>,
+  parameters?: Record<string, any>,
   args?: Record<string, any>
 ) {
   command = command === 'g' ? 'generate' : command;
@@ -120,8 +121,8 @@ export function reportCommandRunEvent(
 }
 
 export function reportProjectGraphCreationEvent(duration: number) {
-  trackEvent(EventCustomDimension.CreateProjectGraph, {
-    [EventCustomMetric.Duration]: duration,
+  trackEvent(customDimensions.createProjectGraph, {
+    [customDimensions.duration]: duration,
   });
 }
 
@@ -280,7 +281,7 @@ export function argsToQueryString(args: Record<string, any>): string {
 
 function trackEvent(
   eventName: string,
-  parameters?: Record<string, ParameterValue>
+  parameters?: Record<string, string | number | boolean>
 ) {
   if (_telemetryInitialized) {
     // Convert parameters to string map for Rust
@@ -305,7 +306,7 @@ function trackEvent(
 function trackPageView(
   pageTitle: string,
   pageLocation?: string,
-  parameters?: Record<string, ParameterValue>
+  parameters?: Record<string, string | number | boolean>
 ) {
   if (_telemetryInitialized) {
     // Convert parameters to string map for Rust
