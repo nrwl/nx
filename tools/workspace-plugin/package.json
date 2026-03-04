@@ -10,11 +10,13 @@
     "@nx/plugin": "workspace:*",
     "@nx/js": "workspace:*",
     "@xmldom/xmldom": "^0.8.10",
+    "glob": "^7.1.4",
     "nx": "workspace:*",
+    "shiki": "^3.8.1",
     "tslib": "catalog:typescript"
   },
   "type": "commonjs",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
+  "main": "../../dist/workspace-plugin/src/index.js",
+  "typings": "../../dist/workspace-plugin/src/index.d.ts",
   "devDependencies": {}
 }
