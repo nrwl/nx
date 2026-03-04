@@ -379,6 +379,7 @@ function applyNxDependentConfig(
               ],
               dot: true,
             },
+            noErrorOnMissing: true,
           };
         }),
       })
