@@ -676,14 +676,9 @@ function registerProcessListener(
     // Gracefully kill then exit. Keeping this process alive during the
     // grace period prevents the PTY master from closing prematurely,
     // which would send SIGHUP to children before they finish cleanup.
-    const result = runningTask.kill('SIGTERM');
-    if (result && typeof result.then === 'function') {
-      result.finally(() => {
-        process.exit(signalToCode('SIGINT'));
-      });
-    } else {
+    Promise.resolve(runningTask.kill('SIGTERM')).finally(() => {
       process.exit(signalToCode('SIGINT'));
-    }
+    });
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');
