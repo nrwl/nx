@@ -108,9 +108,9 @@ export function reportCommandRunEvent(
   trackPageView(command, pageLocation, parameters);
 }
 
-export function reportProjectGraphCreationEvent(time: number) {
-  trackEvent('project_graph_creation', {
-    [EventCustomMetric.Time]: time,
+export function reportProjectGraphCreationEvent(duration: number) {
+  trackEvent(EventCustomDimension.CreateProjectGraph, {
+    [EventCustomMetric.Duration]: duration,
   });
 }
 

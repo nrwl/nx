@@ -13,6 +13,7 @@ export enum EventCustomDimension {
   GeneratorName = 'ep.generator_name',
   PackageName = 'ep.package_name',
   PackageVersion = 'ep.package_version',
+  CreateProjectGraph = 'ep.create_project_graph',
 }
 
 /**
@@ -24,5 +25,5 @@ export enum EventCustomDimension {
  * @see https://support.google.com/analytics/answer/10075209?hl=en
  */
 export enum EventCustomMetric {
-  Time = 'epn.time',
+  Duration = 'epn.duration',
 }
