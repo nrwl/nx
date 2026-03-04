@@ -55,6 +55,7 @@ import {
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
 import { yargsMcpCommand } from './mcp/command-object';
+import { reportCommandRunEvent } from '../analytics';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -122,6 +123,12 @@ export const commandsObject = yargs
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
+  .middleware((args) => {
+    const command = (args._ ?? []).join(' ');
+    if (command) {
+      reportCommandRunEvent(command, undefined, args);
+    }
+  })
   .help(false)
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
   // so that it shows up in help. The default yargs implementation of --version is not

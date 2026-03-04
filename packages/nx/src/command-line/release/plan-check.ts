@@ -22,11 +22,9 @@ import {
 } from './config/version-plans';
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
 import { printConfigAndExit } from './utils/print-config';
-import { reportCommandRunEvent } from '../../analytics';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunEvent('release plan:check', undefined, args);
     return createAPI({})(args);
   });
 

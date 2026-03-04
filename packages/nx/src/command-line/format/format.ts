@@ -25,13 +25,11 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { reportCommandRunEvent } from '../../analytics';
 
 export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
-  reportCommandRunEvent('format', undefined, { command, ...args });
   let prettier: typeof import('prettier');
   try {
     prettier = await import('prettier');

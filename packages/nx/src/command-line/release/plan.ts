@@ -28,11 +28,9 @@ import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-f
 import { launchEditor } from './utils/launch-editor';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
-import { reportCommandRunEvent } from '../../analytics';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => {
-    reportCommandRunEvent('release plan', undefined, args);
     return createAPI({})(args);
   });
 

@@ -26,7 +26,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { joinPathFragments } from '../../utils/path';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { getCommandProjects } from '../../commands-runner/get-command-projects';
-import { reportCommandRunEvent } from '../../analytics';
 
 export async function nxExecCommand(
   args: Record<string, string | string[] | boolean>
@@ -40,7 +39,6 @@ export async function nxExecCommand(
   );
   const scriptArgV: string[] = readScriptArgV(overrides);
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  reportCommandRunEvent('exec', undefined, args);
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
     const command = scriptArgV
