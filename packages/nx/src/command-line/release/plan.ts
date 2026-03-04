@@ -30,9 +30,7 @@ import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
-  handleErrors(args.verbose, () => {
-    return createAPI({})(args);
-  });
+  handleErrors(args.verbose, () => createAPI({})(args));
 
 export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   return async function releasePlan(

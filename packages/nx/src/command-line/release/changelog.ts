@@ -104,9 +104,7 @@ export type { ChangelogChange } from './changelog/version-plan-utils';
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
-  handleErrors(args.verbose, () => {
-    return createAPI({}, false)(args);
-  });
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
