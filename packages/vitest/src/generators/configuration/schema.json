@@ -65,6 +65,11 @@
       "default": false,
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
+    },
+    "zoneless": {
+      "type": "boolean",
+      "description": "Whether the Angular project is zoneless. When not provided, it is auto-detected from the project configuration.",
+      "x-priority": "internal"
     }
   },
   "required": ["project"]

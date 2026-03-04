@@ -2,18 +2,10 @@
 
 exports[`vitest generator angular should generate src/test-setup.ts 1`] = `
 "import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-zone';
+import '@analogjs/vitest-angular/setup-snapshots';
+import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
 
-import {
-  BrowserTestingModule,
-  platformBrowserTesting,
-} from '@angular/platform-browser/testing';
-import { getTestBed } from '@angular/core/testing';
-
-getTestBed().initTestEnvironment(
-  BrowserTestingModule,
-  platformBrowserTesting(),
-);
+setupTestBed({ zoneless: false });
 "
 `;
 
