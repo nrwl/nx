@@ -27,7 +27,7 @@ The `@nx/cypress` plugin supports the following package versions.
 
 ## Setting Up @nx/cypress
 
-> Info about [Cypress Component Testing can be found here](/docs/technologies/test-tools/cypress/guides/cypress-component-testing)
+> For Cypress Component Testing, see [the component testing guide](/docs/technologies/test-tools/cypress/guides/cypress-component-testing).
 
 ### Installation
 
@@ -37,31 +37,16 @@ Make sure to install the `@nx/cypress` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/cypress` by running the following command:
 
-{% tabs %}
-{% tabitem label="Nx 18+" %}
-
 ```shell
 nx add @nx/cypress
 ```
 
 This will install the correct version of `@nx/cypress`.
 
-{% /tabitem %}
-{% tabitem label="Nx < 18" %}
-
-Install the `@nx/cypress` package with your package manager.
-
-```shell
-npm add -D @nx/cypress
-```
-
-{% /tabitem %}
-{% /tabs %}
-
 ### How @nx/cypress Infers Tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
@@ -284,7 +269,7 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
+There are a handful of ways to pass environment variables to Cypress, but the most common is via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Make sure to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 
