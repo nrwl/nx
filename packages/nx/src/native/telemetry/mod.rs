@@ -8,8 +8,8 @@
 //! prioritized over regular events.
 //!
 //! # Example usage from Rust code:
-//! ```rust
-//! use crate::native::telemetry::track_rust_event;
+//! ```rust,no_run
+//! use nx::native::telemetry::track_rust_event;
 //! use std::collections::HashMap;
 //!
 //! let mut params = HashMap::new();
