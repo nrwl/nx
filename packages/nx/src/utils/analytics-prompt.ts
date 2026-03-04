@@ -1,4 +1,5 @@
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
 import { join } from 'path';
 import { output } from './output';
@@ -62,7 +63,7 @@ function saveAnalyticsPreference(enabled: boolean): void {
   try {
     const nxJsonPath = join(workspaceRoot, 'nx.json');
     const nxJson = readNxJson(workspaceRoot);
-    nxJson.analytics = enabled ? randomUUID() : false;
+    nxJson.analytics = enabled ? generateWorkspaceId() : false;
     writeJsonFile(nxJsonPath, nxJson);
 
     if (enabled) {
@@ -78,6 +79,29 @@ function saveAnalyticsPreference(enabled: boolean): void {
   } catch {
     // Silently fail - don't block user's command
   }
+}
+
+/**
+ * Generates a deterministic workspace ID by hashing the git remote URL.
+ * Same repo = same ID across clones, but the actual URL stays private.
+ * Falls back to a random UUID if no git remote is available.
+ */
+export function generateWorkspaceId(): string {
+  try {
+    const remoteUrl = execSync('git remote get-url origin', {
+      stdio: 'pipe',
+      cwd: workspaceRoot,
+    })
+      .toString()
+      .trim();
+
+    if (remoteUrl) {
+      return createHash('sha256').update(remoteUrl).digest('hex').slice(0, 32);
+    }
+  } catch {
+    // No git remote available
+  }
+  return randomUUID();
 }
 
 /**
