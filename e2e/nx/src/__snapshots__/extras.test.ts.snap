@@ -3,7 +3,6 @@
 exports[`Extra Nx Misc Tests task graph inputs should correctly expand default task inputs 1`] = `
 {
   "general": [
-    ".github/workflows/ci.yml",
     ".gitignore",
     "nx.json",
   ],
