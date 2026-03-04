@@ -151,9 +151,73 @@ describe('package-manager', () => {
             return jest.requireActual('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
-      expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(4);
+      const originalUserAgent = process.env.npm_config_user_agent;
+      delete process.env.npm_config_user_agent;
+      try {
+        const packageManager = detectPackageManager();
+        expect(packageManager).toEqual('npm');
+        expect(fs.existsSync).toHaveBeenCalledTimes(4);
+      } finally {
+        process.env.npm_config_user_agent = originalUserAgent;
+      }
+    });
+
+    it('should detect pnpm from npm_config_user_agent when no lock file exists', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const originalUserAgent = process.env.npm_config_user_agent;
+      process.env.npm_config_user_agent =
+        'pnpm/8.15.4 npm/? node/v20.11.1 darwin arm64';
+      try {
+        expect(detectPackageManager()).toEqual('pnpm');
+      } finally {
+        process.env.npm_config_user_agent = originalUserAgent;
+      }
+    });
+
+    it('should detect yarn from npm_config_user_agent when no lock file exists', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const originalUserAgent = process.env.npm_config_user_agent;
+      process.env.npm_config_user_agent =
+        'yarn/1.22.21 npm/? node/v20.11.1 darwin arm64';
+      try {
+        expect(detectPackageManager()).toEqual('yarn');
+      } finally {
+        process.env.npm_config_user_agent = originalUserAgent;
+      }
+    });
+
+    it('should detect bun from npm_config_user_agent when no lock file exists', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const originalUserAgent = process.env.npm_config_user_agent;
+      process.env.npm_config_user_agent = 'bun/1.0.25';
+      try {
+        expect(detectPackageManager()).toEqual('bun');
+      } finally {
+        process.env.npm_config_user_agent = originalUserAgent;
+      }
+    });
+
+    it('should prefer lock file detection over npm_config_user_agent', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn.lock':
+            return true;
+          default:
+            return false;
+        }
+      });
+      const originalUserAgent = process.env.npm_config_user_agent;
+      process.env.npm_config_user_agent =
+        'pnpm/8.15.4 npm/? node/v20.11.1 darwin arm64';
+      try {
+        expect(detectPackageManager()).toEqual('yarn');
+      } finally {
+        process.env.npm_config_user_agent = originalUserAgent;
+      }
     });
   });
 
