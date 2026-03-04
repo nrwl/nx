@@ -24,9 +24,7 @@ import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-f
 import { printConfigAndExit } from './utils/print-config';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
-  handleErrors(args.verbose, () => {
-    return createAPI({})(args);
-  });
+  handleErrors(args.verbose, () => createAPI({})(args));
 
 export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   return async function releasePlanCheck(args: PlanOptions): Promise<number> {

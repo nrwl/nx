@@ -21,7 +21,6 @@ import { splitTarget } from '../../utils/split-target';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
-import { flushAnalytics } from '../../analytics';
 
 export async function runOne(
   cwd: string,
@@ -100,7 +99,6 @@ export async function runOne(
       extraTargetDependencies,
       extraOptions
     );
-    await flushAnalytics();
     process.exit(status);
   }
 }

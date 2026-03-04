@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { exit } from 'process';
 import * as yargs from 'yargs-parser';
 import { Arguments } from 'yargs';
 import { existsSync } from 'fs';
@@ -39,6 +40,7 @@ export async function nxExecCommand(
   );
   const scriptArgV: string[] = readScriptArgV(overrides);
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
     const command = scriptArgV
@@ -175,7 +177,7 @@ function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
         `Is ${targetName} missing from ${project.data.root}/package.json's nx.includedScripts field?`,
       ],
     });
-    process.exit(1);
+    exit(1);
   }
 }
 

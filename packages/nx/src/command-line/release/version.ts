@@ -63,9 +63,7 @@ export interface NxReleaseVersionResult {
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => {
-    return createAPI({}, false)(args);
-  });
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
