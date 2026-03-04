@@ -736,7 +736,7 @@ export class TaskOrchestrator {
           }
         }
 
-        if (!streamOutput) {
+        if (!streamOutput && !shouldPrefix) {
           // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
           runningTask.onExit((code, terminalOutput) => {
             this.options.lifeCycle.printTaskTerminalOutput(
