@@ -1,34 +1,32 @@
 ---
-title: 'Nx + AX = 10x'
+title: 'Agentic Experience Is the New Developer Experience'
 slug: 'making-nx-agent-ready'
 authors: ['Max Kless']
 tags: [nx, ai, cli]
 cover_image: /blog/images/articles/bg-making-nx-agent-ready.avif
-description: 'How we redesigned Nx CLI commands like nx import, nx init, and create-nx-workspace to work seamlessly with AI agents — and the AX principles behind the changes.'
+description: 'How we redesigned Nx CLI commands like nx import, nx init, and create-nx-workspace to work seamlessly with AI agents, and the AX principles behind the changes.'
 draft: true
 ---
 
-We just shipped a major round of improvements to Nx's CLI commands — specifically designed to make them work well with AI agents. Commands like `create-nx-workspace`, `nx init`, and `nx import` have all been updated, and I wanted to use the opportunity to give some insight into how we think about agentic experience (AX).
+We just shipped a major round of improvements to Nx's CLI commands, all specifically designed to make them work well with AI agents. Commands like `create-nx-workspace`, `nx init`, and `nx import` have all been updated, and I wanted to use the opportunity to give some insight into how we think about agentic experience (AX).
 
-## Agentic Experience Is the New Developer Experience
+There's been a growing realization in the ecosystem that [**agentic experience (AX)** is becoming just as important as traditional developer experience.](https://biilmann.blog/articles/introducing-ax/) The tools we build aren't just used by humans typing in a terminal anymore. They're increasingly called by AI agents acting on behalf of developers. This requires a mental shift on our side as tool builders. If AI agents struggle to access, understand and interact with our software, we risk being left behind in this time of rapid transformation.
 
-There's been a growing realization in the ecosystem that [**agentic experience (AX)** is becoming just as important as traditional developer experience.](https://biilmann.blog/articles/introducing-ax/) The tools we build aren't just used by humans typing in a terminal anymore — they're increasingly called by AI agents acting on behalf of developers. This requires a mental shift on our side as tool builders. If AI agents struggle to access, understand and interact with our software, we risk being left behind in this time of rapid transformation.
-
-Instead of adding friction to developers and agents working with Nx, we're focused on expanding the scope at which agents can act autonomously — in your terminal, repository and beyond.
+Instead of adding friction to developers and agents working with Nx, we're focused on expanding the scope at which agents can act autonomously: in your terminal, repository and beyond.
 
 {% tweet url="https://x.com/victorsavkin/status/2014024244015874327" /%}
 
 ## Optimizing for AX
 
-Over the last weeks and months, I've spent a lot of time reading through agent logs and retracing what they did while solving a given problem. It's a very useful thing I would recommend to anyone — after working on a project for a while, sometimes it's easy to forget how much implicit context about a problem space exists in your head. Watching where an agent has to work harder to fill these gaps will show you where more attention is needed.
+Over the last weeks and months, I've spent a lot of time reading through agent logs and retracing what they did while solving a given problem. It's a very useful exercise. After working on a project for a while, it's easy to forget how much implicit context about a problem space exists in your head. Watching where an agent has to work harder to fill these gaps will show you where more attention is needed.
 
 The wonderful thing is, improvements to AX tend to also improve DX. If you manage to explain a concept better or make a CLI command more intuitive, humans will benefit just as much as agents.
 
 ### Context, Context, Context
 
-What's in an agent's context window has a major impact on the quality of the results it will produce — as the context fills up, model intelligence deteriorates ([context rot](https://research.trychroma.com/context-rot)). So instead of endless exploration and trial-and-error, we want to provide agents with the knowledge they need to complete their tasks:
+What's in an agent's context window has a major impact on the quality of the results it will produce. As the context fills up, model intelligence deteriorates ([context rot](https://research.trychroma.com/context-rot)). So instead of endless exploration and trial-and-error, we want to provide agents with the knowledge they need to complete their tasks:
 
-- **Skills** are a great way of giving domain-specific smarts to agents and have emerged as a clear standard — read more in my last blog post '[Why we deleted (most of) our MCP tools](/blog/why-we-deleted-most-of-our-mcp-tools)'
+- **Skills** are a great way of giving domain-specific smarts to agents and have emerged as a clear standard. Read more in my last blog post '[Why we deleted (most of) our MCP tools](/blog/why-we-deleted-most-of-our-mcp-tools)'
 - Just like a human would, agents can call **`--help`** to understand more about a CLI command. We need to keep making sure that the results are up-to-date and progressively disclose relevant information on subcommands
 - **Documentation** is becoming even more important in 2026. Whenever an agent shows a gap in understanding, we want to make sure there's a doc we can point them at in the future.
 
@@ -75,7 +73,7 @@ npx nx import --sourceRepository=../monorepo-1
 
 ### Idempotency
 
-If an agent runs a command and gets asked for input halfway through, it needs to be able to **call the command again** with the right inputs without redoing all the previous work or erroring out. This is idempotency — and it's critical for agents that operate in a loop of "try, learn, retry."
+If an agent runs a command and gets asked for input halfway through, it needs to be able to **call the command again** with the right inputs without redoing all the previous work or erroring out. This is idempotency, and it's critical for agents that operate in a loop of "try, learn, retry."
 
 We made sure that commands like `nx import` can handle being re-invoked with tweaked inputs gracefully.
 
@@ -83,7 +81,7 @@ We made sure that commands like `nx import` can handle being re-invoked with twe
 
 This one is subtle but important. When a command outputs information, it should **provide structure and context** rather than try to force the model into a specific behavior. The output should be informative, not instructive.
 
-In the past, we've experimented with creating more cleanly-defined flows for agents to follow — this often ends up frustrating due to the non-determinism of these systems as well as our inherently limited knowledge about the exact problem a developer is trying to solve.
+In the past, we've experimented with creating more cleanly-defined flows for agents to follow, but this often ends up frustrating due to the non-determinism of these systems as well as our inherently limited knowledge about the exact problem a developer is trying to solve.
 
 ### An Open Question: Will Human and Agent Experiences Diverge?
 
@@ -97,7 +95,7 @@ This is just the beginning. The principles we applied to `nx import` are being r
 
 The line between developer tools and agent tools is blurring fast, and we think that's a good thing. The same qualities that make a tool great for agents make it great for humans too. We're building for both.
 
-We'd love to hear your thoughts — let us know via [GitHub](https://github.com/nrwl/nx) or reach out on social media if you have ideas or feedback.
+We'd love to hear your thoughts! Let us know via [GitHub](https://github.com/nrwl/nx) or reach out on social media if you have ideas or feedback.
 
 **Learn more:**
 
