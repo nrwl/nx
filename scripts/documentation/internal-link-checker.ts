@@ -157,8 +157,42 @@ const astroSitemapUrls = readSiteMapIndex(
   // astro-docs links are prefixed with /docs, but that isn't reflected in the file paths
 ).flatMap((path) => readSiteMapLinks(path.replace('/docs/', '/')));
 console.log(astroSitemapUrls.length + ' URLs found in Astro sitemap');
+// Framer-served pages are not in either sitemap but are valid link targets.
+// These paths are proxied to Framer by the Netlify edge function.
+const framerPaths = [
+  '/',
+  '/nx-cloud',
+  '/enterprise',
+  '/enterprise/security',
+  '/enterprise/trial',
+  '/community',
+  '/company',
+  '/contact',
+  '/contact/sales',
+  '/contact/engineering',
+  '/contact/labs',
+  '/customers',
+  '/customer-stories',
+  '/solutions',
+  '/solutions/engineering',
+  '/solutions/leadership',
+  '/solutions/management',
+  '/solutions/platform',
+  '/partners',
+  '/remote-cache',
+  '/webinar',
+  '/webinars',
+  '/careers',
+  '/brands',
+  '/java',
+  '/react',
+  '/resources',
+].map((p) => `https://nx.dev${p}`);
+
 // Combine all sitemap URLs into a single set
-const sitemapUrls = [...new Set([...nextjsSitemapUrls, ...astroSitemapUrls])];
+const sitemapUrls = [
+  ...new Set([...nextjsSitemapUrls, ...astroSitemapUrls, ...framerPaths]),
+];
 
 function headerToAnchor(line: string): string {
   return line

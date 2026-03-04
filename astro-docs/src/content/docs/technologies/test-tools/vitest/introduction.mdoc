@@ -1,6 +1,6 @@
 ---
-title: Overview of the Nx Vitest Plugin
-description: The Nx Plugin for Vitest contains executors and generators that support testing projects using Vitest. This page also explains how to configure Vitest on your Nx workspace.
+title: Vitest Plugin for Nx
+description: The Nx Plugin for Vitest contains executors and generators that support testing projects using Vitest, including setup and configuration for your Nx workspace.
 sidebar:
   label: Introduction
 filter: 'type:References'
@@ -11,6 +11,16 @@ filter: 'type:References'
 The `@nx/vitest` plugin adds [inferred Vitest targets](#configuration), a [project configuration generator](#add-vitest-to-a-project), and CI-friendly [test splitting](#ci-considerations).
 
 You can use Vitest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+## Requirements
+
+The `@nx/vite` plugin supports the following package versions.
+
+| Package  | Supported Versions                         |
+| -------- | ------------------------------------------ |
+| `vitest` | ^1.0.0 \|\| ^2.0.0 \|\| ^3.0.0 \|\| ^4.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setup
 

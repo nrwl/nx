@@ -12,7 +12,15 @@ The TypeScript plugin for Nx, `@nx/js`, provides [generators for creating TypeSc
 
 You don't need the plugin to use TypeScript with Nx, any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin can help simplify setups and maintenance of TypeScript projects at scale.
 
-See the [TypeScript compatibility matrix](/docs/reference/nodejs-typescript-compatibility#typescript-compatibility) for supported TypeScript versions.
+## Requirements
+
+Nx supports the latest version of TypeScript. TypeScript itself only officially supports its latest release under the [Modern Lifecycle Policy](https://learn.microsoft.com/en-us/lifecycle/policies/modern), but Nx maintains a wider range to give you time to upgrade. Support for an older TypeScript version may be dropped in an Nx major release, and support for a newer version may be added in an Nx minor release.
+
+| Nx Version     | TypeScript Version |
+| -------------- | ------------------ |
+| 22.x (current) | >= 5.4.2 < 5.10.0  |
+| 21.x           | >= 5.4.2 < 5.10.0  |
+| 20.x           | ~5.4.2             |
 
 ## Setting Up @nx/js plugin
 

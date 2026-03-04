@@ -126,6 +126,49 @@ class AddTestCiTargetsTest {
   }
 
   @Test
+  fun `should include dependsOn when test task has dependencies`() {
+    File(projectRoot, "build.gradle").apply { writeText("// test build file") }
+
+    val testFile =
+        File(projectRoot, "src/test/kotlin/DependentTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("class DependentTest { @Test fun testMethod() {} }")
+        }
+
+    val compileTask = project.tasks.register("compileTestKotlin").get()
+    testTask.dependsOn(compileTask)
+
+    val testFiles = project.files(testFile)
+    testTask.inputs.files(testFiles)
+
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName,
+        gitIgnoreClassifier = gitIgnoreClassifier)
+
+    val ciTarget = targets["ci--DependentTest"]
+    assertTrue(ciTarget != null, "CI target should be created")
+
+    val dependsOn = ciTarget?.get("dependsOn") as? List<*>
+    assertTrue(dependsOn != null, "dependsOn should be present when test task has dependencies")
+    assertTrue(dependsOn!!.isNotEmpty(), "dependsOn should not be empty")
+    assertTrue(
+        dependsOn.any { it.toString().contains("compileTestKotlin") },
+        "dependsOn should contain the dependency task name")
+  }
+
+  @Test
   fun `should skip abstract test classes`() {
     val abstractTestFile =
         File(projectRoot, "src/test/java/AbstractTest.java").apply {

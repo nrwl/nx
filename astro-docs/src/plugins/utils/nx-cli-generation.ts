@@ -88,6 +88,7 @@ export async function loadNxCliPackage(
       docType: 'cli',
       description: 'Complete reference for Nx CLI commands',
       filter: 'type:References',
+      weight: 4,
     },
     rendered: await renderMarkdown(markdown),
     collection: 'nx-reference-packages',
@@ -187,13 +188,14 @@ function generateOptionsTable(
 }
 
 function generateExamplesSection(
-  examples: ParsedCliCommand['examples']
+  examples: ParsedCliCommand['examples'],
+  commandName: string
 ): string {
   if (!examples || examples.length === 0) {
     return '';
   }
 
-  let section = `\n#### Examples\n\n`;
+  let section = `\n#### \`nx ${commandName}\` Examples\n\n`;
 
   for (const example of examples) {
     section += `${example.description}:\n\n`;
@@ -213,11 +215,12 @@ The Nx command line has various subcommands and options to help you manage your 
 Below is a complete reference for all available commands and their options.
 You can run nx --help to view all available options.
 
-## Available Commands
-
 ${flattenedCommands
   .map(({ fullName, cmd, parentOptions }) => {
-    let section = `### \`nx ${fullName}\`\n`;
+    const isSubCommand = parentOptions !== undefined;
+    const headingLevel = isSubCommand ? '###' : '##';
+
+    let section = `${headingLevel} \`nx ${fullName}\`\n`;
 
     section += cmd.description || 'No description available';
 
@@ -228,9 +231,20 @@ ${flattenedCommands
     }
 
     // Build the usage command string
-    const usageCmd = cmd.command
-      ? cmd.command.replace('$0', fullName)
-      : fullName;
+    let usageCmd: string;
+    if (cmd.command && cmd.command.includes('$0')) {
+      // Has $0 placeholder - replace with full name
+      usageCmd = cmd.command.replace('$0', fullName);
+    } else if (cmd.command && parentOptions !== undefined) {
+      // Sub-command without $0: use fullName, append positional args from cmd.command
+      const firstSpaceIdx = cmd.command.indexOf(' ');
+      usageCmd =
+        firstSpaceIdx !== -1
+          ? fullName + cmd.command.substring(firstSpaceIdx)
+          : fullName;
+    } else {
+      usageCmd = cmd.command || fullName;
+    }
 
     section += `\n\n**Usage:**
 \`\`\`bash
@@ -239,7 +253,7 @@ nx ${usageCmd}
 `;
 
     // Add examples section if available
-    section += generateExamplesSection(cmd.examples);
+    section += generateExamplesSection(cmd.examples, fullName);
 
     // If this is a parent command with subcommands, label options as "Shared Options"
     const hasSubcommands = cmd.subcommands && cmd.subcommands.length > 0;

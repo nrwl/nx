@@ -1,5 +1,5 @@
 ---
-title: Overview of the Nx Vite Plugin
+title: Vite Plugin for Nx
 description: Use Vite with Nx for inferred dev/build tasks, generators, and CI-friendly workflows.
 sidebar:
   label: Introduction
@@ -15,6 +15,16 @@ Starting with Nx v22, Vitest support has moved to the dedicated [`@nx/vitest` pl
 {% /aside %}
 
 You can use Vite with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+## Requirements
+
+The `@nx/vite` plugin supports the following package versions.
+
+| Package | Supported Versions             |
+| ------- | ------------------------------ |
+| `vite`  | ^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setup
 

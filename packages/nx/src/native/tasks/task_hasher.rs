@@ -48,22 +48,61 @@ pub struct HashInputs {
 /// Internal builder that uses HashSet for O(1) deduplication during accumulation.
 /// Convert to HashInputs via `into()` when ready to return via NAPI.
 #[derive(Debug, Default, Clone)]
-struct HashInputsBuilder {
-    files: HashSet<String>,
-    runtime: HashSet<String>,
-    environment: HashSet<String>,
-    dep_outputs: HashSet<String>,
-    external: HashSet<String>,
+pub(crate) struct HashInputsBuilder {
+    pub(crate) files: HashSet<String>,
+    pub(crate) runtime: HashSet<String>,
+    pub(crate) environment: HashSet<String>,
+    pub(crate) dep_outputs: HashSet<String>,
+    pub(crate) external: HashSet<String>,
 }
 
 impl HashInputsBuilder {
     /// Extends this builder with all values from another builder
-    fn extend(&mut self, other: HashInputsBuilder) {
+    pub(crate) fn extend(&mut self, other: HashInputsBuilder) {
         self.files.extend(other.files);
         self.runtime.extend(other.runtime);
         self.environment.extend(other.environment);
         self.dep_outputs.extend(other.dep_outputs);
         self.external.extend(other.external);
+    }
+}
+
+/// Converts context-free `HashInstruction` variants into their `HashInputsBuilder`.
+///
+/// # Panics
+/// Panics for context-dependent variants (WorkspaceFileSet, ProjectFileSet,
+/// TaskOutput, TsConfiguration) that require workspace files, project graph,
+/// or filesystem access. Callers must handle those variants before calling `.into()`.
+impl From<&HashInstruction> for HashInputsBuilder {
+    fn from(instruction: &HashInstruction) -> Self {
+        match instruction {
+            HashInstruction::Runtime(runtime) => HashInputsBuilder {
+                runtime: HashSet::from([runtime.clone()]),
+                ..Default::default()
+            },
+            HashInstruction::Environment(env) => HashInputsBuilder {
+                environment: HashSet::from([env.clone()]),
+                ..Default::default()
+            },
+            HashInstruction::External(external) => HashInputsBuilder {
+                external: HashSet::from([external.clone()]),
+                ..Default::default()
+            },
+            HashInstruction::AllExternalDependencies => HashInputsBuilder {
+                external: HashSet::from(["AllExternalDependencies".to_string()]),
+                ..Default::default()
+            },
+            HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
+                HashInputsBuilder::default()
+            }
+            // These variants require external context — callers must match on them
+            // explicitly before falling through to `.into()`.
+            other => unreachable!(
+                "{:?} requires context (workspace files, project graph, etc.) \
+                 and cannot be converted to HashInputsBuilder via From",
+                other
+            ),
+        }
     }
 }
 
@@ -103,9 +142,9 @@ pub struct HasherOptions {
 #[napi]
 pub struct TaskHasher {
     workspace_root: String,
-    project_graph: External<ProjectGraph>,
-    project_file_map: External<HashMap<String, Vec<FileData>>>,
-    all_workspace_files: External<Vec<FileData>>,
+    project_graph: Arc<ProjectGraph>,
+    project_file_map: Arc<HashMap<String, Vec<FileData>>>,
+    all_workspace_files: Arc<Vec<FileData>>,
     ts_config: Vec<u8>,
     ts_config_paths: HashMap<String, Vec<String>>,
     root_tsconfig_path: Option<String>,
@@ -118,9 +157,15 @@ impl TaskHasher {
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
-        project_graph: External<ProjectGraph>,
-        project_file_map: External<ProjectFiles>,
-        all_workspace_files: External<Vec<FileData>>,
+        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
+            Arc<ProjectGraph>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_file_map: &External<
+            Arc<ProjectFiles>,
+        >,
+        #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
+            Arc<Vec<FileData>>,
+        >,
         ts_config: Buffer,
         ts_config_paths: HashMap<String, Vec<String>>,
         root_tsconfig_path: Option<String>,
@@ -128,9 +173,9 @@ impl TaskHasher {
     ) -> Self {
         Self {
             workspace_root,
-            project_graph,
-            project_file_map,
-            all_workspace_files,
+            project_graph: Arc::clone(project_graph),
+            project_file_map: Arc::clone(project_file_map),
+            all_workspace_files: Arc::clone(all_workspace_files),
             ts_config: ts_config.to_vec(),
             ts_config_paths,
             root_tsconfig_path,
@@ -143,7 +188,7 @@ impl TaskHasher {
     #[napi]
     pub fn hash_plans(
         &self,
-        hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
         cwd: String,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
@@ -154,7 +199,7 @@ impl TaskHasher {
 
         let function_start = std::time::Instant::now();
 
-        trace!("hashing plans {:?}", hash_plans.as_ref());
+        trace!("hashing plans {:?}", &**hash_plans);
         trace!("Starting hash_plans with {} plans", hash_plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());
@@ -300,40 +345,22 @@ impl TaskHasher {
                     Arc::clone(&self.runtime_cache),
                 )?;
                 trace!(parent: &span, "hash_runtime: {:?}", now.elapsed());
-                (
-                    hashed_runtime,
-                    HashInputsBuilder {
-                        runtime: HashSet::from([runtime.clone()]),
-                        ..Default::default()
-                    },
-                )
+                (hashed_runtime, instruction.into())
             }
             HashInstruction::Environment(env) => {
                 let hashed_env = hash_env(env, js_env);
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
-                (
-                    hashed_env,
-                    HashInputsBuilder {
-                        environment: HashSet::from([env.clone()]),
-                        ..Default::default()
-                    },
-                )
+                (hashed_env, instruction.into())
             }
             HashInstruction::Cwd(mode) => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
                 let hashed_cwd = hash_cwd(workspace_root, cwd, mode.clone());
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
-                (hashed_cwd, HashInputsBuilder::default())
+                (hashed_cwd, instruction.into())
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let project = self
-                    .project_graph
-                    .nodes
-                    .get(project_name)
-                    .ok_or_else(|| anyhow!("project {} not found", project_name))?;
                 let result = hash_project_files_with_inputs(
                     project_name,
-                    &project.root,
                     file_sets,
                     &self.project_file_map,
                 )?;
@@ -350,7 +377,7 @@ impl TaskHasher {
                 let hashed_project_config =
                     hash_project_config(project_name, &self.project_graph.nodes)?;
                 trace!(parent: &span, "hash_project_config: {:?}", now.elapsed());
-                (hashed_project_config, HashInputsBuilder::default())
+                (hashed_project_config, instruction.into())
             }
             HashInstruction::TsConfiguration(project_name) => {
                 let ts_config_hash = if !selectively_hash_tsconfig {
@@ -422,13 +449,7 @@ impl TaskHasher {
                     Arc::clone(&self.external_cache),
                 )?;
                 trace!(parent: &span, "hash_external: {:?}", now.elapsed());
-                (
-                    hashed_external,
-                    HashInputsBuilder {
-                        external: HashSet::from([external.clone()]),
-                        ..Default::default()
-                    },
-                )
+                (hashed_external, instruction.into())
             }
             HashInstruction::AllExternalDependencies => {
                 let hashed_all_externals = hash_all_externals(
@@ -437,13 +458,7 @@ impl TaskHasher {
                     Arc::clone(&self.external_cache),
                 )?;
                 trace!(parent: &span, "hash_all_externals: {:?}", now.elapsed());
-                (
-                    hashed_all_externals,
-                    HashInputsBuilder {
-                        external: HashSet::from(["AllExternalDependencies".to_string()]),
-                        ..Default::default()
-                    },
-                )
+                (hashed_all_externals, instruction.into())
             }
         };
         Ok((instruction.to_string(), hash, inputs))

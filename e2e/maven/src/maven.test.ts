@@ -46,9 +46,9 @@ describe('Maven', () => {
     expect(output).toContain('- install-ci:');
   });
 
-  it('should build Maven project with dependencies', () => {
+  it('should build Maven project with dependencies without batch mode', () => {
     // Build app which depends on lib, which depends on utils
-    let buildOutput = runCLI('run app:install', { verbose: true });
+    let buildOutput = runCLI('run app:install --no-batch', { verbose: true });
 
     // Should build dependencies first
     expect(buildOutput).toContain('BUILD SUCCESS');
@@ -60,8 +60,8 @@ describe('Maven', () => {
     );
   });
 
-  it('should run tests for Maven project', () => {
-    const testOutput = runCLI('run utils:test', { verbose: true });
+  it('should run tests for Maven project without batch mode', () => {
+    const testOutput = runCLI('run utils:test --no-batch', { verbose: true });
     expect(testOutput).toContain('BUILD SUCCESS');
   });
 
@@ -118,7 +118,7 @@ describe('Maven', () => {
     expect(output).toContain('- mvn-install-ci:');
 
     // Verify prefixed target works
-    const buildOutput = runCLI('run app:mvn-compile');
+    const buildOutput = runCLI('run app:mvn-compile --no-batch');
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });

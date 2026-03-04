@@ -1,5 +1,5 @@
 ---
-title: Overview of the Nx Plugin for Maven
+title: Maven Plugin for Nx
 description: This plugin allows Maven tasks to be run through Nx.
 sidebar:
   label: 'Introduction'
@@ -16,12 +16,16 @@ The `@nx/maven` plugin registers Maven modules as Nx projects so you can [set up
 
 You can use Maven with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
+## Requirements
+
+| Dependency | Supported Versions |
+| ---------- | ------------------ |
+| Java       | >= 17              |
+| Maven      | >= 3.6.0           |
+
+Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx).
+
 ## Setup
-
-### Prerequisites
-
-- **Java 17 or newer**
-- **Maven 3.6.0 or newer**
 
 ### Install Nx
 

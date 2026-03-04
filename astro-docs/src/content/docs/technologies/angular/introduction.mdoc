@@ -12,7 +12,17 @@ filter: 'type:References'
 The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for monorepos.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-See the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) to know which Nx version supports a given Angular version.
+## Requirements
+
+The `@nx/angular` plugin supports the following package versions.
+
+| Package         | Supported Versions |
+| --------------- | ------------------ |
+| `@angular/core` | >= 19.0.0 < 22.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+For older Nx versions, see the full [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
 
 ## Setup
 

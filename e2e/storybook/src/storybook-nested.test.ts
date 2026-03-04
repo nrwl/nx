@@ -13,9 +13,7 @@ import {
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
 
-// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
-// See: https://github.com/qmhc/unplugin-dts/issues/461
-xdescribe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
+describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
   const appName = uniq('react');
 
   beforeAll(() => {

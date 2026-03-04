@@ -17,7 +17,9 @@ We attempted to configure a custom path via `edge_functions = "nx-dev/nx-dev/net
 
 ### `rewrite-framer-urls.ts`
 
-Proxies requests to Framer-hosted pages and rewrites URLs in the HTML response to use `nx.dev` instead of the Framer domain. This ensures:
+Proxies all requests to Framer by default and rewrites URLs in the HTML response to use `nx.dev` instead of the Framer domain. Only paths explicitly kept in Next.js (defined in the `nextjsPaths` set and `excludedPath` config) bypass the proxy.
+
+This ensures:
 
 - Canonical URLs point to nx.dev
 - No duplicate indexing by search engines
@@ -26,7 +28,16 @@ Proxies requests to Framer-hosted pages and rewrites URLs in the HTML response t
 **Environment variables** (configured in Netlify):
 
 - `NEXT_PUBLIC_FRAMER_URL`: The Framer site URL (e.g., `https://ready-knowledge-238309.framer.app`)
-- `NEXT_PUBLIC_FRAMER_REWRITES`: Comma-separated list of paths to proxy (e.g., `/enterprise,/powerpack`)
+
+### `framer-sitemap.ts`
+
+Proxies Framer's `sitemap.xml` at the path `/sitemap-1.xml` and rewrites URLs to use `nx.dev`. This is a separate edge function from the main Framer proxy so that the main function can keep `accept: ['text/html']` for compute cost savings.
+
+The Next.js sitemap index (`sitemap.xml`) references `/sitemap-1.xml` via the `additionalSitemaps` config in `next-sitemap.config.js`.
+
+**Environment variables** (configured in Netlify):
+
+- `NEXT_PUBLIC_FRAMER_URL`: Same as the main proxy function
 
 ## Future
 

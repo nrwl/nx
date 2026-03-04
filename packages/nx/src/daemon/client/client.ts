@@ -1059,9 +1059,12 @@ export class DaemonClient {
   private setUpConnection() {
     const socketPath = this.getSocketPath();
 
-    this.socketMessenger = new DaemonSocketMessenger(
-      connect(socketPath)
-    ).listen(
+    const socket = connect(socketPath);
+    // Unref the socket so it doesn't keep the process alive. The
+    // sendMessageToDaemon method uses a keep-alive setTimeout to
+    // explicitly hold the event loop open while awaiting a response.
+    socket.unref();
+    this.socketMessenger = new DaemonSocketMessenger(socket).listen(
       (message) => this.handleMessage(message),
       () => {
         // it's ok for the daemon to terminate if the client doesn't wait on

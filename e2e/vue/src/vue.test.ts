@@ -8,9 +8,7 @@ import {
   updateFile,
 } from '@nx/e2e-utils';
 
-// TODO: Re-enable once @microsoft/api-extractor ESM import issue is resolved
-// See: https://github.com/qmhc/unplugin-dts/issues/461
-xdescribe('Vue Plugin', () => {
+describe('Vue Plugin', () => {
   let proj: string;
 
   beforeAll(() => {

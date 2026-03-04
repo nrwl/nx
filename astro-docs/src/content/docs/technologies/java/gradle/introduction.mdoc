@@ -1,5 +1,5 @@
 ---
-title: Overview of the Nx Plugin for Gradle
+title: Gradle Plugin for Nx
 description: Run Gradle tasks through Nx with caching, graph insights, and CI optimization.
 sidebar:
   label: 'Introduction'
@@ -12,11 +12,16 @@ The `@nx/gradle` plugin registers Gradle projects in the Nx graph so you can [se
 
 You can use Gradle with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
+## Requirements
+
+| Dependency | Supported Versions |
+| ---------- | ------------------ |
+| Java       | >= 17              |
+| Gradle     | >= 8.0             |
+
+Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx).
+
 ## Setup
-
-### Prerequisites
-
-- Java 17 or newer
 
 ### Install Nx
 

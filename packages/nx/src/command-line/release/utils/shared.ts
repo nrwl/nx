@@ -35,7 +35,7 @@ export interface VersionDataEntry {
    * dockerVersion will be populated if the project is a docker project and has been
    * included within this release.
    */
-  dockerVersion?: string;
+  dockerVersion?: string | null;
   /**
    * The list of projects which depend upon the current project.
    */
@@ -314,16 +314,21 @@ export function createGitTagValues(
               );
             }
           } else {
-            // Use either docker version or semver version based on preference
-            tags.push(
-              interpolate(releaseGroup.releaseTag.pattern, {
-                version: preferDockerVersion
-                  ? projectVersionData.dockerVersion
-                  : projectVersionData.newVersion,
-                projectName: sanitizeProjectNameForGitTag(project),
-                releaseGroupName: releaseGroup.name,
-              })
-            );
+            // Use either docker version or semver version based on preference, with null fallback
+            const version = preferDockerVersion
+              ? (projectVersionData.dockerVersion ??
+                projectVersionData.newVersion)
+              : (projectVersionData.newVersion ??
+                projectVersionData.dockerVersion);
+            if (version) {
+              tags.push(
+                interpolate(releaseGroup.releaseTag.pattern, {
+                  version,
+                  projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
+                })
+              );
+            }
           }
         }
       }
@@ -357,15 +362,18 @@ export function createGitTagValues(
           );
         }
       } else {
-        // Use either docker version or semver version based on preference
-        tags.push(
-          interpolate(releaseGroup.releaseTag.pattern, {
-            version: preferDockerVersion
-              ? projectVersionData.dockerVersion
-              : projectVersionData.newVersion,
-            releaseGroupName: releaseGroup.name,
-          })
-        );
+        // Use either docker version or semver version based on preference, with null fallback
+        const version = preferDockerVersion
+          ? (projectVersionData.dockerVersion ?? projectVersionData.newVersion)
+          : (projectVersionData.newVersion ?? projectVersionData.dockerVersion);
+        if (version) {
+          tags.push(
+            interpolate(releaseGroup.releaseTag.pattern, {
+              version,
+              releaseGroupName: releaseGroup.name,
+            })
+          );
+        }
       }
     }
   }

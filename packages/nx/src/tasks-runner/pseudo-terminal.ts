@@ -4,7 +4,7 @@ import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
-import { codeToSignal } from '../utils/exit-codes';
+import { codeToSignal, messageToCode } from '../utils/exit-codes';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
@@ -221,25 +221,6 @@ export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
 
   send(message: Serializable) {
     this.pseudoIpc.sendMessageToChild(this.id, message);
-  }
-}
-
-function messageToCode(message: string): number {
-  if (message.startsWith('Terminated by ')) {
-    switch (message.replace('Terminated by ', '').trim()) {
-      case 'Termination':
-        return 143;
-      case 'Interrupt':
-        return 130;
-      default:
-        return 128;
-    }
-  } else if (message.startsWith('Exited with code ')) {
-    return parseInt(message.replace('Exited with code ', '').trim());
-  } else if (message === 'Success') {
-    return 0;
-  } else {
-    return 1;
   }
 }
 

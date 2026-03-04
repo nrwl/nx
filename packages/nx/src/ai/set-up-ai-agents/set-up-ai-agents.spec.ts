@@ -393,6 +393,45 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
+      it('should preserve existing ref in nx-claude-plugins source', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        // Create existing config with a custom ref
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            extraKnownMarketplaces: {
+              'nx-claude-plugins': {
+                source: {
+                  source: 'github',
+                  repo: 'nrwl/nx-ai-agents-config',
+                  ref: 'experimental',
+                },
+              },
+            },
+            enabledPlugins: {
+              'nx@nx-claude-plugins': true,
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.extraKnownMarketplaces['nx-claude-plugins']).toEqual({
+          source: {
+            source: 'github',
+            repo: 'nrwl/nx-ai-agents-config',
+            ref: 'experimental',
+          },
+        });
+      });
+
       it('should NOT write to .mcp.json for claude (MCP is provided by plugin)', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -590,6 +629,64 @@ describe('setup-ai-agents generator', () => {
         expect(tree.exists('AGENTS.md')).toBe(true);
         // .mcp.json should NOT be created - Claude uses plugin, Gemini uses .gemini/settings.json
         expect(tree.exists('.mcp.json')).toBe(false);
+      });
+    });
+
+    describe('gitignore', () => {
+      it('should add .nx/polygraph to .gitignore when it does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('.nx/polygraph');
+      });
+
+      it('should add .nx/polygraph to existing .gitignore', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\ndist\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('node_modules');
+        expect(gitignore).toContain('.nx/polygraph');
+      });
+
+      it('should not duplicate if .nx/polygraph is already present', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\n.nx/polygraph\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        const matches = gitignore.match(/\.nx\/polygraph/g);
+        expect(matches).toHaveLength(1);
+      });
+
+      it('should not add if a broader pattern already covers it', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', '.nx/\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).not.toContain('.nx/polygraph');
       });
     });
 
