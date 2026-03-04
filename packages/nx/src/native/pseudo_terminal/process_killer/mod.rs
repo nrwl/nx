@@ -77,8 +77,13 @@ pub fn kill_process_tree(root_pid: i32, signal: Option<Either<String, i32>>) {
 ///
 /// Returns the list in BFS order (root first, leaves last).
 /// If the root process has already exited, returns an empty Vec.
-fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
+fn collect_process_tree(sys: &System, root_pid: i32) -> (Vec<Pid>, HashMap<Pid, Vec<Pid>>) {
     let root = Pid::from(root_pid as usize);
+
+    if sys.process(root).is_none() {
+        debug!("Root process {} not found", root);
+        return (Vec::new(), HashMap::new());
+    }
 
     let mut children: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(sys.processes().len() / 4);
     for (pid, proc_info) in sys.processes() {
@@ -89,11 +94,6 @@ fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
         if let Some(parent) = proc_info.parent() {
             children.entry(parent).or_default().push(*pid);
         }
-    }
-
-    if sys.process(root).is_none() {
-        debug!("Root process {} not found", root);
-        return Vec::new();
     }
 
     let mut to_kill = Vec::new();
@@ -115,7 +115,7 @@ fn collect_process_tree(sys: &System, root_pid: i32) -> Vec<Pid> {
         }
     }
 
-    to_kill
+    (to_kill, children)
 }
 
 /// Send a signal to PIDs in reverse order (leaves first, then parents).
@@ -142,7 +142,7 @@ fn snapshot_and_signal(root_pid: i32, signal: Signal) -> Vec<Pid> {
     let mut sys = System::new();
     sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
 
-    let to_kill = collect_process_tree(&sys, root_pid);
+    let (to_kill, _children) = collect_process_tree(&sys, root_pid);
     if to_kill.is_empty() {
         return Vec::new();
     }
@@ -188,7 +188,7 @@ pub async fn kill_process_tree_graceful(
             true,
             ProcessRefreshKind::nothing(),
         );
-        let tree = collect_process_tree(&sys, root_pid);
+        let (tree, children_of) = collect_process_tree(&sys, root_pid);
         if tree.is_empty() {
             return;
         }
@@ -197,16 +197,6 @@ pub async fn kill_process_tree_graceful(
         if mapped == Signal::Kill {
             send_signal_to_pids(&sys, &tree, Signal::Kill);
             return;
-        }
-
-        // Build parent→children map from snapshot (static — won't change)
-        let mut children_of: HashMap<Pid, Vec<Pid>> = HashMap::with_capacity(tree.len());
-        for &pid in &tree {
-            if let Some(proc) = sys.process(pid) {
-                if let Some(parent) = proc.parent() {
-                    children_of.entry(parent).or_default().push(pid);
-                }
-            }
         }
 
         let mut remaining: HashSet<Pid> = tree.iter().copied().collect();
