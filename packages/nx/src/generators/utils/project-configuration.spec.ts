@@ -403,4 +403,335 @@ describe('project configuration', () => {
       `);
     });
   });
+
+  describe('with both project.json and package.json', () => {
+    it('should not copy properties from package.json to project.json when updating', () => {
+      // Set up a project with both package.json and project.json
+      const projectRoot = 'libs/mixed-project';
+
+      // Create package.json with some nx configuration
+      writeJson<PackageJson>(tree, `${projectRoot}/package.json`, {
+        name: 'mixed-project',
+        version: '1.0.0',
+        nx: {
+          tags: ['from-package-json'],
+          implicitDependencies: ['package-implicit-dep'],
+          namedInputs: {
+            packageNamedInput: ['src/**/*'],
+          },
+        },
+      });
+
+      // Create project.json with different configuration
+      writeJson(tree, `${projectRoot}/project.json`, {
+        name: 'mixed-project',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        sourceRoot: `${projectRoot}/src`,
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              outputPath: 'dist/mixed-project',
+            },
+          },
+        },
+      });
+
+      // Read the merged configuration and update it
+      const mergedConfig = readProjectConfiguration(tree, 'mixed-project');
+
+      // Update the project configuration with new values
+      updateProjectConfiguration(tree, 'mixed-project', {
+        ...mergedConfig,
+        sourceRoot: `${projectRoot}/updated-src`,
+        targets: {
+          ...mergedConfig.targets,
+          test: {
+            executor: '@nx/jest:jest',
+            options: {
+              jestConfig: `${projectRoot}/jest.config.ts`,
+            },
+          },
+        },
+      });
+
+      // Verify project.json only contains project-specific properties (not package.json properties)
+      const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+      expect(projectJsonContent).toEqual({
+        name: 'mixed-project',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        sourceRoot: `${projectRoot}/updated-src`,
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              outputPath: 'dist/mixed-project',
+            },
+          },
+          test: {
+            executor: '@nx/jest:jest',
+            options: {
+              jestConfig: `${projectRoot}/jest.config.ts`,
+            },
+          },
+        },
+      });
+
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent).toEqual({
+        name: 'mixed-project',
+        version: '1.0.0',
+        nx: {
+          tags: ['from-package-json'],
+          implicitDependencies: ['package-implicit-dep'],
+          namedInputs: {
+            packageNamedInput: ['src/**/*'],
+          },
+        },
+      });
+    });
+
+    it('should handle nested properties correctly when both files exist', () => {
+      const projectRoot = 'libs/nested-test';
+
+      // Create package.json with nested configuration
+      writeJson<PackageJson>(tree, `${projectRoot}/package.json`, {
+        name: 'nested-test',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            lint: {
+              executor: '@nx/eslint:lint',
+              options: {
+                lintFilePatterns: ['src/**/*.ts'],
+              },
+            },
+          },
+          metadata: {
+            description: 'from-package',
+            technologies: ['from-package-tech'],
+          },
+        },
+      });
+
+      // Create project.json with different nested configuration
+      writeJson(tree, `${projectRoot}/project.json`, {
+        name: 'nested-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              outputPath: 'dist/nested-test',
+            },
+          },
+        },
+        metadata: {
+          description: 'from-project',
+          technologies: ['from-project-tech'],
+        },
+      });
+
+      // Read merged config and update it
+      const mergedConfig = readProjectConfiguration(tree, 'nested-test');
+
+      // Update configuration
+      updateProjectConfiguration(tree, 'nested-test', {
+        ...mergedConfig,
+        targets: {
+          ...mergedConfig.targets,
+          test: {
+            executor: '@nx/jest:jest',
+          },
+        },
+      });
+
+      // Verify project.json only contains properties that should be there
+      const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+      expect(projectJsonContent).toEqual({
+        name: 'nested-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              outputPath: 'dist/nested-test',
+            },
+          },
+          test: {
+            executor: '@nx/jest:jest',
+          },
+        },
+        metadata: {
+          description: 'from-project',
+          technologies: ['from-package-tech', 'from-project-tech'], // merged array (acceptable)
+        },
+      });
+
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent).toEqual({
+        name: 'nested-test',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            lint: {
+              executor: '@nx/eslint:lint',
+              options: {
+                lintFilePatterns: ['src/**/*.ts'],
+              },
+            },
+          },
+          metadata: {
+            description: 'from-package',
+            technologies: ['from-package-tech'],
+          },
+        },
+      });
+    });
+
+    it('should allow project.json to override properties from package.json', () => {
+      const projectRoot = 'libs/override-test';
+
+      // Create package.json with a name
+      writeJson<PackageJson>(tree, `${projectRoot}/package.json`, {
+        name: 'package-name',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                outputPath: 'dist/package-name',
+              },
+            },
+          },
+        },
+      });
+
+      // Create project.json that overrides the name and adds new targets
+      writeJson(tree, `${projectRoot}/project.json`, {
+        name: 'project-name-override',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          test: {
+            executor: '@nx/jest:jest',
+          },
+        },
+      });
+
+      // Read merged config and update it
+      const mergedConfig = readProjectConfiguration(
+        tree,
+        'project-name-override'
+      );
+
+      // Update configuration
+      updateProjectConfiguration(tree, 'project-name-override', {
+        ...mergedConfig,
+        targets: {
+          ...mergedConfig.targets,
+          lint: {
+            executor: '@nx/eslint:lint',
+          },
+        },
+      });
+
+      // Verify project.json keeps the override name and only its targets
+      const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+      expect(projectJsonContent).toEqual({
+        name: 'project-name-override',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          test: {
+            executor: '@nx/jest:jest',
+          },
+          lint: {
+            executor: '@nx/eslint:lint',
+          },
+        },
+      });
+
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent).toEqual({
+        name: 'package-name',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                outputPath: 'dist/package-name',
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should write property to project.json when value differs from package.json', () => {
+      const projectRoot = 'libs/override-value-test';
+
+      // Create package.json with some properties
+      writeJson<PackageJson>(tree, `${projectRoot}/package.json`, {
+        name: 'override-value-test',
+        version: '1.0.0',
+        nx: {
+          tags: ['package-tag'],
+          sourceRoot: 'src-from-package',
+        },
+      });
+
+      // Create project.json with NO tags or sourceRoot initially
+      writeJson(tree, `${projectRoot}/project.json`, {
+        name: 'override-value-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+          },
+        },
+      });
+
+      // Read merged config and update with DIFFERENT values than what's in package.json
+      const mergedConfig = readProjectConfiguration(
+        tree,
+        'override-value-test'
+      );
+
+      // Update configuration with different values
+      updateProjectConfiguration(tree, 'override-value-test', {
+        ...mergedConfig,
+        tags: ['overridden-tag'], // different from package.json
+        sourceRoot: 'src-overridden', // different from package.json
+      });
+
+      // Verify project.json now contains the overridden values
+      const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+      expect(projectJsonContent).toEqual({
+        name: 'override-value-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+          },
+        },
+        tags: ['overridden-tag'], // different from package.json, so written here
+        sourceRoot: 'src-overridden', // different from package.json, so written here
+      });
+
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent).toEqual({
+        name: 'override-value-test',
+        version: '1.0.0',
+        nx: {
+          tags: ['package-tag'],
+          sourceRoot: 'src-from-package',
+        },
+      });
+    });
+  });
 });
