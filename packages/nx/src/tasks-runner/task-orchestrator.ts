@@ -691,7 +691,7 @@ export class TaskOrchestrator {
         }
         const runCommandsOptions = {
           ...combinedOptions,
-          env,
+          env: shouldPrefix ? { ...env, NX_PREFIX_OUTPUT: 'false' } : env,
           usePty:
             this.tuiEnabled ||
             (!this.tasksSchedule.hasTasks() &&
