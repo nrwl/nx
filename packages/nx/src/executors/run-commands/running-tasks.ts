@@ -651,6 +651,9 @@ function processEnv(
   if (color) {
     res.FORCE_COLOR = `${color}`;
   }
+  // Don't leak NX_PREFIX_OUTPUT to child processes — the parent
+  // task-orchestrator handles prefixing, not the spawned commands.
+  delete res.NX_PREFIX_OUTPUT;
   return res;
 }
 
