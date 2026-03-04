@@ -12,9 +12,7 @@ import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
-  hashTaskOutput,
   IS_WASM,
-  OutputFingerprints,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
@@ -67,9 +65,6 @@ export class TaskOrchestrator {
 
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getDbConnection())
-    : null;
-  private outputFingerprints = !IS_WASM
-    ? new OutputFingerprints(getDbConnection())
     : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -1182,29 +1177,16 @@ export class TaskOrchestrator {
   }
 
   private async shouldCopyOutputsFromCache(outputs: string[], hash: string) {
-    return !(await this.outputsHashesMatch(outputs, hash));
-  }
-
-  private async outputsHashesMatch(
-    outputs: string[],
-    hash: string
-  ): Promise<boolean> {
     if (this.daemon?.enabled()) {
-      return this.daemon.outputsHashesMatch(outputs, hash);
+      return !(await this.daemon.outputsHashesMatch(outputs, hash));
+    } else {
+      return true;
     }
-    if (!this.outputFingerprints || !outputs?.length) return false;
-    const stored = this.outputFingerprints.get(hash);
-    if (!stored) return false;
-    return hashTaskOutput(workspaceRoot, outputs) === stored;
   }
 
   private async recordOutputsHash(task: Task) {
     if (this.daemon?.enabled()) {
-      await this.daemon.recordOutputsHash(task.outputs, task.hash);
-    }
-    if (this.outputFingerprints && task.outputs?.length && task.hash) {
-      const fingerprint = hashTaskOutput(workspaceRoot, task.outputs);
-      this.outputFingerprints.record(task.hash, fingerprint);
+      return this.daemon.recordOutputsHash(task.outputs, task.hash);
     }
   }
 

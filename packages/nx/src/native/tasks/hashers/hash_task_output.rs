@@ -1,7 +1,7 @@
 use crate::native::cache::expand_outputs::get_files_for_outputs;
 use crate::native::glob::build_glob_set;
 use crate::native::hasher::hash_file;
-use anyhow::Result;
+use anyhow::*;
 use dashmap::DashMap;
 use rayon::prelude::*;
 use std::path::Path;
@@ -35,15 +35,7 @@ pub fn resolve_task_output_files(
         .collect())
 }
 
-/// Fingerprints all output files for a task. Exposed to TypeScript via napi.
-#[napi]
-pub fn hash_task_output(workspace_root: String, outputs: Vec<String>) -> anyhow::Result<String> {
-    let cache = DashMap::new();
-    let result = hash_task_output_impl(&workspace_root, "**/*", &outputs, &cache)?;
-    Ok(result.hash)
-}
-
-pub fn hash_task_output_impl(
+pub fn hash_task_output(
     workspace_root: &str,
     glob: &str,
     outputs: &[String],
