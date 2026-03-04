@@ -137,6 +137,12 @@
       "description": "Updates the nx wrapper.",
       "implementation": "./src/migrations/update-22-1-0/update-nx-wrapper"
     },
+    "22-6-1-add-claude-worktrees-to-git-ignore": {
+      "cli": "nx",
+      "version": "22.6.1-beta.0",
+      "description": "Adds .claude/worktrees to .gitignore",
+      "implementation": "./src/migrations/update-22-6-1/add-claude-worktrees-to-git-ignore"
+    },
     "22-7-0-add-polygraph-to-git-ignore": {
       "cli": "nx",
       "version": "22.7.0-beta.0",
