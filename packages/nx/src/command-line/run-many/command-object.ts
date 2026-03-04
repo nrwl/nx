@@ -9,7 +9,6 @@ import {
   withTargetAndConfigurationOption,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
@@ -32,6 +31,6 @@ export const yargsRunManyCommand: CommandModule = {
         await import('./run-many').then((m) => m.runMany(withOverrides(args)));
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };

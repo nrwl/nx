@@ -4,7 +4,6 @@ import type {
   ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 
 type PropertyDescription = {
   type?: string | string[];
@@ -982,7 +981,7 @@ async function promptForValues(
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
       console.error(e);
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     });
 }
 

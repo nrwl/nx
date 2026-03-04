@@ -26,7 +26,6 @@ import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function format(
   command: 'check' | 'write',
@@ -43,7 +42,7 @@ export async function format(
         `Please install "prettier" and try again, or don't run the "nx format:${command}" command.`,
       ],
     });
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
@@ -92,7 +91,7 @@ export async function format(
         } else {
           console.log(filesWithDifferentFormatting.join('\n'));
         }
-        exitAndFlushAnalytics(1);
+        process.exit(1);
       }
       break;
     }

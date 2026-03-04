@@ -2,7 +2,6 @@ import { ProjectGraph } from '../config/project-graph';
 import { findCycle, makeAcyclic } from '../tasks-runner/task-graph-utils';
 import { NxArgs } from '../utils/command-line-utils';
 import { output } from '../utils/output';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 import { CommandGraph } from './command-graph';
 
 /**
@@ -77,7 +76,7 @@ export function createCommandGraph(
         title: `Could not execute command because the project graph has a circular dependency`,
         bodyLines: [`${cycle.join(' --> ')}`],
       });
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
   }
 

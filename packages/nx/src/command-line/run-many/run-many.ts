@@ -18,7 +18,6 @@ import { output } from '../../utils/output';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -80,7 +79,7 @@ export async function runMany(
       extraTargetDependencies,
       extraOptions
     );
-    exitAndFlushAnalytics(status);
+    process.exit(status);
   }
 }
 

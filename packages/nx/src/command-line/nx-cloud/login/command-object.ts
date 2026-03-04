@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsLoginCommand: CommandModule = {
   command: 'login [nxCloudUrl]',
@@ -18,6 +17,6 @@ export const yargsLoginCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    exitAndFlushAnalytics(await (await import('./login')).loginHandler(args));
+    process.exit(await (await import('./login')).loginHandler(args));
   },
 };

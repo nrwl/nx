@@ -55,7 +55,6 @@ import {
 } from './deprecated/command-objects';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 import { yargsMcpCommand } from './mcp/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
@@ -147,7 +146,7 @@ function createMissingConformanceCommand(
           'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
         ],
       });
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     },
   };
 }

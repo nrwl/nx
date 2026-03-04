@@ -33,7 +33,6 @@ import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } fr
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
@@ -1242,7 +1241,7 @@ export async function handleNxReleaseConfigError(
       throw new Error(`Unhandled error code: ${error.code}`);
   }
 
-  exitAndFlushAnalytics(1);
+  process.exit(1);
 }
 
 function ensureReleaseGroupReleaseTagPatternIsValid(

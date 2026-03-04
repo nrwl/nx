@@ -1,6 +1,5 @@
 import type { CommandModule } from 'yargs';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface SyncArgs {
   verbose?: boolean;
@@ -14,9 +13,7 @@ export const yargsSyncCommand: CommandModule<
   describe: 'Sync the workspace files by running all the sync generators.',
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
-    exitAndFlushAnalytics(
-      await import('./sync').then((m) => m.syncHandler(args))
-    );
+    process.exit(await import('./sync').then((m) => m.syncHandler(args)));
   },
 };
 
@@ -29,7 +26,7 @@ export const yargsSyncCheckCommand: CommandModule<
     'Check that no changes are required after running all sync generators.',
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
-    exitAndFlushAnalytics(
+    process.exit(
       await import('./sync').then((m) =>
         m.syncHandler({ ...args, check: true })
       )

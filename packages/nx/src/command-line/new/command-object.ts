@@ -1,5 +1,4 @@
 import { Argv, CommandModule } from 'yargs';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsNewCommand: CommandModule = {
   command: 'new [_..]',
@@ -7,7 +6,7 @@ export const yargsNewCommand: CommandModule = {
   builder: (yargs) => withNewOptions(yargs),
   handler: async (args) => {
     args._ = args._.slice(1);
-    exitAndFlushAnalytics(
+    process.exit(
       await (
         await import('./new')
       ).newWorkspace(args['nxWorkspaceRoot'] as string, args)

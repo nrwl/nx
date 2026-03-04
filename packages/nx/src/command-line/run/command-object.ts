@@ -6,7 +6,6 @@ import {
   withRunOneOptions,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsRunCommand: CommandModule = {
   command: 'run [project][:target][:configuration] [_..]',
@@ -27,7 +26,7 @@ export const yargsRunCommand: CommandModule = {
         );
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };
 
@@ -45,7 +44,7 @@ export const yargsNxInfixCommand: CommandModule = {
         // Yargs parses <target> as 'undefined' if running just 'nx'
         if (!args.target || args.target === 'undefined') {
           showHelp();
-          exitAndFlushAnalytics(1);
+          process.exit(1);
         }
         return (await import('./run-one')).runOne(
           process.cwd(),
@@ -53,6 +52,6 @@ export const yargsNxInfixCommand: CommandModule = {
         );
       }
     );
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };

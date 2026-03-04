@@ -83,7 +83,6 @@ import {
   validateResolvedVersionPlansAgainstFilter,
 } from './utils/version-plan-utils';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -165,7 +164,7 @@ export function createAPI(
         title: `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
         bodyLines: [nxJsonMessage],
       });
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
 
     const tree = new FsTree(workspaceRoot, args.verbose);
@@ -281,7 +280,7 @@ export function createAPI(
       );
     if (versionPlanValidationError) {
       output.error(versionPlanValidationError);
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
 
     /**

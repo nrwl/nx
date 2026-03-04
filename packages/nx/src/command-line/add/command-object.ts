@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withOverrides, withVerbose } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface AddOptions {
   packageSpecifier: string;
@@ -41,7 +40,7 @@ export const yargsAddCommand: CommandModule<{}, AddOptions> = {
         'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator'
       ) as any,
   handler: async (args) => {
-    exitAndFlushAnalytics(
+    process.exit(
       await import('./add').then((m) => m.addHandler(withOverrides(args)))
     );
   },

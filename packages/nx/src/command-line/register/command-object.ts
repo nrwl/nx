@@ -1,7 +1,6 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { handleErrors } from '../../utils/handle-errors';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export interface RegisterOptions {
   key?: string;
@@ -27,6 +26,6 @@ export const yargsRegisterCommand: CommandModule<{}, RegisterOptions> = {
     const exitCode = await handleErrors(args.verbose ?? false, async () => {
       return (await import('./register')).handleRegister(args);
     });
-    exitAndFlushAnalytics(exitCode);
+    process.exit(exitCode);
   },
 };

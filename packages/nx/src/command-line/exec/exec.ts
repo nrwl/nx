@@ -27,7 +27,6 @@ import { joinPathFragments } from '../../utils/path';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { getCommandProjects } from '../../commands-runner/get-command-projects';
 import { reportCommandRunEvent } from '../../analytics';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export async function nxExecCommand(
   args: Record<string, string | string[] | boolean>
@@ -145,7 +144,7 @@ function readScriptArgV(
     output.error({
       title: '`nx exec` requires passing in a command after `--`',
     });
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 
   return overrides.__overrides_unparsed__;
@@ -178,7 +177,7 @@ function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
         `Is ${targetName} missing from ${project.data.root}/package.json's nx.includedScripts field?`,
       ],
     });
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 }
 

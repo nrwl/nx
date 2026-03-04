@@ -1,7 +1,6 @@
 import { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../analytics/analytics';
 
 export const yargsRepairCommand: CommandModule = {
   command: 'repair',
@@ -17,5 +16,5 @@ export const yargsRepairCommand: CommandModule = {
   `,
   builder: (yargs) => linkToNxDevAndExamples(withVerbose(yargs), 'repair'),
   handler: async (args: ArgumentsCamelCase<{ verbose: boolean }>) =>
-    exitAndFlushAnalytics(await (await import('./repair')).repair(args)),
+    process.exit(await (await import('./repair')).repair(args)),
 };

@@ -66,7 +66,6 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
-import { exitAndFlushAnalytics } from '../analytics/analytics';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -408,7 +407,7 @@ function createTaskGraphAndRunValidations(
         title: `Could not execute command because the task graph has a circular dependency`,
         bodyLines: [`${cycle.join(' --> ')}`],
       });
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
   }
 
@@ -683,7 +682,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       }
     }
 
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 
   if (areAllResultsFailures) {
@@ -862,7 +861,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
       ({ applyChanges }) => applyChanges === 'yes'
     );
   } catch {
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 }
 
@@ -894,10 +893,10 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
     ]).then(({ runTasks }) => runTasks === 'yes');
 
     if (!runTasks) {
-      exitAndFlushAnalytics(1);
+      process.exit(1);
     }
   } catch {
-    exitAndFlushAnalytics(1);
+    process.exit(1);
   }
 }
 

@@ -1,7 +1,6 @@
 import type { NxReleaseConfiguration } from '../../../config/nx-json';
 import { output } from '../../../utils/output';
 import type { NxReleaseConfig } from '../config/config';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export function printConfigAndExit({
   userProvidedReleaseConfig,
@@ -39,7 +38,7 @@ export function printConfigAndExit({
         'For the user-facing configuration format, and the full list of available options, please reference https://nx.dev/reference/nx-json#release',
       ],
     });
-    exitAndFlushAnalytics(0);
+    process.exit(0);
   }
 
   console.log(JSON.stringify(userProvidedReleaseConfig, null, 2));

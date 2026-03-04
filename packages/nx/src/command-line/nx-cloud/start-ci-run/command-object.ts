@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
-import { exitAndFlushAnalytics } from '../../../analytics/analytics';
 
 export const yargsStartCiRunCommand: CommandModule = {
   command: 'start-ci-run [options]',
@@ -12,7 +11,7 @@ export const yargsStartCiRunCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    exitAndFlushAnalytics(
+    process.exit(
       await (await import('./start-ci-run')).startCiRunHandler(args)
     );
   },
