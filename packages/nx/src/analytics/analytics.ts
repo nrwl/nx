@@ -21,6 +21,7 @@ import { parse } from 'semver';
 import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
+import { generateWorkspaceId } from '../utils/analytics-prompt';
 
 // Conditionally import telemetry functions only on non-WASM platforms
 let initializeTelemetry: typeof InitializeTelemetryType;
@@ -44,9 +45,13 @@ export async function startAnalytics() {
     return;
   }
 
-  const workspaceId = getAnalyticsId();
+  if (!isAnalyticsEnabled()) {
+    return;
+  }
+
+  const workspaceId = generateWorkspaceId();
   if (!workspaceId) {
-    // Analytics are disabled, exit early.
+    // Not a git repo — no telemetry
     return;
   }
   const userId = await getCurrentMachineId();
@@ -343,7 +348,7 @@ function getPackageManagerInfo() {
   };
 }
 
-function getAnalyticsId(): string | false | undefined {
+function isAnalyticsEnabled(): boolean {
   const nxJson = readNxJson(workspaceRoot);
-  return nxJson?.analytics;
+  return nxJson?.analytics === true;
 }

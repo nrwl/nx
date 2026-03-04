@@ -1,15 +1,8 @@
-import {
-  ensureAnalyticsPreferenceSet,
-  getAnalyticsId,
-} from './analytics-prompt';
+import { ensureAnalyticsPreferenceSet } from './analytics-prompt';
 import * as isCi from './is-ci';
 import * as enquirer from 'enquirer';
 import * as fileUtils from './fileutils';
 import * as nxJson from '../config/nx-json';
-
-// UUID v4 regex pattern
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 describe('analytics-prompt', () => {
   let originalStdinIsTTY: boolean | undefined;
@@ -58,13 +51,11 @@ describe('analytics-prompt', () => {
       expect(mockWriteJsonFile).not.toHaveBeenCalled();
     });
 
-    it('should skip prompting if analytics is already set to a UUID', async () => {
+    it('should skip prompting if analytics is already true', async () => {
       mockIsCI.mockReturnValue(false);
       process.stdin.isTTY = true;
       process.stdout.isTTY = true;
-      mockReadNxJson.mockReturnValue({
-        analytics: '550e8400-e29b-41d4-a716-446655440000',
-      });
+      mockReadNxJson.mockReturnValue({ analytics: true });
 
       await ensureAnalyticsPreferenceSet();
 
@@ -72,7 +63,7 @@ describe('analytics-prompt', () => {
       expect(mockWriteJsonFile).not.toHaveBeenCalled();
     });
 
-    it('should skip prompting if analytics is already set to false', async () => {
+    it('should skip prompting if analytics is already false', async () => {
       mockIsCI.mockReturnValue(false);
       process.stdin.isTTY = true;
       process.stdout.isTTY = true;
@@ -85,7 +76,7 @@ describe('analytics-prompt', () => {
       expect(mockWriteJsonFile).not.toHaveBeenCalled();
     });
 
-    it('should prompt and save a UUID when user accepts', async () => {
+    it('should prompt and save true when user accepts', async () => {
       mockIsCI.mockReturnValue(false);
       process.stdin.isTTY = true;
       process.stdout.isTTY = true;
@@ -99,9 +90,7 @@ describe('analytics-prompt', () => {
       expect(mockPrompt).toHaveBeenCalled();
       expect(mockWriteJsonFile).toHaveBeenCalledWith(
         expect.stringContaining('nx.json'),
-        expect.objectContaining({
-          analytics: expect.stringMatching(UUID_PATTERN),
-        })
+        expect.objectContaining({ analytics: true })
       );
     });
 
@@ -137,33 +126,6 @@ describe('analytics-prompt', () => {
         expect.stringContaining('nx.json'),
         expect.objectContaining({ analytics: false })
       );
-    });
-  });
-
-  describe('getAnalyticsId', () => {
-    it('should return the analytics UUID when set', () => {
-      const uuid = '550e8400-e29b-41d4-a716-446655440000';
-      mockReadNxJson.mockReturnValue({ analytics: uuid });
-
-      expect(getAnalyticsId()).toBe(uuid);
-    });
-
-    it('should return false when analytics is disabled', () => {
-      mockReadNxJson.mockReturnValue({ analytics: false });
-
-      expect(getAnalyticsId()).toBe(false);
-    });
-
-    it('should return undefined when analytics is not set', () => {
-      mockReadNxJson.mockReturnValue({});
-
-      expect(getAnalyticsId()).toBeUndefined();
-    });
-
-    it('should return undefined when nxJson is empty', () => {
-      mockReadNxJson.mockReturnValue(null);
-
-      expect(getAnalyticsId()).toBeUndefined();
     });
   });
 });
