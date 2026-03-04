@@ -18,7 +18,6 @@ import {
 } from '../../utils/plugins/output';
 import { reportCommandRunEvent } from '../../analytics';
 
-
 export interface ListArgs {
   /** The name of an installed plugin to query  */
   plugin?: string | undefined;

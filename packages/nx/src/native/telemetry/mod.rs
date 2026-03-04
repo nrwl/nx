@@ -26,7 +26,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-const TRACKING_ID_PROD: &str = "G-83SJXKY605";
+const TRACKING_ID_PROD: &str = "G-BGPKPJK4PY";
 const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
 const BATCH_INTERVAL_MS: u64 = 50;
 
@@ -277,7 +277,7 @@ impl TelemetryService {
         user_parameters.insert("up.node_version".to_string(), node_version); // NodeVersion
         user_parameters.insert("up.package_manager".to_string(), package_manager_name); // PackageManager
         if let Some(version) = package_manager_version {
-            user_parameters.insert("up.pkg_manager_version".to_string(), version); // PackageManagerVersion
+            user_parameters.insert("up.package_manager_version".to_string(), version); // PackageManagerVersion
         }
         user_parameters.insert("up.nx_version".to_string(), nx_version); // NxVersion
         user_parameters.insert("ep.is_ai_agent".to_string(), is_ai_agent.to_string()); // IsAgent
