@@ -167,9 +167,11 @@ export function readProjectAndTargetFromTargetString(
   projects: Record<string, ProjectGraphProjectNode>
 ): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
-  const [maybeProject, ...segments] = splitTarget(targetString, {
-    nodes: projects,
-  } as ProjectGraph);
+  const [maybeProject, ...segments] = splitTarget(
+    targetString,
+    { nodes: projects } as ProjectGraph,
+    { silent: true }
+  );
 
   if (!segments.length) {
     // if no additional segments are provided, then the string references
