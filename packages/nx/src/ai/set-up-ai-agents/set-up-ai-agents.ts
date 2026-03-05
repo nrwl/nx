@@ -305,6 +305,12 @@ export async function setupAiAgentsGeneratorImpl(
     '.nx/polygraph'
   );
 
+  addEntryToGitIgnore(
+    tree,
+    join(options.directory, '.gitignore'),
+    '.claude/worktrees'
+  );
+
   await formatChangedFilesWithPrettierIfAvailable(tree);
 
   // we use the check variable to determine if we should actually make changes or just report what would be changed
