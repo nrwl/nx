@@ -4,7 +4,7 @@ import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
-import { codeToSignal } from '../utils/exit-codes';
+import { codeToSignal, messageToCode } from '../utils/exit-codes';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
@@ -144,17 +144,18 @@ export class PseudoTerminal {
 export class PseudoTtyProcess implements RunningTask {
   isAlive = true;
 
-  private exitCallbacks: Array<(code: number) => void> = [];
+  private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
+    [];
   private outputCallbacks: Array<(output: string) => void> = [];
 
-  private terminalOutput = '';
+  private terminalOutputChunks: string[] = [];
 
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
     private childProcess: ChildProcess
   ) {
     childProcess.onOutput((output) => {
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       this.outputCallbacks.forEach((cb) => cb(output));
     });
 
@@ -164,19 +165,21 @@ export class PseudoTtyProcess implements RunningTask {
       const code = messageToCode(message);
       childProcess.cleanup();
 
-      this.exitCallbacks.forEach((cb) => cb(code));
+      const terminalOutput = this.terminalOutputChunks.join('');
+      this.terminalOutputChunks = [];
+      this.exitCallbacks.forEach((cb) => cb(code, terminalOutput));
     });
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
     return new Promise((res) => {
-      this.onExit((code) => {
-        res({ code, terminalOutput: this.terminalOutput });
+      this.onExit((code, terminalOutput) => {
+        res({ code, terminalOutput });
       });
     });
   }
 
-  onExit(callback: (code: number) => void): void {
+  onExit(callback: (code: number, terminalOutput: string) => void): void {
     this.exitCallbacks.push(callback);
   }
 
@@ -218,25 +221,6 @@ export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
 
   send(message: Serializable) {
     this.pseudoIpc.sendMessageToChild(this.id, message);
-  }
-}
-
-function messageToCode(message: string): number {
-  if (message.startsWith('Terminated by ')) {
-    switch (message.replace('Terminated by ', '').trim()) {
-      case 'Termination':
-        return 143;
-      case 'Interrupt':
-        return 130;
-      default:
-        return 128;
-    }
-  } else if (message.startsWith('Exited with code ')) {
-    return parseInt(message.replace('Exited with code ', '').trim());
-  } else if (message === 'Success') {
-    return 0;
-  } else {
-    return 1;
   }
 }
 

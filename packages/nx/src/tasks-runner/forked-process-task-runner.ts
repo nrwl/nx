@@ -3,14 +3,16 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { RustPseudoTerminal } from '../native';
-import { signalToCode } from '../utils/exit-codes';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { getProcessMetricsService } from './process-metrics-service';
-import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
+import {
+  createPseudoTerminal as createPseudoTerminalWithShutdown,
+  PseudoTerminal,
+  PseudoTtyProcess,
+} from './pseudo-terminal';
 import { BatchProcess } from './running-tasks/batch-process';
 import {
   NodeChildProcessWithDirectOutput,
@@ -44,7 +46,7 @@ export class ForkedProcessTaskRunner {
 
   // TODO: vsavkin delegate terminal output printing
   public async forkProcessForBatch(
-    { executorName, taskGraph: batchTaskGraph }: Batch,
+    { id: batchId, executorName, taskGraph: batchTaskGraph }: Batch,
     projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
@@ -73,7 +75,6 @@ export class ForkedProcessTaskRunner {
 
     // Register batch worker process with all tasks
     if (p.pid) {
-      const batchId = `${executorName}-${p.pid}`;
       const taskIds = Object.keys(batchTaskGraph.tasks);
       getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
     }
@@ -187,7 +188,8 @@ export class ForkedProcessTaskRunner {
   }
 
   private async createPseudoTerminal() {
-    const terminal = new PseudoTerminal(new RustPseudoTerminal());
+    // Use the helper to ensure shutdown callbacks are registered
+    const terminal = createPseudoTerminalWithShutdown(true);
 
     await terminal.init();
 
@@ -240,12 +242,7 @@ export class ForkedProcessTaskRunner {
     });
     this.processes.add(p);
 
-    let terminalOutput = '';
-    p.onOutput((msg) => {
-      terminalOutput += msg;
-    });
-
-    p.onExit((code) => {
+    p.onExit((code, terminalOutput) => {
       if (!this.tuiEnabled && code > 128) {
         process.exit(code);
       }
@@ -438,23 +435,6 @@ export class ForkedProcessTaskRunner {
       this.cleanup();
       process.off('message', messageHandler);
     });
-    process.once('SIGINT', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
-    });
-    process.once('SIGTERM', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.once('SIGHUP', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    // Signal handlers removed - TaskOrchestrator owns signal handling
   }
 }

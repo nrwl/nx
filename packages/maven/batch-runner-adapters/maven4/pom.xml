@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>dev.nx.maven</groupId>
         <artifactId>batch-runner-adapters</artifactId>
-        <version>0.0.13</version>
+        <version>0.0.14</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -104,7 +101,6 @@
     </dependencies>
 
     <build>
-        <finalName>maven4-adapter</finalName>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
 
         <plugins>
@@ -139,7 +135,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -147,6 +143,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <outputFile>${project.build.directory}/maven4-adapter.jar</outputFile>
                             <artifactSet>
                                 <includes>
                                     <include>dev.nx.maven:nx-maven-shared</include>

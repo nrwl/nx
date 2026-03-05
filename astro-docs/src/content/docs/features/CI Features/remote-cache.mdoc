@@ -11,11 +11,9 @@ src="https://youtu.be/NF1__N_snog"
 title="Remote Caching with Nx Replay"
  /%}
 
-Repeatedly rebuilding and retesting the same code is costly — not just in terms of wasted resources, but also in terms of developer time. To solve this, Nx includes a sophisticated computation caching system that ensures **code is never rebuilt twice**, saving you both time and resources.
+Nx [caches task results locally](/docs/features/cache-task-results) to avoid rebuilding the same code twice. Remote caching extends this by **sharing the cache across your team and CI**.
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](../../../../assets/features/distributed-caching.svg)
-
-By default, Nx [caches task computations locally](/docs/features/cache-task-results), but the biggest benefit comes from **sharing this cache across your team and in CI**.
 
 - **Zero config** and **secure** by default
 - Drastically **speeds up task execution times** during local development, and more critically in CI
@@ -52,6 +50,8 @@ Nx Cloud stores the following:
 - **Hash:** The hash of the inputs to the computation. The inputs include the source code, runtime values, and command line arguments. Note that the hash is included in the cache, but the actual inputs are not.
 
 Learn more about [how caching works](/docs/concepts/how-caching-works#what-is-cached).
+
+Cache correctness depends on your tasks declaring the right `inputs` and `outputs`. If a task reads a file that isn't in its inputs, cache hits can serve stale results. If it writes outside its declared outputs, those files go missing on a cache restore. [Task sandboxing](/docs/features/ci-features/sandboxing) uses IO tracing to catch these mismatches so you can fix them before they cause problems.
 
 ## Security in Remote Caching
 

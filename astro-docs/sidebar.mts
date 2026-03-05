@@ -3,6 +3,7 @@ import {
   getTechnologyKBItems,
   getTechnologyAPIItems,
 } from './src/plugins/utils/plugin-mappings';
+import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url';
 
 type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 
@@ -24,8 +25,6 @@ const learnGroups: SidebarItems = [
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
       { label: 'Installation', link: 'getting-started/installation' },
-      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
-      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
       {
         label: 'Start a New Project',
         link: 'getting-started/start-new-project',
@@ -33,6 +32,12 @@ const learnGroups: SidebarItems = [
       {
         label: 'Add to Existing Project',
         link: 'getting-started/start-with-existing-project',
+      },
+      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
+      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
+      {
+        label: 'Nx Cloud',
+        link: 'getting-started/nx-cloud',
       },
       {
         label: 'Tutorials',
@@ -88,6 +93,10 @@ const learnGroups: SidebarItems = [
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
+      {
+        label: 'Synthetic Monorepos',
+        link: 'concepts/synthetic-monorepos',
+      },
     ],
   },
   {
@@ -95,6 +104,10 @@ const learnGroups: SidebarItems = [
     collapsed: false,
     items: [
       { label: 'Run Tasks', link: 'features/run-tasks' },
+      {
+        label: 'Cache Task Results',
+        link: 'features/cache-task-results',
+      },
       { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
       {
         label: 'Code Organization',
@@ -172,6 +185,11 @@ const learnGroups: SidebarItems = [
           {
             label: 'GitHub Integration',
             link: 'features/ci-features/github-integration',
+          },
+          {
+            label: 'Sandboxing',
+            link: 'features/ci-features/sandboxing',
+            badge: 'New',
           },
           {
             label: 'CIPE Affected Project Graph',
@@ -389,7 +407,7 @@ const technologiesGroups: SidebarItems = [
           },
           {
             label: 'Angular Rsbuild',
-            link: 'technologies/angular/angular-rsbuild/create-config',
+            link: 'technologies/angular/angular-rsbuild/introduction',
           },
           { label: 'React', link: 'technologies/react/introduction' },
           {
@@ -886,6 +904,10 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'TypeScript',
         collapsed: true,
         items: [
+          {
+            label: 'Maintain TypeScript Monorepos',
+            link: 'features/maintain-typescript-monorepos',
+          },
           ...getTechnologyKBItems('typescript'),
           {
             label: 'Buildable and Publishable Libraries',
@@ -894,10 +916,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'TypeScript Project Linking',
             link: 'concepts/typescript-project-linking',
-          },
-          {
-            label: 'Maintain TypeScript Monorepos',
-            link: 'features/maintain-typescript-monorepos',
           },
         ],
       },
@@ -997,10 +1015,6 @@ const referenceGroups: SidebarItems = [
       { label: 'nxignore', link: 'reference/nxignore' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
-      {
-        label: 'Node/TypeScript Compatibility',
-        link: 'reference/nodejs-typescript-compatibility',
-      },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console Settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
@@ -1155,7 +1169,7 @@ const referenceGroups: SidebarItems = [
       },
       {
         label: 'Changelog',
-        link: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
+        link: `${resolveNxDevUrl()}/changelog`,
       },
       {
         label: 'Deprecations',

@@ -5,12 +5,16 @@ filter: 'type:Guides'
 ---
 
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
-The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
+The `inputs` are a list of file sets, runtime inputs, and environment variables that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
 Nx errs on the side of caution when using inputs. Ideally, the "perfect" configuration of inputs will allow Nx to never re-run something when it does not need to. In practice though, it is better to play it safe and include more than strictly necessary in the inputs of a task. Forgetting to consider something during computation hash calculation may lead to negative consequences for end users. Start safe and fine-tune your inputs when there are clear opportunities to improve the cache hit rate.
 
 For an overview of all the possible [types of inputs](/docs/reference/inputs) and how to reuse sets of inputs as [named inputs](/docs/reference/inputs#named-inputs), see the reference documentation.
+
+{% aside type="caution" title="Directory Paths Require Trailing Slash or Glob" %}
+When specifying a directory as an input, you must use a trailing slash (`/`) or a glob pattern. For example, `{projectRoot}/src/` or `{projectRoot}/src/**/*` will match all files in the `src` directory, but `{projectRoot}/src` (without trailing slash) will not match any files. This differs from `outputs`, which support naked directory paths.
+{% /aside %}
 
 Throughout this recipe, the following project structure of a simple workspace will be used as an example to help understand inputs better.
 
@@ -320,7 +324,7 @@ Be sure to [view the existing inputs](#viewing-the-inputs-of-a-task) and start f
 
 Inputs of a task are configured in the `inputs` array on the target. This can be done in several different places:
 
-- As of Nx 18, Nx Plugins often [infer inputs for tasks](/docs/concepts/inferred-tasks) which run other tools.
+- Nx Plugins often [infer inputs for tasks](/docs/concepts/inferred-tasks) which run other tools.
   - In doing so, they will also define some reasonable defaults for the `inputs` of those tasks.
 - The `inputs` array in the `targetDefaults` for a set of targets in `nx.json`.
 - The `inputs` array for a specific target in the project configuration file.
@@ -442,6 +446,37 @@ With the above named inputs, Nx will behave in the following way:
 
 - When only test files are changed, Nx will restore previous compilation results from the cache and re-run the tests for the projects containing the test files
 - When any production files are changed, Nx will re-run the tests for the project as well as any projects which depend on it
+
+### Specifying Dependency File Patterns Directly
+
+Instead of defining a named input and referencing it with `^`, you can directly specify file patterns to consider from dependency projects using the `^{projectRoot}` syntax:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "inputs": [
+        "production",
+        "^{projectRoot}/src/**/*.ts", // Only consider .ts source files from dependencies
+      ],
+    },
+  },
+}
+```
+
+This is useful when you want fine-grained control over which files from dependencies affect a task's cache without creating a named input. For example, a `build` task might only need to consider `.ts` files from its dependencies rather than all production files.
+
+You can also use the object format with the `dependencies` property:
+
+```jsonc
+{
+  "inputs": [
+    "production",
+    { "fileset": "{projectRoot}/src/**/*.ts", "dependencies": true },
+  ],
+}
+```
 
 ### Consider the Version of a Language for all Tasks
 

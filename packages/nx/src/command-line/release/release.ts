@@ -60,7 +60,7 @@ export function createAPI(
 
   return async function release(
     args: ReleaseOptions
-  ): Promise<NxReleaseVersionResult | number> {
+  ): Promise<NxReleaseVersionResult> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     const overriddenConfig = overrideReleaseConfig ?? {};
     const userProvidedReleaseConfig = ignoreNxJsonConfig

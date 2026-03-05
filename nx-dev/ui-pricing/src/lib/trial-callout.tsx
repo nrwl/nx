@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 import Image from 'next/image';
 import { ButtonLink } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function TrialCallout({
   pageId,
@@ -49,7 +49,7 @@ export function TrialCallout({
                 size="default"
                 title="Start free trial"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'start-trial-click',
                     'trial-callout-' + pageId,
                     'trial-callout'
@@ -65,7 +65,7 @@ export function TrialCallout({
                 href="/contact/sales"
                 title="Reach out to us"
                 onClick={() =>
-                  sendCustomEvent(
+                  sendCustomEventViaGtm(
                     'contact-click',
                     'trial-callout-' + pageId,
                     'trial-callout'

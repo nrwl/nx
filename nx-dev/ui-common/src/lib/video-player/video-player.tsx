@@ -12,7 +12,7 @@ import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { VideoModal } from '../video-modal';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import {
   VideoPlayerButtonProps,
   VideoPlayerContextValue,
@@ -207,7 +207,11 @@ export function VideoPlayerProvider({
 
   const openModal = () => {
     if (analytics) {
-      sendCustomEvent(analytics.event, analytics.category, analytics.label);
+      sendCustomEventViaGtm(
+        analytics.event,
+        analytics.category,
+        analytics.label
+      );
     }
     onPlay?.();
     setIsModalOpen(true);
@@ -220,7 +224,11 @@ export function VideoPlayerProvider({
 
   const startPlaying = () => {
     if (analytics) {
-      sendCustomEvent(analytics.event, analytics.category, analytics.label);
+      sendCustomEventViaGtm(
+        analytics.event,
+        analytics.category,
+        analytics.label
+      );
     }
     onPlay?.();
     setIsPlaying(true);
@@ -232,7 +240,7 @@ export function VideoPlayerProvider({
 
   const sendAnalytics = analytics
     ? (event: string, category: string, label: string) => {
-        sendCustomEvent(event, category, label);
+        sendCustomEventViaGtm(event, category, label);
       }
     : undefined;
 

@@ -4,6 +4,7 @@ import {
   cleanupProject,
   expectCodeIsFormatted,
   getSelectedPackageManager,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
@@ -34,6 +35,9 @@ describe('create-nx-workspace --preset=angular', () => {
     checkFilesExist('src/app/app-module.ts');
     checkFilesDoNotExist('src/app/app.routes.ts');
     expectCodeIsFormatted();
+
+    const nxJson = readJson(`nx.json`);
+    expect(nxJson.nxCloudId).toBeUndefined();
   });
 
   it('should create a workspace with a single angular app at the root using standalone APIs', () => {

@@ -3,16 +3,21 @@ import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import * as pc from 'picocolors';
 import { claudeMcpJsonPath } from '../../ai/constants';
+import { detectAiAgent } from '../../ai/detect-ai-agent';
 import {
   Agent,
+  agentDisplayMap,
   AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
   supportedAgents,
 } from '../../ai/utils';
+import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../devkit-internals';
 import { output } from '../../utils/output';
+import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
@@ -21,13 +26,32 @@ export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
+  // When called as inner from the tmp install, just run the impl directly
+  if (inner) {
+    return await configureAiAgentsHandlerImpl(args);
+  }
+
   // Use environment variable to force local execution
   if (
     process.env.NX_USE_LOCAL === 'true' ||
-    process.env.NX_AI_FILES_USE_LOCAL === 'true' ||
-    inner
+    process.env.NX_AI_FILES_USE_LOCAL === 'true'
   ) {
-    return await configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
+    await resetDaemonAgentStatus();
+    return;
+  }
+
+  // Skip downloading latest if the current version is already the latest
+  try {
+    const latestVersion = await resolvePackageVersionUsingRegistry(
+      'nx',
+      'latest'
+    );
+    if (latestVersion === nxVersion) {
+      return await configureAiAgentsHandlerImpl(args);
+    }
+  } catch {
+    // If we can't check, proceed with download
   }
 
   let cleanup: () => void | undefined;
@@ -42,24 +66,37 @@ export async function configureAiAgentsHandler(
     );
 
     const module = await import(modulePath);
-    const configureAiAgentsResult = await module.configureAiAgentsHandler(
-      args,
-      true
-    );
+    await module.configureAiAgentsHandler(args, true);
     cleanup();
-    return configureAiAgentsResult;
   } catch (error) {
     if (cleanup) {
       cleanup();
     }
     // Fall back to local implementation
-    return configureAiAgentsHandlerImpl(args);
+    await configureAiAgentsHandlerImpl(args);
   }
+
+  // Reset daemon cache using the local daemon client (the inner handler's
+  // client belongs to the tmp install and isn't connected to our daemon)
+  await resetDaemonAgentStatus();
 }
 
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
+  // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+  // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+  process.on('uncaughtException', (error) => {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error['code'] === 'ERR_USE_AFTER_CLOSE'
+    )
+      return;
+    throw error;
+  });
+
   const normalizedOptions = normalizeOptions(options);
 
   const {
@@ -173,6 +210,99 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   }
+
+  // Automatic mode (no explicit --agents): update outdated agents and report
+  // non-configured ones. When an AI agent is detected, also configure the
+  // detected agent itself (even if non-configured or partial).
+  const detectedAgent = detectAiAgent();
+  const agentsExplicitlyPassed = options.agents !== undefined;
+  const isAutoMode =
+    !agentsExplicitlyPassed && (options.interactive === false || detectedAgent);
+
+  if (isAutoMode) {
+    const agentsToConfig: Agent[] = [];
+    const allConfigs = [
+      ...nonConfiguredAgents,
+      ...partiallyConfiguredAgents,
+      ...fullyConfiguredAgents,
+    ];
+
+    // When an AI agent is detected, configure it if it needs it
+    if (detectedAgent) {
+      const detectedNeedsConfig =
+        nonConfiguredAgents.some((a) => a.name === detectedAgent) ||
+        partiallyConfiguredAgents.some((a) => a.name === detectedAgent) ||
+        fullyConfiguredAgents.some(
+          (a) => a.name === detectedAgent && a.outdated
+        );
+
+      if (detectedNeedsConfig) {
+        agentsToConfig.push(detectedAgent);
+      }
+    }
+
+    // Update any other outdated agents
+    for (const a of fullyConfiguredAgents) {
+      if (a.outdated && !agentsToConfig.includes(a.name)) {
+        agentsToConfig.push(a.name);
+      }
+    }
+
+    const stillNonConfigured = nonConfiguredAgents.filter(
+      (a) => !agentsToConfig.includes(a.name)
+    );
+
+    const nothingToDoMessage = detectedAgent
+      ? `${
+          agentDisplayMap[detectedAgent] ?? detectedAgent
+        } configuration is up to date`
+      : 'All configured AI agents are up to date';
+
+    if (agentsToConfig.length > 0) {
+      const configSpinner = ora(`Configuring agent(s)...`).start();
+      try {
+        await configureAgents(agentsToConfig, workspaceRoot, false);
+        configSpinner.stop();
+
+        output.success({
+          title: 'AI agents configured successfully',
+          bodyLines: agentsToConfig.map((name) => {
+            const config = allConfigs.find((a) => a.name === name);
+            return config
+              ? `${config.displayName}: ${getAgentConfiguredDescription(config)}`
+              : `- ${name}`;
+          }),
+        });
+      } catch (e) {
+        configSpinner.fail('Failed to configure AI agents');
+        output.error({
+          title: 'Error details:',
+          bodyLines: [e.message],
+        });
+        process.exit(1);
+      }
+    } else {
+      output.success({
+        title: nothingToDoMessage,
+      });
+    }
+
+    if (stillNonConfigured.length > 0) {
+      const agentNames = stillNonConfigured.map((a) => a.name);
+      output.log({
+        title: 'The following agents are not yet configured:',
+        bodyLines: [
+          ...stillNonConfigured.map((a) => `- ${a.displayName}`),
+          '',
+          `Run: nx configure-ai-agents --agents ${agentNames.join(' ')}`,
+        ],
+      });
+    }
+
+    return;
+  }
+
+  // Interactive mode (or non-interactive with explicit --agents)
   const allAgentChoices: AgentPromptChoice[] = [];
   const preselectedIndices: number[] = [];
   let currentIndex = 0;
@@ -233,7 +363,7 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   } else {
-    // in non-interactive mode, configure all
+    // non-interactive with explicit --agents: configure all requested
     selectedAgents = allAgentChoices.map((a) => a.name);
   }
 
@@ -322,7 +452,7 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
     case 'opencode':
       return `Configures MCP server. Adds skills and agents. Updates ${rulesFile}.`;
     case 'codex':
-      return `Configures MCP server. Updates ${rulesFile}.`;
+      return `Configures MCP server. Adds skills. Updates ${rulesFile}.`;
     default:
       return '';
   }
@@ -346,7 +476,7 @@ function getAgentConfiguredDescription(agent: AgentConfiguration): string {
     case 'opencode':
       return `MCP + skills + ${rulesFile}`;
     case 'codex':
-      return `MCP + ${rulesFile}`;
+      return `MCP + skills + ${rulesFile}`;
     default:
       return '';
   }
@@ -384,4 +514,21 @@ function normalizeOptions(
     agents,
     check,
   };
+}
+
+async function resetDaemonAgentStatus(): Promise<void> {
+  try {
+    // Don't check daemonClient.enabled() — the CLI sets NX_DAEMON=false for
+    // configure-ai-agents (it doesn't need the daemon to do its work), but a
+    // daemon started by a previous command may still be running and serving
+    // cached status. We just need to reach it to reset its cache.
+    if (await daemonClient.isServerAvailable()) {
+      await daemonClient.resetConfigureAiAgentsStatus();
+    }
+  } catch {
+    // Daemon may not be running, that's fine
+  } finally {
+    // Close the daemon socket so the process can exit cleanly.
+    daemonClient.reset();
+  }
 }

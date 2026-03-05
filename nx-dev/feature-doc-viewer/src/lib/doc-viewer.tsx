@@ -11,7 +11,7 @@ import { cx } from '@nx/nx-dev-ui-primitives';
 import { useRef, useState, useEffect } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 import { RelatedDocumentsSection } from './related-documents-section';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { FeedbackDialog } from '@nx/nx-dev-feature-feedback';
 
 export function DocViewer({
@@ -69,7 +69,7 @@ export function DocViewer({
     // sanitize the feedback from the user script tags/other malicious code
     const sanitizedFeedback = feedback.replace(/(<([^>]+)>)/gi, '');
 
-    sendCustomEvent('feedback', 'feedback', 'idea', undefined, {
+    sendCustomEventViaGtm('feedback', 'feedback', 'idea', undefined, {
       feedback: sanitizedFeedback,
     });
   }

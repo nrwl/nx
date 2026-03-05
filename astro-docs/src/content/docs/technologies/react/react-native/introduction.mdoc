@@ -1,18 +1,29 @@
 ---
-title: Overview of the Nx React Native Plugin
-description: The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. This page also explains how to configure React Native on your Nx workspace.
+title: React Native Plugin for Nx
+description: The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace, including setup and configuration.
 sidebar:
   label: 'Introduction'
 filter: 'type:References'
 ---
 
-React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
+React Native brings the React declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
 
 The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Detox, and Storybook.
 - Scaffolding for creating buildable libraries that can be published to npm.
 - Utilities for automatic workspace refactoring.
+
+## Requirements
+
+The `@nx/react-native` plugin supports the following package versions.
+
+| Package        | Supported Versions |
+| -------------- | ------------------ |
+| `metro-config` | >= 0.82.0          |
+| `react-native` | ~0.79.3            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setting Up React Native
 
@@ -40,31 +51,16 @@ Make sure to install the `@nx/react-native` version that matches the version of 
 
 In any Nx workspace, you can install `@nx/react-native` by running the following command:
 
-{% tabs syncKey="nx-version" %}
-{% tabitem label="Nx 18+" %}
-
 ```shell
 nx add @nx/react-native
 ```
 
 This will install the correct version of `@nx/react-native`.
 
-{% /tabitem %}
-{% tabitem label="Nx < 18" %}
-
-Install the `@nx/react-native` package with your package manager.
-
-```shell
-npm add -D @nx/react-native
-```
-
-{% /tabitem %}
-{% /tabs %}
-
 ### How @nx/react-native Infers Tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/react-native` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:

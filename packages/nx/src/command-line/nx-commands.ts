@@ -46,6 +46,7 @@ import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
 import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
+import { yargsApplyLocallyCommand } from './nx-cloud/apply-locally/command-object';
 import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-client/command-object';
 import {
   yargsPrintAffectedCommand,
@@ -115,6 +116,7 @@ export const commandsObject = yargs
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)
+  .command(yargsApplyLocallyCommand)
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
   .command(resolveConformanceCommandObject())

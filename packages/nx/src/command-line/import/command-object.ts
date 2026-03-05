@@ -1,7 +1,14 @@
 import { CommandModule } from 'yargs';
+import { isAiAgent } from '../../native';
+import { handleErrors } from '../../utils/handle-errors';
+import { writeAiOutput } from '../ai/ai-output';
+import {
+  buildImportErrorResult,
+  determineImportErrorCode,
+  writeErrorLog,
+} from './utils/ai-output';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',
@@ -13,7 +20,8 @@ export const yargsImportCommand: CommandModule = {
         yargs
           .positional('sourceRepository', {
             type: 'string',
-            description: 'The remote URL of the source to import.',
+            description:
+              'The remote URL or local path of the source repository to import.',
           })
           .positional('destinationDirectory', {
             type: 'string',
@@ -41,12 +49,30 @@ export const yargsImportCommand: CommandModule = {
             description: 'Interactive mode.',
             default: true,
           })
+          .option('plugins', {
+            type: 'string',
+            description:
+              'Plugins to install after import: "skip" for none, "all" for all detected, or comma-separated list (e.g., @nx/vite,@nx/jest).',
+          })
       ),
       'import'
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      return (await import('./import')).importHandler(args as any);
+      try {
+        return await (await import('./import')).importHandler(args as any);
+      } catch (error) {
+        if (isAiAgent()) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          const errorCode = determineImportErrorCode(error);
+          const errorLogPath = writeErrorLog(error, 'nx-import');
+          writeAiOutput(
+            buildImportErrorResult(errorMessage, errorCode, errorLogPath)
+          );
+        }
+        throw error;
+      }
     });
     process.exit(exitCode);
   },

@@ -4,7 +4,7 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 export function PlansDisplay(): ReactElement {
   return (
@@ -59,7 +59,7 @@ export function PlansDisplay(): ReactElement {
                     size="default"
                     variant="contrast"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'start-hobby-plan-click',
                         'plans-table',
                         'pricing-plans'
@@ -91,7 +91,7 @@ export function PlansDisplay(): ReactElement {
                       target="_blank"
                       title="Check our AI integrations and how to use them"
                       onClick={() =>
-                        sendCustomEvent(
+                        sendCustomEventViaGtm(
                           'learn-ai-integrations-click',
                           'plans-table',
                           'pricing-plans'
@@ -114,7 +114,7 @@ export function PlansDisplay(): ReactElement {
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
-                          sendCustomEvent(
+                          sendCustomEventViaGtm(
                             'learn-nx-replay-click',
                             'plans-table',
                             'pricing-plans'
@@ -140,7 +140,7 @@ export function PlansDisplay(): ReactElement {
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
                         onClick={() =>
-                          sendCustomEvent(
+                          sendCustomEventViaGtm(
                             'learn-nx-agents-click',
                             'plans-table',
                             'pricing-plans'
@@ -186,7 +186,7 @@ export function PlansDisplay(): ReactElement {
                   size="default"
                   variant="secondary"
                   onClick={() =>
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'start-team-plan-click',
                       'plans-table',
                       'pricing-plans'
@@ -232,7 +232,7 @@ export function PlansDisplay(): ReactElement {
                     target="_blank"
                     title="Check our AI integrations and how to use them"
                     onClick={() =>
-                      sendCustomEvent(
+                      sendCustomEventViaGtm(
                         'learn-ai-integrations-click',
                         'plans-table',
                         'pricing-plans'
@@ -305,7 +305,7 @@ export function PlansDisplay(): ReactElement {
                   size="default"
                   variant="secondary"
                   onClick={() =>
-                    sendCustomEvent(
+                    sendCustomEventViaGtm(
                       'request-trial-click',
                       'plans-table',
                       'pricing-plans'
@@ -345,7 +345,7 @@ export function PlansDisplay(): ReactElement {
                       target="_blank"
                       title="Check our enterprise features"
                       onClick={() =>
-                        sendCustomEvent(
+                        sendCustomEventViaGtm(
                           'learn-nx-enterprise-click',
                           'plans-table',
                           'pricing-plans'

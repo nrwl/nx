@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import Cards from './Cards.astro';
+import LinkCard from './LinkCard.astro';
+
+export interface Props {
+  group: string;
+}
+
+const { group } = Astro.props;
+const groupSegments = group.split('/');
+
+// Use the Starlight resolved sidebar from Astro locals
+const sidebar = Astro.locals.starlightRoute.sidebar;
+type SidebarEntry = (typeof sidebar)[number];
+
+function findGroup(
+  entries: SidebarEntry[],
+  segments: string[],
+  depth: number = 0
+): SidebarEntry | null {
+  for (const entry of entries) {
+    if (entry.type === 'group' && entry.label === segments[depth]) {
+      if (depth === segments.length - 1) {
+        return entry;
+      }
+      return findGroup(entry.entries, segments, depth + 1);
+    }
+  }
+  return null;
+}
+
+interface LinkItem {
+  label: string;
+  href: string;
+}
+
+function slugify(label: string): string {
+  return label
+    .replace(/\.NET/g, 'dotnet')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Build base URL path from the group prop segments
+const baseSlug = groupSegments.map((s) => slugify(s)).join('/');
+
+function collectTopLevelItems(entries: SidebarEntry[]): LinkItem[] {
+  const items: LinkItem[] = [];
+  for (const entry of entries) {
+    if (entry.type === 'link') {
+      items.push({ label: entry.label, href: entry.href });
+    }
+    if (entry.type === 'group') {
+      const groupSlug = slugify(entry.label);
+      items.push({
+        label: entry.label,
+        href: `/docs/${baseSlug}/${groupSlug}`,
+      });
+    }
+  }
+  return items;
+}
+
+const matchedGroup = findGroup(sidebar, groupSegments);
+const linkItems =
+  matchedGroup && matchedGroup.type === 'group'
+    ? collectTopLevelItems(matchedGroup.entries)
+    : [];
+
+// Look up each page in the docs collection for descriptions
+const allDocs = await getCollection('docs');
+
+const processedPages = linkItems.map((item) => {
+  const docPath = item.href.replace(/^\/docs\//, '');
+  const doc = allDocs.find(
+    (d) =>
+      d.id === docPath ||
+      d.id === `${docPath}.mdoc` ||
+      d.id === `${docPath}/index` ||
+      d.id === `${docPath}/index.mdoc`
+  );
+
+  return {
+    title: item.label,
+    description: doc?.data?.description || '',
+    href: item.href,
+  };
+});
+---
+
+{
+  processedPages.length > 0 ? (
+    <Cards>
+      {processedPages.map((page) => (
+        <LinkCard
+          title={page.title}
+          description={page.description}
+          href={page.href}
+          type="documentation"
+        />
+      ))}
+    </Cards>
+  ) : (
+    <p>No pages found in this section.</p>
+  )
+}

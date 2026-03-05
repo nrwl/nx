@@ -7,7 +7,9 @@ sidebar:
 filter: 'type:Features'
 ---
 
-This guide shows how to configure your Nx workspace for AI coding assistants. The setup gives your agent workspace context and CI integration, making it smarter when working in an Nx monorepo and more autonomous when iterating on CI failures.
+AI coding assistants often hallucinate outdated Nx commands and lack context about your workspace structure. Without workspace awareness, they suggest commands that don't exist or miss project relationships entirely.
+
+The Nx AI integration gives assistants accurate, real-time information about your workspace, projects, and available commands, making them smarter when working in an Nx monorepo and more autonomous when iterating on CI failures.
 
 ## Configure Nx AI Integration
 
@@ -24,7 +26,7 @@ To automatically configure your Nx monorepo to work best with AI agents and assi
 npx nx configure-ai-agents
 ```
 
-This will prompt you for which AI agents/assistants to configure and set up the [Nx MCP server](/docs/features/enhance-ai), AI agent configuration files (`AGENTS.md`, `CLAUDE.md`, etc.), and agent skills. For Claude Code, skills are installed via a plugin; for other agents, they're copied into your workspace.
+This will prompt you for which AI agents/assistants to configure and set up the [Nx MCP server](/docs/reference/nx-mcp), AI agent configuration files (`AGENTS.md`, `CLAUDE.md`, etc.), and agent skills (for workspace exploration, code generation, and task execution). For Claude Code, skills are installed via a plugin; for other agents, they're copied into your workspace.
 
 Alternatively, you can install just the skills via:
 
@@ -43,7 +45,7 @@ The Nx AI integration provides your coding assistant with powerful capabilities:
 - **Workspace Understanding** - Graph-aware exploration of project dependencies and relationships. AI gets structured data instead of grepping through files.
 - **[Real-time Terminal Integration](https://nx.dev/blog/nx-terminal-integration-ai)** - AI can read your terminal output, running processes, and error messages without copy-pasting.
 - **Reliable Code Generation** - AI invokes Nx generators for predictable scaffolding, then adapts the result to your workspace. Faster, standardized, fewer hallucinations.
-- **Autonomous CI Workflows** - The CI monitor skill bridges your local agent with Nx Cloud. Push, monitor, get failures, fix, repeat until CI is green. Enables "Ralph Wiggum loop" patterns where you review the final PR, not every CI hiccup.
+- **Autonomous CI Workflows** - The CI monitor skill bridges your local agent with Nx Cloud. Push, monitor, get failures, fix, repeat until CI is green. Enables autonomous CI workflows ("Ralph Wiggum loop")—you review the final PR, not every intermediate fix.
 - **Cross-project Impact Analysis** - Understanding the implications of changes across your entire monorepo.
 
 ## Configure CI to Leverage AI Capabilities

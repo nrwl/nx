@@ -2,12 +2,7 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import {
-  MessageKey,
-  messages,
-  shouldShowCloudPrompt,
-  getFlowVariant,
-} from '../utils/nx/ab-testing';
+import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import { isGitAvailable } from '../utils/git/git';
 import {
@@ -23,6 +18,7 @@ import {
   agentDisplayMap,
   supportedAgents,
 } from '../create-workspace-options';
+import { detectAiAgentName } from '../utils/ai/ai-output';
 import { CnwError } from '../utils/error-utils';
 
 export async function determineNxCloud(
@@ -39,10 +35,12 @@ export async function determineNxCloud(
 
 export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
-): Promise<'github' | 'skip'> {
+): Promise<'yes' | 'skip' | 'never'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
-    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'github';
+    if (parsedArgs.nxCloud === 'skip') return 'skip';
+    if (parsedArgs.nxCloud === 'never') return 'never';
+    return 'yes';
   }
 
   // Non-interactive mode
@@ -50,38 +48,10 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Variant 2: skip prompt entirely, auto-connect (CLOUD-4235)
-  if (!shouldShowCloudPrompt()) {
-    return 'github';
-  }
-
-  // Variant 1: updated messaging; Variant 0: control (CLOUD-4235)
-  const variant = getFlowVariant();
-  const message =
-    variant === '1'
-      ? 'Try the full Nx experience?'
-      : 'Try the full Nx platform?';
-  const footer =
-    variant === '1'
-      ? '\nSet up remote caching and CI that fixes itself in less than 5 minutes.'
-      : '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud';
-
-  const promptConfig = {
-    name: 'nxCloud',
-    message,
-    type: 'autocomplete',
-    choices: [
-      { value: 'yes', name: 'Yes' },
-      { value: 'skip', name: 'Skip' },
-    ],
-    initial: 0,
-    footer: () => chalk.dim(footer),
-  };
-
-  const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
-    promptConfig as any, // types in enquirer are not up to date
-  ]);
-  return result.nxCloud;
+  const result = await nxCloudPrompt('setupNxCloudV2');
+  if (result === 'never') return 'never';
+  if (result === 'skip') return 'skip';
+  return 'yes';
 }
 
 export async function determineIfGitHubWillBeUsed(
@@ -137,54 +107,20 @@ export async function determineTemplate(
   }>
 ): Promise<string | 'custom'> {
   if (parsedArgs.template) return parsedArgs.template;
-  if (parsedArgs.preset) return 'custom';
-  if (!parsedArgs.interactive || isCI()) return 'custom';
-  // Docs generation needs preset flow to document all presets
-  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
-  // Template flow requires git for cloning - fall back to custom preset if git is not available
-  if (!isGitAvailable()) return 'custom';
-  const { template } = await enquirer.prompt<{ template: string }>([
-    {
-      name: 'template',
-      message: 'Which starter do you want to use?',
-      type: 'autocomplete',
-      choices: [
-        {
-          name: 'nrwl/empty-template',
-          message: 'Minimal           (empty monorepo without projects)',
-        },
-        {
-          name: 'nrwl/react-template',
-          message:
-            'React             (fullstack monorepo with React and Express)',
-        },
-        {
-          name: 'nrwl/angular-template',
-          message:
-            'Angular           (fullstack monorepo with Angular and Express)',
-        },
-        {
-          name: 'nrwl/typescript-template',
-          message:
-            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
-        },
-        {
-          name: 'custom',
-          message:
-            'Custom            (advanced setup with additional frameworks)',
-        },
-      ],
-      initial: 0,
-    },
-  ]);
-
-  return template;
+  return 'custom';
 }
 
 export async function determineAiAgents(
   parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
 ): Promise<Agent[]> {
-  return parsedArgs.aiAgents ?? [];
+  if (parsedArgs.aiAgents) {
+    return parsedArgs.aiAgents;
+  }
+  const detected = detectAiAgentName();
+  if (detected) {
+    return [detected as Agent];
+  }
+  return [];
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {

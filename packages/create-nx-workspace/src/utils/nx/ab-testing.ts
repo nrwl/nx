@@ -2,9 +2,9 @@ import { execSync } from 'node:child_process';
 import {
   existsSync,
   readFileSync,
-  writeFileSync,
   statSync,
   unlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -80,7 +80,8 @@ function getFlowVariantInternal(): string {
 }
 
 /**
- * Returns the flow variant for tracking (0 = preset, 1 = template).
+ * Returns the flow variant for tracking (0, 1, or 2).
+ * Returns '0' for docs generation to preserve deterministic output.
  */
 export function getFlowVariant(): string {
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
@@ -97,12 +98,10 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
 }
 
-/**
- * Returns whether the cloud prompt should be shown.
- * Variant 2 skips the prompt (auto-connect). (CLOUD-4235)
- */
 export function shouldShowCloudPrompt(): boolean {
-  return getFlowVariant() !== '2';
+  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
+  // To re-enable A/B testing: return getFlowVariant() !== '2';
+  return false;
 }
 
 // ============================================================================
@@ -136,21 +135,14 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
 
 /**
  * Get the banner variant for completion messages.
- * Uses NX_CNW_FLOW_VARIANT to determine which banner to show.
- * - Variant 0: Plain link (control) - always used for enterprise URLs
- * - Variant 1: "Finish your set up in 5 minutes" banner
+ * Now locked to variant 2 (CLOUD-4255).
+ * - Variant 0: Plain link - used for enterprise URLs and docs generation
  * - Variant 2: "Enable remote caching and automatic fixes" banner
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
 export function getBannerVariant(cloudUrl?: string): BannerVariant {
-  // Enterprise URLs always get plain link (variant 0)
-  if (isEnterpriseCloudUrl(cloudUrl)) {
-    return '0';
-  }
-
-  // Use the flow variant (which handles docs generation, env var, and caching)
-  return getFlowVariant() as BannerVariant;
+  return '0';
 }
 
 export const NxCloudChoices = [
@@ -160,6 +152,7 @@ export const NxCloudChoices = [
   'bitbucket-pipelines',
   'circleci',
   'skip',
+  'never',
   'yes', // Deprecated but still handled
 ];
 
@@ -188,73 +181,36 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
-   * Locked to "full platform" messaging (CLOUD-4235)
+   * NXC-4020: Restored to v22.1.3 wording
    */
   setupNxCloud: [
     {
-      code: 'cloud-v2-full-platform-visit',
-      message: 'Try the full Nx platform?',
+      code: 'enable-caching2',
+      message: 'Would you like remote caching to make your build faster?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
+        { value: 'skip', name: 'No - I would not like remote caching' },
       ],
       footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
+      hint: '(can be disabled any time)',
       fallback: undefined,
-      completionMessage: 'platform-setup',
+      completionMessage: 'cache-setup',
     },
   ],
   /**
    * Simplified Cloud prompt for template flow
    */
   setupNxCloudV2: [
-    //{
-    //  code: 'cloud-v2-remote-cache-visit',
-    //  message: 'Enable remote caching with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
-    //  fallback: undefined,
-    //  completionMessage: 'cache-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-fast-ci-visit',
-    //  message: 'Speed up CI and reduce compute costs with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-green-prs-visit',
-    //  message: 'Get to green PRs faster with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
     {
-      code: 'cloud-v2-full-platform-visit',
-      message: 'Try the full Nx platform?',
+      code: 'connect-to-cloud',
+      message: 'Connect to Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: "No, don't ask again" },
       ],
       footer:
         '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',

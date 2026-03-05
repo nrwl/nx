@@ -77,6 +77,8 @@ export async function getOptions(
     runMode: _runMode,
     reportsDirectory,
     coverage,
+    reporter,
+    reporters,
     // parseCLI artifacts
     '--': _dashdash,
     color: _color,
@@ -95,14 +97,23 @@ export async function getOptions(
     // but leaving it here in case someone did not migrate correctly
     root: resolved?.config?.root ?? root,
     config: viteConfigPath,
-    // Pass reporters from config so NxReporter can be merged without losing config reporters
-    // Safe: CLI options override (not merge with) config reporters, so no duplication
-    reporters: resolved?.config?.['test']?.reporters,
+    // Vitest's resolveConfig processes reporters in two steps:
+    // 1. options.reporters (plural) sets resolved.reporters
+    // 2. resolved.reporter (singular, from config) overwrites resolved.reporters
+    // Setting reporter to [] prevents config's reporter from overriding NxReporter
+    // (which is pushed onto reporters in vitest.impl.ts).
+    reporter: [],
+    reporters:
+      reporter ??
+      reporters ??
+      // reporter (singular) has higher priority in vitest but is not declared in InlineConfig
+      (resolved?.config?.['test'] as Record<string, any>)?.reporter ??
+      resolved?.config?.['test']?.reporters,
     coverage: {
       ...(coverage ?? {}),
       ...(reportsDirectory && { reportsDirectory }),
     },
-  };
+  } as Record<string, any>;
 }
 
 export function getOptionsAsArgv(obj: Record<string, any>): string[] {

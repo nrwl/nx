@@ -208,6 +208,7 @@ If you are using MinIO earlier than `2024-07-04T14-25-45Z` it is recommended to 
 | **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
 | **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |
 | **disableChecksum** | This disables AWS' checksum validation for cache entries                                                  |
+| **cacheKeyPrefix**  | Prefix added to cache keys                                                                                |
 
 By default, Nx will try to write and read from the remote cache while running locally. This means that permissions must be set for users who are expected to access the remote cache.
 
@@ -233,6 +234,19 @@ The cache mode in CI can also be configured by setting `ciMode` to `read-only` o
     "region": "us-east-1",
     "bucket": "my-bucket",
     "ciMode": "read-only",
+  },
+}
+```
+
+# Cache Key Prefix
+
+The `cacheKeyPrefix` setting enables you to add a prefix to your cache keys, making it possible to store multiple projects or environments within the same storage bucket.
+
+```jsonc
+// nx.json
+{
+  "s3": {
+    "cacheKeyPrefix": "designSystem",
   },
 }
 ```

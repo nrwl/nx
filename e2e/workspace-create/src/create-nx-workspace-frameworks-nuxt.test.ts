@@ -3,6 +3,7 @@ import {
   cleanupProject,
   expectCodeIsFormatted,
   getSelectedPackageManager,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
@@ -29,6 +30,9 @@ describe('create-nx-workspace --preset=nuxt', () => {
     checkFilesExist('app/app.vue');
     checkFilesExist('app/pages/index.vue');
     expectCodeIsFormatted();
+
+    const nxJson = readJson(`nx.json`);
+    expect(nxJson.nxCloudId).toBeUndefined();
   });
 
   it('should be able to create a nuxt monorepo', () => {

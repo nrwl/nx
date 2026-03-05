@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, renameSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, statSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -199,6 +199,13 @@ export function createProjectFileMapCache(
   return newValue;
 }
 
+/**
+ * Tracks the mtime of the project graph cache file after the last successful
+ * writeCache() call. Used by writeCacheIfStale() to skip redundant writes
+ * when no external process has modified the cache file since the last write.
+ */
+let lastWrittenCacheMtimeMs: number | undefined;
+
 export function writeCache(
   cache: FileMapCache,
   projectGraph: ProjectGraph,
@@ -246,6 +253,12 @@ export function writeCache(
         );
       }
 
+      try {
+        lastWrittenCacheMtimeMs = statSync(nxProjectGraph).mtimeMs;
+      } catch {
+        lastWrittenCacheMtimeMs = undefined;
+      }
+
       done = true;
     } catch (err: any) {
       if (err instanceof Error) {
@@ -267,6 +280,34 @@ export function writeCache(
   }
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
+}
+
+/**
+ * Writes the cache only if the on-disk cache file has been modified since
+ * this process last wrote it (i.e. an external process overwrote it), or
+ * if this process has never written the cache.
+ *
+ * Use this instead of writeCache() on hot paths where the same graph may
+ * be served multiple times without changing (e.g. the daemon responding
+ * to repeated client requests).
+ */
+export function writeCacheIfStale(
+  cache: FileMapCache,
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps,
+  errors: ProjectGraphErrorTypes[]
+): void {
+  if (lastWrittenCacheMtimeMs !== undefined) {
+    try {
+      const currentMtimeMs = statSync(nxProjectGraph).mtimeMs;
+      if (currentMtimeMs === lastWrittenCacheMtimeMs) {
+        return;
+      }
+    } catch {
+      // File doesn't exist or can't be stat'd — proceed with write
+    }
+  }
+  writeCache(cache, projectGraph, sourceMaps, errors);
 }
 
 export function shouldRecomputeWholeGraph(

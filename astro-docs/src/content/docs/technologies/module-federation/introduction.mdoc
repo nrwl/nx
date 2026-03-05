@@ -1,12 +1,23 @@
 ---
-title: NxModuleFederationPlugin
+title: Module Federation Plugin for Nx
 description: Details about the NxModuleFederationPlugin
 sidebar:
   label: Introduction
 filter: 'type:References'
 ---
 
-The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience(DX) that you would normally receive from using Nx's `withModuleFederation` function.
+The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience (DX) that you would normally get from using the Nx `withModuleFederation` function.
+
+## Requirements
+
+The `@nx/module-federation` plugin supports the following package versions.
+
+| Package        | Supported Versions |
+| -------------- | ------------------ |
+| `webpack`      | ^5.0.0             |
+| `@rspack/core` | ^1.6.0             |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Usage
 

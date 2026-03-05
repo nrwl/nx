@@ -90,12 +90,17 @@ class CLIOutput {
   }
 
   overwriteLine(lineText: string = '') {
+    // Ensure we always start writing from column 0.
+    readline.cursorTo(process.stdout, 0);
     // this replaces the existing text up to the new line length
     process.stdout.write(lineText);
     // clear whatever text might be left to the right of the cursor (happens
     // when existing text was longer than new one)
     readline.clearLine(process.stdout, 1);
-    process.stdout.write(EOL);
+    // Move to the next line and re-anchor to column 0 without relying on
+    // terminal newline translation behavior.
+    process.stdout.write('\n');
+    readline.cursorTo(process.stdout, 0);
   }
 
   private writeOutputTitle({
@@ -232,6 +237,11 @@ class CLIOutput {
     this.addNewline();
   }
 
+  logRawLine(message: string) {
+    this.writeToStdOut(`${message}${EOL}`);
+    this.addNewline();
+  }
+
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
     this.writeToStdOut(this.getCommandWithStatus(message, taskStatus));
@@ -301,16 +311,7 @@ class CLIOutput {
     }
   }
 
-  private addTaskStatus(
-    taskStatus:
-      | 'success'
-      | 'failure'
-      | 'skipped'
-      | 'local-cache-kept-existing'
-      | 'local-cache'
-      | 'remote-cache',
-    commandOutput: string
-  ) {
+  private addTaskStatus(taskStatus: TaskStatus, commandOutput: string) {
     if (taskStatus === 'local-cache') {
       return `${commandOutput}  ${pc.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {

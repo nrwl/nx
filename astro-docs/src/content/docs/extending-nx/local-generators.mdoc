@@ -128,6 +128,184 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ![vscode-schematics-debug](../../../assets/nx-console/vscode-schematics-debug.png)
 
+## Generator Schema Properties
+
+Beyond the standard [JSON Schema](https://json-schema.org/) properties like `type`, `description`, `enum`, and `default`, Nx recognizes several custom properties in your `schema.json` that control CLI prompting behavior and how [Nx Console](/docs/getting-started/editor-setup) renders the generator form.
+
+### `$default`
+
+Provides a dynamic default value from a runtime source. Used to map positional CLI arguments and other context to schema properties.
+
+```json
+// schema.json
+{
+  "properties": {
+    "name": {
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    }
+  }
+}
+```
+
+| Source                              | Description                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------- |
+| `{ "$source": "argv", "index": 0 }` | Uses the positional CLI argument at the given index                                         |
+| `{ "$source": "projectName" }`      | Uses the current project name. Also triggers project autocomplete in the CLI and Nx Console |
+| `{ "$source": "workingDirectory" }` | Uses the current working directory relative to the workspace root                           |
+| `{ "$source": "unparsed" }`         | Collects any extra arguments not matched by other schema properties                         |
+
+### `x-prompt`
+
+Defines an interactive prompt shown when the option is not provided on the command line. Can be a simple string or a structured object for more control.
+
+```json
+// schema.json
+{
+  "properties": {
+    "style": {
+      "type": "string",
+      "description": "The file extension to be used for style files.",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          { "value": "css", "label": "CSS" },
+          { "value": "scss", "label": "SASS (.scss)" },
+          { "value": "less", "label": "LESS" }
+        ]
+      }
+    }
+  }
+}
+```
+
+**Short form:** `"x-prompt": "What name would you like to use?"` — displays a simple text prompt.
+
+**Long form object properties:**
+
+| Property      | Type                                             | Description                                           |
+| ------------- | ------------------------------------------------ | ----------------------------------------------------- |
+| `message`     | `string`                                         | The prompt text displayed to the user                 |
+| `type`        | `string`                                         | Prompt type: `"input"`, `"list"`, or `"confirmation"` |
+| `multiselect` | `boolean`                                        | Allow selecting multiple items (for `"list"` type)    |
+| `items`       | `(string \| { label: string, value: string })[]` | Choices for `"list"` type prompts                     |
+
+In Nx Console, the `message` is shown as a tooltip on the field and `items` labels are shown as option descriptions.
+
+### `x-priority`
+
+Controls the visibility and ordering of an option in the Nx Console Generate form.
+
+```json
+// schema.json
+{
+  "properties": {
+    "name": {
+      "type": "string",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "x-priority": "internal"
+    }
+  }
+}
+```
+
+| Value         | Effect                                                        |
+| ------------- | ------------------------------------------------------------- |
+| `"important"` | Field appears near the top of the form, after required fields |
+| `"internal"`  | Field is hidden from the form by default                      |
+
+Options in the Nx Console form are sorted: **required** > **important** > **regular** > **deprecated** > **internal**.
+
+### `x-deprecated`
+
+Marks an option as deprecated. Deprecated options are sorted to the bottom of the form in Nx Console and display a warning.
+
+```json
+// schema.json
+{
+  "properties": {
+    "oldOption": {
+      "type": "string",
+      "x-deprecated": "Use 'newOption' instead."
+    }
+  }
+}
+```
+
+The value can be `true` (boolean) or a string with the deprecation reason/migration guidance.
+
+### `x-dropdown`
+
+Tells both the CLI and Nx Console to present a dropdown populated with workspace data.
+
+```json
+// schema.json
+{
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "x-dropdown": "projects"
+    }
+  }
+}
+```
+
+Currently only `"projects"` is supported, which shows all projects in the workspace.
+
+{% aside type="note" title="Automatic project autocomplete" %}
+The CLI and Nx Console also automatically provide project autocomplete for any property named `project` or `projectName`, or that has `$default` set to `{ "$source": "projectName" }` — even without `x-dropdown`.
+{% /aside %}
+
+### `x-hint`
+
+Displays a hint popover next to the field label in the Nx Console Generate form. Use this for brief contextual guidance that doesn't belong in the main `description`.
+
+```json
+// schema.json
+{
+  "properties": {
+    "name": {
+      "type": "string",
+      "x-hint": "You can provide a nested path like my-dir/my-lib"
+    }
+  }
+}
+```
+
+### `x-completion-type` and `x-completion-glob`
+
+These properties are used by Nx Console's language server to provide autocomplete suggestions when editing configuration files like `project.json` or `nx.json`.
+
+```json
+// schema.json
+{
+  "properties": {
+    "tsConfig": {
+      "type": "string",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig*.json"
+    }
+  }
+}
+```
+
+| `x-completion-type` value | Description                                                               |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `"file"`                  | Autocomplete with file paths (optionally filtered by `x-completion-glob`) |
+| `"directory"`             | Autocomplete with directory paths                                         |
+| `"projects"`              | Autocomplete with workspace project names                                 |
+| `"targets"`               | Autocomplete with available target names                                  |
+| `"targetsWithDeps"`       | Autocomplete targets, including `^target` syntax for dependencies         |
+| `"tags"`                  | Autocomplete with project tags                                            |
+| `"projectTarget"`         | Autocomplete with `project:target` format                                 |
+
 ## Generator Utilities
 
 The [`@nx/devkit` package](/docs/reference/devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).

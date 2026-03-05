@@ -141,7 +141,10 @@ function withNx(
 
       let graph: ProjectGraph;
       try {
-        graph = await createProjectGraphAsync();
+        graph = await createProjectGraphAsync({
+          exitOnError: false,
+          resetDaemonClient: true,
+        });
       } catch (e) {
         throw new Error(
           'Could not create project graph. Please ensure that your workspace is valid.',

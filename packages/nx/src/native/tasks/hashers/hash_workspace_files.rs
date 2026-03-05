@@ -73,8 +73,8 @@ pub fn hash_workspace_files_with_inputs(
             .filter(|file| glob.is_match(&file.file))
         {
             debug!("Adding {:?} ({:?}) to hash", file.hash, file.file);
-            hasher.update(file.file.clone().as_bytes());
-            hasher.update(file.hash.clone().as_bytes());
+            hasher.update(file.file.as_bytes());
+            hasher.update(file.hash.as_bytes());
             files.push(file.file.clone());
         }
         let hashed_value = hasher.digest().to_string();

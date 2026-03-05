@@ -18,7 +18,7 @@ pub fn hash_runtime(
     env: &HashMap<String, String>,
     cache: Arc<DashMap<String, String>>,
 ) -> anyhow::Result<String> {
-    let cache_key = format!("{}-{:?}", command, env);
+    let cache_key = runtime_cache_key(command, env);
 
     if let Some(cache_results) = cache.get(&cache_key) {
         return Ok(cache_results.clone());
@@ -45,6 +45,12 @@ pub fn hash_runtime(
     cache.insert(cache_key, hash_result.clone());
 
     Ok(hash_result)
+}
+
+fn runtime_cache_key(command: &str, env: &HashMap<String, String>) -> String {
+    let mut entries: Vec<_> = env.iter().collect();
+    entries.sort_by(|(a, _), (b, _)| a.cmp(b));
+    format!("{}-{:?}", command, entries)
 }
 
 #[cfg(target_os = "windows")]
@@ -83,5 +89,22 @@ mod tests {
 
         let result = hash_runtime(workspace_root, command, &env, Arc::clone(&cache)).unwrap();
         assert_eq!(result, "10571312846059850300");
+    }
+
+    #[test]
+    fn runtime_cache_key_is_deterministic() {
+        let command = "echo runtime";
+        let mut env_a = HashMap::new();
+        env_a.insert("B".to_string(), "2".to_string());
+        env_a.insert("A".to_string(), "1".to_string());
+
+        let mut env_b = HashMap::new();
+        env_b.insert("A".to_string(), "1".to_string());
+        env_b.insert("B".to_string(), "2".to_string());
+
+        let key_a = runtime_cache_key(command, &env_a);
+        let key_b = runtime_cache_key(command, &env_b);
+
+        assert_eq!(key_a, key_b);
     }
 }

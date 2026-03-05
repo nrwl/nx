@@ -60,7 +60,6 @@ import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-c
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
-  getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
@@ -552,11 +551,13 @@ export async function runCommandForTasks(
       printSummary();
     }
 
+    await printConfigureAiAgentsDisclaimer();
+
     await printNxKey();
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskGraph, taskResults),
+      completed: didCommandComplete(tasks, taskResults),
     };
   } catch (e) {
     restoreTerminal?.();
@@ -564,34 +565,36 @@ export async function runCommandForTasks(
   }
 }
 
-function didCommandComplete(
-  tasks: Task[],
-  taskGraph: TaskGraph,
-  taskResults: TaskResults
-): boolean {
-  // If no tasks, then we can consider it complete
-  if (tasks.length === 0) {
-    return true;
+async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+  try {
+    if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
+      return;
+    }
+    const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
+    if (outdatedAgents.length > 0) {
+      output.logRawLine(
+        output.dim(
+          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+        )
+      );
+    }
+  } catch {
+    // Silently ignore errors
   }
+}
 
-  let continousLeafTasks = false;
-  const leafTasks = getLeafTasks(taskGraph);
+function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
+  if (tasks.length === 0) return true;
+
   for (const task of tasks) {
     if (!task.continuous) {
-      // If any discrete task does not have a result then it did not run
-      if (!taskResults[task.id]) {
-        return false;
-      }
-    } else {
-      if (leafTasks.has(task.id)) {
-        continousLeafTasks = true;
-      }
+      // Discrete task must have a result (was started and finished)
+      if (!taskResults[task.id]) return false;
     }
   }
 
-  // If a leaf task is continous, we must have cancelled it.
-  // Otherwise, we've looped through all the discrete tasks and they have results
-  return !continousLeafTasks;
+  // Any stopped task means the run was interrupted
+  return !Object.values(taskResults).some((r) => r.status === 'stopped');
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -913,7 +916,9 @@ export function setEnvVarsBasedOnArgs(
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+  // Force streaming only when the TUI is active, so it can capture and
+  // render task output. Other output styles manage their own streaming.
+  if (isTuiEnabled()) {
     process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {

@@ -1,5 +1,6 @@
 import { performance } from 'perf_hooks';
 
+import { join } from 'path';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -8,7 +9,12 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import { FileLock, IS_WASM } from '../native';
+import { workspaceDataDirectory } from '../utils/cache-directory';
+import { getCallSites } from '../utils/call-sites';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 import { fileExists } from '../utils/fileutils';
+import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -29,18 +35,12 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
+import { getPlugins } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import { getPlugins } from './plugins/get-plugins';
-import { logger } from '../utils/logger';
-import { FileLock, IS_WASM } from '../native';
-import { join } from 'path';
-import { workspaceDataDirectory } from '../utils/cache-directory';
-import { DelayedSpinner } from '../utils/delayed-spinner';
-import { getCallSites } from '../utils/call-sites';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -416,10 +416,36 @@ export async function createProjectGraphAndSourceMapsAsync(
 }
 
 export function preventRecursionInGraphConstruction() {
-  // preventRecursionInGraphConstruction -> callee -> ...
-  // slice removes preventRecursionInGraphConstruction and its caller,
-  // which is useful when using this function to detect recursion in buildProjectGraphAndSourceMapsWithoutDaemon
-  const stackframes = getCallSites().slice(2);
+  const allFrames = getCallSites();
+
+  // Find the first occurrence of buildProjectGraphAndSourceMapsWithoutDaemon in the call stack.
+  // This represents the current invocation and should be skipped for the recursion check.
+  const firstOccurrenceIndex = allFrames.findIndex(
+    (f) =>
+      f.getFunctionName() === buildProjectGraphAndSourceMapsWithoutDaemon.name
+  );
+
+  let stackframes: NodeJS.CallSite[];
+
+  if (firstOccurrenceIndex !== -1) {
+    // Skip the current invocation frame and any consecutive frames with the same function name.
+    // Some runtimes (e.g. Bun) include extra async frames for the same call, which would
+    // otherwise cause a false positive loop detection.
+    let startIndex = firstOccurrenceIndex + 1;
+    while (
+      startIndex < allFrames.length &&
+      allFrames[startIndex].getFunctionName() ===
+        buildProjectGraphAndSourceMapsWithoutDaemon.name
+    ) {
+      startIndex++;
+    }
+    stackframes = allFrames.slice(startIndex);
+  } else {
+    // If buildProjectGraphAndSourceMapsWithoutDaemon is not in the stack (e.g., when called
+    // from daemon client), fall back to the original slice(2) behavior.
+    // preventRecursionInGraphConstruction -> callee -> ...
+    stackframes = allFrames.slice(2);
+  }
 
   if (
     stackframes.some((f) => {

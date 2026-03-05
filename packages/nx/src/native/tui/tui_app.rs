@@ -1,5 +1,4 @@
 use color_eyre::eyre::Result;
-use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
 use ratatui::layout::Size;
 use std::collections::HashMap;
@@ -243,11 +242,11 @@ pub trait TuiApp: Send {
     /// # Arguments
     ///
     /// * `task_id` - The task identifier
-    /// * `parser_and_writer` - External reference to PTY parser and writer
+    /// * `parser_and_writer` - Reference to PTY parser and writer
     fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         // Interactive PTYs don't need dimension calculation - they use parser/writer dimensions
         let pty =

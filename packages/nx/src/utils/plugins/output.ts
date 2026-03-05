@@ -1,4 +1,9 @@
+import { join } from 'path';
 import * as pc from 'picocolors';
+import {
+  ExecutorsJsonEntry,
+  GeneratorsJsonEntry,
+} from '../../config/misc-interfaces';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { output } from '../output';
 import { getPackageManagerCommand } from '../package-manager';
@@ -70,7 +75,8 @@ export function listPowerpackPlugins(): void {
 
 export async function listPluginCapabilities(
   pluginName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  json = false
 ) {
   const plugin = await getPluginCapabilities(
     workspaceRoot,
@@ -79,6 +85,10 @@ export async function listPluginCapabilities(
   );
 
   if (!plugin) {
+    if (json) {
+      console.log(JSON.stringify({ error: `${pluginName} is not installed` }));
+      return;
+    }
     const pmc = getPackageManagerCommand();
     output.note({
       title: `${pluginName} is not currently installed`,
@@ -102,11 +112,36 @@ export async function listPluginCapabilities(
     !hasProjectGraphExtension &&
     !hasProjectInference
   ) {
+    if (json) {
+      console.log(
+        JSON.stringify({
+          name: plugin.name,
+          path: plugin.path,
+          generators: {},
+          executors: {},
+          projectGraphExtension: false,
+          projectInference: false,
+        })
+      );
+      return;
+    }
     output.warn({ title: `No capabilities found in ${pluginName}` });
     return;
   }
 
+  if (json) {
+    console.log(
+      JSON.stringify(formatPluginCapabilitiesAsJson(plugin), null, 2)
+    );
+    return;
+  }
+
   const bodyLines = [];
+
+  if (plugin.path) {
+    bodyLines.push(`${pc.bold('Path:')} ${plugin.path}`);
+    bodyLines.push('');
+  }
 
   if (hasGenerators) {
     bodyLines.push(pc.bold(pc.green('GENERATORS')));
@@ -146,6 +181,93 @@ export async function listPluginCapabilities(
     title: `Capabilities in ${plugin.name}:`,
     bodyLines,
   });
+}
+
+export function formatPluginCapabilitiesAsJson(plugin: PluginCapabilities) {
+  const generators: Record<
+    string,
+    { description: string; path: string | null; schema: string | null }
+  > = {};
+  for (const [name, entry] of Object.entries(plugin.generators ?? {})) {
+    generators[name] = {
+      description: entry.description ?? '',
+      path: resolveCapabilityPath(
+        plugin.path,
+        entry.factory ?? entry.implementation
+      ),
+      schema: resolveCapabilityPath(plugin.path, entry.schema),
+    };
+  }
+
+  const executors: Record<
+    string,
+    { description: string; path: string | null; schema: string | null }
+  > = {};
+  for (const [name, entry] of Object.entries(plugin.executors ?? {})) {
+    if (typeof entry === 'string') {
+      executors[name] = { description: '', path: null, schema: null };
+    } else {
+      executors[name] = {
+        description: entry.description ?? '',
+        path: resolveCapabilityPath(plugin.path, entry.implementation),
+        schema: resolveCapabilityPath(plugin.path, entry.schema),
+      };
+    }
+  }
+
+  return {
+    name: plugin.name,
+    path: plugin.path ?? null,
+    generators,
+    executors,
+    projectGraphExtension: !!plugin.projectGraphExtension,
+    projectInference: !!plugin.projectInference,
+  };
+}
+
+export function formatPluginsAsJson(
+  localPlugins: Map<string, PluginCapabilities>,
+  installedPlugins: Map<string, PluginCapabilities>
+) {
+  function formatPluginSummary(plugin: PluginCapabilities) {
+    const capabilities: string[] = [];
+    if (hasElements(plugin.executors)) {
+      capabilities.push('executors');
+    }
+    if (hasElements(plugin.generators)) {
+      capabilities.push('generators');
+    }
+    if (plugin.projectGraphExtension) {
+      capabilities.push('graph-extension');
+    }
+    if (plugin.projectInference) {
+      capabilities.push('project-inference');
+    }
+    return {
+      name: plugin.name,
+      path: plugin.path ?? null,
+      capabilities,
+    };
+  }
+
+  return {
+    localWorkspacePlugins: Array.from(localPlugins.values()).map(
+      formatPluginSummary
+    ),
+    installedPlugins: Array.from(installedPlugins.values()).map(
+      formatPluginSummary
+    ),
+  };
+}
+
+function resolveCapabilityPath(
+  pluginPath: string | undefined,
+  relativePath: string | undefined
+): string | null {
+  if (!pluginPath || !relativePath) {
+    return null;
+  }
+  return join(pluginPath, relativePath);
 }
 
 function hasElements(obj: any): boolean {

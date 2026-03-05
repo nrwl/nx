@@ -10,6 +10,19 @@ const nxMavenApplyGoal = 'dev.nx.maven:nx-maven-plugin:apply';
 const nxMavenRecordGoal = 'dev.nx.maven:nx-maven-plugin:record';
 
 /**
+ * Get the Maven project coordinates (groupId:artifactId) from project metadata.
+ * Falls back to the Nx project name if metadata is not available.
+ */
+function getMavenProjectName(context: ExecutorContext): string {
+  const projectConfig =
+    context.projectGraph?.nodes?.[context.projectName]?.data;
+  return (
+    (projectConfig?.metadata as Record<string, string>)?.mavenProject ||
+    context.projectName
+  );
+}
+
+/**
  * Build Maven command arguments
  */
 function buildMavenArgs(
@@ -65,9 +78,9 @@ export default async function mavenExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
-  const projectName = context.projectName;
+  const mavenProject = getMavenProjectName(context);
   const useMaven4 = isMaven4(workspaceRoot);
-  const args = buildMavenArgs(options, projectName, useMaven4);
+  const args = buildMavenArgs(options, mavenProject, useMaven4);
 
   return runCommandsImpl(
     {

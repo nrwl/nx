@@ -30,6 +30,9 @@ jobs:
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_USE_NEW_TASK_APIS: 'true'
       NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
+      NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
+      NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'false'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
 
     steps:
       - name: Checkout
@@ -75,7 +78,7 @@ jobs:
           pnpm playwright install --with-deps
 
       - name: Nx Report
-        run: 
+        run:
           pnpm nx report
 
       - name: Run Checks/Lint/Test/Build
@@ -94,7 +97,7 @@ jobs:
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,test,test-kt,build,e2e,e2e-ci,format-native,lint-native &
+          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native,gradle:build-ci &
           pids+=($!)
 
           for pid in "${pids[@]}"; do

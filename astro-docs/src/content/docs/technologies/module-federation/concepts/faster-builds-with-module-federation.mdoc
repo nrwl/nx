@@ -19,8 +19,7 @@ Federation:
   to unexpected errors.
 
 Nx provides the best experience for teams that want faster builds, but want to also minimize the downsides that come
-with Module Federation. Starting in Nx 14,
-we provide specialized generators, executors, and utilities that make Module Federation easy to set up and work with.
+with Module Federation. Nx provides specialized generators, executors, and utilities that make Module Federation easy to set up and work with.
 
 ## When should I use Module Federation?
 
@@ -63,8 +62,7 @@ three remotes under these routes:
 1. `/cart`
 1. `/about`
 
-But before we begin, we've put together a couple of example repos (React and Angular) for you to inspect if you want to
-skip ahead.
+Before you begin, check out the example repos (React and Angular) if you want to skip ahead.
 
 {% github_repository url="https://github.com/nrwl/ng-module-federation" /%}
 
@@ -302,9 +300,8 @@ The required `name` property is the magic to link the host and remotes together.
 three remotes by their names.
 
 {% aside type="note" title="More details" %}
-It is important that the values in `remotes` property matches the `name` property of the remote applications. Otherwise,
-webpack will throw an error. Nx handles this automatically for you so there shouldn't be an issue unless it was modified
-manually.
+The values in the `remotes` property must match the `name` property of the remote applications. Otherwise,
+webpack will throw an error. Nx handles this automatically, so this is only a concern if you modify it manually.
 {% /aside %}
 
 ## What does `withModuleFederation` do?
@@ -353,8 +350,7 @@ bundles before optimizing the shared behavior.
 To analyze the size of your bundles, run build with `--statsJson` and use a tool
 like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer).
 
-If you have any feedback regarding this feature, we'd love to hear from you--check
-our [community page](https://nx.dev/community) for links to our Discord and Twitter.
+If you have any feedback regarding this feature, let us know on [our community page](https://nx.dev/community).
 {% /aside %}
 
 ## Remote computation caching with Nx Cloud
@@ -492,7 +488,7 @@ production/
 └── (snip)
 ```
 
-The above command is just an example. You'll need to use what make sense for your team and workspace.
+The above command is just an example. You'll need to use what makes sense for your team and workspace.
 
 For examples of how CI/CD pipelines can be configured using Nx Cloud and GitHub, see
 our [React](https://github.com/nrwl/react-module-federation)
@@ -507,7 +503,7 @@ and [Angular](https://github.com/nrwl/ng-module-federation) examples.
 By using Module Federation you essentially split your application build process vertically. You can also split it
 horizontally by making some libraries buildable.
 
-We don't recommend making all libraries in your workspace buildable--it will make some things faster but many other
+Making all libraries in your workspace buildable is not recommended. It will make some things faster but many other
 things slower. But in some scenarios making a few large libraries at the bottom of your graph buildable can speed up
 your CI.
 

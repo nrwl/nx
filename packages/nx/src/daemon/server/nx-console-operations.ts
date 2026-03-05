@@ -1,4 +1,3 @@
-import { installPackageToTmpAsync } from '../../devkit-internals';
 import { homedir } from 'os';
 import {
   canInstallNxConsole,
@@ -6,10 +5,7 @@ import {
   NxConsolePreferences,
 } from '../../native';
 import { serverLogger } from '../logger';
-
-// Module-level state - persists across invocations within daemon lifecycle
-let latestNxTmpPath: string | null = null;
-let cleanupFn: (() => void) | null = null;
+import { getLatestNxTmpPath } from './latest-nx';
 
 const log = (...messageParts: unknown[]) => {
   serverLogger.log('[NX-CONSOLE]:', ...messageParts);
@@ -33,24 +29,11 @@ export async function getNxConsoleStatus({
   }
 
   try {
-    // If we don't have a tmp path yet, pull latest Nx
-    if (latestNxTmpPath === null) {
-      log('Pulling latest Nx (latest) to check console status...');
-      const packageInstallResults = await installPackageToTmpAsync(
-        'nx',
-        'latest'
-      );
-      latestNxTmpPath = packageInstallResults.tempDir;
-      cleanupFn = packageInstallResults.cleanup;
-      log('Successfully pulled latest Nx to', latestNxTmpPath);
-    } else {
-      log('Reusing cached Nx installation from', latestNxTmpPath);
-    }
+    const tmpPath = await getLatestNxTmpPath();
 
-    // Try to use the cached tmp path
     const modulePath = require.resolve(
       'nx/src/daemon/server/nx-console-operations.js',
-      { paths: [latestNxTmpPath] }
+      { paths: [tmpPath] }
     );
 
     const module = await import(modulePath);
@@ -58,11 +41,7 @@ export async function getNxConsoleStatus({
     log('Console status check completed, shouldPrompt:', result);
     return result;
   } catch (error) {
-    // If tmp path failed (e.g., directory was deleted), fall back to local immediately
-    log(
-      'Failed to use latest Nx, falling back to local implementation. Error:',
-      error.message
-    );
+    log('Failed to use latest Nx for console status. Error:', error.message);
     return await getNxConsoleStatusImpl();
   }
 }
@@ -90,24 +69,11 @@ export async function handleNxConsolePreferenceAndInstall({
   }
 
   try {
-    // If we don't have a tmp path yet, pull latest Nx
-    if (latestNxTmpPath === null) {
-      log('Pulling latest Nx (latest) to handle preference and install...');
-      const packageInstallResults = await installPackageToTmpAsync(
-        'nx',
-        'latest'
-      );
-      latestNxTmpPath = packageInstallResults.tempDir;
-      cleanupFn = packageInstallResults.cleanup;
-      log('Successfully pulled latest Nx to', latestNxTmpPath);
-    } else {
-      log('Reusing cached Nx installation from', latestNxTmpPath);
-    }
+    const tmpPath = await getLatestNxTmpPath();
 
-    // Try to use the cached tmp path
     const modulePath = require.resolve(
       'nx/src/daemon/server/nx-console-operations.js',
-      { paths: [latestNxTmpPath] }
+      { paths: [tmpPath] }
     );
 
     const module = await import(modulePath);
@@ -121,25 +87,12 @@ export async function handleNxConsolePreferenceAndInstall({
     );
     return result;
   } catch (error) {
-    // If tmp path failed (e.g., directory was deleted), fall back to local immediately
     log(
-      'Failed to use latest Nx, falling back to local implementation. Error:',
+      'Failed to use latest Nx for preference install. Error:',
       error.message
     );
     return await handleNxConsolePreferenceAndInstallImpl(preference);
   }
-}
-
-/**
- * Clean up the latest Nx installation on daemon shutdown.
- */
-export function cleanupLatestNxInstallation(): void {
-  if (cleanupFn) {
-    log('Cleaning up latest Nx installation from', latestNxTmpPath);
-    cleanupFn();
-  }
-  latestNxTmpPath = null;
-  cleanupFn = null;
 }
 
 export async function getNxConsoleStatusImpl(): Promise<boolean> {
@@ -147,7 +100,7 @@ export async function getNxConsoleStatusImpl(): Promise<boolean> {
   const preferences = new NxConsolePreferences(homedir());
   const preference = preferences.getAutoInstallPreference();
 
-  const canInstallConsole = canInstallNxConsole();
+  const canInstallConsole = await canInstallNxConsole();
 
   // If user previously opted in but extension is not installed,
   // they must have manually uninstalled it - respect that choice
@@ -174,7 +127,7 @@ export async function handleNxConsolePreferenceAndInstallImpl(
 
   let installed = false;
   if (preference) {
-    installed = installNxConsole();
+    installed = await installNxConsole();
   }
 
   return { installed };

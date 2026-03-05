@@ -30,6 +30,19 @@ to = "/docs/quickstart"
 from = "/showcase/benchmarks/*"
 to = "/docs/reference/benchmarks/:splat"
 
+# Fix broken /docs/ paths still linked from CLI/Cloud source code (DOC-428)
+[[redirects]]
+from = "/docs/features/ci-features/self-healing"
+to = "/docs/features/ci-features/self-healing-ci"
+
+[[redirects]]
+from = "/docs/extending-nx/recipes/create-preset"
+to = "/docs/extending-nx/create-preset"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-monorepos"
+to = "/docs/guides/adopting-nx/adding-to-monorepo"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

@@ -27,8 +27,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "nx"
 
-include("batch-runner")
-project(":batch-runner").projectDir = file("packages/gradle/batch-runner")
+include("gradle-batch-runner")
+project(":gradle-batch-runner").projectDir = file("packages/gradle/batch-runner")
 
-include("project-graph")
-project(":project-graph").projectDir = file("packages/gradle/project-graph")
+include("gradle-project-graph")
+project(":gradle-project-graph").projectDir = file("packages/gradle/project-graph")

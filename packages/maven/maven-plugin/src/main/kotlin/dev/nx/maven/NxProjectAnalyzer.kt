@@ -61,7 +61,11 @@ class NxProjectAnalyzer(
     // Project metadata including target groups
     val metadataStart = System.currentTimeMillis()
     val projectMetadata = JsonObject()
+    projectMetadata.addProperty("mavenProject", projectName)
     projectMetadata.add("targetGroups", targetGroups)
+    val technologies = JsonArray()
+    technologies.add("maven")
+    projectMetadata.add("technologies", technologies)
     nxProject.add("metadata", projectMetadata)
 
     // Tags

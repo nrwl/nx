@@ -4,10 +4,14 @@ mod glob_parser;
 pub mod glob_transform;
 
 use crate::native::glob::glob_transform::convert_glob;
+use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
 use std::path::Path;
+use std::sync::{Arc, LazyLock};
 use tracing::trace;
+
+static GLOB_CACHE: LazyLock<DashMap<String, Arc<NxGlobSet>>> = LazyLock::new(DashMap::new);
 
 pub struct NxGlobSetBuilder {
     included_globs: GlobSetBuilder,
@@ -89,7 +93,16 @@ fn potential_glob_split(
     }
 }
 
-pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<NxGlobSet> {
+pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
+    // Build cache key from sorted globs joined by null byte (cannot appear in glob strings)
+    let mut sorted_globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
+    sorted_globs.sort();
+    let cache_key = sorted_globs.join("\0");
+
+    if let Some(cached) = GLOB_CACHE.get(&cache_key) {
+        return Ok(Arc::clone(cached.value()));
+    }
+
     let result = globs
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
@@ -106,7 +119,9 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
 
     trace!(?globs, ?result, "converted globs");
 
-    NxGlobSetBuilder::new(&result)?.build()
+    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
+    GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
+    Ok(glob_set)
 }
 
 pub(crate) fn contains_glob_pattern(value: &str) -> bool {

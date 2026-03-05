@@ -14,7 +14,12 @@ import { CnwErrorCode } from '../error-utils';
 let _isAiAgent: boolean | null = null;
 export function isAiAgent(): boolean {
   if (_isAiAgent === null) {
-    _isAiAgent = isClaudeCode() || isOpenCode() || isReplitAi() || isCursorAi();
+    _isAiAgent =
+      isClaudeCode() ||
+      isOpenCode() ||
+      isReplitAi() ||
+      isCursorAi() ||
+      isGeminiCli();
   }
   return _isAiAgent;
 }
@@ -36,6 +41,18 @@ export function isCursorAi(): boolean {
   const hasCursorTraceId = !!process.env.CURSOR_TRACE_ID;
   const hasComposerNoInteraction = !!process.env.COMPOSER_NO_INTERACTION;
   return pagerMatches && hasCursorTraceId && hasComposerNoInteraction;
+}
+
+export function isGeminiCli(): boolean {
+  return !!process.env.GEMINI_CLI;
+}
+
+export function detectAiAgentName(): string | null {
+  if (isClaudeCode()) return 'claude';
+  if (isCursorAi()) return 'cursor';
+  if (isOpenCode()) return 'opencode';
+  if (isGeminiCli()) return 'gemini';
+  return null;
 }
 
 // Progress stages for NDJSON streaming

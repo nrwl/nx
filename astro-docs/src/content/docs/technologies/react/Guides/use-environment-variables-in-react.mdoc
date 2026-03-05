@@ -13,7 +13,7 @@ In React applications using Vite (e.g. those using `@nx/vite:*` executors), Nx i
 - `NODE_ENV`
 - Variables prefixed with `VITE_`, such as `VITE_CUSTOM_VAR`
 
-You can read more about how to define environment variables in Vite [here](https://vite.dev/guide/env-and-mode.html).
+For more details, see the [Vite environment variables documentation](https://vite.dev/guide/env-and-mode.html).
 
 You can then use these variables in your application code like so: `import.meta.env.VITE_CUSTOM_VAR`.
 
@@ -31,9 +31,9 @@ The root cause of this issue is that Nx has already loaded variables from `.env.
 
 #### Solution
 
-We recommend that developers adapt to the Nx way of handling environment variables and refer to our [documentation on defining environment variables](/docs/guides/tips-n-tricks/define-environment-variables). This will help ensure consistent behavior and prevent conflicts when using Nx with Vite.
+Adapt to the Nx way of handling environment variables by following the [guide on defining environment variables](/docs/guides/tips-n-tricks/define-environment-variables). This ensures consistent behavior and prevents conflicts when using Nx with Vite.
 
-However, if you still want to use Vite's `mode`, you still can. To ensure seamless integration between Nx and Vite environment variables, you can establish a clear distinction between `configuration` and `mode` names. By assigning distinct names to both `configuration` and `mode`, you can eliminate any potential conflicts that may arise during environment variable loading. Additionally, consider defining custom configurations in your Nx workspace, each with a corresponding `mode` option. For example, you can create configurations like `development`, `production`, and `staging`, each with its respective `mode` set, like this:
+However, if you still want to use Vite's `mode`, you can. To avoid conflicts between Nx and Vite environment variables, establish a clear distinction between `configuration` and `mode` names. By assigning distinct names to both `configuration` and `mode`, you can eliminate any potential conflicts that may arise during environment variable loading. Additionally, consider defining custom configurations in your Nx workspace, each with a corresponding `mode` option. For example, you can create configurations like `development`, `production`, and `staging`, each with its respective `mode` set, like this:
 
 ```json frame="none"
 "configurations": {
@@ -66,16 +66,15 @@ includes the following variables in the build process:
 - `NODE_ENV`
 - Variables prefixed with `NX_PUBLIC`, such as `NX_PUBLIC_CUSTOM_VAR` (when using the [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin) or the [withNx](/docs/technologies/build-tools/webpack/guides/webpack-plugins#withnx) plugins)
 
-Defining environment variables can vary between OSes. It's also important to know that this is temporary for the life of
-the shell session.
+Defining environment variables can vary between OSes. This is temporary for the life of the shell session.
 
 ### Using environment variables in `index.html`
 
 Nx supports interpolating environment variables into your `index.html` file for React and Web applications built with Webpack.
 This feature is available when using the [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin) or the [withNx](/docs/technologies/build-tools/webpack/guides/webpack-plugins#withnx) plugins.
 
-{% aside type="note" title="Predefined Nx variable" %}
-Note that with the release of Nx 19, you won't be able to use predefined Nx variable on this [link](/docs/reference/environment-variables).
+{% aside type="note" title="Predefined Nx variables" %}
+You can't use [predefined Nx environment variables](/docs/reference/environment-variables) in `index.html` interpolation.
 {% /aside %}
 
 To interpolate an environment variable named `NX_PUBLIC_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:

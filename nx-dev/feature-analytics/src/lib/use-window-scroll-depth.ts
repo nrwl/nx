@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { sendCustomEvent } from './google-analytics';
+import { sendCustomEventViaGtm } from './google-analytics';
 
 const SCROLL_THRESHOLDS = [10, 25, 50, 75, 90] as const;
 
@@ -28,7 +28,7 @@ export function useWindowScrollDepth(): void {
         !firedThresholds.current.has(threshold)
       ) {
         firedThresholds.current.add(threshold);
-        sendCustomEvent(`scroll_${threshold}`, 'scroll', pathname || '/');
+        sendCustomEventViaGtm(`scroll_${threshold}`, 'scroll', pathname || '/');
       }
     }
   }, [pathname]);

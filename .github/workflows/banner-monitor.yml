@@ -1,0 +1,92 @@
+name: Banner Content Monitor
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions: {}
+
+env:
+  BANNER_URL: ${{ vars.BANNER_URL }}
+
+jobs:
+  check-and-deploy:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch banner content and compute hash
+        id: banner
+        run: |
+          if [ -z "$BANNER_URL" ]; then
+            echo "BANNER_URL is not set"
+            exit 1
+          fi
+
+          # Fetch content and compute hash
+          CONTENT_HASH=$(curl -sf "$BANNER_URL" | sha256sum | cut -d' ' -f1)
+
+          if [ -z "$CONTENT_HASH" ]; then
+            echo "Failed to fetch banner content"
+            exit 1
+          fi
+
+          echo "current_hash=$CONTENT_HASH" >> $GITHUB_OUTPUT
+          echo "Current banner hash: $CONTENT_HASH"
+
+      - name: Restore cached hash
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .banner-hash
+          key: banner-content-hash-
+          restore-keys: |
+            banner-content-hash-
+
+      - name: Compare hashes
+        id: compare
+        run: |
+          CURRENT_HASH="${{ steps.banner.outputs.current_hash }}"
+
+          if [ -f .banner-hash ]; then
+            CACHED_HASH=$(cat .banner-hash)
+            echo "Cached hash: $CACHED_HASH"
+          else
+            CACHED_HASH=""
+            echo "No cached hash found"
+          fi
+
+          if [ "$CURRENT_HASH" != "$CACHED_HASH" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Banner content has changed!"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Banner content unchanged"
+          fi
+
+      - name: Trigger Netlify deploys
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          npm install -g netlify-cli
+
+          echo "Triggering nx-docs deploy..."
+          netlify deploy --trigger --prod -s nx-docs
+
+          echo "Triggering nx-dev deploy..."
+          netlify deploy --trigger --prod -s nx-dev
+
+          echo "Both deploys triggered successfully"
+
+      - name: Save new hash to cache
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          echo "${{ steps.banner.outputs.current_hash }}" > .banner-hash
+
+      - name: Update cache
+        if: steps.compare.outputs.changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .banner-hash
+          key: banner-content-hash-${{ github.run_id }}

@@ -36,7 +36,7 @@ import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import { GitHubIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import { useRouter } from 'next/navigation';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
@@ -100,7 +100,7 @@ export function Header({
       title: 'Contact Us',
       children: <span>Contact</span>,
       onClick: () =>
-        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
+        sendCustomEventViaGtm('contact-click', 'header-cta', 'page-header'),
     },
     {
       href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header',
@@ -110,7 +110,7 @@ export function Header({
       title: 'Try Nx Cloud for free',
       children: 'Try Nx Cloud for free',
       onClick: () =>
-        sendCustomEvent('login-click', 'header-cta', 'page-header'),
+        sendCustomEventViaGtm('login-click', 'header-cta', 'page-header'),
     },
   ];
 
@@ -159,7 +159,7 @@ export function Header({
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'documentation-click',
                   'header-navigation',
                   'page-header'
@@ -269,7 +269,11 @@ export function Header({
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent('nx-cloud-click', 'header-cta', 'page-header')
+                sendCustomEventViaGtm(
+                  'nx-cloud-click',
+                  'header-cta',
+                  'page-header'
+                )
               }
             >
               Nx Cloud
@@ -280,7 +284,11 @@ export function Header({
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent('pricing-click', 'header-cta', 'page-header')
+                sendCustomEventViaGtm(
+                  'pricing-click',
+                  'header-cta',
+                  'page-header'
+                )
               }
             >
               Pricing
@@ -293,7 +301,11 @@ export function Header({
               className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
-                sendCustomEvent('enterprise-click', 'header-cta', 'page-header')
+                sendCustomEventViaGtm(
+                  'enterprise-click',
+                  'header-cta',
+                  'page-header'
+                )
               }
             >
               Enterprise
@@ -466,7 +478,7 @@ export function Header({
                               title="Try Nx Cloud for free"
                               className="w-full"
                               onClick={() =>
-                                sendCustomEvent(
+                                sendCustomEventViaGtm(
                                   'get-started-click',
                                   'mobile-header-cta',
                                   'mobile-navigation'
@@ -504,7 +516,7 @@ export function Header({
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
-                              sendCustomEvent(
+                              sendCustomEventViaGtm(
                                 'documentation-click',
                                 'mobile-header-navigation',
                                 'page-header'
@@ -609,7 +621,7 @@ export function Header({
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
-                              sendCustomEvent(
+                              sendCustomEventViaGtm(
                                 'nx-cloud-click',
                                 'mobile-header-cta',
                                 'page-header'
@@ -624,7 +636,7 @@ export function Header({
                             className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
-                              sendCustomEvent(
+                              sendCustomEventViaGtm(
                                 'pricing-click',
                                 'mobile-header-cta',
                                 'page-header'
@@ -677,7 +689,7 @@ export function Header({
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
-                              sendCustomEvent(
+                              sendCustomEventViaGtm(
                                 'contact-click',
                                 'mobile-header-cta',
                                 'page-header'
