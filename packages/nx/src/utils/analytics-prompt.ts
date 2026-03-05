@@ -82,14 +82,21 @@ function saveAnalyticsPreference(enabled: boolean): void {
 }
 
 /**
- * Generates a deterministic workspace ID from the git repo.
- * Tries git remote URL first, then falls back to the first commit SHA.
- * Returns null if not in a git repo (no telemetry for non-git workspaces).
+ * Generates a deterministic workspace ID.
+ * Priority: nxCloudId > git remote URL (hashed).
+ * Returns null if neither is available (no telemetry).
  */
 export function generateWorkspaceId(cwd?: string): string | null {
   const root = cwd ?? workspaceRoot;
 
-  // Try git remote URL hash first
+  // Use nxCloudId if available — most stable identifier
+  const nxJson = readNxJson(root);
+  const nxCloudId = nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken;
+  if (nxCloudId) {
+    return nxCloudId;
+  }
+
+  // Fall back to git remote URL hash
   try {
     const remoteUrl = execSync('git remote get-url origin', {
       stdio: 'pipe',
@@ -105,7 +112,7 @@ export function generateWorkspaceId(cwd?: string): string | null {
     // No git remote available
   }
 
-  // Fall back to first commit SHA hash
+  // Fall back to first commit SHA — already a hash
   try {
     const firstCommit = execSync('git rev-list --max-parents=0 HEAD', {
       stdio: 'pipe',
@@ -113,13 +120,10 @@ export function generateWorkspaceId(cwd?: string): string | null {
     })
       .toString()
       .trim()
-      .split('\n')[0]; // Take first line in case of multiple roots
+      .split('\n')[0];
 
     if (firstCommit) {
-      return createHash('sha256')
-        .update(firstCommit)
-        .digest('hex')
-        .slice(0, 32);
+      return firstCommit;
     }
   } catch {
     // Not a git repo
