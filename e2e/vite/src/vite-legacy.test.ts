@@ -483,6 +483,7 @@ export default App;
 
         const results = runCLI(`test ${lib} --coverage`, {
           silenceError: true,
+          redirectStderr: true,
         });
         expect(results).toContain(
           `Running target test for project ${lib} failed`
