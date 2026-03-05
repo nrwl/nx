@@ -146,7 +146,6 @@ export class PluginCache<T> {
     }
   }
 
-
   /**
    * Evicts the oldest 50% of entries (front of the access-order queue)
    * and returns the remaining entries + accessOrder as a plain object.
