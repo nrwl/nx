@@ -17,6 +17,11 @@
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
       "implementation": "./src/migrations/update-22-1-0/create-ai-instructions-for-vitest-4"
+    },
+    "update-22-6-0-prefix-reports-directory": {
+      "version": "22.6.0-beta.0",
+      "description": "Prefix reportsDirectory with {projectRoot} to maintain correct resolution after workspace-root-relative behavior change.",
+      "implementation": "./src/migrations/update-22-6-0/prefix-reports-directory-with-project-root"
     }
   },
   "packageJsonUpdates": {
