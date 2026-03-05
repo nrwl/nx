@@ -126,7 +126,7 @@ class AddTestCiTargetsTest {
   }
 
   @Test
-  fun `should include dependsOn when test task has dependencies`() {
+  fun `should not include same-project dependsOn for CI targets`() {
     File(projectRoot, "build.gradle").apply { writeText("// test build file") }
 
     val testFile =
@@ -160,13 +160,10 @@ class AddTestCiTargetsTest {
     val ciTarget = targets["ci--DependentTest"]
     assertTrue(ciTarget != null, "CI target should be created")
 
-    @Suppress("UNCHECKED_CAST")
-    val dependsOn = ciTarget?.get("dependsOn") as? List<Map<String, Any>>
-    assertTrue(dependsOn != null, "dependsOn should be present when test task has dependencies")
-    assertTrue(dependsOn!!.isNotEmpty(), "dependsOn should not be empty")
-    assertTrue(
-        dependsOn.any { it["target"] == "compileTestKotlin" },
-        "dependsOn should contain the dependency task name")
+    // Same-project dependencies are not included in dependsOn;
+    // Gradle handles same-project task ordering internally.
+    val dependsOn = ciTarget?.get("dependsOn")
+    assertTrue(dependsOn == null, "Same-project dependsOn should not be present, got $dependsOn")
   }
 
   @Test

@@ -67,7 +67,7 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
-  fun `test getDependsOnForTask with direct dependsOn`() {
+  fun `test getDependsOnForTask with direct dependsOn same project returns null`() {
     val project = ProjectBuilder.builder().withName("myApp").build()
     // Create a build file so the task dependencies are properly detected
     val buildFile = java.io.File(project.projectDir, "build.gradle")
@@ -81,10 +81,9 @@ class ProcessTaskUtilsTest {
     val dependencies = mutableSetOf<Dependency>()
     val dependsOn = getDependsOnForTask(null, taskA, dependencies)
 
-    assertNotNull(dependsOn)
-    assertTrue(
-        dependsOn!!.any { it["target"] == "taskB" },
-        "Expected dependsOn entry with target 'taskB' but got $dependsOn")
+    // Same-project dependencies are not included in dependsOn;
+    // Gradle handles same-project task ordering internally.
+    assertNull(dependsOn)
   }
 
   @Test
@@ -246,7 +245,7 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getDependsOnForTask with pre-computed dependsOnTasks`() {
+    fun `test getDependsOnForTask with pre-computed dependsOnTasks same project returns null`() {
       // Create a build file so the task dependencies are properly detected
       val buildFile = java.io.File(project.projectDir, "build.gradle")
       buildFile.writeText("// test build file")
@@ -269,25 +268,10 @@ class ProcessTaskUtilsTest {
       val dependencies2 = mutableSetOf<Dependency>()
       val resultWithoutPreComputed = getDependsOnForTask(null, taskA, dependencies2)
 
-      // Both results should be identical
-      assertNotNull(resultWithPreComputed)
-      assertNotNull(resultWithoutPreComputed)
-      assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
-      assertEquals(2, resultWithPreComputed.size)
-
-      // Should contain both dependencies as object entries with target names
-      assertTrue(
-          resultWithPreComputed.any { it["target"] == "taskB" },
-          "Expected target 'taskB' in $resultWithPreComputed")
-      assertTrue(
-          resultWithPreComputed.any { it["target"] == "taskC" },
-          "Expected target 'taskC' in $resultWithPreComputed")
-      assertTrue(
-          resultWithoutPreComputed.any { it["target"] == "taskB" },
-          "Expected target 'taskB' in $resultWithoutPreComputed")
-      assertTrue(
-          resultWithoutPreComputed.any { it["target"] == "taskC" },
-          "Expected target 'taskC' in $resultWithoutPreComputed")
+      // Same-project dependencies are not included in dependsOn;
+      // Gradle handles same-project task ordering internally.
+      assertNull(resultWithPreComputed)
+      assertNull(resultWithoutPreComputed)
     }
 
     @Test
@@ -488,11 +472,8 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["metadata"])
     assertNotNull(result["options"])
 
-    // Verify dependsOn is populated with object format
-    @Suppress("UNCHECKED_CAST") val dependsOn = result["dependsOn"] as? List<Map<String, Any>>
-    assertNotNull(dependsOn)
-    assertEquals(1, dependsOn!!.size)
-    assertEquals("compile", dependsOn[0]["target"])
+    // Same-project dependsOn should not be included (Gradle handles internally)
+    assertNull(result["dependsOn"])
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>

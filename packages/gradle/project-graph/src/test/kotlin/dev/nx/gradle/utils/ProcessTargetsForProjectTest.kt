@@ -81,15 +81,13 @@ class ProcessTargetsForProjectTest {
         gradleTargets.targets["ci-build"],
         "Expected ci-build target to be present in processed targets")
 
-    // Verify dependencies are rewritten for 'check' and 'build' tasks in the returned targets
+    // Same-project dependsOn are not included in regular targets (Gradle handles internally)
     val checkTarget = gradleTargets.targets["check"]
     assertNotNull(checkTarget, "Check target should exist in processed targets")
-    val checkDependsOn = checkTarget["dependsOn"] as? List<*>
-    assertNotNull(checkDependsOn, "Check dependsOn should not be null in processed targets")
-    assertTrue(
-        checkDependsOn.any { (it as? Map<*, *>)?.get("target") == "test" },
-        "Expected 'check' to depend on 'test' in processed targets, got $checkDependsOn")
+    val buildTarget = gradleTargets.targets["build"]
+    assertNotNull(buildTarget, "Build target should exist in processed targets")
 
+    // CI targets compute dependencies directly from Gradle's task graph
     val checkCiTarget = gradleTargets.targets["ci-check"]
     assertNotNull(checkCiTarget, "Check CI target should exist in processed targets")
     val checkCiDependsOn = checkCiTarget["dependsOn"] as? List<*>
@@ -97,14 +95,6 @@ class ProcessTargetsForProjectTest {
     assertTrue(
         checkCiDependsOn.any { (it as? Map<*, *>)?.get("target") == "ci-test" },
         "Expected 'ci-check' to depend on 'ci-test' in processed targets, got $checkCiDependsOn")
-
-    val buildTarget = gradleTargets.targets["build"]
-    assertNotNull(buildTarget, "Build target should exist in processed targets")
-    val buildDependsOn = buildTarget["dependsOn"] as? List<*>
-    assertNotNull(buildDependsOn, "Build dependsOn should not be null in processed targets")
-    assertTrue(
-        buildDependsOn.any { (it as? Map<*, *>)?.get("target") == "check" },
-        "Expected 'build' to depend on 'check' in processed targets, got $buildDependsOn")
 
     val buildCiTarget = gradleTargets.targets["ci-build"]
     assertNotNull(buildCiTarget, "Build CI target should exist in processed targets")
@@ -198,39 +188,24 @@ class ProcessTargetsForProjectTest {
         gradleTargets.targets.containsKey("ci-build"),
         "Expected ci-build target to be present as a main target")
 
-    // Verify dependencies are NOT rewritten for 'check' and 'build' tasks
+    // Same-project dependsOn are not included in regular targets (Gradle handles internally)
     val checkTarget = gradleTargets.targets["check"]
     assertNotNull(checkTarget, "Check target should exist")
-    val checkDependsOn = checkTarget["dependsOn"] as? List<*>
-    assertNotNull(checkDependsOn, "Check dependsOn should not be null")
-    assertTrue(
-        checkDependsOn.any { (it as? Map<*, *>)?.get("target") == "test" },
-        "Expected 'check' to depend on 'test', got $checkDependsOn")
-    assertFalse(
-        checkDependsOn.any { (it as? Map<*, *>)?.get("target") == "ci-test" },
-        "Expected 'check' NOT to depend on 'ci-test'")
+    val buildTarget = gradleTargets.targets["build"]
+    assertNotNull(buildTarget, "Build target should exist")
 
+    // CI targets compute dependencies directly from Gradle's task graph
     val checkCiTarget = gradleTargets.targets["ci-check"]
     assertNotNull(checkCiTarget, "Check CI target should exist in processed targets")
     val checkCiDependsOn = checkCiTarget["dependsOn"] as? List<*>
     assertNotNull(checkCiDependsOn, "Check CI dependsOn should not be null in processed targets")
+    // When atomized is false, ci-check should depend on 'test' (not 'ci-test')
     assertFalse(
         checkCiDependsOn.any { (it as? Map<*, *>)?.get("target") == "ci-test" },
         "Expected 'ci-check' to NOT depend on 'ci-test' in processed targets")
     assertTrue(
         checkCiDependsOn.any { (it as? Map<*, *>)?.get("target") == "test" },
         "Expected 'ci-check' to depend on 'test' in processed targets, got $checkCiDependsOn")
-
-    val buildTarget = gradleTargets.targets["build"]
-    assertNotNull(buildTarget, "Build target should exist")
-    val buildDependsOn = buildTarget["dependsOn"] as? List<*>
-    assertNotNull(buildDependsOn, "Build dependsOn should not be null")
-    assertTrue(
-        buildDependsOn.any { (it as? Map<*, *>)?.get("target") == "check" },
-        "Expected 'build' to depend on 'check', got $buildDependsOn")
-    assertFalse(
-        buildDependsOn.any { (it as? Map<*, *>)?.get("target") == "ci-check" },
-        "Expected 'build' NOT to depend on 'ci-check'")
 
     val buildCiTarget = gradleTargets.targets["ci-build"]
     assertNotNull(buildCiTarget, "Build CI target should exist in processed targets")
@@ -420,11 +395,8 @@ class ProcessTargetsForProjectTest {
             workspaceRoot = workspaceRoot,
             atomized = true)
 
-    val checkDependsOn = gradleTargets.targets["check"]?.get("dependsOn") as? List<*>
-    assertTrue(
-        checkDependsOn?.any { (it as? Map<*, *>)?.get("target") == "test" } == true,
-        "Expected check to depend on 'test', got $checkDependsOn")
-
+    // Same-project dependsOn are not included in regular targets
+    // CI targets compute dependencies directly from Gradle's task graph
     val ciCheckDependsOn = gradleTargets.targets["ci-check"]?.get("dependsOn") as? List<*>
     assertTrue(
         ciCheckDependsOn?.any { (it as? Map<*, *>)?.get("target") == "ci-test" } == true,

@@ -340,11 +340,10 @@ fun getDependsOnForTask(
     val result = mutableListOf<Map<String, Any>>()
     val grouped = depEntries.groupBy { it.isSameProject }
 
-    // Same-project dependencies: one entry per target
-    grouped[true]
-        ?.map { it.targetName }
-        ?.distinct()
-        ?.forEach { targetName -> result.add(mapOf("target" to targetName)) }
+    // Same-project dependencies are NOT included in dependsOn.
+    // Gradle handles same-project task ordering internally when running a task.
+    // Including them would cause Nx to schedule them as separate tasks, which
+    // can fail when tasks exist during project graph generation but not execution.
 
     // Cross-project dependencies: group by target, collect projects into array
     grouped[false]
@@ -366,7 +365,7 @@ fun getDependsOnForTask(
       val combinedDependsOn = getDependsOnTask(task)
       val result =
           if (combinedDependsOn.isNotEmpty()) {
-            mapTasksToObjects(combinedDependsOn)
+            mapTasksToObjects(combinedDependsOn).ifEmpty { null }
           } else {
             null
           }
@@ -388,7 +387,7 @@ fun getDependsOnForTask(
     return try {
       val result =
           if (dependsOnTasks.isNotEmpty()) {
-            mapTasksToObjects(dependsOnTasks)
+            mapTasksToObjects(dependsOnTasks).ifEmpty { null }
           } else {
             null
           }
