@@ -40,13 +40,13 @@ pub mod user_dimension {
     pub const NODE_VERSION: &str = "up.node_version";
     pub const PACKAGE_MANAGER: &str = "up.package_manager";
     pub const PACKAGE_MANAGER_VERSION: &str = "up.package_manager_version";
-    pub const NX_VERSION: &str = "up.nx_version";
     pub const IS_CI: &str = "up.is_ci";
 }
 
 /// Event-scoped custom dimensions (ep.* = event parameter string, epn.* = number)
 /// These are the source of truth — TypeScript imports them via get_event_dimensions().
 pub mod event_dimension {
+    pub const NX_VERSION: &str = "ep.nx_version";
     pub const IS_AI_AGENT: &str = "ep.is_ai_agent";
     pub const COMMAND: &str = "ep.nx_command";
     pub const GENERATOR_NAME: &str = "ep.generator_name";

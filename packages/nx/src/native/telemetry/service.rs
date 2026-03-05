@@ -102,7 +102,7 @@ impl TelemetryService {
         if let Some(version) = package_manager_version {
             user_parameters.insert(user_dimension::PACKAGE_MANAGER_VERSION.to_string(), version);
         }
-        user_parameters.insert(user_dimension::NX_VERSION.to_string(), nx_version);
+        user_parameters.insert(event_dimension::NX_VERSION.to_string(), nx_version);
         user_parameters.insert(
             event_dimension::IS_AI_AGENT.to_string(),
             is_ai_agent.to_string(),
