@@ -755,6 +755,36 @@ describe('ProjectNameInNodePropsManager', () => {
       expect(projectOwner.targets.build.dependsOn[0]).toBe('new-ab:c');
     });
 
+    it('should substitute a colon-leading project name in a "project:target" string entry', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Project whose name starts with ':' — no targets of its own,
+      // so findMatchingSegments cannot resolve the string-form entry.
+      const colonPkg = createProject(':pkg', 'libs/pkg');
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: [':pkg:compile'],
+          },
+        },
+      });
+
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([colonPkg, projectA])
+      );
+      manager.markDirty('libs/pkg', ':pkg');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'renamed-pkg', root: 'libs/pkg' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.build.dependsOn[0]).toBe('renamed-pkg:compile');
+    });
+
     it('should substitute for targets expanded from glob keys with string dependsOn', () => {
       const manager = new ProjectNameInNodePropsManager();
 
@@ -1457,6 +1487,103 @@ describe('ProjectNameInNodePropsManager', () => {
 
       // Should use the new location since it was found first in plugin result
       expect(projectA.targets.build.inputs[0].projects).toBe('renamed-b');
+    });
+  });
+
+  // ============== Same-Project Colon Target Name Tests ==============
+
+  describe('same-project colon target names in dependsOn', () => {
+    it('should not substitute a dependsOn string that matches an owning project target name', () => {
+      // Reproduces the real-world bug: devkit has a target literally named
+      // "nx:echo" and a "parent" target with dependsOn: ["nx:echo"]. A
+      // different project at root "." is transiently named "nx" by an early
+      // plugin, then renamed to "@nx/nx-source". Without the fix, the
+      // substitution manager incorrectly rewrites "nx:echo" →
+      // "@nx/nx-source:echo" because it parses "nx:echo" as project "nx"
+      // target "echo" and a dirty entry exists for the name "nx".
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Project at root that transiently has name "nx", then renamed
+      const rootProject = createProject('nx', 'root-dir');
+
+      // The "nx" package — a separate project with a stable name "nx"
+      const nxProject = createProject('nx', 'packages/nx');
+
+      // devkit has a target literally named "nx:echo" and a "parent"
+      // target that depends on it (same-project reference)
+      const devkit = createProject('devkit', 'packages/devkit', {
+        targets: {
+          'nx:echo': {
+            command: "echo 'Hello'",
+          },
+          parent: {
+            dependsOn: ['nx:echo'],
+          },
+        },
+      });
+
+      // First plugin result: root project with name "nx"
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([rootProject])
+      );
+
+      // Second plugin result: devkit with the colon target
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([nxProject, devkit])
+      );
+
+      // Root project renamed from "nx" to "@nx/nx-source"
+      manager.markDirty('root-dir', 'nx');
+
+      const rootMap = createRootMap([
+        { name: '@nx/nx-source', root: 'root-dir' },
+        { name: 'nx', root: 'packages/nx' },
+        {
+          name: 'devkit',
+          root: 'packages/devkit',
+          targets: devkit.targets,
+        },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // "nx:echo" should remain unchanged — it is a same-project target,
+      // not a cross-project reference to the "nx" project.
+      expect(devkit.targets.parent.dependsOn[0]).toBe('nx:echo');
+    });
+
+    it('should still substitute genuine cross-project "project:target" references', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Project B has a "compile" target
+      const projectB = createProject('project-b', 'libs/b', {
+        targets: { compile: {} },
+      });
+
+      // Project A references project-b:compile (a real cross-project ref)
+      // and does NOT have a target named "project-b:compile"
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['project-b:compile'],
+          },
+        },
+      });
+
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([projectA, projectB])
+      );
+      manager.markDirty('libs/b', 'project-b');
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'renamed-b', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // The genuine cross-project reference should be substituted
+      expect(projectA.targets.build.dependsOn[0]).toBe('renamed-b:compile');
     });
   });
 });

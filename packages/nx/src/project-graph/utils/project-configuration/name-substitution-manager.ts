@@ -318,7 +318,9 @@ export class ProjectNameInNodePropsManager {
           this.registerSubstitutorsForDependsOn(
             ownerRoot,
             targetName,
-            targetConfig.dependsOn
+            targetConfig.dependsOn,
+            project.targets,
+            project.name
           );
         }
       }
@@ -474,7 +476,11 @@ export class ProjectNameInNodePropsManager {
   private registerSubstitutorsForDependsOn(
     ownerRoot: string,
     targetName: string,
-    dependsOn: NonNullable<ProjectConfiguration['targets'][string]['dependsOn']>
+    dependsOn: NonNullable<
+      ProjectConfiguration['targets'][string]['dependsOn']
+    >,
+    ownerTargets?: Record<string, unknown>,
+    ownerProjectName?: string
   ) {
     const arrayKey = `${ownerRoot}:targets.${targetName}.dependsOn`;
     for (let i = 0; i < dependsOn.length; i++) {
@@ -484,10 +490,15 @@ export class ProjectNameInNodePropsManager {
         // starting with '^' are dependency-mode references (no project
         // name). Use splitTargetFromNodes with accumulated project nodes
         // to properly handle project / target names containing colons.
-        if (!dep.startsWith('^')) {
+        //
+        // However, if the string matches a target name in the owning
+        // project, it is a same-project target reference (e.g. a target
+        // literally named "nx:echo"), not a cross-project reference.
+        if (!dep.startsWith('^') && !(ownerTargets && dep in ownerTargets)) {
           const [maybeProject, ...rest] = splitTargetFromNodes(
             dep,
-            this.knownProjectNodes
+            this.knownProjectNodes,
+            { silent: true, currentProject: ownerProjectName }
           );
           if (rest.length > 0) {
             const targetPart = rest.join(':');
