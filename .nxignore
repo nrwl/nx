@@ -10,3 +10,6 @@ packages/nx/src/native/native-bindings.js
 
 # Workaround for ignore-files crate bug with prefix matching
 **/target/
+
+# Netlify build artifacts
+.netlify
