@@ -919,6 +919,7 @@ Update packages in both groups with a mix #2
 
     const releaseResult = runCLI('release major --verbose --skip-publish', {
       silenceError: true,
+      redirectStderr: true,
     });
 
     expect(releaseResult).toContain(
@@ -930,6 +931,7 @@ Update packages in both groups with a mix #2
 
     const versionResult = runCLI('release version major --verbose', {
       silenceError: true,
+      redirectStderr: true,
     });
 
     expect(versionResult).toContain(

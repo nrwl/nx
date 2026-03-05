@@ -82,6 +82,7 @@ describe('nx release first run', () => {
     it('should error', async () => {
       const releaseOutput1 = runCLI(`release patch --skip-publish -d`, {
         silenceError: true,
+        redirectStderr: true,
       });
 
       expect(
@@ -251,6 +252,7 @@ describe('nx release first run', () => {
 
       const releaseOutput1 = runCLI(`release patch --verbose -y -d`, {
         silenceError: true,
+        redirectStderr: true,
       });
 
       expect(
