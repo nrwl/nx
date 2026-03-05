@@ -1,5 +1,5 @@
 import { SectionHeading } from '@nx/nx-dev-ui-common';
-import { YoutubeIcon } from '@nx/nx-dev/ui-icons';
+import { YoutubeIcon } from '@nx/nx-dev-ui-icons';
 import { JSX } from 'react';
 
 export function CourseHero(): JSX.Element {
