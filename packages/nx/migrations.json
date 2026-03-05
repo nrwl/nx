@@ -139,7 +139,7 @@
     },
     "22-6-1-add-claude-worktrees-to-git-ignore": {
       "cli": "nx",
-      "version": "22.6.1-beta.0",
+      "version": "22.6.0-beta.10",
       "description": "Adds .claude/worktrees to .gitignore",
       "implementation": "./src/migrations/update-22-6-1/add-claude-worktrees-to-git-ignore"
     },
