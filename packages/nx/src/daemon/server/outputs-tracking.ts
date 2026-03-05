@@ -12,17 +12,19 @@ const numberOfExpandedOutputs = {} as { [hash: string]: number };
 
 export function _recordOutputsHash(outputs: string[], hash: string) {
   numberOfExpandedOutputs[hash] = outputs.length;
+  const now = Date.now();
   for (const output of outputs) {
     recordedHashes[output] = hash;
-    timestamps[output] = new Date().getTime();
+    timestamps[output] = now;
 
+    // Optimize: calculate dirname once per iteration instead of twice
     let current = output;
-    while (current != dirname(current)) {
-      if (!dirsContainingOutputs[current]) {
-        dirsContainingOutputs[current] = new Set<string>();
-      }
+    let parent = dirname(current);
+    while (current !== parent) {
+      dirsContainingOutputs[current] ??= new Set<string>();
       dirsContainingOutputs[current].add(output);
-      current = dirname(current);
+      current = parent;
+      parent = dirname(current);
     }
   }
 }
@@ -44,23 +46,23 @@ export function recordedHash(output: string) {
   return recordedHashes[output];
 }
 
-export async function recordOutputsHash(_outputs: string[], hash: string) {
-  const outputs = await normalizeOutputs(_outputs);
+export function recordOutputsHash(_outputs: string[], hash: string) {
+  // Early exit before expensive normalization
   if (disabled) return;
+  const outputs = normalizeOutputs(_outputs);
   _recordOutputsHash(outputs, hash);
 }
 
-export async function outputsHashesMatch(_outputs: string[], hash: string) {
-  const outputs = await normalizeOutputs(_outputs);
+export function outputsHashesMatch(_outputs: string[], hash: string) {
+  // Early exit before expensive normalization
   if (disabled) return false;
+  const outputs = normalizeOutputs(_outputs);
   return _outputsHashesMatch(outputs, hash);
 }
 
-async function normalizeOutputs(outputs: string[]) {
-  let expandedOutputs = collapseExpandedOutputs(
-    getFilesForOutputs(workspaceRoot, outputs)
-  );
-  return expandedOutputs;
+// Made synchronous - getFilesForOutputs is a sync Rust FFI call
+function normalizeOutputs(outputs: string[]) {
+  return collapseExpandedOutputs(getFilesForOutputs(workspaceRoot, outputs));
 }
 
 export function processFileChangesInOutputs(
@@ -84,12 +86,15 @@ export function processFileChangesInOutputs(
     }
 
     // the path is a child of some output or unrelated
-    while (current != dirname(current)) {
+    // Optimize: calculate dirname once per iteration instead of twice
+    let parent = dirname(current);
+    while (current !== parent) {
       if (recordedHashes[current] && now - timestamps[current] > 2000) {
         recordedHashes[current] = undefined;
         break;
       }
-      current = dirname(current);
+      current = parent;
+      parent = dirname(current);
     }
   }
 }
