@@ -1490,6 +1490,138 @@ describe('ProjectNameInNodePropsManager', () => {
     });
   });
 
+  // ============== Rename + New Project With Same Name ==============
+
+  describe('rename with new project reusing old name', () => {
+    it('should not substitute references to A when A is renamed to B and a new project takes name A', () => {
+      // Scenario:
+      //   Plugin 1 creates project "A" at libs/a (nothing depends on it)
+      //   Plugin 2:
+      //     - Renames libs/a from "A" to "B"
+      //     - Adds a new project "A" at libs/new-a
+      //     - Adds project C at libs/c that depends on "A"
+      //
+      // After merging, C's dependsOn "A" refers to the NEW project at
+      // libs/new-a, NOT the renamed project at libs/a. Substitutions
+      // should leave C's reference unchanged.
+
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Plugin 1: creates project "A" at libs/a — nothing references it
+      const originalA = createProject('A', 'libs/a');
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([originalA])
+      );
+
+      // Plugin 2: renames libs/a → "B", introduces new "A" at libs/new-a,
+      // and project C that depends on "A" (the new one)
+      const renamedA = createProject('B', 'libs/a');
+      const newA = createProject('A', 'libs/new-a');
+      const projectC = createProject('C', 'libs/c', {
+        targets: {
+          build: createTargetWithDependsOn('A'),
+        },
+      });
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([renamedA, newA, projectC])
+      );
+
+      // The merge phase detected that libs/a changed from "A" to "B"
+      manager.markDirty('libs/a', 'A');
+
+      const rootMap = createRootMap([
+        { name: 'B', root: 'libs/a' },
+        { name: 'A', root: 'libs/new-a' },
+        { name: 'C', root: 'libs/c', targets: projectC.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // C's dependsOn should still reference "A" (the new project),
+      // NOT "B" (the renamed project)
+      expect(projectC.targets.build.dependsOn[0].projects).toBe('A');
+    });
+
+    it('should not substitute input references to A when A is renamed to B and a new project takes name A', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Plugin 1: creates project "A" at libs/a — nothing references it
+      const originalA = createProject('A', 'libs/a');
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([originalA])
+      );
+
+      // Plugin 2: renames libs/a → "B", introduces new "A" at libs/new-a,
+      // and project C with inputs referencing "A" (the new one)
+      const renamedA = createProject('B', 'libs/a');
+      const newA = createProject('A', 'libs/new-a');
+      const projectC = createProject('C', 'libs/c', {
+        targets: {
+          build: createTargetWithProjectInput('A'),
+        },
+      });
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([renamedA, newA, projectC])
+      );
+
+      manager.markDirty('libs/a', 'A');
+
+      const rootMap = createRootMap([
+        { name: 'B', root: 'libs/a' },
+        { name: 'A', root: 'libs/new-a' },
+        { name: 'C', root: 'libs/c', targets: projectC.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // C's input reference should still point to "A" (the new project)
+      expect(projectC.targets.build.inputs[0].projects).toBe('A');
+    });
+
+    it('should not substitute array input references to A when A is renamed and a new project takes name A', () => {
+      const manager = new ProjectNameInNodePropsManager();
+
+      // Plugin 1: creates project "A" at libs/a — nothing references it
+      const originalA = createProject('A', 'libs/a');
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([originalA])
+      );
+
+      // Plugin 2: renames libs/a → "B", introduces new "A", and project C
+      // with array input referencing ["A", "other"]
+      const renamedA = createProject('B', 'libs/a');
+      const newA = createProject('A', 'libs/new-a');
+      const otherProject = createProject('other', 'libs/other');
+      const projectC = createProject('C', 'libs/c', {
+        targets: {
+          build: createTargetWithProjectInput(['A', 'other']),
+        },
+      });
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([renamedA, newA, otherProject, projectC])
+      );
+
+      manager.markDirty('libs/a', 'A');
+
+      const rootMap = createRootMap([
+        { name: 'B', root: 'libs/a' },
+        { name: 'A', root: 'libs/new-a' },
+        { name: 'other', root: 'libs/other' },
+        { name: 'C', root: 'libs/c', targets: projectC.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // "A" in the array should still point to the new project "A"
+      expect((projectC.targets.build.inputs[0].projects as string[])[0]).toBe(
+        'A'
+      );
+      expect((projectC.targets.build.inputs[0].projects as string[])[1]).toBe(
+        'other'
+      );
+    });
+  });
+
   // ============== Same-Project Colon Target Name Tests ==============
 
   describe('same-project colon target names in dependsOn', () => {
