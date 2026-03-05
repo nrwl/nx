@@ -125,6 +125,7 @@ describe('nx release git operations', () => {
 
     const releaseOutput1 = runCLI(`release patch --first-release -d`, {
       silenceError: true,
+      redirectStderr: true,
     });
 
     expect(
@@ -154,6 +155,7 @@ describe('nx release git operations', () => {
       `release version patch --first-release -d`,
       {
         silenceError: true,
+        redirectStderr: true,
       }
     );
 
@@ -170,6 +172,7 @@ describe('nx release git operations', () => {
       `release changelog 1.0.0 --first-release -d`,
       {
         silenceError: true,
+        redirectStderr: true,
       }
     );
 

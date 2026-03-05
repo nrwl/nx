@@ -84,8 +84,9 @@ describe('nx release version plans check command', () => {
 
   it('should work as expected when there are no version plan files on disk', async () => {
     // it should error if version plans are not yet enabled
-    expect(runCLI('release plan:check', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    expect(
+      runCLI('release plan:check', { silenceError: true, redirectStderr: true })
+    ).toMatchInlineSnapshot(`
 
       NX   Version plans are not enabled
 
@@ -428,8 +429,9 @@ describe('nx release version plans check command', () => {
     patchVersionPlanFile((currentContents) =>
       currentContents.replaceAll(pkg1, 'independent-group')
     );
-    expect(runCLI('release plan:check', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    expect(
+      runCLI('release plan:check', { silenceError: true, redirectStderr: true })
+    ).toMatchInlineSnapshot(`
 
       NX   Found a version bump for group 'independent-group' in 'version-plan-{RANDOM_NUMBER}.md' but the group's projects are independently versioned. Individual projects of 'independent-group' should be bumped instead.
 
@@ -504,8 +506,9 @@ describe('nx release version plans check command', () => {
     writeFileSync(join(pkg1Dir, 'file.ts'), 'const a = 1;');
 
     // it should show information about the missing version plan and show an error message
-    expect(runCLI('release plan:check', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    expect(
+      runCLI('release plan:check', { silenceError: true, redirectStderr: true })
+    ).toMatchInlineSnapshot(`
 
       NX   Touched projects based on changed files
 
@@ -525,8 +528,12 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --verbose', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    expect(
+      runCLI('release plan:check --verbose', {
+        silenceError: true,
+        redirectStderr: true,
+      })
+    ).toMatchInlineSnapshot(`
 
       NX   Affected criteria defaulted to --base=main --head=HEAD
 
