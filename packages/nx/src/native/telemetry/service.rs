@@ -107,7 +107,7 @@ impl TelemetryService {
             event_dimension::IS_AI_AGENT.to_string(),
             is_ai_agent.to_string(),
         );
-        user_parameters.insert(event_dimension::IS_CI.to_string(), is_ci.to_string());
+        user_parameters.insert(user_dimension::IS_CI.to_string(), is_ci.to_string());
 
         // Create channels
         let (event_tx, event_rx) = crossbeam_channel::unbounded();
