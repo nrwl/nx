@@ -94,7 +94,7 @@ async function main() {
       handleNxVersionCommand(LOCAL_NX_VERSION, GLOBAL_NX_VERSION);
     }
 
-    if (!workspace) {
+    if (!workspace && !isNxCloudCommand(process.argv[2])) {
       handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
@@ -198,6 +198,7 @@ function isNxCloudCommand(command: string): boolean {
     'view-logs',
     'fix-ci',
     'record',
+    'polygraph',
   ];
   return nxCloudCommands.includes(command);
 }
