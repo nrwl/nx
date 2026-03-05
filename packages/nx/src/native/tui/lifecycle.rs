@@ -401,7 +401,7 @@ impl AppLifeCycle {
         Ok(())
     }
 
-    #[napi]
+    #[napi(async_runtime)]
     pub fn end_command(&self) -> napi::Result<()> {
         self.with_app(|app| app.end_command());
         Ok(())
