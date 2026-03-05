@@ -534,14 +534,13 @@ export class TaskOrchestrator {
           );
         }
 
+        task.startTime = result.startTime;
+        task.endTime = result.endTime;
+
         this.options.lifeCycle.endTasks(
           [
             {
-              task: {
-                ...task,
-                startTime: result.startTime,
-                endTime: result.endTime,
-              },
+              task,
               status,
               code: result.success ? 0 : 1,
               terminalOutput: result.terminalOutput,
@@ -557,17 +556,18 @@ export class TaskOrchestrator {
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
 
-      return batchResultEntries.map(([taskId, result]) => ({
-        ...result,
-        code: result.success ? 0 : 1,
-        task: {
-          ...this.taskGraph.tasks[taskId],
-          startTime: result.startTime,
-          endTime: result.endTime,
-        },
-        status: (result.success ? 'success' : 'failure') as TaskStatus,
-        terminalOutput: result.terminalOutput,
-      }));
+      return batchResultEntries.map(([taskId, result]) => {
+        const task = this.taskGraph.tasks[taskId];
+        task.startTime = result.startTime;
+        task.endTime = result.endTime;
+        return {
+          ...result,
+          code: result.success ? 0 : 1,
+          task,
+          status: (result.success ? 'success' : 'failure') as TaskStatus,
+          terminalOutput: result.terminalOutput,
+        };
+      });
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
