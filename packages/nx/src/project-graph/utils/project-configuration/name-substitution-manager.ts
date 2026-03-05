@@ -45,12 +45,34 @@ type SubstitutorEntry = {
  *    ({@link applySubstitutions}).
  */
 export class ProjectNameInNodePropsManager {
-  // Maps the *referenced project name at registration time* → set of
-  // substitutor entries that should run when a project is renamed FROM
-  // that name. Keying by name (not root) means no project-map lookup is
-  // needed at registration time, and ordering between result entries does
-  // not matter.
-  private projectNameSubstitutors = new Map<string, Set<SubstitutorEntry>>();
+  // ── Why two maps? ──────────────────────────────────────────────────
+  // Substitutors must be keyed by *root* (not name) so that a rename
+  // A → B at root X does not accidentally rewrite references to a
+  // *different* project that now occupies the name "A" at root Y.
+  // However, at registration time the referenced project may not yet
+  // exist (forward reference), so its root is unknown. In that case
+  // we fall back to keying by name. applySubstitutions consults both
+  // maps: root-keyed first (covers the common resolved case), then
+  // name-keyed (covers the forward-reference fallback).
+  // ─────────────────────────────────────────────────────────────────
+
+  // Maps the *root of the referenced project* → set of substitutor entries
+  // that should run when that project is renamed. Keying by root (resolved
+  // at registration time via knownProjectNodes) ensures that when project
+  // "A" is renamed to "B" and a *new* project takes the name "A" at a
+  // different root, references to the new "A" are not incorrectly rewritten.
+  private substitutorsByReferencedRoot = new Map<
+    string,
+    Set<SubstitutorEntry>
+  >();
+
+  // Fallback map for references whose name could not be resolved to a root
+  // at registration time (forward references to projects not yet seen).
+  // Keyed by the referenced project name.
+  private substitutorsByUnresolvedName = new Map<
+    string,
+    Set<SubstitutorEntry>
+  >();
 
   // Tracks substitutor entries by (array path, index, subIndex). This
   // serves two purposes:
@@ -68,15 +90,22 @@ export class ProjectNameInNodePropsManager {
   private substitutorsByArrayKey = new Map<
     string,
     Array<
-      | Array<{ referencedName: string; entry: SubstitutorEntry } | undefined>
+      | Array<
+          | {
+              mapKey: string;
+              keyedByRoot: boolean;
+              entry: SubstitutorEntry;
+            }
+          | undefined
+        >
       | undefined
     >
   >();
 
   // Projects whose names changed during the merge phase. Key = root of the
   // renamed project, value = all names it previously held in this merge.
-  // These are used in applySubstitutions to locate substitutors keyed by
-  // old names.
+  // The root is used to locate root-keyed substitutors directly, and
+  // previousNames are used as a fallback for name-keyed substitutors.
   private dirtyEntries = new Map<string, Set<string>>();
 
   // Partial project graph nodes accumulated across plugin registrations.
@@ -86,16 +115,20 @@ export class ProjectNameInNodePropsManager {
   private knownProjectNodes: Record<string, ProjectGraphProjectNode> = {};
 
   private removeSubstitutorEntry(item: {
-    referencedName: string;
+    mapKey: string;
+    keyedByRoot: boolean;
     entry: SubstitutorEntry;
   }) {
-    const substitutors = this.projectNameSubstitutors.get(item.referencedName);
+    const map = item.keyedByRoot
+      ? this.substitutorsByReferencedRoot
+      : this.substitutorsByUnresolvedName;
+    const substitutors = map.get(item.mapKey);
     if (!substitutors) {
       return;
     }
     substitutors.delete(item.entry);
     if (substitutors.size === 0) {
-      this.projectNameSubstitutors.delete(item.referencedName);
+      map.delete(item.mapKey);
     }
   }
 
@@ -218,9 +251,10 @@ export class ProjectNameInNodePropsManager {
     }
   }
 
-  // Registers a new substitutor keyed by `referencedName` (the project name
-  // as it appears in the reference), tracked at (arrayKey, index, subIndex)
-  // for deduplication and tail-clearing.
+  // Registers a new substitutor for `referencedName`, tracked at
+  // (arrayKey, index, subIndex) for deduplication and tail-clearing.
+  // The substitutor is keyed by the referenced project's *root* when the
+  // name can be resolved via knownProjectNodes, or by name as a fallback.
   private registerProjectNameSubstitutor(
     referencedName: string,
     ownerRoot: string,
@@ -232,14 +266,25 @@ export class ProjectNameInNodePropsManager {
     // Evict any existing substitutor at this exact position first.
     this.clearSubstitutorAtIndex(arrayKey, index, subIndex);
 
-    let substitutorsForName = this.projectNameSubstitutors.get(referencedName);
-    if (!substitutorsForName) {
-      substitutorsForName = new Set();
-      this.projectNameSubstitutors.set(referencedName, substitutorsForName);
+    // Resolve the referenced name to a root when possible. This ensures
+    // that when a project is renamed and a new project takes the old name,
+    // substitutors point at the correct root and are not triggered for the
+    // wrong project.
+    const referencedRoot = this.knownProjectNodes[referencedName]?.data?.root;
+    const keyedByRoot = referencedRoot !== undefined;
+    const mapKey = keyedByRoot ? referencedRoot : referencedName;
+    const map = keyedByRoot
+      ? this.substitutorsByReferencedRoot
+      : this.substitutorsByUnresolvedName;
+
+    let substitutorsForKey = map.get(mapKey);
+    if (!substitutorsForKey) {
+      substitutorsForKey = new Set();
+      map.set(mapKey, substitutorsForKey);
     }
 
     const entry: SubstitutorEntry = { ownerRoot, substitutor };
-    substitutorsForName.add(entry);
+    substitutorsForKey.add(entry);
 
     let byIndex = this.substitutorsByArrayKey.get(arrayKey);
     if (!byIndex) {
@@ -249,16 +294,17 @@ export class ProjectNameInNodePropsManager {
 
     if (subIndex === undefined) {
       // Single project reference — store directly
-      byIndex[index] = [{ referencedName, entry }];
+      byIndex[index] = [{ mapKey, keyedByRoot, entry }];
     } else {
       // Multiple projects in an array — ensure the slot exists
       if (!byIndex[index]) {
         byIndex[index] = [];
       }
       const subArray = byIndex[index] as Array<
-        { referencedName: string; entry: SubstitutorEntry } | undefined
+        | { mapKey: string; keyedByRoot: boolean; entry: SubstitutorEntry }
+        | undefined
       >;
-      subArray[subIndex] = { referencedName, entry };
+      subArray[subIndex] = { mapKey, keyedByRoot, entry };
     }
   }
 
@@ -565,12 +611,15 @@ export class ProjectNameInNodePropsManager {
    * {@link applySubstitutions}.
    */
   markDirty(root: string, previousName: string) {
-    let previousNames = this.dirtyEntries.get(root);
-    if (!previousNames) {
-      previousNames = new Set<string>();
-      this.dirtyEntries.set(root, previousNames);
+    if (!this.dirtyEntries.has(root)) {
+      this.dirtyEntries.set(root, new Set<string>());
     }
-    previousNames.add(previousName);
+    // Only store the previous name when there are unresolved name-keyed
+    // substitutors that actually need it. Root-keyed substitutors are
+    // looked up by root directly and don't need the name at all.
+    if (this.substitutorsByUnresolvedName.has(previousName)) {
+      this.dirtyEntries.get(root).add(previousName);
+    }
   }
 
   /**
@@ -584,14 +633,28 @@ export class ProjectNameInNodePropsManager {
       if (!finalName) {
         continue;
       }
+
+      // Primary lookup: substitutors keyed by the root of the renamed
+      // project. These were resolved at registration time.
+      const rootSubstitutors = this.substitutorsByReferencedRoot.get(root);
+      if (rootSubstitutors) {
+        for (const { ownerRoot, substitutor } of rootSubstitutors) {
+          const ownerConfig = rootMap[ownerRoot];
+          if (ownerConfig) {
+            substitutor(finalName, ownerConfig);
+          }
+        }
+      }
+
+      // Fallback: substitutors keyed by name (for forward references whose
+      // root could not be resolved at registration time).
       for (const previousName of previousNames) {
-        const substitutors = this.projectNameSubstitutors.get(previousName);
-        if (!substitutors) {
+        const nameSubstitutors =
+          this.substitutorsByUnresolvedName.get(previousName);
+        if (!nameSubstitutors) {
           continue;
         }
-        for (const { ownerRoot, substitutor } of substitutors) {
-          // Each entry stores the ownerRoot of the project holding the stale
-          // reference so we can look up its final merged config here.
+        for (const { ownerRoot, substitutor } of nameSubstitutors) {
           const ownerConfig = rootMap[ownerRoot];
           if (ownerConfig) {
             substitutor(finalName, ownerConfig);
