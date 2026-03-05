@@ -8,9 +8,13 @@ export interface LoginArgs {
 }
 
 export function loginHandler(args: LoginArgs): Promise<number> {
-  if (!isNxCloudUsed(readNxJson())) {
-    warnNotConnectedToCloud();
-    return Promise.resolve(0);
+  try {
+    if (!isNxCloudUsed(readNxJson())) {
+      warnNotConnectedToCloud();
+      return Promise.resolve(0);
+    }
+  } catch {
+    // Not in an Nx workspace — proceed with login anyway
   }
 
   if (args.nxCloudUrl) {
