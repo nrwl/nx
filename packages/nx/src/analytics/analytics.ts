@@ -36,7 +36,7 @@ if (!IS_WASM) {
   getEventDimensions = nativeModule.getEventDimensions;
 }
 
-const customDimensions = IS_WASM ? null : getEventDimensions();
+const customDimensions = IS_WASM ? null : (getEventDimensions?.() ?? null);
 
 let _telemetryInitialized = false;
 
@@ -93,8 +93,8 @@ export async function startAnalytics() {
 
 export function reportNxAddCommand(packageName: string, version: string) {
   reportCommandRunEvent('add', {
-    [customDimensions.packageName]: packageName,
-    [customDimensions.packageVersion]: version,
+    [getCustomDimensions().packageName]: packageName,
+    [getCustomDimensions().packageVersion]: version,
   });
 }
 
