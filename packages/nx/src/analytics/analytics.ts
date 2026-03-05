@@ -93,8 +93,8 @@ export async function startAnalytics() {
 
 export function reportNxAddCommand(packageName: string, version: string) {
   reportCommandRunEvent('add', {
-    [getCustomDimensions().packageName]: packageName,
-    [getCustomDimensions().packageVersion]: version,
+    [customDimensions.packageName]: packageName,
+    [customDimensions.packageVersion]: version,
   });
 }
 
