@@ -569,6 +569,16 @@ async function normalizeArgsMiddleware(
     if (!templateProvided && !presetProvided) {
       const workspaceName = (argv.name as string) || (argv._[0] as string);
       writeAiOutput(buildTemplateRequiredResult(workspaceName));
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: false,
+        meta: {
+          type: 'cancel',
+          flowVariant: getFlowVariant(),
+          aiAgent: true,
+        },
+      });
       process.exit(0); // Exit 0 - JSON output has success: false, AI parses that
     }
 

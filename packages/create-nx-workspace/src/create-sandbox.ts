@@ -47,10 +47,29 @@ export async function createSandbox(packageManager: PackageManager) {
     installSpinner.succeed();
   } catch (e) {
     installSpinner.fail();
+    const logFile = e instanceof CnwError ? e.logFile : undefined;
+    const exitCode = e instanceof CnwError ? e.exitCode : undefined;
     const message = e instanceof Error ? e.message : String(e);
+
+    const lines = [`Failed to install dependencies`];
+    if (message?.trim()) {
+      lines.push(message.trim());
+    }
+    if (exitCode != null) {
+      lines.push(`Exit code: ${exitCode}`);
+    }
+    if (logFile) {
+      lines.push(`Log file: ${logFile}`);
+    }
+    lines.push(
+      `\nPlease verify that "${install}" runs successfully in a temporary directory.`
+    );
+
     throw new CnwError(
       'SANDBOX_FAILED',
-      `Failed to install dependencies: ${message}`
+      lines.join('\n'),
+      logFile,
+      exitCode ?? undefined
     );
   } finally {
     installSpinner.stop();
