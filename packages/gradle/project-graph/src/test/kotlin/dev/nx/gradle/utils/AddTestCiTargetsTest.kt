@@ -160,11 +160,12 @@ class AddTestCiTargetsTest {
     val ciTarget = targets["ci--DependentTest"]
     assertTrue(ciTarget != null, "CI target should be created")
 
-    val dependsOn = ciTarget?.get("dependsOn") as? List<*>
+    @Suppress("UNCHECKED_CAST")
+    val dependsOn = ciTarget?.get("dependsOn") as? List<Map<String, Any>>
     assertTrue(dependsOn != null, "dependsOn should be present when test task has dependencies")
     assertTrue(dependsOn!!.isNotEmpty(), "dependsOn should not be empty")
     assertTrue(
-        dependsOn.any { it.toString().contains("compileTestKotlin") },
+        dependsOn.any { it["target"] == "compileTestKotlin" },
         "dependsOn should contain the dependency task name")
   }
 

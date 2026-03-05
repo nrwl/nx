@@ -82,7 +82,9 @@ class ProcessTaskUtilsTest {
     val dependsOn = getDependsOnForTask(null, taskA, dependencies)
 
     assertNotNull(dependsOn)
-    assertTrue(dependsOn!!.contains("myApp:taskB"))
+    assertTrue(
+        dependsOn!!.any { it["target"] == "taskB" },
+        "Expected dependsOn entry with target 'taskB' but got $dependsOn")
   }
 
   @Test
@@ -273,11 +275,19 @@ class ProcessTaskUtilsTest {
       assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
       assertEquals(2, resultWithPreComputed.size)
 
-      // Should contain both dependencies
-      assertTrue(resultWithPreComputed.contains("test:taskB"))
-      assertTrue(resultWithPreComputed.contains("test:taskC"))
-      assertTrue(resultWithoutPreComputed.contains("test:taskB"))
-      assertTrue(resultWithoutPreComputed.contains("test:taskC"))
+      // Should contain both dependencies as object entries with target names
+      assertTrue(
+          resultWithPreComputed.any { it["target"] == "taskB" },
+          "Expected target 'taskB' in $resultWithPreComputed")
+      assertTrue(
+          resultWithPreComputed.any { it["target"] == "taskC" },
+          "Expected target 'taskC' in $resultWithPreComputed")
+      assertTrue(
+          resultWithoutPreComputed.any { it["target"] == "taskB" },
+          "Expected target 'taskB' in $resultWithoutPreComputed")
+      assertTrue(
+          resultWithoutPreComputed.any { it["target"] == "taskC" },
+          "Expected target 'taskC' in $resultWithoutPreComputed")
     }
 
     @Test
@@ -478,11 +488,11 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["metadata"])
     assertNotNull(result["options"])
 
-    // Verify dependsOn is populated
-    val dependsOn = result["dependsOn"] as? List<*>
+    // Verify dependsOn is populated with object format
+    @Suppress("UNCHECKED_CAST") val dependsOn = result["dependsOn"] as? List<Map<String, Any>>
     assertNotNull(dependsOn)
     assertEquals(1, dependsOn!!.size)
-    assertEquals("testProject:compile", dependsOn[0])
+    assertEquals("compile", dependsOn[0]["target"])
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
@@ -633,9 +643,12 @@ class ProcessTaskUtilsTest {
         val dependsOn = getDependsOnForTask(null, appTask, dependencies)
 
         assertNotNull(dependsOn)
-        assertTrue(
-            dependsOn!!.contains(":lib:compileJava"),
-            "Expected ':lib:compileJava' but got $dependsOn")
+        val libEntry = dependsOn!!.find { it["target"] == "compileJava" }
+        assertNotNull(
+            libEntry, "Expected dependsOn entry with target 'compileJava' but got $dependsOn")
+        @Suppress("UNCHECKED_CAST") val projects = libEntry!!["projects"] as? List<String>
+        assertNotNull(projects, "Expected 'projects' field for cross-project dependency")
+        assertTrue(projects!!.contains(":lib"), "Expected project ':lib' in $projects")
       } finally {
         rootDir.deleteRecursively()
       }

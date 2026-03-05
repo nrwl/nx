@@ -123,6 +123,8 @@ fun processTargetsForProject(
   // with Kotlin Multiplatform which adds tasks dynamically
   val testTasks = project.tasks.withType(Test::class.java).toList()
   val hasCiTestTarget = ciTestTargetBaseName != null && testTasks.isNotEmpty() && atomized
+  // Pre-index test tasks by prefixed name for O(1) lookup during dependency replacement
+  val testTasksByPrefixedName = testTasks.associateBy { applyPrefix(it.name) }
 
   logger.info(
       "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
@@ -205,25 +207,30 @@ fun processTargetsForProject(
         val ciCheckTargetName =
             applyPrefix(targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci"))
         if (task.name == "check") {
+          @Suppress("UNCHECKED_CAST")
           val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dependency ->
-                val dependsOn = dependency.toString()
+              (target["dependsOn"] as? List<Map<String, Any>>)?.map { dependency ->
+                val depTarget = dependency["target"] as? String ?: return@map dependency
 
-                when {
-                  hasCiTestTarget && dependsOn == "$nxProjectName:$testTargetName" -> {
-                    "$nxProjectName:$ciTestTargetBaseName"
-                  }
-                  hasCiTestTarget && dependsOn.startsWith("$nxProjectName:") -> {
-                    val taskName = dependsOn.removePrefix("$nxProjectName:")
-                    // Check if it's a test task that's not the default test target
-                    if (testTasks.any { it.name == taskName } &&
-                        applyPrefix(taskName) != testTargetName) {
-                      "$nxProjectName:$ciTestTargetBaseName-$taskName"
-                    } else {
-                      dependency
+                val newTargetName =
+                    when {
+                      hasCiTestTarget && depTarget == testTargetName -> ciTestTargetBaseName
+                      hasCiTestTarget -> {
+                        // depTarget is already prefixed, so use pre-indexed lookup
+                        val matchingTask = testTasksByPrefixedName[depTarget]
+                        if (matchingTask != null && depTarget != testTargetName) {
+                          "$ciTestTargetBaseName-${matchingTask.name}"
+                        } else {
+                          null
+                        }
+                      }
+                      else -> null
                     }
-                  }
-                  else -> dependency
+
+                if (newTargetName != null) {
+                  dependency.toMutableMap().apply { this["target"] = newTargetName }
+                } else {
+                  dependency
                 }
               } ?: emptyList()
 
@@ -242,11 +249,12 @@ fun processTargetsForProject(
         if (task.name == "build") {
           val ciBuildTargetName =
               applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
+          @Suppress("UNCHECKED_CAST")
           val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dep ->
-                val dependsOn = dep.toString()
-                if (dependsOn == "$nxProjectName:${applyPrefix("check")}") {
-                  "$nxProjectName:$ciCheckTargetName"
+              (target["dependsOn"] as? List<Map<String, Any>>)?.map { dep ->
+                val depTarget = dep["target"] as? String ?: return@map dep
+                if (depTarget == applyPrefix("check")) {
+                  dep.toMutableMap().apply { this["target"] = ciCheckTargetName }
                 } else {
                   dep
                 }

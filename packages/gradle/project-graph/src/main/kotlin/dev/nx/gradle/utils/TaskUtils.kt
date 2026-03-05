@@ -273,8 +273,15 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @param targetNamePrefix optional prefix to apply to all target names
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
+private data class DepEntry(
+    val projectName: String,
+    val targetName: String,
+    val isSameProject: Boolean
+)
+
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
-internal val taskDependencyCache = ThreadLocal.withInitial { mutableMapOf<String, List<String>?>() }
+internal val taskDependencyCache =
+    ThreadLocal.withInitial { mutableMapOf<String, List<Map<String, Any>>?>() }
 
 fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
@@ -282,7 +289,7 @@ fun getDependsOnForTask(
     dependencies: MutableSet<Dependency>? = null,
     targetNameOverrides: Map<String, String> = emptyMap(),
     targetNamePrefix: String = ""
-): List<String>? {
+): List<Map<String, Any>>? {
 
   // Helper function to apply prefix to target names
   fun applyPrefix(name: String): String =
@@ -297,35 +304,58 @@ fun getDependsOnForTask(
     return cache[taskKey]
   }
 
-  fun mapTasksToNames(tasks: Collection<Task>): List<String> {
-    return tasks.mapNotNull { depTask ->
-      val depProject = depTask.project
-      val taskProject = task.project
+  fun mapTasksToObjects(tasks: Collection<Task>): List<Map<String, Any>> {
+    val taskProject = task.project
 
-      if (task.name != "buildDependents" &&
-          depProject != taskProject &&
-          dependencies != null &&
-          taskProject.buildFile.exists()) {
-        dependencies.add(
-            Dependency(
-                taskProject.projectDir.path,
-                depProject.projectDir.path,
-                taskProject.buildFile.path))
-      }
+    val depEntries =
+        tasks.mapNotNull { depTask ->
+          val depProject = depTask.project
 
-      if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
-        val taskName =
-            applyPrefix(
-                if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-                  targetNameOverrides["testTargetName"]!!
-                } else {
-                  depTask.name
-                })
-        "${getNxProjectName(depProject)}:${taskName}"
-      } else {
-        null
-      }
-    }
+          if (task.name != "buildDependents" &&
+              depProject != taskProject &&
+              dependencies != null &&
+              taskProject.buildFile.exists()) {
+            dependencies.add(
+                Dependency(
+                    taskProject.projectDir.path,
+                    depProject.projectDir.path,
+                    taskProject.buildFile.path))
+          }
+
+          if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+            val targetName =
+                applyPrefix(
+                    if (depTask.name == "test" &&
+                        targetNameOverrides.containsKey("testTargetName")) {
+                      targetNameOverrides["testTargetName"]!!
+                    } else {
+                      depTask.name
+                    })
+            DepEntry(getNxProjectName(depProject), targetName, depProject == taskProject)
+          } else {
+            null
+          }
+        }
+
+    val result = mutableListOf<Map<String, Any>>()
+    val grouped = depEntries.groupBy { it.isSameProject }
+
+    // Same-project dependencies: one entry per target
+    grouped[true]
+        ?.map { it.targetName }
+        ?.distinct()
+        ?.forEach { targetName -> result.add(mapOf("target" to targetName)) }
+
+    // Cross-project dependencies: group by target, collect projects into array
+    grouped[false]
+        ?.groupBy { it.targetName }
+        ?.forEach { (targetName, entries) ->
+          result.add(
+              mapOf(
+                  "target" to targetName, "projects" to entries.map { it.projectName }.distinct()))
+        }
+
+    return result
   }
 
   // Add a placeholder to prevent infinite recursion only when not using pre-computed dependencies
@@ -336,7 +366,7 @@ fun getDependsOnForTask(
       val combinedDependsOn = getDependsOnTask(task)
       val result =
           if (combinedDependsOn.isNotEmpty()) {
-            mapTasksToNames(combinedDependsOn)
+            mapTasksToObjects(combinedDependsOn)
           } else {
             null
           }
@@ -358,7 +388,7 @@ fun getDependsOnForTask(
     return try {
       val result =
           if (dependsOnTasks.isNotEmpty()) {
-            mapTasksToNames(dependsOnTasks)
+            mapTasksToObjects(dependsOnTasks)
           } else {
             null
           }

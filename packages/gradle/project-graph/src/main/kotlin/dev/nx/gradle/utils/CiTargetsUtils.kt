@@ -23,7 +23,7 @@ fun addTestCiTargets(
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
-  val ciDependsOn = mutableListOf<Map<String, String>>()
+  val ciDependsOn = mutableListOf<Map<String, Any>>()
 
   processTestFiles(
       testFiles,
@@ -58,7 +58,7 @@ private fun processTestFiles(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    ciDependsOn: MutableList<Map<String, String>>,
+    ciDependsOn: MutableList<Map<String, Any>>,
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   testFiles
@@ -79,7 +79,7 @@ private fun processTestFiles(
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(
-              mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
+              mapOf("target" to targetName, "projects" to listOf("self"), "params" to "forward"))
         }
       }
 }
@@ -143,7 +143,7 @@ private fun ensureParentCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    ciDependsOn: List<Map<String, String>>,
+    ciDependsOn: List<Map<String, Any>>,
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {
