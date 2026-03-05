@@ -3,6 +3,7 @@ import * as isCi from './is-ci';
 import * as enquirer from 'enquirer';
 import * as fileUtils from './fileutils';
 import * as nxJson from '../config/nx-json';
+import * as outputModule from './output';
 
 describe('analytics-prompt', () => {
   let originalStdinIsTTY: boolean | undefined;
@@ -13,9 +14,15 @@ describe('analytics-prompt', () => {
   let mockReadNxJson = jest.spyOn(nxJson, 'readNxJson');
   let mockReadJsonFile = jest.spyOn(fileUtils, 'readJsonFile');
   let mockWriteJsonFile = jest.spyOn(fileUtils, 'writeJsonFile');
+  let mockOutputLog = jest.spyOn(outputModule.output, 'log');
+  let mockOutputSuccess = jest.spyOn(outputModule.output, 'success');
 
   beforeEach(() => {
     jest.resetAllMocks();
+
+    // Prevent output from writing to stdout during tests
+    mockOutputLog.mockImplementation(() => {});
+    mockOutputSuccess.mockImplementation(() => {});
 
     // Save original TTY values
     originalStdinIsTTY = process.stdin.isTTY;
