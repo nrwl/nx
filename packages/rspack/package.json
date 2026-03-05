@@ -61,7 +61,7 @@
     "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "^0.21.2",
+    "@module-federation/enhanced": "^2.1.0",
     "@module-federation/node": "^2.7.21"
   },
   "nx-migrations": {
