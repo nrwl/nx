@@ -114,7 +114,8 @@ node_modules/
 # Upstream docs local configuration (machine-specific)
 .upstreamdocs.local.json
 
-astro-docs/.netlify
+# Netlify build artifacts
+.netlify
 
 coverage
 
