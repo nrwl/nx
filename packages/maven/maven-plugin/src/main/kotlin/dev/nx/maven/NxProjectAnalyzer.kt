@@ -51,8 +51,14 @@ class NxProjectAnalyzer(
     val configCreationTime = System.currentTimeMillis() - configCreationStart
     log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
+    // Build list of external dep node names for target inputs
+    val externalDepNames = project.artifacts
+      .filter { !coordinatesMap.containsKey("${it.groupId}:${it.artifactId}") }
+      .map { "maven:${it.groupId}:${it.artifactId}" }
+      .distinct()
+
     val targetAnalysisStart = System.currentTimeMillis()
-    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project)
+    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project, externalDepNames)
     val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
     log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
@@ -105,6 +111,22 @@ class NxProjectAnalyzer(
       }
     }
 
+    // Collect external dependencies (not in coordinatesMap)
+    // Use project.artifacts (includes transitive deps) instead of project.dependencies (direct only)
+    val externalDependencies = project.artifacts
+      .filter { artifact ->
+        !coordinatesMap.containsKey("${artifact.groupId}:${artifact.artifactId}")
+      }
+      .map { artifact ->
+        ExternalMavenDependency(
+          groupId = artifact.groupId,
+          artifactId = artifact.artifactId,
+          version = artifact.version,
+          scope = artifact.scope,
+          artifactFile = artifact.file
+        )
+      }
+
     val dependenciesJson = dependencies.map { nxDependency ->
       val dependency = JsonObject()
 
@@ -115,7 +137,7 @@ class NxProjectAnalyzer(
       dependency
     }
 
-    return ProjectAnalysis(project.file, root, nxProject, dependenciesJson)
+    return ProjectAnalysis(project.file, root, nxProject, dependenciesJson, externalDependencies)
   }
 
   private fun determineProjectType(packaging: String): String {
@@ -128,7 +150,21 @@ class NxProjectAnalyzer(
   }
 }
 
-data class ProjectAnalysis(val pomFile: File, val root: String, val project: JsonElement, val dependencies: List<JsonElement>)
+data class ProjectAnalysis(
+  val pomFile: File,
+  val root: String,
+  val project: JsonElement,
+  val dependencies: List<JsonElement>,
+  val externalDependencies: List<ExternalMavenDependency>
+)
+
+data class ExternalMavenDependency(
+  val groupId: String,
+  val artifactId: String,
+  val version: String?,
+  val scope: String?,
+  val artifactFile: File?
+)
 
 data class NxDependency(val type: NxDependencyType, val source: String, val target: String, val sourceFile: File)
 
