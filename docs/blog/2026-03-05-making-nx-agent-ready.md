@@ -47,7 +47,7 @@ A surprising shortcoming of agents currently is their inability to deal with dyn
 
 Commands like `nx import` and `nx init` relied heavily on terminal prompts. Now, when we detect they are being called from inside an AI agent, our commands emit **JSON-formatted messages** for key events: progress updates, required inputs, errors, and completion with suggested next steps. This gives agents structured data they can easily parse and act on.
 
-``` {% command="npx nx import --sourceRepository=../monorepo-1" %}
+```{% command="npx nx import --sourceRepository=../monorepo-1" %}
 {"stage":"starting","message":"Importing repository..."}
 {
   "stage":            "needs_input",
