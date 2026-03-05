@@ -105,6 +105,7 @@ export class PluginCache<T> {
    * 3. On total serialization failure (even after eviction),
    *    write an empty cache so the file is valid
    */
+
   writeToDisk(cachePath: string): void {
     mkdirSync(dirname(cachePath), { recursive: true });
 
@@ -119,6 +120,9 @@ export class PluginCache<T> {
       // RangeError → string too large, recoverable via eviction
       if (e instanceof RangeError) {
         const reduced = this.evictOldestHalf();
+        // Update in-memory state
+        this.entries = reduced.entries;
+        this.accessOrder = new Set(reduced.accessOrder);
         try {
           content = JSON.stringify(reduced);
         } catch {
@@ -141,6 +145,7 @@ export class PluginCache<T> {
       tryRemoveFile(cachePath);
     }
   }
+
 
   /**
    * Evicts the oldest 50% of entries (front of the access-order queue)
