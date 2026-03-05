@@ -1,12 +1,14 @@
 import { createHash } from 'crypto';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { output } from './output';
 import { isCI } from './is-ci';
 import { readNxJson } from '../config/nx-json';
 import { writeJsonFile } from './fileutils';
 import { workspaceRoot } from './workspace-root';
+import { formatFilesWithPrettierIfAvailable } from '../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 /**
  * Prompts user for analytics preference if not already set in nx.json.
@@ -31,7 +33,7 @@ export async function ensureAnalyticsPreferenceSet(): Promise<void> {
 
   const analyticsEnabled = await promptForAnalyticsPreference();
 
-  saveAnalyticsPreference(analyticsEnabled);
+  await saveAnalyticsPreference(analyticsEnabled);
 }
 
 export async function promptForAnalyticsPreference(): Promise<boolean> {
@@ -59,12 +61,25 @@ export async function promptForAnalyticsPreference(): Promise<boolean> {
   }
 }
 
-function saveAnalyticsPreference(enabled: boolean): void {
+async function saveAnalyticsPreference(enabled: boolean): Promise<void> {
   try {
     const nxJsonPath = join(workspaceRoot, 'nx.json');
     const nxJson = readNxJson(workspaceRoot);
     nxJson.analytics = enabled;
-    writeJsonFile(nxJsonPath, nxJson);
+
+    const formattedContent = await formatFilesWithPrettierIfAvailable(
+      [{ path: nxJsonPath, content: JSON.stringify(nxJson) }],
+      workspaceRoot,
+      { silent: true }
+    );
+
+    if (formattedContent.has(nxJsonPath)) {
+      writeFileSync(nxJsonPath, formattedContent.get(nxJsonPath)!, {
+        encoding: 'utf-8',
+      });
+    } else {
+      writeJsonFile(nxJsonPath, nxJson);
+    }
 
     if (enabled) {
       output.success({ title: 'Thank you for helping improve Nx!' });
