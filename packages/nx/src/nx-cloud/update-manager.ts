@@ -59,11 +59,14 @@ export interface NxCloudClient {
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
   getRemoteCache: () => RemoteCacheV2;
 }
-export async function verifyOrUpdateNxCloudClient(
-  options: CloudTaskRunnerOptions
-): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
+export async function verifyOrUpdateNxCloudClient(options?: {
+  url?: string;
+  customProxyConfigPath?: string;
+}): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
   debugLog('Verifying current cloud bundle');
   const currentBundle = getLatestInstalledRunnerBundle();
+  const apiUrl =
+    process.env.NX_CLOUD_API || options?.url || 'https://cloud.nx.app';
 
   if (shouldVerifyInstalledRunnerBundle(currentBundle)) {
     const axios = createApiAxiosInstance(options);
@@ -73,8 +76,8 @@ export async function verifyOrUpdateNxCloudClient(
       verifyBundleResponse = await verifyCurrentBundle(axios, currentBundle);
     } catch (e: any) {
       // Enterprise image compatibility, to be removed
-      if (e.message === 'Request failed with status code 404' && options.url) {
-        throw new NxCloudEnterpriseOutdatedError(options.url);
+      if (e.message === 'Request failed with status code 404' && apiUrl) {
+        throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
       debugLog(
@@ -88,12 +91,12 @@ export async function verifyOrUpdateNxCloudClient(
       }
 
       if (currentBundle.version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
-        throw new NxCloudEnterpriseOutdatedError(options.url);
+        throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
       const nxCloudClient = require(currentBundle.fullPath);
       if (nxCloudClient.commands === undefined) {
-        throw new NxCloudEnterpriseOutdatedError(options.url);
+        throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
       return {
@@ -120,7 +123,7 @@ export async function verifyOrUpdateNxCloudClient(
     );
 
     if (version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
-      throw new NxCloudEnterpriseOutdatedError(options.url);
+      throw new NxCloudEnterpriseOutdatedError(apiUrl);
     }
 
     const fullPath = await downloadAndExtractClientBundle(
@@ -135,7 +138,7 @@ export async function verifyOrUpdateNxCloudClient(
     const nxCloudClient = require(fullPath);
 
     if (nxCloudClient.commands === undefined) {
-      throw new NxCloudEnterpriseOutdatedError(options.url);
+      throw new NxCloudEnterpriseOutdatedError(apiUrl);
     }
     return { version, nxCloudClient };
   }
