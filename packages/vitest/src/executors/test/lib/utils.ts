@@ -3,10 +3,11 @@ import {
   joinPathFragments,
   logger,
   stripIndents,
+  workspaceRoot,
 } from '@nx/devkit';
 import { VitestExecutorOptions } from '../schema';
 import { normalizeViteConfigFilePath } from '../../../utils/options-utils';
-import { relative } from 'path';
+import { isAbsolute, relative, resolve } from 'path';
 import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
@@ -100,9 +101,24 @@ export async function getOptions(
     reporters: resolved?.config?.['test']?.reporters,
     coverage: {
       ...(coverage ?? {}),
-      ...(reportsDirectory && { reportsDirectory }),
+      ...(reportsDirectory && {
+        reportsDirectory: resolveReportsDirectory(reportsDirectory),
+      }),
     },
   };
+}
+
+/**
+ * Nx's resolveNxTokensInOptions strips {workspaceRoot}/ from option values,
+ * leaving a workspace-root-relative path. However, vitest resolves
+ * reportsDirectory relative to the project root. This function converts
+ * the path to absolute so vitest resolves it correctly.
+ */
+export function resolveReportsDirectory(reportsDirectory: string): string {
+  if (isAbsolute(reportsDirectory)) {
+    return reportsDirectory;
+  }
+  return resolve(workspaceRoot, reportsDirectory);
 }
 
 export function getOptionsAsArgv(obj: Record<string, any>): string[] {
