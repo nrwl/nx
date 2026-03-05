@@ -151,7 +151,7 @@ describe('Nx Affected and Graph Tests', () => {
 
       const failedTests = runCLI(
         `affected:test --files="libs/${mylib}/src/index.ts"`,
-        { silenceError: true }
+        { silenceError: true, redirectStderr: true }
       );
       expect(failedTests).toContain(mylib);
       expect(failedTests).toContain(myapp);

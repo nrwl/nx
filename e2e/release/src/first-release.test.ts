@@ -312,6 +312,7 @@ describe('nx release first run', () => {
 
       const releaseOutput3 = runCLI(`release patch --verbose -y -d`, {
         silenceError: true,
+        redirectStderr: true,
       });
 
       expect(
