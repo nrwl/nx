@@ -3,6 +3,7 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.*
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -126,7 +127,7 @@ class AddTestCiTargetsTest {
   }
 
   @Test
-  fun `should include dependsOn when test task has dependencies`() {
+  fun `should not include same-project dependsOn for CI targets`() {
     File(projectRoot, "build.gradle").apply { writeText("// test build file") }
 
     val testFile =
@@ -160,12 +161,15 @@ class AddTestCiTargetsTest {
     val ciTarget = targets["ci--DependentTest"]
     assertTrue(ciTarget != null, "CI target should be created")
 
+    // Same-project dependencies should be included as object format without projects field
     val dependsOn = ciTarget?.get("dependsOn") as? List<*>
-    assertTrue(dependsOn != null, "dependsOn should be present when test task has dependencies")
-    assertTrue(dependsOn!!.isNotEmpty(), "dependsOn should not be empty")
+    assertNotNull(dependsOn, "Same-project dependsOn should be present")
     assertTrue(
-        dependsOn.any { it.toString().contains("compileTestKotlin") },
-        "dependsOn should contain the dependency task name")
+        dependsOn!!.any { (it as? DependsOnEntry)?.target == "compileTestKotlin" },
+        "Expected dependsOn to contain 'compileTestKotlin', got $dependsOn")
+    assertTrue(
+        dependsOn.all { (it as? DependsOnEntry)?.projects == null },
+        "Same-project deps should not have projects field")
   }
 
   @Test

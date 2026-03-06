@@ -4,6 +4,36 @@ import {
 } from 'nx/src/config/project-graph';
 
 /**
+ * Resolves a dependsOn entry to an Nx task ID (project:target format).
+ * Handles both string format ("project:target") and object format
+ * ({ target: "name", projects?: ["proj1"] }).
+ * For same-project object deps (no projects field), uses the owning project name.
+ */
+function resolveDepToTaskId(
+  dep: string | { target?: string; projects?: string | string[] },
+  owningProject: string
+): string | null {
+  if (typeof dep === 'string') {
+    return dep;
+  }
+  const target = dep?.target;
+  if (!target) {
+    return null;
+  }
+  if (dep.projects) {
+    const projectList = Array.isArray(dep.projects)
+      ? dep.projects
+      : [dep.projects];
+    // For cross-project deps, use the first project
+    return projectList[0] !== 'self'
+      ? `${projectList[0]}:${target}`
+      : `${owningProject}:${target}`;
+  }
+  // Same-project dep (no projects field)
+  return `${owningProject}:${target}`;
+}
+
+/**
  * Returns Gradle CLI arguments to exclude dependent tasks
  * that are not part of the current execution set.
  *
@@ -29,9 +59,9 @@ export function getExcludeTasks(
     const taskDeps = nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
 
     for (const dep of taskDeps) {
-      const taskId = typeof dep === 'string' ? dep : dep?.target;
-      if (taskId && !runningTaskIds.has(taskId)) {
-        const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
+      const depTaskId = resolveDepToTaskId(dep, project);
+      if (depTaskId && !runningTaskIds.has(depTaskId)) {
+        const gradleTaskName = getGradleTaskNameWithNxTaskId(depTaskId, nodes);
         if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
           excludes.add(gradleTaskName);
         }
@@ -71,7 +101,7 @@ export function getAllDependsOn(
           ?.dependsOn ?? [];
 
       for (const dep of directDependencies) {
-        const depTaskId = typeof dep === 'string' ? dep : dep?.target;
+        const depTaskId = resolveDepToTaskId(dep, currentProjectName);
         if (depTaskId && !allDependsOn.has(depTaskId)) {
           stack.push(depTaskId);
         }
