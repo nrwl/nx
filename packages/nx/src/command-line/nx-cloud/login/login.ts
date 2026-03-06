@@ -1,6 +1,4 @@
-import { readNxJson } from '../../../config/nx-json';
-import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
-import { executeNxCloudCommand, warnNotConnectedToCloud } from '../utils';
+import { executeNxCloudCommand } from '../utils';
 
 export interface LoginArgs {
   nxCloudUrl?: string;
@@ -8,15 +6,6 @@ export interface LoginArgs {
 }
 
 export function loginHandler(args: LoginArgs): Promise<number> {
-  try {
-    if (!isNxCloudUsed(readNxJson())) {
-      warnNotConnectedToCloud();
-      return Promise.resolve(0);
-    }
-  } catch {
-    // Not in an Nx workspace — proceed with login anyway
-  }
-
   if (args.nxCloudUrl) {
     process.env.NX_CLOUD_API = args.nxCloudUrl;
   }
