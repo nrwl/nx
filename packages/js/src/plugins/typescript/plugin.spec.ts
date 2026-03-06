@@ -1706,6 +1706,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                       "{projectRoot}/cypress/dist/**/*.d.ts",
                       "{projectRoot}/cypress/dist/tsconfig.tsbuildinfo",
                     ],
@@ -1841,6 +1843,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -2476,7 +2480,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/**/*.d.ts",
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.tsbuildinfo",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.spec.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/**/*.d.ts",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/tsconfig.tsbuildinfo",
                     ],
