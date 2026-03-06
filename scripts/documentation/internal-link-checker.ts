@@ -145,7 +145,7 @@ const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
 
 // Read Next.js sitemap URLs
 const nextjsSitemapUrls = readSiteMapIndex(
-  join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
+  join(workspaceRoot, 'nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 console.log(nextjsSitemapUrls.length + ' URLs found in Next.js sitemap');

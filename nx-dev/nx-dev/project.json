@@ -4,28 +4,43 @@
   "sourceRoot": "nx-dev/nx-dev",
   "projectType": "application",
   "targets": {
+    "next:build": {
+      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/lib/banner.json",
+        { "env": "NEXT_PUBLIC_ASTRO_URL" }
+      ]
+    },
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base"
-        }
-      ],
+      "dependsOn": ["copy-docs", "prebuild-banner"],
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["nx run nx-dev:sitemap"],
+        "commands": [
+          { "command": "next build", "description": "Build Next.js app" },
+          {
+            "command": "pnpm next-sitemap --config ./next-sitemap.config.js && node ./scripts/patch-sitemap-index.mjs",
+            "description": "Generate sitemap"
+          }
+        ],
+        "cwd": "nx-dev/nx-dev",
         "parallel": false
       },
       "inputs": [
         "production",
         "^production",
-        { "env": "NEXT_PUBLIC_ASTRO_URL" }
+        "{projectRoot}/lib/banner.json",
+        "{projectRoot}/next-sitemap.config.js",
+        { "env": "NEXT_PUBLIC_ASTRO_URL" },
+        { "env": "NX_DEV_URL" },
+        { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
-      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"],
-      "configurations": {
-        "netlify": {
-          "outputs": ["{workspaceRoot}/nx-dev/nx-dev/.next"]
-        }
-      }
+      "outputs": [
+        "{workspaceRoot}/nx-dev/nx-dev/.next",
+        "{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml",
+        "{workspaceRoot}/nx-dev/nx-dev/public/robots.txt"
+      ]
     },
     "check-links": {
       "cache": true,
@@ -36,7 +51,7 @@
       },
       "inputs": [
         "{workspaceRoot}/docs/**/*",
-        "{workspaceRoot}/dist/nx-dev/nx-dev/public/sitemap*.xml",
+        "{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml",
         "{workspaceRoot}/astro-docs/dist/sitemap*.xml",
         "{workspaceRoot}/scripts/tsconfig.scripts.json",
         "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
@@ -54,7 +69,7 @@
         { "env": "NX_DEV_URL" },
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
-      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
+      "outputs": ["{workspaceRoot}/nx-dev/nx-dev/public"],
       "options": {
         "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js && node ./nx-dev/nx-dev/scripts/patch-sitemap-index.mjs"
       }
@@ -71,30 +86,17 @@
         }
       }
     },
-    "build-base": {
-      "parallelism": false,
-      "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs", "prebuild-banner"],
-      "inputs": ["production", "^production", "{projectRoot}/lib/banner.json"],
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "root": "nx-dev/nx-dev",
-        "outputPath": "dist/nx-dev/nx-dev"
-      },
-      "configurations": {
-        "development": {
-          "outputPath": "nx-dev/nx-dev"
-        },
-        "production": {},
-        "netlify": {
-          "outputPath": "nx-dev/nx-dev"
-        }
-      }
-    },
     "copy-docs": {
       "inputs": ["{workspaceRoot}/docs/**/*"],
       "outputs": ["{projectRoot}/public/documentation"],
       "command": "node ./copy-docs.js",
+      "options": {
+        "cwd": "nx-dev/nx-dev"
+      }
+    },
+    "serve": {
+      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "command": "next dev",
       "options": {
         "cwd": "nx-dev/nx-dev"
       }
@@ -110,27 +112,11 @@
       }
     },
     "start": {
-      "dependsOn": ["build-base"],
-      "command": "nx run nx-dev:serve:production"
-    },
-    "serve": {
-      "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "dependsOn": ["build"],
+      "command": "next start",
       "options": {
-        "buildTarget": "nx-dev:build-base",
-        "dev": true
-      },
-      "configurations": {
-        "production": {
-          "buildTarget": "nx-dev:build-base:production",
-          "dev": false
-        },
-        "development": {
-          "buildTarget": "nx-dev:build-base:development",
-          "dev": true
-        }
-      },
-      "defaultConfiguration": "development"
+        "cwd": "nx-dev/nx-dev"
+      }
     },
     "deploy-build": {
       "executor": "nx:run-commands",
@@ -152,7 +138,7 @@
         "netlify": {
           "commands": [
             {
-              "command": "nx run nx-dev:build-base:netlify && cp nx-dev/nx-dev/_redirects nx-dev/nx-dev/.next/_redirects && nx run nx-dev:sitemap",
+              "command": "nx run nx-dev:build && cp nx-dev/nx-dev/_redirects nx-dev/nx-dev/.next/_redirects",
               "description": "NextJs build for Netlify"
             }
           ]
