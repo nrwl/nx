@@ -272,7 +272,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
         execSync('yarn --version', { env, windowsHide: false })
           .toString()
           .trim()
-      ) < 2;
+      ) === 1;
   } catch {
     // This would fail if yarn is not installed which is okay
     return () => {};
