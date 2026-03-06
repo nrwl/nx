@@ -87,7 +87,7 @@ describe('prefix-reports-directory-with-project-root', () => {
       ).toBe('{projectRoot}/reports/ci/my-lib');
     });
 
-    it('should not modify reportsDirectory that already has {projectRoot}', () => {
+    it('should not modify reportsDirectory that starts with {projectRoot}', () => {
       addProjectConfiguration(tree, 'my-lib', {
         root: 'libs/my-lib',
         targets: {
@@ -105,6 +105,27 @@ describe('prefix-reports-directory-with-project-root', () => {
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.targets.test.options.reportsDirectory).toBe(
         '{projectRoot}/coverage'
+      );
+    });
+
+    it('should migrate reportsDirectory that contains {projectRoot} but does not start with it', () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'libs/my-lib',
+        targets: {
+          test: {
+            executor: '@nx/vitest:test',
+            options: {
+              reportsDirectory: 'coverage/{projectRoot}',
+            },
+          },
+        },
+      });
+
+      prefixReportsDirectoryWithProjectRoot(tree);
+
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.targets.test.options.reportsDirectory).toBe(
+        '{projectRoot}/coverage/{projectRoot}'
       );
     });
 

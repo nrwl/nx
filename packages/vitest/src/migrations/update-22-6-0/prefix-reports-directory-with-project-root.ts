@@ -133,8 +133,8 @@ function needsMigration(reportsDirectory: string | undefined): boolean {
   if (isAbsolute(reportsDirectory)) {
     return false;
   }
-  // Already has {projectRoot} token
-  if (reportsDirectory.includes('{projectRoot}')) {
+  // Already starts with {projectRoot}
+  if (reportsDirectory.startsWith('{projectRoot}')) {
     return false;
   }
   return true;
