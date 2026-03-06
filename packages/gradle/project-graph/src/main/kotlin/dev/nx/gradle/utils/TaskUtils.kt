@@ -291,10 +291,6 @@ fun getDependsOnForTask(
     targetNamePrefix: String = ""
 ): List<Map<String, Any>>? {
 
-  // Helper function to apply prefix to target names
-  fun applyPrefix(name: String): String =
-      if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$name" else name
-
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
   val cache = taskDependencyCache.get()
@@ -323,14 +319,7 @@ fun getDependsOnForTask(
           }
 
           if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
-            val targetName =
-                applyPrefix(
-                    if (depTask.name == "test" &&
-                        targetNameOverrides.containsKey("testTargetName")) {
-                      targetNameOverrides["testTargetName"]!!
-                    } else {
-                      depTask.name
-                    })
+            val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
             DepEntry(getNxProjectName(depProject), targetName, depProject == taskProject)
           } else {
             null
