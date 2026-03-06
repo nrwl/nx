@@ -107,6 +107,8 @@
       "@nx/eslint",
       "@nx/workspace",
       "@nx/angular",
+      "@nx/angular-rspack",
+      "@nx/angular-rspack-compiler",
       "@nx/jest",
       "@nx/cypress",
       "@nx/detox",
