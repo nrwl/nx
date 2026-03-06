@@ -87,6 +87,10 @@ export enum DependencyType {
    * Implicit dependencies are inferred
    */
   implicit = 'implicit',
+  /**
+   * Type-only dependencies are used for TypeScript type information and do not exist at runtime
+   */
+  type = 'type',
 }
 
 /**
