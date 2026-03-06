@@ -1,7 +1,5 @@
-import {
-  ConfigurationResult,
-  ConfigurationSourceMaps,
-} from './utils/project-configuration-utils';
+import { ConfigurationResult } from './utils/project-configuration-utils';
+import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraph } from '../config/project-graph';
 import { CreateNodesFunctionV2 } from './plugins/public-api';
