@@ -302,7 +302,6 @@
       },
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
-    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {
