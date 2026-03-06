@@ -81,9 +81,12 @@ class ProcessTaskUtilsTest {
     val dependencies = mutableSetOf<Dependency>()
     val dependsOn = getDependsOnForTask(null, taskA, dependencies)
 
-    // Same-project dependencies are not included in dependsOn;
-    // Gradle handles same-project task ordering internally.
-    assertNull(dependsOn)
+    // Same-project dependencies use object format without projects field
+    assertNotNull(dependsOn, "Same-project dependsOn should be present")
+    assertEquals(1, dependsOn!!.size)
+    assertEquals("taskB", dependsOn[0]["target"])
+    assertFalse(
+        dependsOn[0].containsKey("projects"), "Same-project deps should not have projects field")
   }
 
   @Test
@@ -268,10 +271,15 @@ class ProcessTaskUtilsTest {
       val dependencies2 = mutableSetOf<Dependency>()
       val resultWithoutPreComputed = getDependsOnForTask(null, taskA, dependencies2)
 
-      // Same-project dependencies are not included in dependsOn;
-      // Gradle handles same-project task ordering internally.
-      assertNull(resultWithPreComputed)
-      assertNull(resultWithoutPreComputed)
+      // Same-project dependencies use object format without projects field
+      assertNotNull(
+          resultWithPreComputed, "Same-project dependsOn should be present (pre-computed)")
+      assertNotNull(resultWithoutPreComputed, "Same-project dependsOn should be present (computed)")
+      assertEquals(2, resultWithPreComputed!!.size)
+      assertEquals(2, resultWithoutPreComputed!!.size)
+      assertTrue(
+          resultWithPreComputed.all { !it.containsKey("projects") },
+          "Same-project deps should not have projects field")
     }
 
     @Test
@@ -472,8 +480,12 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["metadata"])
     assertNotNull(result["options"])
 
-    // Same-project dependsOn should not be included (Gradle handles internally)
-    assertNull(result["dependsOn"])
+    // Same-project dependsOn should be present as object format without projects field
+    val dependsOn = result["dependsOn"] as? List<*>
+    assertNotNull(dependsOn, "Same-project dependsOn should be present")
+    assertTrue(
+        dependsOn!!.any { (it as? Map<*, *>)?.get("target") == "compile" },
+        "Expected dependsOn to contain 'compile', got $dependsOn")
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
@@ -630,6 +642,76 @@ class ProcessTaskUtilsTest {
         @Suppress("UNCHECKED_CAST") val projects = libEntry!!["projects"] as? List<String>
         assertNotNull(projects, "Expected 'projects' field for cross-project dependency")
         assertTrue(projects!!.contains(":lib"), "Expected project ':lib' in $projects")
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getDependsOnForTask returns multiple entries for different cross-project targets`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val libDir = java.io.File(rootDir, "lib").apply { mkdirs() }
+      val utilDir = java.io.File(rootDir, "util").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val libProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(libDir)
+                .withName("lib")
+                .build()
+        val utilProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(utilDir)
+                .withName("util")
+                .build()
+
+        java.io.File(appDir, "build.gradle").writeText("// app")
+        java.io.File(libDir, "build.gradle").writeText("// lib")
+        java.io.File(utilDir, "build.gradle").writeText("// util")
+
+        // Different targets on different projects
+        val libClasses = libProject.tasks.register("classes").get()
+        val libJar = libProject.tasks.register("jar").get()
+        val utilClasses = utilProject.tasks.register("classes").get()
+
+        // app:build depends on lib:classes, lib:jar, and util:classes
+        val appTask =
+            appProject.tasks.register("build").get().apply {
+              dependsOn(libClasses, libJar, utilClasses)
+            }
+
+        val dependencies = mutableSetOf<Dependency>()
+        val dependsOn = getDependsOnForTask(null, appTask, dependencies)
+
+        assertNotNull(dependsOn, "dependsOn should not be null")
+        // Should have 2 entries: "classes" (with lib + util) and "jar" (with lib)
+        assertEquals(2, dependsOn!!.size, "Expected 2 dependsOn entries, got $dependsOn")
+
+        val classesEntry = dependsOn.find { it["target"] == "classes" }
+        assertNotNull(classesEntry, "Expected 'classes' target in $dependsOn")
+        @Suppress("UNCHECKED_CAST") val classesProjects = classesEntry!!["projects"] as List<String>
+        assertTrue(classesProjects.contains(":lib"), "Expected :lib in classes projects")
+        assertTrue(classesProjects.contains(":util"), "Expected :util in classes projects")
+
+        val jarEntry = dependsOn.find { it["target"] == "jar" }
+        assertNotNull(jarEntry, "Expected 'jar' target in $dependsOn")
+        @Suppress("UNCHECKED_CAST") val jarProjects = jarEntry!!["projects"] as List<String>
+        assertTrue(jarProjects.contains(":lib"), "Expected :lib in jar projects")
+        assertEquals(1, jarProjects.size, "jar should only have 1 project")
       } finally {
         rootDir.deleteRecursively()
       }

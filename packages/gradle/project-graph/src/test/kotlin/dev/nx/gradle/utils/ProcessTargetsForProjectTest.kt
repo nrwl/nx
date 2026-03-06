@@ -81,7 +81,7 @@ class ProcessTargetsForProjectTest {
         gradleTargets.targets["ci-build"],
         "Expected ci-build target to be present in processed targets")
 
-    // Same-project dependsOn are not included in regular targets (Gradle handles internally)
+    // Same-project dependsOn are included as object format without projects field
     val checkTarget = gradleTargets.targets["check"]
     assertNotNull(checkTarget, "Check target should exist in processed targets")
     val buildTarget = gradleTargets.targets["build"]
@@ -188,7 +188,7 @@ class ProcessTargetsForProjectTest {
         gradleTargets.targets.containsKey("ci-build"),
         "Expected ci-build target to be present as a main target")
 
-    // Same-project dependsOn are not included in regular targets (Gradle handles internally)
+    // Same-project dependsOn are included as object format without projects field
     val checkTarget = gradleTargets.targets["check"]
     assertNotNull(checkTarget, "Check target should exist")
     val buildTarget = gradleTargets.targets["build"]
@@ -395,7 +395,7 @@ class ProcessTargetsForProjectTest {
             workspaceRoot = workspaceRoot,
             atomized = true)
 
-    // Same-project dependsOn are not included in regular targets
+    // Same-project dependsOn are included as object format without projects field
     // CI targets compute dependencies directly from Gradle's task graph
     val ciCheckDependsOn = gradleTargets.targets["ci-check"]?.get("dependsOn") as? List<*>
     assertTrue(
