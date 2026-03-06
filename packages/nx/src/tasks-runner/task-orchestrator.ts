@@ -9,7 +9,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
-import { TaskHasher } from '../hasher/task-hasher';
+import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -398,28 +398,54 @@ export class TaskOrchestrator {
     await this.preRunSteps(tasks, { groupId });
 
     // Phase 1: Topological cache resolution
-    // Walk the batch task graph level by level. At each level, hash root tasks,
-    // check cache, and restore cached outputs. This ensures tasks with depsOutputs
-    // are only hashed after their dependencies' outputs are restored from cache.
+    // Walk the entire batch task graph level by level. At each level, partition
+    // root tasks into cache-eligible vs ineligible. A task is ineligible if it
+    // has depsOutputs inputs AND any of its dependencies were not cached (their
+    // outputs aren't on disk, so the hash would be wrong). All roots are removed
+    // each iteration so the walk continues to deeper levels.
     let allCachedResults: TaskResult[] = [];
     let remaining = batch.taskGraph;
+    const nonCachedTaskIds = new Set<string>();
 
     if (doNotSkipCache) {
       while (remaining.roots.length > 0) {
         const rootTasks = remaining.roots.map((id) => remaining.tasks[id]);
 
-        await this.hashBatchTasks(rootTasks);
+        // Partition: skip cache for depsOutputs tasks with non-cached deps.
+        // Only call getInputs() when a task actually has a non-cached dep —
+        // if all deps are cached, the task is always eligible regardless.
+        const eligible: Task[] = [];
+        for (const task of rootTasks) {
+          const depIds = batch.taskGraph.dependencies[task.id];
+          const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
 
-        const cacheResults = await this.applyCachedResults(rootTasks);
-        const cachedIds = cacheResults.map((r) => r.task.id);
-
-        if (cachedIds.length === 0) {
-          // No cache hits at this level — stop peeling
-          break;
+          if (
+            hasNonCachedDep &&
+            getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length >
+              0
+          ) {
+            nonCachedTaskIds.add(task.id);
+          } else {
+            eligible.push(task);
+          }
         }
 
-        allCachedResults.push(...cacheResults);
-        remaining = removeTasksFromTaskGraph(remaining, cachedIds);
+        // Hash and check cache for eligible tasks
+        if (eligible.length > 0) {
+          await this.hashBatchTasks(eligible);
+          const cacheResults = await this.applyCachedResults(eligible);
+          const cachedIds = new Set(cacheResults.map((r) => r.task.id));
+          allCachedResults.push(...cacheResults);
+
+          for (const task of eligible) {
+            if (!cachedIds.has(task.id)) {
+              nonCachedTaskIds.add(task.id);
+            }
+          }
+        }
+
+        // Remove ALL roots to expose next level
+        remaining = removeTasksFromTaskGraph(remaining, remaining.roots);
       }
     }
 
@@ -429,12 +455,17 @@ export class TaskOrchestrator {
     // get correct hashes on the first pass — no re-hash needed.
     let results: TaskResult[] = allCachedResults;
 
-    if (Object.keys(remaining.tasks).length > 0) {
+    if (nonCachedTaskIds.size > 0) {
+      const cachedTaskIds = tasks
+        .map((t) => t.id)
+        .filter((id) => !nonCachedTaskIds.has(id));
+      const runGraph = removeTasksFromTaskGraph(batch.taskGraph, cachedTaskIds);
+
       const batchResults = await this.runBatch(
         {
           id: batch.id,
           executorName: batch.executorName,
-          taskGraph: remaining,
+          taskGraph: runGraph,
         },
         this.batchEnv,
         groupId
@@ -447,6 +478,24 @@ export class TaskOrchestrator {
       await this.hashBatchTasks(tasksToHash);
 
       results = [...allCachedResults, ...batchResults];
+    } else if (!doNotSkipCache) {
+      // Cache is skipped — run everything
+      const batchResults = await this.runBatch(
+        {
+          id: batch.id,
+          executorName: batch.executorName,
+          taskGraph: batch.taskGraph,
+        },
+        this.batchEnv,
+        groupId
+      );
+
+      const tasksToHash = batchResults
+        .filter((r) => r.status === 'success' || r.status === 'failure')
+        .map((r) => r.task);
+      await this.hashBatchTasks(tasksToHash);
+
+      results = batchResults;
     }
 
     await this.postRunSteps(results, doNotSkipCache, { groupId });
