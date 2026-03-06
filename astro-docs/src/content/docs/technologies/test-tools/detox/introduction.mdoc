@@ -24,9 +24,9 @@ The `@nx/detox` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-## Setting Up Detox
+## Setting up detox
 
-### Setup Environment
+### Setup environment
 
 #### Install applesimutils (Mac only)
 
@@ -37,7 +37,7 @@ brew tap wix/brew
 brew install applesimutils
 ```
 
-#### Install Jest Globally
+#### Install Jest globally
 
 ```shell
 npm install -g jest
@@ -57,7 +57,7 @@ nx add @nx/detox
 
 This will install the correct version of `@nx/detox`.
 
-### How @nx/detox Infers Tasks
+### How @nx/detox infers tasks
 
 The `@nx/detox` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
 
@@ -66,11 +66,11 @@ The `@nx/detox` plugin will create a task for any project that has an ESLint con
 - `detox.config.js`
 - `detox.config.json`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/detox Configuration
+### @nx/detox configuration
 
 The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
 
@@ -92,9 +92,9 @@ The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
 
 Once a Detox configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `startTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build` and `test`.
 
-## Using Detox
+## Using detox
 
-### Testing Applications
+### Testing applications
 
 - Run `nx test-ios frontend-e2e` to build the iOS app and execute e2e tests with Detox for iOS (Mac only)
 - Run `nx test-android frontend-e2e` to build the Android app and execute e2e tests with Detox for Android
@@ -104,7 +104,7 @@ You can run below commands:
 - `nx build-ios frontend-e2e`: build the iOS app (Mac only)
 - `nx build-android frontend-e2e`: build the Android app
 
-### Testing against Prod Build
+### Testing against prod build
 
 You can run your e2e test against a production build:
 
@@ -119,7 +119,7 @@ You can run your e2e test against a production build:
 
 If you need to fine tune your Detox setup, you can do so by modifying `.detoxrc.json` in the e2e project.
 
-#### Change Testing Simulator/Emulator
+#### Change testing simulator/emulator
 
 For iOS, in terminal, run `xcrun simctl list devices available` to view a list of simulators on your Mac. To open your active simulator, `run open -a simulator`. In `frontend-e2e/.detoxrc.json`, you could change the simulator under `devices.simulator.device`.
 

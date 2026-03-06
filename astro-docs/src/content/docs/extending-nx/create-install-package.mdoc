@@ -23,7 +23,7 @@ npx create-nx-workspace --preset my-plugin
 
 This allows you to take full control over the shape of the generated Nx workspace. You might however want to have your own `create-{x}` package, whether that is for marketing purposes, branding or better discoverability. Starting with Nx 16.5 you can now have such a `create-{x}` package generated for you.
 
-## Generating a "Create Package"
+## Generating a "Create package"
 
 There are a few methods to create a package that will work with `create-nx-workspace`'s public API to setup a new workspace that uses your Nx plugin.
 
@@ -161,6 +161,6 @@ Have a look at some of the example tests that were generated for you. When runni
 
 Your plugin and create package will both need to be published to NPM to be useable. Publishing your packages is exactly the same as described [previously](#testing-your-create-package), except that you don't run the `local-registry` task so that the `publish` task will publish to the real NPM servers.
 
-## Further Reading
+## Further reading
 
 - [Blog post: Create your own create-react-app CLI](https://nx.dev/blog/create-your-own-create-react-app-cli)

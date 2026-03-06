@@ -65,7 +65,7 @@ nx show project myproject --web
 
 The project details view also shows where each setting is defined so that you know where to change it.
 
-## Project Level Configuration Files
+## Project level configuration files
 
 If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles. Nx merges the two files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
 
@@ -203,7 +203,7 @@ Below are some more complete examples of project configuration files. For a more
 {% /tabitem %}
 {% /tabs %}
 
-## Task Definitions (Targets)
+## Task definitions (Targets)
 
 A large portion of project configuration is related to defining the tasks for the project. In addition, to defining what the task actually does, a task definition also has properties that define the way that Nx should run that task. Those properties are described in detail below.
 
@@ -249,7 +249,7 @@ If you are using distributed task execution, tasks will still be run simultaneou
 
 {% /aside %}
 
-### Inputs and Named Inputs
+### Inputs and named inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.
 
@@ -296,7 +296,7 @@ Specifically, by default, the following locations are cached for builds:
 
 Read the [configure outputs for task caching](/docs/guides/tasks--caching/configure-outputs) recipe for helpful tips for setting outputs.
 
-#### Basic Example
+#### Basic example
 
 Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
 
@@ -313,7 +313,7 @@ Usually, a target writes to a specific directory or a file. The following instru
 }
 ```
 
-#### Specifying Globs
+#### Specifying globs
 
 Sometimes, multiple targets might write to the same directory. When possible it is recommended to direct these targets into separate directories.
 
@@ -583,7 +583,7 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 }
 ```
 
-### Sync Generators
+### Sync generators
 
 In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
 
@@ -631,7 +631,7 @@ In the case of an explicit target using an executor, you can specify the executo
 }
 ```
 
-### Target Metadata
+### Target metadata
 
 You can add additional metadata to be attached to a target. For example, you can provide a description stating what the
 target does:
@@ -649,7 +649,7 @@ target does:
 }
 ```
 
-## Project Metadata
+## Project metadata
 
 The following properties describe the project as a whole.
 
@@ -780,7 +780,7 @@ An implicit dependency could also be a glob pattern:
 
 The `release` property allows project-level overrides for the [nx release](/docs/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
 
-#### Docker Configuration {% badge text="experimental" /%}
+#### Docker configuration {% badge text="experimental" /%}
 
 {% aside type="caution" title="Experimental Feature" %}
 Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.

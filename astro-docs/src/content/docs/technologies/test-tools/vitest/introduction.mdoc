@@ -104,7 +104,7 @@ nx g @nx/vue:lib libs/my-vue-lib --unitTestRunner=vitest
 
 {% /aside %}
 
-## Local Development
+## Local development
 
 Run Vitest through Nx so caching and the project graph work together.
 
@@ -213,11 +213,11 @@ If you use Vitest for unit and e2e tests, configure the plugin twice with differ
 }
 ```
 
-## CI Considerations
+## CI considerations
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-### Build and Test Only What Changed
+### Build and test only what changed
 
 ```shell
 nx affected -t test
@@ -226,7 +226,7 @@ nx affected -t test
 This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
 Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-### Remote Caching
+### Remote caching
 
 Share test and e2e cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
@@ -234,17 +234,17 @@ Share test and e2e cache results across your team and CI with [remote caching](/
 nx connect
 ```
 
-### Task Splitting for Slow Tests
+### Task splitting for slow tests
 
 For slow test suites (e.g. E2E or integration tests), set `ciTargetName` to split tests by file for distributed CI runs. Each test file becomes its own cacheable CI task with better caching and retries. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
 
 If you use `testMode: "watch"` locally, use `testMode: "run"` for CI to keep runs deterministic.
 
-### Feature-Based Testing
+### Feature-based testing
 
 Organize tests by feature to get better cache hits and more targeted CI runs. See the [feature-based testing guide](/docs/guides/tips-n-tricks/feature-based-testing) for strategies on structuring tests in a monorepo.
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="Vitest Config Reference" description="Learn about Vitest configuration options and defaults." href="https://vitest.dev/config/" /%}

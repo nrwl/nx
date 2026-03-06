@@ -21,6 +21,8 @@ When working on Nx documentation, all documentation content lives in the `astro-
 - Development workflow and commands
 - Sidebar management
 
+**MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `nx-docs-style-check` skill. No exceptions.
+
 ### Quick Reference
 
 - Documentation content: `astro-docs/src/content/docs/`

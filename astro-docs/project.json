@@ -101,6 +101,33 @@
         "cwd": "astro-docs"
       }
     },
+    "vale": {
+      "command": "node scripts/vale-changed.mjs",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/content/docs/**/*.mdoc",
+        "{projectRoot}/src/content/docs/**/*.mdx",
+        "{projectRoot}/src/content/docs/**/*.md",
+        "{projectRoot}/.vale.ini",
+        "{projectRoot}/.vale/styles/**/*"
+      ]
+    },
+    "vale:all": {
+      "command": "node scripts/vale-changed.mjs --all",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "{projectRoot}/src/content/docs/**/*.mdoc",
+        "{projectRoot}/src/content/docs/**/*.mdx",
+        "{projectRoot}/src/content/docs/**/*.md",
+        "{projectRoot}/.vale.ini",
+        "{projectRoot}/.vale/styles/**/*"
+      ]
+    },
     "format": {
       "cache": true,
       "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",

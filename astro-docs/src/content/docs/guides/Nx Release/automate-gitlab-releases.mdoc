@@ -15,11 +15,11 @@ Nx release supports two main ways of doing this:
 1. In all environments it will preferentially check for an environment variable (the environment variable can either be called `GITLAB_TOKEN` or `GL_TOKEN`).
 2. In GitLab CI it will check for and use the automatically created GitLab token in the `CI_JOB_TOKEN` environment variable.
 
-## GitLab Release Contents
+## GitLab release contents
 
 When a GitLab release is created, it will include the changelog that Nx Release generates with entries based on the changes since the last release. Nx Release will parse the `feat` and `fix` type commits according to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification and sort them into appropriate sections of the changelog.
 
-## Enable Release Creation
+## Enable release creation
 
 To enable GitLab release creation for your workspace, set `release.changelog.workspaceChangelog.createRelease` to `'gitlab'` in `nx.json`:
 
@@ -36,11 +36,11 @@ To enable GitLab release creation for your workspace, set `release.changelog.wor
 }
 ```
 
-## Preview the Release
+## Preview the release
 
 Use `nx release --dry-run` to preview the GitLab release instead of creating it. This allows you to see what the release will look like without pushing anything to GitLab.
 
-## Disable File Creation
+## Disable file creation
 
 Since GitLab releases contain the changelog, you may wish to disable the generation and management of the local `CHANGELOG.md` file. To do this, set `release.changelog.workspaceChangelog.file` to `false` in `nx.json`:
 
@@ -60,7 +60,7 @@ Since GitLab releases contain the changelog, you may wish to disable the generat
 
 Note: When configured this way, Nx Release will not delete existing changelog files, just ignore them.
 
-## Project Level Changelogs
+## Project level changelogs
 
 Nx Release supports creating GitLab releases for project level changelogs as well. This is particularly useful when [releasing projects independently](/docs/guides/nx-release/release-projects-independently). To enable this, set `release.changelog.projectChangelogs.createRelease` to `'gitlab'` in `nx.json`:
 

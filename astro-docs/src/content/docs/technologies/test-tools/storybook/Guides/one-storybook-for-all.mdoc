@@ -7,7 +7,7 @@ filter: 'type:Guides'
 ---
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace.
 
 This case would work if all your projects (applications and libraries) containing stories that you want to use are using the same framework (Angular, React, Vue, etc). The reason is that you will be importing the stories in a central host Storybook's `.storybook/main.ts`, and we will be using one specific builder to build that Storybook. Storybook does not support mixing frameworks in the same Storybook instance.
 
@@ -134,7 +134,7 @@ Ideal for:
 
 - Workspaces with a single app and multiple libraries all using a single framework
 
-## Extras - Dependencies
+## Extras - dependencies
 
 Your new Storybook host, essentially, depends on all the projects from which it is importing stories. This means whenever one of these projects updates a component, or updates a story, our Storybook host would have to rebuild, to reflect these changes. It cannot rely on the cached result. However, Nx does not understand the imports in `libs/storybook-host/.storybook/main.ts`, and the result is that Nx does not know which projects the Storybook host depends on, based solely on the `main.ts` imports.
 

@@ -1,0 +1,9 @@
+extends: substitution
+message: "Use '%s' instead of '%s'. Product names must be capitalized."
+level: error
+ignorecase: false
+swap:
+  '(?:nx cloud|NX Cloud|Nx cloud|NX cloud)': Nx Cloud
+  '(?:nx console|NX Console|Nx console|NX console)': Nx Console
+  '(?:nx agents|NX Agents|Nx agents|NX agents)': Nx Agents
+  '(?:nx replay|NX Replay|Nx replay|NX replay)': Nx Replay

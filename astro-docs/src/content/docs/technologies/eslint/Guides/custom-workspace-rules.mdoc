@@ -10,7 +10,7 @@ Custom ESLint rules allow you to enforce team-specific conventions, project arch
 
 <!-- TODO: Add "Quick Start with the Generator" section once @nx/eslint:workspace-rule supports ESLint v9 -->
 
-## Understanding the Two Approaches
+## Understanding the two approaches
 
 There are two main approaches for custom ESLint rules in Nx workspaces:
 
@@ -27,11 +27,11 @@ Choose the approach that fits your workspace setup:
 | Want rules as a publishable package  | Package Manager Workspaces |
 | TypeScript rules with minimal config | `loadWorkspaceRules`       |
 
-## Approach 1: Package Manager Workspaces
+## Approach 1: package manager workspaces
 
 If your workspace uses npm, yarn, pnpm, or bun workspaces, you can create custom ESLint rules as a regular package. This approach treats your custom rules like any other internal dependency.
 
-### Step 1: Create the ESLint Plugin Package
+### Step 1: create the ESLint plugin package
 
 Create a new library for your ESLint plugin:
 
@@ -96,7 +96,7 @@ export const noFooConst = ESLintUtils.RuleCreator(() => __filename)({
 });
 ```
 
-### Step 4: Install and Use the Plugin
+### Step 4: install and use the plugin
 
 After creating your plugin package, install dependencies to ensure it's symlinked:
 
@@ -143,7 +143,7 @@ export default [
 {% /tabitem %}
 {% /tabs %}
 
-### Running TypeScript Rules
+### Running TypeScript rules
 
 When using TypeScript for your ESLint rules, the TypeScript code must be transpiled or interpreted before ESLint can use it. There are several options:
 
@@ -157,7 +157,7 @@ NODE_OPTIONS="--experimental-strip-types" nx lint myproject
 
 <!-- TODO(v23): Remove Node 20 since it will be out of LTS -->
 
-Alternatively, if you are on Node 20 or do not want to use Node's strip-types feature, the `tsx` package provides fast TypeScript execution with ESM support:
+Alternatively, if you are on Node 20 or do not want to use Node.js strip-types feature, the `tsx` package provides fast TypeScript execution with ESM support:
 
 ```shell
 npm install -D tsx
@@ -197,7 +197,7 @@ The `loadWorkspaceRules` utility from `@nx/eslint-plugin` lets you load ESLint r
 - You want rules in a non-standard location
 - You need automatic TypeScript transpilation
 
-### Basic Usage
+### Basic usage
 
 ```javascript
 // eslint.config.mjs
@@ -221,7 +221,7 @@ export default [
 ];
 ```
 
-### How `loadWorkspaceRules` Works
+### How `loadWorkspaceRules` works
 
 The utility:
 
@@ -230,7 +230,7 @@ The utility:
 3. Automatically finds and uses a `tsconfig.json` for TypeScript transpilation
 4. Returns the exported rules object
 
-### Specifying a Custom `tsconfig`
+### Specifying a custom `tsconfig`
 
 You can provide a specific `tsconfig.json` path:
 
@@ -243,7 +243,7 @@ const customRules = await loadWorkspaceRules(
 
 If not provided, `loadWorkspaceRules` searches for `tsconfig.json` starting from the rules directory and traversing up to the workspace root.
 
-### Example: Project-Specific Rules
+### Example: Project-specific rules
 
 You can load rules from within a project:
 
@@ -271,7 +271,7 @@ export default [
 
 <!-- TODO: Add section for @nx/eslint:workspace-rule once it supports ESLint v9 -->
 
-## Related Resources
+## Related resources
 
 - [ESLint Developer Guide](https://eslint.org/docs/developer-guide/working-with-rules)
 - [TypeScript ESLint Custom Rules](https://typescript-eslint.io/developers/custom-rules)

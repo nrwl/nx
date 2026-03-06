@@ -78,7 +78,7 @@ npx create-nx-workspace@latest --preset=web-components --bundler=vite
 
 For the full framework workflows, see the [React introduction](/docs/technologies/react/introduction) or [Web app reference](/docs/reference/web).
 
-## Local Development
+## Local development
 
 - `nx dev my-app` starts the Vite dev server for the project (same as the deprecated `serve` target).
 - `nx build my-app` creates a production build in `dist/` (controlled by `build.outDir` in `vite.config.*`) and registers the outputs for Nx caching.
@@ -90,7 +90,7 @@ Replace `my-app` with your project name.
 
 ## Configuration
 
-### Configure Task Inference
+### Configure task inference
 
 The `@nx/vite` plugin infers tasks by reading Vite config files. Any of the following config files will be picked up:
 
@@ -112,7 +112,7 @@ Dev, preview, and serve-static targets are created for buildable projects. If yo
 
 Typecheck targets are created when a `tsconfig*.json` file exists in the project.
 
-### Plugin Options
+### Plugin options
 
 Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 
@@ -150,7 +150,7 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 | `buildDepsTargetName`   | Name of the build-deps target for dependency builds  | none           |
 | `watchDepsTargetName`   | Name of the watch-deps target for dependency watches | none           |
 
-### Disable or Scope Inference
+### Disable or scope inference
 
 To stop inference for a specific project, exclude its config file with `include`/`exclude` filters in `nx.json`:
 
@@ -168,7 +168,7 @@ To stop inference for a specific project, exclude its config file with `include`
 
 To avoid specific targets, adjust the config files that trigger them. For example, remove `tsconfig*.json` to stop `typecheck`, or use library mode (`build.lib`) to skip `dev`, `preview`, and `serve-static` unless you set dev server options.
 
-### View Inferred Tasks
+### View inferred tasks
 
 To see what tasks Nx inferred for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run:
 
@@ -176,7 +176,7 @@ To see what tasks Nx inferred for a project, open the [project details view](/do
 nx show project my-app --web
 ```
 
-## CI and Scale
+## CI and scale
 
 Use Nx to keep CI fast in large monorepos:
 
@@ -184,7 +184,7 @@ Use Nx to keep CI fast in large monorepos:
 - Enable remote caching with [Nx Cloud](/docs/guides/nx-cloud/setup-ci) using `nx connect`.
 - Follow the [CI setup guide](/docs/guides/nx-cloud/setup-ci) for a full pipeline.
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="Configure Vite" description="Set up Vite config, Nx-specific plugins, and recommended defaults." href="/docs/technologies/build-tools/vite/guides/configure-vite" /%}

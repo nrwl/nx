@@ -25,9 +25,9 @@ nx.json           | # Equivalent to turbo.json
 - [Configuration Migration Guide](#configuration-migration-guide) - How to mentally map Turborepo configuration to Nx configuration
 - [Command Equivalents](#command-equivalents) - How to mentally map Turborepo commands to Nx commands
 
-## Why Migrate to Nx?
+## Why migrate to Nx?
 
-### 1. Superior Performance through Smarter Computation Caching
+### 1. superior performance through smarter computation caching
 
 **Nx is significantly faster than Turborepo**, with open-source benchmarks showing more then 7x better performance in large monorepos. This is publicly verifiable here: [large-monorepo benchmark](https://github.com/vsavkin/large-monorepo).
 
@@ -35,13 +35,13 @@ The performance difference is particularly noticeable in larger, real-world mono
 
 ![nx and turbo benchmark](../../../../assets/guides/adopting-nx/turbo-nx-perf.gif)
 
-This isn't just about raw speed - Nx's approach to file restoration means it's both faster and more reliable, especially when working with tools that watch files.
+This isn't just about raw speed - Nx approach to file restoration means it's both faster and more reliable, especially when working with tools that watch files.
 
 ### 2. Fast CI
 
 **Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, [Nx Cloud](https://nx.dev/nx-cloud) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote cache, [you can host your own](/docs/guides/tasks--caching/self-hosted-caching).
 
-However, unlike Turborepo, Nx's CI solution ([Nx Cloud](https://nx.dev/nx-cloud)) goes way beyond just locating a shared cache on a server somewhere.
+However, unlike Turborepo, Nx CI solution ([Nx Cloud](https://nx.dev/nx-cloud)) goes way beyond just locating a shared cache on a server somewhere.
 
 Nx Cloud allows you to ship updates to your users faster and with more confidence than ever before thanks to:
 
@@ -64,21 +64,21 @@ This means that you do not need to add `package.json` files for languages like R
 
 Turborepo forces you to manually annotated your non-JavaScript packages, Nx understands it all through its first-class plugins, making it suitable for everything from open-source JavaScript tools with a handful of `npm` packages through to the largest enterprise-grade polyglot/multi-languages monorepos.
 
-### 4. Superior Developer Experience
+### 4. Superior developer experience
 
-#### Rich Visualization
+#### Rich visualization
 
 Being able to visually explore your workspace is crucial for large monorepos:
 
 - **Nx**: Rich, interactive visualizer, both locally via the `nx graph` CLI and for every pull request via Nx Cloud. (More [in the docs](/docs/features/explore-graph))
 - **Turborepo**: [Browser-based graph visualizations](https://turborepo.com/docs/reference/devtools) and [Graphviz image exports](https://turborepo.com/docs/reference/run#--graph-file-name)
 
-#### IDE/Developer Tools
+#### IDE/Developer tools
 
 - **Nx**: provides powerful VSCode and WebStorm/IntelliJ extensions with nearly 2 million installations. Run tasks, code generators, the graph visualizer, interact with Nx Cloud CI runs and more.
 - **Turborepo**: provides basic LSP support
 
-### 5. Plugin System and Organizational Scaling
+### 5. plugin system and organizational scaling
 
 Nx is like the **VSCode of build tools**. Just as VSCode provides a core experience that can be enhanced with extensions for Git, Docker, MongoDB etc., Nx offers:
 
@@ -94,7 +94,7 @@ This plugin system helps teams scale organizationally by:
 - Providing tools to analyze cache misses
 - Supporting visibility constraints
 
-### 6. Enterprise-Ready Features
+### 6. Enterprise-ready features
 
 - Conformance rules for consistently enforcing best practices across your organization
 - On-premise and single-tenant Nx Cloud options
@@ -103,7 +103,7 @@ This plugin system helps teams scale organizationally by:
 - Comprehensive analytics and insights
 - Module boundary rules essential for multi-team monorepos
 
-### 7. Thriving Community
+### 7. Thriving community
 
 Nx has been battle-tested since 2016:
 
@@ -112,7 +112,7 @@ Nx has been battle-tested since 2016:
 - Rich ecosystem of [third-party plugins](/docs/plugin-registry), many with millions of downloads in their own right
 - Used by over half of Fortune 500 companies in production
 
-### 8. Incremental Adoption
+### 8. Incremental adoption
 
 Nx can be added to a repo with almost no friction. You can incrementally enable plugins and supporting features that are not available with Turborepo.
 
@@ -123,7 +123,7 @@ Here are some examples:
 - [Video: From PNPM Monorepo to Fast CI](https://www.youtube.com/watch?v=zX-1tpqUG5c)
 - [Video: AI-powered Debugging with Nx Cloud](https://www.youtube.com/watch?v=g2m9cHp-O-Q)
 
-## Easy Automated Migration Example
+## Easy automated migration example
 
 The simplest way to understand the concepts is to see a basic migration example.
 
@@ -154,7 +154,7 @@ nx.json           | # Equivalent to turbo.json
 
 It's important to remember that Nx is a superset of Turborepo, it can do everything Turborepo can do and much more, so there is absolutely no special configuration needed for Nx, it just works on the Turborepo workspace.
 
-### Example: Basic Configuration Comparison
+### Example: Basic configuration comparison
 
 To help with understanding the new `nx.json` file, let's compare it to the `turbo.json` file:
 
@@ -217,11 +217,11 @@ After running `nx init`, you'll automatically have an equivalent `nx.json`:
 }
 ```
 
-## Configuration Migration Guide
+## Configuration migration guide
 
 Most settings in the old `turbo.json` file can be converted directly into `nx.json` equivalents. Here's how to map each configuration property:
 
-### Global Configuration
+### Global configuration
 
 | Turborepo Property     | Nx Equivalent                                                                                                                                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -234,7 +234,7 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 | `remoteCache`          | See [Nx Replay](/docs/features/ci-features/remote-cache)                                                                                                                                                                       |
 | `ui`                   | Nx will intelligently pick the most appropriate terminal output style, but it can be overridden with [`--output-style`](/docs/reference/nx-commands#nx-run-many)                                                               |
 
-### Task Configuration
+### Task configuration
 
 | Turborepo Property | Nx Equivalent                                                                                                                                                                                                       |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -249,7 +249,7 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 | `persistent`       | Nx has a powerful "continuous" setting for tasks in beta which even works across multiple machines. This is going to be generally available in Nx 21 and it will be a superset of Turborepo's "persistent" setting. |
 | `interactive`      | All "continuous" tasks (coming in Nx 21) are intelligently and automatically interactive.                                                                                                                           |
 
-## Command Equivalents
+## Command equivalents
 
 Here's how Turborepo commands map to Nx:
 
