@@ -9,7 +9,7 @@ import {
 
 describe('project-configuration-utils', () => {
   describe('mergeCreateNodesResults', () => {
-    it('should work with clickup repo', () => {
+    it('should substitute gradle-style colon names with project names in dependsOn', () => {
       const {
         results,
         nxJsonConfiguration,
@@ -22,17 +22,17 @@ describe('project-configuration-utils', () => {
         root,
         errors
       );
-      const projectConfig = result.projectRootMap['apps/ovm-compactor'];
+      const projectConfig = result.projectRootMap['apps/my-app'];
       const targetConfig = projectConfig['targets']?.['gradle-test'];
       const dependsOn = targetConfig?.dependsOn;
       expect(dependsOn).toMatchInlineSnapshot(`
         [
-          "ovm-compactor:compileTestJava",
-          "ovm-compactor:testClasses",
-          "ovm-compactor:classes",
-          "ovm-compactor:compileJava",
-          "kafka-stream:jar",
-          "split-client:jar",
+          "my-app:compileTestJava",
+          "my-app:testClasses",
+          "my-app:classes",
+          "my-app:compileJava",
+          "lib-a:jar",
+          "lib-b:jar",
         ]
       `);
     });
