@@ -13,7 +13,7 @@ width="100%" /%}
 
 Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/docs/getting-started/intro#start-small-extend-as-you-grow). As a result, adopting Nx as an Angular user is relatively straightforward. This guide explores some of the similarities and in particular, added benefits of using Nx over the Angular CLI for your Angular project.
 
-## TL;DR: Why should I use Nx for my Angular project?
+## TL;DR: Why should i use Nx for my Angular project?
 
 Nx...
 
@@ -25,7 +25,7 @@ Nx...
 
 Note, the Nx team's focus is on building the best possible developer productivity tool.
 
-### Quick Overview Comparison
+### Quick overview comparison
 
 Here's a quick side-by-side overview comparing the features between the Angular CLI and Nx. _(Kudos to [Daniel Glejzner](https://twitter.com/DanielGlejzner) for helping with this)_
 
@@ -62,11 +62,11 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 
 {% /aside %}
 
-## Similarities and Differences
+## Similarities and differences
 
 Learn about the similarities between the Angular CLI and Nx which makes it easy to [migrate](#migrate-from-the-angular-cli) but also about how Nx goes beyond to further improve your developer productivity.
 
-### Not just for Monorepos: Project Setup & Structure
+### Not just for monorepos: project setup & structure
 
 Nx is not just exclusively for monorepos, but can create
 
@@ -122,7 +122,7 @@ Note that even though the configuration is split, everything works similarly. Mi
 
 More details: Nx [project configuration](/docs/reference/project-configuration).
 
-### Executors vs. Builders, Generators vs. Schematics
+### Executors vs. builders, generators vs. schematics
 
 Nx comes with slightly different terminology than the Angular CLI for some features.
 
@@ -158,7 +158,7 @@ npx nx g @schematics/angular:component my-component
 Support to run Angular Devkit builders and schematics is enabled by installing the [`@nx/angular` plugin](/docs/technologies/angular/introduction). This plugin is installed by default when creating a new Angular workspace with Nx or [migrate an existing Angular CLI workspace to Nx](#migrate-from-the-angular-cli).
 {% /aside %}
 
-### Running Commands
+### Running commands
 
 Commands are run in the very same way as with the Angular CLI. You just switch `ng` with `nx`. For example:
 
@@ -168,7 +168,7 @@ npx nx serve
 
 Nx has more abilities to run commands in parallel, just for specific projects etc. Find out more [in the docs](/docs/features/run-tasks).
 
-### Integrating with Modern Tools
+### Integrating with modern tools
 
 An Angular-based Nx Workspace already comes with a lot of batteries included:
 
@@ -255,7 +255,7 @@ Replace `[package]` with the package name you're trying to add.
 
 ### Speed
 
-Nx is designed to be fast. The Angular CLI leverages Webpack's caching, which Nx also does since it relies on the Angular Devkit when it comes to compiling or running apps. But Nx goes way beyond that, introducing features vital for a fast CI experience, mainly when you have a monorepo.
+Nx is designed to be fast. The Angular CLI leverages Webpack caching, which Nx also does since it relies on the Angular Devkit when it comes to compiling or running apps. But Nx goes way beyond that, introducing features vital for a fast CI experience, mainly when you have a monorepo.
 
 Features like
 
@@ -267,13 +267,13 @@ Features like
 
 And, Nx already uses fast, modern tooling like [ESBuild](/docs/technologies/build-tools/esbuild/introduction), [Vite](/docs/technologies/build-tools/vite/introduction), Vitest and [Rspack](/docs/technologies/build-tools/rspack/introduction) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 
-### Editor Integration
+### Editor integration
 
 Nx goes beyond being just a CLI and comes with [Nx Console](/docs/getting-started/editor-setup), a VSCode and WebStorm extension allowing you to run commands, generate code and visualize your workspace.
 
 ![Nx Console screenshot](../../../../../assets/nx-console/nx-console-screenshot.webp)
 
-### Scaling: Start Simple, Grow to a Monorepo
+### Scaling: start simple, grow to a monorepo
 
 Nx is really made to scale with you. You can
 
@@ -282,7 +282,7 @@ Nx is really made to scale with you. You can
 - you can then migrate to a monorepo when you are ready and need one ([more here](/docs/guides/tips-n-tricks/standalone-to-monorepo))
 - or even [add Webpack Module Federation support](/docs/technologies/angular/guides/module-federation-with-ssr)
 
-### Visualize your Workspace
+### Visualize your workspace
 
 As you start modularizing your Angular workspace, Nx can visualize it using the `nx graph` command or via [Nx Console](/docs/getting-started/editor-setup) directly in your editor.
 

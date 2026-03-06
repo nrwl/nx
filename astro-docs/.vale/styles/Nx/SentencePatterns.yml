@@ -1,0 +1,14 @@
+extends: existence
+message: "Rewrite to lead with the reader's action instead of '%s'. For example, 'You can ...' or 'Run ...'."
+level: warning
+ignorecase: true
+tokens:
+  - 'This allows you to'
+  - 'This enables you to'
+  - 'This lets you'
+  - 'This provides you with'
+  - 'This gives you the ability to'
+  - 'Nx allows you to'
+  - 'Nx enables you to'
+  - 'Nx provides the ability to'
+  - 'Nx provides you with'

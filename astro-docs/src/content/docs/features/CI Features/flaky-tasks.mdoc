@@ -10,7 +10,7 @@ Tasks that fail only sometimes and only in certain environments are called "flak
 
 Ideally as a developer you don't even notice flaky tasks any more as they're automatically re-run and solved for you.
 
-## Enable Flaky Task Detection
+## Enable flaky task detection
 
 Flaky Task Detection is enabled by default if your workspace is connected to Nx Cloud and leverages [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 
@@ -22,7 +22,7 @@ npx nx@latest connect
 
 See the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for all the details.
 
-## How Nx Identifies Flaky Tasks
+## How Nx identifies flaky tasks
 
 Nx leverages its cache mechanism to identify flaky tasks.
 
@@ -35,11 +35,11 @@ Nx can't know with certainty when the task has been fixed to no longer be flaky,
 
 In this image, the `e2e-ci--src/e2e/app.cy.ts` task is a flaky task that has been automatically retried once. There is a `1 retry` indicator to show that it has been retried and, once expanded, you can see tabs that contain the logs for `Attempt 1` and `Attempt 2`. With this UI, you can easily compare the output between a successful and unsuccessful run of a flaky task.
 
-## Automatically Re-run Flaky Tasks
+## Automatically re-run flaky tasks
 
 When a flaky task fails in CI with [distributed task execution](/docs/features/ci-features/distribute-task-execution) enabled, Nx will **automatically send that task to a different agent** and run it again (up to 2 tries in total). Its important to run the task on a different agent to ensure that the agent itself or the other tasks that were run on that agent are not the reason for the flakiness.
 
-## Flaky Task Analytics
+## Flaky task analytics
 
 {% aside type="note" title="Enterprise Feature" %}
 Workspace flaky task analytics is currently available for organizations on the Enterprise plan. Reach out if your organization is [interested in Nx Enterprise](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=flaky-task-analytics).
@@ -67,7 +67,7 @@ Priority levels are determined using percentile-based thresholds that scale acro
 
 Tasks on the right side of the chart typically represent the highest priority items that need attention. The scatter plot shows up to 50 results, sorted by most recent flaked tasks.
 
-### Flaky Task Table
+### Flaky task table
 
 The table provides detailed information about each flaky task in your workspace:
 
@@ -81,7 +81,7 @@ By default, the table loads your most recent flaky tasks. Each row includes:
 - **Time wasted** - An estimate of the total time spent on reruns, calculated by multiplying the total reruns by the average task duration
 - **Last failure** - The timestamp of the most recent failure across all contributing task hashes
 
-#### Flaky Task Detail View
+#### Flaky task detail view
 
 Click on any row in the table to view detailed information about a specific flaky task.
 

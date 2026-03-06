@@ -28,7 +28,7 @@ We intentionally do not include an `"engines"` field in the `package.json` file 
 
 This table will be updated from time to time to reflect the latest versions of Node.js that are supported. If you encounter issues with Nx, please make sure you are using a supported version of Node.js before filing an issue.
 
-## Setting Up @nx/node
+## Setting up @nx/node
 
 ### Installation
 
@@ -44,9 +44,9 @@ nx add @nx/node
 
 This will install the correct version of `@nx/node`.
 
-## Using the @nx/node Plugin
+## Using the @nx/node plugin
 
-### Creating Applications
+### Creating applications
 
 You can add a new application with the following:
 
@@ -56,7 +56,7 @@ nx g @nx/node:application apps/my-new-app
 
 You can run your application with `nx serve my-new-app`, which starts it in watch mode.
 
-### Creating Libraries
+### Creating libraries
 
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
 
@@ -70,9 +70,9 @@ nx g @nx/node:lib libs/my-new-lib \
 --importPath=@myorg/my-new-lib
 ```
 
-## Using Node
+## Using node
 
-### Testing Projects
+### Testing projects
 
 You can run unit tests with:
 
@@ -83,7 +83,7 @@ nx test my-new-lib
 
 Replace `my-new-app` with the name or your project. This command works for both applications and libraries.
 
-### Building Projects
+### Building projects
 
 Node applications can be build with:
 
@@ -99,7 +99,7 @@ nx build my-new-lib
 
 The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
 
-### Application Proxies
+### Application proxies
 
 Generating Node applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
@@ -110,7 +110,7 @@ nx g @nx/node:application apps/my-new-app \
 
 ### Debugging
 
-#### VSCode Integration
+#### VSCode integration
 
 When generating Node applications, Nx automatically creates a VSCode debugging configuration:
 
@@ -133,13 +133,13 @@ The debugger will automatically:
 - Attach to the Node.js debugger on the allocated port.
 - Map compiled JavaScript back to your TypeScript source files.
 
-#### Manual Debugging
+#### Manual debugging
 
 For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the project.json, or by running the serve command with `--port <number>`.
 
 For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
-## More Documentation
+## More documentation
 
 - [Using Cypress](/docs/technologies/test-tools/cypress/introduction)
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)

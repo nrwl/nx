@@ -1,6 +1,6 @@
 ---
 title: 'Building and Testing TypeScript Packages in Nx'
-description: In this tutorial you'll create a TypeScript monorepo with Nx.gradient
+description: You'll create a TypeScript monorepo with Nx.gradient
 sidebar:
   label: 'TypeScript Monorepo'
 filter: 'type:Guides'
@@ -11,7 +11,7 @@ This tutorial walks you through creating a TypeScript monorepo with Nx. You'll b
 What you'll learn:
 
 - How to structure multiple TypeScript packages in a single repository
-- How Nx's caching speeds up your local development and CI pipelines
+- How Nx caching speeds up your local development and CI pipelines
 - How to run builds and tests efficiently across multiple packages
 - How to share code between packages using local libraries
 - How to fix CI failures directly from your editor with Nx Cloud
@@ -28,7 +28,7 @@ Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/typescrip
 
 {% call_to_action variant="simple" title="Create TypeScript Workspace" url="https://cloud.nx.app/create-nx-workspace/typescript/github" /%}
 
-### Step 2: Verify Your Setup
+### Step 2: verify your setup
 
 Please verify closely that you have the following setup:
 
@@ -44,7 +44,7 @@ If you do not see your workspace in Nx Cloud then please follow the steps outlin
 
 This is important for using remote caching and self-healing in CI later in the tutorial.
 
-## Explore the Nx Workspace Setup
+## Explore the Nx workspace setup
 
 Let's take a look at the structure of our new Nx workspace:
 
@@ -77,7 +77,7 @@ Here are some files that might jump to your eyes:
 
 Now, let's build some features and see how Nx helps get us to production faster.
 
-## Building TypeScript Packages
+## Building TypeScript packages
 
 Let's create two TypeScript packages that demonstrate how to structure a TypeScript monorepo. We'll create an `animal` package and a `zoo` package where `zoo` depends on `animal`.
 
@@ -192,7 +192,7 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](../../../../assets/getting-started/run-target-syntax.svg)
 
-### Inferred Tasks
+### Inferred tasks
 
 By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/inferred-tasks) such as `package.json` scripts and TypeScript configuration.
 
@@ -360,7 +360,7 @@ The `@nx/js` plugin automatically configures both the build and typecheck tasks 
 You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/docs/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/docs/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
 {% /aside %}
 
-## Code Sharing with Local Libraries
+## Code sharing with local libraries
 
 When you develop packages, creating shared utilities that multiple packages can use is a common pattern. This approach offers several benefits:
 
@@ -370,7 +370,7 @@ When you develop packages, creating shared utilities that multiple packages can 
 - better scalability in CI by enabling independent test/lint/build commands for each package
 - most importantly: better caching because changes to one package don't invalidate the cache for unrelated packages
 
-### Create a Shared Utilities Library
+### Create a shared utilities library
 
 Let's create a shared utilities library that both our existing packages can use:
 
@@ -408,7 +408,7 @@ export function getRandomItem<T>(items: T[]): T {
 }
 ```
 
-### Import the Shared Library
+### Import the shared library
 
 This allows us to easily import them into other packages. Let's update our `animals` package to use the shared utility:
 
@@ -485,7 +485,7 @@ Run the `zoo` package to see the updated output format:
 node packages/zoo/dist/index.js
 ```
 
-## Visualize your Project Structure
+## Visualize your project structure
 
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/docs/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, enabling intelligent caching, and more. Interestingly, you can also visualize it.
 
@@ -550,7 +550,7 @@ git add .
 git commit -m 'add animal and zoo packages'
 ```
 
-## Building and Testing - Running Multiple Tasks
+## Building and testing - running multiple tasks
 
 Our packages come with preconfigured building and testing . Let's intentionally introduce a typo in our test to demonstrate the self-healing CI feature later.
 
@@ -570,7 +570,7 @@ This is exactly what is configured in `.github/workflows/ci.yml` for the CI pipe
 
 There is a test failure for the `zoo` package due to the updated message. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
 
-### Local Task Cache
+### Local task cache
 
 One thing to highlight is that Nx is able to [cache the tasks you run](/docs/features/cache-task-results).
 
@@ -599,7 +599,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 ## Self-Healing CI with Nx Cloud
 
-In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our zoo package has a test with a typo, so let's see how this can be automatically resolved.
+Explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our zoo package has a test with a typo, so let's see how this can be automatically resolved.
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
@@ -654,7 +654,7 @@ As expected, the CI check may show failures or issues. But rather than looking a
 
 ![Nx Console with notification](../../../../assets/tutorials/ts-ci-notification.avif)
 
-### Fix CI from Your Editor
+### Fix CI from your editor
 
 From the Nx Console notification, if there's a suggested fix (such as fixing the typo "formated" to "formatted"), you can click `Show Suggested Fix` button. Review the suggested fix and approve it by clicking `Apply Fix`.
 
@@ -662,7 +662,7 @@ From the Nx Console notification, if there's a suggested fix (such as fixing the
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
-### Remote Cache for Faster Time To Green
+### Remote cache for faster time to green
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
@@ -686,7 +686,7 @@ This pull request is now ready to be merged with the help of Nx Cloud's self-hea
 
 The next section deals with publishing packages to a registry like NPM, but if you are not interested in publishing your packages, you can skip to [the end](#next-steps).
 
-## Manage Releases
+## Manage releases
 
 If you decide to publish your packages to NPM, Nx can help you [manage the release process](/docs/features/manage-releases). Release management involves updating the version of your packages, populating a changelog, and publishing the new version to the NPM registry.
 
@@ -720,7 +720,7 @@ npx nx release --first-release
 
 After this first release, you can remove the `--first-release` flag and just run `nx release --dry-run`. There is also a [dedicated feature page](/docs/features/manage-releases) that goes into more detail about how to use the `nx release` command.
 
-## Next Steps
+## Next steps
 
 Here are some things you can dive into next:
 

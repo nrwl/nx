@@ -723,7 +723,7 @@ If your projects use Jest with the `@nx/jest` resolver (`@nx/jest/plugins/resolv
 
 Update `vite.config.ts` for each Vite project:
 
-1. Remove `nxViteTsPaths` from `plugins` (if present). This plugin resolved TypeScript path aliases in older Nx versions. After migration, Vite's built-in resolver finds local projects through `node_modules` symlinks. Newer Nx versions may not include this plugin.
+1. Remove `nxViteTsPaths` from `plugins` (if present). This plugin resolved TypeScript path aliases in older Nx versions. After migration, Vite built-in resolver finds local projects through `node_modules` symlinks. Newer Nx versions may not include this plugin.
 2. Add `resolve.conditions` with the same custom condition used in `tsconfig.base.json` (e.g. `@myorg/source`). This lets Vite resolve workspace libraries to source files during dev server and test runs, matching TypeScript's `customConditions` behavior. See [Testing without building dependencies](/docs/technologies/test-tools/vitest/guides/testing-without-building-dependencies) for more details on how this works.
 3. Set `build.outDir` to `./dist` relative to the project folder.
 

@@ -62,7 +62,7 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' your-key.pem # keep a note of the o
 
 Save the output of the above, as we'll also use it in a bit.
 
-## Configure Permissions for the GitHub App
+## Configure permissions for the GitHub app
 
 The following permissions are required for Nx Cloud to work:
 
@@ -134,7 +134,7 @@ Organization permissions:
 
 **When it's used:** Only when you explicitly enable these features through the Nx Cloud interface.
 
-## Your Data and Security
+## Your data and security
 
 Most information accessed through these permissions is used transiently during operations and is not stored. Limited version control metadata (such as branch names, SHAs, and commit information) may be stored as part of your CI pipeline execution records for analytics and debugging purposes.
 
@@ -142,7 +142,7 @@ Most information accessed through these permissions is used transiently during o
 
 You can revoke access to the Nx Cloud GitHub app at any time through your GitHub settings. Write operations (creating repos, posting comments, modifying workflows) only occur when explicitly triggered by your actions or when you opt in to specific features.
 
-## Connect Your Nx Cloud Installation
+## Connect your Nx Cloud installation
 
 Provide the following values to your developer productivity engineer so they can help connect Nx Cloud to your custom GitHub app:
 

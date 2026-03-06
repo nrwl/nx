@@ -21,7 +21,7 @@ The `@nx/expo` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-## Setting Up Expo
+## Setting up Expo
 
 To create a new workspace with Expo, run the following command:
 
@@ -43,7 +43,7 @@ nx add @nx/expo
 
 This will install the correct version of `@nx/expo`.
 
-### How @nx/expo Infers Tasks
+### How @nx/expo infers tasks
 
 The `@nx/expo` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
 
@@ -62,11 +62,11 @@ In the app config file, it needs to have key `expo`:
 }
 ```
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/expo Configuration
+### @nx/expo configuration
 
 The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 
@@ -94,7 +94,7 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 
 Once a Expo configuration file has been identified, the targets are created with the name you specify under `startTargetName`, `serveTargetName`, `runIosTargetName`, `runAndroidTargetname`, `exportTargetName`, `prebuildTargetName`, `installTargetName`, `buildTargetName` or `submitTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `start`, `serve`, `run-ios`, `run-anroid`, `export`, `prebuild`, `install`, `build` and `submit`.
 
-### Creating Applications
+### Creating applications
 
 Add a new application to your workspace with the following command:
 
@@ -108,7 +108,7 @@ Start the application by running:
 nx start my-app
 ```
 
-### Generating Libraries
+### Generating libraries
 
 To generate a new library run:
 
@@ -116,7 +116,7 @@ To generate a new library run:
 npx nx g @nx/expo:lib libs/your-lib-name
 ```
 
-### Generating Components
+### Generating components
 
 To generate a new component inside library run:
 
@@ -128,7 +128,7 @@ Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.js
 
 ## Using Expo
 
-### Start a Development Server
+### Start a development server
 
 You can start a development server by running:
 
@@ -136,7 +136,7 @@ You can start a development server by running:
 nx start <app-name>
 ```
 
-### Compile App Locally
+### Compile app locally
 
 You can compile your app locally with `run-ios` and `run-android` commands:
 
@@ -163,7 +163,7 @@ nx run-android <app-name>
 
 To run these commands, you need to have your development environment setup. To run an iOS app,it can only be run on a Mac, and Xcode must be installed. Similarly, to run an Android app, it requires Android Studio and Java to be installed and configured on your computer. Setup steps: https://reactnative.dev/docs/environment-setup.
 
-### Compile Web Assets
+### Compile web assets
 
 You can build your JavaScript bundle using Metro bundler by running:
 
@@ -210,7 +210,7 @@ nx export <app-name> --platform=web
 {% /tabitem %}
 {% /tabs %}
 
-### Generate Native Code
+### Generate native code
 
 To generate native code, run:
 
@@ -248,7 +248,7 @@ nx prebuild <app-name> --platform=android
 {% /tabitem %}
 {% /tabs %}
 
-### Install Compatible NPM Packages
+### Install compatible npm packages
 
 To install packages that is compatible with current version of Expo, run:
 
@@ -288,7 +288,7 @@ nx install <app-name> --fix
 {% /tabitem %}
 {% /tabs %}
 
-### Run an EAS Build
+### Run an EAS build
 
 Expo Application Services (EAS) are deeply integrated cloud services for Expo and React Native apps. EAS Build is a hosted service for building app binaries for your Expo and React Native projects.
 
@@ -310,7 +310,7 @@ To check the details of your build status, run:
 nx build-list  <app-name>
 ```
 
-### Submit an EAS Build
+### Submit an EAS build
 
 EAS Submit is a hosted service for uploading and submitting your app binaries to the app stores. Since it's a hosted service, you can submit your app to both stores as long as you can run EAS CLI on your machine.
 
@@ -320,7 +320,7 @@ To submit an EAS build:
 nx submit <app-name>
 ```
 
-### Update an EAS Build
+### Update an EAS build
 
 EAS Update is a hosted service that serves updates for projects using the `expo-updates` library.
 
@@ -332,7 +332,7 @@ To update an EAS build:
 nx update <app-name>
 ```
 
-### Testing Projects
+### Testing projects
 
 You can run unit tests with:
 
@@ -340,7 +340,7 @@ You can run unit tests with:
 nx test <project-name>
 ```
 
-## Expo Commands
+## Expo commands
 
 Below table is a map between expo commands and Nx commands:
 
@@ -357,7 +357,7 @@ Below table is a map between expo commands and Nx commands:
 | `eas update`       | `nx update <app-name>`      |
 | `eas submit`       | `nx submit <app-name>`      |
 
-## More Documentation
+## More documentation
 
 - [Using Detox](/docs/technologies/test-tools/detox/introduction)
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)

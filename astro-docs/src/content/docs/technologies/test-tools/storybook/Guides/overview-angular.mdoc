@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:Guides'
 ---
 
-This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
+Walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
 
 {% aside type="caution" title="Set up Storybook in your workspace" %}
 You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/docs/technologies/test-tools/storybook/introduction) to get started.
@@ -20,7 +20,7 @@ You can generate Storybook configuration for an individual Angular project by us
 nx g @nx/angular:storybook-configuration project-name
 ```
 
-## Auto-generate Stories
+## Auto-generate stories
 
 The [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular/generators#storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
@@ -76,7 +76,7 @@ and the result would be the following:
 
 {% /filetree %}
 
-## Example Files
+## Example files
 
 Let's take for example a library in your workspace, under `libs/feature/ui`, called `feature-ui` with a component, called `my-button`.
 
@@ -182,7 +182,7 @@ Your Storybook targets in your `project.json` (or if you run `nx show project my
 
 This setup instructs Nx to use the configuration under the `build` target of `my-project` when using the `storybook` and `build-storybook` executors.
 
-## More Documentation
+## More documentation
 
 - [Set up Compodoc for Storybook on Nx](/docs/technologies/test-tools/storybook/guides/angular-storybook-compodoc)
 - [Configuring styles and preprocessor options](/docs/technologies/test-tools/storybook/guides/angular-configuring-styles)
@@ -191,7 +191,7 @@ You can find all Storybook-related Nx topics [here](/docs/technologies/test-tool
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/angular/get-started/introduction).
 
-### Migration Scenarios
+### Migration scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 

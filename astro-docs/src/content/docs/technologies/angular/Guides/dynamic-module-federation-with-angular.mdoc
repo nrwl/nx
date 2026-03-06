@@ -12,7 +12,7 @@ Dynamic Module Federation is a technique that allows an application to determine
 
 The difficulty in achieving this with a Micro Frontend Architecture using Static Module Federation is that our Remote applications will have a different location (or URL) in each environment. Previously, to account for this, we would have had to specify the deployed location of the Remote applications and rebuild the application for the target environment.
 
-This guide will walk through how the concept of "Build once, deploy everywhere" can be easily achieved in a Micro Frontend Architecture that uses Dynamic Module Federation.
+Walk through how the concept of "Build once, deploy everywhere" can be easily achieved in a Micro Frontend Architecture that uses Dynamic Module Federation.
 
 ## Aim
 
@@ -32,7 +32,7 @@ To achieve the aims, we will do the following:
   - It should use the existing **Login** application.
   - It should use a new **Todo** application.
 
-## Final Code
+## Final code
 
 Here's the source code of the final result for this guide.
 
@@ -40,7 +40,7 @@ Here's the source code of the final result for this guide.
 
 ## First steps
 
-### Create an Nx Workspace
+### Create an Nx workspace
 
 To start with, we need to create a new Nx Workspace and add the Nx Angular plugin. We can do this easily with:
 
@@ -112,7 +112,7 @@ nx g @nx/angular:host apps/dashboard --prefix=ng-mf
 ```
 
 {% aside type="note" title="Running nx commands" %}
-The terminal examples in this guide will show `nx` being run as if it is installed globally. If you have not installed Nx globally (not required), you can use your package manager to run the `nx` local binary:
+The terminal examples will show `nx` being run as if it is installed globally. If you have not installed Nx globally (not required), you can use your package manager to run the `nx` local binary:
 
 - NPM: `npx nx ...`
 - Yarn: `yarn nx ...`
@@ -202,11 +202,11 @@ You give it a name that you can reference in your code, in this case `login`. Nx
 
 Now that we have our applications generated, let's move on to building out some functionality for each.
 
-## Adding Functionality
+## Adding functionality
 
 We'll start by building the **Login** application, which will consist of a login form and some very basic and insecure authorization logic.
 
-### User Library
+### User library
 
 Let's create a user data-access library that will be shared between the host application and the remote application.
 This will be used to determine if there is an authenticated user as well as providing logic for authenticating the user.
@@ -255,7 +255,7 @@ Now, export the service in the library's entry point file:
 export * from './lib/user.service';
 ```
 
-### Login Application
+### Login application
 
 Let's set up our `entry.ts` file in the **Login** application so that it renders a login form. We'll import `FormsModule` and inject our `UserService` to allow us to sign the user in:
 
@@ -336,11 +336,11 @@ If we type in the correct username and password _(demo, demo)_, then we can also
 
 Perfect! Our **Login** application is complete.
 
-### Dashboard Application
+### Dashboard application
 
 Now let's update our **Dashboard** application. We'll hide some content if the user is not authenticated, and present them with the **Login** application where they can log in.
 
-For this to work, the state within `UserService` must be shared across both applications. Usually, with Module Federation in Webpack, you have to specify the packages to share between all the applications in your Micro Frontend solution. However, by taking advantage of Nx's project graph, Nx will automatically find and share the dependencies of your applications.
+For this to work, the state within `UserService` must be shared across both applications. Usually, with Module Federation in Webpack, you have to specify the packages to share between all the applications in your Micro Frontend solution. However, by taking advantage of Nx project graph, Nx will automatically find and share the dependencies of your applications.
 
 {% aside type="note" title="Single version policy" %}
 This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy).
@@ -433,7 +433,7 @@ It's worth stressing that no errors or breakages have been noted from our tests.
 
 {% /aside %}
 
-## Converting the Dashboard application
+## Converting the dashboard application
 
 The **Dashboard** application is a Host application that loads the Remote applications at runtime based on their deployed locations when the application was built using Static Module Federation.
 
@@ -445,7 +445,7 @@ There are 3 steps involved with this:
 - Set the Remote Definitions so that webpack is aware of how to find the Remote applications when requested.
 - Change how we load the Remote applications so that webpack can fetch any required files correctly.
 
-### Fetch and Set the Remote Definitions
+### Fetch and set the remote definitions
 
 Perhaps one of the easiest methods of fetching the Remote Definitions at runtime is to store them in a JSON file that can be present in each environment. The Host application then only has to make a GET request to the JSON file.
 
@@ -530,17 +530,17 @@ nx serve dashboard --devRemotes=login
 
 Should result in the same behaviour as before, except that our **Dashboard** application is waiting until runtime to find out the deployed location of our **Login** application.
 
-In the next section, we will see how Nx's generators can be used to automate a lot of this process for us!
+In the next section, we will see how Nx generators can be used to automate a lot of this process for us!
 
 ---
 
-## Creating a new Dynamic Host application
+## Creating a new dynamic host application
 
 Nx provides generators that aim to streamline the process of setting up a Dynamic Micro Frontend architecture.
 
 To showcase this, let's create a new Host application that will use our previous **Login** application as well as a new **Todo** Remote application.
 
-### Generate the Employee Host application
+### Generate the employee host application
 
 Run the following command to generate a new Host application that is preconfigured for Dynamic Federation and add specify the **Login** Remote application we want to add:
 
@@ -558,7 +558,7 @@ This will generate:
 
 You should take a look at the files generated and see how the **Login** Remote application was added to the `module-federation.manifest.json` file and the slight changes to `main.ts` and `app.routes.ts` to load the Remotes dynamically.
 
-### Generate the Todo Remote application
+### Generate the todo remote application
 
 We're going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host's Micro Frontend Manifest file correctly.
 

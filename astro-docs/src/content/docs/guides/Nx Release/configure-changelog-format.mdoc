@@ -20,7 +20,7 @@ The default changelog renderer for `nx release` generates a changelog entry for 
 - Vinccool96
 ```
 
-## Include All Metadata
+## Include all metadata
 
 There are a few options available to modify the default changelog renderer output. They can be applied to both `workspaceChangelog` and `projectChangelogs` in exactly the same way. All four options are true by default:
 
@@ -62,7 +62,7 @@ Whether the commit references (such as commit and/or PR links) should be include
 
 Whether to include the date in the version title. It can be set to `false` to disable it, or `true` to enable with the default of (YYYY-MM-DD). Defaults to `true`.
 
-## Remove All Metadata
+## Remove all metadata
 
 If you prefer a more minimalist changelog, you can set all the options to false, like this:
 
@@ -94,7 +94,7 @@ Which will generate a changelog that looks similar to the following:
 - **rule-tester:** check for missing placeholder data in the message
 ```
 
-## Custom Changelog Renderer {% badge  text="Nx 22+" /%}
+## Custom changelog renderer {% badge  text="Nx 22+" /%}
 
 For complete control over changelog formatting, you can provide a custom changelog renderer implementation. The renderer can be specified as a path to a module that exports a class extending the base `ChangelogRenderer`.
 

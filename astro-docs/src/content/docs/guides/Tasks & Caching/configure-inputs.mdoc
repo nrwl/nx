@@ -53,7 +53,7 @@ Throughout this recipe, the following project structure of a simple workspace wi
 
 {% /graph %}
 
-## View the Inputs of a Task
+## View the inputs of a task
 
 You can view the configuration for a task of a project by adding the `--graph` flag when running the command:
 
@@ -317,7 +317,7 @@ Use this tool to help understand what inputs are being used by Nx in your worksp
 If no `inputs` are specified at all, Nx will default to looking at all files of a project and its dependencies. This is a rather cautious approach. This might cause Nx to re-run a task in some cases where the cache could have been used instead but it will always give you correct output.
 {% /aside %}
 
-## Configure Inputs
+## Configure inputs
 
 The tasks you run in your workspace will likely already have `inputs` defined.
 Be sure to [view the existing inputs](#viewing-the-inputs-of-a-task) and start from there.
@@ -335,7 +335,7 @@ To override the `inputs` of a task, start by copying over the entire array shown
 
 As you configure `inputs`, keep the project details screen open and it will refresh as changes are made. Check to make sure that the intended configuration is shown.
 
-### Workspace Level Inputs
+### Workspace level inputs
 
 [Target Defaults](/docs/reference/nx-json#target-defaults) defined in `nx.json` apply to a set of targets. Defining `inputs` here one time will apply to a set of similar targets.
 
@@ -355,7 +355,7 @@ This configuration will override any `inputs` inferred by Nx Plugins as you have
 The configuration defined here completely overwrites any `inputs` inferred by Nx Plugins and is not merged in any way.
 This configuration may be overridden by configuration in project-specific configuration files.
 
-### Project Level Inputs
+### Project level inputs
 
 Defining `inputs` of a target in `project.json` or `package.json` will apply only to tasks of the specific project.
 
@@ -402,9 +402,9 @@ The above specifies that the `build` target of the `myreactapp` project will use
 This configuration will override any `inputs` inferred by Nx Plugins as well as any `inputs` defined in the [Target Defaults](/docs/reference/nx-json#target-defaults) in the `nx.json` file as this is more specific than those other methods of configuring `inputs`.
 The configuration defined here completely overwrites any `inputs` inferred by Nx Plugins or in target defaults and is not merged in any way.
 
-## Common Inputs
+## Common inputs
 
-### Test and Config Files
+### Test and config files
 
 Often, projects include some files with runtime behavior and other files for unit testing. When running the `build` task, we do not want Nx to consider test files so updating the test files does not invalidate the cache for `build` tasks.
 
@@ -447,7 +447,7 @@ With the above named inputs, Nx will behave in the following way:
 - When only test files are changed, Nx will restore previous compilation results from the cache and re-run the tests for the projects containing the test files
 - When any production files are changed, Nx will re-run the tests for the project as well as any projects which depend on it
 
-### Specifying Dependency File Patterns Directly
+### Specifying dependency file patterns directly
 
 Instead of defining a named input and referencing it with `^`, you can directly specify file patterns to consider from dependency projects using the `^{projectRoot}` syntax:
 
@@ -478,7 +478,7 @@ You can also use the object format with the `dependencies` property:
 }
 ```
 
-### Consider the Version of a Language for all Tasks
+### Consider the version of a language for all tasks
 
 Many times, the version of the programming language being used will affect the behavior of all tasks for the workspace.
 A runtime input can be added to the `sharedGlobals` named input to consider it for the hash of every task.

@@ -31,7 +31,7 @@ unconventional, you must rename it back to the standard naming convention before
 For example, if you have a `apps/demo/vite.custom.ts` file and are running `nx g @nx/vite:convert-to-inferred`, you must
 first rename the file to `apps/demo/vite.config.ts` before running the generator.
 
-## Next.js: Unable to Migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` Options
+## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
 The [`outputPath`](/docs/technologies/react/remix/executors#build) option from `@nx/next:build` is ignored because it
 conflicts with Next.js' requirement that [`distDir`](https://nextjs.org/docs/app/api-reference/next-config-js/distDir)
@@ -61,7 +61,7 @@ rather just the build artifacts.
 
 These removals are necessary to align with Next.js recommendations.
 
-## Next.js: Nx `serve` Only Starts Dev Server
+## Next.js: Nx `serve` only starts dev server
 
 To better align with Next.js CLI, projects after the migration have two targets to start the server:
 
@@ -71,7 +71,7 @@ To better align with Next.js CLI, projects after the migration have two targets 
 Note that `serve` could be different depending on what you used for `@nx/next:server` previously. After the
 migration, `nx run <proj>:serve --prod` not longer starts the prod server. Use `nx run <proj>:start` instead.
 
-## Remix: Unable to Migrate `outputPath` Option
+## Remix: unable to migrate `outputPath` option
 
 The [`outputPath`](/docs/technologies/react/remix/executors#build) option from `@nx/remix:build` is ignored because it often
 leads to ESM errors when the output path is outside the project root. The ESM error occurs because the
@@ -94,14 +94,14 @@ export default {
 Note that you will need to address potential ESM issues that may arise. For example, change the root `package.json`
 to `"type": "module"`.
 
-## Remix: Unsupported `generatePackageJson` and `generateLockFile` Options
+## Remix: unsupported `generatePackageJson` and `generateLockFile` options
 
 The `generatePackageJson` and `generateLockFile` options in [`@nx/remix:build`](/docs/technologies/react/remix/executors#build) cannot
 currently be migrated. There is support for this feature in
 the [Nx Vite plugin](/docs/technologies/build-tools/vite/guides/configure-vite#typescript-paths), so in the future we may be able to support it if
 using Remix+Vite.
 
-## Storybook: Conflicting `staticDir` Options
+## Storybook: conflicting `staticDir` options
 
 Using `staticDir` for both `@nx/storybook:build-storybook` and `@nx/storybook:storybook` executor options will result in
 the one from `build-storybook` being used in the resulting `.storybook/main.ts` file. It is not possible for us to
@@ -123,7 +123,7 @@ const config: StorybookConfig = {
 export default config;
 ```
 
-## Vite: Unsupported `proxyConfig` Option
+## Vite: unsupported `proxyConfig` option
 
 Projects that used the [`proxyConfig`](/docs/technologies/build-tools/vite/executors#dev-server) option of `@nx/vite:dev-server`
 will need to inline the proxy configuration from the original file into `vite.config.ts`.
@@ -154,7 +154,7 @@ export default defineConfig({
 });
 ```
 
-## Webpack: Project Cannot Be Migrated
+## Webpack: project cannot be migrated
 
 Projects that
 use [Nx-enhanced Webpack configuration](/docs/technologies/build-tools/webpack/guides/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
@@ -163,7 +163,7 @@ require the `@nx/webpack:webpack` executor to work.
 
 To solve this issue, run `nx g @nx/webpack:convert-config-to-webpack-plugin` first, and then try again.
 
-## Webpack: Usage of `useLegacyNxPlugin`
+## Webpack: usage of `useLegacyNxPlugin`
 
 When converting
 from [Nx-enhanced](/docs/technologies/build-tools/webpack/guides/webpack-config-setup#nxenhanced-configuration-with-composable-plugins) to basic

@@ -55,7 +55,7 @@ of them in the following hierarchy.
 
 ## Creating an example workspace
 
-The best way to understand the setup is through an example. In this section, we will create a `host` application with
+The best way to understand the setup is through an example. we will create a `host` application with
 three remotes under these routes:
 
 1. `/shop`
@@ -72,7 +72,7 @@ These examples have fully
 functioning [CI](https://github.com/nrwl/react-module-federation/blob/main/.github/workflows/ci.yml) [workflows](https://github.com/nrwl/ng-module-federation/blob/main/.github/workflows/ci.yml)
 that are simple to set up. You can see what the CI does by viewing the sample pull requests in each repo. Also notice
 the [Nx Cloud](https://nx.app) integration, which gives you insight into each pipeline. We'll touch on
-this [later in this guide](#remote-computation-caching-with-nx-cloud).
+This [later ](#remote-computation-caching-with-nx-cloud).
 
 ![Nx Cloud integration for GitHub](../../../../../assets/concepts/module-federation/pull-request.png)
 
@@ -340,7 +340,7 @@ export const config: ModuleFederationConfig = {
 };
 ```
 
-The `shared` function can return an `undefined` to use Nx's default value, `false` to exclude it from being shared, or
+The `shared` function can return an `undefined` to use Nx default value, `false` to exclude it from being shared, or
 a [shared config](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints) that webpack supports.
 
 {% aside type="note" title="Analysis" %}
@@ -412,7 +412,7 @@ In addition to computation caching, Nx Cloud also comes with:
 
 ## Production build and deployment with Nx Cloud
 
-In this section, we'll examine how to set up your production build and simulate a deployment to `http://localhost:3000`.
+We'll examine how to set up your production build and simulate a deployment to `http://localhost:3000`.
 
 First, make sure you have implicit dependencies from `host` to each remote. In case you didn't already set this up, add
 the following line to the `host`'s project configuration.

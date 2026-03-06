@@ -8,7 +8,7 @@ filter: 'type:References'
 
 [Storybook](https://storybook.js.org) is a development environment for UI components. Browse a component library, view the different states of each component, and interactively develop and test components.
 
-This guide will briefly walk you through using Storybook within an Nx workspace.
+Briefly walk you through using Storybook within an Nx workspace.
 
 ## Requirements
 
@@ -25,7 +25,7 @@ The `@nx/storybook` plugin supports the following package versions.
      rather than a cryptic package-manager resolution failure. Storybook 7 is
      no longer actively supported. -->
 
-## Setting Up Storybook
+## Setting up Storybook
 
 ### Installation
 
@@ -41,7 +41,7 @@ nx add @nx/storybook
 
 This will install the correct version of `@nx/storybook`.
 
-### How @nx/storybook Infers Tasks
+### How @nx/storybook infers tasks
 
 The `@nx/storybook` plugin will create a task for any project that has a Storybook configuration file present. Any of the following files will be recognized as a Storybook configuration file:
 
@@ -52,11 +52,11 @@ The `@nx/storybook` plugin will create a task for any project that has a Storybo
 - `.storybook/main.mjs`
 - `.storybook/main.mts`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/storybook Configuration
+### @nx/storybook configuration
 
 The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 
@@ -81,7 +81,7 @@ The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTarget
 
 ## Using Storybook
 
-### Generating Storybook Configuration
+### Generating Storybook configuration
 
 You can generate Storybook configuration for an individual project with this command:
 
@@ -200,7 +200,7 @@ The project-specific Storybook configuration is pretty much similar to what you 
 └── etc...
 ```
 
-### Using Addons
+### Using addons
 
 To register a [Storybook addon](https://storybook.js.org/addons/) for all Storybook instances in your workspace:
 
@@ -233,7 +233,7 @@ To set up documentation, you can use [Storybook Autodocs](https://storybook.js.o
 
 You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
 
-## More Documentation
+## More documentation
 
 You can find dedicated information for React and Angular:
 
@@ -245,7 +245,7 @@ You can find all Storybook-related Nx documentation in the [Storybook guides sec
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
-### Migration Scenarios
+### Migration scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 

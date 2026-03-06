@@ -22,9 +22,9 @@ The `@nx/next` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-## Setting Up @nx/next
+## Setting up @nx/next
 
-### Add to an Existing Nx Workspace
+### Add to an existing Nx workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
@@ -59,13 +59,13 @@ Verify the plugin is setup:
 
 {% /steps %}
 
-### Create a New Workspace
+### Create a new workspace
 
 ```shell
 npx create-nx-workspace@latest --preset=next
 ```
 
-### Generate a New Application
+### Generate a new application
 
 ```shell
 nx g @nx/next:app apps/my-app
@@ -73,7 +73,7 @@ nx g @nx/next:app apps/my-app
 
 To start the application in development mode, run `nx dev my-app`. Read more about the options available for the [application generator](/docs/technologies/react/next/generators#application).
 
-### Generate a Library
+### Generate a library
 
 ```shell
 nx g @nx/next:lib libs/my-lib
@@ -84,9 +84,9 @@ nx g @nx/next:lib libs/my-lib --publishable --importPath=@myorg/my-lib
 
 Read more about the options available for the [library generator](/docs/technologies/react/next/generators#library).
 
-## Develop Next.js Applications
+## Develop Next.js applications
 
-### Serve for Development
+### Serve for development
 
 ```shell
 nx dev my-app
@@ -94,7 +94,7 @@ nx dev my-app
 
 Starts the Next.js development server at http://localhost:3000 by default.
 
-### Build for Production
+### Build for production
 
 ```shell
 nx build my-app
@@ -111,7 +111,7 @@ const nextConfig = {
 module.exports = nextConfig;
 ```
 
-### Start Production Server
+### Start production server
 
 ```shell
 nx start my-app
@@ -119,7 +119,7 @@ nx start my-app
 
 Serves the production build. Depends on `build` completing first.
 
-### Use Libraries in Your Application
+### Use libraries in your application
 
 ```typescript
 // apps/my-app/pages/index.tsx
@@ -134,7 +134,7 @@ There is no need to build the library prior to using it. When you update your li
 
 ## Configure @nx/next
 
-### How @nx/next Infers Tasks
+### How @nx/next infers tasks
 
 The `@nx/next` plugin creates tasks for any project that has a Next.js configuration file. Any of the following files are recognized:
 
@@ -143,7 +143,7 @@ The `@nx/next` plugin creates tasks for any project that has a Next.js configura
 - `next.config.mjs`
 - `next.config.ts`
 
-### Plugin Options
+### Plugin options
 
 Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
 
@@ -171,7 +171,7 @@ Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
 | `startTargetName`       | Name of the production server task   | `start`        |
 | `serveStaticTargetName` | Name of the static export serve task | `serve-static` |
 
-### Exclude or Include Specific Projects
+### Exclude or include specific projects
 
 Use `include`/`exclude` glob patterns in the plugin configuration to scope which projects the plugin applies to:
 
@@ -194,7 +194,7 @@ Use `include`/`exclude` glob patterns in the plugin configuration to scope which
 }
 ```
 
-### View Inferred Tasks
+### View inferred tasks
 
 To see what tasks Nx inferred for a project:
 
@@ -204,11 +204,11 @@ nx show project my-app
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI Considerations
+## CI considerations
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-### Build and Test Only What Changed
+### Build and test only what changed
 
 ```shell
 nx affected -t build test lint
@@ -216,7 +216,7 @@ nx affected -t build test lint
 
 This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those. Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-### Remote Caching
+### Remote caching
 
 Share build cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
@@ -224,11 +224,11 @@ Share build cache results across your team and CI with [remote caching](/docs/fe
 nx connect
 ```
 
-### Static HTML Export for E2E Testing
+### Static HTML export for E2E testing
 
 Next.js applications support [static HTML export](https://nextjs.org/docs/app/building-your-application/deploying/static-exports) by setting `output: 'export'` in `next.config.js`. The `serve-static` target serves these static files for E2E testing in CI, without requiring a Next.js server.
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="Deploy Next.js to Vercel" description="Deploy your Next.js application to Vercel with Nx." href="/docs/technologies/react/guides/deploy-nextjs-to-vercel" /%}

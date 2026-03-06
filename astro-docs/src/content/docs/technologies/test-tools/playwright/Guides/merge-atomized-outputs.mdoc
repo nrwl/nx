@@ -151,7 +151,7 @@ export default defineConfig({
 }
 ```
 
-## CI Integration
+## CI integration
 
 > The following example CI configuration is for GitHub Actions, but the same steps can be followed in all CI providers.
 > The most important part is to always call the merge report target, `e2e-ci--merge-reports`, even if the E2E tests fail to always have a final merged report.
@@ -226,7 +226,7 @@ export default defineConfig({
 
 List of available Playwright reports can be found in the [Playwright documentation](https://playwright.dev/docs/test-reporters).
 
-## Best Practices
+## Best practices
 
 1. **Environment-based Configuration**: Only enable blob reports in CI to avoid overhead during local development
 2. **Error Handling**: Use `if: always()` (or similar) in CI workflows to merge partial results even when some tests fail
