@@ -1,0 +1,231 @@
+diff --git a/src/daemon/server/project-graph-incremental-recomputation.js b/src/daemon/server/project-graph-incremental-recomputation.js
+index ed08807be6fafdf127a4772c67735d63e993d62b..30972dd6e8fb529784c25f4447343da188011a79 100644
+--- a/src/daemon/server/project-graph-incremental-recomputation.js
++++ b/src/daemon/server/project-graph-incremental-recomputation.js
+@@ -32,6 +32,9 @@ let scheduledTimeoutId;
+ let knownExternalNodes = {};
+ let fileChangeCounter = 0;
+ let recomputationGeneration = 0;
++function logRecomputeEvent(message) {
++    logger_1.serverLogger.log(`[RECOMPUTE] ${message}`);
++}
+ async function getCachedSerializedProjectGraphPromise() {
+     try {
+         let wasScheduled = false;
+@@ -49,7 +52,10 @@ async function getCachedSerializedProjectGraphPromise() {
+         if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
+             if (!cachedSerializedProjectGraphPromise) {
+                 cachedSerializedProjectGraphPromise =
+-                    processFilesAndCreateAndSerializeProjectGraph(plugins);
++                    processFilesAndCreateAndSerializeProjectGraph(plugins, {
++                        cause: 'startup:no-in-memory-cache',
++                        source: 'getCachedSerializedProjectGraphPromise',
++                    });
+                 logger_1.serverLogger.log('No files changed, but no in-memory cached project graph found. Recomputing it...');
+             }
+             else {
+@@ -59,7 +65,10 @@ async function getCachedSerializedProjectGraphPromise() {
+         else {
+             logger_1.serverLogger.log(`Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`);
+             cachedSerializedProjectGraphPromise =
+-                processFilesAndCreateAndSerializeProjectGraph(plugins);
++                processFilesAndCreateAndSerializeProjectGraph(plugins, {
++                    cause: 'request:pending-watched-changes',
++                    source: 'getCachedSerializedProjectGraphPromise',
++                });
+         }
+         const graphWasRecomputed = cachedSerializedProjectGraphPromise !== previousPromise;
+         const result = await cachedSerializedProjectGraphPromise;
+@@ -131,7 +140,10 @@ function addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles) {
+                 waitPeriod = waitPeriod * 2;
+             }
+             cachedSerializedProjectGraphPromise =
+-                processFilesAndCreateAndSerializeProjectGraph(await (0, get_plugins_1.getPlugins)());
++                processFilesAndCreateAndSerializeProjectGraph(await (0, get_plugins_1.getPlugins)(), {
++                    cause: 'watcher:scheduled-workspace-changes',
++                    source: 'addUpdatedAndDeletedFiles:setTimeout',
++                });
+             const { projectGraph, sourceMaps, error } = await cachedSerializedProjectGraphPromise;
+             if (createdFiles.length > 0) {
+                 (0, file_watcher_sockets_1.notifyFileWatcherSockets)(createdFiles, null, null);
+@@ -180,16 +192,20 @@ async function processCollectedUpdatedAndDeletedFiles({ projects, externalNodes,
+         throw e;
+     }
+ }
+-async function processFilesAndCreateAndSerializeProjectGraph(plugins) {
++async function processFilesAndCreateAndSerializeProjectGraph(plugins, reason = {
++    cause: 'unknown',
++    source: 'unknown',
++}) {
+     const myGeneration = ++recomputationGeneration;
+     // Helper to check if this recomputation is stale (a newer one has started)
+     const isStale = () => myGeneration !== recomputationGeneration;
+     try {
+-        perf_hooks_1.performance.mark('hash-watched-changes-start');
+         const updatedFilesSnapshot = new Map(collectedUpdatedFiles);
+         const deletedFilesSnapshot = new Map(collectedDeletedFiles);
+         const updatedFiles = [...updatedFilesSnapshot.keys()];
+         const deletedFiles = [...deletedFilesSnapshot.keys()];
++        logRecomputeEvent(`start id=${myGeneration} cause=${reason.cause} source=${reason.source} updated=${JSON.stringify(updatedFiles)} deleted=${JSON.stringify(deletedFiles)}`);
++        perf_hooks_1.performance.mark('hash-watched-changes-start');
+         let updatedFileHashes = (0, workspace_context_1.updateFilesInContext)(workspace_root_1.workspaceRoot, updatedFiles, deletedFiles);
+         perf_hooks_1.performance.mark('hash-watched-changes-end');
+         perf_hooks_1.performance.measure('hash changed files from watcher', 'hash-watched-changes-start', 'hash-watched-changes-end');
+@@ -214,6 +230,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(plugins) {
+         }
+         // Early exit if a newer recomputation has started - chain to the newer one
+         if (isStale()) {
++            logRecomputeEvent(`stale id=${myGeneration} after=retrieveProjectConfigurations`);
+             return cachedSerializedProjectGraphPromise;
+         }
+         await processCollectedUpdatedAndDeletedFiles(projectConfigurationsResult, updatedFileHashes, deletedFiles);
+@@ -231,6 +248,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(plugins) {
+         }
+         // Early exit if a newer recomputation has started - chain to the newer one
+         if (isStale()) {
++            logRecomputeEvent(`stale id=${myGeneration} after=processCollectedUpdatedAndDeletedFiles`);
+             return cachedSerializedProjectGraphPromise;
+         }
+         const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
+@@ -241,6 +259,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(plugins) {
+                 errors.push(...g.error.errors);
+             }
+             else {
++                const message = g.error instanceof Error ? g.error.message : String(g.error);
++                logRecomputeEvent(`complete id=${myGeneration} status=error kind=createAndSerializeProjectGraph message=${JSON.stringify(message)}`);
+                 return {
+                     error: g.error,
+                     projectGraph: null,
+@@ -255,6 +275,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(plugins) {
+             }
+         }
+         if (errors.length > 0) {
++            logRecomputeEvent(`complete id=${myGeneration} status=error kind=aggregate count=${errors.length}`);
+             return {
+                 error: new error_types_1.DaemonProjectGraphError(errors, g.projectGraph, projectConfigurationsResult.sourceMaps),
+                 projectGraph: null,
+@@ -268,10 +289,13 @@ async function processFilesAndCreateAndSerializeProjectGraph(plugins) {
+             };
+         }
+         else {
++            logRecomputeEvent(`complete id=${myGeneration} status=success`);
+             return g;
+         }
+     }
+     catch (err) {
++        const message = err instanceof Error ? err.message : String(err);
++        logRecomputeEvent(`complete id=${myGeneration} status=exception message=${JSON.stringify(message)}`);
+         return {
+             error: err,
+             projectGraph: null,
+diff --git a/src/daemon/server/server.js b/src/daemon/server/server.js
+index 340384267d400b7f7aadf13d51cb58faa375612a..e462c1f607cbe5bcb084c3ab4457645e8a31c010 100644
+--- a/src/daemon/server/server.js
++++ b/src/daemon/server/server.js
+@@ -320,6 +320,10 @@ const handleWorkspaceChanges = async (err, changeEvents) => {
+             return;
+         }
+         logger_1.serverLogger.watcherLog((0, watcher_1.convertChangeEventsToLogMessage)(changeEvents));
++        logger_1.serverLogger.watcherLog(`Workspace change events: ${JSON.stringify(changeEvents.map((event) => ({
++            type: event.type,
++            path: event.path,
++        })))}`);
+         const updatedFilesToHash = [];
+         const createdFilesToHash = [];
+         const deletedFiles = [];
+diff --git a/src/project-graph/project-graph.js b/src/project-graph/project-graph.js
+index 4ce47003e28c495a383e911089b21d43cce60e17..656fc91383dab537463b88f23fbff456cab3df37 100644
+--- a/src/project-graph/project-graph.js
++++ b/src/project-graph/project-graph.js
+@@ -9,6 +9,7 @@ exports.createProjectGraphAsync = createProjectGraphAsync;
+ exports.createProjectGraphAndSourceMapsAsync = createProjectGraphAndSourceMapsAsync;
+ exports.preventRecursionInGraphConstruction = preventRecursionInGraphConstruction;
+ const perf_hooks_1 = require("perf_hooks");
++const fs_1 = require("fs");
+ const path_1 = require("path");
+ const nx_json_1 = require("../config/nx-json");
+ const client_1 = require("../daemon/client/client");
+@@ -27,6 +28,83 @@ const error_types_1 = require("./error-types");
+ const nx_deps_cache_1 = require("./nx-deps-cache");
+ const get_plugins_1 = require("./plugins/get-plugins");
+ const retrieve_workspace_files_1 = require("./utils/retrieve-workspace-files");
++let relevantDaemonLogCaptureInitialized = false;
++let relevantDaemonLogFilePath = null;
++let relevantDaemonLogStartOffset = 0;
++function initializeRelevantDaemonLogCapture() {
++    if (relevantDaemonLogCaptureInitialized) {
++        return;
++    }
++    relevantDaemonLogCaptureInitialized = true;
++    const workspaceDataDirectory = process.env.NX_WORKSPACE_DATA_DIRECTORY ??
++        process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
++        '.nx/workspace-data';
++    relevantDaemonLogFilePath = path_1.isAbsolute(workspaceDataDirectory)
++        ? (0, path_1.join)(workspaceDataDirectory, 'd', 'daemon.log')
++        : (0, path_1.join)(workspace_root_1.workspaceRoot, workspaceDataDirectory, 'd', 'daemon.log');
++    try {
++        relevantDaemonLogStartOffset = (0, fs_1.existsSync)(relevantDaemonLogFilePath)
++            ? (0, fs_1.statSync)(relevantDaemonLogFilePath).size
++            : 0;
++    }
++    catch {
++        relevantDaemonLogStartOffset = 0;
++    }
++    process.on('exit', printRelevantDaemonLogLines);
++}
++function printRelevantDaemonLogLines() {
++    if (global.__NX_RELEVANT_DAEMON_EVENTS_PRINTED__) {
++        return;
++    }
++    global.__NX_RELEVANT_DAEMON_EVENTS_PRINTED__ = true;
++    if (!relevantDaemonLogFilePath || !(0, fs_1.existsSync)(relevantDaemonLogFilePath)) {
++        return;
++    }
++    try {
++        const contents = (0, fs_1.readFileSync)(relevantDaemonLogFilePath);
++        const nextContent = contents
++            .subarray(Math.min(relevantDaemonLogStartOffset, contents.length))
++            .toString('utf8');
++        const relevantLines = [];
++        for (const line of nextContent.split(/\r?\n/)) {
++            if (!line.length) {
++                continue;
++            }
++            if (line.includes('[RECOMPUTE]') ||
++                line.includes('Workspace change events:') ||
++                line.includes('[plugin-client] restarting worker') ||
++                line.includes('[isolated-plugin] spawned worker for') ||
++                line.includes('[isolated-plugin] shutting down worker for') ||
++                line.includes('pending request(s), not shutting down yet') ||
++                line.includes('Unexpected workspace watcher error') ||
++                line.includes('Unexpected outputs watcher error') ||
++                line.includes('Skipping handleWorkspaceChanges because of a previously recorded watcher error.') ||
++                line.includes('Error detected when recomputing project file map:') ||
++                line.includes('Error detected when creating a project graph:') ||
++                line.includes('[Server] lock file hash changed!') ||
++                line.includes('[Server] Daemon outdated:') ||
++                line.includes('[Server] Restarting daemon...') ||
++                line.includes('[Server] Shutting down daemon (no restart)...') ||
++                line.includes('The plugin worker for ') ||
++                line.includes('Plugin Worker for ')) {
++                relevantLines.push(line);
++            }
++        }
++        if (relevantLines.length === 0) {
++            return;
++        }
++        console.error('--- Relevant daemon events ---');
++        for (const line of relevantLines) {
++            console.error(line);
++        }
++        console.error('--- End relevant daemon events ---');
++    }
++    catch (error) {
++        const message = error instanceof Error ? error.message : String(error);
++        console.error(`[nx-daemon] Failed to print relevant daemon events: ${message}`);
++    }
++}
++initializeRelevantDaemonLogCapture();
+ /**
+  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
+  *
