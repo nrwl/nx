@@ -875,9 +875,11 @@ function getInputs(
       cache
     )
   ) {
-    // Importing modules from a referenced project will load its output declaration files (d.ts)
+    // tsc --build reads .d.ts and .tsbuildinfo files from referenced projects
     // https://www.typescriptlang.org/docs/handbook/project-references.html#what-is-a-project-reference
-    inputs.push({ dependentTasksOutputFiles: '**/*.d.ts' });
+    inputs.push({
+      dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
+    });
   } else {
     inputs.push('production' in namedInputs ? '^production' : '^default');
   }

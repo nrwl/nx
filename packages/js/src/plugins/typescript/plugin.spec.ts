@@ -1683,7 +1683,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress.config.ts",
                       "{projectRoot}/**/*.cy.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
                     ],
                     "metadata": {
@@ -2449,7 +2449,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
                     ],
                     "metadata": {
@@ -4254,7 +4254,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.ts",
                       "{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
                     ],
                     "metadata": {
