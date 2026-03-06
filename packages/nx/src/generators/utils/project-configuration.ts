@@ -11,7 +11,7 @@ import {
 import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
-} from '../../project-graph/utils/project-configuration-utils';
+} from '../../project-graph/utils/project-configuration/project-nodes-manager';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
