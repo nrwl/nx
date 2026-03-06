@@ -900,6 +900,17 @@ function getOutputs(
 ): string[] {
   const outputs = new Set<string>();
 
+  // Map each tsconfig to its basename (e.g. "tsconfig.lib") for deriving
+  // .tsbuildinfo filenames. Without this, all references would incorrectly
+  // use the root config's basename.
+  const tsconfigBasenames = new Map<ParsedTsconfigData, string>();
+  tsconfigBasenames.set(tsConfig, config.basenameNoExt);
+  for (const [refPath, refConfig] of Object.entries(
+    internalProjectReferences
+  )) {
+    tsconfigBasenames.set(refConfig, basename(refPath, '.json'));
+  }
+
   // We could have more surgical outputs based on the tsconfig options, but the
   // user could override them through the command line and that wouldn't be
   // reflected in the outputs. So, we just include everything that could be
@@ -1019,10 +1030,12 @@ function getOutputs(
           );
         } else if (emitDeclarationOnly) {
           // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-          const name = config.basenameNoExt;
           outputs.add(
             pathToInputOrOutput(
-              joinPathFragments(tsconfig.options.outDir, `${name}.tsbuildinfo`),
+              joinPathFragments(
+                tsconfig.options.outDir,
+                `${tsconfigBasenames.get(tsconfig)}.tsbuildinfo`
+              ),
               workspaceRoot,
               config.project
             )
@@ -1048,7 +1061,6 @@ function getOutputs(
         outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts.map'));
 
         // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-        const name = config.basenameNoExt;
         outputs.add(
           tsConfig.options.tsBuildInfoFile
             ? pathToInputOrOutput(
@@ -1056,7 +1068,10 @@ function getOutputs(
                 workspaceRoot,
                 config.project
               )
-            : joinPathFragments('{projectRoot}', `${name}.tsbuildinfo`)
+            : joinPathFragments(
+                '{projectRoot}',
+                `${tsconfigBasenames.get(tsconfig)}.tsbuildinfo`
+              )
         );
       }
     }
