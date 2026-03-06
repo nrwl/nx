@@ -165,10 +165,10 @@ class AddTestCiTargetsTest {
     val dependsOn = ciTarget?.get("dependsOn") as? List<*>
     assertNotNull(dependsOn, "Same-project dependsOn should be present")
     assertTrue(
-        dependsOn!!.any { (it as? Map<*, *>)?.get("target") == "compileTestKotlin" },
+        dependsOn!!.any { (it as? DependsOnEntry)?.target == "compileTestKotlin" },
         "Expected dependsOn to contain 'compileTestKotlin', got $dependsOn")
     assertTrue(
-        dependsOn.all { (it as? Map<*, *>)?.containsKey("projects") != true },
+        dependsOn.all { (it as? DependsOnEntry)?.projects == null },
         "Same-project deps should not have projects field")
   }
 

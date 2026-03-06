@@ -1,6 +1,7 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.NxTaskExtension
+import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
@@ -273,7 +274,7 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @param targetNamePrefix optional prefix to apply to all target names
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
-private data class DepEntry(
+private data class ResolvedTaskDep(
     val projectName: String,
     val targetName: String,
     val isSameProject: Boolean
@@ -281,7 +282,7 @@ private data class DepEntry(
 
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
 internal val taskDependencyCache =
-    ThreadLocal.withInitial { mutableMapOf<String, List<Map<String, Any>>?>() }
+    ThreadLocal.withInitial { mutableMapOf<String, List<DependsOnEntry>?>() }
 
 fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
@@ -289,7 +290,7 @@ fun getDependsOnForTask(
     dependencies: MutableSet<Dependency>? = null,
     targetNameOverrides: Map<String, String> = emptyMap(),
     targetNamePrefix: String = ""
-): List<Map<String, Any>>? {
+): List<DependsOnEntry>? {
 
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
@@ -300,7 +301,7 @@ fun getDependsOnForTask(
     return cache[taskKey]
   }
 
-  fun mapTasksToObjects(tasks: Collection<Task>): List<Map<String, Any>> {
+  fun mapTasksToObjects(tasks: Collection<Task>): List<DependsOnEntry> {
     val taskProject = task.project
 
     val depEntries =
@@ -320,25 +321,26 @@ fun getDependsOnForTask(
 
           if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
             val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
-            DepEntry(getNxProjectName(depProject), targetName, depProject == taskProject)
+            ResolvedTaskDep(getNxProjectName(depProject), targetName, depProject == taskProject)
           } else {
             null
           }
         }
 
-    val result = mutableListOf<Map<String, Any>>()
+    val result = mutableListOf<DependsOnEntry>()
     val grouped = depEntries.groupBy { it.isSameProject }
 
     // Same-project dependencies: just target name, no projects field
-    grouped[true]?.forEach { entry -> result.add(mapOf("target" to entry.targetName)) }
+    grouped[true]?.forEach { entry -> result.add(DependsOnEntry(target = entry.targetName)) }
 
     // Cross-project dependencies: group by target, collect projects into array
     grouped[false]
         ?.groupBy { it.targetName }
         ?.forEach { (targetName, entries) ->
           result.add(
-              mapOf(
-                  "target" to targetName, "projects" to entries.map { it.projectName }.distinct()))
+              DependsOnEntry(
+                  target = targetName,
+                  projects = entries.map { it.projectName }.distinct()))
         }
 
     return result

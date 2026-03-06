@@ -1,5 +1,6 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalNode
 import org.gradle.api.Project
@@ -84,9 +85,8 @@ class ProcessTaskUtilsTest {
     // Same-project dependencies use object format without projects field
     assertNotNull(dependsOn, "Same-project dependsOn should be present")
     assertEquals(1, dependsOn!!.size)
-    assertEquals("taskB", dependsOn[0]["target"])
-    assertFalse(
-        dependsOn[0].containsKey("projects"), "Same-project deps should not have projects field")
+    assertEquals("taskB", dependsOn[0].target)
+    assertNull(dependsOn[0].projects, "Same-project deps should not have projects field")
   }
 
   @Test
@@ -278,7 +278,7 @@ class ProcessTaskUtilsTest {
       assertEquals(2, resultWithPreComputed!!.size)
       assertEquals(2, resultWithoutPreComputed!!.size)
       assertTrue(
-          resultWithPreComputed.all { !it.containsKey("projects") },
+          resultWithPreComputed.all { it.projects == null },
           "Same-project deps should not have projects field")
     }
 
@@ -484,7 +484,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = result["dependsOn"] as? List<*>
     assertNotNull(dependsOn, "Same-project dependsOn should be present")
     assertTrue(
-        dependsOn!!.any { (it as? Map<*, *>)?.get("target") == "compile" },
+        dependsOn!!.any { (it as? DependsOnEntry)?.target == "compile" },
         "Expected dependsOn to contain 'compile', got $dependsOn")
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
@@ -636,12 +636,11 @@ class ProcessTaskUtilsTest {
         val dependsOn = getDependsOnForTask(null, appTask, dependencies)
 
         assertNotNull(dependsOn)
-        val libEntry = dependsOn!!.find { it["target"] == "compileJava" }
+        val libEntry = dependsOn!!.find { it.target == "compileJava" }
         assertNotNull(
             libEntry, "Expected dependsOn entry with target 'compileJava' but got $dependsOn")
-        @Suppress("UNCHECKED_CAST") val projects = libEntry!!["projects"] as? List<String>
-        assertNotNull(projects, "Expected 'projects' field for cross-project dependency")
-        assertTrue(projects!!.contains(":lib"), "Expected project ':lib' in $projects")
+        assertNotNull(libEntry!!.projects, "Expected 'projects' field for cross-project dependency")
+        assertTrue(libEntry.projects!!.contains(":lib"), "Expected project ':lib' in ${libEntry.projects}")
       } finally {
         rootDir.deleteRecursively()
       }
@@ -701,17 +700,17 @@ class ProcessTaskUtilsTest {
         // Should have 2 entries: "classes" (with lib + util) and "jar" (with lib)
         assertEquals(2, dependsOn!!.size, "Expected 2 dependsOn entries, got $dependsOn")
 
-        val classesEntry = dependsOn.find { it["target"] == "classes" }
+        val classesEntry = dependsOn.find { it.target == "classes" }
         assertNotNull(classesEntry, "Expected 'classes' target in $dependsOn")
-        @Suppress("UNCHECKED_CAST") val classesProjects = classesEntry!!["projects"] as List<String>
-        assertTrue(classesProjects.contains(":lib"), "Expected :lib in classes projects")
-        assertTrue(classesProjects.contains(":util"), "Expected :util in classes projects")
+        assertNotNull(classesEntry!!.projects, "Expected projects for classes entry")
+        assertTrue(classesEntry.projects!!.contains(":lib"), "Expected :lib in classes projects")
+        assertTrue(classesEntry.projects!!.contains(":util"), "Expected :util in classes projects")
 
-        val jarEntry = dependsOn.find { it["target"] == "jar" }
+        val jarEntry = dependsOn.find { it.target == "jar" }
         assertNotNull(jarEntry, "Expected 'jar' target in $dependsOn")
-        @Suppress("UNCHECKED_CAST") val jarProjects = jarEntry!!["projects"] as List<String>
-        assertTrue(jarProjects.contains(":lib"), "Expected :lib in jar projects")
-        assertEquals(1, jarProjects.size, "jar should only have 1 project")
+        assertNotNull(jarEntry!!.projects, "Expected projects for jar entry")
+        assertTrue(jarEntry.projects!!.contains(":lib"), "Expected :lib in jar projects")
+        assertEquals(1, jarEntry.projects!!.size, "jar should only have 1 project")
       } finally {
         rootDir.deleteRecursively()
       }

@@ -1,5 +1,7 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.data.DependsOnEntry
+import dev.nx.gradle.data.DependsOnParams
 import dev.nx.gradle.data.NxTargets
 import dev.nx.gradle.data.TargetGroups
 import dev.nx.gradle.utils.parsing.containsEssentialTestAnnotations
@@ -23,7 +25,7 @@ fun addTestCiTargets(
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
-  val ciDependsOn = mutableListOf<Map<String, Any>>()
+  val ciDependsOn = mutableListOf<DependsOnEntry>()
 
   processTestFiles(
       testFiles,
@@ -58,7 +60,7 @@ private fun processTestFiles(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    ciDependsOn: MutableList<Map<String, Any>>,
+    ciDependsOn: MutableList<DependsOnEntry>,
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   testFiles
@@ -78,7 +80,7 @@ private fun processTestFiles(
                   gitIgnoreClassifier)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
-          ciDependsOn.add(mapOf("target" to targetName, "params" to "forward"))
+          ciDependsOn.add(DependsOnEntry(target = targetName, params = DependsOnParams.FORWARD))
         }
       }
 }
@@ -142,7 +144,7 @@ private fun ensureParentCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    ciDependsOn: List<Map<String, Any>>,
+    ciDependsOn: List<DependsOnEntry>,
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {

@@ -201,18 +201,21 @@ fun processTargetsForProject(
         val ciCheckTargetName =
             applyPrefix(targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci"))
 
-        // Maps a same-project dep target to its CI equivalent (e.g., test -> ci-test)
-        fun ciTestReplacementFor(depTargetName: String): String? {
-          if (!hasCiTestTarget) return null
-          if (depTargetName == testTargetName) return ciTestTargetBaseName
-          return testTasksByPrefixedName[depTargetName]?.let { "$ciTestTargetBaseName-${it.name}" }
+        // Build CI test replacements: maps original target names to their CI equivalents
+        // e.g., "test" -> "ci-test", "testDebug" -> "ci-test-testDebug"
+        val ciTestReplacements = mutableMapOf<String, String>()
+        if (hasCiTestTarget) {
+          testTasksByPrefixedName.forEach { (prefixedName, testTask) ->
+            ciTestReplacements[prefixedName] = "$ciTestTargetBaseName-${testTask.name}"
+          }
+          // The default test target gets the base CI name (e.g., "test" -> "ci-test")
+          // Set after the loop so it takes priority over the generic pattern
+          ciTestReplacements[testTargetName] = ciTestTargetBaseName!!
         }
 
         if (task.name == "check") {
           val ciCheckDependsOn =
-              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix) {
-                ciTestReplacementFor(it)
-              }
+              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix, ciTestReplacements)
 
           targets[ciCheckTargetName] =
               mutableMapOf(
@@ -228,9 +231,9 @@ fun processTargetsForProject(
           val ciBuildTargetName =
               applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
           val ciBuildDependsOn =
-              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix) {
-                if (it == applyPrefix("check")) ciCheckTargetName else null
-              }
+              buildCiDependsOn(
+                  task, project, targetNameOverrides, targetNamePrefix,
+                  mapOf(applyPrefix("check") to ciCheckTargetName))
 
           targets[ciBuildTargetName] =
               mutableMapOf(
@@ -255,21 +258,18 @@ fun processTargetsForProject(
 
 /**
  * Build CI dependsOn list from a task's Gradle dependencies. Splits into same-project and
- * cross-project entries, groups cross-project deps by target, and applies an optional same-project
- * replacement function (e.g., test -> ci-test, check -> ci-check).
- *
- * @param replaceSameProject returns a replacement target name for same-project deps, or null to
- *   keep as-is
+ * cross-project entries, groups cross-project deps by target, and optionally replaces same-project
+ * target names using the provided map (e.g., test -> ci-test, check -> ci-check).
  */
 fun buildCiDependsOn(
     task: Task,
     project: Project,
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String,
-    replaceSameProject: (String) -> String?
-): List<Map<String, Any>> {
+    sameProjectReplacements: Map<String, String> = emptyMap()
+): List<DependsOnEntry> {
   val allDeps = getDependsOnTask(task)
-  val result = mutableListOf<Map<String, Any>>()
+  val result = mutableListOf<DependsOnEntry>()
   val crossProjectByTarget = mutableMapOf<String, MutableList<String>>()
 
   allDeps.forEach { depTask ->
@@ -278,8 +278,8 @@ fun buildCiDependsOn(
       val depTargetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
 
       if (depProject == project) {
-        val replaced = replaceSameProject(depTargetName)
-        result.add(mapOf("target" to (replaced ?: depTargetName)))
+        val finalName = sameProjectReplacements[depTargetName] ?: depTargetName
+        result.add(DependsOnEntry(target = finalName))
       } else {
         crossProjectByTarget
             .getOrPut(depTargetName) { mutableListOf() }
@@ -289,7 +289,7 @@ fun buildCiDependsOn(
   }
 
   crossProjectByTarget.forEach { (targetName, projects) ->
-    result.add(mapOf("target" to targetName, "projects" to projects.distinct()))
+    result.add(DependsOnEntry(target = targetName, projects = projects.distinct()))
   }
 
   return result
