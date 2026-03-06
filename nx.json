@@ -245,7 +245,11 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*"],
+      "exclude": [
+        "packages/**/__fixtures__/**/*",
+        "packages/gradle/project-graph/**/*",
+        "packages/gradle/batch-runner/**/*"
+      ],
       "options": {
         "targetName": "lint"
       }
