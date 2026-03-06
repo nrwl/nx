@@ -1,4 +1,5 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { output } from '../utils/output';
 
 export interface SplitTargetOptions {
@@ -7,6 +8,33 @@ export interface SplitTargetOptions {
 }
 
 type TargetTuple = [string, string?, string?];
+
+// Internal: generic project lookup for segment matching.
+// Abstracts the difference between ProjectGraphProjectNode records
+// (used by the public graph API) and plain ProjectConfiguration records
+// (used during the merge phase).
+interface ProjectLookup {
+  has(name: string): boolean;
+  getTargets(name: string): Record<string, any> | undefined;
+}
+
+function nodeLookup(
+  nodes: Record<string, ProjectGraphProjectNode>
+): ProjectLookup {
+  return {
+    has: (name) => !!nodes[name],
+    getTargets: (name) => nodes[name]?.data?.targets,
+  };
+}
+
+function configLookup(
+  configs: Record<string, ProjectConfiguration>
+): ProjectLookup {
+  return {
+    has: (name) => !!configs[name],
+    getTargets: (name) => configs[name]?.targets,
+  };
+}
 
 /**
  * Collects all valid [project, target?, config?] interpretations of a
@@ -19,14 +47,14 @@ type TargetTuple = [string, string?, string?];
  */
 function findAllMatchingSegments(
   segments: string[],
-  nodes: Record<string, ProjectGraphProjectNode>,
+  lookup: ProjectLookup,
   currentProject?: string
 ): TargetTuple[] {
   const matches: TargetTuple[] = [];
 
   // --- Bare-target matches (currentProject context) ---
-  if (currentProject && nodes[currentProject]) {
-    const targets = nodes[currentProject].data.targets || {};
+  if (currentProject && lookup.has(currentProject)) {
+    const targets = lookup.getTargets(currentProject) || {};
     for (let j = 1; j <= segments.length; j++) {
       const candidateTarget = segments.slice(0, j).join(':');
       if (!(candidateTarget in targets)) {
@@ -48,7 +76,7 @@ function findAllMatchingSegments(
   // --- Project-based matches ---
   for (let i = 1; i <= segments.length; i++) {
     const candidateProject = segments.slice(0, i).join(':');
-    if (!nodes[candidateProject]) {
+    if (!lookup.has(candidateProject)) {
       continue;
     }
 
@@ -58,7 +86,7 @@ function findAllMatchingSegments(
       continue;
     }
 
-    const targets = nodes[candidateProject].data.targets || {};
+    const targets = lookup.getTargets(candidateProject) || {};
     for (let j = 1; j <= remaining.length; j++) {
       const candidateTarget = remaining.slice(0, j).join(':');
       if (!(candidateTarget in targets)) {
@@ -119,9 +147,13 @@ function formatMatch(match: TargetTuple): string {
   return match.filter(Boolean).join(':');
 }
 
-export function splitTargetFromNodes(
+/**
+ * Internal implementation shared by splitTargetFromNodes and
+ * splitTargetFromConfigurations.
+ */
+function splitTargetImpl(
   s: string,
-  nodes: Record<string, ProjectGraphProjectNode>,
+  lookup: ProjectLookup,
   options?: SplitTargetOptions
 ): [project: string, target?: string, configuration?: string] {
   const silent = options?.silent ?? false;
@@ -129,7 +161,7 @@ export function splitTargetFromNodes(
 
   const segments = splitByColons(s);
 
-  const matches = findAllMatchingSegments(segments, nodes, currentProject);
+  const matches = findAllMatchingSegments(segments, lookup, currentProject);
 
   if (matches.length > 0) {
     const sorted = sortMatchesByPrecedence(matches, currentProject);
@@ -169,7 +201,7 @@ export function splitTargetFromNodes(
       let absorbed = 1; // absorb at least one segment
       for (let k = remainingSegments.length - 1; k >= 1; k--) {
         const candidate = ':' + remainingSegments.slice(0, k).join(':');
-        if (nodes[candidate]) {
+        if (lookup.has(candidate)) {
           absorbed = k;
           break;
         }
@@ -183,7 +215,7 @@ export function splitTargetFromNodes(
     const restSegments = splitByColons(rest);
     const restMatches = findAllMatchingSegments(
       restSegments,
-      nodes,
+      lookup,
       currentProject
     );
     if (restMatches.length > 0) {
@@ -193,7 +225,7 @@ export function splitTargetFromNodes(
       }
     }
     // no project-target pair found, do the naive matching
-    const validTargets = nodes[project] ? nodes[project].data.targets : {};
+    const validTargets = lookup.getTargets(project);
     const validTargetNames = new Set(Object.keys(validTargets ?? {}));
 
     return [
@@ -203,6 +235,27 @@ export function splitTargetFromNodes(
   }
   // we don't know what to do with the string, return as is
   return [s];
+}
+
+export function splitTargetFromNodes(
+  s: string,
+  nodes: Record<string, ProjectGraphProjectNode>,
+  options?: SplitTargetOptions
+): [project: string, target?: string, configuration?: string] {
+  return splitTargetImpl(s, nodeLookup(nodes), options);
+}
+
+/**
+ * Splits a colon-delimited target specifier using a name-keyed
+ * `Record<string, ProjectConfiguration>` — the format used during
+ * the merge phase before the full project graph is available.
+ */
+export function splitTargetFromConfigurations(
+  s: string,
+  configs: Record<string, ProjectConfiguration>,
+  options?: SplitTargetOptions
+): [project: string, target?: string, configuration?: string] {
+  return splitTargetImpl(s, configLookup(configs), options);
 }
 
 export function splitTarget(
