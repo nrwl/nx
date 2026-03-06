@@ -274,12 +274,6 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @param targetNamePrefix optional prefix to apply to all target names
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
-private data class ResolvedTaskDep(
-    val projectName: String,
-    val targetName: String,
-    val isSameProject: Boolean
-)
-
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
 internal val taskDependencyCache =
     ThreadLocal.withInitial { mutableMapOf<String, List<DependsOnEntry>?>() }
@@ -303,47 +297,41 @@ fun getDependsOnForTask(
 
   fun mapTasksToObjects(tasks: Collection<Task>): List<DependsOnEntry> {
     val taskProject = task.project
+    val sameProjectDependsOn = mutableListOf<DependsOnEntry>()
+    val crossProjectByTarget = mutableMapOf<String, MutableList<String>>()
 
-    val depEntries =
-        tasks.mapNotNull { depTask ->
-          val depProject = depTask.project
+    tasks.forEach { depTask ->
+      val depProject = depTask.project
 
-          if (task.name != "buildDependents" &&
-              depProject != taskProject &&
-              dependencies != null &&
-              taskProject.buildFile.exists()) {
-            dependencies.add(
-                Dependency(
-                    taskProject.projectDir.path,
-                    depProject.projectDir.path,
-                    taskProject.buildFile.path))
-          }
+      if (task.name != "buildDependents" &&
+          depProject != taskProject &&
+          dependencies != null &&
+          taskProject.buildFile.exists()) {
+        dependencies.add(
+            Dependency(
+                taskProject.projectDir.path,
+                depProject.projectDir.path,
+                taskProject.buildFile.path))
+      }
 
-          if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
-            val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
-            ResolvedTaskDep(getNxProjectName(depProject), targetName, depProject == taskProject)
-          } else {
-            null
-          }
+      if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+        val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
+        if (depProject == taskProject) {
+          sameProjectDependsOn.add(DependsOnEntry(target = targetName))
+        } else {
+          crossProjectByTarget
+              .getOrPut(targetName) { mutableListOf() }
+              .add(getNxProjectName(depProject))
+        }
+      }
+    }
+
+    val crossProjectDependsOn =
+        crossProjectByTarget.map { (targetName, projects) ->
+          DependsOnEntry(target = targetName, projects = projects.distinct())
         }
 
-    val result = mutableListOf<DependsOnEntry>()
-    val grouped = depEntries.groupBy { it.isSameProject }
-
-    // Same-project dependencies: just target name, no projects field
-    grouped[true]?.forEach { entry -> result.add(DependsOnEntry(target = entry.targetName)) }
-
-    // Cross-project dependencies: group by target, collect projects into array
-    grouped[false]
-        ?.groupBy { it.targetName }
-        ?.forEach { (targetName, entries) ->
-          result.add(
-              DependsOnEntry(
-                  target = targetName,
-                  projects = entries.map { it.projectName }.distinct()))
-        }
-
-    return result
+    return sameProjectDependsOn + crossProjectDependsOn
   }
 
   // Add a placeholder to prevent infinite recursion only when not using pre-computed dependencies
