@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", "project-graph", "batch-runner"],
+  "ignorePatterns": ["!**/*", "node_modules", "project-graph", "batch-runner"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
