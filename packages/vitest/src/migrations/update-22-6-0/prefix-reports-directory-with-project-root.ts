@@ -133,8 +133,12 @@ function needsMigration(reportsDirectory: string | undefined): boolean {
   if (isAbsolute(reportsDirectory)) {
     return false;
   }
-  // Already starts with {projectRoot}
+  // Already starts with {projectRoot} — already project-root-relative
   if (reportsDirectory.startsWith('{projectRoot}')) {
+    return false;
+  }
+  // Already starts with {workspaceRoot} — user intended workspace-root-relative
+  if (reportsDirectory.startsWith('{workspaceRoot}')) {
     return false;
   }
   return true;

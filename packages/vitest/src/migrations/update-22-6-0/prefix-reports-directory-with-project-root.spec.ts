@@ -129,6 +129,27 @@ describe('prefix-reports-directory-with-project-root', () => {
       );
     });
 
+    it('should not modify reportsDirectory that starts with {workspaceRoot}', () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'libs/my-lib',
+        targets: {
+          test: {
+            executor: '@nx/vitest:test',
+            options: {
+              reportsDirectory: '{workspaceRoot}/coverage/{projectRoot}',
+            },
+          },
+        },
+      });
+
+      prefixReportsDirectoryWithProjectRoot(tree);
+
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.targets.test.options.reportsDirectory).toBe(
+        '{workspaceRoot}/coverage/{projectRoot}'
+      );
+    });
+
     it('should not modify absolute reportsDirectory paths', () => {
       addProjectConfiguration(tree, 'my-lib', {
         root: 'libs/my-lib',
