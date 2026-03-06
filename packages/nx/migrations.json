@@ -145,7 +145,7 @@
     },
     "22-6-0-enable-analytics-prompt": {
       "cli": "nx",
-      "version": "22.6.0-beta.10",
+      "version": "22.6.0-beta.11",
       "description": "Prompts to enable usage analytics",
       "implementation": "./src/migrations/update-22-6-0/enable-analytics-prompt"
     }
