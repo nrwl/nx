@@ -13,13 +13,8 @@ import { LifeCycle, TaskResult } from '../life-cycle';
 
 export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
-  private taskRuns: TaskRun[] = [];
+  private pendingResults: TaskResult[] = [];
   private flakyTasks: string[];
-
-  // hashes which could trigger flaky task detection.
-  // set here rather than on the TaskRun to avoid storing data on
-  // the fs
-  private cacheableHashes: Set<string> = new Set();
 
   startTasks(tasks: Task[]): void {
     for (let task of tasks) {
@@ -29,11 +24,19 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
 
   async endTasks(taskResults: TaskResult[]) {
     for (const taskResult of taskResults) {
-      // Track cacheable tasks for flaky detection
+      this.pendingResults.push(taskResult);
+    }
+  }
+
+  async endCommand() {
+    // Build TaskRun objects now — task.hash is guaranteed to be set by this point
+    const taskRuns: TaskRun[] = [];
+    const cacheableHashes = new Set<string>();
+    for (const taskResult of this.pendingResults) {
       if (taskResult.task.cache === true) {
-        this.cacheableHashes.add(taskResult.task.hash);
+        cacheableHashes.add(taskResult.task.hash);
       }
-      this.taskRuns.push({
+      taskRuns.push({
         project: taskResult.task.target.project,
         target: taskResult.task.target.target,
         configuration: taskResult.task.target.configuration,
@@ -46,13 +49,11 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
         end: (taskResult.task.endTime ?? new Date().getTime()).toString(),
       });
     }
-  }
 
-  async endCommand() {
-    await writeTaskRunsToHistory(this.taskRuns);
+    await writeTaskRunsToHistory(taskRuns);
     // Only check for flaky tasks among cacheable tasks
-    const cacheableTaskRuns = this.taskRuns.filter((t) =>
-      this.cacheableHashes.has(t.hash)
+    const cacheableTaskRuns = taskRuns.filter((t) =>
+      cacheableHashes.has(t.hash)
     );
     const history = await getHistoryForHashes(
       cacheableTaskRuns.map((t) => t.hash)
