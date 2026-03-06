@@ -215,7 +215,8 @@ fun processTargetsForProject(
 
         if (task.name == "check") {
           val ciCheckDependsOn =
-              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix, ciTestReplacements)
+              buildCiDependsOn(
+                  task, project, targetNameOverrides, targetNamePrefix, ciTestReplacements)
 
           targets[ciCheckTargetName] =
               mutableMapOf(
@@ -232,7 +233,10 @@ fun processTargetsForProject(
               applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
           val ciBuildDependsOn =
               buildCiDependsOn(
-                  task, project, targetNameOverrides, targetNamePrefix,
+                  task,
+                  project,
+                  targetNameOverrides,
+                  targetNamePrefix,
                   mapOf(applyPrefix("check") to ciCheckTargetName))
 
           targets[ciBuildTargetName] =

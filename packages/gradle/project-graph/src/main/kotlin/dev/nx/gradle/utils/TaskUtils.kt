@@ -1,8 +1,8 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.NxTaskExtension
-import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.Dependency
+import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File

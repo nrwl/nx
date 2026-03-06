@@ -1,7 +1,7 @@
 package dev.nx.gradle.utils
 
-import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.Dependency
+import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -640,7 +640,8 @@ class ProcessTaskUtilsTest {
         assertNotNull(
             libEntry, "Expected dependsOn entry with target 'compileJava' but got $dependsOn")
         assertNotNull(libEntry!!.projects, "Expected 'projects' field for cross-project dependency")
-        assertTrue(libEntry.projects!!.contains(":lib"), "Expected project ':lib' in ${libEntry.projects}")
+        assertTrue(
+            libEntry.projects!!.contains(":lib"), "Expected project ':lib' in ${libEntry.projects}")
       } finally {
         rootDir.deleteRecursively()
       }
