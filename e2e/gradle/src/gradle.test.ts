@@ -44,8 +44,9 @@ describe('Gradle', () => {
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
 
-        const bootJarOutput = runCLI('bootJar app --no-batch', {
+        const bootJarOutput = runCLI('bootJar app', {
           verbose: true,
+          redirectStderr: true,
         });
         expect(bootJarOutput).toContain(':app:bootJar');
       });
