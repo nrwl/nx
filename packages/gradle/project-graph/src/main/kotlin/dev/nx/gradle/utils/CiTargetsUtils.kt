@@ -78,8 +78,7 @@ private fun processTestFiles(
                   gitIgnoreClassifier)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
-          ciDependsOn.add(
-              mapOf("target" to targetName, "projects" to listOf("self"), "params" to "forward"))
+          ciDependsOn.add(mapOf("target" to targetName, "params" to "forward"))
         }
       }
 }

@@ -200,22 +200,18 @@ fun processTargetsForProject(
       if (ciTestTargetBaseName != null) {
         val ciCheckTargetName =
             applyPrefix(targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci"))
+
+        // Maps a same-project dep target to its CI equivalent (e.g., test -> ci-test)
+        fun ciTestReplacementFor(depTargetName: String): String? {
+          if (!hasCiTestTarget) return null
+          if (depTargetName == testTargetName) return ciTestTargetBaseName
+          return testTasksByPrefixedName[depTargetName]?.let { "$ciTestTargetBaseName-${it.name}" }
+        }
+
         if (task.name == "check") {
           val ciCheckDependsOn =
-              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix) { depTargetName
-                ->
-                when {
-                  hasCiTestTarget && depTargetName == testTargetName -> ciTestTargetBaseName
-                  hasCiTestTarget -> {
-                    val matchingTask = testTasksByPrefixedName[depTargetName]
-                    if (matchingTask != null && depTargetName != testTargetName) {
-                      "$ciTestTargetBaseName-${matchingTask.name}"
-                    } else {
-                      null
-                    }
-                  }
-                  else -> null
-                }
+              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix) {
+                ciTestReplacementFor(it)
               }
 
           targets[ciCheckTargetName] =
@@ -232,9 +228,8 @@ fun processTargetsForProject(
           val ciBuildTargetName =
               applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
           val ciBuildDependsOn =
-              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix) { depTargetName
-                ->
-                if (depTargetName == applyPrefix("check")) ciCheckTargetName else null
+              buildCiDependsOn(task, project, targetNameOverrides, targetNamePrefix) {
+                if (it == applyPrefix("check")) ciCheckTargetName else null
               }
 
           targets[ciBuildTargetName] =
