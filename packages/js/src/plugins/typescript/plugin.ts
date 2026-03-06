@@ -893,189 +893,181 @@ function getInputs(
 
 function getOutputs(
   config: ConfigContext,
-  tsConfig: ParsedTsconfigData,
+  rootTsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   emitDeclarationOnly: boolean
 ): string[] {
   const outputs = new Set<string>();
 
-  // Map each tsconfig to its basename (e.g. "tsconfig.lib") for deriving
-  // .tsbuildinfo filenames. Without this, all references would incorrectly
-  // use the root config's basename.
-  const tsconfigBasenames = new Map<ParsedTsconfigData, string>();
-  tsconfigBasenames.set(tsConfig, config.basenameNoExt);
-  for (const [refPath, refConfig] of Object.entries(
-    internalProjectReferences
-  )) {
-    tsconfigBasenames.set(refConfig, basename(refPath, '.json'));
-  }
-
   // We could have more surgical outputs based on the tsconfig options, but the
   // user could override them through the command line and that wouldn't be
   // reflected in the outputs. So, we just include everything that could be
   // produced by the tsc command.
-  [tsConfig, ...Object.values(internalProjectReferences)].forEach(
-    (tsconfig) => {
-      if (tsconfig.options.outFile) {
-        const outFileName = basename(tsconfig.options.outFile, '.js');
-        const outFileDir = dirname(tsconfig.options.outFile);
-        outputs.add(
-          pathToInputOrOutput(
-            tsconfig.options.outFile,
-            workspaceRoot,
-            config.project
-          )
-        );
-        // outFile is not be used with .cjs, .mjs, .jsx, so the list is simpler
-        const outDir = relative(workspaceRoot, outFileDir);
-        outputs.add(
-          pathToInputOrOutput(
-            joinPathFragments(outDir, `${outFileName}.js.map`),
-            workspaceRoot,
-            config.project
-          )
-        );
-        outputs.add(
-          pathToInputOrOutput(
-            joinPathFragments(outDir, `${outFileName}.d.ts`),
-            workspaceRoot,
-            config.project
-          )
-        );
-        outputs.add(
-          pathToInputOrOutput(
-            joinPathFragments(outDir, `${outFileName}.d.ts.map`),
-            workspaceRoot,
-            config.project
-          )
-        );
-        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-        outputs.add(
-          tsConfig.options.tsBuildInfoFile
-            ? pathToInputOrOutput(
-                tsConfig.options.tsBuildInfoFile,
-                workspaceRoot,
-                config.project
-              )
-            : pathToInputOrOutput(
-                joinPathFragments(outDir, `${outFileName}.tsbuildinfo`),
-                workspaceRoot,
-                config.project
-              )
-        );
-      } else if (tsconfig.options.outDir) {
-        if (emitDeclarationOnly) {
-          outputs.add(
-            pathToInputOrOutput(
-              joinPathFragments(tsconfig.options.outDir, '**/*.d.ts'),
+  [
+    { configBaseNameNoExt: config.basenameNoExt, tsConfig: rootTsConfig },
+    ...Object.entries(internalProjectReferences).map(
+      ([internalConfigPath, internalConfig]) => ({
+        configBaseNameNoExt: basename(internalConfigPath, '.json'),
+        tsConfig: internalConfig,
+      })
+    ),
+  ].forEach(({ configBaseNameNoExt, tsConfig }) => {
+    if (tsConfig.options.outFile) {
+      const outFileName = basename(tsConfig.options.outFile, '.js');
+      const outFileDir = dirname(tsConfig.options.outFile);
+      outputs.add(
+        pathToInputOrOutput(
+          tsConfig.options.outFile,
+          workspaceRoot,
+          config.project
+        )
+      );
+      // outFile is not be used with .cjs, .mjs, .jsx, so the list is simpler
+      const outDir = relative(workspaceRoot, outFileDir);
+      outputs.add(
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.js.map`),
+          workspaceRoot,
+          config.project
+        )
+      );
+      outputs.add(
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.d.ts`),
+          workspaceRoot,
+          config.project
+        )
+      );
+      outputs.add(
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.d.ts.map`),
+          workspaceRoot,
+          config.project
+        )
+      );
+      // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      outputs.add(
+        tsConfig.options.tsBuildInfoFile
+          ? pathToInputOrOutput(
+              tsConfig.options.tsBuildInfoFile,
               workspaceRoot,
               config.project
             )
-          );
-          if (tsConfig.options.declarationMap) {
-            outputs.add(
-              pathToInputOrOutput(
-                joinPathFragments(tsconfig.options.outDir, '**/*.d.ts.map'),
-                workspaceRoot,
-                config.project
-              )
-            );
-          }
-        } else {
+          : pathToInputOrOutput(
+              joinPathFragments(outDir, `${outFileName}.tsbuildinfo`),
+              workspaceRoot,
+              config.project
+            )
+      );
+    } else if (tsConfig.options.outDir) {
+      if (emitDeclarationOnly) {
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(tsConfig.options.outDir, '**/*.d.ts'),
+            workspaceRoot,
+            config.project
+          )
+        );
+        if (tsConfig.options.declarationMap) {
           outputs.add(
             pathToInputOrOutput(
-              tsconfig.options.outDir,
+              joinPathFragments(tsConfig.options.outDir, '**/*.d.ts.map'),
               workspaceRoot,
               config.project
             )
           );
         }
+      } else {
+        outputs.add(
+          pathToInputOrOutput(
+            tsConfig.options.outDir,
+            workspaceRoot,
+            config.project
+          )
+        );
+      }
 
-        if (tsconfig.options.tsBuildInfoFile) {
-          if (
-            emitDeclarationOnly ||
-            !normalize(tsconfig.options.tsBuildInfoFile).startsWith(
-              `${normalize(tsconfig.options.outDir)}${sep}`
-            )
-          ) {
-            // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-            outputs.add(
-              pathToInputOrOutput(
-                tsconfig.options.tsBuildInfoFile,
-                workspaceRoot,
-                config.project
-              )
-            );
-          }
-        } else if (
-          tsconfig.options.rootDir &&
-          tsconfig.options.rootDir !== '.'
+      if (tsConfig.options.tsBuildInfoFile) {
+        if (
+          emitDeclarationOnly ||
+          !normalize(tsConfig.options.tsBuildInfoFile).startsWith(
+            `${normalize(tsConfig.options.outDir)}${sep}`
+          )
         ) {
-          // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
-          const relativeRootDir = relative(
-            tsconfig.options.rootDir,
-            join(workspaceRoot, config.project.root)
-          );
-          outputs.add(
-            pathToInputOrOutput(
-              joinPathFragments(
-                tsconfig.options.outDir,
-                relativeRootDir,
-                `*.tsbuildinfo`
-              ),
-              workspaceRoot,
-              config.project
-            )
-          );
-        } else if (emitDeclarationOnly) {
           // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
           outputs.add(
             pathToInputOrOutput(
-              joinPathFragments(
-                tsconfig.options.outDir,
-                `${tsconfigBasenames.get(tsconfig)}.tsbuildinfo`
-              ),
+              tsConfig.options.tsBuildInfoFile,
               workspaceRoot,
               config.project
             )
           );
         }
-      } else if (
-        tsconfig.raw?.include?.length ||
-        tsconfig.raw?.files?.length ||
-        (!tsconfig.raw?.include && !tsconfig.raw?.files)
-      ) {
-        // tsc produce files in place when no outDir or outFile is set
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.cjs'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.mjs'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.js.map')); // should also include .cjs and .mjs data
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx.map'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts.map'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts.map'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts.map'));
-
+      } else if (tsConfig.options.rootDir && tsConfig.options.rootDir !== '.') {
+        // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
+        const relativeRootDir = relative(
+          tsConfig.options.rootDir,
+          join(workspaceRoot, config.project.root)
+        );
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(
+              tsConfig.options.outDir,
+              relativeRootDir,
+              `*.tsbuildinfo`
+            ),
+            workspaceRoot,
+            config.project
+          )
+        );
+      } else if (emitDeclarationOnly) {
         // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
         outputs.add(
-          tsConfig.options.tsBuildInfoFile
-            ? pathToInputOrOutput(
-                tsConfig.options.tsBuildInfoFile,
-                workspaceRoot,
-                config.project
-              )
-            : joinPathFragments(
-                '{projectRoot}',
-                `${tsconfigBasenames.get(tsconfig)}.tsbuildinfo`
-              )
+          pathToInputOrOutput(
+            joinPathFragments(
+              tsConfig.options.outDir,
+              `${configBaseNameNoExt}.tsbuildinfo`
+            ),
+            workspaceRoot,
+            config.project
+          )
         );
       }
+    } else if (
+      tsConfig.raw?.include?.length ||
+      tsConfig.raw?.files?.length ||
+      (!tsConfig.raw?.include && !tsConfig.raw?.files)
+    ) {
+      // tsc produce files in place when no outDir or outFile is set
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.cjs'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.mjs'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.js.map')); // should also include .cjs and .mjs data
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts.map'));
+
+      // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      outputs.add(
+        tsConfig.options.tsBuildInfoFile
+          ? pathToInputOrOutput(
+              tsConfig.options.tsBuildInfoFile,
+              workspaceRoot,
+              config.project
+            )
+          : joinPathFragments(
+              '{projectRoot}',
+              `${configBaseNameNoExt}.tsbuildinfo`
+            )
+      );
     }
-  );
+  });
 
   return Array.from(outputs);
 }
