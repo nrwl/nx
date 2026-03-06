@@ -169,6 +169,25 @@ import {
   handleGetConfigureAiAgentsStatus,
   handleResetConfigureAiAgentsStatus,
 } from './handle-configure-ai-agents';
+import {
+  GET_RUNNING_TASKS,
+  GET_RUNNING_TASK_OUTPUT,
+  REGISTER_RUNNING_TASKS,
+  UNREGISTER_RUNNING_TASKS,
+  UPDATE_RUNNING_TASKS,
+  isHandleGetRunningTaskOutputMessage,
+  isHandleGetRunningTasksMessage,
+  isHandleRegisterRunningTasksMessage,
+  isHandleUnregisterRunningTasksMessage,
+  isHandleUpdateRunningTasksMessage,
+} from '../message-types/running-tasks';
+import {
+  handleGetRunningTaskOutput,
+  handleGetRunningTasks,
+  handleRegisterRunningTasks,
+  handleUnregisterRunningTasks,
+  handleUpdateRunningTasks,
+} from './handle-running-tasks';
 import { deserialize, serialize } from 'v8';
 
 let performanceObserver: PerformanceObserver | undefined;
@@ -466,6 +485,51 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       RESET_CONFIGURE_AI_AGENTS_STATUS,
       () => handleResetConfigureAiAgentsStatus(),
+      mode
+    );
+  } else if (isHandleRegisterRunningTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      REGISTER_RUNNING_TASKS,
+      () =>
+        handleRegisterRunningTasks(
+          payload.pid,
+          payload.command,
+          payload.taskIds
+        ),
+      mode
+    );
+  } else if (isHandleUpdateRunningTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      UPDATE_RUNNING_TASKS,
+      () =>
+        handleUpdateRunningTasks(
+          payload.pid,
+          payload.taskUpdates,
+          payload.outputChunks
+        ),
+      mode
+    );
+  } else if (isHandleUnregisterRunningTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      UNREGISTER_RUNNING_TASKS,
+      () => handleUnregisterRunningTasks(payload.pid),
+      mode
+    );
+  } else if (isHandleGetRunningTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_RUNNING_TASKS,
+      () => handleGetRunningTasks(),
+      mode
+    );
+  } else if (isHandleGetRunningTaskOutputMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_RUNNING_TASK_OUTPUT,
+      () => handleGetRunningTaskOutput(payload.pid, payload.taskId),
       mode
     );
   } else {
