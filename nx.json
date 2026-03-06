@@ -122,7 +122,14 @@
     },
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/scripts/patched-jest-resolver.js",
+        "{workspaceRoot}/scripts/unit-test-setup.js",
+        "{workspaceRoot}/scripts/jest-mocks/ora.js"
+      ],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
         "env": {
