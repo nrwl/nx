@@ -753,18 +753,15 @@ describe('Workspace Tests', () => {
        * Try removing the project (should fail)
        */
 
-      let error;
-      try {
-        console.log(runCLI(`generate @nx/workspace:remove --project ${lib1}`));
-      } catch (e) {
-        error = e;
-      }
+      const output = runCLI(`generate @nx/workspace:remove --project ${lib1}`, {
+        silenceError: true,
+        redirectStderr: true,
+      });
 
-      expect(error).toBeDefined();
-      expect(error.stderr.toString()).toContain(
+      expect(output).toContain(
         `${lib1} is still a dependency of the following projects`
       );
-      expect(error.stderr.toString()).toContain(lib2);
+      expect(output).toContain(lib2);
 
       /**
        * Try force removing the project
