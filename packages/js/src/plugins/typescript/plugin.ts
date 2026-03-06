@@ -49,6 +49,7 @@ export interface TscPluginOptions {
     | boolean
     | {
         targetName?: string;
+        configName?: string;
       };
   build?:
     | boolean
@@ -68,6 +69,7 @@ interface NormalizedPluginOptions {
     | false
     | {
         targetName: string;
+        configName: string;
       };
   build:
     | false
@@ -368,7 +370,9 @@ async function resolveValidConfigFilesAndHashes(
     );
 
     // Skip configs that can't produce any targets based on plugin options
-    const isTypecheckConfig = configContext.basename === 'tsconfig.json';
+    const isTypecheckConfig =
+      configContext.basename ===
+      (options.typecheck ? options.typecheck.configName : 'tsconfig.json');
     const isBuildConfig =
       options.build && configContext.basename === options.build.configName;
     if (!isTypecheckConfig && !isBuildConfig) {
@@ -521,8 +525,8 @@ function buildTscTargets(
 
   let internalProjectReferences: Record<string, ParsedTsconfigData>;
   if (
-    config.basename === 'tsconfig.json' &&
     options.typecheck &&
+    config.basename === options.typecheck.configName &&
     tsConfig.raw?.['nx']?.addTypecheckTarget !== false
   ) {
     internalProjectReferences = resolveInternalProjectReferences(
@@ -1468,7 +1472,9 @@ function normalizePluginOptions(
   const compiler = pluginOptions.compiler ?? defaultCompiler;
 
   const defaultTypecheckTargetName = 'typecheck';
+  const defaultTypecheckConfigName = 'tsconfig.json';
   let typecheck: NormalizedPluginOptions['typecheck'] = {
+    configName: defaultTypecheckConfigName,
     targetName: defaultTypecheckTargetName,
   };
   if (pluginOptions.typecheck === false) {
@@ -1478,6 +1484,8 @@ function normalizePluginOptions(
     typeof pluginOptions.typecheck !== 'boolean'
   ) {
     typecheck = {
+      configName:
+        pluginOptions.typecheck.configName ?? defaultTypecheckConfigName,
       targetName:
         pluginOptions.typecheck.targetName ?? defaultTypecheckTargetName,
     };
