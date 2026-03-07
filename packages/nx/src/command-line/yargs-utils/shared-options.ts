@@ -115,6 +115,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       default: false,
     })
+    .middleware((args) => {
+      if (!args.nxBail && process.env.NX_BAIL === 'true') {
+        args.nxBail = true;
+      }
+    })
     .option('nxIgnoreCycles', {
       describe: 'Ignore cycles in the task graph.',
       type: 'boolean',
