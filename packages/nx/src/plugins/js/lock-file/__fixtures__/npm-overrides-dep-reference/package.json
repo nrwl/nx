@@ -1,0 +1,11 @@
+{
+  "name": "test-dependency-reference",
+  "version": "1.0.0",
+  "dependencies": {
+    "glob": "^10.0.0",
+    "minimatch": "^10.0.0"
+  },
+  "overrides": {
+    "minimatch": "$minimatch"
+  }
+}

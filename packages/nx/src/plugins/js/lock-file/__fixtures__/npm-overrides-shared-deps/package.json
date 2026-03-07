@@ -1,0 +1,12 @@
+{
+  "name": "test-npm-overrides-shared-deps",
+  "version": "1.0.0",
+  "dependencies": {
+    "pkg-a": "^1.0.0",
+    "pkg-b": "^2.0.0"
+  },
+  "overrides": {
+    "pkg-a": "1.0.0",
+    "pkg-b": "2.0.0"
+  }
+}
