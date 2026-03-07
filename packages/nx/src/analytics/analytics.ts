@@ -50,11 +50,13 @@ export async function startAnalytics() {
     return;
   }
 
+  const nxJson = readNxJson(workspaceRoot);
   const workspaceId = generateWorkspaceId();
   if (!workspaceId) {
     // Not a git repo — no telemetry
     return;
   }
+  const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
   const userId = await getCurrentMachineId();
   const packageManagerInfo = getPackageManagerInfo();
 
@@ -74,7 +76,8 @@ export async function startAnalytics() {
       os.arch(),
       os.platform(),
       os.release(),
-      !!isCI()
+      !!isCI(),
+      isNxCloud
     );
     _telemetryInitialized = true;
 

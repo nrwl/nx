@@ -380,7 +380,7 @@ export interface HashInputs {
  * Initialize the global telemetry service
  * This should be called once at startup from TypeScript
  */
-export declare function initializeTelemetry(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean): void
+export declare function initializeTelemetry(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string
