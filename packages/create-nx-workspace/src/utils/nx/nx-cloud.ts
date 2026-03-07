@@ -3,7 +3,7 @@ import { CLIOutput } from '../output';
 import { getCompletionMessage, getSkippedCloudMessage } from './messages';
 import { getFlowVariant } from './ab-testing';
 import { nxVersion } from './nx-version';
-import * as ora from 'ora';
+import ora from 'ora';
 
 export type NxCloud =
   | 'yes'

@@ -1,11 +1,15 @@
 import type { Arguments } from 'yargs';
 import { DAEMON_OUTPUT_LOG_FILE } from '../../daemon/tmp-dir';
+import { handleImport } from '../../utils/handle-import';
 import { output } from '../../utils/output';
 import { generateDaemonHelpOutput } from '../../daemon/client/generate-help-output';
 
 export async function daemonHandler(args: Arguments) {
   if (args.start) {
-    const { daemonClient } = await import('../../daemon/client/client');
+    const { daemonClient } = await handleImport(
+      '../../daemon/client/client.js',
+      __dirname
+    );
     const pid = await daemonClient.startInBackground();
     output.log({
       title: `Daemon Server - Started in a background process...`,
@@ -16,7 +20,10 @@ export async function daemonHandler(args: Arguments) {
       ],
     });
   } else if (args.stop) {
-    const { daemonClient } = await import('../../daemon/client/client');
+    const { daemonClient } = await handleImport(
+      '../../daemon/client/client.js',
+      __dirname
+    );
     await daemonClient.stop();
     output.log({ title: 'Daemon Server - Stopped' });
   } else {

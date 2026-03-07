@@ -151,6 +151,12 @@ catalogs:
     '@jest/types':
       specifier: 30.0.1
       version: 30.0.1
+    '@swc-contrib/mut-cjs-exports':
+      specifier: ^14.3.0
+      version: 14.7.0
+    '@swc/jest':
+      specifier: 0.2.39
+      version: 0.2.39
     '@types/jest':
       specifier: 30.0.0
       version: 30.0.0
@@ -749,6 +755,9 @@ importers:
       '@svgr/webpack':
         specifier: ^8.0.1
         version: 8.1.0(typescript@5.9.2)
+      '@swc-contrib/mut-cjs-exports':
+        specifier: catalog:jest
+        version: 14.7.0(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/jest@0.2.39(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@swc-node/register':
         specifier: catalog:swc
         version: 1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2)
@@ -762,7 +771,7 @@ importers:
         specifier: catalog:swc
         version: 0.5.18
       '@swc/jest':
-        specifier: 0.2.39
+        specifier: catalog:jest
         version: 0.2.39(@swc/core@1.15.10(@swc/helpers@0.5.18))
       '@testing-library/react':
         specifier: 15.0.6
@@ -12158,6 +12167,12 @@ packages:
   '@svgr/webpack@8.1.0':
     resolution: {integrity: sha512-LnhVjMWyMQV9ZmeEy26maJk+8HTIbd59cH4F2MJ439k9DqejRisfFNGAPvRYlKETuh9LrImlS8aKsBgKjMA8WA==}
     engines: {node: '>=14'}
+
+  '@swc-contrib/mut-cjs-exports@14.7.0':
+    resolution: {integrity: sha512-rxTnVN1dubiQds7L2EDnjVJZVuI/8V67DH66ry6u14KM3YyB1ch4dBy8xmXO2HeJ4/PmC1oOLGrTqAIGRxYfKw==}
+    peerDependencies:
+      '@swc/core': ^1.10.0
+      '@swc/jest': ^0.2.37
 
   '@swc-node/core@1.14.1':
     resolution: {integrity: sha512-jrt5GUaZUU6cmMS+WTJEvGvaB6j1YNKPHPzC2PUi2BjaFbtxURHj6641Az6xN7b665hNniAIdvjxWcRml5yCnw==}
@@ -38119,6 +38134,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  '@swc-contrib/mut-cjs-exports@14.7.0(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/jest@0.2.39(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@swc/core': 1.15.10(@swc/helpers@0.5.18)
+      '@swc/jest': 0.2.39(@swc/core@1.15.10(@swc/helpers@0.5.18))
 
   '@swc-node/core@1.14.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)':
     dependencies:
