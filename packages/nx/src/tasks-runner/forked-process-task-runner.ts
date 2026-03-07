@@ -3,6 +3,7 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { signalToCode } from '../utils/exit-codes';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
@@ -407,10 +408,8 @@ export class ForkedProcessTaskRunner {
     writeFileSync(outputPath, content);
   }
 
-  cleanup(signal?: NodeJS.Signals) {
-    this.processes.forEach((p) => {
-      p.kill(signal);
-    });
+  async cleanup(signal?: NodeJS.Signals) {
+    await Promise.all([...this.processes].map((p) => p.kill(signal)));
     this.cleanUpBatchProcesses();
   }
 
@@ -430,11 +429,33 @@ export class ForkedProcessTaskRunner {
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', messageHandler);
 
-    // Terminate any task processes on exit
+    // Terminate any task processes on exit (sync, last resort).
+    // cleanup() is async but the initial signal dispatch is synchronous
+    // (killProcessTreeGraceful snapshots and signals before the async
+    // grace period). The grace period won't complete here, but each
+    // child also has its own sync exit handler as a final fallback.
     process.once('exit', () => {
       this.cleanup();
       process.off('message', messageHandler);
     });
-    // Signal handlers removed - TaskOrchestrator owns signal handling
+    process.once('SIGINT', () => {
+      this.cleanup('SIGTERM').finally(() => {
+        process.off('message', messageHandler);
+        // we exit here because we don't need to write anything to cache.
+        process.exit(signalToCode('SIGINT'));
+      });
+    });
+    process.once('SIGTERM', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.once('SIGHUP', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
   }
 }

@@ -2,8 +2,8 @@ import * as pc from 'picocolors';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { killProcessTree, killProcessTreeGraceful } from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -77,16 +77,8 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  async kill(signal?: NodeJS.Signals) {
-    await Promise.all(
-      this.childProcesses.map(async (p) => {
-        try {
-          return p.kill();
-        } catch (e) {
-          console.error(`Unable to terminate "${p.command}"\nError:`, e);
-        }
-      })
-    );
+  async kill(signal?: NodeJS.Signals): Promise<void> {
+    await Promise.all(this.childProcesses.map((p) => p.kill(signal)));
   }
 
   private async run() {
@@ -155,10 +147,7 @@ export class ParallelRunningTasks implements RunningTask {
             failureDetails = { childProcess, code, terminalOutput };
 
             // Immediately terminate all other running processes
-            await this.terminateRemainingProcesses(
-              runningProcesses,
-              childProcess
-            );
+            this.terminateRemainingProcesses(runningProcesses, childProcess);
           }
 
           runningProcesses.delete(childProcess);
@@ -186,38 +175,16 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  private async terminateRemainingProcesses(
+  private terminateRemainingProcesses(
     runningProcesses: Set<RunningNodeProcess>,
     failedProcess: RunningNodeProcess
-  ): Promise<void> {
-    const terminationPromises: Promise<void>[] = [];
-
+  ): void {
     const processesToTerminate = [...runningProcesses].filter(
       (p) => p !== failedProcess
     );
     for (const process of processesToTerminate) {
       runningProcesses.delete(process);
-
-      // Terminate the process
-      terminationPromises.push(
-        process.kill('SIGTERM').catch((err) => {
-          // Log error but don't fail the entire operation
-          if (this.streamOutput) {
-            console.error(
-              `Failed to terminate process "${process.command}":`,
-              err
-            );
-          }
-        })
-      );
-    }
-
-    // Wait for all terminations to complete with a timeout
-    if (terminationPromises.length > 0) {
-      await Promise.race([
-        Promise.all(terminationPromises),
-        new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
-      ]);
+      process.kill('SIGTERM');
     }
   }
 }
@@ -275,7 +242,7 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals) {
-    return this.currentProcess.kill(signal);
+    return this.currentProcess?.kill(signal);
   }
 
   private async run(
@@ -436,17 +403,10 @@ class RunningNodeProcess implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals): Promise<void> {
-    return new Promise<void>((res, rej) => {
-      treeKill(this.childProcess.pid, signal, (err) => {
-        // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
-        // Ignore the errors, otherwise we will log them unnecessarily.
-        if (err && process.platform !== 'win32') {
-          rej(err);
-        } else {
-          res();
-        }
-      });
-    });
+    if (this.childProcess.pid) {
+      return killProcessTreeGraceful(this.childProcess.pid, signal);
+    }
+    return Promise.resolve();
   }
 
   private triggerOutputListeners(output: string) {
@@ -519,24 +479,24 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
-    // Terminate any task processes on exit
+    // Terminate any task processes on exit (sync, last resort)
     process.on('exit', () => {
-      this.kill();
+      if (this.childProcess.pid) {
+        killProcessTree(this.childProcess.pid);
+      }
     });
+    // Per-child signal handlers only kill their own child process.
+    // They do NOT call process.exit() — that's handled by the parent-level
+    // registerProcessListener to avoid a race where the first child to
+    // finish shutdown exits the parent before others complete.
     process.on('SIGINT', () => {
       this.kill('SIGTERM');
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
     });
     process.on('SIGTERM', () => {
       this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
     });
     process.on('SIGHUP', () => {
       this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
     });
   }
 }
@@ -704,14 +664,24 @@ function registerProcessListener(
     }
   });
 
-  // Terminate any task processes on exit
+  // Terminate any task processes on exit (sync, last resort).
+  // The per-child exit handlers and PseudoTerminal.shutdown() use the
+  // sync killProcessTree for this path. We call kill() here as a
+  // best-effort fallback — it returns a Promise but on 'exit' only
+  // synchronous work runs, so the initial signal is sent but the
+  // grace period won't be awaited. That's acceptable: 'exit' is the
+  // last resort after SIGINT/SIGTERM handlers have already had their
+  // chance to do graceful shutdown.
   process.on('exit', () => {
     runningTask.kill();
   });
   process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
+    // Gracefully kill then exit. Keeping this process alive during the
+    // grace period prevents the PTY master from closing prematurely,
+    // which would send SIGHUP to children before they finish cleanup.
+    Promise.resolve(runningTask.kill('SIGTERM')).finally(() => {
+      process.exit(signalToCode('SIGINT'));
+    });
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');
