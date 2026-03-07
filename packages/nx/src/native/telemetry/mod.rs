@@ -49,6 +49,7 @@ pub fn initialize_telemetry(
     os_platform: String,
     os_release: String,
     is_ci: bool,
+    is_nx_cloud: bool,
 ) -> Result<()> {
     tracing::trace!(
         "Initializing telemetry service for workspace: {}",
@@ -66,6 +67,7 @@ pub fn initialize_telemetry(
         os_platform,
         os_release,
         is_ci,
+        is_nx_cloud,
     )?;
 
     GLOBAL_TELEMETRY

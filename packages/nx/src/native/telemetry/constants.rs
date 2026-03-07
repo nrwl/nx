@@ -38,9 +38,11 @@ pub mod user_dimension {
     pub const OS_ARCHITECTURE: &str = "up.os_architecture";
     pub const USER_ID: &str = "up.user_id";
     pub const NODE_VERSION: &str = "up.node_version";
+    pub const NX_VERSION: &str = "up.nx_version";
     pub const PACKAGE_MANAGER: &str = "up.package_manager";
     pub const PACKAGE_MANAGER_VERSION: &str = "up.package_manager_version";
     pub const IS_CI: &str = "up.is_ci";
+    pub const NX_CLOUD_ENABLED: &str = "up.nx_cloud_enabled";
 }
 
 /// Event-scoped custom dimensions (ep.* = event parameter string, epn.* = number)

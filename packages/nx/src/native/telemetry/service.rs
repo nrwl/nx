@@ -43,6 +43,7 @@ impl TelemetryService {
         os_platform: String,
         os_release: String,
         is_ci: bool,
+        is_nx_cloud: bool,
     ) -> Result<Self> {
         let client = ClientBuilder::new()
             .build()
@@ -102,12 +103,17 @@ impl TelemetryService {
         if let Some(version) = package_manager_version {
             user_parameters.insert(user_dimension::PACKAGE_MANAGER_VERSION.to_string(), version);
         }
+        user_parameters.insert(user_dimension::NX_VERSION.to_string(), nx_version.clone());
         user_parameters.insert(event_dimension::NX_VERSION.to_string(), nx_version);
         user_parameters.insert(
             event_dimension::IS_AI_AGENT.to_string(),
             is_ai_agent.to_string(),
         );
         user_parameters.insert(user_dimension::IS_CI.to_string(), is_ci.to_string());
+        user_parameters.insert(
+            user_dimension::NX_CLOUD_ENABLED.to_string(),
+            is_nx_cloud.to_string(),
+        );
 
         // Create channels
         let (event_tx, event_rx) = crossbeam_channel::unbounded();
