@@ -1,6 +1,7 @@
 import {
   detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
   ExecutorContext,
   readJsonFile,
 } from '@nx/devkit';
@@ -33,6 +34,28 @@ export default async function runExecutor(
   context: ExecutorContext
 ) {
   const pm = detectPackageManager();
+
+  let isNpmInstalled = false;
+  try {
+    // If npm is installed, we should get a version string, otherwise an error will be thrown.
+    isNpmInstalled =
+      execSync('npm --version', {
+        cwd: process.cwd(),
+        encoding: 'utf-8',
+        windowsHide: true,
+      }).trim() !== '';
+  } catch (e) {
+    // Allow missing npm only when using bun (https://github.com/nrwl/nx/pull/32252#discussion_r2262481795)
+    if (pm !== 'bun') {
+      console.error(
+        `npm was not found in the current environment. This is only supported when using \`bun\` as a package manager, but your detected package manager is "${pm}"`
+      );
+      return {
+        success: false,
+      };
+    }
+  }
+
   /**
    * We need to check both the env var and the option because the executor may have been triggered
    * indirectly via dependsOn, in which case the env var will be set, but the option will not.
@@ -127,8 +150,17 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   );
 
   const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+    getPackageManagerCommand(pm).view,
+    packageName,
   ];
+
+  // Since only yarn does not support multiple specific fields, we'll then fetch the complete data
+  if (pm !== 'yarn') {
+    npmViewCommandSegments.push('versions dist-tags');
+  }
+  npmViewCommandSegments.push(`--json --"${registryConfigKey}=${registry}"`);
+
+  // Unlike npm, none of the other package managers appear to have a dedicated equivalent to the "npm dist-tag" command for managing tags after publication
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
@@ -162,80 +194,84 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         };
       }
 
-      // If only one version of a package exists in the registry, versions will be a string instead of an array.
-      const versions = Array.isArray(resultJson.versions)
-        ? resultJson.versions
-        : [resultJson.versions];
+      if (isNpmInstalled) {
+        // If only one version of a package exists in the registry, versions will be a string instead of an array.
+        const versions = Array.isArray(resultJson.versions)
+          ? resultJson.versions
+          : [resultJson.versions];
 
-      if (versions.includes(currentVersion)) {
-        try {
-          if (!isDryRun) {
-            execSync(npmDistTagAddCommandSegments.join(' '), {
-              env: processEnv(true),
-              cwd: context.root,
-              stdio: 'ignore',
-              windowsHide: false,
-            });
-            console.log(
-              `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
-            );
-          } else {
-            console.log(
-              `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
-                'orange'
-              )('[dry-run]')} was set.\n`
-            );
-          }
-          return {
-            success: true,
-          };
-        } catch (err) {
+        if (versions.includes(currentVersion)) {
           try {
-            const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+            if (!isDryRun) {
+              execSync(npmDistTagAddCommandSegments.join(' '), {
+                env: processEnv(true),
+                cwd: context.root,
+                stdio: 'ignore',
+                windowsHide: false,
+              });
+              console.log(
+                `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+              );
+            } else {
+              console.log(
+                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
+                  'orange'
+                )('[dry-run]')} was set.\n`
+              );
+            }
+            return {
+              success: true,
+            };
+          } catch (err) {
+            try {
+              const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
-            // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-            if (
-              !(
-                stdoutData.error?.code?.includes('E404') &&
-                stdoutData.error?.summary?.includes('no such package available')
-              ) &&
-              !(
-                err.stderr?.toString().includes('E404') &&
-                err.stderr?.toString().includes('no such package available')
-              )
-            ) {
-              console.error('npm dist-tag add error:');
-              // npm returns error.summary and error.detail
-              if (stdoutData.error?.summary) {
-                console.error(stdoutData.error.summary);
-              }
-              if (stdoutData.error?.detail) {
-                console.error(stdoutData.error.detail);
-              }
-              // pnpm returns error.code and error.message
-              if (stdoutData.error?.code && !stdoutData.error?.summary) {
-                console.error(`Error code: ${stdoutData.error.code}`);
-              }
-              if (stdoutData.error?.message && !stdoutData.error?.summary) {
-                console.error(stdoutData.error.message);
-              }
+              // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
+              if (
+                !(
+                  stdoutData.error?.code?.includes('E404') &&
+                  stdoutData.error?.summary?.includes(
+                    'no such package available'
+                  )
+                ) &&
+                !(
+                  err.stderr?.toString().includes('E404') &&
+                  err.stderr?.toString().includes('no such package available')
+                )
+              ) {
+                console.error('npm dist-tag add error:');
+                // npm returns error.summary and error.detail
+                if (stdoutData.error?.summary) {
+                  console.error(stdoutData.error.summary);
+                }
+                if (stdoutData.error?.detail) {
+                  console.error(stdoutData.error.detail);
+                }
+                // pnpm returns error.code and error.message
+                if (stdoutData.error?.code && !stdoutData.error?.summary) {
+                  console.error(`Error code: ${stdoutData.error.code}`);
+                }
+                if (stdoutData.error?.message && !stdoutData.error?.summary) {
+                  console.error(stdoutData.error.message);
+                }
 
-              if (context.isVerbose) {
-                console.error('npm dist-tag add stdout:');
-                console.error(JSON.stringify(stdoutData, null, 2));
+                if (context.isVerbose) {
+                  console.error('npm dist-tag add stdout:');
+                  console.error(JSON.stringify(stdoutData, null, 2));
+                }
+                return {
+                  success: false,
+                };
               }
+            } catch (err) {
+              console.error(
+                'Something unexpected went wrong when processing the npm dist-tag add output\n',
+                err
+              );
               return {
                 success: false,
               };
             }
-          } catch (err) {
-            console.error(
-              'Something unexpected went wrong when processing the npm dist-tag add output\n',
-              err
-            );
-            return {
-              success: false,
-            };
           }
         }
       }
