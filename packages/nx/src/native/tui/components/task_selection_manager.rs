@@ -477,6 +477,20 @@ impl TaskSelectionManager {
         }
 
         self.validate_scroll_offset();
+
+        // When viewport grows from the small placeholder size used at init (≤ 5)
+        // to the real terminal size, prefer showing content from the top if the
+        // selected item is still visible from scroll_offset=0. This prevents stale
+        // scroll positions set with the placeholder viewport from hiding top items.
+        if self.viewport_height > old_viewport_height && old_viewport_height <= 5 {
+            if let Some(idx) = self.get_selected_index() {
+                if idx < self.viewport_height && self.scroll_offset != 0 {
+                    self.scroll_offset = 0;
+                    self.invalidate_viewport_cache();
+                }
+            }
+        }
+
         self.ensure_selected_visible();
     }
 
@@ -889,6 +903,70 @@ mod tests {
         // Navigation should exit waiting state
         manager.next();
         assert!(matches!(manager.selection_state, Some(_)));
+    }
+
+    #[test]
+    fn test_viewport_growth_resets_stale_scroll_offset() {
+        // Simulates the real startup sequence: TaskSelectionManager is created with
+        // a small placeholder viewport (e.g. 5) before the terminal size is known.
+        // If entries are added and the viewport scrolls while small, growing to the
+        // real terminal size should reset scroll_offset to 0 so content starts at top.
+        let mut manager = TaskSelectionManager::new(3); // Small placeholder viewport
+
+        let entries: Vec<Option<SelectionEntry>> = (1..=20)
+            .map(|i| Some(SelectionEntry::Task(format!("task-{}", i))))
+            .collect();
+        manager.update_entries(entries);
+        manager.select_first_available();
+
+        // Simulate scrolling while viewport is still small
+        manager.scroll_down(5);
+        assert!(manager.scroll_offset > 0, "should have scrolled");
+
+        // Grow viewport to real terminal size (simulates first real render frame)
+        manager.set_viewport_height(15);
+
+        // scroll_offset should reset to 0 because task-1 (selected, index 0) fits
+        assert_eq!(
+            manager.scroll_offset, 0,
+            "scroll_offset should reset to 0 when viewport grows from placeholder"
+        );
+
+        // Verify first entry is visible
+        let viewport = manager.get_viewport_entries();
+        assert_eq!(
+            viewport[0],
+            Some(SelectionEntry::Task("task-1".to_string())),
+            "first task should be visible after viewport growth"
+        );
+    }
+
+    #[test]
+    fn test_viewport_growth_preserves_scroll_when_selection_not_visible() {
+        // When the selected item wouldn't be visible from scroll_offset=0 in the
+        // new viewport, the scroll offset should NOT reset.
+        let mut manager = TaskSelectionManager::new(3);
+
+        let entries: Vec<Option<SelectionEntry>> = (1..=30)
+            .map(|i| Some(SelectionEntry::Task(format!("task-{}", i))))
+            .collect();
+        manager.update_entries(entries);
+
+        // Select a task far down the list
+        manager.select_task("task-25".to_string());
+        // Scroll so it's visible
+        manager.scroll_down(20);
+        assert!(manager.scroll_offset > 0);
+
+        // Grow viewport -- but task-25 (index 24) won't fit from offset 0 in a
+        // viewport of size 10
+        manager.set_viewport_height(10);
+
+        // scroll_offset should NOT have been reset to 0
+        assert!(
+            manager.scroll_offset > 0,
+            "scroll_offset should be preserved when selected item is far down"
+        );
     }
 
     #[test]
