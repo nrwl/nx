@@ -13,7 +13,7 @@ import * as path from 'path';
 import { SetupVerdaccioGeneratorSchema } from './schema';
 import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 import { verdaccioVersion } from '../../utils/versions';
-import { execSync } from 'child_process';
+import { getNpmRegistry } from '../../utils/npm-config';
 
 export async function setupVerdaccio(
   tree: Tree,
@@ -22,11 +22,7 @@ export async function setupVerdaccio(
   if (!tree.exists('.verdaccio/config.yml')) {
     generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {
       npmUplinkRegistry:
-        execSync('npm config get registry', {
-          windowsHide: false,
-        })
-          ?.toString()
-          ?.trim() ?? 'https://registry.npmjs.org',
+        (await getNpmRegistry(tree.root)) ?? 'https://registry.npmjs.org',
     });
   }
 
