@@ -438,6 +438,8 @@ export class TaskOrchestrator {
           for (const task of eligible) {
             if (!cachedIds.has(task.id)) {
               nonCachedTaskIds.add(task.id);
+              // Clear hash so re-hashing after execution picks it up
+              task.hash = undefined;
             }
           }
         }
