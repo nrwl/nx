@@ -178,68 +178,40 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
         .lock()
         .map_err(|e| Error::from_reason(format!("Failed to lock database connection: {}", e)))?;
 
-    // Try to get existing session
-    let existing = conn
+    // Return session ID only if it exists and last activity was within 30 minutes
+    let active_session = conn
         .query_row(
-            "SELECT m1.value, m2.value FROM metadata m1, metadata m2 \
-             WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY'",
+            &format!(
+                "SELECT m1.value FROM metadata m1, metadata m2 \
+                 WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY' \
+                 AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
+                SESSION_TIMEOUT_SECS
+            ),
             [],
-            |row| {
-                let session_id: String = row.get(0)?;
-                let last_activity: String = row.get(1)?;
-                Ok((session_id, last_activity))
-            },
+            |row| row.get::<_, String>(0),
         )
         .map_err(|e| Error::from_reason(format!("Failed to query session: {}", e)))?;
 
-    if let Some((session_id, last_activity)) = existing {
-        // Check if session is still active (within timeout)
-        let is_active = conn
-            .query_row(
-                &format!(
-                    "SELECT (strftime('%s', 'now') - strftime('%s', '{}')) < {}",
-                    last_activity, SESSION_TIMEOUT_SECS
-                ),
-                [],
-                |row| {
-                    let active: bool = row.get(0)?;
-                    Ok(active)
-                },
-            )
-            .map_err(|e| Error::from_reason(format!("Failed to check session timeout: {}", e)))?
-            .unwrap_or(false);
+    let session_id = if let Some(id) = active_session {
+        tracing::trace!("Reusing existing analytics session: {}", id);
+        id
+    } else {
+        let id = uuid::Uuid::new_v4().to_string();
+        conn.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
+            [&id],
+        )
+        .map_err(|e| Error::from_reason(format!("Failed to save session ID: {}", e)))?;
+        tracing::trace!("Created new analytics session: {}", id);
+        id
+    };
 
-        if is_active {
-            // Update last activity and reuse session
-            conn.execute(
-                "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
-                [],
-            )
-            .map_err(|e| {
-                Error::from_reason(format!("Failed to update session activity: {}", e))
-            })?;
-
-            tracing::trace!("Reusing existing analytics session: {}", session_id);
-            return Ok(session_id);
-        }
-    }
-
-    // Create new session
-    let session_id = uuid::Uuid::new_v4().to_string();
-    conn.execute(
-        "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
-        [&session_id],
-    )
-    .map_err(|e| Error::from_reason(format!("Failed to save session ID: {}", e)))?;
-
+    // Always update last activity timestamp
     conn.execute(
         "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
         [],
     )
-    .map_err(|e| {
-        Error::from_reason(format!("Failed to save session activity: {}", e))
-    })?;
+    .map_err(|e| Error::from_reason(format!("Failed to update session activity: {}", e)))?;
 
-    tracing::trace!("Created new analytics session: {}", session_id);
     Ok(session_id)
 }
