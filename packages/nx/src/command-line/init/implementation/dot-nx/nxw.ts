@@ -106,13 +106,6 @@ function ensureUpToDateInstallation() {
   const nxJsonPath = path.join(__dirname, '..', 'nx.json');
   let nxJson: NxJsonConfiguration;
 
-  if (!fs.existsSync(nxJsonPath)) {
-    console.error(
-      '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
-    );
-    process.exit(1);
-  }
-
   try {
     nxJson = require(nxJsonPath);
     if (!nxJson.installation) {
@@ -122,9 +115,18 @@ function ensureUpToDateInstallation() {
       process.exit(1);
     }
   } catch (e: unknown) {
-    console.error(
-      `[NX]: Failed to parse "nx.json": ${e instanceof Error ? e.message : e}. See https://nx.dev/recipes/installation/install-non-javascript`
-    );
+    if (
+      e instanceof Error &&
+      (e as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND'
+    ) {
+      console.error(
+        '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
+      );
+    } else {
+      console.error(
+        `[NX]: Failed to parse "nx.json": ${e instanceof Error ? e.message : e}. See https://nx.dev/recipes/installation/install-non-javascript`
+      );
+    }
     process.exit(1);
   }
 
