@@ -23,10 +23,14 @@ mod service;
 use napi::bindgen_prelude::*;
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
+use crate::native::db::connection::NxDbConnection;
 use constants::event_dimension;
 use service::TelemetryService;
+
+/// Session timeout in seconds (30 minutes)
+const SESSION_TIMEOUT_SECS: i64 = 30 * 60;
 
 // Global telemetry instance for Rust code to use directly
 static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
@@ -35,10 +39,14 @@ static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
 // Public NAPI API
 // =============================================================================
 
-/// Initialize the global telemetry service
-/// This should be called once at startup from TypeScript
+/// Initialize the global telemetry service.
+/// Reads or creates a session ID from the database so that multiple CLI
+/// invocations within 30 minutes share the same GA4 session.
 #[napi]
 pub fn initialize_telemetry(
+    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] connection: &External<
+        Arc<Mutex<NxDbConnection>>,
+    >,
     workspace_id: String,
     user_id: String,
     nx_version: String,
@@ -56,9 +64,12 @@ pub fn initialize_telemetry(
         workspace_id
     );
 
+    let session_id = get_or_create_session_id(connection)?;
+
     let service = TelemetryService::new(
         workspace_id,
         user_id,
+        session_id,
         nx_version,
         package_manager_name,
         package_manager_version,
@@ -157,4 +168,78 @@ pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<Strin
             tracing::trace!("Failed to track event: {}", e);
         }
     }
+}
+
+/// Get or create an analytics session ID from the database.
+/// Reuses an existing session if the last activity was within 30 minutes,
+/// otherwise creates a new session.
+fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -> Result<String> {
+    let conn = connection
+        .lock()
+        .map_err(|e| Error::from_reason(format!("Failed to lock database connection: {}", e)))?;
+
+    // Try to get existing session
+    let existing = conn
+        .query_row(
+            "SELECT m1.value, m2.value FROM metadata m1, metadata m2 \
+             WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY'",
+            [],
+            |row| {
+                let session_id: String = row.get(0)?;
+                let last_activity: String = row.get(1)?;
+                Ok((session_id, last_activity))
+            },
+        )
+        .map_err(|e| Error::from_reason(format!("Failed to query session: {}", e)))?;
+
+    if let Some((session_id, last_activity)) = existing {
+        // Check if session is still active (within timeout)
+        let is_active = conn
+            .query_row(
+                &format!(
+                    "SELECT (strftime('%s', 'now') - strftime('%s', '{}')) < {}",
+                    last_activity, SESSION_TIMEOUT_SECS
+                ),
+                [],
+                |row| {
+                    let active: bool = row.get(0)?;
+                    Ok(active)
+                },
+            )
+            .map_err(|e| Error::from_reason(format!("Failed to check session timeout: {}", e)))?
+            .unwrap_or(false);
+
+        if is_active {
+            // Update last activity and reuse session
+            conn.execute(
+                "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
+                [],
+            )
+            .map_err(|e| {
+                Error::from_reason(format!("Failed to update session activity: {}", e))
+            })?;
+
+            tracing::trace!("Reusing existing analytics session: {}", session_id);
+            return Ok(session_id);
+        }
+    }
+
+    // Create new session
+    let session_id = uuid::Uuid::new_v4().to_string();
+    conn.execute(
+        "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
+        [&session_id],
+    )
+    .map_err(|e| Error::from_reason(format!("Failed to save session ID: {}", e)))?;
+
+    conn.execute(
+        "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
+        [],
+    )
+    .map_err(|e| {
+        Error::from_reason(format!("Failed to save session activity: {}", e))
+    })?;
+
+    tracing::trace!("Created new analytics session: {}", session_id);
+    Ok(session_id)
 }

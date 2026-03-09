@@ -18,6 +18,7 @@ import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
 import { generateWorkspaceId } from '../utils/analytics-prompt';
+import { getDbConnection } from '../utils/db-connection';
 
 // Conditionally import telemetry functions only on non-WASM platforms
 let initializeTelemetry: typeof InitializeTelemetryType;
@@ -66,7 +67,10 @@ export async function startAnalytics() {
     : 'unknown';
 
   try {
+    const dbConnection = getDbConnection();
+
     initializeTelemetry(
+      dbConnection,
       workspaceId,
       userId,
       nxVersion,
