@@ -2,6 +2,7 @@ import { ensureAnalyticsPreferenceSet } from './analytics-prompt';
 import * as isCi from './is-ci';
 import * as enquirer from 'enquirer';
 import * as fileUtils from './fileutils';
+import * as writeFormattedModule from './write-formatted-json-file';
 import * as nxJson from '../config/nx-json';
 import * as outputModule from './output';
 
@@ -13,7 +14,9 @@ describe('analytics-prompt', () => {
   let mockPrompt = jest.spyOn(enquirer, 'prompt');
   let mockReadNxJson = jest.spyOn(nxJson, 'readNxJson');
   let mockReadJsonFile = jest.spyOn(fileUtils, 'readJsonFile');
-  let mockWriteJsonFile = jest.spyOn(fileUtils, 'writeJsonFile');
+  let mockWriteFormattedJsonFile = jest
+    .spyOn(writeFormattedModule, 'writeFormattedJsonFile')
+    .mockResolvedValue(undefined);
   let mockOutputLog = jest.spyOn(outputModule.output, 'log');
   let mockOutputSuccess = jest.spyOn(outputModule.output, 'success');
 
@@ -42,7 +45,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).not.toHaveBeenCalled();
-      expect(mockWriteJsonFile).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
     });
 
     it('should skip prompting in non-interactive terminals', async () => {
@@ -55,7 +58,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).not.toHaveBeenCalled();
-      expect(mockWriteJsonFile).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
     });
 
     it('should skip prompting if analytics is already true', async () => {
@@ -67,7 +70,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).not.toHaveBeenCalled();
-      expect(mockWriteJsonFile).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
     });
 
     it('should skip prompting if analytics is already false', async () => {
@@ -80,7 +83,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).not.toHaveBeenCalled();
-      expect(mockWriteJsonFile).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
     });
 
     it('should prompt and save true when user accepts', async () => {
@@ -95,7 +98,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).toHaveBeenCalled();
-      expect(mockWriteJsonFile).toHaveBeenCalledWith(
+      expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
         expect.stringContaining('nx.json'),
         expect.objectContaining({ analytics: true })
       );
@@ -112,7 +115,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).toHaveBeenCalled();
-      expect(mockWriteJsonFile).toHaveBeenCalledWith(
+      expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
         expect.stringContaining('nx.json'),
         expect.objectContaining({ analytics: false })
       );
@@ -129,7 +132,7 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).toHaveBeenCalled();
-      expect(mockWriteJsonFile).toHaveBeenCalledWith(
+      expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
         expect.stringContaining('nx.json'),
         expect.objectContaining({ analytics: false })
       );
