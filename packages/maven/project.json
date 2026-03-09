@@ -23,9 +23,10 @@
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{options.outputPath}"],
       "dependsOn": [
+        "^build-base",
         "build-base",
         "maven-batch-runner:_package",
-        "nx:copy-local-native"
+        "nx:build-base"
       ],
       "options": {
         "tsConfig": "./tsconfig.lib.json",

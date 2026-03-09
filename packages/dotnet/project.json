@@ -56,7 +56,12 @@
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
-      "dependsOn": ["build-base", "build-analyzer", "nx:copy-local-native"],
+      "dependsOn": [
+        "^build-base",
+        "build-base",
+        "build-analyzer",
+        "nx:build-base"
+      ],
       "outputs": ["{projectRoot}/dist"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
