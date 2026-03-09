@@ -112,8 +112,6 @@ export class TaskOrchestrator {
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private cleanupDone = false;
 
-  private batchTaskResultsStreamed = new Set<string>();
-
   // endregion internal state
 
   constructor(
@@ -449,7 +447,7 @@ export class TaskOrchestrator {
       }
     }
 
-    // Phase 2: Run remaining tasks without hashing, then hash after execution
+    // Phase 2: Run remaining tasks without hashing, then hash after execution.
     // Hashing is deferred until after the batch so that all outputs (including
     // from sibling tasks) are fresh on disk. This means tasks with depsOutputs
     // get correct hashes on the first pass — no re-hash needed.
@@ -586,19 +584,6 @@ export class TaskOrchestrator {
         task.startTime = result.startTime;
         task.endTime = result.endTime;
 
-        this.options.lifeCycle.endTasks(
-          [
-            {
-              task,
-              status,
-              code: result.success ? 0 : 1,
-              terminalOutput: result.terminalOutput,
-            },
-          ],
-          { groupId }
-        );
-
-        this.batchTaskResultsStreamed.add(taskId);
         this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
       });
 
@@ -1129,30 +1114,25 @@ export class TaskOrchestrator {
     }[],
     groupId: number
   ): Promise<void> {
-    // 1. endTasks FIRST (non-skipped only, and not already streamed for batch)
+    // 1. endTasks FIRST (non-skipped only)
     const tasksToReport: TaskResult[] = [];
     const taskIds: string[] = [];
     for (const { task, status, terminalOutput } of results) {
       taskIds.push(task.id);
 
       if (this.completedTasks[task.id] === undefined && status !== 'skipped') {
-        if (!this.batchTaskResultsStreamed.has(task.id)) {
-          tasksToReport.push({
-            task,
-            status,
-            terminalOutput,
-            code:
-              status === 'success' ||
-              status === 'local-cache' ||
-              status === 'local-cache-kept-existing' ||
-              status === 'remote-cache'
-                ? 0
-                : 1,
-          });
-        } else {
-          // clean up the task id from the set since we've already verified it
-          this.batchTaskResultsStreamed.delete(task.id);
-        }
+        tasksToReport.push({
+          task,
+          status,
+          terminalOutput,
+          code:
+            status === 'success' ||
+            status === 'local-cache' ||
+            status === 'local-cache-kept-existing' ||
+            status === 'remote-cache'
+              ? 0
+              : 1,
+        });
       }
     }
 
