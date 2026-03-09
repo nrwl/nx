@@ -20,6 +20,7 @@ export declare class AppLifeCycle {
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
+  setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
