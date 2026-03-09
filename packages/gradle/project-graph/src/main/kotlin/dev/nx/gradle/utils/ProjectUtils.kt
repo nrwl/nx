@@ -5,6 +5,7 @@ import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.testing.Test
 
 /**
@@ -123,6 +124,8 @@ fun processTargetsForProject(
   // with Kotlin Multiplatform which adds tasks dynamically
   val testTasks = project.tasks.withType(Test::class.java).toList()
   val hasCiTestTarget = ciTestTargetBaseName != null && testTasks.isNotEmpty() && atomized
+  // Pre-index test tasks by prefixed name for O(1) lookup during dependency replacement
+  val testTasksByPrefixedName = testTasks.associateBy { applyPrefix(it.name) }
 
   logger.info(
       "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
@@ -134,14 +137,7 @@ fun processTargetsForProject(
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
-      // Apply target name override if applicable, then apply prefix
-      val targetName =
-          applyPrefix(
-              if (task.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-                targetNameOverrides["testTargetName"]!!
-              } else {
-                task.name
-              })
+      val targetName = resolveTargetName(task, targetNameOverrides, targetNamePrefix)
 
       // Group task under its group if available, using the overridden name
       task.group
@@ -204,37 +200,30 @@ fun processTargetsForProject(
       if (ciTestTargetBaseName != null) {
         val ciCheckTargetName =
             applyPrefix(targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci"))
+
+        // Build CI test replacements: maps original target names to their CI equivalents
+        // e.g., "test" -> "ci-test", "testDebug" -> "ci-test-testDebug"
+        val ciTestReplacements = mutableMapOf<String, String>()
+        if (hasCiTestTarget) {
+          testTasksByPrefixedName.forEach { (prefixedName, testTask) ->
+            ciTestReplacements[prefixedName] = "$ciTestTargetBaseName-${testTask.name}"
+          }
+          // The default test target gets the base CI name (e.g., "test" -> "ci-test")
+          // Set after the loop so it takes priority over the generic pattern
+          ciTestReplacements[testTargetName] = ciTestTargetBaseName!!
+        }
+
         if (task.name == "check") {
-          val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dependency ->
-                val dependsOn = dependency.toString()
+          val ciCheckDependsOn =
+              buildCiDependsOn(
+                  task, project, targetNameOverrides, targetNamePrefix, ciTestReplacements)
 
-                when {
-                  hasCiTestTarget && dependsOn == "$nxProjectName:$testTargetName" -> {
-                    "$nxProjectName:$ciTestTargetBaseName"
-                  }
-                  hasCiTestTarget && dependsOn.startsWith("$nxProjectName:") -> {
-                    val taskName = dependsOn.removePrefix("$nxProjectName:")
-                    // Check if it's a test task that's not the default test target
-                    if (testTasks.any { it.name == taskName } &&
-                        applyPrefix(taskName) != testTargetName) {
-                      "$nxProjectName:$ciTestTargetBaseName-$taskName"
-                    } else {
-                      dependency
-                    }
-                  }
-                  else -> dependency
-                }
-              } ?: emptyList()
-
-          val newTarget: MutableMap<String, Any?> =
+          targets[ciCheckTargetName] =
               mutableMapOf(
-                  "dependsOn" to replacedDependencies,
+                  "dependsOn" to ciCheckDependsOn,
                   "executor" to "nx:noop",
                   "cache" to true,
                   "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
-
-          targets[ciCheckTargetName] = newTarget
           ensureTargetGroupExists(targetGroups, testCiTargetGroup)
           targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
         }
@@ -242,24 +231,20 @@ fun processTargetsForProject(
         if (task.name == "build") {
           val ciBuildTargetName =
               applyPrefix(targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci"))
-          val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dep ->
-                val dependsOn = dep.toString()
-                if (dependsOn == "$nxProjectName:${applyPrefix("check")}") {
-                  "$nxProjectName:$ciCheckTargetName"
-                } else {
-                  dep
-                }
-              } ?: emptyList()
+          val ciBuildDependsOn =
+              buildCiDependsOn(
+                  task,
+                  project,
+                  targetNameOverrides,
+                  targetNamePrefix,
+                  mapOf(applyPrefix("check") to ciCheckTargetName))
 
-          val newTarget: MutableMap<String, Any?> =
+          targets[ciBuildTargetName] =
               mutableMapOf(
-                  "dependsOn" to replacedDependencies,
+                  "dependsOn" to ciBuildDependsOn,
                   "executor" to "nx:noop",
                   "cache" to true,
                   "metadata" to getMetadata("Runs Gradle Build in CI", projectBuildPath, "build"))
-
-          targets[ciBuildTargetName] = newTarget
           ensureTargetGroupExists(targetGroups, "build")
           targetGroups["build"]?.add(ciBuildTargetName)
         }
@@ -273,4 +258,58 @@ fun processTargetsForProject(
 
   logger.info("Final targets in processTargetsForProject: $targets")
   return GradleTargets(targets, targetGroups, externalNodes)
+}
+
+/**
+ * Build CI dependsOn list from a task's Gradle dependencies. Splits into same-project and
+ * cross-project entries, groups cross-project deps by target, and optionally replaces same-project
+ * target names using the provided map (e.g., test -> ci-test, check -> ci-check).
+ */
+fun buildCiDependsOn(
+    task: Task,
+    project: Project,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String,
+    sameProjectReplacements: Map<String, String> = emptyMap()
+): List<DependsOnEntry> {
+  val allDeps = getDependsOnTask(task)
+  val result = mutableListOf<DependsOnEntry>()
+  val crossProjectByTarget = mutableMapOf<String, MutableList<String>>()
+
+  allDeps.forEach { depTask ->
+    val depProject = depTask.project
+    if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+      val depTargetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
+
+      if (depProject == project) {
+        val finalName = sameProjectReplacements[depTargetName] ?: depTargetName
+        result.add(DependsOnEntry(target = finalName))
+      } else {
+        crossProjectByTarget
+            .getOrPut(depTargetName) { mutableListOf() }
+            .add(getNxProjectName(depProject))
+      }
+    }
+  }
+
+  crossProjectByTarget.forEach { (targetName, projects) ->
+    result.add(DependsOnEntry(target = targetName, projects = projects.distinct()))
+  }
+
+  return result
+}
+
+/** Resolve a dependency task's target name, applying overrides and prefix. */
+fun resolveTargetName(
+    depTask: Task,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String
+): String {
+  val baseName =
+      if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+        targetNameOverrides["testTargetName"]!!
+      } else {
+        depTask.name
+      }
+  return if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$baseName" else baseName
 }

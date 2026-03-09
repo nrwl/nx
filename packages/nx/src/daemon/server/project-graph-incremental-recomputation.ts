@@ -15,6 +15,7 @@ import {
   nxProjectGraph,
   readFileMapCache,
   writeCache,
+  writeCacheIfStale,
 } from '../../project-graph/nx-deps-cache';
 import {
   retrieveProjectConfigurations,
@@ -98,6 +99,7 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
     waitPeriod = 100;
     await resetInternalStateIfNxDepsMissing();
     const plugins = await getPlugins();
+    const previousPromise = cachedSerializedProjectGraphPromise;
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
@@ -117,6 +119,8 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(plugins);
     }
+    const graphWasRecomputed =
+      cachedSerializedProjectGraphPromise !== previousPromise;
     const result = await cachedSerializedProjectGraphPromise;
 
     if (wasScheduled) {
@@ -133,16 +137,22 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
         : [result.error]
       : [];
 
-    // Always write the daemon's current graph to disk to ensure disk cache
-    // stays in sync with the daemon's in-memory cache. This prevents issues
-    // where a non-daemon process writes a stale/errored cache that never
-    // gets overwritten by the daemon's valid graph.
+    // Write the daemon's current graph to disk to ensure disk cache stays
+    // in sync with the daemon's in-memory cache. This prevents issues where
+    // a non-daemon process writes a stale/errored cache that never gets
+    // overwritten by the daemon's valid graph.
+    //
+    // When the graph was just recomputed, always write so the new graph is
+    // persisted. When serving the same graph from memory, use
+    // writeCacheIfStale to skip the write unless an external process has
+    // modified the file since this process last wrote it.
     if (
       result.projectGraph &&
       result.projectFileMapCache &&
       result.sourceMaps
     ) {
-      writeCache(
+      const writeFn = graphWasRecomputed ? writeCache : writeCacheIfStale;
+      writeFn(
         result.projectFileMapCache,
         result.projectGraph,
         result.sourceMaps,

@@ -1,6 +1,6 @@
 ---
 title: 'Building and Testing Angular Apps in Nx'
-description: In this tutorial you'll create a frontend-focused monorepo with Nx.
+description: You'll create a frontend-focused monorepo with Nx.
 sidebar:
   label: 'Angular Monorepo'
 filter: 'type:Guides'
@@ -11,12 +11,12 @@ This tutorial walks you through creating an Angular monorepo with Nx. You'll bui
 What you'll learn:
 
 - How to structure multiple Angular apps and libraries in a single repository
-- How Nx's caching speeds up your local development and CI pipelines
+- How Nx caching speeds up your local development and CI pipelines
 - How to run builds, tests, and serve commands efficiently across multiple projects
 - How to share UI components and utilities between Angular applications
 - How to fix CI failures directly from your editor with Nx Cloud
 
-## Prerequisite: Tutorial Setup
+## Prerequisite: Tutorial setup
 
 {% aside type="note" title="Prerequisites" %}
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
@@ -28,7 +28,7 @@ Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/angular/g
 
 {% call_to_action variant="default" title="Create Angular Workspace" url="https://cloud.nx.app/create-nx-workspace/angular/github" /%}
 
-### Step 2: Verify Your Setup
+### Step 2: verify your setup
 
 Please verify closely that you have the following setup:
 
@@ -55,7 +55,7 @@ You should see your workspace in your [Nx Cloud organization](https://cloud.nx.a
 
 This is important for using remote caching and self-healing in CI later in the tutorial.
 
-## Explore the Nx Workspace Setup
+## Explore the Nx workspace setup
 
 Let's take a look at the structure of our new Nx workspace:
 {%filetree%}
@@ -80,7 +80,7 @@ Here are some files that might jump to your eyes:
 
 Now, let's build some features and see how Nx helps get us to production faster.
 
-## Serving the App
+## Serving the app
 
 To serve your new Angular app, run:
 
@@ -94,7 +94,7 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](../../../../assets/getting-started/run-target-syntax.svg)
 
-### Project Configuration
+### Project configuration
 
 The project tasks are defined in the `project.json` file.
 
@@ -227,7 +227,7 @@ npx nx show project angular-demo
 
 {% /project_details %}
 
-## Modularization with Local Libraries
+## Modularization with local libraries
 
 When you develop your Angular application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
@@ -252,7 +252,7 @@ Nx allows you to separate this logic into "local libraries." The main benefits i
 - better scalability in CI by enabling independent test/lint/build commands for each library
 - better scalability in your teams by allowing different teams to work on separate libraries
 
-### Create Local Libraries
+### Create local libraries
 
 Let's create a reusable design system library called `ui` that we can use across our workspace. This library will contain reusable components such as buttons, inputs, and other UI elements.
 
@@ -292,7 +292,7 @@ npx nx lint ui
 npx nx test ui
 ```
 
-### Import Libraries into the Demo App
+### Import libraries into the demo app
 
 All libraries that we generate are automatically included in the TypeScript path mappings configured in the root-level `tsconfig.base.json`.
 
@@ -427,7 +427,7 @@ Serve your app again (`npx nx serve angular-demo`) and you should see the new He
 
 If you have keen eyes, you may have noticed that there is a typo in the `App` component. This mistake is intentional, and we'll see later how Nx can fix this issue automatically in CI.
 
-## Visualize your Project Structure
+## Visualize your project structure
 
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/docs/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, identifying [affected projects](/docs/features/run-tasks#run-tasks-on-projects-affected-by-a-pr) and more. Interestingly, you can also visualize it.
 
@@ -481,7 +481,7 @@ git add .
 git commit -m 'add hero component'
 ```
 
-## Testing and Linting - Running Multiple Tasks
+## Testing and linting - running multiple tasks
 
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
 
@@ -500,7 +500,7 @@ This is exactly what is configured in `.github/workflows/ci.yml` for the CI pipe
 
 There is a test failure for the `angular-demo` app due to the updated content. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
 
-### Local Task Cache
+### Local task cache
 
 One thing to highlight is that Nx is able to [cache the tasks you run](/docs/features/cache-task-results).
 
@@ -529,7 +529,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 ## Self-Healing CI with Nx Cloud
 
-In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our angular-demo app has a test failure, so let's see how this can be automatically resolved.
+Explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our angular-demo app has a test failure, so let's see how this can be automatically resolved.
 
 The `npx nx fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
@@ -584,7 +584,7 @@ As expected, the CI check fails because of the test failure in the `angular-demo
 
 ![Nx Console with failure notification](../../../../assets/tutorials/angular-ci-notification.avif)
 
-### Fix CI from Your Editor
+### Fix CI from your editor
 
 From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe` to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
 
@@ -592,7 +592,7 @@ From the Nx Console notification, you can click `Show Suggested Fix` button. Rev
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
-### Remote Cache for Faster Time To Green
+### Remote cache for faster time to green
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
@@ -614,7 +614,7 @@ This pull request is now ready to be merged with the help of Nx Cloud's self-hea
 
 ![Pull request is green](../../../../assets/tutorials/angular-ci-green.avif)
 
-## Next Steps
+## Next steps
 
 Here are some things you can dive into next:
 

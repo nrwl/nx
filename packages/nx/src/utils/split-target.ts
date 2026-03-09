@@ -1,10 +1,10 @@
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 
 function findMatchingSegments(
   s: string,
-  projectGraph: ProjectGraph
+  nodes: Record<string, ProjectGraphProjectNode>
 ): [string, string?, string?] | undefined {
-  const projectNames = Object.keys(projectGraph.nodes);
+  const projectNames = Object.keys(nodes);
   // return project if matching
   if (projectNames.includes(s)) {
     return [s];
@@ -14,7 +14,7 @@ function findMatchingSegments(
   }
   for (const projectName of projectNames) {
     for (const [targetName, targetConfig] of Object.entries(
-      projectGraph.nodes[projectName].data.targets || {}
+      nodes[projectName].data.targets || {}
     )) {
       if (s === `${projectName}:${targetName}`) {
         return [projectName, targetName];
@@ -32,11 +32,11 @@ function findMatchingSegments(
   }
 }
 
-export function splitTarget(
+export function splitTargetFromNodes(
   s: string,
-  projectGraph: ProjectGraph
+  nodes: Record<string, ProjectGraphProjectNode>
 ): [project: string, target?: string, configuration?: string] {
-  const matchingSegments = findMatchingSegments(s, projectGraph);
+  const matchingSegments = findMatchingSegments(s, nodes);
   if (matchingSegments) {
     return matchingSegments;
   }
@@ -45,14 +45,12 @@ export function splitTarget(
     // if only configuration cannot be matched, try to match project and target
     const configuration = segments[segments.length - 1];
     const rest = s.slice(0, -(configuration.length + 1));
-    const matchingSegments = findMatchingSegments(rest, projectGraph);
+    const matchingSegments = findMatchingSegments(rest, nodes);
     if (matchingSegments && matchingSegments.length === 2) {
       return [...(matchingSegments as [string, string]), configuration];
     }
     // no project-target pair found, do the naive matching
-    const validTargets = projectGraph.nodes[project]
-      ? projectGraph.nodes[project].data.targets
-      : {};
+    const validTargets = nodes[project] ? nodes[project].data.targets : {};
     const validTargetNames = new Set(Object.keys(validTargets ?? {}));
 
     return [project, ...groupJointSegments(segments, validTargetNames)] as [
@@ -63,6 +61,13 @@ export function splitTarget(
   }
   // we don't know what to do with the string, return as is
   return [s];
+}
+
+export function splitTarget(
+  s: string,
+  projectGraph: ProjectGraph
+): [project: string, target?: string, configuration?: string] {
+  return splitTargetFromNodes(s, projectGraph.nodes);
 }
 
 function groupJointSegments(segments: string[], validTargetNames: Set<string>) {

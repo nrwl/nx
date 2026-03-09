@@ -7,6 +7,12 @@ distribute-on:
 assignment-rules:
   - projects:
       - e2e-gradle
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
       - e2e-next
       - e2e-plugin
     targets:

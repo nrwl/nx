@@ -18,6 +18,7 @@ export function createCopyPlugin(assets: AssetGlobPattern[]) {
           ],
           dot: true,
         },
+        noErrorOnMissing: true,
       };
     }),
   });

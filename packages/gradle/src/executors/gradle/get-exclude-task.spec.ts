@@ -114,6 +114,42 @@ describe('getExcludeTasks', () => {
     );
     expect(excludes).toEqual(new Set());
   });
+
+  it('should handle object-format dependsOn entries', () => {
+    const objectNodes: any = {
+      app1: {
+        name: 'app1',
+        type: 'app',
+        data: {
+          root: 'app1',
+          targets: {
+            build: {
+              dependsOn: [
+                { target: 'compileJava' },
+                { target: 'build', projects: ['app2'] },
+              ],
+              options: { taskName: ':app1:build' },
+            },
+            compileJava: { options: { taskName: ':app1:compileJava' } },
+          },
+        },
+      },
+      app2: {
+        name: 'app2',
+        type: 'app',
+        data: {
+          root: 'app2',
+          targets: {
+            build: { dependsOn: [], options: { taskName: ':app2:build' } },
+          },
+        },
+      },
+    };
+    const targets = new Set<string>(['app1:build']);
+    const runningTaskIds = new Set<string>(['app1:build']);
+    const excludes = getExcludeTasks(targets, objectNodes, runningTaskIds);
+    expect(excludes).toEqual(new Set([':app1:compileJava', ':app2:build']));
+  });
 });
 
 describe('getAllDependsOn', () => {
@@ -176,5 +212,33 @@ describe('getAllDependsOn', () => {
   it('should not include the starting task in the result', () => {
     const dependencies = getAllDependsOn(nodes, 'a', 'build');
     expect(dependencies).not.toContain('a:build');
+  });
+
+  it('should handle object-format dependsOn entries', () => {
+    const objectNodes: any = {
+      app: {
+        name: 'app',
+        type: 'app',
+        data: {
+          root: 'app',
+          targets: {
+            build: {
+              dependsOn: [
+                { target: 'compileJava' },
+                { target: 'jar', projects: ['lib'] },
+              ],
+            },
+            compileJava: {},
+          },
+        },
+      },
+      lib: {
+        name: 'lib',
+        type: 'lib',
+        data: { root: 'lib', targets: { jar: {} } },
+      },
+    };
+    const dependencies = getAllDependsOn(objectNodes, 'app', 'build');
+    expect(dependencies).toEqual(new Set(['app:compileJava', 'lib:jar']));
   });
 });

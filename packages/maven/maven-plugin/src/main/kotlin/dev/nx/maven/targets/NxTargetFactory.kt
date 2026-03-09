@@ -101,6 +101,16 @@ class NxTargetFactory(
       log.info("No test goals found for project ${project.artifactId}, skipping atomized test target generation")
     }
 
+    // Add technologies metadata to all targets
+    nxTargets.entrySet().forEach { (_, targetElement) ->
+      val targetObj = targetElement.asJsonObject
+      val metadata = targetObj.getAsJsonObject("metadata") ?: JsonObject()
+      val technologies = JsonArray()
+      technologies.add("maven")
+      metadata.add("technologies", technologies)
+      targetObj.add("metadata", metadata)
+    }
+
     val targetGroupsJson = buildTargetGroupsJson(targetGroups)
     return Pair(nxTargets, targetGroupsJson)
   }
@@ -604,10 +614,10 @@ class NxTargetFactory(
     val isIgnored = gitIgnoreClassifier.isIgnored(buildJsonFile)
     if (isIgnored) {
       log.warn("Input path is gitignored: ${buildJsonFile.path}")
-      val input = pathFormatter.toDependentTaskOutputs(buildJsonFile, project.basedir)
+      // Match the specific build state file in dependency outputs
       val obj = JsonObject()
-      obj.addProperty("dependentTasksOutputFiles", input.path)
-      if (input.transitive) obj.addProperty("transitive", true)
+      obj.addProperty("dependentTasksOutputFiles", "nx-build-state.json")
+      obj.addProperty("transitive", true)
       target.inputs?.add(obj)
     } else {
       val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)

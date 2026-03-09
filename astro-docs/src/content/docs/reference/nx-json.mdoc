@@ -117,7 +117,7 @@ To learn about creating your own plugin read about [extending Nx](/docs/extendin
 }
 ```
 
-### Scope Plugins to Specific Projects
+### Scope plugins to specific projects
 
 Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
 
@@ -136,7 +136,7 @@ Plugins use config files to infer tasks for projects. You can specify which conf
 
 The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
 
-#### Using Negation Patterns
+#### Using negation patterns
 
 You can use negation patterns (patterns starting with `!`) to create more precise include/exclude rules. Patterns are processed in order, with later patterns overriding earlier ones.
 
@@ -178,7 +178,7 @@ This will exclude all e2e projects except `toolkit-workspace-e2e`.
 - The last matching pattern determines if a file is included
 - If the first pattern is a negation, all files are matched initially
 
-## Task Options
+## Task options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
 
@@ -193,13 +193,13 @@ The following properties affect the way Nx runs tasks and can be set at the root
 
 You can configure `parallel` in `nx.json`, but you can also set a `--parallel` flag in the terminal `nx run-many -t test --parallel=5`.
 
-## Default Base
+## Default base
 
 Tells Nx which base branch to use when calculating affected projects.
 
 - `defaultBase` defines the default base branch, defaults to `main`.
 
-## Target Defaults
+## Target defaults
 
 Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults looking for a configuration whose key matches any of the following:
 
@@ -254,7 +254,7 @@ In this case Nx will use the right `production` input for each project.
 {% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/guides/tasks--caching/configure-inputs" /%}
 {% /cardgrid %}
 
-### Task Pipelines
+### Task pipelines
 
 Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
 building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
@@ -323,7 +323,7 @@ When defining any options or configurations inside of a target default, you may 
 }
 ```
 
-#### Target Default Priority
+#### Target default priority
 
 Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 
@@ -391,7 +391,7 @@ If multiple targets with the same name run different commands (or use different 
 
 For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/guides/tasks--caching/pass-args-to-commands).
 
-### Task Atomizer Configuration
+### Task atomizer configuration
 
 Task Atomizer plugins create several targets with a similar pattern. For example, the `@nx/cypress` plugin creates a top level `e2e-ci` target and a target for each test file that looks like `e2e-ci--test/my/test.spec.ts`. To avoid having to write a target default for each of these targets, you can use a glob pattern in the target default key.
 
@@ -435,7 +435,7 @@ If you want to limit the projects that `nx release` targets, you can use the `pr
 }
 ```
 
-### Projects Relationship
+### Projects relationship
 
 The `projectsRelationship` property tells Nx whether to release projects independently or together. By default Nx will release all your projects together in lock step, which is an equivalent of `"projectRelationships": "fixed"`. If you want to release projects independently, you can set `"projectsRelationship": "independent"`.
 
@@ -450,7 +450,7 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
 }
 ```
 
-### Release Tag
+### Release tag
 
 The `releaseTag` property controls how git tags are parsed and generated. By default tags conform to semantic version and are validated as such.
 
@@ -462,17 +462,31 @@ Release tag configuration now uses a nested `releaseTag` object. Old flat proper
 **Nx < 22:** `releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`
 {% /aside %}
 
-#### Configuration Options
+#### Configuration options
 
-| Property                 | Type    | Default                                                           | Description                                                                                                  |
-| ------------------------ | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **pattern**              | string  | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}` |
-| **requireSemver**        | boolean | `false`                                                           | Whether to require that all tags match semantic versioning                                                   |
-| **strictPreid**          | boolean | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                              |
-| **preferDockerVersion**  | boolean | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                               |
-| **checkAllBranchesWhen** | string  | undefined                                                         | Branch to check when resolving current versions from git tags                                                |
+| Property                 | Type                | Default                                                           | Description                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **pattern**              | string              | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}`                                                                                                                                                                                          |
+| **requireSemver**        | boolean             | `false`                                                           | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
+| **strictPreid**          | boolean             | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
+| **preferDockerVersion**  | boolean             | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                                                                                                                                                                                                                        |
+| **checkAllBranchesWhen** | boolean \| string[] | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
 
-#### Tag Pattern Syntax
+#### Branch resolution for git tags
+
+The `checkAllBranchesWhen` option controls how Nx resolves existing git tags to determine the current version of your projects.
+
+By default, Nx checks for matching tags on the current branch. If no tags are found, it falls back to checking all branches.
+
+| Value      | Behavior                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`     | Always check all branches for the latest matching tag                                                                                                                     |
+| `false`    | Only check the current branch (no fallback to all branches)                                                                                                               |
+| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/isaacs/minimatch). Otherwise, use the default behavior |
+
+This option is useful when release tags may exist on multiple branches. Setting `checkAllBranchesWhen` to `true` or to a list of branch patterns ensures Nx finds the latest tag regardless of which branch it was created on.
+
+#### Tag pattern syntax
 
 The tag pattern supports interpolating the following values:
 
@@ -487,7 +501,7 @@ Example patterns and their results:
 - `{releaseGroupName}/{projectName}/{version}` → `backend/api/1.0.0`
 - `release/{version}` → `release/1.0.0`
 
-#### Example Configuration
+#### Example configuration
 
 {% tabs syncKey="nx-release-configuration" %}
 {% tabitem label="Nx 22+" %}
@@ -501,7 +515,7 @@ Example patterns and their results:
       "requireSemver": true,
       "strictPreid": true,
       "preferDockerVersion": false,
-      "checkAllBranchesWhen": "main",
+      "checkAllBranchesWhen": ["main", "release/*"],
     },
   },
 }
@@ -518,7 +532,7 @@ Example patterns and their results:
     "releaseTagPatternRequireSemver": true,
     "releaseTagPatternStrictPreid": true,
     "releaseTagPatternPreferDockerVersion": false,
-    "releaseTagPatternCheckAllBranchesWhen": "main",
+    "releaseTagPatternCheckAllBranchesWhen": ["main", "release/*"],
   },
 }
 ```
@@ -588,7 +602,7 @@ There are two types of possible changelog that can be generated:
 
 The `changelog` property is used to configure both of these changelogs.
 
-#### Workspace Changelog
+#### Workspace changelog
 
 The `changelog.workspaceChangelog` property configures the workspace changelog. It is used to determine if and how the workspace changelog is generated.
 
@@ -621,7 +635,7 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
 }
 ```
 
-#### Project Changelogs
+#### Project changelogs
 
 The `changelog.projectChangelogs` property configures the project changelogs. It is used to determine if and how the project changelogs are generated.
 
@@ -655,7 +669,7 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
 }
 ```
 
-#### Replace Existing Contents {% badge  text="Nx 22+" /%}
+#### Replace existing contents {% badge  text="Nx 22+" /%}
 
 By default, changelog entries are prepended to existing changelog files. To completely replace the entire changelog file contents instead, use the `replaceExistingContents` option:
 
@@ -745,7 +759,7 @@ The `docker` property configures Docker image versioning and publishing when usi
 
 Read more about it in the [Release Docker Images guide](/docs/guides/nx-release/release-docker-images).
 
-#### Docker Plugin Options
+#### Docker plugin options
 
 When configuring the `@nx/docker` plugin in `nx.json`, you can customize the behavior of Docker build and run targets. One important option is `skipDefaultTag`:
 
@@ -773,7 +787,7 @@ When configuring the `@nx/docker` plugin in `nx.json`, you can customize the beh
 
 If you want to use `nx release` with Docker projects, leave `skipDefaultTag` as `false` (the default) or omit it entirely.
 
-#### Version Scheme Syntax
+#### Version scheme syntax
 
 Docker version schemes support calendar-based patterns using the following placeholders:
 
@@ -798,7 +812,7 @@ Example patterns:
 - `{currentDate|YY.MM.DD.HHmm}-{commitSha}` - Results in: 25.01.30.1430-abcdef1234567890
 - `{projectName}-{versionActionsVersion}` - Results in: api-1.2.3
 
-#### Group-Level Docker Configuration
+#### Group-level Docker configuration
 
 You can configure [Docker release](/docs/guides/nx-release/release-docker-images) settings at the release group level:
 
@@ -896,7 +910,7 @@ If connecting to a different Nx Cloud instance, you can define the `nxCloudUrl`:
 
 For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/docs/reference/nx-cloud-cli).
 
-## Max Cache Size
+## Max cache size
 
 The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
 
@@ -984,14 +998,14 @@ The `conformance` property in `nx.json` configures the usage of [Nx Conformance]
 }
 ```
 
-### Configuration Options
+### Configuration options
 
 | Property       | Type                | Description                                                                                                                                           |
 | -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **outputPath** | `string \| false`   | Optional path to write the conformance results to. Defaults to `"dist/conformance-result.json"`. Set to `false` to disable writing results to a file. |
 | **rules**      | `Array<RuleConfig>` | List of conformance rules to apply to your workspace.                                                                                                 |
 
-### Rule Configuration
+### Rule configuration
 
 Each rule in the `rules` array can have the following properties:
 
@@ -1033,7 +1047,7 @@ You can also use objects with `matcher` and `explanation` properties to document
 }
 ```
 
-### Rule Status Values
+### Rule status values
 
 - **enforced** (default): Rule violations will cause the conformance check to fail (exit code 1)
 - **evaluated**: Rule violations are reported but don't cause failures (exit code 0)

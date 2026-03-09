@@ -1,6 +1,6 @@
 ---
-title: Overview of the Nx Vue Plugin
-description: The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.
+title: Vue Plugin for Nx
+description: The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace, including setup and configuration.
 sidebar:
   label: 'Introduction'
 filter: 'type:References'
@@ -8,9 +8,19 @@ filter: 'type:References'
 
 The Nx plugin for [Vue](https://vuejs.org/).
 
-## Setting Up @nx/vue
+## Requirements
 
-### Generating a new Workspace
+The `@nx/vue` plugin supports the following package versions.
+
+| Package | Supported Versions |
+| ------- | ------------------ |
+| `vue`   | ^3.5.13            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/vue
+
+### Generating a new workspace
 
 To create a new workspace with Vue, run `npx create-nx-workspace@latest --preset=vue`.
 
@@ -28,7 +38,7 @@ nx add @nx/vue
 
 This will install the correct version of `@nx/vue`.
 
-## Using the @nx/vue Plugin
+## Using the @nx/vue plugin
 
 ### Generate a new project using Vue
 

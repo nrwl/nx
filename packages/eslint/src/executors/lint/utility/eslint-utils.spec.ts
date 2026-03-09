@@ -1,3 +1,7 @@
+jest.mock('eslint', () => ({
+  loadESLint: undefined,
+}));
+
 jest.mock('eslint/use-at-your-own-risk', () => ({
   LegacyESLint: jest.fn(),
 }));
@@ -7,6 +11,9 @@ import { resolveAndInstantiateESLint } from './eslint-utils';
 
 describe('eslint-utils', () => {
   beforeEach(() => {
+    const eslintModule = require('eslint');
+    eslintModule.loadESLint = undefined;
+
     jest.clearAllMocks();
   });
 
@@ -52,6 +59,33 @@ describe('eslint-utils', () => {
       rulePaths: [],
       errorOnUnmatchedPattern: false,
     });
+  });
+
+  it('should create the ESLint instance with loadESLint when available', async () => {
+    const eslintModule = require('eslint');
+    const LoadedESLintClass = jest.fn();
+    eslintModule.loadESLint = jest.fn().mockResolvedValue(LoadedESLintClass);
+
+    await resolveAndInstantiateESLint('./.eslintrc.json', {} as any);
+
+    expect(eslintModule.loadESLint).toHaveBeenCalledWith({
+      useFlatConfig: false,
+    });
+    expect(LoadedESLintClass).toHaveBeenCalledWith({
+      overrideConfigFile: './.eslintrc.json',
+      fix: false,
+      cache: false,
+      cacheLocation: undefined,
+      cacheStrategy: undefined,
+      errorOnUnmatchedPattern: false,
+
+      ignorePath: undefined,
+      reportUnusedDisableDirectives: undefined,
+      resolvePluginsRelatedTo: undefined,
+      rulePaths: [],
+      useEslintrc: true,
+    });
+    expect(LegacyESLint).not.toHaveBeenCalled();
   });
 
   describe('noEslintrc', () => {
@@ -206,6 +240,36 @@ describe('eslint-utils', () => {
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
       );
+    });
+
+    it('should resolve flat ESLint v9+ using loadESLint when available', async () => {
+      const eslintModule = require('eslint');
+      const LoadedESLintClass: jest.Mock & { version?: string } = jest.fn();
+      LoadedESLintClass.version = '9.0.0';
+      eslintModule.loadESLint = jest.fn().mockResolvedValue(LoadedESLintClass);
+
+      await resolveAndInstantiateESLint(
+        'eslint.config.mjs',
+        {
+          quiet: true,
+        } as any,
+        true
+      );
+
+      expect(eslintModule.loadESLint).toHaveBeenCalledWith({
+        useFlatConfig: true,
+      });
+      expect(LoadedESLintClass).toHaveBeenCalledWith({
+        overrideConfigFile: 'eslint.config.mjs',
+        fix: false,
+        cache: false,
+        cacheLocation: undefined,
+        cacheStrategy: undefined,
+        errorOnUnmatchedPattern: false,
+
+        ruleFilter: expect.any(Function),
+      });
+      expect(LegacyESLint).not.toHaveBeenCalled();
     });
   });
 });

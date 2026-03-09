@@ -81,11 +81,11 @@ impl FileLock {
     }
 
     #[napi(ts_return_type = "Promise<void>")]
-    pub fn wait(&mut self, env: Env) -> napi::Result<napi::JsObject> {
+    pub fn wait(&mut self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
         if self.locked {
             let lock_file_path = self.lock_file_path.clone();
             self.locked = false;
-            env.spawn_future(async move {
+            let promise = env.spawn_future(async move {
                 let file = OpenOptions::new()
                     .read(true)
                     .write(true)
@@ -94,9 +94,13 @@ impl FileLock {
                 fs4::fs_std::FileExt::lock_shared(&file)?;
                 fs4::fs_std::FileExt::unlock(&file)?;
                 Ok(())
-            })
+            })?;
+            // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8
+            // and remains valid beyond this stack frame.
+            Ok(unsafe { std::mem::transmute(promise) })
         } else {
-            env.spawn_future(async move { Ok(()) })
+            let promise = env.spawn_future(async move { Ok(()) })?;
+            Ok(unsafe { std::mem::transmute(promise) })
         }
     }
 

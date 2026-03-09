@@ -3,6 +3,7 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.*
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -123,6 +124,52 @@ class AddTestCiTargetsTest {
     // Should create targets using regex-based approach since no compiled classes exist
     assertTrue(targets.containsKey("ci--DefaultTest"))
     assertTrue(targets.containsKey("ci"))
+  }
+
+  @Test
+  fun `should not include same-project dependsOn for CI targets`() {
+    File(projectRoot, "build.gradle").apply { writeText("// test build file") }
+
+    val testFile =
+        File(projectRoot, "src/test/kotlin/DependentTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("class DependentTest { @Test fun testMethod() {} }")
+        }
+
+    val compileTask = project.tasks.register("compileTestKotlin").get()
+    testTask.dependsOn(compileTask)
+
+    val testFiles = project.files(testFile)
+    testTask.inputs.files(testFiles)
+
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName,
+        gitIgnoreClassifier = gitIgnoreClassifier)
+
+    val ciTarget = targets["ci--DependentTest"]
+    assertTrue(ciTarget != null, "CI target should be created")
+
+    // Same-project dependencies should be included as object format without projects field
+    val dependsOn = ciTarget?.get("dependsOn") as? List<*>
+    assertNotNull(dependsOn, "Same-project dependsOn should be present")
+    assertTrue(
+        dependsOn!!.any { (it as? DependsOnEntry)?.target == "compileTestKotlin" },
+        "Expected dependsOn to contain 'compileTestKotlin', got $dependsOn")
+    assertTrue(
+        dependsOn.all { (it as? DependsOnEntry)?.projects == null },
+        "Same-project deps should not have projects field")
   }
 
   @Test

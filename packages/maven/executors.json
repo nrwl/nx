@@ -5,7 +5,8 @@
       "implementation": "./dist/executors/maven/maven.impl",
       "batchImplementation": "./dist/executors/maven/maven-batch.impl",
       "schema": "./dist/executors/maven/schema.json",
-      "description": "Runs Maven phases and goals via Maven executable."
+      "description": "Runs Maven phases and goals via Maven executable.",
+      "preferBatch": true
     }
   }
 }

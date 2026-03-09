@@ -18,9 +18,9 @@ This is a separate graph of tasks and their dependencies which is based on the p
 Nx allows you to interactively explore your workspace through a UI which shows the information above.
 Using this tool is _vital_ to understanding both your workspace as well as how Nx behaves.
 
-This guide will teach you to use this tool to explore projects, the project graph, and the task graphs for your workspace.
+Teach you to use this tool to explore projects, the project graph, and the task graphs for your workspace.
 
-## Explore Projects in your Workspace
+## Explore projects in your workspace
 
 Projects in Nx are the different parts of the monorepo which can have tasks run for them.
 
@@ -272,13 +272,13 @@ You can see more details about a specific project in Nx Console or by running `n
 The view shows a list of targets which can be [run by Nx](/docs/features/run-tasks).
 Each target has different options which determine how Nx runs the task.
 
-## Explore the Project Graph
+## Explore the project graph
 
 Nx understands the projects in your workspace as a graph and uses this understanding to behave intelligently.
 Exploring this graph visually is vital to understanding how your code is structured and how Nx behaves.
 It always stays up to date without having to actively maintain a document as it is calculated by analyzing your source code.
 
-### Launching the Project Graph
+### Launching the project graph
 
 To launch the project graph visualization for your workspace, use [Nx Console](/docs/getting-started/editor-setup) or run:
 
@@ -288,7 +288,7 @@ npx nx graph
 
 This will open a browser window with an interactive view of the project graph of your workspace.
 
-### Focusing on Valuable Projects
+### Focusing on valuable projects
 
 Viewing the entire graph can be unmanageable even for smaller repositories, so there are several ways to narrow the
 focus of the visualization down to the most useful part of the graph at the moment.
@@ -541,7 +541,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
 
 {% /graph %}
 
-### Export Project Graph to JSON
+### Export project graph to JSON
 
 If you prefer to analyze the underlying data of the project graph with a script or some other tool, you can run:
 
@@ -551,7 +551,7 @@ nx graph --file=output.json
 
 This will give you all the information that is used to create the project graph visualization.
 
-### Export the Project Graph as an Image
+### Export the project graph as an image
 
 There is a floating action button in the bottom right of the project graph view which will save the graph as a `.png` file.
 Sharing this image with other developers is a great way to express how a project fits into the workspace.
@@ -562,7 +562,7 @@ Some moments which you may want to share these images are:
 - When changing how project(s) are related
 - To share which other projects are directly affected by changes you are making
 
-## Explore the Task Graph
+## Explore the task graph
 
 Nx uses the project graph of your workspace to determine the order in which to [run tasks](/docs/features/run-tasks). Pass the `--graph` flag to view the **task graph** which is executed by Nx when running a command.
 

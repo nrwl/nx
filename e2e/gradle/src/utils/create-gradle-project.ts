@@ -91,7 +91,7 @@ export function createGradleProject(
 
   e2eConsoleLogger(
     execSync(
-      `${gradleCommand} :project-graph:publishToMavenLocal -PskipSign=true`,
+      `${gradleCommand} :gradle-project-graph:publishToMavenLocal -PskipSign=true`,
       {
         cwd: `${__dirname}/../../../..`,
       }

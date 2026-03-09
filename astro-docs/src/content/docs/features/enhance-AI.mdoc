@@ -29,9 +29,9 @@ This sets up:
 - **Agent skills**: Domain-specific knowledge for monorepo workflows — workspace exploration, code generation, task execution, CI monitoring, and package linking. Skills teach agents _how_ to work with Nx rather than dumping data into context.
 - **Nx MCP server**: Provides connectivity to Nx Cloud CI pipelines, self-healing fixes, running processes, and Nx documentation — things agents can't easily reach on their own
 
-## What This Enables
+## What this enables
 
-### Self-Healing CI Integration
+### Self-healing CI integration
 
 Nx Cloud provides AI-powered [Self-Healing CI](/docs/features/ci-features/self-healing-ci) that analyzes failed runs and proposes verified fixes. With `configure-ai-agents`, your local agent connects to this CI counterpart via skills and the Nx MCP, gaining full context about run information, failures, and suggested fixes.
 
@@ -51,7 +51,7 @@ The workflow:
 
 This reduces context-switching—you review the final PR rather than intervening at each failure.
 
-### Workspace Architecture Understanding
+### Workspace architecture understanding
 
 Nx exposes the project graph and relevant metadata to AI agents. This helps them move faster and more precisely:
 
@@ -63,7 +63,7 @@ Nx exposes the project graph and relevant metadata to AI agents. This helps them
 
 This architectural awareness is critical for agents operating in large monorepos where understanding project relationships determines the quality of generated code.
 
-### Predictable, Fast Code Generation
+### Predictable, fast code generation
 
 AI-generated code is token-intensive, slow, and not guaranteed to align with patterns in other projects. Nx generators solve this by providing predictable scaffolding that agents can invoke and then adapt.
 
@@ -75,7 +75,7 @@ Your AI agent can:
 
 This approach is faster, produces consistent code across projects, and reduces hallucinations.
 
-## Learn More
+## Learn more
 
 - [Autonomous AI Agents at Scale](https://nx.dev/blog/ai-agents-and-continuity): Infrastructure requirements for AI agent workflows
 - [Why Nx and AI Work So Well Together](https://nx.dev/blog/nx-and-ai-why-they-work-together): The foundation for AI-powered development

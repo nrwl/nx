@@ -6,7 +6,7 @@ filter: 'type:References'
 
 Here are some common scenarios we came across while trying to run Nx on CIs
 
-## Native Modules
+## Native modules
 
 Nx publishes native binaries that should be automatically downloaded and installed when Nx is used.
 
@@ -51,9 +51,9 @@ We publish modules for the following platforms:
 
 If you're running a machine that isn't part of the list above, then Nx does not support it at this time. [Please open an issue on GitHub](https://github.com/nrwl/nx/issues/new/choose) if you feel Nx should support that platform and we will assess what can be done, please make sure to include your platform and architecture in the issue.
 
-### Node.js Installation Issues
+### Node.js installation issues
 
-Ensure that the architecture of your Node.js installation matches your hardware. Run `nx report` and check that the `OS` property is correct (e.g. `darwin-arm64` for MacOS on Apple silicon). If it contains `x64` even though you're on an `arm64` chip, then something is wrong. A mismatch in architecture can lead to errors loading Nx's native binary.
+Ensure that the architecture of your Node.js installation matches your hardware. Run `nx report` and check that the `OS` property is correct (e.g. `darwin-arm64` for MacOS on Apple silicon). If it contains `x64` even though you're on an `arm64` chip, then something is wrong. A mismatch in architecture can lead to errors loading Nx native binary.
 
 Often, the culprit of the mismatch is a faulty installation of your toolchain: Homebrew (MacOS), Node.js or VSCode (if using Nx Console). You should reinstall your toolchain with the correct architecture. Run `nx report` again to validate the installation.
 

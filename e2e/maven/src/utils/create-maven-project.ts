@@ -3,6 +3,7 @@ import {
   tmpProjPath,
   readFile,
   updateFile,
+  fileExists,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs-extra';
@@ -155,6 +156,11 @@ export async function createMavenProject(
     '.mvn/wrapper/maven-wrapper.properties',
     readFile('app/.mvn/wrapper/maven-wrapper.properties')
   );
+  if (fileExists('.gitignore')) {
+    updateFile('.gitignore', readFile('.gitignore') + '\ntarget');
+  } else {
+    updateFile('.gitignore', 'target');
+  }
 
   chmodSync(join(cwd, 'mvnw'), 0o755);
   chmodSync(join(cwd, 'mvnw.cmd'), 0o755);

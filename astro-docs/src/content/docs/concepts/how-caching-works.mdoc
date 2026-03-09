@@ -1,6 +1,6 @@
 ---
 title: How Caching Works
-description: Learn how Nx's computation hashing enables powerful caching, including what factors determine cache validity and how local and remote caches work together.
+description: Learn how Nx computation hashing enables powerful caching, including what factors determine cache validity and how local and remote caches work together.
 sidebar:
   order: 1
 filter: 'type:Concepts'
@@ -24,7 +24,7 @@ By default, the computation hash for something like `nx test remixapp` includes:
 
 After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally, and then if it is missing, and if a remote cache is configured, it checks remotely. If a matching computation is found, Nx retrieves and replays it. This includes restoring files.
 
-Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, just a lot faster.
+Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, only a lot faster.
 
 ![cache](../../../assets/concepts/caching/cache.svg)
 
@@ -32,7 +32,7 @@ If Nx doesn't find a corresponding computation hash, Nx runs the task, and after
 
 ## Optimizations
 
-Although conceptually this is fairly straightforward, Nx optimizes the experience for you. For instance, Nx:
+Nx optimizes the caching experience in several ways. For instance, Nx:
 
 - Captures stdout and stderr to make sure the replayed output looks the same, including on Windows.
 - Minimizes the IO by remembering what files are replayed where.
@@ -46,7 +46,7 @@ As your workspace grows, the task graph looks more like this:
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.
 
-## Fine-tuning Nx's Cache
+## Fine-tuning the Nx cache
 
 Each cacheable task defines a set of inputs and outputs. Inputs are factors Nx considers when calculating the computation hash.
 Outputs are files that will be cached and restored when the computation hash matches.
@@ -58,7 +58,7 @@ Inputs are factors Nx considers when calculating the computation hash for a task
 
 For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/docs/guides/tasks--caching/configure-inputs)
 
-## What is Cached
+## What is cached
 
 Nx cache works on the process level. Regardless of the tools used to build/test/lint/etc.. your project, the results are cached. This includes:
 
@@ -129,7 +129,7 @@ If neither is defined, Nx defaults to caching `dist` and `build` at the root of 
 Several executors have a property in options called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. You can reuse that property though by defining your outputs like: `outputs: [{options.outputPath}]`.
 {% /aside %}
 
-## Define Cache Inputs
+## Define cache inputs
 
 By default the cache considers all project files (e.g. `{projectRoot}/**/*`). This behavior can be customized by defining in a much more fine-grained way what files should be included or excluded for each target.
 
@@ -181,7 +181,7 @@ Inputs may include
 
 Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/docs/guides/tasks--caching/configure-inputs).
 
-## Args Hash Inputs
+## Args hash inputs
 
 Finally, in addition to Source Code Hash Inputs and Runtime Hash Inputs, Nx needs to consider the arguments: For
 example, `nx build remixapp` and `nx build remixapp -- --flag=true` produce different

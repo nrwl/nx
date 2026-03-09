@@ -2,7 +2,7 @@
 title: 'Building and Testing React Apps in Nx'
 sidebar:
   label: 'React Monorepo'
-description: In this tutorial you'll create a frontend-focused monorepo with Nx.
+description: You'll create a frontend-focused monorepo with Nx.
 filter: 'type:Guides'
 ---
 
@@ -11,12 +11,12 @@ This tutorial walks you through creating a React monorepo with Nx. You'll build 
 What you'll learn:
 
 - How to structure multiple React apps and libraries in a single repository
-- How Nx's caching speeds up your local development and CI pipelines
+- How Nx caching speeds up your local development and CI pipelines
 - How to run builds, tests, and serve commands efficiently across multiple projects
 - How to share React components and hooks between applications
 - How to fix CI failures directly from your editor with Nx Cloud
 
-## Prerequisite: Tutorial Setup
+## Prerequisite: Tutorial setup
 
 {% aside type="note" title="Prerequisites" %}
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
@@ -28,7 +28,7 @@ Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/react/git
 
 {% call_to_action variant="simple" title="Create Workspace" url="https://cloud.nx.app/create-nx-workspace/react/github" /%}
 
-### Step 2: Verify Your Setup
+### Step 2: verify your setup
 
 Please verify closely that you have the following setup:
 
@@ -44,7 +44,7 @@ If you do not see your workspace in Nx Cloud then please follow the steps outlin
 
 This is important for using remote caching and self-healing in CI later in the tutorial.
 
-## Explore the Nx Workspace Setup
+## Explore the Nx workspace setup
 
 Let's take a look at the structure of our new Nx workspace:
 
@@ -75,7 +75,7 @@ Here are some files that might jump to your eyes:
 
 Now, let's build some features and see how Nx helps get us to production faster.
 
-## Serving the App
+## Serving the app
 
 To serve your new React app, run:
 
@@ -89,7 +89,7 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](../../../../assets/getting-started/run-target-syntax.svg)
 
-### Inferred Tasks
+### Inferred tasks
 
 By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
 
@@ -205,7 +205,7 @@ Now if you look at the project details view, the outputs for the build target wi
 You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/docs/reference/nx-json#target-defaults) or setting a value in your [`package.json` file](/docs/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
 {% /aside %}
 
-## Modularization with Local Libraries
+## Modularization with local libraries
 
 When you develop your React application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
@@ -231,7 +231,7 @@ Nx allows you to separate this logic into "local libraries." The main benefits i
 - better scalability in CI by enabling independent test/lint/build commands for each library
 - better scalability in your teams by allowing different teams to work on separate libraries
 
-### Create Local Libraries
+### Create local libraries
 
 Let's create a reusable design system library called `ui` that we can use across our workspace. This library will contain reusable components such as buttons, inputs, and other UI elements.
 
@@ -273,7 +273,7 @@ npx nx lint ui
 npx nx test ui
 ```
 
-### Import Libraries into the Demo App
+### Import libraries into the demo app
 
 All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
 
@@ -385,7 +385,7 @@ Serve your app again (`npx nx serve demo`) and you should see the new Hero compo
 
 If you have keen eyes, you may have noticed that there is a typo in the `App` component. This mistake is intentional, and we'll see later how Nx can fix this issue automatically in CI.
 
-## Visualize your Project Structure
+## Visualize your project structure
 
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/docs/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, enabling intelligent caching, and more. Interestingly, you can also visualize it.
 
@@ -439,7 +439,7 @@ git add .
 git commit -m 'add hero component'
 ```
 
-## Testing and Linting - Running Multiple Tasks
+## Testing and linting - running multiple tasks
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for testing and linting. We can use the same syntax as before to run these tasks:
 
@@ -458,7 +458,7 @@ This is exactly what is configured in `.github/workflows/ci.yml` for the CI pipe
 
 There is a test failure for the `demo` app due to the updated content. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
 
-### Local Task Cache
+### Local task cache
 
 One thing to highlight is that Nx is able to [cache the tasks you run](/docs/features/cache-task-results).
 
@@ -487,7 +487,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 ## Self-Healing CI with Nx Cloud
 
-In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our demo app has a test failure, so let's see how this can be automatically resolved.
+Explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our demo app has a test failure, so let's see how this can be automatically resolved.
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
@@ -542,7 +542,7 @@ As expected, the CI check fails because of the test failure in the `demo` app. B
 
 ![Nx Console with failure notification](../../../../assets/tutorials/react-ci-notification.avif)
 
-### Fix CI from Your Editor
+### Fix CI from your editor
 
 From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe`to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
 
@@ -550,7 +550,7 @@ From the Nx Console notification, you can click `Show Suggested Fix` button. Rev
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
-### Remote Cache for Faster Time To Green
+### Remote cache for faster time to green
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
@@ -572,7 +572,7 @@ This pull request is now ready to be merged with the help of Nx Cloud's self-hea
 
 ![Pull request is green](../../../../assets/tutorials/react-ci-green.avif)
 
-## Next Steps
+## Next steps
 
 Here are some things you can dive into next:
 

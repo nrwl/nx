@@ -1,21 +1,37 @@
 /**
  * AI Agent NDJSON Output Utilities for nx init
  *
- * When an AI agent is detected, nx init switches to AI-optimized output mode:
- * - NDJSON (Newline-Delimited JSON) output for structured parsing
- * - Progress stages for tracking initialization steps
- * - Structured success/error/needs_input results
+ * Extends the shared base with init-specific types and builders.
  *
  * NOTE: This is intentionally duplicated from create-nx-workspace.
  * CNW is self-contained and cannot import from the nx package.
  */
 
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { writeFileSync } from 'fs';
-import { isAiAgent } from '../../../native';
+// Import shared base types and utilities
+import {
+  writeAiOutput,
+  logProgress,
+  writeErrorLog,
+  type ProgressMessage,
+  type DetectedPlugin,
+  type NextStep,
+  type UserNextSteps,
+  type PluginWarning,
+  type BaseProgressStage,
+} from '../../ai/ai-output';
 
-// Progress stages for NDJSON streaming
+// Re-export shared base types and utilities
+export { writeAiOutput, logProgress, writeErrorLog };
+export type {
+  ProgressMessage,
+  DetectedPlugin,
+  NextStep,
+  UserNextSteps,
+  PluginWarning,
+  BaseProgressStage,
+};
+
+// Init-specific progress stages
 export type ProgressStage =
   | 'starting'
   | 'detecting'
@@ -26,7 +42,7 @@ export type ProgressStage =
   | 'error'
   | 'needs_input';
 
-// Error codes specific to nx init
+// Init-specific error codes
 export type NxInitErrorCode =
   | 'ALREADY_INITIALIZED'
   | 'PACKAGE_INSTALL_ERROR'
@@ -35,16 +51,6 @@ export type NxInitErrorCode =
   | 'PLUGIN_INIT_ERROR'
   | 'NETWORK_ERROR'
   | 'UNKNOWN';
-
-export interface ProgressMessage {
-  stage: ProgressStage;
-  message: string;
-}
-
-export interface DetectedPlugin {
-  name: string;
-  reason: string;
-}
 
 export interface NeedsInputResult {
   stage: 'needs_input';
@@ -56,24 +62,6 @@ export interface NeedsInputResult {
   recommendedOption: string;
   recommendedReason: string;
   exampleCommand: string;
-}
-
-export interface NextStep {
-  title: string;
-  command?: string;
-  url?: string;
-  note?: string;
-}
-
-export interface UserNextSteps {
-  description: string;
-  steps: NextStep[];
-}
-
-export interface PluginWarning {
-  plugin: string;
-  error: string;
-  hint: string;
 }
 
 export interface SuccessResult {
@@ -105,57 +93,6 @@ export type AiOutputMessage =
   | NeedsInputResult
   | SuccessResult
   | ErrorResult;
-
-/**
- * Write NDJSON message to stdout.
- * Only outputs if running under an AI agent.
- * Each message is a single line of JSON.
- */
-export function writeAiOutput(message: AiOutputMessage): void {
-  if (isAiAgent()) {
-    process.stdout.write(JSON.stringify(message) + '\n');
-
-    // For success results, output plain text instructions that the agent can show the user
-    if (
-      message.stage === 'complete' &&
-      'success' in message &&
-      message.success
-    ) {
-      const successMsg = message as SuccessResult;
-      const steps = successMsg.userNextSteps.steps;
-
-      let plainText = '\n---USER_NEXT_STEPS---\n';
-      plainText +=
-        '[DISPLAY] Show the user these next steps to complete setup:\n\n';
-
-      steps.forEach((step, i) => {
-        plainText += `${i + 1}. ${step.title}`;
-        if (step.command) {
-          plainText += `\n   Run: ${step.command}`;
-        }
-        if (step.url) {
-          plainText += `\n   Visit: ${step.url}`;
-        }
-        if (step.note) {
-          plainText += `\n   ${step.note}`;
-        }
-        plainText += '\n';
-      });
-
-      plainText += '---END---\n';
-
-      process.stdout.write(plainText);
-    }
-  }
-}
-
-/**
- * Log progress stage during initialization.
- * Only outputs if running under an AI agent.
- */
-export function logProgress(stage: ProgressStage, message: string): void {
-  writeAiOutput({ stage, message });
-}
 
 /**
  * Build needs_input result for plugin selection.
@@ -305,37 +242,6 @@ export function getErrorHints(errorCode: NxInitErrorCode): string[] {
         'Report issues at https://github.com/nrwl/nx/issues',
       ];
   }
-}
-
-/**
- * Write detailed error information to a temp file for AI debugging.
- * Returns the path to the error log file.
- */
-export function writeErrorLog(error: Error | unknown): string {
-  const timestamp = Date.now();
-  const errorLogPath = join(tmpdir(), `nx-init-error-${timestamp}.log`);
-
-  let errorDetails = `Nx Init Error Log\n`;
-  errorDetails += `==================\n`;
-  errorDetails += `Timestamp: ${new Date(timestamp).toISOString()}\n\n`;
-
-  if (error instanceof Error) {
-    errorDetails += `Error: ${error.message}\n\n`;
-    if (error.stack) {
-      errorDetails += `Stack Trace:\n${error.stack}\n`;
-    }
-  } else {
-    errorDetails += `Error: ${String(error)}\n`;
-  }
-
-  try {
-    writeFileSync(errorLogPath, errorDetails);
-  } catch {
-    // If we can't write the log, return empty path
-    return '';
-  }
-
-  return errorLogPath;
 }
 
 /**

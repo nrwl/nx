@@ -1,5 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
 import type { Declaration } from 'postcss';
 import { LoaderContext } from 'webpack';
 
@@ -103,9 +104,15 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       resourceCache.set(cacheKey, outputUrl);
       return outputUrl;
     }
-    const normalizedUrl = path.resolve(context, inputUrl.replace(/\\/g, '/'));
-    const parsedUrl = new URL(normalizedUrl, 'file:///');
-    const { pathname, hash, search } = parsedUrl;
+    // Separate URL query/hash from the file path before resolving
+    const [, filePath, urlSuffix] = inputUrl.match(/^([^?#]*)(.*)$/)!;
+    const resolvedPath = path.resolve(context, filePath.replace(/\\/g, '/'));
+    const { pathname } = pathToFileURL(resolvedPath);
+    let hash = '';
+    let search = '';
+    if (urlSuffix) {
+      ({ hash, search } = new URL(`file:///dummy${urlSuffix}`));
+    }
     const resolver = (file: string, base: string) =>
       new Promise<boolean | string>((resolve, reject) => {
         loader.resolve(base, decodeURI(file), (err, result) => {

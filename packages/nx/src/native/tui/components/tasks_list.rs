@@ -137,7 +137,7 @@ impl TaskItem {
 }
 
 #[napi]
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TaskStatus {
     // Explicit statuses that can come from the task runner
     Success,
@@ -166,6 +166,7 @@ impl std::str::FromStr for TaskStatus {
             "success" => Ok(Self::Success),
             "failure" => Ok(Self::Failure),
             "skipped" => Ok(Self::Skipped),
+            "stopped" => Ok(Self::Stopped),
             "local-cache-kept-existing" => Ok(Self::LocalCacheKeptExisting),
             "local-cache" => Ok(Self::LocalCache),
             "remote-cache" => Ok(Self::RemoteCache),

@@ -1683,7 +1683,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress.config.ts",
                       "{projectRoot}/**/*.cy.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
                     ],
                     "metadata": {
@@ -1706,6 +1706,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                       "{projectRoot}/cypress/dist/**/*.d.ts",
                       "{projectRoot}/cypress/dist/tsconfig.tsbuildinfo",
                     ],
@@ -1841,6 +1843,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -2449,7 +2453,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
                     ],
                     "metadata": {
@@ -2476,7 +2480,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/**/*.d.ts",
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.tsbuildinfo",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.spec.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/**/*.d.ts",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/tsconfig.tsbuildinfo",
                     ],
@@ -4254,7 +4258,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.ts",
                       "{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
                     ],
                     "metadata": {
@@ -6091,6 +6095,33 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }
       `);
     });
+  });
+
+  it('should handle concurrent invocations without crashing', async () => {
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+      'libs/my-lib/tsconfig.json': JSON.stringify({
+        compilerOptions: { outDir: '../../dist/libs/my-lib' },
+        files: [],
+      }),
+      'libs/my-lib/package.json': `{}`,
+      'libs/other-lib/tsconfig.json': JSON.stringify({
+        compilerOptions: { outDir: '../../dist/libs/other-lib' },
+        files: [],
+      }),
+      'libs/other-lib/package.json': `{}`,
+    });
+
+    const [result1, result2] = await Promise.all([
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {}),
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {}),
+    ]);
+
+    expect(result1.projects['libs/my-lib']).toBeDefined();
+    expect(result1.projects['libs/other-lib']).toBeDefined();
+    expect(result2.projects['libs/my-lib']).toBeDefined();
+    expect(result2.projects['libs/other-lib']).toBeDefined();
+    expect(result1.projects['libs/my-lib'].targets.typecheck).toBeDefined();
+    expect(result2.projects['libs/my-lib'].targets.typecheck).toBeDefined();
   });
 });
 

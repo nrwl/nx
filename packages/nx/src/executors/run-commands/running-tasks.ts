@@ -507,7 +507,10 @@ class RunningNodeProcess implements RunningTask {
         cb(1, terminalOutput);
       }
     });
-    this.childProcess.on('exit', (code) => {
+    this.childProcess.on('exit', (code, signal) => {
+      if (code === null) {
+        code = signalToCode(signal);
+      }
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
@@ -648,6 +651,9 @@ function processEnv(
   if (color) {
     res.FORCE_COLOR = `${color}`;
   }
+  // Don't leak NX_PREFIX_OUTPUT to child processes — the parent
+  // task-orchestrator handles prefixing, not the spawned commands.
+  delete res.NX_PREFIX_OUTPUT;
   return res;
 }
 

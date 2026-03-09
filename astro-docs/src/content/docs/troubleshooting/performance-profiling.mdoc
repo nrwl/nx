@@ -7,7 +7,7 @@ filter: 'type:References'
 When running an Nx command, many tasks are run at different times in different processes.
 Visualizing where and when the tasks were executed can help optimize the entire run to be quicker.
 
-## How to Profile the Performance of Running Tasks
+## How to profile the performance of running tasks
 
 {% youtube src="https://youtu.be/Esx-P1Zf1-E" title="Performance Profiling Nx Tasks with Chrome Devtools" /%}
 
@@ -26,7 +26,7 @@ NX_PROFILE=profile.json nx affected --target build
 3. Click the upload button and open the `profile.json` that was created. (Or drag the file into the window)
 4. Expand each group to see the names of the tasks which were run
 
-### Optimizing the Performance of Running Tasks
+### Optimizing the performance of running tasks
 
 Now that you have visualized how the tasks were run, you can try tweaking things to make the process faster. Generate profiles after each tweak and compare the results.
 
@@ -34,7 +34,7 @@ Now that you have visualized how the tasks were run, you can try tweaking things
 2. Try adding more workers. Did the new workers handle tasks while other workers were busy? This will likely result in faster runs.
 3. Are a lot of the tasks waiting on a single task to be completed? Splitting that project into smaller projects may allow fewer projects and therefore tasks to depend on a single project/task. This will allow for more room to parallelize the tasks.
 
-## Profiling Nx Commands
+## Profiling Nx commands
 
 {% youtube src="https://youtu.be/olkVyoc2MAQ" title="Performance Profiling Nx" /%}
 

@@ -16,7 +16,7 @@ Each platform has specific configurations and optimizations that help you build 
 
 {% course_video src="https://www.youtube.com/watch?v=8mqHXYIl_qI" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-06-nx-cloud-setup" /%}
 
-## CI Configuration
+## CI configuration
 
 {% tabs syncKey="ci-provider" %}
 {% tabitem label="GitHub" %}
@@ -373,7 +373,7 @@ The `pull-requests` and `main` jobs implement the CI workflow.
 {% /tabitem %}
 {% /tabs %}
 
-## Get the Commit of the Last Successful Build
+## Get the commit of the last successful build
 
 {% tabs syncKey="ci-provider" %}
 {% tabitem label="GitHub" %}
@@ -462,9 +462,9 @@ We also have to set `NX_BRANCH` explicitly.
 {% /tabitem %}
 {% /tabs %}
 
-## Common Features Across Platforms
+## Common features across platforms
 
-### Task Distribution with Nx Cloud
+### Task distribution with Nx Cloud
 
 All CI platforms support task distribution via Nx Cloud. To enable it:
 
@@ -474,13 +474,13 @@ All CI platforms support task distribution via Nx Cloud. To enable it:
 
 Learn more at [Nx Cloud CI Reference](https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun).
 
-### Self-Healing CI
+### Self-healing CI
 
 Nx Cloud can recommend fixes for failures to help you get CI green faster. The `nx fix-ci` command is included in all platform configurations and runs automatically after failures.
 
 Learn more about [Self-Healing CI features](https://nx.dev/ci/features/self-healing-ci).
 
-### Recording Commands
+### Recording commands
 
 You can record any command's logs to Nx Cloud by prepending it with `nx-cloud record --`. This helps with debugging and monitoring your CI pipeline.
 

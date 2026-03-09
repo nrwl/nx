@@ -16,7 +16,19 @@ Nest.js is a framework designed for building scalable server-side applications. 
 
 Many conventions and best practices used in Angular applications can be also be used in Nest.
 
-## Setting Up @nx/nest
+## Requirements
+
+The `@nx/nest` plugin depends on `@nestjs/schematics` for code generation, which pins the supported NestJS major version.
+
+| Nx Version     | NestJS Version |
+| -------------- | -------------- |
+| 22.x (current) | ^11.0.0        |
+| 21.x           | ^11.0.0        |
+| 20.x           | ^10.0.0        |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/nest
 
 ### Generating a new workspace
 
@@ -46,7 +58,7 @@ nx add @nx/nest
 
 This will install the correct version of `@nx/nest`.
 
-### Create Applications
+### Create applications
 
 You can add a new Nest application with the following command:
 
@@ -54,7 +66,7 @@ You can add a new Nest application with the following command:
 nx g @nx/nest:app apps/my-nest-app
 ```
 
-#### Application Proxies
+#### Application proxies
 
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
@@ -62,7 +74,7 @@ Generating Nest applications has an option to configure other projects in the wo
 nx g @nx/nest:app apps/my-nest-app --frontendProject my-angular-app
 ```
 
-### Create Libraries
+### Create libraries
 
 You can add a new Nest library with the following command:
 
@@ -84,13 +96,13 @@ nx g @nx/nest:lib libs/my-nest-lib --publishable --importPath=@my-workspace/my-n
 
 > Read more about [building and publishing libraries here](/docs/concepts/buildable-and-publishable-libraries).
 
-### Nest Generators
+### Nest generators
 
 The Nest plugin for Nx extends the generators provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--project` flag should be used for all Nest generators.
 
 > `--project` is used to infer the root of the project where the generators will generate the files.
 
-## Using Nest
+## Using nest
 
 ### Build
 
@@ -126,9 +138,9 @@ By default, the serve command will run in `watch` mode. This allows code to be c
 
 Nest applications also have the `inspect` flag set, so you can attach your debugger to the running instance.
 
-##### VSCode Integration
+##### VSCode integration
 
-When generating Nest applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
+When generating Nest applications, Nx automatically creates a VSCode debugging configuration:
 
 - **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
 - **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
@@ -149,7 +161,7 @@ The debugger will automatically:
 - Attach to the Node.js debugger on the allocated port.
 - Map compiled JavaScript back to your TypeScript source files.
 
-##### Manual Debugging
+##### Manual debugging
 
 For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the `project.json`, or by running the serve command with `--port <number>`.
 
@@ -169,7 +181,7 @@ You can lint a library with the following command:
 nx lint my-nest-lib
 ```
 
-### Unit Test
+### Unit test
 
 You can run unit test for an application with the following command:
 
@@ -183,7 +195,7 @@ You can run unit test for a library with the following command:
 nx test my-nest-lib
 ```
 
-## Using CLI Plugins
+## Using CLI plugins
 
 Nest supports the use of various CLI plugins to enhance the development experience. Plugins can be configured via **transformers** property in NxWebpackPlugin.
 As an example, to set up a [Swagger plugin](https://docs.nestjs.com/openapi/cli-plugin), modify the Nest application's Webpack configuration as follows:
@@ -214,7 +226,7 @@ module.exports = {
 Ensuring a smooth and reliable deployment of a Nest.js application in a production environment requires careful planning and the right strategy. Depending on your specific needs and infrastructure, you can choose from several deployment approaches. Below are four commonly used methods:
 
 1. **Using Docker:**
-   Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
+   Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Use the `@nx/node:setup-docker` generator to set up Docker for your project.
 
 2. **Installing Dependencies on the Server:**
    Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
@@ -229,6 +241,6 @@ Ensuring a smooth and reliable deployment of a Nest.js application in a producti
 Bundling dependencies is typically not recommended for Node applications.
 {% /aside %}
 
-## More Documentation
+## More documentation
 
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)

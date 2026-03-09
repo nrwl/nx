@@ -69,8 +69,30 @@ export function detectPackageManager(dir: string = ''): PackageManager {
         ? 'yarn'
         : existsSync(join(dir, 'pnpm-lock.yaml'))
           ? 'pnpm'
-          : 'npm')
+          : detectInvokedPackageManager())
   );
+}
+
+/**
+ * Detects which package manager was used to invoke the current command
+ * based on the npm_config_user_agent environment variable.
+ *
+ * Falls back to 'npm' if detection fails.
+ */
+function detectInvokedPackageManager(): PackageManager {
+  const userAgent = process.env.npm_config_user_agent;
+  if (userAgent) {
+    if (userAgent.startsWith('pnpm/')) {
+      return 'pnpm';
+    }
+    if (userAgent.startsWith('yarn/')) {
+      return 'yarn';
+    }
+    if (userAgent.startsWith('bun/')) {
+      return 'bun';
+    }
+  }
+  return 'npm';
 }
 
 /**

@@ -201,9 +201,11 @@ export function withBatch(yargs: Argv) {
     type: 'boolean',
     describe: 'Run task(s) in batches for executors which support batches.',
     coerce: (v) => {
-      return v || process.env.NX_BATCH_MODE === 'true';
+      if (v !== undefined) return v;
+      if (process.env.NX_BATCH_MODE === 'true') return true;
+      return undefined; // Let preferBatch decide
     },
-    default: false,
+    default: undefined,
   }) as any;
 }
 

@@ -417,6 +417,40 @@ export default defineMarkdocConfig({
         },
       },
     },
+    llm_copy_prompt: {
+      render: component('./src/components/markdoc/LlmCopyPrompt.astro'),
+      attributes: {
+        title: { type: 'String', required: true },
+      },
+      children: ['paragraph', 'tag', 'list'],
+      transform(node, config) {
+        const attributes = node.transformAttributes(config);
+        function extractText(n) {
+          if (typeof n === 'string') return n;
+          if (n.type === 'text' || n.type === 'softbreak')
+            return n.attributes?.content ?? '\n';
+          if (n.type === 'inline')
+            return (n.children || []).map(extractText).join('');
+          if (n.type === 'paragraph')
+            return (n.children || []).map(extractText).join('') + '\n';
+          if (n.type === 'item')
+            return '- ' + (n.children || []).map(extractText).join('');
+          if (n.type === 'list')
+            return (n.children || []).map(extractText).join('\n') + '\n';
+          if (n.children) return n.children.map(extractText).join('');
+          return '';
+        }
+        const promptText = node.children.map(extractText).join('\n').trim();
+        return new Markdoc.Tag(this.render, { ...attributes, promptText }, []);
+      },
+    },
+    llm_only: {
+      attributes: {},
+      children: ['paragraph', 'tag', 'list'],
+      transform() {
+        return null;
+      },
+    },
     youtube: {
       render: component('./src/components/markdoc/Youtube.astro'),
       attributes: {

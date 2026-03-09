@@ -123,9 +123,8 @@ export async function addVitestAnalog(
     addPlugin: options.addPlugin ?? false,
     skipFormat: options.skipFormat,
     skipPackageJson: options.skipPackageJson,
+    zoneless: options.zoneless,
   });
-
-  createAnalogSetupFile(tree, options, angularMajorVersion);
 }
 
 function validateVitestVersion(tree: Tree): void {
@@ -225,53 +224,4 @@ function addVitestScreenshotsToGitIgnore(tree: Tree): void {
   } else {
     logger.warn(`Couldn't find .gitignore file to update`);
   }
-}
-
-function createAnalogSetupFile(
-  tree: Tree,
-  options: AddVitestAnalogOptions,
-  angularMajorVersion: number
-): void {
-  let setupFile: string;
-
-  if (angularMajorVersion >= 21) {
-    setupFile = `import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-snapshots';
-import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
-
-setupTestBed(${options.zoneless ? '' : '{ zoneless: false }'});
-`;
-  } else if (angularMajorVersion === 20) {
-    setupFile = `import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-zone';
-import {
-  BrowserTestingModule,
-  platformBrowserTesting,
-} from '@angular/platform-browser/testing';
-import { getTestBed } from '@angular/core/testing';
-
-getTestBed().initTestEnvironment(
-  BrowserTestingModule,
-  platformBrowserTesting(),
-);
-`;
-  } else {
-    setupFile = `import '@analogjs/vitest-angular/setup-zone';
-import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
-import { getTestBed } from '@angular/core/testing';
-
-getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting(),
-);
-`;
-  }
-
-  tree.write(
-    joinPathFragments(options.projectRoot, 'src/test-setup.ts'),
-    setupFile
-  );
 }

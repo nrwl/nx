@@ -1773,7 +1773,7 @@ describe('lib', () => {
   });
 
   describe('--testEnvironment', () => {
-    it('should generate a vite config with testEnvironment set to node', async () => {
+    it('should generate a vitest config with testEnvironment set to node', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-node-lib',
@@ -1781,12 +1781,13 @@ describe('lib', () => {
         testEnvironment: 'node',
       });
 
-      const content = tree.read('my-node-lib/vite.config.ts', 'utf-8');
+      expect(tree.exists('my-node-lib/vite.config.ts')).toBe(false);
+      const content = tree.read('my-node-lib/vitest.config.mts', 'utf-8');
 
       expect(content).toContain(`environment: 'node'`);
     });
 
-    it('should generate a vite config with testEnvironment set to jsdom by default', async () => {
+    it('should generate a vitest config with testEnvironment set to jsdom by default', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-jsdom-lib',
@@ -1794,7 +1795,8 @@ describe('lib', () => {
         testEnvironment: undefined,
       });
 
-      const content = tree.read('my-jsdom-lib/vite.config.ts', 'utf-8');
+      expect(tree.exists('my-jsdom-lib/vite.config.ts')).toBe(false);
+      const content = tree.read('my-jsdom-lib/vitest.config.mts', 'utf-8');
 
       expect(content).toContain(`environment: 'jsdom'`);
     });

@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+
+// TODO: Remove this workaround once picocolors handles FORCE_COLOR=0 correctly
+// See: https://github.com/alexeyraspopov/picocolors/issues/100
+if (process.env.FORCE_COLOR === '0') {
+  process.env.NO_COLOR = '1';
+  delete process.env.FORCE_COLOR;
+}
+
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
@@ -86,7 +94,7 @@ async function main() {
       handleNxVersionCommand(LOCAL_NX_VERSION, GLOBAL_NX_VERSION);
     }
 
-    if (!workspace) {
+    if (!workspace && !isNxCloudCommand(process.argv[2])) {
       handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
@@ -190,6 +198,7 @@ function isNxCloudCommand(command: string): boolean {
     'view-logs',
     'fix-ci',
     'record',
+    'polygraph',
   ];
   return nxCloudCommands.includes(command);
 }

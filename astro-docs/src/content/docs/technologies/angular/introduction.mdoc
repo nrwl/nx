@@ -12,7 +12,17 @@ filter: 'type:References'
 The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for monorepos.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-See the [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) to know which Nx version supports a given Angular version.
+## Requirements
+
+The `@nx/angular` plugin supports the following package versions.
+
+| Package         | Supported Versions |
+| --------------- | ------------------ |
+| `@angular/core` | >= 19.0.0 < 22.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+For older Nx versions, see the full [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
 
 ## Setup
 
@@ -45,9 +55,9 @@ npx create-nx-workspace my-org --template=nrwl/angular-template
 For a guided walkthrough, follow the [Angular Monorepo Tutorial](/docs/getting-started/tutorials/angular-monorepo-tutorial).
 {% /aside %}
 
-## Local Development
+## Local development
 
-### Generate an Angular Application
+### Generate an Angular application
 
 ```shell
 nx g @nx/angular:app apps/my-app
@@ -63,7 +73,7 @@ nx lint my-app
 nx e2e my-app
 ```
 
-### Generate an Angular Library
+### Generate an Angular library
 
 ```shell
 nx g @nx/angular:lib libs/my-lib
@@ -83,7 +93,7 @@ nx test my-lib
 nx lint my-lib
 ```
 
-### Buildable and Publishable Libraries
+### Buildable and publishable libraries
 
 If you need libraries that build or publish, generate them with build output enabled and an import path. This creates build targets you can cache and run in CI.
 See [Set up incremental builds for Angular libraries](/docs/technologies/angular/guides/setup-incremental-builds-angular) for details.
@@ -92,7 +102,7 @@ See [Set up incremental builds for Angular libraries](/docs/technologies/angular
 nx g @nx/angular:lib libs/my-lib
 ```
 
-### Set Up Module Federation
+### Set up Module Federation
 
 Nx includes generators for scaffolding [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx) architectures with Angular. Generate a host application and its remotes in one command:
 
@@ -112,7 +122,7 @@ nx g @nx/angular:remote apps/login --host=shell
 
 Pass `--dynamic` for [dynamic federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/technologies/angular/guides/module-federation-with-ssr).
 
-## CI Considerations
+## CI considerations
 
 Run only what changed using the project graph:
 
@@ -130,7 +140,7 @@ If you use Angular CLI configurations, define a `ci` configuration in `angular.j
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a sample CI setup.
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="Angular Monorepo Tutorial" description="Build an Angular monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/angular-monorepo-tutorial" /%}

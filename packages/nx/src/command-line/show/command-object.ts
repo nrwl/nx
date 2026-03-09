@@ -41,6 +41,7 @@ export type ShowTargetBaseOptions = NxShowArgs & {
 
 export type ShowTargetInputsOptions = NxShowArgs & {
   target?: string;
+  configuration?: string;
   check?: string[];
   verbose?: boolean;
 };

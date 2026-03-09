@@ -9,12 +9,12 @@ Nx Cloud provides several pre-built launch templates for common use-cases. You c
 
 {% github_repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
 
-## Getting Started with Custom Launch Templates
+## Getting started with custom launch templates
 
 The easiest way to create a new custom launch template is to modify one of the pre-built ones. To do that, create a file in the
 `.nx/workflows` folder and copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
 
-## Launch Template Structure
+## Launch template structure
 
 ### `launch-templates`
 
@@ -298,7 +298,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
         base-branch: 'main'
 ```
 
-## Full Example
+## Full example
 
 This is an example of a launch template using all pre-built features:
 
@@ -403,7 +403,7 @@ nx-cloud start-ci-run --distribute-on="4 my-linux-large-js"
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
 ```
 
-## Validating Launch Templates
+## Validating launch templates
 
 {% aside type="note" %}
 **Commit before Validation**
@@ -419,7 +419,7 @@ To do this, run the `nx-cloud validate` command, with the path to the launch tem
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
-## Pass Environment Variables
+## Pass environment variables
 
 If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
@@ -427,7 +427,7 @@ If you need to send environment variables to agents, you can use the [--with-env
 nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
-## Pass Values Between Steps
+## Pass values between steps
 
 If you need to pass a value from one step to another step, such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.
 
@@ -448,7 +448,7 @@ launch-templates:
           cargo --version
 ```
 
-## Private NPM Registry
+## Private npm registry
 
 {% aside type="caution" title="Protect sensitive values" %}
 To prevent any sensitive values from showing up in a `git diff`, we recommend using the `user` level location for the `.npmrc` or `.yarnrc` file.
@@ -483,7 +483,7 @@ Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```
 
-## Custom Node Version
+## Custom node version
 
 Nx Agents come with node LTS installed. If you want to use a different version, you can add a step to install the desired node version.
 
@@ -552,7 +552,7 @@ launch-templates:
 {% /tabitem %}
 {% /tabs %}
 
-## Specific Package Manager Version
+## Specific package manager version
 
 Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack) by default, allowing you to define the yarn or pnpm version via the `package.json`.
 
@@ -569,7 +569,7 @@ Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack)
 Currently, corepack [only supports yarn or pnpm](https://nodejs.org/api/corepack.html#supported-package-managers) as package managers. If you need to use a specific npm version, you will need to create a custom launch template and install the specific npm version, i.e. `npm install -g npm@<version>`
 {% /aside %}
 
-## Installing Packages
+## Installing packages
 
 You can use `apt` to install popular linux packages. This is helpful in streamlining setting up various toolchains needed for your workspace.
 
@@ -657,7 +657,7 @@ launch-templates:
 {% /tabitem %}
 {% /tabs %}
 
-## Dynamic Changesets
+## Dynamic changesets
 
 NxCloud can calculate how big your pull request is based on how many projects in your workspace it affects. You can then configure Nx Agents to dynamically use a different number of agents based on your changeset size.
 
@@ -739,7 +739,7 @@ launch-templates:
           echo "SOME_VALUE: $SOME_VALUE"
 ```
 
-## Nx Workspace in a Subdirectory
+## Nx workspace in a subdirectory
 
 If your Nx workspace is in a subdirectory of your repository, set `NX_WORKING_DIRECTORY` in your launch template:
 

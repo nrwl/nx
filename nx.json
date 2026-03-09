@@ -112,7 +112,6 @@
     },
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
-      "inputs": ["production", "^production"],
       "cache": true
     },
     "test-native": {
@@ -298,11 +297,11 @@
     {
       "plugin": "@nx/gradle",
       "options": {
-        "testTargetName": "test-kt"
+        "targetNamePrefix": "gradle:",
+        "ciTestTargetName": "test-ci"
       },
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
-    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {
@@ -344,7 +343,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 1,
+  "bust": 2,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true

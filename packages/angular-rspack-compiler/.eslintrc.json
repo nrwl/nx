@@ -45,6 +45,7 @@
             "ignoredDependencies": [
               "@angular/core",
               "jsonc-eslint-parser",
+              "semver",
               "vitest",
               "memfs"
             ]

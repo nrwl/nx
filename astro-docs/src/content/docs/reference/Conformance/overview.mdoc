@@ -20,7 +20,7 @@ The plugin also provides the following pre-written rules:
 In order to use `@nx/conformance`, you need to have an active [Nx Enterprise license](https://nx.dev/enterprise). If you don't have a license or it has expired, the `nx conformance` command will fail.
 {% /aside %}
 
-## Set Up @nx/conformance
+## Set up @nx/conformance
 
 1. [Activate your license](/docs/enterprise/activate-license) if you haven't already
 2. Install the package
@@ -68,7 +68,7 @@ Use `npx nx-cloud record --` to capture the logs for `nx conformance:check` in t
 {% /tabitem %}
 {% /tabs %}
 
-## Conformance Configuration Reference
+## Conformance configuration reference
 
 ```jsonc
 // nx.json
@@ -95,11 +95,11 @@ Use `npx nx-cloud record --` to capture the logs for `nx conformance:check` in t
 }
 ```
 
-## Provided Conformance Rules
+## Provided conformance rules
 
 The following rules are provided by Nx along with the `@nx/conformance` plugin.
 
-### Enforce Project Boundaries
+### Enforce project boundaries
 
 This rule is similar to the Nx [ESLint Enforce Module Boundaries rule](/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 
@@ -161,7 +161,7 @@ a given `source` project the resulting constraints would be **all** that match i
 | onlyDependOnProjectsWithTags | _Array<string>_ | The source **can depend only** on projects that contain at least one of these tags |
 | notDependOnProjectsWithTags  | _Array<string>_ | The source **can not depend** on projects that contain at least one of these tags  |
 
-### Ensure Owners
+### Ensure owners
 
 This rule requires every project to have an owner defined for the [`@nx/owners` plugin](/docs/reference/owners)
 
@@ -180,7 +180,7 @@ Set the `rule` property to: `@nx/conformance/ensure-owners`
 }
 ```
 
-## Next Steps
+## Next steps
 
 For more information about the conformance plugin, consult the following articles:
 

@@ -28,7 +28,7 @@ npx nx@latest migrate latest
 Want a more visual and guided way to migrate? Check out the [Migrate UI](/docs/guides/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/docs/getting-started/editor-setup).
 {% /aside %}
 
-## How Does It Work?
+## How does it work?
 
 Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/docs/plugin-registry)**. Each plugin can provide migrations for its area of competency.
 
@@ -52,7 +52,7 @@ In the example below, the React plugin defines a migration script (`./src/migrat
 
 When running `nx migrate latest`, Nx parses all the available plugins and their migration files and applies the necessary changes to your workspace.
 
-## How Do I Upgrade My Nx Workspace?
+## How do i upgrade my Nx workspace?
 
 Updating your Nx workspace happens in three steps:
 
@@ -62,7 +62,7 @@ Updating your Nx workspace happens in three steps:
 
 You can intervene at each step and make adjustments as needed for your specific workspaces. This is especially important in large codebases where you might want to control the changes more granularly.
 
-### Step 1: Update Dependencies and Generate Migrations
+### Step 1: update dependencies and generate migrations
 
 First, run the `migrate` command:
 
@@ -85,7 +85,7 @@ At this point, no packages have been installed, and no other files have been tou
 
 Now, you can **inspect `package.json` to see if the changes make sense**. Sometimes the migration can update a package to a version that is either not allowed or conflicts with another package. Feel free to manually apply the desired adjustments. Also look at the `migrations.json` for the type of migrations that are going to be applied.
 
-### Step 2: Run Migrations
+### Step 2: Run migrations
 
 You can now run the actual code migrations that were generated in the `migrations.json` in the previous step.
 
@@ -99,13 +99,13 @@ Depending on the migrations that ran, this might **update your source code** and
 Note that each Nx plugin is able to provide a set of migrations which are relevant to particular versions of the package. Hence `migrations.json` will only contain migrations which are appropriate for the update you are currently applying.
 {% /aside %}
 
-### Step 3: Clean Up
+### Step 3: Clean up
 
 After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
 Note: You may want to keep the `migrations.json` until every branch that was created before the migration has been merged. Leaving the `migrations.json` in place allows devs to run `nx migrate --run-migrations` to apply the same migration process to their newly merged code as well.
 
-### Step 4: Update Community Plugins (Optional)
+### Step 4: Update community plugins (Optional)
 
 If you have any [Nx community plugins](/docs/plugin-registry) installed you need to migrate them individually (assuming they provide migration scripts) by using the following command:
 
@@ -119,13 +119,13 @@ For a list of all the plugins you currently have installed, run:
 nx report
 ```
 
-## Keep Nx Packages on the Same Version
+## Keep Nx packages on the same version
 
 When you run `nx migrate`, the `nx` package and all the `@nx/` packages get updated to the same version. It is important to [keep these versions in sync](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync) to have Nx work properly.
 
 As long as you run `nx migrate` instead of manually changing the version numbers, you shouldn't have to worry about it. Also, when you add a new plugin, use `nx add <plugin>` to automatically install the version that matches your repository's version of Nx.
 
-## Need to Opt-out of Some Migrations?
+## Need to opt-out of some migrations?
 
 Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept.
 

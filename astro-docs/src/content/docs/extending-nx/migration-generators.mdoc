@@ -8,7 +8,7 @@ When your plugin is being used in other repos, it is helpful to provide migratio
 
 A migration generator is a normal generator that is triggered when a developer runs the `nx migrate` command.
 
-## Create a Migration Generator
+## Create a migration generator
 
 For this example, we'll create a new migration generator that updates repos to use `newExecutorName` instead of `oldExecutorName` in their targets. This migration will be applied when the run `nx migrate` to move up past version `2.0.1` of our plugin.
 
@@ -49,7 +49,7 @@ This command will update the following files:
 
 And it creates a blank generator under: `libs/pluginName/src/migrations/change-executor-name/change-executor-name.ts`
 
-### 2. Write the Generator Code
+### 2. write the generator code
 
 ```ts
 // change-executor-name.ts
