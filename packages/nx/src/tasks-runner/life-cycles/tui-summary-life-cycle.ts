@@ -49,10 +49,8 @@ export function getTuiTerminalSummaryLifeCycle({
 
   const failedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
-  // Tasks ended with 'stopped' status (interrupted, didn't finish — counts as failure)
+  // Tasks that were stopped (interrupted or fulfilled continuous tasks)
   const stoppedTasks = new Set<string>();
-  // Tasks shown with cyan stopped icon (includes fulfilled continuous tasks ended as 'success')
-  const displayStoppedTasks = new Set<string>();
 
   // Chunks accumulated progressively during task execution
   const taskOutputChunks: Record<string, string[]> = {};
@@ -90,48 +88,43 @@ export function getTuiTerminalSummaryLifeCycle({
       tasksToTerminalOutputs[task.id] = output;
     }
   };
+  const taskStatusAlreadySet = new Set<string>();
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
-    if (taskStatus === NativeTaskStatus.Stopped) {
-      displayStoppedTasks.add(taskId);
-      inProgressTasks.delete(taskId);
+    // Guard against double-counting: setTaskStatus may be called from both
+    // streaming callbacks (real-time) and completeTasks (post-run)
+    if (taskStatusAlreadySet.has(taskId)) {
+      return;
+    }
+    taskStatusAlreadySet.add(taskId);
+
+    switch (taskStatus) {
+      case NativeTaskStatus.Success:
+        totalCompletedTasks++;
+        totalSuccessfulTasks++;
+        inProgressTasks.delete(taskId);
+        break;
+      case NativeTaskStatus.Failure:
+        totalCompletedTasks++;
+        totalFailedTasks++;
+        failedTasks.add(taskId);
+        inProgressTasks.delete(taskId);
+        break;
+      case NativeTaskStatus.LocalCache:
+      case NativeTaskStatus.LocalCacheKeptExisting:
+      case NativeTaskStatus.RemoteCache:
+        totalCompletedTasks++;
+        totalCachedTasks++;
+        totalSuccessfulTasks++;
+        inProgressTasks.delete(taskId);
+        break;
+      case NativeTaskStatus.Stopped:
+        stoppedTasks.add(taskId);
+        inProgressTasks.delete(taskId);
+        break;
     }
   };
 
-  lifeCycle.endTasks = (taskResults) => {
-    for (const { task, status, terminalOutput } of taskResults) {
-      totalCompletedTasks++;
-      inProgressTasks.delete(task.id);
-      tasksToTaskStatus[task.id] = status;
-      if (status === 'stopped') {
-        stoppedTasks.add(task.id);
-      }
-
-      switch (status) {
-        case 'remote-cache':
-        case 'local-cache':
-        case 'local-cache-kept-existing':
-          totalCachedTasks++;
-          totalSuccessfulTasks++;
-          break;
-        case 'success':
-          totalSuccessfulTasks++;
-          break;
-        case 'failure':
-          totalFailedTasks++;
-          failedTasks.add(task.id);
-          break;
-        case 'stopped':
-          break;
-      }
-
-      // Store the final string directly — shares the same reference as
-      // TaskResultsLifeCycle, old chunks become GC-eligible
-      if (terminalOutput !== undefined) {
-        tasksToTerminalOutputs[task.id] = terminalOutput;
-        delete taskOutputChunks[task.id];
-      }
-    }
-  };
+  lifeCycle.endTasks = () => {};
 
   lifeCycle.endCommand = () => {
     timeTakenText = prettyTime(process.hrtime(start));
@@ -326,7 +319,7 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = getTerminalOutput(taskId);
-      if (displayStoppedTasks.has(taskId) || !taskStatus) {
+      if (stoppedTasks.has(taskId) || !taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         checklistLines.push(

@@ -1113,16 +1113,35 @@ impl TasksList {
         start_time: Option<i64>,
         end_time: Option<i64>,
     ) {
+        let duration = match (start_time, end_time) {
+            (Some(start), Some(end)) => Some(format_duration_since(start, end)),
+            (Some(_), None) => Some(DURATION_NOT_YET_KNOWN.to_string()),
+            _ => None,
+        };
+
         if let Some(task_item) = self.task_lookup.get_mut(&task_name) {
             task_item.start_time = start_time;
             task_item.end_time = end_time;
+            if let Some(ref d) = duration {
+                if !task_item.continuous || end_time.is_some() {
+                    task_item.duration = d.clone();
+                }
+            }
+        }
 
-            // Update the duration string if we have both times
-            if let (Some(start), Some(end)) = (start_time, end_time) {
-                task_item.duration = format_duration_since(start, end);
-            } else if start_time.is_some() && end_time.is_none() && !task_item.continuous {
-                // Task is in progress
-                task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
+        // Also update display_items so the rendered list reflects the timing
+        for display_item in &mut self.display_items {
+            if let DisplayItem::Task(task_item) = display_item
+                && task_item.name == task_name
+            {
+                task_item.start_time = start_time;
+                task_item.end_time = end_time;
+                if let Some(ref d) = duration {
+                    if !task_item.continuous || end_time.is_some() {
+                        task_item.duration = d.clone();
+                    }
+                }
+                break;
             }
         }
     }
@@ -2881,6 +2900,9 @@ impl Component for TasksList {
             }
             Action::UpdateTaskStatus(task_name, status) => {
                 self.update_task_status(task_name, status);
+            }
+            Action::SetTaskTiming(task_id, start_time, end_time) => {
+                self.set_task_timing(task_id, Some(start_time), Some(end_time));
             }
             Action::UpdateCloudMessage(message) => {
                 self.cloud_message = Some(message);

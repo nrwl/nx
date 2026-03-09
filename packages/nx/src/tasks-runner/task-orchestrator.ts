@@ -447,7 +447,7 @@ export class TaskOrchestrator {
       }
     }
 
-    // Phase 2: Run remaining tasks without hashing, then hash after execution.
+    // Phase 2: Run remaining tasks without hashing, then hash after execution
     // Hashing is deferred until after the batch so that all outputs (including
     // from sibling tasks) are fresh on disk. This means tasks with depsOutputs
     // get correct hashes on the first pass — no re-hash needed.
@@ -584,6 +584,13 @@ export class TaskOrchestrator {
         task.startTime = result.startTime;
         task.endTime = result.endTime;
 
+        if (result.startTime && result.endTime) {
+          this.options.lifeCycle.setTaskTiming?.(
+            taskId,
+            result.startTime,
+            result.endTime
+          );
+        }
         this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
       });
 
