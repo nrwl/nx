@@ -231,7 +231,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     val createNodesResults = JsonArray()
 
     // Build a deduplicated map of all external nodes across all projects
-    val allExternalNodes = generateExternalNodes(inMemoryAnalyses)
+    val allExternalNodes = buildExternalNodes(inMemoryAnalyses)
 
     inMemoryAnalyses.forEach { analysis ->
       val resultTuple = JsonArray()
@@ -257,10 +257,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     }
 
     return createNodesResults
-  }
-
-  private fun generateExternalNodes(projectAnalyses: List<ProjectAnalysis>): JsonObject {
-    return buildExternalNodes(projectAnalyses)
   }
 
   private fun generateExternalEdges(allExternalDeps: List<ExternalMavenDependency>): List<JsonObject> {
