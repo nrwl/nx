@@ -1,5 +1,6 @@
 import { CommandModule, showHelp } from 'yargs';
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
+import { isAiAgent } from '../../native';
 import { handleErrors } from '../../utils/handle-errors';
 import {
   parseCSV,
@@ -65,6 +66,11 @@ export const yargsShowCommand: CommandModule<
       .option('json', {
         type: 'boolean',
         description: 'Output JSON.',
+      })
+      .middleware((args) => {
+        if (args.json == null && isAiAgent()) {
+          args.json = true;
+        }
       })
       .example(
         '$0 show projects',
