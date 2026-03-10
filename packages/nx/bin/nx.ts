@@ -298,8 +298,12 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
   try {
     const searchPaths = getNxRequirePaths(workspace.dir);
     for (const searchPath of searchPaths) {
+      if (!existsSync(searchPath)) {
+        continue;
+      }
+
       try {
-        const externalRequire = createRequire(join(searchPath, 'index.js'));
+        const externalRequire = createRequire(join(searchPath, 'package.json'));
         const pkgJsonPath = externalRequire.resolve('nx/package.json');
         return require(pkgJsonPath).version;
       } catch {}
