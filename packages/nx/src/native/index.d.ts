@@ -377,10 +377,11 @@ export interface HashInputs {
 }
 
 /**
- * Initialize the global telemetry service
- * This should be called once at startup from TypeScript
+ * Initialize the global telemetry service.
+ * Reads or creates a session ID from the database so that multiple CLI
+ * invocations within 30 minutes share the same GA4 session.
  */
-export declare function initializeTelemetry(workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string

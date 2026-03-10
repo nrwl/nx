@@ -35,6 +35,7 @@ impl TelemetryService {
     pub fn new(
         workspace_id: String,
         user_id: String,
+        session_id: String,
         nx_version: String,
         package_manager_name: String,
         package_manager_version: Option<String>,
@@ -51,9 +52,6 @@ impl TelemetryService {
 
         // Detect AI agent from environment variables
         let is_ai_agent = crate::native::utils::ai::is_ai_agent();
-
-        // Session ID - generate a unique ID for this session
-        let session_id = uuid::Uuid::new_v4().to_string();
 
         let mut common_request_parameters = HashMap::new();
         common_request_parameters

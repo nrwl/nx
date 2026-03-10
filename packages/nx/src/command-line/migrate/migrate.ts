@@ -37,6 +37,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
+import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import { commitChanges } from '../../utils/git-utils';
 import {
@@ -1481,26 +1482,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       title: `The migrate command failed.`,
     });
     throw e;
-  }
-}
-
-async function writeFormattedJsonFile(
-  filePath: string,
-  content: any,
-  options?: JsonWriteOptions
-): Promise<void> {
-  const formattedContent = await formatFilesWithPrettierIfAvailable(
-    [{ path: filePath, content: JSON.stringify(content) }],
-    workspaceRoot,
-    { silent: true }
-  );
-
-  if (formattedContent.has(filePath)) {
-    writeFileSync(filePath, formattedContent.get(filePath)!, {
-      encoding: 'utf-8',
-    });
-  } else {
-    writeJsonFile(filePath, content, options);
   }
 }
 

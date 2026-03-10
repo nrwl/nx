@@ -18,6 +18,7 @@ import * as os from 'os';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
 import { generateWorkspaceId } from '../utils/analytics-prompt';
+import { getDbConnection } from '../utils/db-connection';
 
 // Conditionally import telemetry functions only on non-WASM platforms
 let initializeTelemetry: typeof InitializeTelemetryType;
@@ -66,7 +67,10 @@ export async function startAnalytics() {
     : 'unknown';
 
   try {
+    const dbConnection = getDbConnection();
+
     initializeTelemetry(
+      dbConnection,
       workspaceId,
       userId,
       nxVersion,
@@ -129,155 +133,38 @@ export function reportProjectGraphCreationEvent(duration: number) {
   });
 }
 
-const INTERNAL_ARGS_KEYS = new Set([
+const SKIP_ARGS_KEYS = new Set([
   '$0',
   '_',
   '__overrides_unparsed__',
   '__overrides__',
 ]);
 
-const SENSITIVE_ARGS_KEYS = new Set([
-  // Project identifiers — could reveal internal project/business names
-  'project',
-  'projects',
-  'projectName',
-  'focus',
-  'exclude',
-  'groups',
-  'group',
-  'appProject',
-  'e2eProject',
-  'backendProject',
-  'name',
-
-  // File paths — could reveal usernames, directory structure, client names
-  'file',
-  'files',
-  'cwd',
-  'envFile',
-  'outputPath',
-  'tsConfig',
-  'directory',
-  'source',
-  'destination',
-  'sourceDirectory',
-  'destinationDirectory',
-  'main',
-  'index',
-  'polyfills',
-  'config',
-  'configFile',
-  'webpackConfig',
-  'rspackConfig',
-  'viteConfig',
-  'jestConfig',
-  'cypressConfig',
-  'entryFile',
-  'coverageDirectory',
-  'projectRoot',
-  'sourceRoot',
-  'workspaceRoot',
-  'input',
-  'output',
-
-  // URLs and hosts — could expose internal infrastructure
-  'host',
-  'baseUrl',
-  'baseHref',
-  'deployUrl',
-  'publicUrl',
-  'publicPath',
-  'url',
-  'remote',
-  'registry',
-  'sourceRepository',
-
-  // Package/module names — could reveal private packages
-  'importPath',
-  'npmScope',
-  'packageName',
-  'moduleName',
-  'packageSpecifier',
-  'packageAndVersion',
-  'generator',
-  'collection',
-  'plugin',
-  'bundleName',
-  'entryName',
-  'outputFileName',
-
-  // Free-form text — could contain anything
-  'message',
-  'commitPrefix',
-  'gitCommitMessage',
-  'gitTagMessage',
-  'gitCommitArgs',
-  'gitTagArgs',
-  'gitPushArgs',
-  'command',
-  'commands',
-  'script',
-  'description',
-  'prefix',
-  'displayName',
-  'tags',
-  'title',
-  'label',
-  'scope',
-  'tag',
-
-  // Credentials and auth
-  'otp',
-  'key',
+// String args with fixed enum values that are safe to include in analytics.
+// All boolean and number args are included automatically.
+const ALLOWED_STRING_ARGS = new Set([
+  'outputStyle',
+  'type',
+  'view',
   'access',
-  'ciBuildId',
-
-  // Git refs — could reveal branch naming conventions
-  'base',
-  'head',
-  'ref',
-  'from',
-  'to',
-
-  // Keys that can be string paths (not just booleans)
-  'runMigrations',
-  'graph',
+  'preset',
+  'interactive',
+  'printConfig',
+  'resolveVersionPlans',
 ]);
-
-function isSensitiveKey(key: string): boolean {
-  if (SENSITIVE_ARGS_KEYS.has(key)) return true;
-  // Normalize kebab-case to camelCase and re-check
-  if (key.includes('-')) {
-    const camelKey = key.replace(/-(.)/g, (_, c) => c.toUpperCase());
-    return SENSITIVE_ARGS_KEYS.has(camelKey);
-  }
-  return false;
-}
-
-function sanitizeValue(value: any): string {
-  // Preserve booleans — we still want to know true vs false
-  if (typeof value === 'boolean') {
-    return String(value);
-  }
-  return '<redacted>';
-}
 
 export function argsToQueryString(args: Record<string, any>): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(args)) {
-    if (INTERNAL_ARGS_KEYS.has(key)) continue;
+    if (SKIP_ARGS_KEYS.has(key)) continue;
     if (value === undefined || value === null) continue;
-    if (typeof value === 'object' && !Array.isArray(value)) continue;
 
-    const sensitive = isSensitiveKey(key);
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        params.append(key, sensitive ? sanitizeValue(item) : String(item));
-      }
-    } else {
-      params.append(key, sensitive ? sanitizeValue(value) : String(value));
+    if (typeof value === 'boolean' || typeof value === 'number') {
+      params.append(key, String(value));
+    } else if (typeof value === 'string' && ALLOWED_STRING_ARGS.has(key)) {
+      params.append(key, value);
     }
+    // All other types (strings, arrays, objects) are dropped
   }
   return params.toString();
 }

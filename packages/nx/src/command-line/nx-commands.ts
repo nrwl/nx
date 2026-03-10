@@ -126,7 +126,10 @@ export const commandsObject = yargs
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
   .middleware((args) => {
-    const command = (args._ ?? []).join(' ');
+    const context = (commandsObject as any).getInternalMethods().getContext();
+    const command =
+      (context.commands ?? []).join(' ') ||
+      (args._ ?? []).slice(0, 1).join(' ');
     if (command) {
       reportCommandRunEvent(command, undefined, args);
     }
