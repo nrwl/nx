@@ -301,10 +301,11 @@ class AddTestCiTargetsTest {
           writeText("class OverriddenTest { @Test fun testMethod() {} }")
         }
 
-    val libProject = ProjectBuilder.builder()
-        .withProjectDir(File(workspaceRoot, "lib").apply { mkdirs() })
-        .withParent(project)
-        .build()
+    val libProject =
+        ProjectBuilder.builder()
+            .withProjectDir(File(workspaceRoot, "lib").apply { mkdirs() })
+            .withParent(project)
+            .build()
     File(libProject.projectDir, "build.gradle").apply { writeText("// lib build file") }
     val libTestTask = libProject.tasks.register("test").get()
     testTask.dependsOn(libTestTask)
