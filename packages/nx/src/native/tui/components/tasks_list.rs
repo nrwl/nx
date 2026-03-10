@@ -134,6 +134,21 @@ impl TaskItem {
             }
         }
     }
+
+    pub fn update_timing(&mut self, start_time: Option<i64>, end_time: Option<i64>) {
+        self.start_time = start_time;
+        self.end_time = end_time;
+        let duration = match (start_time, end_time) {
+            (Some(start), Some(end)) => Some(format_duration_since(start, end)),
+            (Some(_), None) => Some(DURATION_NOT_YET_KNOWN.to_string()),
+            _ => None,
+        };
+        if let Some(d) = duration {
+            if !self.continuous || end_time.is_some() {
+                self.duration = d;
+            }
+        }
+    }
 }
 
 #[napi]
@@ -1113,34 +1128,14 @@ impl TasksList {
         start_time: Option<i64>,
         end_time: Option<i64>,
     ) {
-        let duration = match (start_time, end_time) {
-            (Some(start), Some(end)) => Some(format_duration_since(start, end)),
-            (Some(_), None) => Some(DURATION_NOT_YET_KNOWN.to_string()),
-            _ => None,
-        };
-
         if let Some(task_item) = self.task_lookup.get_mut(&task_name) {
-            task_item.start_time = start_time;
-            task_item.end_time = end_time;
-            if let Some(ref d) = duration {
-                if !task_item.continuous || end_time.is_some() {
-                    task_item.duration = d.clone();
-                }
-            }
+            task_item.update_timing(start_time, end_time);
         }
-
-        // Also update display_items so the rendered list reflects the timing
         for display_item in &mut self.display_items {
             if let DisplayItem::Task(task_item) = display_item
                 && task_item.name == task_name
             {
-                task_item.start_time = start_time;
-                task_item.end_time = end_time;
-                if let Some(ref d) = duration {
-                    if !task_item.continuous || end_time.is_some() {
-                        task_item.duration = d.clone();
-                    }
-                }
+                task_item.update_timing(start_time, end_time);
                 break;
             }
         }

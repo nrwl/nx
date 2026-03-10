@@ -288,11 +288,8 @@ export class TaskOrchestrator {
   }
 
   public processAllScheduledTasks() {
-    const { scheduledTasks, scheduledBatches } =
-      this.tasksSchedule.getAllScheduledTasks();
+    const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
 
-    for (const batch of scheduledBatches) {
-    }
     this.processTasks(scheduledTasks);
   }
 
