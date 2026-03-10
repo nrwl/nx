@@ -1,3 +1,4 @@
+import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -207,7 +208,7 @@ async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
     promptConfig.hint = () => pc.dim(hint);
   }
 
-  const enquirer = await import('enquirer');
+  const enquirer = await handleImport('enquirer');
   return await enquirer
     .prompt([promptConfig])
     .then((a: { NxCloud: MessageOptionKey }) => {

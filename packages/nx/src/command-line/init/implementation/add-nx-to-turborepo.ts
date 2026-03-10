@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
 import { getPackageManagerCommand } from '../../../utils/package-manager';
 import { InitArgs } from '../init-v1';
@@ -38,7 +39,7 @@ export async function addNxToTurborepo(_options: Options) {
 
   // Turborepo workspaces usually have prettier installed, so try and match the formatting before writing the file
   try {
-    const prettier = await import('prettier');
+    const prettier = await handleImport('prettier');
     const config = await prettier.resolveConfig(repoRoot);
     writeFileSync(
       nxJsonPath,
