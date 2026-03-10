@@ -1685,6 +1685,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
+                      "{projectRoot}/nested-project/tsconfig.json",
+                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2455,6 +2457,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
+                      "{projectRoot}/nested-project/tsconfig.json",
+                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -4260,6 +4264,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       },
+                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",

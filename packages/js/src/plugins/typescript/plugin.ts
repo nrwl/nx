@@ -870,20 +870,28 @@ function getInputs(
     );
   }
 
-  if (
-    hasExternalProjectReferences(
-      config.originalPath,
-      tsConfig,
-      workspaceRoot,
-      config.project,
-      cache
-    )
-  ) {
+  const externalRefConfigFiles = getExternalProjectReferenceConfigFiles(
+    tsConfig,
+    internalProjectReferences,
+    workspaceRoot,
+    config.project,
+    cache,
+    configFiles
+  );
+  if (externalRefConfigFiles.length > 0) {
     // tsc --build reads .d.ts and .tsbuildinfo files from referenced projects
     // https://www.typescriptlang.org/docs/handbook/project-references.html#what-is-a-project-reference
     inputs.push({
       dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
     });
+    // tsc --build also reads the tsconfig files from external project
+    // references (and their extended configs) when processing project
+    // references, so we need to add them as inputs
+    inputs.push(
+      ...externalRefConfigFiles.map((p) =>
+        pathToInputOrOutput(p, workspaceRoot, config.project)
+      )
+    );
   } else {
     inputs.push('production' in namedInputs ? '^production' : '^default');
   }
@@ -1216,58 +1224,62 @@ function resolveShallowExternalProjectReferences(
   return projectReferences;
 }
 
-function hasExternalProjectReferences(
-  tsConfigPath: string,
+/**
+ * Collects config file paths from external project references, including their
+ * extended config files. It checks the root tsconfig and all internal project
+ * references for their direct external references.
+ */
+function getExternalProjectReferenceConfigFiles(
   tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   project: ProjectContext,
   cache: InvocationCache,
-  seen = new Set<string>()
-): boolean {
-  if (!tsConfig.projectReferences?.length) {
-    return false;
-  }
-  seen.add(tsConfigPath);
+  existingConfigFiles: Set<string>
+): string[] {
+  const externalRefs: Record<string, ParsedTsconfigData> = {};
 
-  for (const ref of tsConfig.projectReferences) {
-    let refConfigPath = ref.path;
-    if (seen.has(refConfigPath)) {
-      continue;
-    }
+  // Collect direct external references from the root tsconfig
+  resolveShallowExternalProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    project,
+    cache,
+    externalRefs
+  );
 
-    if (!existsSync(refConfigPath)) {
-      continue;
-    }
-
-    if (!refConfigPath.endsWith('.json')) {
-      refConfigPath = join(refConfigPath, 'tsconfig.json');
-    }
-
-    const refContext = getConfigContext(refConfigPath, workspaceRoot, cache);
-
-    if (isExternalProjectReference(refContext, project, workspaceRoot, cache)) {
-      return true;
-    }
-    const refTsConfig = retrieveTsConfigFromCache(
-      refConfigPath,
-      workspaceRoot,
-      cache
-    );
-    const result = hasExternalProjectReferences(
-      refConfigPath,
+  // Collect external references from internal project references
+  for (const refTsConfig of Object.values(internalProjectReferences)) {
+    resolveShallowExternalProjectReferences(
       refTsConfig,
       workspaceRoot,
       project,
       cache,
-      seen
+      externalRefs
     );
+  }
 
-    if (result) {
-      return true;
+  const result: string[] = [];
+  const seen = new Set<string>();
+  for (const [refConfigPath, refTsConfig] of Object.entries(externalRefs)) {
+    if (!existingConfigFiles.has(refConfigPath) && !seen.has(refConfigPath)) {
+      result.push(refConfigPath);
+      seen.add(refConfigPath);
+    }
+    const extendedFiles = getExtendedConfigFiles(
+      refTsConfig,
+      workspaceRoot,
+      cache
+    );
+    for (const extFile of extendedFiles.files) {
+      if (!existingConfigFiles.has(extFile) && !seen.has(extFile)) {
+        result.push(extFile);
+        seen.add(extFile);
+      }
     }
   }
 
-  return false;
+  return result;
 }
 
 function isExternalProjectReference(
