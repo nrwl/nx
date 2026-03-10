@@ -26,6 +26,7 @@ import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
 import { join } from 'path';
+import { afterEach } from 'vitest';
 
 describe('Nx Commands', () => {
   beforeAll(() =>
@@ -1426,8 +1427,12 @@ describe('global installation', () => {
   });
 
   describe('inside nx directory', () => {
-    beforeAll(() => {
+    beforeEach(() => {
       newProject({ packages: [] });
+    });
+
+    afterEach(() => {
+      cleanupProject();
     });
 
     it('should invoke Nx commands from local repo', () => {
