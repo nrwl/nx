@@ -19,6 +19,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
+import java.security.MessageDigest
 
 /**
  * Maven plugin to analyze project structure and generate JSON for Nx integration
@@ -259,94 +260,12 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
   }
 
   private fun generateExternalNodes(projectAnalyses: List<ProjectAnalysis>): JsonObject {
-    val externalNodes = JsonObject()
-
-    // Deduplicate external deps across all projects by groupId:artifactId
-    val seen = mutableMapOf<String, ExternalMavenDependency>()
-    projectAnalyses.forEach { analysis ->
-      analysis.externalDependencies.forEach { extDep ->
-        val key = "${extDep.groupId}:${extDep.artifactId}"
-        // Keep the first occurrence (or one with a version if the existing one has none)
-        val existing = seen[key]
-        if (existing == null || (existing.version == null && extDep.version != null)) {
-          seen[key] = extDep
-        }
-      }
-    }
-
-    // Create external node JSON for each unique dependency
-    seen.forEach { (coordinates, extDep) ->
-      val nodeName = "maven:${coordinates}"
-      val node = JsonObject()
-      node.addProperty("type", "maven")
-      node.addProperty("name", nodeName)
-
-      val data = JsonObject()
-      data.addProperty("packageName", coordinates)
-      data.addProperty("groupId", extDep.groupId)
-      data.addProperty("artifactId", extDep.artifactId)
-      data.addProperty("version", extDep.version ?: "managed")
-
-      // Read the .sha1 sidecar file that Maven already computed next to the artifact
-      extDep.artifactFile?.let { jarFile ->
-        val sha1File = File("${jarFile.absolutePath}.sha1")
-        if (sha1File.exists()) {
-          data.addProperty("hash", sha1File.readText().trim())
-        } else {
-          log.warn("No .sha1 hash file found for ${coordinates} at ${sha1File.absolutePath}")
-        }
-      }
-
-      node.add("data", data)
-
-      externalNodes.add(nodeName, node)
-    }
-
-    return externalNodes
+    return buildExternalNodes(projectAnalyses)
   }
 
   private fun generateExternalEdges(allExternalDeps: List<ExternalMavenDependency>): List<JsonObject> {
-    val edges = mutableListOf<JsonObject>()
     val localRepo = session.repositorySession.localRepository.basedir
-    val reader = MavenXpp3Reader()
-
-    // Build set of known external node keys for quick lookup
-    val externalNodeKeys = allExternalDeps
-      .map { "${it.groupId}:${it.artifactId}" }
-      .toSet()
-
-    // Deduplicate: only process each groupId:artifactId once
-    val seen = mutableSetOf<String>()
-    val uniqueDeps = allExternalDeps.filter { seen.add("${it.groupId}:${it.artifactId}") }
-
-    for (dep in uniqueDeps) {
-      val version = dep.version ?: continue
-      val pomPath = File(
-        localRepo,
-        "${dep.groupId.replace('.', '/')}/${dep.artifactId}/${version}/${dep.artifactId}-${version}.pom"
-      )
-
-      if (!pomPath.exists()) continue
-
-      try {
-        val model = FileReader(pomPath).use { reader.read(it) }
-        model.dependencies?.forEach { pomDep ->
-          val targetKey = "${pomDep.groupId}:${pomDep.artifactId}"
-          if (externalNodeKeys.contains(targetKey)) {
-            val edge = JsonObject()
-            edge.addProperty("type", "static")
-            edge.addProperty("source", "maven:${dep.groupId}:${dep.artifactId}")
-            edge.addProperty("target", "maven:${targetKey}")
-            edges.add(edge)
-          }
-        }
-      } catch (e: Exception) {
-        log.debug("Could not parse POM for ${dep.groupId}:${dep.artifactId}:${version}: ${e.message}")
-      }
-    }
-
-    log.info("Generated ${edges.size} external-to-external dependency edges")
-    return edges
+    return buildExternalEdges(allExternalDeps, localRepo)
   }
 
   private fun generateCoordinatesMap(
@@ -356,4 +275,118 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     projects.associate { project ->
       "${project.groupId}:${project.artifactId}" to pathFormatter.normalizeRelativePath(project.basedir.canonicalFile.relativeTo(workspaceRoot).path)
     }
+}
+
+/**
+ * Builds a deduplicated map of external nodes from project analyses.
+ * Extracted as a top-level function for testability.
+ */
+internal fun buildExternalNodes(projectAnalyses: List<ProjectAnalysis>): JsonObject {
+  val log: Logger = LoggerFactory.getLogger("dev.nx.maven.ExternalNodes")
+  val externalNodes = JsonObject()
+
+  // Deduplicate external deps across all projects by groupId:artifactId
+  val seen = mutableMapOf<String, ExternalMavenDependency>()
+  projectAnalyses.forEach { analysis ->
+    analysis.externalDependencies.forEach { extDep ->
+      val key = "${extDep.groupId}:${extDep.artifactId}"
+      // Keep the first occurrence (or one with a version if the existing one has none)
+      val existing = seen[key]
+      if (existing == null || (existing.version == null && extDep.version != null)) {
+        seen[key] = extDep
+      }
+    }
+  }
+
+  // Create external node JSON for each unique dependency
+  seen.forEach { (coordinates, extDep) ->
+    val nodeName = "maven:${coordinates}"
+    val node = JsonObject()
+    node.addProperty("type", "maven")
+    node.addProperty("name", nodeName)
+
+    val data = JsonObject()
+    data.addProperty("packageName", coordinates)
+    data.addProperty("groupId", extDep.groupId)
+    data.addProperty("artifactId", extDep.artifactId)
+    data.addProperty("version", extDep.version ?: "managed")
+
+    // Read the .sha1 sidecar file that Maven already computed next to the artifact
+    var hash: String? = null
+    extDep.artifactFile?.let { jarFile ->
+      val sha1File = File("${jarFile.absolutePath}.sha1")
+      if (sha1File.exists()) {
+        hash = sha1File.readText().trim()
+      }
+    }
+    // Fallback: hash the coordinates so cache invalidation still works on version bumps
+    if (hash == null) {
+      val version = extDep.version ?: "managed"
+      hash = sha1("${extDep.groupId}:${extDep.artifactId}:${version}")
+    }
+    data.addProperty("hash", hash)
+
+    node.add("data", data)
+
+    externalNodes.add(nodeName, node)
+  }
+
+  return externalNodes
+}
+
+/**
+ * Builds external-to-external dependency edges by reading POM files
+ * from the local Maven repository.
+ * Extracted as a top-level function for testability.
+ */
+internal fun buildExternalEdges(
+  allExternalDeps: List<ExternalMavenDependency>,
+  localRepo: File
+): List<JsonObject> {
+  val log: Logger = LoggerFactory.getLogger("dev.nx.maven.ExternalEdges")
+  val edges = mutableListOf<JsonObject>()
+  val reader = MavenXpp3Reader()
+
+  // Build set of known external node keys for quick lookup
+  val externalNodeKeys = allExternalDeps
+    .map { "${it.groupId}:${it.artifactId}" }
+    .toSet()
+
+  // Deduplicate: only process each groupId:artifactId once
+  val seen = mutableSetOf<String>()
+  val uniqueDeps = allExternalDeps.filter { seen.add("${it.groupId}:${it.artifactId}") }
+
+  for (dep in uniqueDeps) {
+    val version = dep.version ?: continue
+    val pomPath = File(
+      localRepo,
+      "${dep.groupId.replace('.', '/')}/${dep.artifactId}/${version}/${dep.artifactId}-${version}.pom"
+    )
+
+    if (!pomPath.exists()) continue
+
+    try {
+      val model = FileReader(pomPath).use { reader.read(it) }
+      model.dependencies?.forEach { pomDep ->
+        val targetKey = "${pomDep.groupId}:${pomDep.artifactId}"
+        if (externalNodeKeys.contains(targetKey)) {
+          val edge = JsonObject()
+          edge.addProperty("type", "static")
+          edge.addProperty("source", "maven:${dep.groupId}:${dep.artifactId}")
+          edge.addProperty("target", "maven:${targetKey}")
+          edges.add(edge)
+        }
+      }
+    } catch (e: Exception) {
+      log.debug("Could not parse POM for ${dep.groupId}:${dep.artifactId}:${version}: ${e.message}")
+    }
+  }
+
+  log.info("Generated ${edges.size} external-to-external dependency edges")
+  return edges
+}
+
+private fun sha1(input: String): String {
+  val digest = MessageDigest.getInstance("SHA-1")
+  return digest.digest(input.toByteArray()).joinToString("") { "%02x".format(it) }
 }
