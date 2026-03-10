@@ -52,7 +52,6 @@
               "@module-federation/sdk",
               "@module-federation/enhanced",
               "css-loader",
-              "less-loader",
               "webpack",
               "sass-embedded",
               "sass",
