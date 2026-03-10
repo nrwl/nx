@@ -1433,6 +1433,17 @@ export class TaskOrchestrator {
   private setupSignalHandlers() {
     process.once('SIGINT', () => {
       this.stopRequested = true;
+      if (!this.tuiEnabled) {
+        // Silence output immediately — pnpm (and similar wrappers) may
+        // exit before nx finishes cleanup, returning the shell prompt.
+        // Any output after that point would appear after the prompt.
+        const noop = (_chunk, _encoding, callback) => {
+          if (callback) callback();
+          return true;
+        };
+        process.stdout.write = noop as any;
+        process.stderr.write = noop as any;
+      }
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
