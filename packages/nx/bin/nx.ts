@@ -2,6 +2,7 @@
 
 // TODO: Remove this workaround once picocolors handles FORCE_COLOR=0 correctly
 // See: https://github.com/alexeyraspopov/picocolors/issues/100
+
 if (process.env.FORCE_COLOR === '0') {
   process.env.NO_COLOR = '1';
   delete process.env.FORCE_COLOR;
@@ -23,15 +24,18 @@ import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
 import { execSync } from 'child_process';
 import { createRequire } from 'module';
-import { join } from 'path';
+import { extname, join } from 'path';
+import { existsSync } from 'fs';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { readJsonFile } from '../src/utils/fileutils';
 import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
 import { flushAnalytics, startAnalytics } from '../src/analytics';
+
+const isTsExt = extname(__filename).endsWith('.ts');
+const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
   if (
@@ -172,7 +176,7 @@ function determineNxVersions(
     : null;
   const GLOBAL_NX_VERSION: string | null = isLocalInstall
     ? null
-    : require(require.resolve('nx/package.json')).version;
+    : require(pathToPkgJson).version;
 
   globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
   return { LOCAL_NX_VERSION, GLOBAL_NX_VERSION };
@@ -188,12 +192,14 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   // prefer Nx installed in .nx/installation
   try {
     const installPath = getNxInstallationPath(root);
-    const installRequire = createRequire(join(installPath, 'index.js'));
-    return installRequire.resolve('nx/bin/nx.js');
+    if (existsSync(installPath)) {
+      const installRequire = createRequire(join(installPath, 'package.json'));
+      return installRequire.resolve('nx/bin/nx.js');
+    }
   } catch {}
 
   // check for root install
-  const rootRequire = createRequire(join(root, 'index.js'));
+  const rootRequire = createRequire(join(root, 'package.json'));
   return rootRequire.resolve('nx/bin/nx.js');
 }
 
@@ -290,7 +296,7 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
       try {
         const externalRequire = createRequire(join(searchPath, 'index.js'));
         const pkgJsonPath = externalRequire.resolve('nx/package.json');
-        return readJsonFile(pkgJsonPath).version;
+        return require(pkgJsonPath).version;
       } catch {}
     }
   } catch {}
