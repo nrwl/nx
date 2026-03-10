@@ -566,6 +566,184 @@ class ProcessTaskUtilsTest {
   }
 
   @Nested
+  inner class GradleFilesInputsTests {
+
+    @Test
+    fun `getGradleFilesInputs returns empty list when no gradle files exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        val result = getGradleFilesInputs(tempDir.path)
+        assertTrue(result.isEmpty(), "Expected empty list when no gradle files exist")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getGradleFilesInputs returns gradle-wrapper files when they exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create gradle wrapper directory and files
+        val gradleWrapperDir = java.io.File(tempDir, "gradle/wrapper")
+        gradleWrapperDir.mkdirs()
+        java.io.File(gradleWrapperDir, "gradle-wrapper.jar").writeBytes(ByteArray(0))
+        java.io.File(gradleWrapperDir, "gradle-wrapper.properties").writeText("distributionUrl=...")
+
+        val result = getGradleFilesInputs(tempDir.path)
+
+        assertEquals(2, result.size, "Expected 2 gradle wrapper files")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
+            "Expected gradle-wrapper.jar in $result")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
+            "Expected gradle-wrapper.properties in $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getGradleFilesInputs returns gradle properties when it exists`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create only gradle.properties
+        java.io.File(tempDir, "gradle.properties").writeText("org.gradle.jvmargs=-Xmx2g")
+
+        val result = getGradleFilesInputs(tempDir.path)
+
+        assertEquals(1, result.size, "Expected 1 gradle file")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle.properties"),
+            "Expected gradle.properties in $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getGradleFilesInputs returns all gradle files when all exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create all gradle files
+        val gradleWrapperDir = java.io.File(tempDir, "gradle/wrapper")
+        gradleWrapperDir.mkdirs()
+        java.io.File(gradleWrapperDir, "gradle-wrapper.jar").writeBytes(ByteArray(0))
+        java.io.File(gradleWrapperDir, "gradle-wrapper.properties").writeText("distributionUrl=...")
+        java.io.File(tempDir, "gradle.properties").writeText("org.gradle.jvmargs=-Xmx2g")
+
+        val result = getGradleFilesInputs(tempDir.path)
+
+        assertEquals(3, result.size, "Expected 3 gradle files")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
+            "Expected gradle-wrapper.jar")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
+            "Expected gradle-wrapper.properties")
+        assertTrue(result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getInputsForTask includes gradle files when they exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create gradle.properties only
+        java.io.File(tempDir, "gradle.properties").writeText("org.gradle.jvmargs=-Xmx2g")
+
+        // Create a subproject directory to differentiate projectRoot from workspaceRoot
+        val projectDir = java.io.File(tempDir, "app").apply { mkdirs() }
+        val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+        val workspaceRoot = tempDir.path
+        val projectRoot = projectDir.path
+
+        val mainTask = project.tasks.register("mainTask").get()
+        val inputFile = java.io.File("$projectRoot/src/main.kt")
+        mainTask.inputs.files(inputFile)
+
+        val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+        val result =
+            getInputsForTask(
+                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+        assertNotNull(result)
+        assertTrue(
+            result!!.any { it == "{workspaceRoot}/gradle.properties" },
+            "Expected gradle.properties in inputs: $result")
+        assertTrue(
+            result.any { it == "{projectRoot}/src/main.kt" }, "Expected src/main.kt in inputs: $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getInputsForTask does not include gradle files when they do not exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Don't create any gradle files
+        // Create a subproject directory to differentiate projectRoot from workspaceRoot
+        val projectDir = java.io.File(tempDir, "app").apply { mkdirs() }
+        val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+        val workspaceRoot = tempDir.path
+        val projectRoot = projectDir.path
+
+        val mainTask = project.tasks.register("mainTask").get()
+        val inputFile = java.io.File("$projectRoot/src/main.kt")
+        mainTask.inputs.files(inputFile)
+
+        val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+        val result =
+            getInputsForTask(
+                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+        assertNotNull(result)
+        // Should have src/main.kt but no gradle files
+        assertTrue(
+            result!!.any { it == "{projectRoot}/src/main.kt" }, "Expected src/main.kt in inputs: $result")
+        assertFalse(
+            result.any { it.toString().contains("gradle") },
+            "Did not expect any gradle files in inputs: $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+  }
+
+  @Nested
   inner class SubprojectNamingTests {
 
     @Test

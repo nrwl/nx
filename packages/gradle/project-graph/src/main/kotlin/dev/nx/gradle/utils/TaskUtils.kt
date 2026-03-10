@@ -109,6 +109,25 @@ fun getGradlewCommand(): String {
 }
 
 /**
+ * Get gradle wrapper and properties files that should be included as inputs. These files affect
+ * build behavior and should invalidate cache when changed.
+ *
+ * @param workspaceRoot the workspace root path
+ * @return list of relative paths to gradle files that exist, empty if none found
+ */
+fun getGradleFilesInputs(workspaceRoot: String): List<String> {
+  val gradleFiles =
+      listOf(
+          "gradle/wrapper/gradle-wrapper.jar",
+          "gradle/wrapper/gradle-wrapper.properties",
+          "gradle.properties")
+
+  return gradleFiles
+      .filter { relativePath -> File("$workspaceRoot/$relativePath").exists() }
+      .map { relativePath -> "{workspaceRoot}/$relativePath" }
+}
+
+/**
  * Parse task and get inputs for this task
  *
  * @param dependsOnTasks set of tasks this task depends on
@@ -131,6 +150,9 @@ fun getInputsForTask(
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
     val dependentTaskOutputExtensions = mutableSetOf<String>()
+
+    // Add gradle wrapper and properties files as inputs if they exist
+    inputs.addAll(getGradleFilesInputs(workspaceRoot))
 
     // Collect outputs from dependent tasks - group by extension for glob patterns
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
