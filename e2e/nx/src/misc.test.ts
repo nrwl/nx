@@ -26,7 +26,6 @@ import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
 import { join } from 'path';
-import { afterEach } from 'vitest';
 
 describe('Nx Commands', () => {
   beforeAll(() =>
