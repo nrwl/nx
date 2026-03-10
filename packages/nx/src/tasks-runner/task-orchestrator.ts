@@ -535,7 +535,7 @@ export class TaskOrchestrator {
       applyFromCacheOrRunBatchStart.name,
       applyFromCacheOrRunBatchEnd.name
     );
-    return results;
+    return [...cachedResults, ...batchResults];
   }
 
   private async runBatch(
