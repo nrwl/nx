@@ -82,7 +82,6 @@ export class TaskOrchestrator {
   private initializingTaskIds = new Set(this.initiatingTasks.map((t) => t.id));
 
   private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
-  private processedBatches = new Map<Batch, Promise<void>>();
 
   private completedTasks: {
     [id: string]: TaskStatus;
@@ -288,21 +287,11 @@ export class TaskOrchestrator {
     return taskSpecificEnv;
   }
 
-  private async processScheduledBatch(batch: Batch) {
-    // Hashing moved to applyFromCacheOrRunBatch for topological ordering
-    await Promise.all(
-      Object.values(batch.taskGraph.tasks).map((task) =>
-        this.options.lifeCycle.scheduleTask(task)
-      )
-    );
-  }
-
   public processAllScheduledTasks() {
     const { scheduledTasks, scheduledBatches } =
       this.tasksSchedule.getAllScheduledTasks();
 
     for (const batch of scheduledBatches) {
-      this.processedBatches.set(batch, this.processScheduledBatch(batch));
     }
     this.processTasks(scheduledTasks);
   }
@@ -453,9 +442,6 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    // Wait for batch to be processed
-    await this.processedBatches.get(batch);
-
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
       executorName: batch.executorName,
       taskIds: Object.keys(batch.taskGraph.tasks),
@@ -464,7 +450,10 @@ export class TaskOrchestrator {
     const { cachedResults, needsRehashAfterExecution } =
       await this.applyBatchCachedResults(batch, doNotSkipCache);
 
-    // All tasks are now hashed — notify lifecycle before execution
+    // All tasks are now hashed — notify lifecycle (scheduleTask + startTasks)
+    await Promise.all(
+      tasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+    );
     await this.preRunSteps(tasks, { groupId });
 
     // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
