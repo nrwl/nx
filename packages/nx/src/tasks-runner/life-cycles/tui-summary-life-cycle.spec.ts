@@ -1,7 +1,7 @@
 import { EOL } from 'os';
 import { stripVTControlCharacters } from 'util';
 import { Task } from '../../config/task-graph';
-import { parseTaskStatus, TaskStatus as NativeTaskStatus } from '../../native';
+import { TaskStatus as NativeTaskStatus } from '../../native';
 import * as taskHistoryUtils from '../../utils/task-history';
 import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
 import { TaskMetadata } from '../life-cycle';
@@ -74,7 +74,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(dep.id, parseTaskStatus('failure'));
       lifeCycle.printTaskTerminalOutput?.(dep, 'failure', 'boom');
       lifeCycle.endCommand?.();
 
@@ -134,7 +133,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(dep.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(dep, 'success', ':)');
       lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
       lifeCycle.appendTaskOutput?.(target.id, "Wait, I'm not done yet", true);
@@ -196,7 +194,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(dep.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(dep, 'success', ':)');
       lifeCycle.endCommand?.();
 
@@ -348,7 +345,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(e2eTest.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(
         e2eTest,
         'success',
@@ -450,8 +446,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(bar.id, parseTaskStatus('failure'));
-      lifeCycle.setTaskStatus?.(foo.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
       lifeCycle.printTaskTerminalOutput?.(bar, 'failure', 'boom');
       lifeCycle.endCommand?.();
@@ -530,7 +524,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(foo.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
       lifeCycle.endCommand?.();
 
@@ -623,7 +616,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(e2eTest.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(
         e2eTest,
         'success',
@@ -725,8 +717,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ],
         null as unknown as TaskMetadata
       );
-      lifeCycle.setTaskStatus?.(bar.id, parseTaskStatus('success'));
-      lifeCycle.setTaskStatus?.(foo.id, parseTaskStatus('success'));
       lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
       lifeCycle.printTaskTerminalOutput?.(bar, 'success', ':)');
       lifeCycle.endCommand?.();
