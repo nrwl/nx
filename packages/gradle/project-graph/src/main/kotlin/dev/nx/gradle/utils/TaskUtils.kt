@@ -44,17 +44,14 @@ fun processTask(
     target["continuous"] = true
   }
 
-  // Get combined depends on tasks once and reuse
   val dependsOnTasks = getDependsOnTask(task)
 
-  // process outputs
   val outputs = getOutputsForTask(task, projectRoot, workspaceRoot)
   if (!outputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${outputs.size} outputs")
     target["outputs"] = outputs
   }
 
-  // process dependsOn
   val dependsOn =
       getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides, targetNamePrefix)
 
@@ -63,13 +60,9 @@ fun processTask(
     target["dependsOn"] = dependsOn
   }
 
-  // Check for nx extension to get additional config
   val nxExtension = task.extensions.findByType(NxTaskExtension::class.java)
-
-  // Merge nx.json config into target (this allows users to set any Nx target properties)
   nxExtension?.json?.getOrNull()?.let { nxJson -> target["nxConfig"] = nxJson }
 
-  // process inputs
   val inputs =
       getInputsForTask(
           dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
@@ -108,6 +101,24 @@ fun getGradlewCommand(): String {
   }
 }
 
+private val GRADLE_INPUT_FILES =
+    listOf(
+        "gradle/wrapper/gradle-wrapper.jar",
+        "gradle/wrapper/gradle-wrapper.properties",
+        "gradle.properties")
+
+/**
+ * Get gradle wrapper and properties files that should be included as inputs. These files affect
+ * build behavior and should invalidate cache when changed.
+ *
+ * @param workspaceRoot the workspace root path
+ * @return list of relative paths to gradle files that exist, empty if none found
+ */
+fun getGradleFilesInputs(workspaceRoot: String): List<String> {
+  return GRADLE_INPUT_FILES.filter { relativePath -> File("$workspaceRoot/$relativePath").exists() }
+      .map { relativePath -> "{workspaceRoot}/$relativePath" }
+}
+
 /**
  * Parse task and get inputs for this task
  *
@@ -131,6 +142,8 @@ fun getInputsForTask(
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
     val dependentTaskOutputExtensions = mutableSetOf<String>()
+
+    inputs.addAll(getGradleFilesInputs(workspaceRoot))
 
     // Collect outputs from dependent tasks - group by extension for glob patterns
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
@@ -182,7 +195,6 @@ fun getInputsForTask(
       inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension"))
     }
 
-    // Add external dependencies if any
     if (externalDependencies.isNotEmpty()) {
       inputs.add(mapOf("externalDependencies" to externalDependencies))
     }
@@ -338,7 +350,6 @@ fun getDependsOnForTask(
   if (dependsOnTasks == null) {
     try {
       cache[taskKey] = null
-      // Compute dependencies
       val combinedDependsOn = getDependsOnTask(task)
       val result =
           if (combinedDependsOn.isNotEmpty()) {
@@ -346,7 +357,6 @@ fun getDependsOnForTask(
           } else {
             null
           }
-      // Cache the actual result before returning
       cache[taskKey] = result
       return result
     } catch (e: Exception) {
@@ -360,7 +370,6 @@ fun getDependsOnForTask(
       }
     }
   } else {
-    // When using pre-computed dependencies, don't use cache
     return try {
       val result =
           if (dependsOnTasks.isNotEmpty()) {
