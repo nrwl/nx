@@ -21,7 +21,9 @@ fun addTestCiTargets(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String> = emptyMap(),
+    targetNamePrefix: String = ""
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
@@ -37,7 +39,9 @@ fun addTestCiTargets(
       workspaceRoot,
       ciTestTargetName,
       ciDependsOn,
-      gitIgnoreClassifier)
+      gitIgnoreClassifier,
+      targetNameOverrides,
+      targetNamePrefix)
 
   ensureParentCiTarget(
       targets,
@@ -61,7 +65,9 @@ private fun processTestFiles(
     workspaceRoot: String,
     ciTestTargetName: String,
     ciDependsOn: MutableList<DependsOnEntry>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String
 ) {
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
@@ -77,7 +83,9 @@ private fun processTestFiles(
                   testTask,
                   projectRoot,
                   workspaceRoot,
-                  gitIgnoreClassifier)
+                  gitIgnoreClassifier,
+                  targetNameOverrides,
+                  targetNamePrefix)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(DependsOnEntry(target = targetName, params = DependsOnParams.FORWARD))
@@ -106,7 +114,9 @@ private fun buildTestCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String
 ): MutableMap<String, Any?> {
   val taskInputs =
       getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
@@ -131,7 +141,9 @@ private fun buildTestCiTarget(
         target["outputs"] = it
       }
 
-  getDependsOnForTask(null, testTask)?.takeIf { it.isNotEmpty() }?.let { target["dependsOn"] = it }
+  getDependsOnForTask(null, testTask, null, targetNameOverrides, targetNamePrefix)
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { target["dependsOn"] = it }
 
   return target
 }

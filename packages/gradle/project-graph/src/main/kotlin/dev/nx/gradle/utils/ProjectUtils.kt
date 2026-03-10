@@ -193,7 +193,9 @@ fun processTargetsForProject(
               projectRoot,
               workspaceRoot,
               ciTestTargetName,
-              gitIgnoreClassifier)
+              gitIgnoreClassifier,
+              targetNameOverrides,
+              targetNamePrefix)
         }
       }
 
