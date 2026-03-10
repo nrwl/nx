@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
-import { handleImport } from '../../../utils/handle-import';
 
 export const yargsLoginCommand: CommandModule = {
   command: 'login [nxCloudUrl]',
@@ -18,8 +17,6 @@ export const yargsLoginCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(
-      await (await handleImport('./login.js', __dirname)).loginHandler(args)
-    );
+    process.exit(await (await import('./login.js')).loginHandler(args));
   },
 };

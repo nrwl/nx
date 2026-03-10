@@ -1,6 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
 import { WatchArguments } from './watch';
-import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { parseCSV, withVerbose } from '../yargs-utils/shared-options';
 
@@ -9,9 +8,7 @@ export const yargsWatchCommand: CommandModule = {
   describe: 'Watch for changes within projects, and execute commands.',
   builder: (yargs) => linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
   handler: async (args) => {
-    await handleImport('./watch.js', __dirname).then((m) =>
-      m.watch(args as WatchArguments)
-    );
+    await import('./watch.js').then((m) => m.watch(args as WatchArguments));
   },
 };
 

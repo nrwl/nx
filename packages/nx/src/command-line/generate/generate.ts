@@ -16,7 +16,6 @@ import {
   Schema,
 } from '../../utils/params';
 import { handleErrors } from '../../utils/handle-errors';
-import { handleImport } from '../../utils/handle-import';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -414,9 +413,7 @@ export async function generate(args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (
-        await handleImport('../../adapter/ngcli-adapter.js', __dirname)
-      ).generate(
+      return (await import('../../adapter/ngcli-adapter.js')).generate(
         workspaceRoot,
         {
           ...opts,

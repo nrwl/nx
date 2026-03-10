@@ -31,7 +31,6 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { getTaskIOService } from './task-io-service';
-import { handleImport } from '../utils/handle-import';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -290,8 +289,7 @@ export class DbCache {
   private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
     let getRemoteCache = null;
     try {
-      getRemoteCache = (await handleImport(this.resolvePackage(pkg)))
-        .getRemoteCache;
+      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
     } catch {
       return null;
     }

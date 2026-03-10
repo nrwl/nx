@@ -1,6 +1,5 @@
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { readNxJson } from '../../config/configuration';
-import { handleImport } from '../../utils/handle-import';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -61,7 +60,7 @@ export async function runOne(
 
   if (nxArgs.help) {
     await (
-      await handleImport('./run.js', __dirname)
+      await import('./run.js')
     ).printTargetRunHelp(
       {
         ...opts,

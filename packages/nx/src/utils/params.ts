@@ -1,5 +1,4 @@
 import { logger } from './logger';
-import { handleImport } from './handle-import';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type {
   ProjectsConfigurations,
@@ -976,7 +975,7 @@ async function promptForValues(
   projectsConfigurations: ProjectsConfigurations
 ) {
   return await (
-    await handleImport('enquirer')
+    await import('enquirer')
   )
     .prompt(getPromptsForSchema(opts, schema, projectsConfigurations))
     .then((values) => ({ ...opts, ...values }))

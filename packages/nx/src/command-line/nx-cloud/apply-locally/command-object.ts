@@ -1,6 +1,5 @@
 import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
-import { handleImport } from '../../../utils/handle-import';
 
 export const yargsApplyLocallyCommand: CommandModule = {
   command: 'apply-locally [options]',
@@ -13,9 +12,7 @@ export const yargsApplyLocallyCommand: CommandModule = {
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(
-      await (
-        await handleImport('./apply-locally.js', __dirname)
-      ).applyLocallyHandler(args)
+      await (await import('./apply-locally.js')).applyLocallyHandler(args)
     );
   },
 };

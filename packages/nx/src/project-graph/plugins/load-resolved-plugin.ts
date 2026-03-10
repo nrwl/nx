@@ -1,7 +1,6 @@
 import type { PluginConfiguration } from '../../config/nx-json';
 import { LoadedNxPlugin } from './loaded-nx-plugin';
 import type { NxPlugin } from './public-api';
-import { handleImport } from '../../utils/handle-import';
 
 export async function loadResolvedNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
@@ -16,7 +15,7 @@ export async function loadResolvedNxPluginAsync(
 }
 
 async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
-  const m = await handleImport(pluginPath);
+  const m = await import(pluginPath);
   if (
     m.default &&
     ('createNodes' in m.default ||

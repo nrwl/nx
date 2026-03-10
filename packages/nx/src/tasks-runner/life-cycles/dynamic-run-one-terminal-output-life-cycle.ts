@@ -8,7 +8,6 @@ import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
-import { handleImport } from '../../utils/handle-import';
 import * as pc from 'picocolors';
 
 const LEFT_PAD = `   `;
@@ -75,7 +74,7 @@ export async function createRunOneDynamicOutputRenderer({
   const lifeCycle = {} as Partial<LifeCycle>;
 
   const start = process.hrtime();
-  const figures = await handleImport('figures');
+  const figures = await import('figures');
 
   let state: State = 'EXECUTING_DEPENDENT_TARGETS';
 

@@ -8,6 +8,8 @@
  */
 export type { Tree, FileChange } from './generators/tree';
 
+console.log('this is going to be real annoying');
+
 /**
  * @category Workspace
  */

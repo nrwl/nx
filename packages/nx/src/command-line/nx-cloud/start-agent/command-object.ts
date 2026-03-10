@@ -1,5 +1,4 @@
 import { CommandModule } from 'yargs';
-import { handleImport } from '../../../utils/handle-import';
 import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsStartAgentCommand: CommandModule = {
@@ -13,9 +12,7 @@ export const yargsStartAgentCommand: CommandModule = {
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(
-      await (
-        await handleImport('./start-agent.js', __dirname)
-      ).startAgentHandler(args)
+      await (await import('./start-agent.js')).startAgentHandler(args)
     );
   },
 };

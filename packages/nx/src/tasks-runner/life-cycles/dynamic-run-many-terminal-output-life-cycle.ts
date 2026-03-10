@@ -9,7 +9,6 @@ import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
-import { handleImport } from '../../utils/handle-import';
 import * as pc from 'picocolors';
 
 const LEFT_PAD = `   `;
@@ -65,7 +64,7 @@ export async function createRunManyDynamicOutputRenderer({
   const isVerbose = overrides.verbose === true;
 
   const start = process.hrtime();
-  const figures = await handleImport('figures');
+  const figures = await import('figures');
 
   const targets = args.targets;
   const totalTasks = tasks.length;

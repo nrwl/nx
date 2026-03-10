@@ -1,5 +1,4 @@
 import { ArgumentsCamelCase, CommandModule } from 'yargs';
-import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 
@@ -17,7 +16,5 @@ export const yargsRepairCommand: CommandModule = {
   `,
   builder: (yargs) => linkToNxDevAndExamples(withVerbose(yargs), 'repair'),
   handler: async (args: ArgumentsCamelCase<{ verbose: boolean }>) =>
-    process.exit(
-      await (await handleImport('./repair.js', __dirname)).repair(args)
-    ),
+    process.exit(await (await import('./repair.js')).repair(args)),
 };

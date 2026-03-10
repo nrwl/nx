@@ -1,5 +1,4 @@
 import { CommandModule } from 'yargs';
-import { handleImport } from '../../../utils/handle-import';
 import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsDownloadCloudClientCommand: CommandModule = {
@@ -9,7 +8,7 @@ export const yargsDownloadCloudClientCommand: CommandModule = {
   handler: async (args: any) => {
     process.exit(
       await (
-        await handleImport('./download-cloud-client.js', __dirname)
+        await import('./download-cloud-client.js')
       ).downloadCloudClientHandler(args)
     );
   },

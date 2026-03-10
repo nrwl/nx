@@ -42,7 +42,6 @@ import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
-import { handleImport } from '../../utils/handle-import';
 
 export type ModificationResults = {
   messages: CLINoteMessageConfig[];
@@ -110,7 +109,7 @@ export async function setupAiAgentsGenerator(
       'src/ai/set-up-ai-agents/set-up-ai-agents.js'
     );
 
-    const module = await handleImport(modulePath);
+    const module = await import(modulePath);
     const setupAiAgentsGeneratorResult = await module.setupAiAgentsGenerator(
       tree,
       normalizedOptions,

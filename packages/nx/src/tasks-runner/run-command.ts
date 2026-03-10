@@ -67,7 +67,6 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
-import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -132,9 +131,8 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await handleImport(
-      '../native/index.js',
-      __dirname
+    const { AppLifeCycle, restoreTerminal } = await import(
+      '../native/index.js'
     );
     let appLifeCycle;
 
