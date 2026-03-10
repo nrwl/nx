@@ -422,10 +422,10 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
       (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
-    }${opts.redirectStderr ? ' 2>&1' : ''}`;
+    }`;
     logInfo(`Run Command: ${command}`);
     const startTime = performance.now();
-    const logs = execSync(commandToRun, {
+    const result = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
@@ -445,12 +445,12 @@ export function runCLI(
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${command}`,
-        bodyLines: [logs as string],
+        bodyLines: [result as string],
         color: 'green',
       });
     }
 
-    const r = stripVTControlCharacters(logs);
+    const r = stripVTControlCharacters(result);
 
     runCLI.lastExitCode = 0;
     return r;
@@ -466,7 +466,10 @@ export function runCLI(
     }
     if (opts.silenceError) {
       runCLI.lastExitCode = (e.status ?? 1) as number;
-      return stripVTControlCharacters(e.stdout + e.stderr);
+      const combinedOutput = opts.redirectStderr
+        ? e.stdout + e.stderr
+        : e.stdout;
+      return stripVTControlCharacters(combinedOutput);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;
