@@ -1,6 +1,10 @@
+const mockPrompt = jest.fn();
+jest.mock('enquirer', () => ({
+  prompt: (...args: any[]) => mockPrompt(...args),
+}));
+
 import { ensureAnalyticsPreferenceSet } from './analytics-prompt';
 import * as isCi from './is-ci';
-import * as enquirer from 'enquirer';
 import * as fileUtils from './fileutils';
 import * as nxJson from '../config/nx-json';
 import * as outputModule from './output';
@@ -10,7 +14,6 @@ describe('analytics-prompt', () => {
   let originalStdoutIsTTY: boolean | undefined;
 
   let mockIsCI = jest.spyOn(isCi, 'isCI');
-  let mockPrompt = jest.spyOn(enquirer, 'prompt');
   let mockReadNxJson = jest.spyOn(nxJson, 'readNxJson');
   let mockReadJsonFile = jest.spyOn(fileUtils, 'readJsonFile');
   let mockWriteJsonFile = jest.spyOn(fileUtils, 'writeJsonFile');
