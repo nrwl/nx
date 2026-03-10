@@ -1684,6 +1684,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.cy.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
                     ],
                     "metadata": {
@@ -2454,6 +2455,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.spec.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
                     ],
                     "metadata": {
@@ -4259,6 +4261,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/foo.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
                     ],
                     "metadata": {

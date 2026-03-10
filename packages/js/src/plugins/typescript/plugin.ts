@@ -883,6 +883,7 @@ function getInputs(
     // https://www.typescriptlang.org/docs/handbook/project-references.html#what-is-a-project-reference
     inputs.push({
       dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
+      transitive: true,
     });
   } else {
     inputs.push('production' in namedInputs ? '^production' : '^default');
