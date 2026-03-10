@@ -66,19 +66,10 @@ class NxProjectAnalyzer(
 
     // Project metadata including target groups
     val metadataStart = System.currentTimeMillis()
-    val projectMetadata = JsonObject()
-    projectMetadata.addProperty("mavenProject", projectName)
-    projectMetadata.add("targetGroups", targetGroups)
-    val technologies = JsonArray()
-    technologies.add("maven")
-    projectMetadata.add("technologies", technologies)
-    nxProject.add("metadata", projectMetadata)
-
-    // Tags
-    val tags = JsonArray()
-    tags.add("maven:${project.groupId}")
-    tags.add("maven:${project.packaging}")
-    nxProject.add("tags", tags)
+    nxProject.add("metadata", buildProjectMetadata(
+      projectName, project.groupId, project.artifactId, targetGroups
+    ))
+    nxProject.add("tags", buildProjectTags(project.groupId, project.packaging))
     val metadataTime = System.currentTimeMillis() - metadataStart
     log.info("Metadata and tags creation took ${metadataTime}ms for project: ${project.artifactId}")
 
@@ -170,4 +161,25 @@ data class NxDependency(val type: NxDependencyType, val source: String, val targ
 
 enum class NxDependencyType {
   Implicit, Static, Dynamic
+}
+
+internal fun buildProjectMetadata(
+  projectName: String, groupId: String, artifactId: String, targetGroups: JsonElement
+): JsonObject {
+  val metadata = JsonObject()
+  metadata.addProperty("mavenProject", projectName)
+  metadata.addProperty("groupId", groupId)
+  metadata.addProperty("artifactId", artifactId)
+  metadata.add("targetGroups", targetGroups)
+  val technologies = JsonArray()
+  technologies.add("maven")
+  metadata.add("technologies", technologies)
+  return metadata
+}
+
+internal fun buildProjectTags(groupId: String, packaging: String): JsonArray {
+  val tags = JsonArray()
+  tags.add("maven:$groupId")
+  tags.add("maven:$packaging")
+  return tags
 }
