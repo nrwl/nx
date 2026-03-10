@@ -661,7 +661,8 @@ class ProcessTaskUtilsTest {
         assertTrue(
             result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
             "Expected gradle-wrapper.properties")
-        assertTrue(result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
       } finally {
         tempDir.deleteRecursively()
       }
@@ -699,7 +700,8 @@ class ProcessTaskUtilsTest {
             result!!.any { it == "{workspaceRoot}/gradle.properties" },
             "Expected gradle.properties in inputs: $result")
         assertTrue(
-            result.any { it == "{projectRoot}/src/main.kt" }, "Expected src/main.kt in inputs: $result")
+            result.any { it == "{projectRoot}/src/main.kt" },
+            "Expected src/main.kt in inputs: $result")
       } finally {
         tempDir.deleteRecursively()
       }
@@ -733,7 +735,8 @@ class ProcessTaskUtilsTest {
         assertNotNull(result)
         // Should have src/main.kt but no gradle files
         assertTrue(
-            result!!.any { it == "{projectRoot}/src/main.kt" }, "Expected src/main.kt in inputs: $result")
+            result!!.any { it == "{projectRoot}/src/main.kt" },
+            "Expected src/main.kt in inputs: $result")
         assertFalse(
             result.any { it.toString().contains("gradle") },
             "Did not expect any gradle files in inputs: $result")
