@@ -435,7 +435,7 @@ export class TaskOrchestrator {
     doNotSkipCache: boolean,
     batch: Batch,
     groupId: number
-  ): Promise<void> {
+  ): Promise<TaskResult[]> {
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
@@ -535,6 +535,7 @@ export class TaskOrchestrator {
       applyFromCacheOrRunBatchStart.name,
       applyFromCacheOrRunBatchEnd.name
     );
+    return [...cachedResults, ...batchResults];
   }
 
   private async runBatch(
