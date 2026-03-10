@@ -151,6 +151,7 @@ Update multiple packages
     // EXPECTED: Should error because version plan contains pkg2 which is not in filter
     const result = runCLI(`release -p ${pkg1} --skip-publish`, {
       silenceError: true,
+      redirectStderr: true,
     });
 
     expect(result).toContain(
