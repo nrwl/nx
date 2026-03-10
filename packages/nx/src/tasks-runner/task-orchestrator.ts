@@ -456,6 +456,11 @@ export class TaskOrchestrator {
     );
     await this.preRunSteps(tasks, { groupId });
 
+    // Complete cached results immediately — no need to wait for execution
+    if (cachedResults.length > 0) {
+      await this.postRunSteps(cachedResults, doNotSkipCache, { groupId });
+    }
+
     // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
     const taskIdsToSkip = cachedResults.map((r) => r.task.id);
     let batchResults: TaskResult[] = [];
@@ -486,9 +491,9 @@ export class TaskOrchestrator {
       }
     }
 
-    const results = [...cachedResults, ...batchResults];
-
-    await this.postRunSteps(results, doNotSkipCache, { groupId });
+    if (batchResults.length > 0) {
+      await this.postRunSteps(batchResults, doNotSkipCache, { groupId });
+    }
 
     // Update batch status based on all task results
     const hasFailures = taskEntries.some(([taskId]) => {
