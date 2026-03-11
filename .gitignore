@@ -128,6 +128,7 @@ packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
 packages/dotnet/README.md
 packages/maven/README.md
+packages/nx/README.md
 
 test-output
 test-results
