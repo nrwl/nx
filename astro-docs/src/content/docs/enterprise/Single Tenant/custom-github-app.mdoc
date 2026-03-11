@@ -76,6 +76,7 @@ Repository permissions:
 - `Metadata: Read`
 - `Pull requests: Read & Write`
 - `Workflows: Read & Write`
+- `Actions: Read`
 
 Organization permissions:
 
@@ -133,6 +134,12 @@ Organization permissions:
 **Used for:** Automatically configuring GitHub Actions workflow files when you opt in to features like Self-Healing CI and distributed task execution.
 
 **When it's used:** Only when you explicitly enable these features through the Nx Cloud interface.
+
+### Actions (read)
+
+**Used for:** Retrieving GitHub Action logs so that they can be surfaced on Nx Cloud to help resolve failures before Nx Cloud had a chance to run tasks, and for Polygraph support.
+
+**When it's used:** Only when using Polygraph, and Nx Cloud MCP tools to get CI information.
 
 ## Your data and security
 
