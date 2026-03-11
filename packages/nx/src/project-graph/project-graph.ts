@@ -284,7 +284,7 @@ export async function createProjectGraphAndSourceMapsAsync(
     resetDaemonClient: false,
   }
 ) {
-  performance.mark('create-project-graph-async:start');
+  performance.mark('createProjectGraphAsync:start');
 
   if (!daemonClient.enabled()) {
     const lock = !IS_WASM
@@ -341,25 +341,25 @@ export async function createProjectGraphAndSourceMapsAsync(
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
       performance.measure(
-        'create-project-graph-async >> retrieve-project-configurations',
+        'createProjectGraphAsync >> retrieve-project-configurations',
         'retrieve-project-configurations:start',
         'retrieve-project-configurations:end'
       );
       performance.measure(
-        'create-project-graph-async >> retrieve-workspace-files',
+        'createProjectGraphAsync >> retrieve-workspace-files',
         'retrieve-workspace-files:start',
         'retrieve-workspace-files:end'
       );
       performance.measure(
-        'create-project-graph-async >> build-project-graph-using-project-file-map',
+        'createProjectGraphAsync >> build-project-graph-using-project-file-map',
         'build-project-graph-using-project-file-map:start',
         'build-project-graph-using-project-file-map:end'
       );
-      performance.mark('create-project-graph-async:end');
+      performance.mark('createProjectGraphAsync:end');
       performance.measure(
         '[track] createProjectGraphAsync',
-        'create-project-graph-async:start',
-        'create-project-graph-async:end'
+        'createProjectGraphAsync:start',
+        'createProjectGraphAsync:end'
       );
       return res;
     } catch (e) {
@@ -371,11 +371,11 @@ export async function createProjectGraphAndSourceMapsAsync(
     try {
       const projectGraphAndSourceMaps =
         await daemonClient.getProjectGraphAndSourceMaps();
-      performance.mark('create-project-graph-async:end');
+      performance.mark('createProjectGraphAsync:end');
       performance.measure(
-        'create-project-graph-async',
-        'create-project-graph-async:start',
-        'create-project-graph-async:end'
+        '[track] createProjectGraphAsync',
+        'createProjectGraphAsync:start',
+        'createProjectGraphAsync:end'
       );
       return projectGraphAndSourceMaps;
     } catch (e) {
