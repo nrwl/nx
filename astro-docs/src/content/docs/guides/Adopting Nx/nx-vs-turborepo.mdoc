@@ -28,6 +28,7 @@ This page starts with the basics, like onboarding, and progressively moves into 
 | [AI integration](#ai-integration) | First-party MCP, workspace analysis, agentic CI | Community MCP only |
 | [CI solution](#running-nx-vs-turbo-on-ci) | Nx Cloud: distribution (9m 20s), self-healing, flaky detection | No CI solution (19m 18s with manual binning) |
 | [Cross-repo coordination](#cross-repo-coordination) | Polygraph (synthetic monorepo) | Not available |
+| [Release management](#release-management) | Built-in versioning, changelogs, and publishing | Requires manual setup or 3rd party tools |
 | [Developer experience](#developer-experience) | TUI, Nx Console IDE extension, interactive graph | Basic TUI, LSP |
 
 ## Onboarding
@@ -304,6 +305,14 @@ Most organizations don't have a single monorepo. They have several monorepos plu
 Nx Cloud's [Polygraph](/docs/enterprise/polygraph) creates a [synthetic monorepo](/docs/concepts/synthetic-monorepos): a unified dependency graph across separate repositories without moving any code. AI agents can read the cross-repo graph, coordinate changes across repos, and manage PRs across repo boundaries.
 
 Turborepo has no cross-repo coordination.
+
+## Release management
+
+Versioning and publishing libraries in a monorepo is a complex orchestration task. You need to identify what changed, determine the next version for each package, update internal dependencies, generate changelogs, and publish to registries.
+
+**Nx provides a first-party, unified release system** via [`nx release`](/docs/features/manage-releases) that automates the entire lifecycle of versioning, changelog generation, and publishing with a single, highly configurable command.
+
+Turborepo has no built-in release solution. Teams usually end up manually configuring third-party tools like [Changesets](https://changesets.js.org/) or [Lerna](https://lerna.js.org/), adding another layer of manual setup and tool maintenance to the workspace.
 
 ## Developer experience
 
