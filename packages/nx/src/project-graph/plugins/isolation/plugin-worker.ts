@@ -10,6 +10,8 @@ import { consumeMessage, isPluginWorkerMessage } from './messaging';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
+import '../../../utils/perf-logging';
+import { startAnalytics } from '../../../analytics';
 
 type Environment = Pick<
   NodeJS.ProcessEnv,
@@ -18,16 +20,14 @@ type Environment = Pick<
 
 const environment: Environment = process.env as Environment;
 
-if (environment.NX_PERF_LOGGING === 'true') {
-  require('../../../utils/perf-logging');
-}
-
 performance.mark(`plugin worker ${process.pid} code loading -- end`);
 performance.measure(
   `plugin worker ${process.pid} code loading`,
   `plugin worker ${process.pid} code loading -- start`,
   `plugin worker ${process.pid} code loading -- end`
 );
+
+startAnalytics();
 
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;

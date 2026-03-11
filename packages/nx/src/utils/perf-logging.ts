@@ -1,13 +1,35 @@
 import { PerformanceObserver } from 'perf_hooks';
 
+import { reportPerfEvent } from '../analytics';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { serverLogger } from '../daemon/logger';
+
+const TRACK_PREFIX = '[track] ';
+
 let initialized = false;
 
-if (process.env.NX_PERF_LOGGING === 'true' && !initialized) {
+if (!initialized) {
   initialized = true;
 
   const obs = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      console.log(`Time for '${entry.name}'`, entry.duration);
+      const shouldTrack = entry.name.startsWith(TRACK_PREFIX);
+      const displayName = shouldTrack
+        ? entry.name.slice(TRACK_PREFIX.length)
+        : entry.name;
+
+      if (process.env.NX_PERF_LOGGING === 'true') {
+        const message = `Time taken for '${displayName}' ${entry.duration}ms`;
+        if (isOnDaemon()) {
+          serverLogger.log(message);
+        } else {
+          console.log(message);
+        }
+      }
+
+      if (shouldTrack) {
+        reportPerfEvent(displayName, entry.duration);
+      }
     }
   });
   obs.observe({ entryTypes: ['measure'] });

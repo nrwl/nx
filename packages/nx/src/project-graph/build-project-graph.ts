@@ -383,7 +383,7 @@ async function updateProjectGraphWithPlugins(
 
       performance.mark(`${plugin.name}:createDependencies - end`);
       performance.measure(
-        `${plugin.name}:createDependencies`,
+        `[track] ${plugin.name}:createDependencies`,
         `${plugin.name}:createDependencies - start`,
         `${plugin.name}:createDependencies - end`
       );

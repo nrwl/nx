@@ -3,6 +3,6 @@ export {
   reportNxAddCommand,
   reportNxGenerateCommand,
   reportCommandRunEvent,
-  reportProjectGraphCreationEvent,
+  reportPerfEvent,
   flushAnalytics,
 } from './analytics';

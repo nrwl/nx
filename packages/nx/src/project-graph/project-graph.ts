@@ -41,7 +41,6 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import { reportProjectGraphCreationEvent } from '../analytics';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -261,7 +260,6 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
-  const startTime = performance.now();
   if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
     try {
       // If no cached graph is found, we will fall through to the normal flow
@@ -277,8 +275,6 @@ export async function createProjectGraphAsync(
 
   const projectGraphAndSourceMaps =
     await createProjectGraphAndSourceMapsAsync(opts);
-  const endTime = performance.now();
-  reportProjectGraphCreationEvent(endTime - startTime);
   return projectGraphAndSourceMaps.projectGraph;
 }
 
@@ -361,7 +357,7 @@ export async function createProjectGraphAndSourceMapsAsync(
       );
       performance.mark('create-project-graph-async:end');
       performance.measure(
-        'create-project-graph-async',
+        '[track] createProjectGraphAsync',
         'create-project-graph-async:start',
         'create-project-graph-async:end'
       );

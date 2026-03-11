@@ -100,7 +100,7 @@ export class LoadedNxPlugin {
         } finally {
           performance.mark(`${plugin.name}:createNodes - end`);
           performance.measure(
-            `${plugin.name}:createNodes`,
+            `[track] ${plugin.name}:createNodes`,
             `${plugin.name}:createNodes - start`,
             `${plugin.name}:createNodes - end`
           );

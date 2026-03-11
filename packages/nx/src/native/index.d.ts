@@ -256,7 +256,6 @@ export interface EventDimensions {
   generatorName: string
   packageName: string
   packageVersion: string
-  createProjectGraph: string
   duration: string
 }
 
