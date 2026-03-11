@@ -66,6 +66,7 @@ export let fileMapWithFiles:
   | undefined;
 export let currentProjectFileMapCache: FileMapCache | undefined;
 export let currentProjectGraph: ProjectGraph | undefined;
+export let currentSourceMaps: ConfigurationSourceMaps | undefined;
 
 // Maps file path to a version counter that increments on each modification.
 // This lets us detect mid-flight re-modifications when clearing processed files.
@@ -478,6 +479,7 @@ async function createAndSerializeProjectGraph({
 
     currentProjectFileMapCache = projectFileMapCache;
     currentProjectGraph = projectGraph;
+    currentSourceMaps = sourceMaps;
 
     performance.mark('create-project-graph-end');
     performance.measure(
@@ -530,6 +532,7 @@ async function resetInternalState() {
   fileMapWithFiles = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
+  currentSourceMaps = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
   resetWorkspaceContext();

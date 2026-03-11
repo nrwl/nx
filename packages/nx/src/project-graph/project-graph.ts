@@ -8,6 +8,7 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
+import { isOnDaemon } from '../daemon/is-on-daemon';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
@@ -284,6 +285,20 @@ export async function createProjectGraphAndSourceMapsAsync(
     resetDaemonClient: false,
   }
 ) {
+  // If we're already on the daemon, return the in-memory graph directly
+  // instead of making an IPC call back to ourselves.
+  if (isOnDaemon()) {
+    const { currentProjectGraph, currentSourceMaps } = await import(
+      '../daemon/server/project-graph-incremental-recomputation'
+    );
+    if (currentProjectGraph) {
+      return {
+        projectGraph: currentProjectGraph,
+        sourceMaps: currentSourceMaps,
+      };
+    }
+  }
+
   performance.mark('createProjectGraphAsync:start');
 
   if (!daemonClient.enabled()) {
@@ -373,7 +388,7 @@ export async function createProjectGraphAndSourceMapsAsync(
         await daemonClient.getProjectGraphAndSourceMaps();
       performance.mark('createProjectGraphAsync:end');
       performance.measure(
-        'createProjectGraphAsync',
+        '[track] createProjectGraphAsync',
         'createProjectGraphAsync:start',
         'createProjectGraphAsync:end'
       );
