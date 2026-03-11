@@ -242,6 +242,11 @@
       "types": "./src/**/*.d.ts",
       "default": "./dist/src/**/*.js"
     },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",
       "types": "./src/*.d.ts",
@@ -255,6 +260,11 @@
     "./presets/*": {
       "@nx/nx-source": "./presets/*",
       "default": "./dist/presets/*"
+    },
+    "./tasks-runners/default": {
+      "@nx/nx-source": "./tasks-runners/default.ts",
+      "types": "./tasks-runners/default.d.ts",
+      "default": "./dist/tasks-runners/default.js"
     }
   }
 }
