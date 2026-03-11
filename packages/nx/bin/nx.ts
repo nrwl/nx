@@ -104,27 +104,30 @@ async function main() {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
-    // Prompt for analytics preference if not set
-    try {
-      await ensureAnalyticsPreferenceSet();
-    } catch {}
-    await startAnalytics();
-
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
-    } else if (isLocalInstall) {
-      await initLocal(workspace);
-    } else if (localNx) {
-      // Nx is being run from globally installed CLI - hand off to the local
-      warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
-      if (localNx.includes('.nx')) {
-        const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
-        require(nxWrapperPath);
-      } else {
-        require(localNx);
+    } else {
+      // Prompt for analytics preference if not set (skip for cloud commands
+      // which may run outside a workspace and should not create nx.json)
+      try {
+        await ensureAnalyticsPreferenceSet();
+      } catch {}
+      await startAnalytics();
+
+      if (isLocalInstall) {
+        await initLocal(workspace);
+      } else if (localNx) {
+        // Nx is being run from globally installed CLI - hand off to the local
+        warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
+        if (localNx.includes('.nx')) {
+          const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
+          require(nxWrapperPath);
+        } else {
+          require(localNx);
+        }
       }
     }
   }
