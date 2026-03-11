@@ -29,7 +29,8 @@ This page starts with the basics, like onboarding, and progressively moves into 
 | [CI solution](#running-nx-vs-turbo-on-ci)           | Nx Cloud: distribution (9m 20s), self-healing, flaky detection    | No CI solution (19m 18s with manual binning)              |
 | [Cross-repo coordination](#cross-repo-coordination) | Polygraph (synthetic monorepo)                                    | Not available                                             |
 | [Release management](#release-management)           | Built-in versioning, changelogs, and publishing                   | Requires manual setup or 3rd party tools                  |
-| [Developer experience](#developer-experience)       | TUI, Nx Console IDE extension, interactive graph                  | Basic TUI, LSP                                            |
+| [Observability](#observability)                     | Integrated dashboards and AI-powered run analysis                 | Experimental OpenTelemetry (OTLP) export                  |
+| [Developer experience](#developer-experience)       | TUI, IDE extensions, and interactive project graph                | Basic TUI and LSP support                                 |
 
 ## Onboarding
 
@@ -224,29 +225,18 @@ Turborepo has no module boundary enforcement.
 Nx provides [first-party plugins](/docs/plugin-registry) for Maven, Gradle, .NET, and Docker, plus community plugins for Python (UV, Poetry), Rust (Cargo), Go, and PHP.
 Each plugin provides full dependency graph analysis, caching, affected detection, and distribution.
 
-Turborepo is a JavaScript/TypeScript tool.
-It can run non-JS code, but only by wrapping it in `package.json` scripts.
-There's no native dependency graph analysis for non-JS languages.
+Turborepo is a JavaScript/TypeScript tool. It can run non-JS code only by wrapping it in `package.json` scripts, which means there is no native dependency graph analysis for those languages.
 
-With Nx, adding a Go microservice or a Python ML pipeline to your workspace gets full build system support without workarounds.
+**This difference is critical for AI readiness.** When your backend is in Go and your frontend is in Next.js, an AI agent with Nx can see the full cross-language dependency chain. With Turborepo, those services are "islands," and an agent has no way to reason about how a change in the Go API affects the frontend.
 
 ## AI integration
 
 Nx actively embraces AI and autonomous agents across the entire development lifecycle, not just individual features.
-The [first-party MCP server](/docs/features/enhance-AI) gives coding agents deep workspace understanding: the full dependency graph, the ability to execute tasks, and awareness of what changed and what that change affected.
-Module boundary rules (above) provide guardrails so agents don't violate your architecture.
-On CI, self-healing automatically fixes failures agents introduce, and flaky task detection prevents false negatives from blocking their PRs.
-An agent can implement a feature, run CI, and fix any failures that surface, all without human intervention.
+The [first-party MCP server](/docs/features/enhance-AI) gives coding agents deep workspace understanding: the full dependency graph, the ability to execute tasks, and awareness of what changed and how those changes ripples through the workspace.
+
+On CI, [self-healing](/docs/features/ci-features/self-healing-ci) automatically fixes failures agents introduce, reducing "time to green" by an average of **1 hour per PR**. [Flaky task detection](/docs/features/ci-features/flaky-tasks) prevents false negatives from blocking their work.
 
 Turborepo has community-provided MCP support but lacks workspace analysis, task execution through the agent, and agentic CI.
-
-| Feature                    | Nx          | Turborepo          |
-| -------------------------- | ----------- | ------------------ |
-| MCP server                 | First-party | Community-provided |
-| Workspace analysis for AI  | Yes         | No                 |
-| Task execution via AI      | Yes         | No                 |
-| Module boundary guardrails | Yes         | No                 |
-| Agentic CI (self-healing)  | Yes         | No                 |
 
 ## Running Nx vs Turbo on CI
 
@@ -321,7 +311,23 @@ Nx Cloud's [self-healing CI](/docs/features/ci-features/self-healing-ci) places 
 
 ![Time to green data: ~1h reduction per PR, 1h 24m developer time saved, 22.6% fewer context switches](../../../../assets/guides/adopting-nx/time-to-green.avif)
 
+_The metrics shown above are extracted directly from the Nx Cloud dashboard._
+
 Turborepo offers neither. A flaky test fails the build, and every failure requires a full human round trip.
+
+### Observability
+
+Both tools offer visibility into your pipelines, but through different models.
+
+**Nx Cloud** provides integrated dashboards out of the box. You get detailed run reports, timing data, cache hit/miss trends, and historical performance analysis without any external setup. These insights are also queryable via the MCP server, letting AI assistants analyze CI performance conversationally.
+
+![Nx DTE across 12 Nx Agents - all agents have minimum 97% utilization](../../../../assets/guides/adopting-nx/dte-chart.avif)
+
+_Nx Agent utilization chart, showing even distribution across CI runners._
+
+For deep dives into resource utilization, see [CI Resource Usage](/docs/guides/nx-cloud/ci-resource-usage).
+
+**Turborepo** exposes run metrics via experimental **OpenTelemetry (OTLP)**. This is useful if you already have a mature observability stack (like Datadog or Grafana) and want to route build metrics into it, though it requires significant manual setup and maintenance of your own collector and visualization layer.
 
 ## Cross-repo coordination
 
