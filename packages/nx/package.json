@@ -209,9 +209,9 @@
       "default": "./dist/src/plugins/package-json/index.js"
     },
     "./src/plugins/**/*": {
-      "@nx/nx-source": "./src/**/*.ts",
-      "types": "./src/**/*.d.ts",
-      "default": "./dist/src/**/*.js"
+      "@nx/nx-source": "./src/plugins/**/*.ts",
+      "types": "./src/plugins/**/*.d.ts",
+      "default": "./dist/src/plugins/**/*.js"
     },
     "./src/utils/plugins": {
       "@nx/nx-source": "./src/utils/plugins/index.ts",
