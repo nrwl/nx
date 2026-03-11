@@ -61,7 +61,7 @@ export function loadNxPlugin(
   index?: number
 ) {
   return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
+    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
     () => {},
   ] as const;
 }

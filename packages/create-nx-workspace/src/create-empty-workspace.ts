@@ -74,7 +74,6 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
       `Successfully created the workspace: ${directory}`
     );
   } catch (e) {
-    console.log(e);
     workspaceSetupSpinner.fail();
     const message = e instanceof Error ? e.message : String(e);
     throw new CnwError(
