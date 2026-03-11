@@ -373,7 +373,7 @@ export async function createProjectGraphAndSourceMapsAsync(
         await daemonClient.getProjectGraphAndSourceMaps();
       performance.mark('createProjectGraphAsync:end');
       performance.measure(
-        '[track] createProjectGraphAsync',
+        'createProjectGraphAsync',
         'createProjectGraphAsync:start',
         'createProjectGraphAsync:end'
       );
