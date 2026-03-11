@@ -1128,14 +1128,13 @@ describe('@nx/jest/plugin config file inputs', () => {
 
   it('should resolve moduleNameMapper <rootDir> to correct scoped package name', async () => {
     await tempFs.createFiles({
-      'node_modules/@schematics/angular/package.json':
-        '{ "name": "@schematics/angular", "version": "1.0.0" }',
-      'node_modules/@schematics/angular/collection.json': '{}',
+      'node_modules/@acme/utils/package.json':
+        '{ "name": "@acme/utils", "version": "1.0.0" }',
+      'node_modules/@acme/utils/index.js': '{}',
     });
     mockConfig({
       moduleNameMapper: {
-        '^@schematics/angular$':
-          '<rootDir>/../node_modules/@schematics/angular/collection.json',
+        '^@acme/utils$': '<rootDir>/../node_modules/@acme/utils/index.js',
       },
     });
     const results = await createNodesFunction(
@@ -1145,7 +1144,7 @@ describe('@nx/jest/plugin config file inputs', () => {
     );
     expect(getTestInputs(results)).toContainEqual(
       expect.objectContaining({
-        externalDependencies: expect.arrayContaining(['@schematics/angular']),
+        externalDependencies: expect.arrayContaining(['@acme/utils']),
       })
     );
   });
