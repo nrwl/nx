@@ -870,6 +870,16 @@ function getInputs(
     );
   }
 
+  // tsc --build reads .d.ts and .tsbuildinfo files from dependent tasks, not
+  // the source files of dependencies. This correctly tracks build outputs from
+  // both external project references and same-project task dependencies (e.g.
+  // build-native producing .d.ts files that may be excluded from file watching
+  // via .nxignore).
+  inputs.push({
+    dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
+    transitive: true,
+  });
+
   const externalRefConfigFiles = getExternalProjectReferenceConfigFiles(
     tsConfig,
     internalProjectReferences,
@@ -879,12 +889,6 @@ function getInputs(
     configFiles
   );
   if (externalRefConfigFiles.length > 0) {
-    // tsc --build reads .d.ts and .tsbuildinfo files from referenced projects
-    // https://www.typescriptlang.org/docs/handbook/project-references.html#what-is-a-project-reference
-    inputs.push({
-      dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
-      transitive: true,
-    });
     // tsc --build also reads the tsconfig files from external project
     // references (and their extended configs) when processing project
     // references, so we need to add them as inputs
@@ -893,8 +897,6 @@ function getInputs(
         pathToInputOrOutput(p, workspaceRoot, config.project)
       )
     );
-  } else {
-    inputs.push('production' in namedInputs ? '^production' : '^default');
   }
 
   // inputs.push({ externalDependencies });
