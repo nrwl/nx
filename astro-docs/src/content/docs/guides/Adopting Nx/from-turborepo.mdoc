@@ -123,16 +123,16 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 
 ### Task configuration
 
-| Turborepo Property | Nx Equivalent                                                                                                                                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                                                                                                                                         |
-| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                                                                                                                                      |
-| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                                                                                                                                 |
-| `passThroughEnv`   | N/A. See [Defining Environment Variables](/docs/guides/tips-n-tricks/define-environment-variables)                                                                                                                  |
-| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                                                                                                                                     |
-| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                                                                                                                                       |
-| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                                                                                                                                               |
-| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#nx-run-many)                                                                                                                                                     |
+| Turborepo Property | Nx Equivalent                                                                                                                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                                                                                                                          |
+| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                                                                                                                       |
+| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                                                                                                                  |
+| `passThroughEnv`   | N/A. See [Defining Environment Variables](/docs/guides/tips-n-tricks/define-environment-variables)                                                                                                   |
+| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                                                                                                                      |
+| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                                                                                                                        |
+| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                                                                                                                                |
+| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#nx-run-many)                                                                                                                                      |
 | `persistent`       | Use [`continuous`](/docs/guides/tasks--caching/defining-task-pipeline#continuous-task-dependencies). Continuous tasks are not waited on before running dependents and work across multiple machines. |
 | `interactive`      | All `continuous` tasks are intelligently and automatically interactive.                                                                                                                              |
 

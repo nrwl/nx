@@ -16,24 +16,24 @@ All benchmarks on this page use the same [pnpm workspace](https://github.com/mee
 
 This page starts with the basics, like onboarding, and progressively moves into more advanced capabilities.
 
-| Topic | Nx | Turborepo |
-| --- | --- | --- |
-| [Onboarding](#onboarding) | Zero-config or guided `nx init` (+3 lines) | Manual `turbo.json` (+144 lines) |
-| [Running tasks](#running-tasks) | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
-| [Caching](#caching) | Composable `namedInputs` | Flat input lists |
-| [Task sandboxing](#task-sandboxing) | IO tracing + cache poisoning protection | Not available |
-| [Code generation](#code-generation) | Programmatic generators with AST transforms and graph awareness | Template-based file scaffolding (Plop) |
-| [Module boundary rules](#module-boundary-rules) | Tag-based enforcement | Not available |
-| [Polyglot support](#polyglot-support) | Native support for JS/TS, Java, .NET, Python, Rust | JS/TS only |
-| [AI integration](#ai-integration) | First-party MCP, workspace analysis, agentic CI | Community MCP only |
-| [CI solution](#running-nx-vs-turbo-on-ci) | Nx Cloud: distribution (9m 20s), self-healing, flaky detection | No CI solution (19m 18s with manual binning) |
-| [Cross-repo coordination](#cross-repo-coordination) | Polygraph (synthetic monorepo) | Not available |
-| [Release management](#release-management) | Built-in versioning, changelogs, and publishing | Requires manual setup or 3rd party tools |
-| [Developer experience](#developer-experience) | TUI, Nx Console IDE extension, interactive graph | Basic TUI, LSP |
+| Topic                                               | Nx                                                                | Turborepo                                                 |
+| --------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
+| [Onboarding](#onboarding)                           | Zero-config or guided `nx init` (+3 lines)                        | Manual `turbo.json` (+144 lines)                          |
+| [Running tasks](#running-tasks)                     | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
+| [Caching](#caching)                                 | Composable `namedInputs`                                          | Flat input lists                                          |
+| [Task sandboxing](#task-sandboxing)                 | IO tracing + cache poisoning protection                           | Not available                                             |
+| [Code generation](#code-generation)                 | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
+| [Module boundary rules](#module-boundary-rules)     | Tag-based enforcement                                             | Not available                                             |
+| [Polyglot support](#polyglot-support)               | Native support for JS/TS, Java, .NET, Python, Rust                | JS/TS only                                                |
+| [AI integration](#ai-integration)                   | First-party MCP, workspace analysis, agentic CI                   | Community MCP only                                        |
+| [CI solution](#running-nx-vs-turbo-on-ci)           | Nx Cloud: distribution (9m 20s), self-healing, flaky detection    | No CI solution (19m 18s with manual binning)              |
+| [Cross-repo coordination](#cross-repo-coordination) | Polygraph (synthetic monorepo)                                    | Not available                                             |
+| [Release management](#release-management)           | Built-in versioning, changelogs, and publishing                   | Requires manual setup or 3rd party tools                  |
+| [Developer experience](#developer-experience)       | TUI, Nx Console IDE extension, interactive graph                  | Basic TUI, LSP                                            |
 
 ## Onboarding
 
-Nx works with your existing `package.json` scripts out of the box. Add the `nx` package to your workspace and you immediately get task orchestration, affected detection, and local caching, without writing any task configuration. 
+Nx works with your existing `package.json` scripts out of the box. Add the `nx` package to your workspace and you immediately get task orchestration, affected detection, and local caching, without writing any task configuration.
 
 Turborepo requires every task to be explicitly declared in `turbo.json` before anything runs, even if the same tasks already work with your package manager directly:
 
@@ -47,8 +47,8 @@ For a more guided experience, run `npx nx@latest init`. The interactive setup de
 
 Looking at the raw impact on a repository using the same [pnpm workspace](https://github.com/meeroslav/pnpm-workspace-baseline) migrated with both tools:
 
-| Setup        | Config written     | Net impact on codebase                                                     |
-| ------------ | ------------------ | -------------------------------------------------------------------------- |
+| Setup        | Config written     | Net impact on codebase                                                    |
+| ------------ | ------------------ | ------------------------------------------------------------------------- |
 | Nx (minimal) | 3 lines            | [+3 lines](https://github.com/meeroslav/pnpm-workspace-baseline/pull/4)   |
 | Nx (guided)  | 85 lines           | [-15 lines](https://github.com/meeroslav/pnpm-workspace-baseline/pull/2)  |
 | Turborepo    | 122 lines (manual) | [+144 lines](https://github.com/meeroslav/pnpm-workspace-baseline/pull/3) |
@@ -121,29 +121,56 @@ Here's the same workspace configured with both tools:
       "outputs": ["dist/**"],
       "dependsOn": ["^build"],
       "inputs": [
-        "$TURBO_DEFAULT$", "!eslint.config.mjs",
-        "!**/*.spec.ts", "!**/*.test.ts", "!**/*.spec.tsx", "!**/*.test.tsx",
-        "!**/*.spec.js", "!**/*.test.js", "!**/*.spec.jsx", "!**/*.test.jsx",
-        "!tsconfig.spec.json", "!vitest.config.ts", "!jest.config.js"
+        "$TURBO_DEFAULT$",
+        "!eslint.config.mjs",
+        "!**/*.spec.ts",
+        "!**/*.test.ts",
+        "!**/*.spec.tsx",
+        "!**/*.test.tsx",
+        "!**/*.spec.js",
+        "!**/*.test.js",
+        "!**/*.spec.jsx",
+        "!**/*.test.jsx",
+        "!tsconfig.spec.json",
+        "!vitest.config.ts",
+        "!jest.config.js"
       ]
     },
     "build:prod": {
       "outputs": ["dist/**"],
       "dependsOn": ["^build"],
       "inputs": [
-        "$TURBO_DEFAULT$", "!eslint.config.mjs",
-        "!**/*.spec.ts", "!**/*.test.ts", "!**/*.spec.tsx", "!**/*.test.tsx",
-        "!**/*.spec.js", "!**/*.test.js", "!**/*.spec.jsx", "!**/*.test.jsx",
-        "!tsconfig.spec.json", "!vitest.config.ts", "!jest.config.js"
+        "$TURBO_DEFAULT$",
+        "!eslint.config.mjs",
+        "!**/*.spec.ts",
+        "!**/*.test.ts",
+        "!**/*.spec.tsx",
+        "!**/*.test.tsx",
+        "!**/*.spec.js",
+        "!**/*.test.js",
+        "!**/*.spec.jsx",
+        "!**/*.test.jsx",
+        "!tsconfig.spec.json",
+        "!vitest.config.ts",
+        "!jest.config.js"
       ]
     },
     "check-types": {
       "dependsOn": ["^check-types"],
       "inputs": [
-        "$TURBO_DEFAULT$", "!eslint.config.mjs",
-        "!**/*.spec.ts", "!**/*.test.ts", "!**/*.spec.tsx", "!**/*.test.tsx",
-        "!**/*.spec.js", "!**/*.test.js", "!**/*.spec.jsx", "!**/*.test.jsx",
-        "!tsconfig.spec.json", "!vitest.config.ts", "!jest.config.js"
+        "$TURBO_DEFAULT$",
+        "!eslint.config.mjs",
+        "!**/*.spec.ts",
+        "!**/*.test.ts",
+        "!**/*.spec.tsx",
+        "!**/*.test.tsx",
+        "!**/*.spec.js",
+        "!**/*.test.js",
+        "!**/*.spec.jsx",
+        "!**/*.test.jsx",
+        "!tsconfig.spec.json",
+        "!vitest.config.ts",
+        "!jest.config.js"
       ]
     },
     "test": {},
@@ -243,8 +270,6 @@ Its Rust-powered task scheduler produces a more optimal execution order, and its
 
 A 16% gap may sound modest, but on a 30-minute pipeline that's nearly 4 minutes saved on every run. Note that these numbers are without any cache optimization, just both tools running out of the box on the same codebase.
 
-
-
 ### Distributed CI
 
 When a single machine is no longer enough, the tools diverge significantly.
@@ -276,10 +301,10 @@ On the same workspace distributed across 4 machines:
 Turborepo is 2x slower even on this small sample.
 One Turborepo agent ran for 18 minutes while another sat idle after 3 minutes. The gap grows with more machines.
 
-**The core difference is declarative vs imperative**: 
+**The core difference is declarative vs imperative**:
 
 - With Nx you declare _what_ should run on CI, and Nx Cloud figures out the optimal distribution automatically. Nx Agents adapts automatically and gets smarter over time.
-- With Turborepo, you imperatively assign tasks to machines and maintain that mapping as the codebase evolves. 
+- With Turborepo, you imperatively assign tasks to machines and maintain that mapping as the codebase evolves.
 
 To learn more about distribution on CI, read [Distribute Task Execution (Nx Agents)](docs/features/ci-features/distribute-task-execution).
 
@@ -360,4 +385,3 @@ You can run tasks, explore the project graph, scaffold with generators, and insp
 It also includes a language server that provides autocompletion in `nx.json` and `project.json` files.
 
 Turborepo provides basic LSP support for `turbo.json`.
-
