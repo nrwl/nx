@@ -175,6 +175,39 @@ export class PluginLifecycleManager {
   }
 
   /**
+   * Aborts a single session within a phase by decrementing its count.
+   *
+   * Called when graph construction is abandoned mid-flight (e.g., a newer
+   * recomputation supersedes the current one). Without this, hooks that
+   * were entered but whose phase never completed would leave the session
+   * count elevated, preventing the worker from ever shutting down.
+   *
+   * Each caller that aborts should call this once, mirroring how each
+   * caller increments the count once via enterHook on the first hook.
+   *
+   * @returns true if the worker should shut down, false otherwise
+   */
+  abortPhase(phase: Phase): boolean {
+    if (!this.registeredPhases[phase]) {
+      return false;
+    }
+
+    const count = this.phaseSessionCount[phase] ?? 0;
+    if (count === 0) {
+      return false;
+    }
+
+    const newCount = count - 1;
+    this.phaseSessionCount[phase] = newCount;
+
+    if (newCount > 0) {
+      return false;
+    }
+
+    return this.isLastRegisteredPhase(phase);
+  }
+
+  /**
    * Returns the current session count for a phase. Useful for testing.
    */
   getPhaseRefCount(phase: Phase): number {

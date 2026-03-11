@@ -356,6 +356,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     // Early exit if a newer recomputation has started - chain to the newer one
     if (isStale()) {
+      notifyPluginsGraphAborted(plugins);
       return cachedSerializedProjectGraphPromise;
     }
 
@@ -380,6 +381,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     // Early exit if a newer recomputation has started - chain to the newer one
     if (isStale()) {
+      notifyPluginsGraphAborted(plugins);
       return cachedSerializedProjectGraphPromise;
     }
 
@@ -543,6 +545,12 @@ async function resetInternalStateIfNxDepsMissing() {
     }
   } catch (e) {
     await resetInternalState();
+  }
+}
+
+function notifyPluginsGraphAborted(plugins: LoadedNxPlugin[]) {
+  for (const plugin of plugins) {
+    plugin.abortGraphPhase?.();
   }
 }
 
