@@ -77,7 +77,7 @@ export class ParallelRunningTasks implements RunningTask {
   }
 
   async kill(signal?: NodeJS.Signals): Promise<void> {
-    await Promise.all(this.childProcesses.map((p) => p.kill(signal)));
+    await Promise.allSettled(this.childProcesses.map((p) => p.kill(signal)));
   }
 
   private async run() {
@@ -183,7 +183,7 @@ export class ParallelRunningTasks implements RunningTask {
     );
     for (const process of processesToTerminate) {
       runningProcesses.delete(process);
-      process.kill('SIGTERM');
+      process.kill('SIGTERM').catch(() => {});
     }
   }
 }
@@ -346,6 +346,8 @@ class RunningNodeProcess implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private killing = false;
+  private closedPromise: Promise<void>;
   public command: string;
 
   constructor(
@@ -367,9 +369,15 @@ class RunningNodeProcess implements RunningTask {
     }
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
+      detached: process.platform !== 'win32',
       env,
       cwd,
       windowsHide: true,
+      stdio: ['inherit', 'pipe', 'pipe'],
+    });
+
+    this.closedPromise = new Promise<void>((resolve) => {
+      this.childProcess.on('close', resolve);
     });
     this.childProcess.stdout?.setEncoding('utf8');
     this.childProcess.stderr?.setEncoding('utf8');
@@ -403,11 +411,17 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
-  kill(signal?: NodeJS.Signals): Promise<void> {
-    if (this.childProcess.pid) {
-      return killProcessTreeGraceful(this.childProcess.pid, signal);
-    }
-    return Promise.resolve();
+  async kill(signal?: NodeJS.Signals): Promise<void> {
+    if (this.killing || !this.childProcess.pid) return;
+    this.killing = true;
+    await killProcessTreeGraceful(this.childProcess.pid, signal);
+    // Wait for Node.js to drain stdio pipes and fire exit/close events.
+    // Without this, process.exit() in the orchestrator's cleanup chain
+    // can tear down the event loop before buffered output is processed.
+    await Promise.race([
+      this.closedPromise,
+      new Promise<void>((resolve) => setTimeout(resolve, 1000)),
+    ]);
   }
 
   private triggerOutputListeners(output: string) {
@@ -480,25 +494,29 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
-    // Terminate any task processes on exit (sync, last resort)
+    // Terminate any task processes on exit (sync, last resort).
+    // Skip if graceful kill is already in progress — it tracks cleanup
+    // subprocesses and we must not interfere with them.
     process.on('exit', () => {
-      if (this.childProcess.pid) {
+      if (this.childProcess.pid && !this.killing) {
         killProcessTree(this.childProcess.pid);
       }
     });
-    // Per-child signal handlers only kill their own child process.
-    // They do NOT call process.exit() — that's handled by the parent-level
-    // registerProcessListener to avoid a race where the first child to
-    // finish shutdown exits the parent before others complete.
-    process.on('SIGINT', () => {
-      this.kill('SIGTERM');
-    });
-    process.on('SIGTERM', () => {
-      this.kill('SIGTERM');
-    });
-    process.on('SIGHUP', () => {
-      this.kill('SIGTERM');
-    });
+    // In the direct path, detached children don't get OS SIGINT (own process
+    // group via setsid); the orchestrator's cleanup() sends SIGTERM via
+    // killProcessTreeGraceful. Signal handlers here are only needed in the
+    // forked path where there's no orchestrator to dispatch signals.
+    if (process.env.NX_FORKED_TASK_EXECUTOR) {
+      process.on('SIGINT', () => {
+        this.kill('SIGTERM');
+      });
+      process.on('SIGTERM', () => {
+        this.kill('SIGTERM');
+      });
+      process.on('SIGHUP', () => {
+        this.kill('SIGTERM');
+      });
+    }
   }
 }
 
@@ -676,22 +694,20 @@ function registerProcessListener(
   process.on('exit', () => {
     runningTask.kill();
   });
-  process.on('SIGINT', () => {
-    // Gracefully kill then exit. Keeping this process alive during the
-    // grace period prevents the PTY master from closing prematurely,
-    // which would send SIGHUP to children before they finish cleanup.
-    Promise.resolve(runningTask.kill('SIGTERM')).finally(() => {
-      process.exit(signalToCode('SIGINT'));
+  // In the direct path, the orchestrator handles signal dispatch to children.
+  // These handlers are only needed in the forked path where there's no
+  // orchestrator.
+  if (process.env.NX_FORKED_TASK_EXECUTOR) {
+    process.on('SIGINT', () => {
+      Promise.resolve(runningTask.kill('SIGTERM')).finally(() => {
+        process.exit(signalToCode('SIGINT'));
+      });
     });
-  });
-  process.on('SIGTERM', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-  process.on('SIGHUP', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
+    process.on('SIGTERM', () => {
+      runningTask.kill('SIGTERM');
+    });
+    process.on('SIGHUP', () => {
+      runningTask.kill('SIGTERM');
+    });
+  }
 }
