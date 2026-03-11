@@ -790,6 +790,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/nx-cloud/source-control-integration',
           },
           {
+            label: 'GitHub App Permissions',
+            link: 'guides/nx-cloud/source-control-integration/github-app-permissions',
+          },
+          {
             label: 'Configuring the Cloud Runner',
             link: 'reference/nx-cloud/config',
           },
