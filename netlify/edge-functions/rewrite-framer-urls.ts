@@ -86,6 +86,11 @@ export const config = {
     '/webinar',
     '/sitemap.xml',
     '/sitemap-*.xml',
+    // Paths with _redirects rules that must not be proxied to Framer
+    '/pricing/special-offer',
+    '/powerpack/special-offer',
+    '/powerpack',
+    '/powerpack/*',
     // Static asset directories from public/ — must not be proxied to Framer
     '/documentation/*',
     '/assets/*',
