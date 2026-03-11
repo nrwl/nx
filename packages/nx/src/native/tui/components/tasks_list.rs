@@ -1309,6 +1309,8 @@ impl TasksList {
 
     /// Updates their status to InProgress and marks for deferred sort.
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+        let mut has_standalone_change = false;
+
         for task in &tasks {
             let task_id = &task.id;
             let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
@@ -1345,10 +1347,13 @@ impl TasksList {
             // Add to in-progress list if standalone task
             if !is_in_batch && !self.in_progress_tasks.iter().any(|id| id == task_id) {
                 self.in_progress_tasks.push(task_id.to_string());
+                has_standalone_change = true;
             }
         }
 
-        self.needs_sort = true;
+        if has_standalone_change {
+            self.needs_sort = true;
+        }
     }
 
     /// Performs initial in-progress task selection if not yet done.
@@ -1515,10 +1520,11 @@ impl TasksList {
                     self.in_progress_tasks.push(task_id.to_string());
                 }
             }
-        }
 
-        // Mark for deferred sort (no immediate sort!)
-        self.needs_sort = true;
+            // Only re-sort when a standalone task changed — batch-nested task
+            // status changes don't affect display order.
+            self.needs_sort = true;
+        }
     }
 
     /// Updates the live duration for all InProgress tasks that have a start_time.
@@ -1545,8 +1551,11 @@ impl TasksList {
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
+        let mut has_standalone_change = false;
+
         for task_result in task_results {
             let task_id = &task_result.task.id;
+            let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
 
             if let Some((start, end)) = task_result.task.start_time.zip(task_result.task.end_time) {
                 // Update in task_lookup
@@ -1568,8 +1577,15 @@ impl TasksList {
                     }
                 }
             }
+
+            if !is_in_batch {
+                has_standalone_change = true;
+            }
         }
-        self.needs_sort = true;
+
+        if has_standalone_change {
+            self.needs_sort = true;
+        }
     }
 
     /// Removes a batch group and ungroups its tasks back to individual display.
