@@ -54,6 +54,16 @@ export class LoadedNxPlugin {
   readonly include?: string[];
   readonly exclude?: string[];
 
+  /**
+   * Notifies the plugin that graph construction was aborted mid-flight.
+   * Overridden by IsolatedPlugin to reset lifecycle phase tracking so
+   * the worker can still shut down properly.
+   *
+   * @param lastCompletedHook The name of the last graph-phase hook that
+   *   was called before the abort (e.g. 'createNodes').
+   */
+  abortGraphPhase?(lastCompletedHook: string): void;
+
   constructor(
     plugin: NxPluginV2,
     pluginDefinition: PluginConfiguration,

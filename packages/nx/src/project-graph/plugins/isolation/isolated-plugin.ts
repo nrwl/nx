@@ -434,6 +434,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.shutdown();
   }
 
+  abortGraphPhase(lastCompletedHook: Hook): void {
+    if (this.lifecycle?.abortPhase('graph', lastCompletedHook)) {
+      this.shutdownIfInactive();
+    }
+  }
+
   shutdown(): void {
     if (!this._alive) return;
     this._alive = false;
