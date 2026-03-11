@@ -15,8 +15,8 @@ impl ProcessKiller {
 
     /// Kill the process tree rooted at this process.
     ///
-    /// On Windows, the signal parameter is ignored - all signals map to
-    /// TerminateProcess via sysinfo's Signal::Kill.
+    /// On Windows, sysinfo only supports Signal::Kill (TerminateProcess).
+    /// Unsupported signals automatically fall back to SIGKILL.
     pub fn kill(&self, signal: Option<&'static str>) {
         kill_process_tree_internal(self.pid, signal);
     }

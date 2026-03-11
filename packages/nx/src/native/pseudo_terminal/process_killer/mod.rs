@@ -38,28 +38,22 @@ pub(crate) fn normalize_signal(signal: Option<&Either<String, i32>>) -> Option<&
     })
 }
 
-/// Convert a Node.js signal string to sysinfo::Signal with platform-appropriate mapping.
+/// Convert a Node.js signal string to sysinfo::Signal.
 ///
-/// On Windows, all signals map to Kill (TerminateProcess) since Windows doesn't
-/// have Unix-style signals for console applications.
+/// On Windows, sysinfo only supports `Signal::Kill` (TerminateProcess).
+/// Other signal variants exist in the enum but `kill_with` returns `None`.
+/// This is intentional: `killProcessTreeGraceful` uses the no-op as a
+/// "wait for the grace period, then force-kill" strategy — children on
+/// Windows already receive CTRL_C_EVENT from the OS when the user presses
+/// Ctrl+C, so the graceful killer just needs to wait, not signal.
 fn map_signal(signal: Option<&str>) -> Signal {
-    #[cfg(windows)]
-    {
-        // Windows only supports Kill (TerminateProcess)
-        let _ = signal; // suppress unused warning
-        Signal::Kill
-    }
-
-    #[cfg(not(windows))]
-    {
-        match signal {
-            Some("SIGKILL") => Signal::Kill,
-            Some("SIGTERM") | None => Signal::Term,
-            Some("SIGINT") => Signal::Interrupt,
-            Some("SIGQUIT") => Signal::Quit,
-            Some("SIGHUP") => Signal::Hangup,
-            _ => Signal::Term,
-        }
+    match signal {
+        Some("SIGKILL") => Signal::Kill,
+        Some("SIGTERM") | None => Signal::Term,
+        Some("SIGINT") => Signal::Interrupt,
+        Some("SIGQUIT") => Signal::Quit,
+        Some("SIGHUP") => Signal::Hangup,
+        _ => Signal::Term,
     }
 }
 
@@ -119,7 +113,13 @@ fn collect_process_tree(sys: &System, root_pid: i32) -> (Vec<Pid>, HashMap<Pid, 
 }
 
 /// Send a signal to PIDs in reverse order (leaves first, then parents).
-fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal) {
+///
+/// If `force_kill_fallback` is true and the signal is unsupported on this
+/// platform (e.g. SIGTERM on Windows), falls back to SIGKILL. This is used
+/// by the fire-and-forget `killProcessTree` where we must guarantee the
+/// process is killed. The graceful variant passes `false` so unsupported
+/// signals are no-ops (letting the grace period + deadline handle it).
+fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal, force_kill_fallback: bool) {
     for pid in pids.iter().rev() {
         if let Some(proc_info) = sys.process(*pid) {
             match proc_info.kill_with(signal) {
@@ -130,7 +130,15 @@ fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal) {
                     debug!("Process {} already exited or insufficient permissions", pid);
                 }
                 None => {
-                    debug!("Signal {} not supported for process {}", signal, pid);
+                    if force_kill_fallback && signal != Signal::Kill {
+                        debug!(
+                            "Signal {} not supported for process {}, falling back to SIGKILL",
+                            signal, pid
+                        );
+                        proc_info.kill_with(Signal::Kill);
+                    } else {
+                        debug!("Signal {} not supported for process {}", signal, pid);
+                    }
                 }
             }
         }
@@ -153,7 +161,9 @@ fn snapshot_and_signal(root_pid: i32, signal: Signal) -> Vec<Pid> {
         to_kill.len(),
         root_pid
     );
-    send_signal_to_pids(&sys, &to_kill, signal);
+    // Fire-and-forget must guarantee the kill, so fall back to SIGKILL
+    // on platforms where the requested signal is unsupported (e.g. Windows).
+    send_signal_to_pids(&sys, &to_kill, signal, true);
     to_kill
 }
 
@@ -188,18 +198,22 @@ pub async fn kill_process_tree_graceful(
             true,
             ProcessRefreshKind::nothing(),
         );
-        let (tree, children_of) = collect_process_tree(&sys, root_pid);
+        let (tree, mut children_of) = collect_process_tree(&sys, root_pid);
         if tree.is_empty() {
             return;
         }
 
         // SIGKILL: no point in bottom-up, just kill everything
         if mapped == Signal::Kill {
-            send_signal_to_pids(&sys, &tree, Signal::Kill);
+            send_signal_to_pids(&sys, &tree, Signal::Kill, false);
             return;
         }
 
-        let mut remaining: HashSet<Pid> = tree.iter().copied().collect();
+        // Only snapshot PIDs receive the graceful signal. Processes spawned
+        // later (cleanup handlers, docker compose, etc.) are tracked and
+        // awaited but never signaled — they get time to finish naturally.
+        let snapshot_pids: HashSet<Pid> = tree.iter().copied().collect();
+        let mut remaining: HashSet<Pid> = snapshot_pids.clone();
         let mut signaled: HashSet<Pid> = HashSet::with_capacity(tree.len());
         let mut buf: Vec<Pid> = Vec::with_capacity(tree.len());
         let poll = std::time::Duration::from_millis(100);
@@ -207,49 +221,54 @@ pub async fn kill_process_tree_graceful(
         let start = std::time::Instant::now();
 
         loop {
-            // Find and signal new leaves in one pass. A leaf is a PID whose
-            // children (per the original snapshot) have all exited.
+            // Signal new leaves among snapshot PIDs. A snapshot PID is a
+            // "leaf" when all its children (original + newly discovered)
+            // have exited from `remaining`.
             buf.clear();
-            buf.extend(remaining.iter().copied());
-            let mut has_leaves = false;
+            buf.extend(
+                remaining
+                    .iter()
+                    .copied()
+                    .filter(|pid| snapshot_pids.contains(pid)),
+            );
             for &pid in &buf {
                 let is_leaf = children_of
                     .get(&pid)
                     .map_or(true, |kids| kids.iter().all(|k| !remaining.contains(k)));
-                if !is_leaf {
+                if !is_leaf || !signaled.insert(pid) {
                     continue;
                 }
-                has_leaves = true;
-                if !signaled.insert(pid) {
-                    continue;
-                }
-                // Signal directly from cached handle — kill_with sends via
-                // kill(2) syscall, no refresh needed
                 if let Some(proc) = sys.process(pid) {
                     proc.kill_with(mapped);
                 }
             }
 
-            if !has_leaves {
-                // Shouldn't happen in a valid tree, but don't leak processes
-                for pid in &remaining {
-                    if let Some(proc) = sys.process(*pid) {
-                        proc.kill_with(Signal::Kill);
-                    }
-                }
-                break;
-            }
-
             std::thread::sleep(poll);
 
-            // Refresh only remaining PIDs to check who's still alive.
-            // Reuses `sys` — avoids allocating a new System per iteration.
-            // `buf` already contains remaining PIDs from the leaf-scan above.
+            // Full refresh to detect both exits and newly spawned processes.
             sys.refresh_processes_specifics(
-                ProcessesToUpdate::Some(&buf),
+                ProcessesToUpdate::All,
                 true,
                 ProcessRefreshKind::nothing(),
             );
+
+            // Discover new children of tracked processes (cleanup
+            // subprocesses). They are added to `remaining` so we await
+            // them, and to `children_of` so their parent isn't
+            // considered a leaf while they're alive.
+            for (pid, proc_info) in sys.processes() {
+                if remaining.contains(pid) || proc_info.thread_kind().is_some() {
+                    continue;
+                }
+                if let Some(parent) = proc_info.parent() {
+                    if remaining.contains(&parent) {
+                        remaining.insert(*pid);
+                        children_of.entry(parent).or_default().push(*pid);
+                        debug!("Tracking new cleanup process {} (child of {})", pid, parent);
+                    }
+                }
+            }
+
             remaining.retain(|pid| sys.process(*pid).is_some());
 
             if remaining.is_empty() {
@@ -262,7 +281,6 @@ pub async fn kill_process_tree_graceful(
                     root_pid,
                     remaining.len()
                 );
-                // Refresh already done above; just SIGKILL survivors
                 for pid in &remaining {
                     if let Some(proc) = sys.process(*pid) {
                         proc.kill_with(Signal::Kill);

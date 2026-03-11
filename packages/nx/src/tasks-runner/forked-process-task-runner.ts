@@ -3,7 +3,7 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { signalToCode } from '../utils/exit-codes';
+
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
@@ -441,21 +441,14 @@ export class ForkedProcessTaskRunner {
     process.once('SIGINT', () => {
       this.cleanup('SIGTERM').finally(() => {
         process.off('message', messageHandler);
-        // we exit here because we don't need to write anything to cache.
-        process.exit(signalToCode('SIGINT'));
+        // No process.exit() here — the orchestrator's setupSignalHandlers()
+        // owns the exit decision for the direct path, and in the forked path
+        // the cleanup above is a no-op (0 processes).
       });
     });
-    process.once('SIGTERM', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.once('SIGHUP', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    // SIGTERM/SIGHUP are NOT handled here. The orchestrator's
+    // setupSignalHandlers() handles them and calls FPTR.cleanup()
+    // as part of its own cleanup sequence. Using process.once() here
+    // would consume the event before the orchestrator sees it.
   }
 }
