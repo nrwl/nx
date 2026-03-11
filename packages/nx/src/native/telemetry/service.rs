@@ -221,10 +221,7 @@ fn enqueue_page_view(
 ) {
     let mut params = user_params.clone();
     params.extend(page_view.parameters);
-    params.insert(
-        event_param::EVENT_NAME.to_string(),
-        "page_view".to_string(),
-    );
+    params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
     params.insert(
         event_param::DOCUMENT_TITLE.to_string(),
         truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH),
