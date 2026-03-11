@@ -71,6 +71,8 @@ export interface LifeCycle {
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
+  setTaskTiming?(taskId: string, startTime: number, endTime: number): void;
+
   registerForcedShutdownCallback?(callback: () => void): void;
 
   setEstimatedTaskTimings?(timings: Record<string, number>): void;
@@ -192,6 +194,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setTaskStatus) {
         l.setTaskStatus(taskId, status);
+      }
+    }
+  }
+
+  setTaskTiming(taskId: string, startTime: number, endTime: number): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskTiming) {
+        l.setTaskTiming(taskId, startTime, endTime);
       }
     }
   }

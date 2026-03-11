@@ -663,6 +663,11 @@ impl AppLifeCycle {
         self.with_app(|app| app.update_task_status(task_id, status));
     }
 
+    #[napi]
+    pub fn set_task_timing(&mut self, task_id: String, start_time: i64, end_time: i64) {
+        self.with_app(|app| app.set_task_timing(task_id, start_time, end_time));
+    }
+
     // This method is excluded from test builds because it uses ThreadsafeFunction
     // which requires Node.js runtime symbols.
     #[cfg(not(test))]
