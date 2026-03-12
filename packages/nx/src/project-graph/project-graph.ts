@@ -9,6 +9,7 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
+import { measureAndTrack } from '../utils/perf-logging';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
@@ -295,8 +296,8 @@ export async function createProjectGraphAndSourceMapsAsync(
     );
     if (currentProjectGraph) {
       performance.mark('createProjectGraphAsync:end');
-      performance.measure(
-        '[track] createProjectGraphAsync',
+      measureAndTrack(
+        'createProjectGraphAsync',
         'createProjectGraphAsync:start',
         'createProjectGraphAsync:end'
       );
@@ -377,8 +378,8 @@ export async function createProjectGraphAndSourceMapsAsync(
         'build-project-graph-using-project-file-map:end'
       );
       performance.mark('createProjectGraphAsync:end');
-      performance.measure(
-        '[track] createProjectGraphAsync',
+      measureAndTrack(
+        'createProjectGraphAsync',
         'createProjectGraphAsync:start',
         'createProjectGraphAsync:end'
       );
@@ -393,8 +394,8 @@ export async function createProjectGraphAndSourceMapsAsync(
       const projectGraphAndSourceMaps =
         await daemonClient.getProjectGraphAndSourceMaps();
       performance.mark('createProjectGraphAsync:end');
-      performance.measure(
-        '[track] createProjectGraphAsync',
+      measureAndTrack(
+        'createProjectGraphAsync',
         'createProjectGraphAsync:start',
         'createProjectGraphAsync:end'
       );

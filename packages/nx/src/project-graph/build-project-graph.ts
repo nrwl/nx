@@ -1,3 +1,4 @@
+import { measureAndTrack } from '../utils/perf-logging';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -382,8 +383,8 @@ async function updateProjectGraphWithPlugins(
       }
 
       performance.mark(`${plugin.name}:createDependencies - end`);
-      performance.measure(
-        `[track] ${plugin.name}:createDependencies`,
+      measureAndTrack(
+        `${plugin.name}:createDependencies`,
         `${plugin.name}:createDependencies - start`,
         `${plugin.name}:createDependencies - end`
       );

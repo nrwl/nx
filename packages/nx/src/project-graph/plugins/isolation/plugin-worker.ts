@@ -20,14 +20,14 @@ type Environment = Pick<
 
 const environment: Environment = process.env as Environment;
 
+startAnalytics();
+
 performance.mark(`plugin worker ${process.pid} code loading -- end`);
 performance.measure(
   `plugin worker ${process.pid} code loading`,
   `plugin worker ${process.pid} code loading -- start`,
   `plugin worker ${process.pid} code loading -- end`
 );
-
-startAnalytics();
 
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
