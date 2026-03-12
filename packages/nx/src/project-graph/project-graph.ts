@@ -285,6 +285,8 @@ export async function createProjectGraphAndSourceMapsAsync(
     resetDaemonClient: false,
   }
 ) {
+  performance.mark('createProjectGraphAsync:start');
+
   // If we're already on the daemon, return the in-memory graph directly
   // instead of making an IPC call back to ourselves.
   if (isOnDaemon()) {
@@ -292,14 +294,18 @@ export async function createProjectGraphAndSourceMapsAsync(
       '../daemon/server/project-graph-incremental-recomputation'
     );
     if (currentProjectGraph) {
+      performance.mark('createProjectGraphAsync:end');
+      performance.measure(
+        '[track] createProjectGraphAsync',
+        'createProjectGraphAsync:start',
+        'createProjectGraphAsync:end'
+      );
       return {
         projectGraph: currentProjectGraph,
         sourceMaps: currentSourceMaps,
       };
     }
   }
-
-  performance.mark('createProjectGraphAsync:start');
 
   if (!daemonClient.enabled()) {
     const lock = !IS_WASM
