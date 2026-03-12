@@ -97,7 +97,6 @@ After running `nx init`, you'll automatically have an equivalent `nx.json`:
       "cache": true
     },
     "dev": {
-      "cache": false,
       "continuous": true
     }
   }
@@ -123,54 +122,56 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 
 ### Task configuration
 
-| Turborepo Property | Nx Equivalent                                                                                                                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                                                                                                                          |
-| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                                                                                                                       |
-| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                                                                                                                  |
-| `passThroughEnv`   | N/A. See [Defining Environment Variables](/docs/guides/tips-n-tricks/define-environment-variables)                                                                                                   |
-| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                                                                                                                      |
-| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                                                                                                                        |
-| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                                                                                                                                |
-| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                                                      |
-| `persistent`       | Use [`continuous`](/docs/guides/tasks--caching/defining-task-pipeline#continuous-task-dependencies). Continuous tasks are not waited on before running dependents and work across multiple machines. |
-| `interactive`      | All `continuous` tasks are intelligently and automatically interactive.                                                                                                                              |
+| Turborepo Property | Nx Equivalent                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                         |
+| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                      |
+| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                 |
+| `passThroughEnv`   | N/A. See [Defining Environment Variables](/docs/guides/tips-n-tricks/define-environment-variables)  |
+| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                     |
+| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                       |
+| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                               |
+| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                     |
+| `persistent`       | Use [`continuous`](/docs/guides/tasks--caching/defining-task-pipeline#continuous-task-dependencies) |
+| `interactive`      | All `continuous` tasks are intelligently and automatically interactive.                             |
 
 ## Command equivalents
 
 Here's how Turborepo commands map to Nx:
 
-| Turborepo Command           | Nx Equivalent                                                                                                                                                                |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `turbo run test lint build` | [`nx run-many -t test lint build`](/docs/reference/nx-commands#nx-run-many)                                                                                                  |
-| `--cache-dir`               | Set in [`nx.json` under `cacheDirectory`](/docs/reference/nx-json#task-options)                                                                                              |
-| `--concurrency`             | [`--parallel`](/docs/reference/nx-commands#parallel)                                                                                                                         |
-| `--continue`                | [Use `--nx-bail`](/docs/reference/nx-commands#nxbail) with the inverse value                                                                                                 |
-| `--cpuprofile`              | Use [`NX_PROFILE=profile.json`](/docs/troubleshooting/performance-profiling)                                                                                                 |
-| `--cwd`                     | Available in [`run-commands` executor](/docs/reference/nx/executors#run-commands#cwd)                                                                                        |
-| `--daemon`                  | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/concepts/nx-daemon#turning-it-off)                                                                            |
-| `--dry-run`                 | N/A. Nx has `--dry-run` for `nx generate` but not for running tasks                                                                                                          |
-| `--env-mode`                | See [React](/docs/technologies/react/guides/use-environment-variables-in-react) and [Angular](/docs/technologies/angular/guides/use-environment-variables-in-angular) guides |
-| `--filter`                  | Use lots of advanced project matcher syntax like [`-p admin-*` or `-p tag:api-*`](/docs/reference/nx-commands#nx-run-many)                                                   |
-| `--force`                   | [`nx reset`](/docs/reference/nx-commands#nx-reset) and then run the command again                                                                                            |
-| `--framework-inference`     | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/concepts/inferred-tasks)                                                                          |
-| `--global-deps`             | Use [`inputs` in `nx.json`](/docs/guides/tasks--caching/configure-inputs)                                                                                                    |
-| `--graph`                   | [Similar syntax](/docs/reference/nx-commands#graph) or [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience                                    |
-| `--heap`                    | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                  |
-| `--ignore`                  | Use [`.nxignore`](/docs/reference/nxignore) or `.gitignore`                                                                                                                  |
-| `--log-order`               | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                              |
-| `--no-cache`                | Use [`--skip-nx-cache`](/docs/reference/nx-commands#skipnxcache)                                                                                                             |
-| `--output-logs`             | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                              |
-| `--only`                    | N/A                                                                                                                                                                          |
-| `--parallel`                | N/A                                                                                                                                                                          |
-| `--preflight`               | N/A                                                                                                                                                                          |
-| `--summarize`               | N/A                                                                                                                                                                          |
-| `--token`                   | Set [Nx Cloud CI Access Token](/docs/guides/nx-cloud/access-tokens#setting-ci-access-tokens)                                                                                 |
-| `--team`                    | See `--token` for Nx Cloud workspace selection                                                                                                                               |
-| `--trace`                   | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                  |
-| `--verbosity`               | Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                       |
-| `turbo gen`                 | [Use `nx generate`](/docs/features/generate-code)                                                                                                                            |
-| `turbo login`               | `nx login` - [Create an Nx Cloud account](/docs/reference/nx-commands#nx-login)                                                                                              |
-| `turbo link`                | `nx connect` - [Connect a workspace to an Nx Cloud account](/docs/reference/nx-commands#nx-connect)                                                                          |
+| Turborepo Command            | Nx Equivalent                                                                                                                                                                |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `turbo run test lint build`  | [`nx run-many -t test lint build`](/docs/reference/nx-commands#nx-run-many)                                                                                                  |
+| `turbo run build --affected` | [`nx affected -t build`](/docs/reference/nx-commands#nx-affected)                                                                                                            |
+| `turbo devtools`             | [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience, also available in [Nx Console](/docs/getting-started/editor-setup)                       |
+| `--cache-dir`                | Set in [`nx.json` under `cacheDirectory`](/docs/reference/nx-json#task-options)                                                                                              |
+| `--concurrency`              | [`--parallel`](/docs/reference/nx-commands#parallel)                                                                                                                         |
+| `--continue`                 | [Use `--nx-bail`](/docs/reference/nx-commands#nxbail) with the inverse value                                                                                                 |
+| `--cpuprofile`               | Use [`NX_PROFILE=profile.json`](/docs/troubleshooting/performance-profiling)                                                                                                 |
+| `--cwd`                      | Available in [`run-commands` executor](/docs/reference/nx/executors#run-commands#cwd)                                                                                        |
+| `--daemon`                   | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/concepts/nx-daemon#turning-it-off)                                                                            |
+| `--dry-run`                  | Use [`nx show target <project>:<target> --inputs --outputs`](/docs/reference/nx-commands#nx-show-target) to preview inputs and outputs (available since 22.6.0+)             |
+| `--env-mode`                 | See [React](/docs/technologies/react/guides/use-environment-variables-in-react) and [Angular](/docs/technologies/angular/guides/use-environment-variables-in-angular) guides |
+| `--filter`                   | Use lots of advanced project matcher syntax like [`-p admin-*` or `-p tag:api-*`](/docs/reference/nx-commands#nx-run-many)                                                   |
+| `--force`                    | [`nx reset`](/docs/reference/nx-commands#nx-reset) and then run the command again                                                                                            |
+| `--framework-inference`      | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/concepts/inferred-tasks)                                                                          |
+| `--global-deps`              | Use the [`sharedGlobals` `namedInput`](/docs/guides/tasks--caching/configure-inputs). Nx is far more flexible with composable [`namedInputs`](/docs/reference/inputs)        |
+| `--graph`                    | [Similar syntax](/docs/reference/nx-commands#graph) or [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience                                    |
+| `--heap`                     | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                  |
+| `--ignore`                   | Use [`.nxignore`](/docs/reference/nxignore) or `.gitignore`                                                                                                                  |
+| `--log-order`                | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                              |
+| `--no-cache`                 | Use [`--skip-nx-cache`](/docs/reference/nx-commands#skipnxcache)                                                                                                             |
+| `--output-logs`              | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                              |
+| `--only`                     | N/A                                                                                                                                                                          |
+| `--parallel`                 | N/A                                                                                                                                                                          |
+| `--preflight`                | N/A                                                                                                                                                                          |
+| `--summarize`                | N/A                                                                                                                                                                          |
+| `--token`                    | Set [Nx Cloud CI Access Token](/docs/guides/nx-cloud/access-tokens#setting-ci-access-tokens)                                                                                 |
+| `--team`                     | See `--token` for Nx Cloud workspace selection                                                                                                                               |
+| `--trace`                    | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                  |
+| `--verbosity`                | Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                       |
+| `turbo gen`                  | [Use `nx generate`](/docs/features/generate-code)                                                                                                                            |
+| `turbo login`                | `nx login` - [Create an Nx Cloud account](/docs/reference/nx-commands#nx-login)                                                                                              |
+| `turbo link`                 | `nx connect` - [Connect a workspace to an Nx Cloud account](/docs/reference/nx-commands#nx-connect)                                                                          |
 
 For a complete list of Nx commands and options, see the [Nx CLI documentation](/docs/reference/nx-commands).

@@ -23,8 +23,8 @@ This page starts with the basics, like onboarding, and progressively moves into 
 | [Caching](#caching)                                 | Explicit opt-in, composable `namedInputs`                         | Cached by default, flat input lists                       |
 | [Task sandboxing](#task-sandboxing)                 | IO tracing + cache poisoning protection                           | Not available                                             |
 | [Code generation](#code-generation)                 | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
-| [Module boundary rules](#module-boundary-rules)     | Tag-based enforcement                                             | Not available                                             |
-| [Polyglot support](#polyglot-support)               | Native support for JS/TS, Java, .NET, Python, Rust                | JS/TS only                                                |
+| [Module boundary rules](#module-boundary-rules)     | Tag-based lint rule + conformance rules (polyglot)                | Experimental `turbo boundaries` (since 2024)              |
+| [Polyglot support](#polyglot-support)               | Native support for JS/TS, Java, .NET, Python, Rust                | Any CLI via `package.json` scripts, no native graph       |
 | [AI integration](#ai-integration)                   | First-party MCP, workspace analysis, agentic CI                   | Community MCP only                                        |
 | [CI solution](#running-nx-vs-turbo-on-ci)           | Nx Cloud: distribution (9m 20s), self-healing, flaky detection    | No CI solution (19m 18s with manual binning)              |
 | [Cross-repo coordination](#cross-repo-coordination) | Polygraph (synthetic monorepo)                                    | Not available                                             |
@@ -44,7 +44,7 @@ Turborepo requires every task to be explicitly declared in `turbo.json` before a
   ╰─▶   × Could not find task `build` in project
 ```
 
-For a more guided experience, run `npx nx@latest init`. The interactive setup detects your existing tooling, asks which tasks should be cacheable, and scaffolds an `nx.json` with the right configuration. If you have Next.js and ESLint, for example, Nx automatically infers `build`, `dev`, `start`, and `lint` targets without you declaring them.
+For a more guided experience, run `npx nx init`. The interactive setup detects your existing tooling, asks which tasks should be cacheable, and scaffolds an `nx.json` with the right configuration. If you have Next.js and ESLint, for example, Nx automatically infers `build`, `dev`, `start`, and `lint` targets without you declaring them.
 
 Looking at the raw impact on a repository using the same [pnpm workspace](https://github.com/meeroslav/pnpm-workspace-baseline) migrated with both tools:
 
@@ -99,6 +99,14 @@ Here's the same workspace configured with both tools:
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"],
       "outputs": ["{projectRoot}/dist"],
+      "cache": true,
+      "configurations": {
+        "prod": {}
+      }
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"],
+      "inputs": ["production", "^production"],
       "cache": true
     },
     "test": {
@@ -107,8 +115,17 @@ Here's the same workspace configured with both tools:
       "cache": true
     },
     "lint": {
-      "inputs": ["default"],
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"],
       "cache": true
+    },
+    "dev": {
+      "continuous": true
+    },
+    "@org/shop-e2e:test:e2e": {
+      "dependsOn": ["@org/shop:build"]
+    },
+    "@org/admin-e2e:test:e2e": {
+      "dependsOn": ["@org/admin:build"]
     }
   }
 }
@@ -214,20 +231,20 @@ The real value isn't raw scaffolding, AI can do that too. It's deterministic, co
 
 ## Module boundary rules
 
-In large workspaces, unchecked dependencies between projects lead to architectural drift.
-Nx enforces [module boundary rules](/docs/features/enforce-module-boundaries) that control which projects can depend on which, based on tags you assign.
+In large workspaces, unchecked dependencies between projects lead to architectural drift. Both tools offer mechanisms to enforce boundaries, but with different maturity and scope.
 
-This becomes especially important with AI coding agents.
-Boundary rules act as guardrails, preventing agents from creating arbitrary cross-project dependencies that violate your architecture.
+Nx has provided [module boundary rules](/docs/features/enforce-module-boundaries) since its earliest versions. You assign tags to projects and define which tags can depend on which, enforced as a lint rule. For polyglot workspaces where ESLint isn't available, Nx also offers [conformance rules](/docs/enterprise/conformance) that work across any language.
 
-Turborepo has no module boundary enforcement.
+This becomes especially important with AI coding agents. Boundary rules act as guardrails, preventing agents from creating arbitrary cross-project dependencies that violate your architecture.
+
+Turborepo added experimental [`turbo boundaries`](https://turborepo.dev/docs/reference/boundaries) in 2024, which can define allowed dependencies in `turbo.json` and visualize them in their devtools graph view.
 
 ## Polyglot support
 
 Nx provides [first-party plugins](/docs/plugin-registry) for Maven, Gradle, .NET, and Docker, plus community plugins for Python (UV, Poetry), Rust (Cargo), Go, and PHP.
-Each plugin provides full dependency graph analysis, caching, affected detection, and distribution.
+Each plugin provides automatic dependency detection, target inference, caching, affected detection, and distribution.
 
-Turborepo is a JavaScript/TypeScript tool. It can run non-JS code only by wrapping it in `package.json` scripts, which means there is no native dependency graph analysis for those languages.
+Turborepo can orchestrate any language by wrapping CLI commands in `package.json` scripts. However, non-JS projects still require a `package.json`, and Turborepo provides no automatic dependency graph analysis or target inference for those languages. You must define everything manually.
 
 **This difference is critical for AI readiness.** When your backend is in Go and your frontend is in Next.js, an AI agent with Nx can see the full cross-language dependency chain. With Turborepo, those services are "islands," and an agent has no way to reason about how a change in the Go API affects the frontend.
 
