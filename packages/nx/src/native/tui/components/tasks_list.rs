@@ -606,47 +606,28 @@ impl TasksList {
                     }
                 }
                 DisplayItem::BatchGroup(batch_group) => {
-                    // Add batch group identifier wrapped in SelectionEntry::BatchGroup
                     let batch_id = batch_group.batch_id.clone();
 
-                    // A batch with a start_time is in-progress (it's been started),
-                    // regardless of whether individual nested tasks have transitioned yet
-                    let is_started = batch_group.start_time.is_some();
+                    // A batch group only exists if start_batch was called, so it's
+                    // in-progress unless all nested tasks have completed
+                    let all_completed = batch_group.nested_tasks.iter().all(|task_id| {
+                        self.task_lookup
+                            .get(task_id)
+                            .map(|task| {
+                                !matches!(
+                                    task.status,
+                                    TaskStatus::InProgress
+                                        | TaskStatus::Shared
+                                        | TaskStatus::NotStarted
+                                )
+                            })
+                            .unwrap_or(false)
+                    });
 
-                    let has_in_progress = is_started
-                        || batch_group.nested_tasks.iter().any(|task_id| {
-                            self.task_lookup
-                                .get(task_id)
-                                .map(|task| {
-                                    matches!(
-                                        task.status,
-                                        TaskStatus::InProgress | TaskStatus::Shared
-                                    )
-                                })
-                                .unwrap_or(false)
-                        });
-
-                    let all_completed = !is_started
-                        && batch_group.nested_tasks.iter().all(|task_id| {
-                            self.task_lookup
-                                .get(task_id)
-                                .map(|task| {
-                                    !matches!(
-                                        task.status,
-                                        TaskStatus::InProgress
-                                            | TaskStatus::Shared
-                                            | TaskStatus::NotStarted
-                                    )
-                                })
-                                .unwrap_or(true)
-                        });
-
-                    if has_in_progress {
-                        in_progress.push(SelectionEntry::BatchGroup(batch_id.clone()));
-                    } else if all_completed {
+                    if all_completed {
                         completed.push(SelectionEntry::BatchGroup(batch_id.clone()));
                     } else {
-                        pending.push(SelectionEntry::BatchGroup(batch_id.clone()));
+                        in_progress.push(SelectionEntry::BatchGroup(batch_id.clone()));
                     }
 
                     // NOTE: We do NOT add individual nested tasks to status vectors here!
@@ -814,20 +795,23 @@ impl TasksList {
                     }
                     DisplayItem::BatchGroup(batch) => {
                         // A batch with a start_time is in-progress
-                        let has_in_progress = batch.start_time.is_some()
-                            || batch.nested_tasks.iter().any(|task_id| {
-                                self.task_lookup
-                                    .get(task_id)
-                                    .map(|t| {
-                                        matches!(
-                                            t.status,
-                                            TaskStatus::InProgress | TaskStatus::Shared
-                                        )
-                                    })
-                                    .unwrap_or(false)
-                            });
+                        // A batch group only exists if started, so it's
+                        // in-progress unless all nested tasks have completed
+                        let all_completed = batch.nested_tasks.iter().all(|task_id| {
+                            self.task_lookup
+                                .get(task_id)
+                                .map(|t| {
+                                    !matches!(
+                                        t.status,
+                                        TaskStatus::InProgress
+                                            | TaskStatus::Shared
+                                            | TaskStatus::NotStarted
+                                    )
+                                })
+                                .unwrap_or(false)
+                        });
 
-                        if has_in_progress {
+                        if !all_completed {
                             parallel_count += 1; // Count the batch group itself
                             // Add nested tasks if expanded
                             if batch.is_expanded {
