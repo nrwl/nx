@@ -346,7 +346,7 @@ class RunningNodeProcess implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
-  private killing = false;
+  private killPromise: Promise<void> | null = null;
   private closedPromise: Promise<void>;
   public command: string;
 
@@ -409,17 +409,24 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
-  async kill(signal?: NodeJS.Signals): Promise<void> {
-    if (this.killing || !this.childProcess.pid) return;
-    this.killing = true;
-    await killProcessTreeGraceful(this.childProcess.pid, signal);
-    // Wait for Node.js to drain stdio pipes and fire exit/close events.
-    // Without this, process.exit() in the orchestrator's cleanup chain
-    // can tear down the event loop before buffered output is processed.
-    await Promise.race([
-      this.closedPromise,
-      new Promise<void>((resolve) => setTimeout(resolve, 1000)),
-    ]);
+  kill(signal?: NodeJS.Signals): Promise<void> {
+    if (this.killPromise) return this.killPromise;
+    if (!this.childProcess.pid) return Promise.resolve();
+    // Cache the promise so concurrent callers (e.g. cleanup() after a
+    // fire-and-forget kill from cleanUpUnneededContinuousTasks) await the
+    // same in-progress operation instead of no-oping.
+    this.killPromise = killProcessTreeGraceful(
+      this.childProcess.pid,
+      signal
+    ).then(() =>
+      // Wait for stdio drain and close events before the orchestrator
+      // tears down the event loop via process.exit().
+      Promise.race([
+        this.closedPromise,
+        new Promise<void>((resolve) => setTimeout(resolve, 1000)),
+      ])
+    );
+    return this.killPromise;
   }
 
   private triggerOutputListeners(output: string) {
@@ -496,7 +503,7 @@ class RunningNodeProcess implements RunningTask {
     // Skip if graceful kill is already in progress — it tracks cleanup
     // subprocesses and we must not interfere with them.
     process.on('exit', () => {
-      if (this.childProcess.pid && !this.killing) {
+      if (this.childProcess.pid && !this.killPromise) {
         killProcessTree(this.childProcess.pid);
       }
     });
