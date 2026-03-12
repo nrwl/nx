@@ -373,10 +373,17 @@ export class TaskOrchestrator {
 
     const nonCachedTaskIds = new Set<string>();
 
-    let remaining = batch.taskGraph;
+    // Build in-degree counters and use reverse deps for topological walk
+    const batchReverseDeps = calculateReverseDeps(batch.taskGraph);
+    const inDegree: Record<string, number> = {};
+    for (const id of Object.keys(batch.taskGraph.tasks)) {
+      inDegree[id] = batch.taskGraph.dependencies[id]?.length ?? 0;
+    }
 
-    while (remaining.roots.length > 0) {
-      const rootTasks = remaining.roots.map((id) => remaining.tasks[id]);
+    let currentRoots = batch.taskGraph.roots.slice();
+
+    while (currentRoots.length > 0) {
+      const rootTasks = currentRoots.map((id) => batch.taskGraph.tasks[id]);
 
       await this.hashBatchTasks(rootTasks);
 
@@ -417,7 +424,17 @@ export class TaskOrchestrator {
         }
       }
 
-      remaining = removeTasksFromTaskGraph(remaining, remaining.roots);
+      // Find next roots by decrementing dependents' in-degree
+      const nextRoots: string[] = [];
+      for (const id of currentRoots) {
+        for (const depId of batchReverseDeps[id]) {
+          inDegree[depId]--;
+          if (inDegree[depId] === 0) {
+            nextRoots.push(depId);
+          }
+        }
+      }
+      currentRoots = nextRoots;
     }
 
     return { cachedResults, needsRehashAfterExecution };
