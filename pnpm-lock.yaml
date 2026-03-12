@@ -28308,8 +28308,8 @@ snapshots:
   '@astrojs/mdx@4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.30.1)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.3
-      '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
-      acorn: 8.15.0
+      '@mdx-js/mdx': 3.1.0(acorn@8.16.0)
+      acorn: 8.16.0
       astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.30.1)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
@@ -28327,8 +28327,8 @@ snapshots:
   '@astrojs/mdx@4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.30.1)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.3
-      '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
-      acorn: 8.15.0
+      '@mdx-js/mdx': 3.1.0(acorn@8.16.0)
+      acorn: 8.16.0
       astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.30.1)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
@@ -33916,36 +33916,6 @@ snapshots:
       unist-util-visit: 4.1.2
       vfile: 5.3.7
     transitivePeerDependencies:
-      - supports-color
-
-  '@mdx-js/mdx@3.1.0(acorn@8.15.0)':
-    dependencies:
-      '@types/estree': 1.0.8
-      '@types/estree-jsx': 1.0.5
-      '@types/hast': 3.0.4
-      '@types/mdx': 2.0.13
-      collapse-white-space: 2.1.0
-      devlop: 1.1.0
-      estree-util-is-identifier-name: 3.0.0
-      estree-util-scope: 1.0.0
-      estree-walker: 3.0.3
-      hast-util-to-jsx-runtime: 2.3.6
-      markdown-extensions: 2.0.0
-      recma-build-jsx: 1.0.0
-      recma-jsx: 1.0.0(acorn@8.15.0)
-      recma-stringify: 1.0.0
-      rehype-recma: 1.0.0
-      remark-mdx: 3.1.0
-      remark-parse: 11.0.0
-      remark-rehype: 11.1.2
-      source-map: 0.7.6
-      unified: 11.0.5
-      unist-util-position-from-estree: 2.0.0
-      unist-util-stringify-position: 4.0.0
-      unist-util-visit: 5.0.0
-      vfile: 6.0.3
-    transitivePeerDependencies:
-      - acorn
       - supports-color
 
   '@mdx-js/mdx@3.1.0(acorn@8.16.0)':
@@ -53826,16 +53796,6 @@ snapshots:
       '@types/estree': 1.0.8
       estree-util-build-jsx: 3.0.1
       vfile: 6.0.3
-
-  recma-jsx@1.0.0(acorn@8.15.0):
-    dependencies:
-      acorn-jsx: 5.3.2(acorn@8.15.0)
-      estree-util-to-js: 2.0.0
-      recma-parse: 1.0.0
-      recma-stringify: 1.0.0
-      unified: 11.0.5
-    transitivePeerDependencies:
-      - acorn
 
   recma-jsx@1.0.0(acorn@8.16.0):
     dependencies:

@@ -163,7 +163,11 @@
       "dependsOn": ["build-base", "copy-local-native"],
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "inputs": ["production", "^production", "native"],
-      "outputs": ["{projectRoot}/dist"],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/src/native",
+        "{projectRoot}/**/*.d.ts"
+      ],
       "options": {
         "main": "./bin/nx.js",
         "types": "./bin/nx.d.ts",
