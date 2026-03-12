@@ -20,7 +20,7 @@ This page starts with the basics, like onboarding, and progressively moves into 
 | --------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
 | [Onboarding](#onboarding)                           | Zero-config or guided `nx init` (+3 lines)                        | Manual `turbo.json` (+144 lines)                          |
 | [Running tasks](#running-tasks)                     | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
-| [Caching](#caching)                                 | Composable `namedInputs`                                          | Flat input lists                                          |
+| [Caching](#caching)                                 | Explicit opt-in, composable `namedInputs`                         | Cached by default, flat input lists                       |
 | [Task sandboxing](#task-sandboxing)                 | IO tracing + cache poisoning protection                           | Not available                                             |
 | [Code generation](#code-generation)                 | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
 | [Module boundary rules](#module-boundary-rules)     | Tag-based enforcement                                             | Not available                                             |
@@ -70,9 +70,11 @@ Where Nx goes further is with [plugins](/docs/concepts/inferred-tasks). Adding a
 
 ## Caching
 
-Both tools cache task results, but the depth of caching support differs significantly. Better cache configuration means fewer false positives, fewer unnecessary re-runs, and faster CI.
+Both tools cache task results, but the defaults and depth of caching support differ significantly. Better cache configuration means fewer false positives, fewer unnecessary re-runs, and faster CI.
 
-Nx provides [`namedInputs`](/docs/reference/inputs), reusable input patterns that you can compose across targets. You define a pattern once (like "production sources") and reference it everywhere. Turborepo's `inputs` are flat lists with no composition, so every target repeats the same exclusions.
+**Turborepo caches every task by default**, so you opt out of caching with `cache: false` on tasks like `dev`. **Nx does the opposite: nothing is cached unless you explicitly set `cache: true`.** This is a more cautious opt-in model, since not all tasks are cacheable by default.
+
+Nx also provides [`namedInputs`](/docs/reference/inputs), reusable input patterns that you can compose across targets. You define a pattern once (like "production sources") and reference it everywhere. Turborepo's `inputs` are flat lists with no composition, so every target repeats the same exclusions.
 
 Here's the same workspace configured with both tools:
 
