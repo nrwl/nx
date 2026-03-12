@@ -865,14 +865,12 @@ impl ProcessMetricsCollector {
 
     /// Create a new ProcessMetricsCollector with custom configuration
     fn with_config(config: CollectorConfig) -> Self {
-        // Use targeted refresh instead of new_all() to avoid loading unnecessary data
-        // (disks, networks, components, users). Load processes to establish CPU baseline
-        // so first collection cycle has accurate CPU data.
+        // Only grab CPU/memory info at construction — defer process scanning
+        // to startCollection() so construction stays fast (~1ms instead of ~240ms).
         let sys = System::new_with_specifics(
             RefreshKind::nothing()
                 .with_cpu(CpuRefreshKind::nothing())
-                .with_memory(MemoryRefreshKind::nothing().with_ram())
-                .with_processes(ProcessRefreshKind::nothing().with_cpu().with_memory()),
+                .with_memory(MemoryRefreshKind::nothing().with_ram()),
         );
         let cpu_cores = sys.cpus().len() as u32;
         let total_memory = sys.total_memory() as i64;

@@ -275,7 +275,7 @@ async function handleMessage(socket: Socket, data: string) {
     await handleResult(
       socket,
       'REQUEST_PROJECT_GRAPH',
-      () => handleRequestProjectGraph(),
+      () => handleRequestProjectGraph(payload.clientGraphHash),
       mode
     );
   } else if (payload.type === 'HASH_TASKS') {
@@ -557,13 +557,57 @@ function registerProcessTerminationListeners() {
 }
 
 let existingLockHash: string | undefined;
+let lockFilesDirty = true;
+let nxVersionDirty = true;
+let cachedNxVersionMismatch = false;
+let cachedLockFileChanged = false;
+
+const LOCK_FILE_NAMES = new Set([
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'bun.lockb',
+  'bun.lock',
+]);
+
+/**
+ * Mark lock/version checks as dirty when relevant files change.
+ * Called from the file watcher handler.
+ */
+export function markOutdatedChecksDirty(changedFiles: string[]) {
+  for (const file of changedFiles) {
+    const basename = file.split('/').pop();
+    if (LOCK_FILE_NAMES.has(basename)) {
+      lockFilesDirty = true;
+    }
+    if (
+      basename === 'package.json' &&
+      (file.endsWith('node_modules/nx/package.json') || file === 'package.json')
+    ) {
+      nxVersionDirty = true;
+    }
+  }
+}
 
 function daemonIsOutdated(): string | null {
-  if (isNxVersionMismatch()) {
+  // Only re-check nx version when relevant files changed
+  if (nxVersionDirty) {
+    nxVersionDirty = false;
+    cachedNxVersionMismatch = isNxVersionMismatch();
+  }
+  if (cachedNxVersionMismatch) {
     return 'NX_VERSION_CHANGED';
-  } else if (lockFileHashChanged()) {
+  }
+
+  // Only re-hash lock files when they changed
+  if (lockFilesDirty) {
+    lockFilesDirty = false;
+    cachedLockFileChanged = lockFileHashChanged();
+  }
+  if (cachedLockFileChanged) {
     return 'LOCK_FILES_CHANGED';
   }
+
   return null;
 }
 
@@ -623,6 +667,9 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     }
 
     serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
+
+    // Mark outdated checks dirty so the interval re-checks only when needed
+    markOutdatedChecksDirty(changeEvents.map((e) => e.path));
 
     const updatedFilesToHash = [];
     const createdFilesToHash = [];
