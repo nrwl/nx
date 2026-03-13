@@ -154,6 +154,18 @@ npx nx affected -t test
 
 Learn more about the [affected command here](/docs/features/ci-features/affected).
 
+### Run tasks in batch mode
+
+For supported executors, you can run tasks in batch mode to group them into
+a single process instead of spawning one process per task.
+This reduces startup overhead and lets tools share state across tasks.
+
+```shell
+npx nx run-many -t build --batch
+```
+
+Learn more about [batch mode](/docs/guides/tasks--caching/batch-mode).
+
 ## Defining a task pipeline
 
 It is pretty common to have dependencies between tasks, requiring one task to be run before another. For example, you might want to run the `build` target on the `header` project before running the `build` target on the `app` project.
