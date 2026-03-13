@@ -116,11 +116,11 @@ export default async function* mavenBatchExecutor(
   };
 
   // Spawn batch runner process
-  // stdin: pipe (send task data), stdout: inherit (Maven output), stderr: pipe (results)
+  // stdin: pipe (send task data), stdout: pipe (Maven output), stderr: pipe (results)
   const child = spawn('java', javaArgs, {
     cwd: workspaceRoot,
     env: process.env,
-    stdio: ['pipe', 'inherit', 'pipe'],
+    stdio: ['pipe', 'pipe', 'pipe'],
     windowsHide: true,
   });
 
@@ -132,6 +132,14 @@ export default async function* mavenBatchExecutor(
   });
   child.stdin.write(JSON.stringify(stdinPayload));
   child.stdin.end();
+
+  // Forward stdout to console and capture for error reporting
+  const stdoutLines: string[] = [];
+  child.stdout?.on('data', (data: Buffer) => {
+    const text = data.toString();
+    stdoutLines.push(text);
+    process.stdout.write(text);
+  });
 
   // Read stderr line by line for JSON results
   const rl = createInterface({
@@ -181,13 +189,26 @@ export default async function* mavenBatchExecutor(
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.log(`[Maven Batch] Process exited with code: ${code}`);
       }
-      // If process exited unexpectedly, print captured stderr
-      if (code !== 0 && stderrLines.length > 0) {
-        console.error(
-          `[Maven Batch] Process exited with code ${code}. Stderr output:`
-        );
-        for (const line of stderrLines) {
-          console.error(line);
+      // If process exited unexpectedly, print all captured output for debugging
+      if (code !== 0) {
+        console.error(`[Maven Batch] Process exited with code ${code}.`);
+        if (stderrLines.length > 0) {
+          console.error('[Maven Batch] Stderr output:');
+          for (const line of stderrLines) {
+            console.error(line);
+          }
+        }
+        if (stdoutLines.length > 0) {
+          console.error('[Maven Batch] Stdout output:');
+          for (const line of stdoutLines) {
+            console.error(line);
+          }
+        }
+        if (stderrLines.length === 0 && stdoutLines.length === 0) {
+          console.error(
+            '[Maven Batch] No output captured. The JVM may have failed to start.'
+          );
+          console.error(`[Maven Batch] Command: java ${javaArgs.join(' ')}`);
         }
       }
       // Print failed task outputs to stderr so they appear in error.message
