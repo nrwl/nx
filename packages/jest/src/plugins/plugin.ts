@@ -727,7 +727,7 @@ function classifyResolvedPath(
   workspaceRoot: string
 ): FilePathInput {
   const relToWorkspace = normalizePath(relative(workspaceRoot, absolutePath));
-  if (relToWorkspace.includes('node_modules')) {
+  if (relToWorkspace.includes('node_modules/')) {
     const nmIndex = relToWorkspace.lastIndexOf('node_modules/');
     const afterNm = relToWorkspace.slice(nmIndex + 'node_modules/'.length);
     return { externalDependencies: [extractPackageName(afterNm)] };
