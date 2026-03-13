@@ -91,7 +91,8 @@ function createAppTsConfig(
   };
 
   // Only set composite in TS solution workspaces. In regular workspaces,
-  // composite requires declaration emit which conflicts with vue-tsc.
+  // tsconfig.base.json has declaration: false which conflicts with
+  // composite: true (TS6304).
   if (options.isUsingTsSolutionConfig) {
     compilerOptions.composite = true;
   }

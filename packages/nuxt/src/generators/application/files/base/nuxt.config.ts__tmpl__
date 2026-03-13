@@ -14,6 +14,16 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../<%= relativePathToRootTsConfig %>', // Nuxt copies this string as-is to the `./.nuxt/tsconfig.json`, therefore it needs to be relative to that directory
+      <%_ if (isUsingTsSolutionConfig) { _%>
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.json extends tsconfig.base.json which
+        // has composite and emitDeclarationOnly. Override them here since the
+        // .nuxt/tsconfig.json is used for type-checking only (noEmit: true).
+        composite: false,
+        emitDeclarationOnly: false,
+        declarationMap: false,
+      },
+      <%_ } _%>
     },
   },
   imports: {

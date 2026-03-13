@@ -229,7 +229,8 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       },
       options.linter === 'eslint'
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-        : undefined
+        : undefined,
+      options.useAppDir ? 'app' : 'src'
     );
   }
 

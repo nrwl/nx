@@ -8,13 +8,13 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
-describe('Nuxt Plugin', () => {
+describe('Nuxt Plugin (non-TS-solution)', () => {
   const app = uniq('app');
 
   beforeAll(() => {
     newProject({
       packages: ['@nx/nuxt'],
-      preset: 'ts',
+      preset: 'apps',
     });
     runCLI(
       `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress --linter=eslint`

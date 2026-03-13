@@ -22,7 +22,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -76,7 +78,10 @@ vitest.config.*.timestamp*"
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
-  "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
+  "extends": [
+    "@nuxt/eslint-config",
+    "../.eslintrc.json"
+  ],
   "ignorePatterns": [
     "!**/*",
     ".nuxt/**",
@@ -86,7 +91,13 @@ exports[`app generated files content - as-provided - my-app general application 
   ],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+        "*.vue"
+      ],
       "rules": {}
     }
   ]
@@ -112,14 +123,8 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
-    },
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
+    }
   );
 "
 `;
@@ -142,14 +147,8 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
-    },
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
+    }
   );
 "
 `;
@@ -177,7 +176,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -197,7 +198,9 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure tsconfig and project.json correctly 2`] = `
 "{
-  "include": [".nuxt/nuxt.d.ts"],
+  "include": [
+    ".nuxt/nuxt.d.ts"
+  ],
   "extends": "./.nuxt/tsconfig.json"
 }
 "
@@ -228,7 +231,7 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../coverage/my-app',
       provider: 'v8' as const,
-    },
+    }
   },
 }));
 "
@@ -269,7 +272,9 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure vitest correctly 3`] = `
 "{
-  "include": [".nuxt/nuxt.d.ts"],
+  "include": [
+    ".nuxt/nuxt.d.ts"
+  ],
   "extends": "./.nuxt/tsconfig.json"
 }
 "
@@ -335,7 +340,9 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -365,7 +372,9 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.less'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -395,7 +404,9 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.scss'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -424,7 +435,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -442,7 +455,10 @@ vitest.config.*.timestamp*"
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `
 "{
-  "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
+  "extends": [
+    "@nuxt/eslint-config",
+    "../.eslintrc.json"
+  ],
   "ignorePatterns": [
     "!**/*",
     ".nuxt/**",
@@ -452,7 +468,13 @@ exports[`app generated files content - as-provided - myApp general application s
   ],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+        "*.vue"
+      ],
       "rules": {}
     }
   ]
@@ -478,14 +500,8 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
-    },
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
+    }
   );
 "
 `;
@@ -508,14 +524,8 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
-    },
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
+    }
   );
 "
 `;
@@ -543,7 +553,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -563,7 +575,9 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure tsconfig and project.json correctly 2`] = `
 "{
-  "include": [".nuxt/nuxt.d.ts"],
+  "include": [
+    ".nuxt/nuxt.d.ts"
+  ],
   "extends": "./.nuxt/tsconfig.json"
 }
 "
@@ -594,7 +608,7 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../coverage/myApp',
       provider: 'v8' as const,
-    },
+    }
   },
 }));
 "
@@ -635,7 +649,9 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure vitest correctly 3`] = `
 "{
-  "include": [".nuxt/nuxt.d.ts"],
+  "include": [
+    ".nuxt/nuxt.d.ts"
+  ],
   "extends": "./.nuxt/tsconfig.json"
 }
 "
@@ -701,7 +717,9 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -731,7 +749,9 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.less'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -761,7 +781,9 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.scss'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
@@ -790,7 +812,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [
+      nxViteTsPaths()
+    ],
   },
 });
 "
