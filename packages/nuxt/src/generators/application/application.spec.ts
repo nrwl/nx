@@ -454,9 +454,16 @@ describe('app', () => {
       expect(tree.read('myapp/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(
         `null`
       );
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(
-        `[]`
-      );
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
       const packageJson = readJson(tree, 'myapp/package.json');
       expect(packageJson.name).toBe('@proj/myapp');
       expect(packageJson.nx).toBeUndefined();
@@ -492,6 +499,7 @@ describe('app', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
+            "noEmit": false,
             "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
@@ -530,6 +538,7 @@ describe('app', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
+            "noEmit": false,
             "outDir": "./out-tsc/vitest",
             "resolveJsonModule": true,
             "types": [

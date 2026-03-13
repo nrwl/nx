@@ -16,6 +16,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -159,6 +165,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -342,6 +354,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -372,6 +390,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -402,6 +426,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -432,6 +462,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -539,6 +575,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -722,6 +764,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -752,6 +800,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -782,6 +836,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
@@ -812,6 +872,12 @@ export default defineNuxtConfig({
     typeCheck: true,
     tsConfig: {
       extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      compilerOptions: {
+        // Nuxt's generated .nuxt/tsconfig.*.json files set noEmit: true.
+        // In TS solution workspaces, tsconfig.base.json has composite: true
+        // which conflicts with noEmit: true (TS6304). Override it here.
+        composite: false,
+      },
     },
   },
   imports: {
