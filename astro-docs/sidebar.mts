@@ -287,7 +287,11 @@ const learnGroups: SidebarItems = [
             link: 'guides/adopting-nx/preserving-git-histories',
           },
           {
-            label: 'Migrating From Turborepo',
+            label: 'Nx vs Turborepo',
+            link: 'guides/adopting-nx/nx-vs-turborepo',
+          },
+          {
+            label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
         ],
