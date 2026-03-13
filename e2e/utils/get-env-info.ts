@@ -170,14 +170,6 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
-      // Remove NODE_ENV to prevent Jest's NODE_ENV=test from leaking into
-      // e2e test subprocesses. Build tools (nuxt, vite, etc.) set their own
-      // NODE_ENV and the test value can mask real failures (e.g., skipping
-      // type checking when nuxt sees NODE_ENV=test).
-      if (key === 'NODE_ENV') {
-        return false;
-      }
-
       // Remove AI agent detection env vars to prevent the test runner's
       // environment (e.g., running inside Claude Code) from leaking into
       // e2e test subprocesses. Tests that need these pass them explicitly.
