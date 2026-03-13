@@ -25,5 +25,5 @@ expression: terminal.backend()
 "  ·    task-24                                                                                         ...        ...  ║"
 "  ·    task-25                                                                                         ...        ...  ║"
 "  ·    task-26                                                                                         ...        ...  ║"
-"                                                                                                                       ↓"
+"  ·    task-27                                                                                         ...        ...  ↓"
 "                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

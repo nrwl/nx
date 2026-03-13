@@ -10,5 +10,5 @@ expression: terminal.backend()
 "  ·    task10                                                  ...        ...  ║"
 "  ·    task2                                                   ...        ...  ║"
 "  ·    task3                                                   ...        ...  ║"
-"                                                                               ↓"
+"  ·    task4                                                   ...        ...  ↓"
 "                                                                quit: q  help: ?"
