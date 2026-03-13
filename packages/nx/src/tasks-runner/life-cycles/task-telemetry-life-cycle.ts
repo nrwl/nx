@@ -33,9 +33,11 @@ export class TaskTelemetryLifeCycle implements LifeCycle {
       end: 'task-execution-lifecycle:end',
       detail: {
         track: true,
-        [customDimensions?.taskCount]: this.taskCount,
-        [customDimensions?.cachedTaskCount]: this.cachedTaskCount,
-        [customDimensions?.projectCount]: this.projects.size,
+        ...(customDimensions && {
+          [customDimensions.taskCount]: this.taskCount,
+          [customDimensions.cachedTaskCount]: this.cachedTaskCount,
+          [customDimensions.projectCount]: this.projects.size,
+        }),
       },
     });
   }

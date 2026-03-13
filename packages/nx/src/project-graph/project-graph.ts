@@ -301,9 +301,11 @@ export async function createProjectGraphAndSourceMapsAsync(
         end: 'createProjectGraphAsync:end',
         detail: {
           track: true,
-          [customDimensions?.projectCount]: Object.keys(
-            currentProjectGraph.nodes
-          ).length,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(
+              currentProjectGraph.nodes
+            ).length,
+          }),
         },
       });
       return {
@@ -388,8 +390,10 @@ export async function createProjectGraphAndSourceMapsAsync(
         end: 'createProjectGraphAsync:end',
         detail: {
           track: true,
-          [customDimensions?.projectCount]: Object.keys(res.projectGraph.nodes)
-            .length,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(res.projectGraph.nodes)
+              .length,
+          }),
         },
       });
       return res;
@@ -408,9 +412,11 @@ export async function createProjectGraphAndSourceMapsAsync(
         end: 'createProjectGraphAsync:end',
         detail: {
           track: true,
-          [customDimensions?.projectCount]: Object.keys(
-            projectGraphAndSourceMaps.projectGraph.nodes
-          ).length,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(
+              projectGraphAndSourceMaps.projectGraph.nodes
+            ).length,
+          }),
         },
       });
       return projectGraphAndSourceMaps;
