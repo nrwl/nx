@@ -10,14 +10,8 @@ import {
 
 describe('Nuxt Plugin', () => {
   const app = uniq('app');
-  let originalNodeEnv: string | undefined;
 
   beforeAll(() => {
-    // Strip NODE_ENV to prevent Jest's NODE_ENV=test from leaking into
-    // nuxt subprocesses. Nuxt skips type checking when NODE_ENV=test.
-    originalNodeEnv = process.env.NODE_ENV;
-    delete process.env.NODE_ENV;
-
     newProject({
       packages: ['@nx/nuxt'],
     });
@@ -30,7 +24,6 @@ describe('Nuxt Plugin', () => {
   });
 
   afterAll(() => {
-    process.env.NODE_ENV = originalNodeEnv;
     killPorts();
     cleanupProject();
   });
