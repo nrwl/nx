@@ -45,15 +45,14 @@ nx run-many -t test --batch
 nx run-many -t build --no-batch
 ```
 
-
 ## Supported executors
 
-If batch mode is turned on but a plugin does not support batch mode, Nx will fall back to the regular executor implementation. 
+If batch mode is turned on but a plugin does not support batch mode, Nx will fall back to the regular executor implementation.
 
-| Executor     | Notes                                                     |
-| ------------ | --------------------------------------------------------- |
-| `@nx/js:tsc` | Uses TypeScript project references for incremental builds |
-| `@nx/jest`   | Batches test compilation across projects                  |
+| Executor     | Notes                                                                           |
+| ------------ | ------------------------------------------------------------------------------- |
+| `@nx/js:tsc` | Uses TypeScript project references for incremental builds                       |
+| `@nx/jest`   | Batches test compilation across projects                                        |
 | `@nx/gradle` | Runs multiple Gradle tasks in a single invocation. Batch mode is on by default. |
 | `@nx/maven`  | Runs multiple Maven tasks in a single invocation. Batch mode is on by default.  |
 
