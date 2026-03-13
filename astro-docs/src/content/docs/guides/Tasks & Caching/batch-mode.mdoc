@@ -1,0 +1,82 @@
+---
+title: Batch Mode
+description: Learn how Nx batch mode groups multiple tasks into a single process to reduce overhead and speed up builds, tests, and other operations.
+filter: 'type:Guides'
+---
+
+Batch mode lets Nx group related tasks and execute them in a single process
+instead of spawning a separate process for each one.
+This reduces per-process startup overhead, enables tool-native incremental builds,
+and minimizes redundant work, especially in large monorepos where hundreds of
+tasks may run in a single pipeline.
+
+## Why batch mode is faster
+
+Without batch mode, Nx launches a new process for every task.
+Each process independently loads configuration, resolves dependencies,
+and initializes the underlying tool (TypeScript compiler, Jest runner,
+Gradle daemon, etc.).
+Batch mode eliminates that repeated work:
+
+- **Reduced process overhead.** One process handles many tasks, avoiding
+  the cost of spawning and tearing down separate processes.
+- **Tool-native incremental builds.** Tools like `tsc` and Gradle can
+  share state across tasks within the same process, using features like
+  TypeScript project references and the Gradle build cache.
+- **Less redundant I/O.** Shared file resolution and dependency graphs
+  mean the tool reads overlapping configuration and source files only once.
+
+The larger your task graph, the greater the speedup.
+Workspaces with dozens of libraries often see the most dramatic improvements.
+
+## How to enable batch mode
+
+Set `NX_BATCH_MODE=true` or use the `--batch` arg to enable batch mode for a run:
+
+```shell
+NX_BATCH_MODE=true nx run-many -t build test
+nx run-many -t test --batch
+```
+
+The CLI arg is helpful when selectively enabling batch mode. e.g. only jest but not tsc
+
+```shell
+nx run-many -t test --batch
+nx run-many -t build --no-batch
+```
+
+
+## Supported executors
+
+If batch mode is turned on but a plugin does not support batch mode, Nx will fall back to the regular executor implementation. 
+
+| Executor     | Notes                                                     |
+| ------------ | --------------------------------------------------------- |
+| `@nx/js:tsc` | Uses TypeScript project references for incremental builds |
+| `@nx/jest`   | Batches test compilation across projects                  |
+| `@nx/gradle` | Runs multiple Gradle tasks in a single invocation. Batch mode is on by default. |
+| `@nx/maven`  | Runs multiple Maven tasks in a single invocation. Batch mode is on by default.  |
+
+{% aside type="caution" title="Experimental" %}
+Batch mode is an experimental feature.
+While it is stable for the executors listed above, the API and behavior
+may evolve in future Nx releases.
+{% /aside %}
+
+## Caching and CI compatibility
+
+Batch mode composes with both local and remote caching.
+Even though tasks run in a single process, Nx still caches each task
+individually, so subsequent runs can restore results from cache as normal.
+Batch mode also works with
+[Nx Agents/Distributed Task Execution (DTE)](/docs/features/ci-features/distribute-task-execution),
+where tasks are distributed across CI agents and each agent can run its
+assigned tasks in batch mode.
+
+## See also
+
+- [Enable TypeScript Batch Mode](/docs/technologies/typescript/guides/enable-tsc-batch-mode)
+- [TSC Batch Mode Benchmarks](/docs/reference/benchmarks/tsc-batch-mode)
+- [Gradle Support](/docs/technologies/java/gradle/introduction#batch-mode)
+- [Maven Support](/docs/technologies/java/maven/introduction#batch-mode)
+- [Jest Support](/docs/technologies/test-tools/jest/introduction#batch-mode)
