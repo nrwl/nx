@@ -1,5 +1,4 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import { measureAndTrack } from '../../utils/perf-logging';
 import { type PluginConfiguration } from '../../config/nx-json';
 import {
   AggregateCreateNodesError,
@@ -100,11 +99,11 @@ export class LoadedNxPlugin {
           throw new AggregateCreateNodesError([[null, e]], []);
         } finally {
           performance.mark(`${plugin.name}:createNodes - end`);
-          measureAndTrack(
-            `${plugin.name}:createNodes`,
-            `${plugin.name}:createNodes - start`,
-            `${plugin.name}:createNodes - end`
-          );
+          performance.measure(`${plugin.name}:createNodes`, {
+            start: `${plugin.name}:createNodes - start`,
+            end: `${plugin.name}:createNodes - end`,
+            detail: { track: true },
+          });
         }
       };
     }

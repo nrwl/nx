@@ -1,21 +1,13 @@
 import { PerformanceObserver } from 'perf_hooks';
 
-import { reportPerfEvent } from '../analytics';
+import { customDimensions, reportEvent } from '../analytics';
+import type { EventParameters } from '../analytics';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { serverLogger } from '../daemon/logger';
 
-const TRACK_PREFIX = '[track] ';
-
-/**
- * Like `performance.measure()` but automatically reports to telemetry.
- */
-export function measureAndTrack(
-  name: string,
-  startMark: string,
-  endMark: string
-) {
-  performance.measure(`${TRACK_PREFIX}${name}`, startMark, endMark);
-}
+const dimensionValues = customDimensions
+  ? new Set(Object.values(customDimensions))
+  : null;
 
 let initialized = false;
 
@@ -24,13 +16,11 @@ if (!initialized) {
 
   const obs = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      const shouldTrack = entry.name.startsWith(TRACK_PREFIX);
-      const displayName = shouldTrack
-        ? entry.name.slice(TRACK_PREFIX.length)
-        : entry.name;
+      const detail = (entry as any).detail;
+      const shouldTrack = detail?.track === true;
 
       if (process.env.NX_PERF_LOGGING === 'true') {
-        const message = `Time taken for '${displayName}' ${entry.duration}ms`;
+        const message = `Time taken for '${entry.name}' ${entry.duration}ms`;
         if (isOnDaemon()) {
           serverLogger.log(message);
         } else {
@@ -38,8 +28,17 @@ if (!initialized) {
         }
       }
 
-      if (shouldTrack) {
-        reportPerfEvent(displayName, entry.duration);
+      if (shouldTrack && dimensionValues) {
+        const { track, ...rest } = detail;
+        const eventParameters: EventParameters = {
+          [customDimensions.duration]: entry.duration,
+        };
+        for (const [key, value] of Object.entries(rest)) {
+          if (dimensionValues.has(key)) {
+            eventParameters[key] = value as string | number | boolean;
+          }
+        }
+        reportEvent(entry.name, eventParameters);
       }
     }
   });
