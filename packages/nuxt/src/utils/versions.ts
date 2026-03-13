@@ -1,7 +1,8 @@
 export const nxVersion = require('../../package.json').version;
 
 // Nuxt versions
-export const nuxtV4Version = '^4.0.0';
+// TODO: unpin when https://github.com/nuxt/nuxt/issues/34545 is resolved
+export const nuxtV4Version = '~4.3.0';
 export const nuxtV3Version = '^3.21.1';
 export const nuxtVersion = nuxtV4Version; // Default to v4
 
