@@ -477,6 +477,9 @@ describe('app', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
+          "compilerOptions": {
+            "noEmit": false,
+          },
           "extends": "./.nuxt/tsconfig.json",
           "files": [],
           "references": [
