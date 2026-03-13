@@ -12,15 +12,13 @@ import {
 import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   getNxWorkspaceFilesFromContext,
-  globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
 } from '../../utils/workspace-context';
-import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
 import { getOnlyDefaultPlugins, getPlugins } from '../plugins/get-plugins';
 
 /**
- * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
+ * Walks the workspace directory to create the `projectFileMap` and `ProjectConfigurations`
  * @throws
  * @param workspaceRoot
  * @param nxJson
@@ -49,7 +47,6 @@ export async function retrieveWorkspaceFiles(
   );
 
   return {
-    allWorkspaceFiles: buildAllWorkspaceFiles(projectFileMap, globalFiles),
     fileMap: {
       projectFileMap,
       nonProjectFiles: globalFiles,
