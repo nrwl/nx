@@ -55,6 +55,10 @@ export interface CreateWorkspaceOptions {
    * @description Whether GitHub CLI (gh) is available on the system (for telemetry)
    */
   ghAvailable?: boolean;
+  /**
+   * @description Enable or disable usage analytics
+   */
+  analytics?: boolean;
 }
 
 export const supportedAgents = [
