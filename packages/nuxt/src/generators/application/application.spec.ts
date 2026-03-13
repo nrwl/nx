@@ -477,9 +477,6 @@ describe('app', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "noEmit": false,
-          },
           "extends": "./.nuxt/tsconfig.json",
           "files": [],
           "references": [
@@ -499,7 +496,6 @@ describe('app', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "noEmit": false,
             "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
@@ -538,7 +534,6 @@ describe('app', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "noEmit": false,
             "outDir": "./out-tsc/vitest",
             "resolveJsonModule": true,
             "types": [

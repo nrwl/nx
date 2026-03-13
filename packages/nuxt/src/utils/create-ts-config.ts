@@ -39,12 +39,6 @@ export function createTsConfig(
     json.exclude = ['node_modules', 'tmp'];
   } else {
     json.extends = './.nuxt/tsconfig.json';
-    // Override noEmit from .nuxt/tsconfig.json. Nuxt sets noEmit: true but
-    // composite project references require declaration emit to be enabled.
-    json.compilerOptions = {
-      ...json.compilerOptions,
-      noEmit: false,
-    };
   }
 
   writeJson(host, `${options.projectRoot}/tsconfig.json`, json);
@@ -92,7 +86,6 @@ function createAppTsConfig(
     extends: './tsconfig.json',
     compilerOptions: {
       composite: true,
-      noEmit: false,
       rootDir: sourceDir,
     },
     include,
