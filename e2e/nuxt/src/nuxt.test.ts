@@ -8,8 +8,7 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
-// TODO: Re-enable once https://github.com/nuxt/nuxt/issues/34545 is resolved
-xdescribe('Nuxt Plugin', () => {
+describe('Nuxt Plugin', () => {
   const app = uniq('app');
 
   beforeAll(() => {

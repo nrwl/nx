@@ -1,11 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
-import {
-  lessVersion,
-  sassVersion,
-  vueRouterVersion,
-  vueTscVersion,
-  vueVersion,
-} from '@nx/vue';
+import { lessVersion, sassVersion, vueTscVersion, vueVersion } from '@nx/vue';
 import { nxVersion } from '../../../utils/versions';
 import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import type { NormalizedSchema } from '../schema';
@@ -24,7 +18,6 @@ export async function ensureDependencies(
     nuxt: nuxtVersions.nuxt,
     h3: nuxtVersions.h3,
     vue: vueVersion,
-    'vue-router': vueRouterVersion,
     'vue-tsc': vueTscVersion,
   };
 

@@ -119,7 +119,9 @@ module.exports = createConfigForNuxt({
   .append(
     {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-      rules: {},
+      rules: {
+        'vue/multi-word-component-names': 'off',
+      },
     },
     {
       ignores: ['.nuxt/**', '.output/**', 'node_modules'],
@@ -144,7 +146,9 @@ export default createConfigForNuxt({
   .append(
     {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-      rules: {},
+      rules: {
+        'vue/multi-word-component-names': 'off',
+      },
     },
     {
       ignores: ['.nuxt/**', '.output/**', 'node_modules'],
