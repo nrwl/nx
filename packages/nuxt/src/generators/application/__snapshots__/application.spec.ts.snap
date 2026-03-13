@@ -112,7 +112,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts'],
     },
   );
 "
@@ -136,7 +136,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts'],
     },
   );
 "
@@ -246,7 +246,8 @@ exports[`app generated files content - as-provided - my-app general application 
       "node",
       "vitest"
     ],
-    "composite": true
+    "composite": true,
+    "noEmit": false
   },
   "include": [
     ".nuxt/nuxt.d.ts",
@@ -491,7 +492,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts'],
     },
   );
 "
@@ -515,7 +516,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts'],
     },
   );
 "
@@ -625,7 +626,8 @@ exports[`app generated files content - as-provided - myApp general application s
       "node",
       "vitest"
     ],
-    "composite": true
+    "composite": true,
+    "noEmit": false
   },
   "include": [
     ".nuxt/nuxt.d.ts",

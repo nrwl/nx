@@ -92,6 +92,7 @@ function createAppTsConfig(
     extends: './tsconfig.json',
     compilerOptions: {
       composite: true,
+      noEmit: false,
       rootDir: sourceDir,
     },
     include,
