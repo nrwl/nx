@@ -194,12 +194,11 @@ export function newProject({
       newProjectEnd.name
     );
 
-    if (isVerbose()) {
-      logInfo(
-        `NX`,
-        `E2E created a project: ${projectDirectory} in ${
-          perfMeasure.duration / 1000
-        } seconds
+    logInfo(
+      `NX`,
+      `E2E created a project: ${projectDirectory} in ${
+        perfMeasure.duration / 1000
+      } seconds
 ${
   createNxWorkspaceMeasure
     ? `create-nx-workspace: ${
@@ -207,14 +206,11 @@ ${
       } seconds\n`
     : ''
 }${
-          packageInstallMeasure
-            ? `packageInstall: ${
-                packageInstallMeasure.duration / 1000
-              } seconds\n`
-            : ''
-        }`
-      );
-    }
+        packageInstallMeasure
+          ? `packageInstall: ${packageInstallMeasure.duration / 1000} seconds\n`
+          : ''
+      }`
+    );
 
     openInEditor(projectDirectory);
     return projScope;

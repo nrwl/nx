@@ -460,5 +460,6 @@
         "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
       }
     ]
-  }
+  },
+  "analytics": true
 }
