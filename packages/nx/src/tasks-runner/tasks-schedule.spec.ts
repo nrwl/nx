@@ -7,7 +7,11 @@ import * as executorUtils from '../command-line/run/executor-utils';
 import * as taskHistoryUtils from '../utils/task-history';
 import type { LifeCycle } from './life-cycle';
 
-function createMockTask(id: string, parallelism: boolean = true): Task {
+function createMockTask(
+  id: string,
+  parallelism: boolean = true,
+  continuous: boolean = false
+): Task {
   const [project, target] = id.split(':');
   return {
     id,
@@ -18,7 +22,7 @@ function createMockTask(id: string, parallelism: boolean = true): Task {
     outputs: [],
     overrides: {},
     parallelism,
-    continuous: false,
+    continuous,
   };
 }
 
@@ -1108,6 +1112,122 @@ describe('TasksSchedule', () => {
 
       expect(taskSchedule.nextBatch()).toBeNull();
       expect(taskSchedule.nextTask()).not.toBeNull();
+    });
+  });
+
+  describe('nextTask with filter', () => {
+    let taskSchedule: TasksSchedule;
+    let discreteTask: Task;
+    let continuousTask1: Task;
+    let continuousTask2: Task;
+
+    beforeEach(async () => {
+      discreteTask = createMockTask('app1:build', true, false);
+      continuousTask1 = createMockTask('app2:serve', true, true);
+      continuousTask2 = createMockTask('app3:serve', true, true);
+
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'app1:build': discreteTask,
+          'app2:serve': continuousTask1,
+          'app3:serve': continuousTask2,
+        },
+        dependencies: {
+          'app1:build': [],
+          'app2:serve': [],
+          'app3:serve': [],
+        },
+        continuousDependencies: {
+          'app1:build': [],
+          'app2:serve': [],
+          'app3:serve': [],
+        },
+        roots: ['app1:build', 'app2:serve', 'app3:serve'],
+      };
+
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+        schema: { version: 2, properties: {} },
+        implementationFactory: jest.fn(),
+        batchImplementationFactory: jest.fn(),
+        isNgCompat: true,
+        isNxExecutor: true,
+      });
+
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          app1: {
+            data: {
+              root: 'app1',
+              targets: {
+                build: { executor: 'awesome-executors:build' },
+              },
+            },
+            name: 'app1',
+            type: 'app',
+          },
+          app2: {
+            data: {
+              root: 'app2',
+              targets: {
+                serve: { executor: 'awesome-executors:serve' },
+              },
+            },
+            name: 'app2',
+            type: 'app',
+          },
+          app3: {
+            data: {
+              root: 'app3',
+              targets: {
+                serve: { executor: 'awesome-executors:serve' },
+              },
+            },
+            name: 'app3',
+            type: 'app',
+          },
+        } as any,
+        dependencies: {},
+        externalNodes: {},
+        version: '5',
+      };
+
+      taskHistory.getEstimatedTaskTimings.mockReturnValue({});
+      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
+        lifeCycle,
+      });
+      await taskSchedule.init();
+
+      process.env['NX_BATCH_MODE'] = 'false';
+      await taskSchedule.scheduleNextTasks();
+    });
+
+    afterEach(() => {
+      delete process.env['NX_BATCH_MODE'];
+    });
+
+    it('should return first matching task when filter is provided', () => {
+      const task = taskSchedule.nextTask((t) => t.continuous);
+      expect(task).toBeDefined();
+      expect(task.continuous).toBe(true);
+    });
+
+    it('should skip non-matching tasks', () => {
+      const task = taskSchedule.nextTask((t) => !t.continuous);
+      expect(task).toEqual(discreteTask);
+    });
+
+    it('should return null when no tasks match filter', () => {
+      // Consume the discrete task
+      taskSchedule.nextTask((t) => !t.continuous);
+      // No more discrete tasks
+      const task = taskSchedule.nextTask((t) => !t.continuous);
+      expect(task).toBeNull();
+    });
+
+    it('should return first task when no filter is provided', () => {
+      const task = taskSchedule.nextTask();
+      expect(task).toBeDefined();
     });
   });
 });
