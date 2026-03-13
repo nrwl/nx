@@ -71,6 +71,11 @@ jobs:
       - name: Lint, test, build, and run e2e
         run: npx nx affected -t lint,test,build,e2e-ci --configuration=ci
 
+      # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - name: Self-Healing CI
+        run: npx nx fix-ci
+        if: always()
+
   agents:
     name: Agent ${{ matrix.agent }}
     runs-on: ubuntu-latest
@@ -98,6 +103,13 @@ jobs:
 
       - name: Start Nx Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent
+        env:
+          NX_AGENT_NAME: ${{ matrix.agent }}
+
+      # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - name: Self-Healing CI
+        run: npx nx fix-ci
+        if: always()
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
 ```
@@ -130,6 +142,9 @@ jobs:
       - run: npx nx-cloud record -- nx format:check
       # Lint, test, build and run e2e on agent jobs for everything affected by a change
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
+      # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run: npx nx fix-ci
+        when: always
   agent:
     docker:
       - image: cimg/node:lts-browsers
@@ -143,6 +158,14 @@ jobs:
       - run:
           command: npx nx-cloud start-agent
           no_output_timeout: 60m
+          environment:
+            NX_AGENT_NAME: << parameters.ordinal >>
+      # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run:
+          command: npx nx fix-ci
+          environment:
+            NX_AGENT_NAME: << parameters.ordinal >>
+        when: always
 workflows:
   build:
     jobs:
@@ -198,6 +221,14 @@ jobs:
 
       - script: npm ci
       - script: npx nx-cloud start-agent
+        env:
+          NX_AGENT_NAME: $(System.JobPositionInPhase)
+
+      # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - script: npx nx fix-ci
+        condition: always()
+        env:
+          NX_AGENT_NAME: $(System.JobPositionInPhase)
 
   - job: main
     displayName: Nx Cloud Main
@@ -224,6 +255,10 @@ jobs:
       - script: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
+
+      # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - script: npx nx fix-ci
+        condition: always()
 ```
 
 This configuration is setting up two types of jobs - a main job and three agent jobs.
@@ -251,9 +286,14 @@ definitions:
         name: Agent
         script:
           - export NX_BRANCH=$BITBUCKET_PR_ID
+          - export NX_AGENT_NAME=$BITBUCKET_STEP_UUID
 
           - npm ci
           - npx nx-cloud start-agent
+        after-script:
+          # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+          - export NX_AGENT_NAME=$BITBUCKET_STEP_UUID
+          - npx nx fix-ci
 
 pipelines:
   pull-requests:
@@ -268,6 +308,9 @@ pipelines:
                 - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
                 - npx nx-cloud record -- nx format:check
                 - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
+              after-script:
+                # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+                - npx nx fix-ci
           - step: *agent
           - step: *agent
           - step: *agent
@@ -300,7 +343,12 @@ image: node:18
       - '.yarn-cache/'
   script:
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - export NX_AGENT_NAME=$CI_JOB_ID
     - yarn nx-cloud start-agent
+  # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+  after_script:
+    - export NX_AGENT_NAME=$CI_JOB_ID
+    - yarn nx fix-ci
 
 # Creating template for a job running DTE (orchestrator)
 .base-pipeline:
@@ -332,6 +380,9 @@ nx-dte:
     - yarn nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
+  # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+  after_script:
+    - yarn nx fix-ci
 
 # Create as many agents as you want
 nx-dte-agent1:
@@ -378,6 +429,12 @@ pipeline {
                         sh "npx nx-cloud record -- nx format:check"
                         sh "npx nx affected --base=HEAD~1 -t lint,test,build,e2e-ci --configuration=ci --parallel=2"
                     }
+                    post {
+                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+                        always {
+                            sh "npx nx fix-ci"
+                        }
+                    }
                 }
                 stage('PR') {
                     when {
@@ -390,28 +447,61 @@ pipeline {
                         sh "npx nx-cloud record -- nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint,test,build,e2e-ci --parallel=2 --configuration=ci"
                     }
+                    post {
+                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+                        always {
+                            sh "npx nx fix-ci"
+                        }
+                    }
                 }
 
                 # Add as many agent you want
                 stage('Agent1') {
                    agent any
+                   environment {
+                    NX_AGENT_NAME = '1'
+                   }
                    steps {
                     sh "npm ci"
                     sh "npx nx-cloud start-agent"
+                   }
+                   post {
+                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+                        always {
+                            sh "npx nx fix-ci"
+                        }
                    }
                 }
                 stage('Agent2') {
                    agent any
+                   environment {
+                    NX_AGENT_NAME = '2'
+                   }
                    steps {
                     sh "npm ci"
                     sh "npx nx-cloud start-agent"
                    }
+                   post {
+                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+                        always {
+                            sh "npx nx fix-ci"
+                        }
+                   }
                 }
                 stage('Agent3') {
                    agent any
+                   environment {
+                    NX_AGENT_NAME = '3'
+                   }
                    steps {
                     sh "npm ci"
                     sh "npx nx-cloud start-agent"
+                   }
+                   post {
+                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
+                        always {
+                            sh "npx nx fix-ci"
+                        }
                    }
                 }
             }

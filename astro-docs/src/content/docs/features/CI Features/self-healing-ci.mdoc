@@ -153,6 +153,10 @@ pipelines:
 
 > NOTE: If all tasks succeed then the `fix-ci` command becomes a no-op automatically, so that is why "always" is recommended.
 
+{% aside type="note" title="Using manual DTE?" %}
+If you use [manual distributed task execution](/docs/guides/nx-cloud/manual-dte) instead of the Nx Agents, Self-Healing CI works the same way. Add `nx fix-ci` to both the **main job** (the orchestrator) and each **agent job** with the appropriate "always run" condition. See the [manual DTE guide](/docs/guides/nx-cloud/manual-dte) for complete examples.
+{% /aside %}
+
 ## Configuring self-healing CI
 
 Self-Healing CI configuration is primarily managed through your [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/settings/self-healing-ci) in the Nx Cloud dashboard. This provides a centralized, auditable way to control the feature's behavior.
@@ -186,6 +190,11 @@ You can choose between two modes:
 You can also specify **Never fix** patterns to exclude certain tasks from ever being fixed by Self-Healing CI. For example, `*e2e*` would exclude all e2e-related tasks.
 
 ### Auto-apply verified code changes
+
+{% youtube
+src="https://youtu.be/30qh5W8zXTY"
+title="Self-Healing CI Auto-Apply Suggestions"
+/%}
 
 Automatically commit code change suggestions to the PR branch **when ALL of these are true**:
 
