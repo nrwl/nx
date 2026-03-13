@@ -736,6 +736,36 @@ describe('utils', () => {
         },
       ]);
     });
+
+    it('should preserve params and options when expanding wildcards', () => {
+      const allTargets = ['build', 'build:test', 'build:prod'];
+      const results = expandWildcardTargetConfiguration(
+        {
+          target: 'build*',
+          projects: ['a'],
+          params: 'forward',
+        },
+        allTargets
+      );
+
+      expect(results).toEqual([
+        {
+          target: 'build',
+          projects: ['a'],
+          params: 'forward',
+        },
+        {
+          target: 'build:test',
+          projects: ['a'],
+          params: 'forward',
+        },
+        {
+          target: 'build:prod',
+          projects: ['a'],
+          params: 'forward',
+        },
+      ]);
+    });
   });
 
   describe('validateOutputs', () => {
