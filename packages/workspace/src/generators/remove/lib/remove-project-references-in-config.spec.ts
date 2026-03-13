@@ -380,5 +380,59 @@ describe('removeProjectReferencesInConfig', () => {
         'unrelated-project',
       ]);
     });
+
+    it('should remove the project from owners section patterns (GitLab)', () => {
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        owners: {
+          format: 'gitlab',
+          sections: [
+            {
+              name: 'Frontend',
+              patterns: [
+                {
+                  projects: ['ng-app', 'other-project'],
+                  owners: ['@frontend-team'],
+                },
+              ],
+            },
+          ],
+        },
+      } as any);
+
+      schema = {
+        projectName: 'ng-app',
+        skipFormat: false,
+        forceRemove: false,
+      };
+
+      removeProjectReferencesInConfig(tree, schema);
+
+      const updatedNxJson = readNxJson(tree) as any;
+      expect(updatedNxJson.owners.sections[0].patterns[0].projects).toEqual([
+        'other-project',
+      ]);
+    });
+
+    it('should handle owners set to true', () => {
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        owners: true,
+      } as any);
+
+      schema = {
+        projectName: 'ng-app',
+        skipFormat: false,
+        forceRemove: false,
+      };
+
+      // Should not throw
+      removeProjectReferencesInConfig(tree, schema);
+
+      const updatedNxJson = readNxJson(tree) as any;
+      expect(updatedNxJson.owners).toBe(true);
+    });
   });
 });

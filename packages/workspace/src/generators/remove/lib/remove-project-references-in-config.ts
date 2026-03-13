@@ -90,15 +90,46 @@ function removeProjectFromOwnersPatterns(
   projectName: string
 ): boolean {
   const owners = nxJson['owners'] as
-    | { patterns?: { projects?: string[] }[] }
+    | {
+        patterns?: { projects?: string[] }[];
+        sections?: { patterns?: { projects?: string[] }[] }[];
+      }
+    | boolean
     | undefined;
 
-  if (!owners?.patterns) {
+  if (typeof owners !== 'object' || !owners) {
     return false;
   }
 
   let changed = false;
-  for (const pattern of owners.patterns) {
+
+  // Filter top-level patterns
+  if (owners.patterns) {
+    if (filterOwnersPatternsList(owners.patterns, projectName)) {
+      changed = true;
+    }
+  }
+
+  // Filter section-level patterns (GitLab)
+  if (owners.sections) {
+    for (const section of owners.sections) {
+      if (section.patterns) {
+        if (filterOwnersPatternsList(section.patterns, projectName)) {
+          changed = true;
+        }
+      }
+    }
+  }
+
+  return changed;
+}
+
+function filterOwnersPatternsList(
+  patterns: { projects?: string[] }[],
+  projectName: string
+): boolean {
+  let changed = false;
+  for (const pattern of patterns) {
     if (!pattern.projects) {
       continue;
     }
@@ -110,6 +141,5 @@ function removeProjectFromOwnersPatterns(
       changed = true;
     }
   }
-
   return changed;
 }
