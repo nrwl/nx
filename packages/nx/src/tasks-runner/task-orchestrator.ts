@@ -1158,7 +1158,7 @@ export class TaskOrchestrator {
           ``,
           `  ${invocationChain}`,
           ``,
-          `Task "${taskKey}" was already invoked by a parent Nx process in this chain.`,
+          `Task "${task.target.project}:${task.target.target}" was already invoked by a parent Nx process in this chain.`,
           `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
           `triggers a chain of tasks that eventually re-invokes itself.`,
           ``,
