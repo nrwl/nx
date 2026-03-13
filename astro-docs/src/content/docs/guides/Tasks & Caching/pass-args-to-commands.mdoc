@@ -191,7 +191,7 @@ Support for providing command args as options was added in **Nx v18.1.1**.
 
 {% /tabitem %}
 
-{% tabitem label="Setting the \"args\" option" %}
+{% tabitem label="Setting the \"args\" option as an array" %}
 
 ```json {% meta="{6-12}" %}
 // apps/my-app/project.json
@@ -202,8 +202,25 @@ Support for providing command args as options was added in **Nx v18.1.1**.
     "build": {
       "options": {
         "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
-        // it also accepts a single string:
-        // "args": "--assetsInlineLimit=2048 --assetsDir=static/assets"
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+
+{% tabitem label="Setting the \"args\" option as a string" %}
+
+```json {% meta="{6-12}" %}
+// apps/my-app/project.json
+{
+  "sourceRoot": "apps/my-app/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "options": {
+        "args": "--assetsInlineLimit=2048 --assetsDir=static/assets"
       }
     }
   }
@@ -240,7 +257,7 @@ To provide the same args for all projects in the workspace, you need to update t
 
 {% /tabitem %}
 
-{% tabitem label="Setting the \"args\" option" %}
+{% tabitem label="Setting the \"args\" option as an array" %}
 
 ```json
 // nx.json
@@ -249,6 +266,23 @@ To provide the same args for all projects in the workspace, you need to update t
     "build": {
       "options": {
         "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+
+{% tabitem label="Setting the \"args\" option as a string" %}
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "args": "--assetsInlineLimit=2048 --assetsDir=static/assets"
       }
     }
   }
