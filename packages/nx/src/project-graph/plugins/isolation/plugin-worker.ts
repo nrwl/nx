@@ -45,6 +45,14 @@ let connectErrorTimeout = setErrorTimeout(
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
+
+  // Stop accepting new connections immediately. There should only
+  // ever be one host → worker connection since the worker is spawned
+  // per host process. Closing the server here prevents phantom
+  // connections (e.g., from overlapping connection attempts) from
+  // creating duplicate load timeouts that would kill the worker.
+  server.close();
+
   logger.verbose(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) connected`
   );
@@ -177,20 +185,13 @@ const server = createServer((socket) => {
     })
   );
 
-  // There should only ever be one host -> worker connection
-  // since the worker is spawned per host process. As such,
-  // we can safely close the worker when the host disconnects.
+  // When the host disconnects, clean up and exit.
   socket.on('end', () => {
-    // Destroys the socket once it's fully closed.
     socket.destroySoon();
-    // Stops accepting new connections, but existing connections are
-    // not closed immediately.
-    server.close(() => {
-      try {
-        unlinkSync(socketPath);
-      } catch (e) {}
-      process.exit(0);
-    });
+    try {
+      unlinkSync(socketPath);
+    } catch (e) {}
+    process.exit(0);
   });
 });
 
