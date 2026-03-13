@@ -55,6 +55,7 @@ import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { handleQToQuit } from '../../utils/handle-q-to-quit';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
@@ -772,7 +773,10 @@ async function startServer(
     }
   });
 
+  const cleanupQToQuit = handleQToQuit(() => handleTermination(0));
+
   const handleTermination = async (exitCode: number) => {
+    cleanupQToQuit();
     if (unregisterFileWatcher) {
       unregisterFileWatcher();
     }
