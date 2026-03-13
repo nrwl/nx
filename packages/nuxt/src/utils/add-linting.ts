@@ -124,7 +124,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts'],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     }
   );
 `;
@@ -151,7 +151,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts'],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     }
   );
 `;
