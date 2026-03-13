@@ -19,6 +19,7 @@ import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-thir
 import { detectInvokedPackageManager } from '../src/utils/package-manager';
 import {
   determineAiAgents,
+  determineAnalytics,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
@@ -28,6 +29,7 @@ import {
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
+  withAnalytics,
   withGitOptions,
   withNxCloud,
   withOptions,
@@ -292,7 +294,8 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         withUseGitHub,
         withAllPrompts,
         withPackageManager,
-        withGitOptions
+        withGitOptions,
+        withAnalytics
       ),
 
     async function handler(argv: yargs.ArgumentsCamelCase<Arguments>) {
@@ -662,6 +665,7 @@ async function normalizeArgsMiddleware(
             : getCompletionMessageKeyForVariant();
       }
 
+      const analytics = await determineAnalytics(argv);
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
@@ -673,6 +677,7 @@ async function normalizeArgsMiddleware(
         defaultBase: 'main',
         aiAgents,
         ghAvailable,
+        analytics,
       });
 
       await recordStat({
@@ -720,12 +725,15 @@ async function normalizeArgsMiddleware(
           ? undefined
           : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
 
+      const analytics = await determineAnalytics(argv);
+
       Object.assign(argv, {
         nxCloud,
         useGitHub,
         packageManager,
         defaultBase,
         aiAgents,
+        analytics,
       });
 
       chosenPreset = argv.preset ?? '';

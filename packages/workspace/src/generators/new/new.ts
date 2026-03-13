@@ -41,6 +41,7 @@ interface Schema {
   zoneless?: boolean;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
+  analytics?: boolean;
   formatter?: string;
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
