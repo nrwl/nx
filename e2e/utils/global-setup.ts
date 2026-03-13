@@ -39,7 +39,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
           '--listen',
           `${listenAddress}:${port}`,
         ],
-        { stdio: 'ignore', detached: true }
+        { stdio: 'ignore' }
       );
     }
 
