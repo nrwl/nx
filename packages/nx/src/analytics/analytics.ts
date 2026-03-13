@@ -127,8 +127,8 @@ export function reportCommandRunEvent(
   trackPageView(command, pageLocation, parameters);
 }
 
-export function reportProjectGraphCreationEvent(duration: number) {
-  trackEvent(customDimensions.createProjectGraph, {
+export function reportPerfEvent(name: string, duration: number) {
+  trackEvent(name, {
     [customDimensions.duration]: duration,
   });
 }

@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { PerformanceObserver } from 'perf_hooks';
+import '../../utils/perf-logging';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
@@ -172,7 +172,6 @@ import {
 } from './handle-configure-ai-agents';
 import { deserialize, serialize } from 'v8';
 
-let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
 
@@ -194,14 +193,6 @@ const server = createServer(async (socket) => {
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
-
-  if (!performanceObserver) {
-    performanceObserver = new PerformanceObserver((list) => {
-      const entry = list.getEntries()[0];
-      serverLogger.log(`Time taken for '${entry.name}'`, `${entry.duration}ms`);
-    });
-    performanceObserver.observe({ entryTypes: ['measure'] });
-  }
 
   socket.on(
     'data',
