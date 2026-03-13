@@ -146,7 +146,8 @@ export function createCommitMessageValues(
     );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     const releaseVersion = new ReleaseVersion({
-      version: projectVersionData.newVersion,
+      version:
+        projectVersionData.newVersion ?? projectVersionData.dockerVersion,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
       releaseGroupName: releaseGroup.name,
     });
@@ -173,7 +174,8 @@ export function createCommitMessageValues(
     if (releaseGroupProjectNames.length === 1) {
       const projectVersionData = versionData[releaseGroupProjectNames[0]];
       const releaseVersion = new ReleaseVersion({
-        version: projectVersionData.newVersion,
+        version:
+          projectVersionData.newVersion ?? projectVersionData.dockerVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
         projectName: releaseGroupProjectNames[0],
         releaseGroupName: releaseGroup.name,
@@ -208,9 +210,13 @@ export function createCommitMessageValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        if (projectVersionData.newVersion !== null) {
+        if (
+          projectVersionData.newVersion !== null ||
+          projectVersionData.dockerVersion != null
+        ) {
           const releaseVersion = new ReleaseVersion({
-            version: projectVersionData.newVersion,
+            version:
+              projectVersionData.newVersion ?? projectVersionData.dockerVersion,
             releaseTagPattern: releaseGroup.releaseTag.pattern,
             projectName: project,
             releaseGroupName: releaseGroup.name,
@@ -225,9 +231,13 @@ export function createCommitMessageValues(
 
     // One entry for the whole group for fixed groups
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    if (projectVersionData.newVersion !== null) {
+    if (
+      projectVersionData.newVersion !== null ||
+      projectVersionData.dockerVersion != null
+    ) {
       const releaseVersion = new ReleaseVersion({
-        version: projectVersionData.newVersion,
+        version:
+          projectVersionData.newVersion ?? projectVersionData.dockerVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
         releaseGroupName: releaseGroup.name,
       });
@@ -287,7 +297,7 @@ export function createGitTagValues(
         const projectVersionData = versionData[project];
         if (
           projectVersionData.newVersion !== null ||
-          projectVersionData.dockerVersion !== null
+          projectVersionData.dockerVersion != null
         ) {
           const preferDockerVersion =
             shouldPreferDockerVersionForReleaseGroup(releaseGroup);
@@ -337,7 +347,7 @@ export function createGitTagValues(
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     if (
       projectVersionData.newVersion !== null ||
-      projectVersionData.dockerVersion !== null
+      projectVersionData.dockerVersion != null
     ) {
       const preferDockerVersion =
         shouldPreferDockerVersionForReleaseGroup(releaseGroup);
