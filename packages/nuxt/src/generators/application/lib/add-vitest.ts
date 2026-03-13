@@ -54,7 +54,11 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
 
   updateJson(tree, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
     json.compilerOptions ??= {};
-    json.compilerOptions.composite = true;
+    // Only set composite in TS solution workspaces. In regular workspaces,
+    // composite requires declaration emit which conflicts with vue-tsc.
+    if (options.isUsingTsSolutionConfig) {
+      json.compilerOptions.composite = true;
+    }
     json.include = ['.nuxt/nuxt.d.ts', ...(json.include ?? [])];
     return json;
   });

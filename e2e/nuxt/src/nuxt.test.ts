@@ -28,8 +28,7 @@ describe('Nuxt Plugin', () => {
     cleanupProject();
   });
 
-  // TODO: fix TS6304 composite/declaration conflict in non-TS-solution workspaces
-  it.skip('should build application', async () => {
+  it('should build application', async () => {
     expect(() => runCLI(`build ${app}`)).not.toThrow();
     checkFilesExist(`${app}/.nuxt/nuxt.d.ts`);
     checkFilesExist(`${app}/.output/nitro.json`);

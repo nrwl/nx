@@ -13,20 +13,20 @@ export function createTsConfig(
   relativePathToRootTsConfig: string
 ) {
   createAppTsConfig(host, options);
-  const json = {
-    files: [],
-    include: options.isUsingTsSolutionConfig ? undefined : ['.nuxt/nuxt.d.ts'],
-    references: [
-      {
-        path: './tsconfig.app.json',
-      },
-    ],
-  } as any;
+  const json = {} as any;
 
-  if (options.unitTestRunner !== 'none') {
-    json.references.push({
-      path: './tsconfig.spec.json',
-    });
+  if (options.isUsingTsSolutionConfig) {
+    // TS solution workspaces use project references with composite.
+    json.files = [];
+    json.references = [{ path: './tsconfig.app.json' }];
+    if (options.unitTestRunner !== 'none') {
+      json.references.push({ path: './tsconfig.spec.json' });
+    }
+  } else {
+    // Regular workspaces skip project references because composite: true
+    // requires declaration emit, but vue-tsc with declaration emit produces
+    // conflicting outputs for .vue files (TS5056).
+    json.include = ['.nuxt/nuxt.d.ts'];
   }
 
   // inline tsconfig.base.json into the project
@@ -46,7 +46,11 @@ export function createTsConfig(
 
 function createAppTsConfig(
   host: Tree,
-  options: { projectRoot: string; useAppDir?: boolean }
+  options: {
+    projectRoot: string;
+    useAppDir?: boolean;
+    isUsingTsSolutionConfig: boolean;
+  }
 ) {
   const sourceDir = options.useAppDir ? 'app' : 'src';
 
@@ -82,12 +86,19 @@ function createAppTsConfig(
     'eslint.config.mjs',
   ];
 
+  const compilerOptions: Record<string, unknown> = {
+    rootDir: sourceDir,
+  };
+
+  // Only set composite in TS solution workspaces. In regular workspaces,
+  // composite requires declaration emit which conflicts with vue-tsc.
+  if (options.isUsingTsSolutionConfig) {
+    compilerOptions.composite = true;
+  }
+
   const json = {
     extends: './tsconfig.json',
-    compilerOptions: {
-      composite: true,
-      rootDir: sourceDir,
-    },
+    compilerOptions,
     include,
     exclude,
   };
