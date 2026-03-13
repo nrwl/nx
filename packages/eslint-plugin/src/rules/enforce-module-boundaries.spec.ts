@@ -1565,7 +1565,7 @@ Violation detected in:
     expect(failures.length).toEqual(1);
   });
 
-  it('should error on importing an app', () => {
+  it('should error on importing an app (in tsconfig paths)', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -1608,6 +1608,62 @@ Violation detected in:
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
+  });
+
+  it('should error on importing an app (not in tsconfig paths)', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import 'myapp';
+        import('myapp');
+        import('myapp/subpath');
+        import 'myapp/subpath';
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: 'app',
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              metadata: {
+                js: {
+                  packageName: 'myapp',
+                  isInPackageManagerWorkspaces: true,
+                  packageMain: 'dist/main.js',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {},
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        myappName: [createFile(`apps/myapp/src/index.ts`)],
+      }
+    );
+
+    const message = 'Imports of apps are forbidden';
+    expect(failures.length).toEqual(4);
+    expect(failures[0].message).toEqual(message);
+    expect(failures[1].message).toEqual(message);
+    expect(failures[2].message).toEqual(message);
+    expect(failures[3].message).toEqual(message);
   });
 
   it('should error on importing an e2e project', () => {
