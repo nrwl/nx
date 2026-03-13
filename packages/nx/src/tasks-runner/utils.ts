@@ -156,9 +156,8 @@ export function expandWildcardTargetConfiguration(
   );
 
   return matchingTargets.map((t) => ({
+    ...dependencyConfig,
     target: t,
-    projects: dependencyConfig.projects,
-    dependencies: dependencyConfig.dependencies,
   }));
 }
 
