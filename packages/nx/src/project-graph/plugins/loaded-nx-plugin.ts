@@ -55,6 +55,13 @@ export class LoadedNxPlugin {
   readonly include?: string[];
   readonly exclude?: string[];
 
+  /**
+   * Notifies the plugin that graph construction was aborted mid-flight.
+   * Overridden by IsolatedPlugin to reset lifecycle phase tracking so
+   * the worker can still shut down properly.
+   */
+  abortGraphPhase?(): void;
+
   constructor(
     plugin: NxPluginV2,
     pluginDefinition: PluginConfiguration,

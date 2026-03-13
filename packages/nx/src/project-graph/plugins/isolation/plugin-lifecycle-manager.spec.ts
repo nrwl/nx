@@ -349,6 +349,93 @@ describe('PluginLifecycleManager', () => {
     });
   });
 
+  describe('abortPhase', () => {
+    it('should decrement session count and return true for last registered phase', () => {
+      const lifecycle = new PluginLifecycleManager([
+        'createNodes',
+        'createDependencies',
+        'createMetadata',
+      ]);
+
+      // Simulate entering graph phase (createNodes is first hook)
+      lifecycle.enterHook('createNodes');
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
+
+      // Abort the graph phase (e.g., graph construction was abandoned)
+      const shouldShutdown = lifecycle.abortPhase('graph');
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+      expect(shouldShutdown).toBe(true); // graph is the only registered phase
+    });
+
+    it('should return false when phase has no active sessions', () => {
+      const lifecycle = new PluginLifecycleManager(['createNodes']);
+
+      const shouldShutdown = lifecycle.abortPhase('graph');
+      expect(shouldShutdown).toBe(false);
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+    });
+
+    it('should return false for unregistered phase', () => {
+      const lifecycle = new PluginLifecycleManager(['createNodes']);
+
+      const shouldShutdown = lifecycle.abortPhase('pre-task');
+      expect(shouldShutdown).toBe(false);
+    });
+
+    it('should return false when later phases have hooks', () => {
+      const lifecycle = new PluginLifecycleManager([
+        'createNodes',
+        'postTasksExecution',
+      ]);
+
+      lifecycle.enterHook('createNodes');
+      const shouldShutdown = lifecycle.abortPhase('graph');
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+      expect(shouldShutdown).toBe(false); // post-task phase still registered
+    });
+
+    it('should decrement by 1 with concurrent callers', () => {
+      const lifecycle = new PluginLifecycleManager(['createNodes']);
+
+      // Two concurrent callers enter
+      lifecycle.enterHook('createNodes');
+      lifecycle.enterHook('createNodes');
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(2);
+
+      // First caller aborts
+      expect(lifecycle.abortPhase('graph')).toBe(false); // count is still 1
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
+
+      // Second caller aborts
+      expect(lifecycle.abortPhase('graph')).toBe(true); // count reaches 0
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+    });
+
+    it('should allow normal hook flow after abort', () => {
+      const lifecycle = new PluginLifecycleManager([
+        'createNodes',
+        'createDependencies',
+        'createMetadata',
+      ]);
+
+      // First recomputation enters but gets aborted
+      lifecycle.enterHook('createNodes');
+      lifecycle.abortPhase('graph');
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+
+      // Second recomputation runs to completion
+      lifecycle.enterHook('createNodes');
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
+      lifecycle.exitHook('createNodes');
+      lifecycle.enterHook('createDependencies');
+      lifecycle.exitHook('createDependencies');
+      lifecycle.enterHook('createMetadata');
+      const shouldShutdown = lifecycle.exitHook('createMetadata');
+      expect(shouldShutdown).toBe(true);
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+    });
+  });
+
   describe('wrapHook', () => {
     it('should call enterHook before and exitHook after the wrapped function', async () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
