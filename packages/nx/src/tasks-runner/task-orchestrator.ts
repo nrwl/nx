@@ -8,7 +8,8 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask } from '../hasher/hash-task';
+import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import { walkTaskGraph } from './task-graph-utils';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
@@ -355,7 +356,8 @@ export class TaskOrchestrator {
    */
   private async applyBatchCachedResults(
     batch: Batch,
-    doNotSkipCache: boolean
+    doNotSkipCache: boolean,
+    groupId: number
   ): Promise<{
     cachedResults: TaskResult[];
     needsRehashAfterExecution: Set<string>;
@@ -372,10 +374,8 @@ export class TaskOrchestrator {
 
     const nonCachedTaskIds = new Set<string>();
 
-    let remaining = batch.taskGraph;
-
-    while (remaining.roots.length > 0) {
-      const rootTasks = remaining.roots.map((id) => remaining.tasks[id]);
+    await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
+      const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
 
       await this.hashBatchTasks(rootTasks);
 
@@ -400,31 +400,34 @@ export class TaskOrchestrator {
         const cachedIds = new Set(cacheResults.map((r) => r.task.id));
         cachedResults.push(...cacheResults);
 
+        if (cacheResults.length > 0) {
+          const cachedTasks = cacheResults.map((r) => r.task);
+          await Promise.all(
+            cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+          );
+          await this.preRunSteps(cachedTasks, { groupId });
+          await this.postRunSteps(cacheResults, doNotSkipCache, { groupId });
+        }
+
         for (const task of eligible) {
           if (!cachedIds.has(task.id)) {
             nonCachedTaskIds.add(task.id);
           }
         }
       }
-
-      remaining = removeTasksFromTaskGraph(remaining, remaining.roots);
-    }
+    });
 
     return { cachedResults, needsRehashAfterExecution };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
-    await Promise.all(
-      tasks.map((task) =>
-        hashTask(
-          this.hasher,
-          this.projectGraph,
-          this.taskGraphForHashing,
-          task,
-          this.batchEnv,
-          this.taskDetails
-        )
-      )
+    await hashTasks(
+      this.hasher,
+      this.projectGraph,
+      this.taskGraphForHashing,
+      this.batchEnv,
+      this.taskDetails,
+      tasks
     );
   }
 
@@ -445,17 +448,17 @@ export class TaskOrchestrator {
     });
 
     const { cachedResults, needsRehashAfterExecution } =
-      await this.applyBatchCachedResults(batch, doNotSkipCache);
+      await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
-    // All tasks are now hashed — notify lifecycle (scheduleTask + startTasks)
-    await Promise.all(
-      tasks.map((task) => this.options.lifeCycle.scheduleTask(task))
-    );
-    await this.preRunSteps(tasks, { groupId });
-
-    // Complete cached results immediately — no need to wait for execution
-    if (cachedResults.length > 0) {
-      await this.postRunSteps(cachedResults, doNotSkipCache, { groupId });
+    // Schedule and start non-cached tasks (cached tasks were already
+    // started and completed inside applyBatchCachedResults)
+    const cachedTaskIds = new Set(cachedResults.map((r) => r.task.id));
+    const nonCachedTasks = tasks.filter((t) => !cachedTaskIds.has(t.id));
+    if (nonCachedTasks.length > 0) {
+      await Promise.all(
+        nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+      );
+      await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
     // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
