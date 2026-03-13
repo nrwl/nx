@@ -35,9 +35,9 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
     }
 
     // Ensure NxConsole is installed if the user has it configured.
-    try {
-      await ensureNxConsoleInstalledViaDaemon();
-    } catch {}
+    // Fire-and-forget: don't block command execution for a marketing prompt.
+    // The daemon returns shouldPrompt=false immediately on first call anyway.
+    ensureNxConsoleInstalledViaDaemon().catch(() => {});
 
     const command = process.argv[2];
     if (command === 'run' || command === 'g' || command === 'generate') {

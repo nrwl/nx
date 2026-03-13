@@ -308,11 +308,53 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
   }
 
+  private cachedProjectGraph: ProjectGraph | null = null;
+  private cachedSourceMaps: ConfigurationSourceMaps | null = null;
+  private cachedGraphHash: string | null = null;
+  private graphCacheLoaded = false;
+
+  private getGraphCachePath(): string {
+    return join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'project-graph-cache.json');
+  }
+
+  private loadGraphCacheFromDisk(): void {
+    if (this.graphCacheLoaded) return;
+    this.graphCacheLoaded = true;
+    try {
+      const raw = readFileSync(this.getGraphCachePath(), 'utf-8');
+      const cached = JSON.parse(raw);
+      if (cached.hash && cached.projectGraph) {
+        this.cachedGraphHash = cached.hash;
+        this.cachedProjectGraph = cached.projectGraph;
+        this.cachedSourceMaps = cached.sourceMaps;
+      }
+    } catch {
+      // No cache or invalid — that's fine, we'll fetch the full graph
+    }
+  }
+
+  private saveGraphCacheToDisk(
+    hash: string,
+    projectGraph: ProjectGraph,
+    sourceMaps: ConfigurationSourceMaps
+  ): void {
+    try {
+      writeFileSync(
+        this.getGraphCachePath(),
+        JSON.stringify({ hash, projectGraph, sourceMaps })
+      );
+    } catch {
+      // Non-critical — next run will just fetch the full graph
+    }
+  }
+
   async getProjectGraphAndSourceMaps(): Promise<{
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
     preventRecursionInGraphConstruction();
+    this.loadGraphCacheFromDisk();
+
     let spinner: DelayedSpinner;
     // If the graph takes a while to load, we want to show a spinner.
     spinner = new DelayedSpinner(
@@ -324,7 +366,29 @@ export class DaemonClient {
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
+        clientGraphHash: this.cachedGraphHash,
       });
+
+      // If the server says "not modified", return the cached graph
+      if (response.notModified && this.cachedProjectGraph) {
+        return {
+          projectGraph: this.cachedProjectGraph,
+          sourceMaps: this.cachedSourceMaps,
+        };
+      }
+
+      // Cache the new graph and its hash — in memory and on disk
+      this.cachedProjectGraph = response.projectGraph;
+      this.cachedSourceMaps = response.sourceMaps;
+      if (response.hash) {
+        this.cachedGraphHash = response.hash;
+        this.saveGraphCacheToDisk(
+          response.hash,
+          response.projectGraph,
+          response.sourceMaps
+        );
+      }
+
       return {
         projectGraph: response.projectGraph,
         sourceMaps: response.sourceMaps,
@@ -1018,18 +1082,19 @@ export class DaemonClient {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       let daemonPid: number | null = null;
-      let serverAvailable: boolean;
+
+      // Check if we have a valid socket path (daemon was previously started
+      // and version matches). If so, skip the probe and connect directly.
+      let hasSocketPath = false;
       try {
-        serverAvailable = await this.isServerAvailable();
+        this.getSocketPath();
+        hasSocketPath = true;
       } catch (err) {
-        // Version mismatch - treat as server not available, start new one
-        if (err instanceof VersionMismatchError) {
-          serverAvailable = false;
-        } else {
-          throw err;
-        }
+        // No socket path or version mismatch — need to start daemon
+        hasSocketPath = false;
       }
-      if (!serverAvailable) {
+
+      if (!hasSocketPath) {
         daemonPid = await this.startInBackground();
       }
       this.setUpConnection();

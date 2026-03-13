@@ -98,11 +98,11 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
 
     // reset the wait time
     waitPeriod = 100;
-    await resetInternalStateIfNxDepsMissing();
-    const plugins = await getPlugins();
     const previousPromise = cachedSerializedProjectGraphPromise;
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
+        await resetInternalStateIfNxDepsMissing();
+        const plugins = await getPlugins();
         cachedSerializedProjectGraphPromise =
           processFilesAndCreateAndSerializeProjectGraph(plugins);
         serverLogger.log(
@@ -114,6 +114,8 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
         );
       }
     } else {
+      await resetInternalStateIfNxDepsMissing();
+      const plugins = await getPlugins();
       serverLogger.log(
         `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
       );
