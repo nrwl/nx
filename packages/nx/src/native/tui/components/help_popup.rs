@@ -188,28 +188,22 @@ impl HelpPopup {
                 ),
             ]),
             Line::from(""),
-            Line::from(vec![
-                Span::styled(
-                    "If you would prefer to not use the TUI, you can disable it by: ",
-                    Style::default().fg(THEME.primary_fg),
-                ),
-            ]),
-            Line::from(vec![
-                Span::styled(
-                    "- Adding the `--no-tui` flag to your command.",
-                    Style::default()
-                        .fg(THEME.info)
-                        .add_modifier(Modifier::ITALIC),
-                ),
-            ]),
-            Line::from(vec![
-                Span::styled(
-                    "- Setting `NX_TUI=false` in your environment.",
-                    Style::default()
-                        .fg(THEME.info)
-                        .add_modifier(Modifier::ITALIC),
-                ),
-            ]),
+            Line::from(vec![Span::styled(
+                "If you would prefer to not use the TUI, you can disable it by: ",
+                Style::default().fg(THEME.primary_fg),
+            )]),
+            Line::from(vec![Span::styled(
+                "- Adding the `--no-tui` flag to your command.",
+                Style::default()
+                    .fg(THEME.info)
+                    .add_modifier(Modifier::ITALIC),
+            )]),
+            Line::from(vec![Span::styled(
+                "- Setting `NX_TUI=false` in your environment.",
+                Style::default()
+                    .fg(THEME.info)
+                    .add_modifier(Modifier::ITALIC),
+            )]),
             Line::from(""),
             Line::from(vec![
                 Span::styled(
