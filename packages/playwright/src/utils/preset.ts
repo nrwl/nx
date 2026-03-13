@@ -69,7 +69,7 @@ export function nxE2EPreset(
       outputFolder: isTsSolutionSetup
         ? 'test-output/playwright/report'
         : join(offset, 'dist', '.playwright', projectPath, 'playwright-report'),
-      open: options.openHtmlReport,
+      open: options?.openHtmlReport ?? 'on-failure',
     },
   ]);
   const shouldGenerateBlobReports =
