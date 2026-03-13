@@ -218,6 +218,13 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   hackFixForDevkitPeerDependencies();
 
+  if (options.local) {
+    const port = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+    const localRegistryUrl = `http://localhost:${port}`;
+    await waitForLocalRegistry(localRegistryUrl);
+    process.env.npm_config_registry = localRegistryUrl;
+  }
+
   // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
   let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
   if (options.dryRun) {
@@ -400,10 +407,6 @@ function parseArgs() {
             'Registry is still set to localhost! Run "pnpm local-registry disable" or pass --force'
           );
         }
-      } else {
-        if (!args.force && !registryIsLocalhost) {
-          throw new Error('--local was passed and registry is not localhost');
-        }
       }
 
       return true;
@@ -474,6 +477,33 @@ function determineDistTag(
         : 'latest';
 
   return distTag;
+}
+
+function waitForLocalRegistry(registryUrl: string): Promise<void> {
+  console.log(`Waiting for local registry at ${registryUrl}...`);
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      reject(
+        new Error(
+          `Local registry at ${registryUrl} did not become available within 60 seconds`
+        )
+      );
+    }, 60_000);
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(registryUrl);
+        if (response.ok) {
+          clearInterval(interval);
+          clearTimeout(timeout);
+          console.log('Local registry is ready.');
+          resolve();
+        }
+      } catch {
+        // Registry not up yet
+      }
+    }, 50);
+  });
 }
 
 //TODO(@Coly010): Remove this after fixing up the release peer dep handling

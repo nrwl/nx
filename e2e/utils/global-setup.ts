@@ -1,10 +1,9 @@
 import { Config } from '@jest/types';
 import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
-import { exec, execSync } from 'node:child_process';
+import { ChildProcess, exec, execSync, spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
-import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
   try {
@@ -25,14 +24,23 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     const registry = `http://${listenAddress}:${port}`;
     const authToken = 'secretVerdaccioToken';
 
-    while (true) {
-      await new Promise((resolve) => setTimeout(resolve, 250));
-      try {
-        await assertLocalRegistryIsRunning(registry);
-        break;
-      } catch {
-        console.log(`Waiting for Local registry to start on ${registry}...`);
-      }
+    // When running outside of Nx (e.g. Jest directly), start verdaccio ourselves
+    let verdaccioProcess: ChildProcess | undefined;
+    if (requiresLocalRelease && !(await isLocalRegistryRunning(registry))) {
+      console.log(
+        `Local registry not detected at ${registry}, starting verdaccio...`
+      );
+      verdaccioProcess = spawn(
+        'npx',
+        [
+          'verdaccio',
+          '--config',
+          '.verdaccio/config.yml',
+          '--listen',
+          `${listenAddress}:${port}`,
+        ],
+        { stdio: 'ignore', detached: true }
+      );
     }
 
     process.env.npm_config_registry = registry;
@@ -54,6 +62,11 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     global.e2eTeardown = () => {
       // Clean up environment variable instead of npm config command
       delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
+      // Kill verdaccio if we started it
+      if (verdaccioProcess) {
+        verdaccioProcess.kill();
+        verdaccioProcess = undefined;
+      }
     };
 
     /**
@@ -77,8 +90,26 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       if (requiresLocalRelease) {
         console.log('Publishing packages to local registry');
         const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
-        // Always show full release logs on CI, they should only happen once via e2e-ci
-        await runLocalRelease(publishVersion, isCI || isVerbose);
+        const verbose = isCI || isVerbose;
+        const releaseCommand = `pnpm nx-release --local ${publishVersion}`;
+        console.log(`> ${releaseCommand}`);
+        await new Promise<void>((resolve, reject) => {
+          const child = exec(releaseCommand, {
+            maxBuffer: 1024 * 1000000,
+            windowsHide: false,
+          });
+          if (verbose) {
+            child.stdout?.pipe(process.stdout);
+            child.stderr?.pipe(process.stderr);
+          }
+          child.on('exit', (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(new Error(`Local release failed with exit code ${code}`));
+            }
+          });
+        });
       }
     }
   } catch (err) {
@@ -112,9 +143,11 @@ function getPublishedVersion(): Promise<string | undefined> {
   });
 }
 
-async function assertLocalRegistryIsRunning(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+async function isLocalRegistryRunning(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url);
+    return response.ok;
+  } catch {
+    return false;
   }
 }

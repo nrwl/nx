@@ -22,17 +22,10 @@
           "input": "production",
           "projects": ["tag:maven:dev.nx.maven"]
         },
-        "{workspaceRoot}/scripts/local-registry",
         "native"
       ],
-      "dependsOn": [
-        "local-registry",
-        {
-          "target": "build",
-          "projects": ["tag:npm:public"]
-        }
-      ],
-      "command": "node ./scripts/local-registry/run-populate-storage.mjs",
+      "dependsOn": ["local-registry", "nx-release"],
+      "command": "echo 'Registry storage populated via nx-release dependency'",
       "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
     },
     "nx-release": {
