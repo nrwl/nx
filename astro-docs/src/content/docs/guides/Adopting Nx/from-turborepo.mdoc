@@ -67,9 +67,7 @@ To help with understanding the new `nx.json` file, let's compare it to the `turb
       "dependsOn": ["^check-types"]
     },
     "dev": {
-      "cache": false,
-      // Nx uses "continuous" instead of "persistent". Continuous tasks are not waited on
-      // before running dependents, and they work across multiple machines.
+      // Nx uses "continuous" instead of "persistent"
       "persistent": true
     }
   }
@@ -122,18 +120,18 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 
 ### Task configuration
 
-| Turborepo Property | Nx Equivalent                                                                                       |
-| ------------------ | --------------------------------------------------------------------------------------------------- |
-| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                         |
-| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                      |
-| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                 |
-| `passThroughEnv`   | N/A. See [Defining Environment Variables](/docs/guides/tips-n-tricks/define-environment-variables)  |
-| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                     |
-| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                       |
-| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                               |
-| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                     |
-| `persistent`       | Use [`continuous`](/docs/guides/tasks--caching/defining-task-pipeline#continuous-task-dependencies) |
-| `interactive`      | All `continuous` tasks are intelligently and automatically interactive.                             |
+| Turborepo Property | Nx Equivalent                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                                                                       |
+| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                                                                    |
+| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                                                               |
+| `passThroughEnv`   | N/A. See [Defining Environment Variables](/docs/guides/tips-n-tricks/define-environment-variables)                                                |
+| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                                                                   |
+| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                                                                     |
+| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                                                                             |
+| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                   |
+| `persistent`       | Use [`continuous`](/docs/guides/tasks--caching/defining-task-pipeline#continuous-task-dependencies)                                               |
+| `interactive`      | N/A. Tasks marked [`continuous`](/docs/guides/tasks--caching/defining-task-pipeline#continuous-task-dependencies) can accept stdin automatically. |
 
 ## Command equivalents
 
