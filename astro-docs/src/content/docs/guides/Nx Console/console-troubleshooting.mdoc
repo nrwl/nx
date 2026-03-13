@@ -8,7 +8,7 @@ sidebar:
 
 Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](/docs/troubleshooting/troubleshoot-nx-install-issues) for more help.
 
-## Enable Debug Logging
+## Enable debug logging
 
 If you're experiencing issues with Nx Console, enabling debug logging can help diagnose the problem by providing detailed information about the extension's internal operations.
 
@@ -19,7 +19,7 @@ If you're experiencing issues with Nx Console, enabling debug logging can help d
 3. Enable the checkbox
 4. Restart VS Code or reload the window (`Ctrl/Cmd + Shift + P` → `Developer: Reload Window`)
 
-#### Viewing Debug Logs
+#### Viewing debug logs
 
 1. Open Command Palette (`Ctrl/Cmd + Shift + P`)
 2. Run `View: Toggle Output`
@@ -37,11 +37,11 @@ If you're experiencing issues with Nx Console, enabling debug logging can help d
 3. Access logs via `Help` → `Show Log in Explorer` (Windows) / `Show Log in Finder` (macOS) / `Show Log in Files` (Linux)
 4. Look for `idea.log` file and paste relevant sections when reporting issues
 
-## Configuration Settings
+## Configuration settings
 
 For a complete reference of all available configuration settings, see the [Nx Console Settings Reference](/docs/reference/nx-console-settings).
 
-## VSCode + nvm Issues
+## VSCode + nvm issues
 
 VSCode loads a version of Node when it starts. It can use versions set via [`nvm`](https://github.com/nvm-sh/nvm) but there are some caveats.
 
@@ -53,6 +53,6 @@ VSCode loads a version of Node when it starts. It can use versions set via [`nvm
 
 We try to make noticing discrepancies easier by showing you the currently loaded Node version on startup. To enable this, toggle the `nxConsole.showNodeVersionOnStartup` setting in VSCode.
 
-## JetBrains WSL Support
+## JetBrains WSL support
 
 The Node interpreter under Languages & Frameworks > Node.js needs to be configured to use the Node executable within the WSL distribution. You can read more on the [official Jetbrains docs](https://www.jetbrains.com/help/webstorm/how-to-use-wsl-development-environment-in-product.html#ws_wsl_node_interpreter_configure).

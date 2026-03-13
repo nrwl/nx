@@ -302,7 +302,6 @@
       },
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
-    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {
@@ -461,5 +460,6 @@
         "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
       }
     ]
-  }
+  },
+  "analytics": true
 }

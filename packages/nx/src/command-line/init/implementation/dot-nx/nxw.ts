@@ -114,10 +114,19 @@ function ensureUpToDateInstallation() {
       );
       process.exit(1);
     }
-  } catch {
-    console.error(
-      '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
-    );
+  } catch (e: unknown) {
+    if (
+      e instanceof Error &&
+      (e as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND'
+    ) {
+      console.error(
+        '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
+      );
+    } else {
+      console.error(
+        `[NX]: Failed to parse "nx.json": ${e instanceof Error ? e.message : e}. See https://nx.dev/recipes/installation/install-non-javascript`
+      );
+    }
     process.exit(1);
   }
 

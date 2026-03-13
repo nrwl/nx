@@ -185,6 +185,11 @@ pub trait TuiApp: Send {
         self.core().update_task_status(task_id, status);
     }
 
+    /// Set the start and end time for a task (in milliseconds since epoch)
+    fn set_task_timing(&mut self, _task_id: String, _start_time: i64, _end_time: i64) {
+        // Default: no-op. Full TUI overrides to update display items.
+    }
+
     /// Called when tasks finish execution
     ///
     /// Default implementation records timing in TuiCore and calls hook.

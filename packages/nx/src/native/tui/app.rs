@@ -2541,6 +2541,10 @@ impl TuiApp for App {
         self.dispatch_action(Action::StartTasks(tasks.to_vec()));
     }
 
+    fn set_task_timing(&mut self, task_id: String, start_time: i64, end_time: i64) {
+        self.dispatch_action(Action::SetTaskTiming(task_id, start_time, end_time));
+    }
+
     fn on_tasks_ended(&mut self, task_results: &[TaskResult]) {
         // Resize PTYs when tasks finish (they may still be displaying output)
         let _ = self.debounce_pty_resize();

@@ -60,7 +60,7 @@ filter: 'type:Guides'
 
         ![Copy SingleSignOnService location URL from metadata](../../../../assets/enterprise/single-tenant/saml/okta_10.png)
 
-## SCIM Provisioning
+## SCIM provisioning
 
 SCIM (System for Cross-domain Identity Management) provisioning enables automatic user lifecycle management for Nx Cloud through Okta.
 Once configured, Okta will automatically:
@@ -139,6 +139,19 @@ Select the appropriate `nxCloudAccessSpec` value when you assign your SAML appli
 
 ![Select access specification when assigning application to groups](../../../../assets/enterprise/single-tenant/saml/okta_scim_7.jpg)
 
-## Connect Your Nx Cloud Installation to Your SAML Set Up
+## Information to exchange with your DPE
 
-Contact your developer productivity engineer to connect your Nx Cloud instance to the SAML configuration.
+Your DPE will provide the following values up front so you can complete both the SAML and SCIM configuration:
+
+### From your DPE
+
+1. **Nx Cloud App URL** (`NX_CLOUD_APP_URL`) — used as the Single Sign On URL (step 3) and the SCIM connector base URL
+2. **JWT Token** — used for SCIM authentication
+3. **Organization ID** (`organization_id`) — used when defining the `nxCloudAccessSpec` enum values
+
+### Send back to your DPE
+
+After completing the setup, send the following so your DPE can finish connecting your Nx Cloud instance:
+
+1. **SAML Certificate** — the one-line certificate string extracted in step 10: `SAML_CERT=<your-cert-string>`
+2. **SAML Entry Point** — the SingleSignOnService URL copied in step 12: `SAML_ENTRY_POINT=<your-sso-url>`

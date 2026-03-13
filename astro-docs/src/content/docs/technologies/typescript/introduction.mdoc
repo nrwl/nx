@@ -22,9 +22,9 @@ Nx supports the latest version of TypeScript. TypeScript itself only officially 
 | 21.x           | >= 5.4.2 < 5.10.0  |
 | 20.x           | ~5.4.2             |
 
-## Setting Up @nx/js plugin
+## Setting up @nx/js plugin
 
-### Add to an Existing Nx Workspace
+### Add to an existing Nx workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/js` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
@@ -61,7 +61,7 @@ Verify the plugin is setup:
 
 If your TypeScript projects aren't showing up with the right targets, then [view read how `@nx/js` infers projects](#how-the-typescript-plugin-infers-tasks)
 
-### Create a New TypeScript Monorepo
+### Create a new TypeScript monorepo
 
 {% tabs syncKey="package-manager" %}
 {% tabitem label="npm" %}
@@ -98,7 +98,7 @@ You can [migrate an existing workspace from path aliases ](/docs/technologies/ty
 
 If you want to keep using the older style of setups with `compilerOptions.paths`, use `create-nx-workspace --preset=apps`.
 
-### Add Build Support to an Existing Project
+### Add build support to an existing project
 
 If you have a TypeScript project that doesn't have a build target, you can use the [`setup-build` generator](/docs/technologies/typescript/generators#setup-build) to add one:
 
@@ -108,9 +108,9 @@ nx g @nx/js:setup-build my-lib
 
 You'll be prompted to choose a bundler. This configures the project for compilation without recreating it from scratch.
 
-## Generate and Manage TypeScript Libraries
+## Generate and manage TypeScript libraries
 
-### Create a Library
+### Create a library
 
 Quickly scaffold out a new typescript library. You'll be prompted for common options like test runner and linter.
 See all the [library generator options](/docs/technologies/typescript/generators#library) for more customization.
@@ -119,7 +119,7 @@ See all the [library generator options](/docs/technologies/typescript/generators
 nx g @nx/js:lib libs/my-lib
 ```
 
-### Create a Buildable or Publishable Library
+### Create a buildable or publishable library
 
 To create a library that can be compiled and published to npm, specify a bundler:
 
@@ -148,7 +148,7 @@ nx g @nx/js:convert-to-swc my-lib
 
 SWC dependencies are installed automatically the first time the generator is ran.
 
-### Build TypeScript Libraries
+### Build TypeScript libraries
 
 ```shell
 nx build my-lib
@@ -170,7 +170,7 @@ The plugin reads `outDir` automatically and sets the correct [task outputs](/doc
 
 If you're manually defining the `build` targets, make sure to keep the [target configuration outputs](/docs/guides/tasks--caching/configure-outputs) in sync with where typescript is outputting the built artifacts. This ensures Nx properly restores the cache for your build tasks.
 
-### Run Typechecking
+### Run typechecking
 
 ```shell
 nx typecheck my-lib
@@ -180,13 +180,13 @@ The `typecheck` task is automatically inferred for any project with a `tsconfig.
 
 If you're not using inferred plugins, then you can manually define a `typecheck` target in your [projects configuration](/docs/reference/project-configuration#project-level-configuration-files).
 
-## Configure `@nx/js` TypeScript Inference
+## Configure `@nx/js` TypeScript inference
 
 By default, when you add the `@nx/js` the plugin will be configured to use project and target inference.
 
 Otherwise you can manually add the [plugin to your `nx.json#plugins` to enable it](#plugin-options)
 
-### How the TypeScript Plugin Infers Tasks
+### How the TypeScript plugin infers tasks
 
 The `@nx/js/typescript` plugin adds tasks based on the files it finds in your project:
 
@@ -228,7 +228,7 @@ This project **will not** get a `build` task because its exports point directly 
 
 This distinction is important in monorepos — not all libraries need to be compiled. Libraries consumed only within the monorepo can point directly to source for faster development, while libraries published to npm need a build step. See [TypeScript Project Linking](/docs/concepts/typescript-project-linking) for more on how projects reference each other.
 
-### Plugin Options
+### Plugin options
 
 Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 
@@ -264,7 +264,7 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 
 Set `typecheck` or `build` to `false` to disable that task entirely.
 
-### Exclude or Include Specific Projects
+### Exclude or include specific projects
 
 You can control which projects the plugin applies to at three levels:
 
@@ -299,7 +299,7 @@ You can control which projects the plugin applies to at three levels:
 }
 ```
 
-### View Inferred Tasks
+### View inferred tasks
 
 To see what tasks Nx inferred for a project:
 
@@ -309,11 +309,11 @@ nx show project <my-project>
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI Considerations for TypeScript Projects
+## CI considerations for TypeScript projects
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-### Build and Test Only What Changed
+### Build and test only what changed
 
 ```shell
 nx affected -t build test typecheck lint
@@ -322,7 +322,7 @@ nx affected -t build test typecheck lint
 This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
 Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-### Remote Caching
+### Remote caching
 
 Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
@@ -330,11 +330,11 @@ Share build and typecheck cache results across your team and CI with [remote cac
 nx connect
 ```
 
-### Batch Mode
+### Batch mode
 
 For large monorepos with many TypeScript projects, [TSC batch mode](/docs/technologies/typescript/guides/enable-tsc-batch-mode) can improve build performance by batching compilation across projects.
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="TypeScript Packages Tutorial" description="Build a TypeScript monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/typescript-packages-tutorial" /%}

@@ -51,7 +51,7 @@ nx build cart
 
 Browse the executors that are available in the [plugin registry](/docs/plugin-registry).
 
-## Run a Terminal Command from an Executor
+## Run a terminal command from an executor
 
 If defining a new target that needs to run a single shell command, there is a shorthand for the `nx:run-commands` executor that can be used.
 
@@ -71,7 +71,7 @@ If defining a new target that needs to run a single shell command, there is a sh
 
 For more info, see the [run-commands documentation](/docs/reference/nx/executors/run-commands)
 
-## Build your own Executor
+## Build your own executor
 
 Nx comes with a Devkit that allows you to build your own executor to automate your Nx workspace. Learn more about it in the [docs page about creating a local executor](/docs/extending-nx/local-executors).
 
@@ -84,7 +84,7 @@ nx [command] [project] --configuration=[configuration]
 nx build cart --configuration=production
 ```
 
-## Use Task Configurations
+## Use task configurations
 
 The `configurations` property provides extra sets of values that will be merged into the options map.
 
@@ -123,7 +123,7 @@ require(`@nx/jest`).executors['jest']({
 The selected configuration adds/overrides the default options, and the provided command line args add/override the
 configuration options.
 
-### Default Configuration
+### Default configuration
 
 When using multiple configurations for a given target, it's helpful to provide a default configuration.
 For example, running e2e tests for multiple environments. By default it would make sense to use a `dev` configuration for day to day work, but having the ability to run against an internal staging environment for the QA team.

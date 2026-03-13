@@ -25,7 +25,7 @@ This will install the correct version of `@nx/docker` to match the version of Nx
 The `@nx/docker` plugin only became available in Nx 21.4.0-beta.9. Your Nx Workspace will need to be on this version or higher to use it.
 {% /aside %}
 
-### How @nx/docker Infers Tasks
+### How @nx/docker infers tasks
 
 The `@nx/docker` plugin will create a task for any project that has a Dockerfile present. It will infer the following tasks:
 
@@ -33,11 +33,11 @@ The `@nx/docker` plugin will create a task for any project that has a Dockerfile
 - `docker:run`
 - `nx-release-publish`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
 
-### @nx/docker Configuration
+### @nx/docker configuration
 
 The `@nx/docker` plugin is configured in the `plugins` array in `nx.json`.
 
@@ -58,7 +58,7 @@ The `@nx/docker` plugin is configured in the `plugins` array in `nx.json`.
 
 The `buildTarget` and `runTarget` options control the names of the inferred Docker tasks. The default names are `docker:build` and `docker:run`.
 
-### Advanced Plugin Configuration
+### Advanced plugin configuration
 
 The `buildTarget` and `runTarget` options can be configured as objects to provide additional customization beyond just naming the targets. This allows you to pass custom arguments, set environment variables, and use pattern interpolation.
 
@@ -96,7 +96,7 @@ The `buildTarget` and `runTarget` options can be configured as objects to provid
 }
 ```
 
-#### Configuration Properties
+#### Configuration properties
 
 When using the object format, the following properties are available:
 
@@ -106,7 +106,7 @@ When using the object format, the following properties are available:
 - **`envFile`** (string, optional): Path to an environment file to load
 - **`cwd`** (string, optional): Working directory for the command. Supports pattern interpolation.
 
-#### Pattern Interpolation
+#### Pattern interpolation
 
 All string values in the configuration support pattern interpolation using the following tokens:
 
@@ -121,7 +121,7 @@ All string values in the configuration support pattern interpolation using the f
 
 Date formatting supports these tokens: `YYYY` (year), `YY` (2-digit year), `MM` (month), `DD` (day), `HH` (hours), `mm` (minutes), `ss` (seconds).
 
-#### Example: Multi-Platform Build with Metadata
+#### Example: multi-Platform build with metadata
 
 Here's a practical example that builds Docker images for multiple platforms and includes build metadata:
 
@@ -181,7 +181,7 @@ This configuration:
 - Enables Docker BuildKit for improved build performance
 - Injects build arguments and environment variables from the CI/CD pipeline
 
-## Using Nx Release to Publish Docker Images
+## Using Nx release to publish Docker images
 
 The `@nx/docker` plugin provides a `nx-release-publish` target for publishing docker images to a registry.
 [Nx Release](/docs/features/manage-releases) was also updated to support versioning docker images, generating changelogs, and publishing docker images to a registry through a single command.

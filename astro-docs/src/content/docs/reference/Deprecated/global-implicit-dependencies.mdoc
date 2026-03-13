@@ -9,7 +9,7 @@ filter: 'type:References'
 
 Since v14.4, Nx supports [`inputs` and `namedInputs`](/docs/guides/tasks--caching/configure-inputs) for setting up implicit dependencies. As of Nx v16, the `implicitDependencies` defined in `nx.json` are ignored and do not influence the affected graph. This field will be removed in v17. The [`implicitDependencies` in the project configuration](/docs/reference/project-configuration#implicitdependencies) are still the best way to manually set up a dependency between two projects that Nx is not able to detect automatically.
 
-## Projects Depending on Global Files
+## Projects depending on global files
 
 The old way to have the `myapp` project depend on specific files in the root of the workspace was to use `implicitDependencies`, like this:
 
@@ -44,7 +44,7 @@ The `sharedGlobals` are included in the `default` named input, so most targets w
 
 For a more detailed explanation, read the [Customizing Inputs and Named Inputs guide](/docs/guides/tasks--caching/configure-inputs)
 
-### Dependencies on Sections of the Root `package.json` File
+### Dependencies on sections of the root `package.json` file
 
 You used to be able to set up dependencies on specific packages in the `dependencies` and `devDependencies` sections of the `package.json` file, like this:
 

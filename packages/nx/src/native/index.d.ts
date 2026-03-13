@@ -20,6 +20,7 @@ export declare class AppLifeCycle {
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
+  setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
@@ -246,6 +247,19 @@ export interface EnvironmentInput {
   env: string
 }
 
+/**
+ * Canonical event dimension and metric names for GA4.
+ * TypeScript imports these from the native module instead of redefining the strings.
+ */
+export interface EventDimensions {
+  command: string
+  generatorName: string
+  packageName: string
+  packageVersion: string
+  createProjectGraph: string
+  duration: string
+}
+
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
@@ -281,9 +295,18 @@ export interface FileSetInput {
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
+/**
+ * Flush all pending telemetry data
+ * This should be called before process exit
+ */
+export declare function flushTelemetry(): void
+
 export declare function getBinaryTarget(): string
 
 export declare function getDefaultMaxCacheSize(cachePath: string): number
+
+/** Returns the canonical event dimension names. */
+export declare function getEventDimensions(): EventDimensions
 
 /**
  * Expands the given outputs into a list of existing files.
@@ -353,6 +376,13 @@ export interface HashInputs {
   /** External dependencies */
   external: Array<string>
 }
+
+/**
+ * Initialize the global telemetry service.
+ * Reads or creates a session ID from the database so that multiple CLI
+ * invocations within 30 minutes share the same GA4 session.
+ */
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string
@@ -532,6 +562,12 @@ export interface TaskTarget {
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/** Track an event using the global telemetry instance */
+export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void
+
+/** Track a page view using the global telemetry instance */
+export declare function trackPageView(pageTitle: string, pageLocation?: string | undefined | null, parameters?: Record<string, string> | undefined | null): void
 
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker

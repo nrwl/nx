@@ -55,7 +55,6 @@ export function addOrChangeTestTarget(
   const target = options.testTarget ?? 'test';
 
   const reportsDirectory = joinPathFragments(
-    offsetFromRoot(project.root),
     'coverage',
     project.root === '.' ? options.project : project.root
   );

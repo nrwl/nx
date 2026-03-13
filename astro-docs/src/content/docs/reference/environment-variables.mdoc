@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-## Nx Environment Variables
+## Nx environment variables
 
 The following environment variables are ones that you can set to change the behavior of Nx in different environments.
 
@@ -41,7 +41,7 @@ The following environment variables are ones that you can set to change the beha
 | `NX_INTERACTIVE`                   | boolean        | If set to `true`, will allow Nx to prompt you in the terminal to answer some further questions when running generators.                                                                                                             |
 | `NX_GENERATE_QUIET`                | boolean        | If set to `true`, will prevent Nx logging file operations during generate                                                                                                                                                           |
 | `NX_PREFER_TS_NODE`                | boolean        | If set to `true`, Nx will use `ts-node` for local execution of plugins even if `@swc-node/register` is installed.                                                                                                                   |
-| `NX_PREFER_NODE_STRIP_TYPES`       | boolean        | If set to `true` and running on Node.js 22.6+, Nx will use Node's native TypeScript type stripping instead of `@swc-node/register` or `ts-node` when loading TypeScript configuration files. This improves performance.             |
+| `NX_PREFER_NODE_STRIP_TYPES`       | boolean        | If set to `true` and running on Node.js 22.6+, Nx will use Node.js native TypeScript type stripping instead of `@swc-node/register` or `ts-node` when loading TypeScript configuration files. This improves performance.            |
 | `NX_IGNORE_CYCLES`                 | boolean        | If set to `true`, Nx will ignore errors created by a task graph circular dependency. Can be overridden on the command line with `--nxIgnoreCycles`                                                                                  |
 | `NX_BATCH_MODE`                    | boolean        | If set to `true`, Nx will run task(s) in batches for executors which support batches.                                                                                                                                               |
 | `NX_SKIP_LOG_GROUPING`             | boolean        | If set to `true`, Nx will not group command's logs on CI.                                                                                                                                                                           |
@@ -56,7 +56,7 @@ The following environment variables are ones that you can set to change the beha
 | `NX_FORMAT_SORT_TSCONFIG_PATHS`    | boolean        | If set to `true`, generators will sort the TypeScript path mappings in the root tsconfig file.                                                                                                                                      |
 | `NX_SKIP_VSCODE_EXTENSION_INSTALL` | boolean        | If set to `true`, skips the automatic installation of the Nx Console extension for supported editors. Set this in environments where the temp file that we store this information in otherwise isn't accessible.                    |
 
-## Plugin Environment Variables
+## Plugin environment variables
 
 The following environment variables can be used to disable specific Nx plugins. This is useful in CI environments where the required tooling (e.g., Java) is not available.
 
@@ -77,7 +77,7 @@ Nx will set the following environment variables so they can be accessible within
 | `NX_DRY_RUN`                   | boolean | Set to `true` during dry runs of generators. Use this to avoid side effects during generators.                                                            |
 | `NX_INTERACTIVE`               | boolean | Set to `false` when running generators with `--interactive=false`. Use this to prevent prompting during generators                                        |
 
-## Nx Cloud Environment Variables
+## Nx Cloud environment variables
 
 The following environment variables are specific to Nx Cloud and can be used to configure cloud-specific behavior:
 
@@ -101,7 +101,7 @@ Similar to the Nx CLI, Nx Cloud also uses the `NX_VERBOSE_LOGGING` environment v
 | `NX_VERBOSE_LOGGING`                  | boolean | Outputs debug information about agents communicating with the main job. Useful for debugging cache misses and on-premises setup issues.                                                                                |
 | `NX_WORKING_DIRECTORY`                | string  | The subdirectory containing your Nx workspace. Set this in your launch template if your Nx workspace is not at the repository root. Only used by Nx Agents.                                                            |
 
-### Deprecated Nx Cloud Environment Variables
+### Deprecated Nx Cloud environment variables
 
 | Property                                                | Type    | Description                                                                                                                                  |
 | ------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |

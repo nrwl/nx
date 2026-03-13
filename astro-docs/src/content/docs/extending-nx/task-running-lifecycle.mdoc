@@ -1,6 +1,6 @@
 ---
 title: Hook into the Task Running Lifecycle
-description: Learn how to extend Nx's task running process with preTasksExecution and postTasksExecution hooks to implement custom logic before and after tasks run.
+description: Learn how to extend Nx task running process with preTasksExecution and postTasksExecution hooks to implement custom logic before and after tasks run.
 sidebar:
   label: Task Running Lifecycle
 filter: 'type:Guides'
@@ -12,16 +12,16 @@ Nx plugins can hook into the task running lifecycle to execute custom logic befo
 These task execution hooks are the new API that replaces the deprecated Custom Tasks Runners. This feature is available since Nx 20.4+. For information about migrating from Custom Tasks Runners to these hooks, see [Deprecating Custom Tasks Runner](/docs/reference/deprecated/custom-tasks-runner).
 {% /aside %}
 
-## Task Execution Hooks
+## Task execution hooks
 
 Nx provides two hooks that plugins can register:
 
 1. `preTasksExecution`: Runs before any tasks are executed
 2. `postTasksExecution`: Runs after all tasks are executed
 
-These hooks allow you to extend Nx's functionality without affecting task execution or violating any invariants.
+These hooks allow you to extend Nx functionality without affecting task execution or violating any invariants.
 
-## Creating Task Execution Hooks
+## Creating task execution hooks
 
 To implement task execution hooks, create a plugin and export the `preTasksExecution` and/or `postTasksExecution` functions:
 
@@ -68,7 +68,7 @@ function isEnvironmentValid() {
 }
 ```
 
-## Configuring Your Plugin
+## Configuring your plugin
 
 Configure your plugin in `nx.json` by adding it to the `plugins` array:
 
@@ -88,11 +88,11 @@ Configure your plugin in `nx.json` by adding it to the `plugins` array:
 
 The options you specify in the configuration will be passed to your hook functions.
 
-## Maintaining State Across Command Invocations
+## Maintaining state across command invocations
 
 By default, every plugin initiates a long-running process, allowing you to maintain state across command invocations. This is particularly useful for gathering advanced analytics or providing cumulative feedback.
 
-## Conditional Execution
+## Conditional execution
 
 You can implement conditional logic in your hooks to control when they run:
 
@@ -117,11 +117,11 @@ export async function postTasksExecution(options, context) {
 }
 ```
 
-## Using `context.argv` to Determine the Command
+## Using `context.argv` to determine the command
 
 The context object includes an `argv` property that contains the original CLI arguments used to invoke Nx. This allows you to distinguish between different execution modes and apply conditional logic.
 
-### Context Properties
+### Context properties
 
 Both `preTasksExecution` and `postTasksExecution` hooks receive a context object with the following properties:
 
@@ -144,7 +144,7 @@ type PostTasksExecutionContext = {
 };
 ```
 
-### Example: Detecting Command Types
+### Example: Detecting command types
 
 ```typescript
 export async function postTasksExecution(options, context) {
@@ -159,7 +159,7 @@ export async function postTasksExecution(options, context) {
 }
 ```
 
-### Example: Conditional Analytics Based on Command
+### Example: conditional analytics based on command
 
 ```typescript
 function isAffectedCommand(argv) {
@@ -188,13 +188,13 @@ export async function postTasksExecution(options, context) {
 }
 ```
 
-### Common Command Patterns
+### Common command patterns
 
 - Direct execution: `nx build my-app` → `argv: ['node', '/path/to/nx', 'build', 'my-app']`
 - Affected: `nx affected -t build test` → `argv: ['node', '/path/to/nx', 'affected', '-t', 'build', 'test']`
 - Run many: `nx run-many -t build -p app1 app2` → `argv: ['node', '/path/to/nx', 'run-many', '-t', 'build', '-p', 'app1', 'app2']`
 
-### Best Practices for Parsing argv
+### Best practices for parsing argv
 
 When working with `context.argv`, parse it defensively:
 
@@ -209,7 +209,7 @@ const targetIndex = context.argv.findIndex(
 const target = targetIndex !== -1 ? context.argv[targetIndex + 1] : undefined;
 ```
 
-## Best Practices
+## Best practices
 
 1. **Keep hooks fast**: Hooks should execute quickly to avoid slowing down the task execution process
 2. **Handle errors gracefully**: Ensure your hooks don't crash the entire execution pipeline

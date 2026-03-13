@@ -17,7 +17,7 @@ For more details, see the [Vite environment variables documentation](https://vit
 
 You can then use these variables in your application code like so: `import.meta.env.VITE_CUSTOM_VAR`.
 
-### Environment Variable Conflict between Nx and Vite
+### Environment variable conflict between Nx and Vite
 
 When using Nx with Vite, you may encounter an issue related to loading environment variables that can lead to unexpected behavior. This issue arises due to the way Nx and Vite handle environment files and configuration settings.
 
@@ -27,13 +27,13 @@ When using Nx with Vite, you may encounter an issue related to loading environme
 
 The conflict occurs when you use the `--configuration` flag in Nx. In such cases, the `--mode` flag in Vite is ignored. For example, this behavior can be particularly confusing, as it may seem like you are always loading the `development` mode in Vite, instead of the expected one, if you're using the `--configuration=development` setting or if your default configuration is `development`.
 
-The root cause of this issue is that Nx has already loaded variables from `.env.[configuration]`. So any variables defined in both Nx and Vite's `.env.[mode]` files will have their values overridden by the Nx-loaded values.
+The root cause of this issue is that Nx has already loaded variables from `.env.[configuration]`. So any variables defined in both Nx and Vite `.env.[mode]` files will have their values overridden by the Nx-loaded values.
 
 #### Solution
 
 Adapt to the Nx way of handling environment variables by following the [guide on defining environment variables](/docs/guides/tips-n-tricks/define-environment-variables). This ensures consistent behavior and prevents conflicts when using Nx with Vite.
 
-However, if you still want to use Vite's `mode`, you can. To avoid conflicts between Nx and Vite environment variables, establish a clear distinction between `configuration` and `mode` names. By assigning distinct names to both `configuration` and `mode`, you can eliminate any potential conflicts that may arise during environment variable loading. Additionally, consider defining custom configurations in your Nx workspace, each with a corresponding `mode` option. For example, you can create configurations like `development`, `production`, and `staging`, each with its respective `mode` set, like this:
+However, if you still want to use Vite `mode`, you can. To avoid conflicts between Nx and Vite environment variables, establish a clear distinction between `configuration` and `mode` names. By assigning distinct names to both `configuration` and `mode`, you can eliminate any potential conflicts that may arise during environment variable loading. Additionally, consider defining custom configurations in your Nx workspace, each with a corresponding `mode` option. For example, you can create configurations like `development`, `production`, and `staging`, each with its respective `mode` set, like this:
 
 ```json frame="none"
 "configurations": {
