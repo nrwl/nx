@@ -80,6 +80,8 @@ jobs:
           pnpm nx report
 
       - name: Run Checks/Lint/Test/Build
+        env:
+          NX_VERBOSE_LOGGING: 'true'
         run: |
           pids=()
 
