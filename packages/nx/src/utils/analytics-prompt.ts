@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import { execSync } from 'child_process';
+import { existsSync } from 'fs';
 import { prompt } from 'enquirer';
 import { join } from 'path';
 import { output } from './output';
@@ -21,6 +22,14 @@ export async function ensureAnalyticsPreferenceSet(): Promise<void> {
   // Only prompt in interactive terminals
   const isInteractive = process.stdin.isTTY && process.stdout.isTTY;
   if (!isInteractive) {
+    return;
+  }
+
+  // Only prompt inside a workspace that has nx.json — avoid creating
+  // nx.json in arbitrary directories (e.g. when running cloud commands
+  // outside a workspace).
+  const nxJsonPath = join(workspaceRoot, 'nx.json');
+  if (!existsSync(nxJsonPath)) {
     return;
   }
 
