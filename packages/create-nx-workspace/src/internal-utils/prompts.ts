@@ -142,6 +142,32 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
   return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
 }
 
+export async function determineAnalytics(
+  parsedArgs: yargs.Arguments<{ analytics?: boolean }>
+): Promise<boolean> {
+  if (typeof parsedArgs.analytics === 'boolean') {
+    return parsedArgs.analytics;
+  }
+
+  if (!parsedArgs.interactive || isCI()) {
+    // Default to false in non-interactive/CI
+    return false;
+  }
+
+  const { enableAnalytics } = await enquirer.prompt<{
+    enableAnalytics: 'Yes' | 'No';
+  }>([
+    {
+      name: 'enableAnalytics',
+      message: 'Help improve Nx by sharing your usage data?',
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return enableAnalytics === 'Yes';
+}
+
 export async function determineDefaultBase(
   parsedArgs: yargs.Arguments<{ defaultBase?: string }>
 ): Promise<string> {
