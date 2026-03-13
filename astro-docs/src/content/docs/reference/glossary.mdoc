@@ -24,6 +24,12 @@ Atomizer automatically splits tasks on [Nx Agents](#nx-agents), providing you de
 
 > See: [Automatically Split E2E Tasks](/docs/features/ci-features/split-e2e-tasks)
 
+### Batch mode
+
+A way to run multiple [tasks](#task) in a single process instead of spawning a separate process for each one. Batch mode reduces per-process startup overhead and lets tools like `tsc` and Gradle share state across tasks. Enable it by setting `NX_BATCH_MODE=true` or passing `--batch`.
+
+> See: [Batch Mode](/docs/guides/tasks--caching/batch-mode)
+
 ### Buildable library
 
 A [library](#library) that has a `build` [target](#target). Some libraries can be generated with a `build` target using the `--buildable` flag.
