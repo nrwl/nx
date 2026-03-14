@@ -1,9 +1,9 @@
-import { Task } from '../config/task-graph';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
+import { Task } from '../config/task-graph';
+import { workspaceRoot } from '../utils/workspace-root';
 import { getEnvPathsForTask } from './task-env-paths';
 
 export function getEnvVariablesForBatchProcess(
@@ -112,6 +112,13 @@ function getNxEnvVariablesForTask(
     env.NX_TERMINAL_CAPTURE_STDERR = 'true';
   }
 
+  // Track the chain of task invocations across nested Nx processes for loop detection.
+  // Each nested Nx process inherits this env var, allowing us to detect when a task
+  // re-invokes itself (directly or indirectly) before it causes an infinite loop.
+  const taskKey = `${task.target.project}:${task.target.target}`;
+  const existingChain = process.env.NX_TASK_INVOCATION_CHAIN;
+  const updatedChain = `${existingChain ?? '$0'} -> ${taskKey}`;
+
   return {
     ...getNxEnvVariablesForForkedProcess(
       forceColor,
@@ -123,6 +130,7 @@ function getNxEnvVariablesForTask(
     ...env,
     // Ensure the TUI does not get spawned within the TUI if ever tasks invoke Nx again
     NX_TUI: 'false',
+    NX_TASK_INVOCATION_CHAIN: updatedChain,
   };
 }
 
