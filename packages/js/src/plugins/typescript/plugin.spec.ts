@@ -1761,8 +1761,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
-                      "{projectRoot}/nested-project/tsconfig.json",
-                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
+                      "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1842,6 +1841,113 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should collect distinct tsconfig patterns from file-specific external project references', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            exclude: ['src/**/*.spec.ts'],
+            references: [
+              { path: '../other-lib/tsconfig.lib.json' }, // file-specific external ref
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.spec.json': JSON.stringify({
+            include: ['src/**/*.spec.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: '../other-lib/tsconfig.spec.json' }, // file-specific external ref
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+          }),
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/tsconfig.spec.json': JSON.stringify({
+            include: ['src/**/*.spec.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        // typecheck collects both tsconfig.lib.json and tsconfig.spec.json
+        // because both internal refs have file-specific external references
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.spec.json'
+        );
+      });
+
+      it('should use relative paths for nested tsconfig references in external deps', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: '../other-lib' }, // directory ref to external dep
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './cypress/tsconfig.json' }, // nested dir inner ref
+            ],
+          }),
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/cypress/tsconfig.json': JSON.stringify({
+            include: ['**/*.cy.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/package.json': `{}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        // should include nested path, not just the basename
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/cypress/tsconfig.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.json'
+        );
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {
@@ -2573,8 +2679,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
-                      "{projectRoot}/nested-project/tsconfig.json",
-                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
+                      "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -4450,7 +4555,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
-                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
+                      "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4481,6 +4586,48 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should only collect tsconfig patterns from the build reference chain', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': '{}',
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: '../other-lib/tsconfig.lib.json' }, // file-specific external ref
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+          }),
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/tsconfig.spec.json': JSON.stringify({
+            include: ['src/**/*.spec.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        // build only collects tsconfig.lib.json because the reference chain
+        // from tsconfig.lib.json only goes through dep/tsconfig.lib.json
+        expect(myLibTargets.build.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.build.inputs).not.toContain(
+          '^{projectRoot}/tsconfig.spec.json'
+        );
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {
