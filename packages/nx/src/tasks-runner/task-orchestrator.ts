@@ -991,7 +991,7 @@ export class TaskOrchestrator {
       temporaryOutputPath,
       pipeOutput
     );
-    this.runningTasksService.addRunningTask(task.id);
+    this.runningTasksService?.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, {
       runningTask: childProcess,
       groupId,
@@ -1307,7 +1307,7 @@ export class TaskOrchestrator {
 
     this.runningContinuousTasks.delete(task.id);
     if (ownsRunningTasksService) {
-      this.runningTasksService.removeRunningTask(task.id);
+      this.runningTasksService?.removeRunningTask(task.id);
     }
 
     task.endTime = Date.now();
