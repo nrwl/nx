@@ -39,6 +39,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               ],
               "syncGenerators": [
                 "@nx/js:typescript-sync",
+                "@nx/js:deps-sync",
               ],
             },
             "my-serve": {
@@ -49,6 +50,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               },
               "syncGenerators": [
                 "@nx/js:typescript-sync",
+                "@nx/js:deps-sync",
               ],
             },
             "my-serve-static": {
@@ -120,6 +122,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               ],
               "syncGenerators": [
                 "@nx/js:typescript-sync",
+                "@nx/js:deps-sync",
               ],
             },
             "build-deps": {
@@ -135,6 +138,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               },
               "syncGenerators": [
                 "@nx/js:typescript-sync",
+                "@nx/js:deps-sync",
               ],
             },
             "serve-static": {
