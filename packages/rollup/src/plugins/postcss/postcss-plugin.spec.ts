@@ -133,6 +133,19 @@ describe('postcss plugin', () => {
       expect(result.code).not.toContain('styleInject');
     });
 
+    it('should set moduleSideEffects to prevent treeshaking of CSS modules', async () => {
+      const plugin = postcss({ inject: false, extract: true });
+      const transform = plugin.transform as Function;
+
+      const result = await transform.call(
+        mockContext,
+        '.foo { color: red; }',
+        '/path/to/styles.css'
+      );
+
+      expect(result.moduleSideEffects).toBe(true);
+    });
+
     it('should process .scss files', async () => {
       const plugin = postcss();
       const transform = plugin.transform as Function;

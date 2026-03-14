@@ -234,6 +234,11 @@ export function postcss(pluginOptions: PostCSSPluginOptions = {}): Plugin {
       return {
         code: result.code,
         map: toRollupSourceMap(result.map) ?? { mappings: '' },
+        // Prevent Rollup from treeshaking CSS modules away.
+        // In extract mode the transform produces an empty export which
+        // Rollup would otherwise remove, causing generateBundle to miss
+        // the CSS content entirely.
+        moduleSideEffects: true,
       };
     },
 
