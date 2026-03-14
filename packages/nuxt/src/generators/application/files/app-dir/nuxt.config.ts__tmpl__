@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     port: 4200,
   },
   typescript: {
-    typeCheck: true,
+    typeCheck: false,
     tsConfig: {
       extends: '../<%= relativePathToRootTsConfig %>', // Nuxt copies this string as-is to the `./.nuxt/tsconfig.json`, therefore it needs to be relative to that directory
       <%_ if (isUsingTsSolutionConfig) { _%>
