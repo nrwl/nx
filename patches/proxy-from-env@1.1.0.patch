@@ -1,0 +1,27 @@
+diff --git a/index.js b/index.js
+index df75004aed7007aaf4624aaa1847a6fedc1bdf09..9181f8ea533baa5c9e94b3e2fc2c1b192d60296d 100644
+--- a/index.js
++++ b/index.js
+@@ -1,6 +1,12 @@
+ 'use strict';
+ 
+-var parseUrl = require('url').parse;
++function parseUrl(urlString) {
++  try {
++    return new URL(urlString);
++  } catch {
++    return null;
++  }
++}
+ 
+ var DEFAULT_PORTS = {
+   ftp: 21,
+@@ -22,7 +28,7 @@ var stringEndsWith = String.prototype.endsWith || function(s) {
+  *  given URL. If no proxy is set, this will be an empty string.
+  */
+ function getProxyForUrl(url) {
+-  var parsedUrl = typeof url === 'string' ? parseUrl(url) : url || {};
++  var parsedUrl = (typeof url === 'string' ? parseUrl(url) : url) || {};
+   var proto = parsedUrl.protocol;
+   var hostname = parsedUrl.host;
+   var port = parsedUrl.port;
