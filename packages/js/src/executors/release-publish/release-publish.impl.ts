@@ -41,6 +41,7 @@ export default async function runExecutor(
       execSync('npm --version', {
         encoding: 'utf-8',
         windowsHide: true,
+        stdio: ['ignore', 'pipe', 'ignore'],
       }).trim() !== '';
   } catch {
     // Allow missing npm only when using bun
@@ -147,21 +148,14 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     warnFn
   );
 
-  // Build the view command based on the detected package manager
-  const viewCommand =
+  // Use bun info when bun is the package manager, otherwise use npm view
+  // (npm view works across npm/pnpm/yarn environments and is the established default)
+  const npmViewCommandSegments =
     pm === 'bun'
-      ? 'bun info'
-      : pm === 'yarn'
-        ? 'yarn info'
-        : pm === 'pnpm'
-          ? 'pnpm view'
-          : 'npm view';
-  const npmViewCommandSegments = [viewCommand, packageName];
-  // Only npm and pnpm support specifying multiple field names for filtering
-  if (pm === 'npm' || pm === 'pnpm') {
-    npmViewCommandSegments.push('versions dist-tags');
-  }
-  npmViewCommandSegments.push(`--json --"${registryConfigKey}=${registry}"`);
+      ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
+      : [
+          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+        ];
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
@@ -288,6 +282,11 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
           !(
             err.stderr?.toString().includes('E404') &&
             err.stderr?.toString().toLowerCase().includes('not found')
+          ) &&
+          // bun uses plain '404' instead of 'E404'
+          !(
+            err.stderr?.toString().includes('404') &&
+            err.stderr?.toString().toLowerCase().includes('not found')
           )
         ) {
           console.error(
@@ -299,7 +298,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
           };
         }
       } catch {
-        // If we can't parse JSON (e.g., bun returns plain text errors), check stderr/stdout for 404
+        // JSON parse failed entirely — check stderr/stdout for plain 404
         const stderrStr = err.stderr?.toString() || '';
         const stdoutStr = err.stdout?.toString() || '';
         if (
