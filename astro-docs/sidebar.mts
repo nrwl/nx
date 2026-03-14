@@ -887,6 +887,7 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Workspace Watching',
             link: 'guides/tasks--caching/workspace-watching',
           },
+          { label: 'Batch Mode', link: 'guides/tasks--caching/batch-mode' },
           { label: 'Terminal UI', link: 'guides/tasks--caching/terminal-ui' },
         ],
       },
