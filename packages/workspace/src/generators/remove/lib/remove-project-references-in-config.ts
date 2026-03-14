@@ -1,6 +1,7 @@
 import { Schema } from '../schema';
 import {
   getProjects,
+  NxJsonConfiguration,
   readNxJson,
   Tree,
   updateNxJson,
@@ -8,10 +9,26 @@ import {
 } from '@nx/devkit';
 
 export function removeProjectReferencesInConfig(tree: Tree, schema: Schema) {
-  // Unset default project if deleting the default project
   const nxJson = readNxJson(tree);
+  let nxJsonChanged = false;
+
+  // Unset default project if deleting the default project
   if (nxJson.defaultProject && nxJson.defaultProject === schema.projectName) {
     delete nxJson.defaultProject;
+    nxJsonChanged = true;
+  }
+
+  // Remove project from conformance rules
+  if (removeProjectFromConformanceRules(nxJson, schema.projectName)) {
+    nxJsonChanged = true;
+  }
+
+  // Remove project from owners patterns
+  if (removeProjectFromOwnersPatterns(nxJson, schema.projectName)) {
+    nxJsonChanged = true;
+  }
+
+  if (nxJsonChanged) {
     updateNxJson(tree, nxJson);
   }
 
@@ -29,4 +46,100 @@ export function removeProjectReferencesInConfig(tree: Tree, schema: Schema) {
       updateProjectConfiguration(tree, projectName, project);
     }
   });
+}
+
+function removeProjectFromConformanceRules(
+  nxJson: NxJsonConfiguration,
+  projectName: string
+): boolean {
+  const conformance = nxJson['conformance'] as
+    | { rules?: { projects?: (string | { matcher: string })[] }[] }
+    | undefined;
+
+  if (!conformance?.rules) {
+    return false;
+  }
+
+  let changed = false;
+  for (const rule of conformance.rules) {
+    if (!rule.projects) {
+      continue;
+    }
+
+    const filtered = rule.projects.filter((entry) => {
+      if (typeof entry === 'string') {
+        return entry !== projectName;
+      }
+      if (typeof entry === 'object' && entry.matcher) {
+        return entry.matcher !== projectName;
+      }
+      return true;
+    });
+
+    if (filtered.length !== rule.projects.length) {
+      rule.projects = filtered;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
+function removeProjectFromOwnersPatterns(
+  nxJson: NxJsonConfiguration,
+  projectName: string
+): boolean {
+  const owners = nxJson['owners'] as
+    | {
+        patterns?: { projects?: string[] }[];
+        sections?: { patterns?: { projects?: string[] }[] }[];
+      }
+    | boolean
+    | undefined;
+
+  if (typeof owners !== 'object' || !owners) {
+    return false;
+  }
+
+  let changed = false;
+
+  // Filter top-level patterns
+  if (owners.patterns) {
+    if (filterOwnersPatternsList(owners.patterns, projectName)) {
+      changed = true;
+    }
+  }
+
+  // Filter section-level patterns (GitLab)
+  if (owners.sections) {
+    for (const section of owners.sections) {
+      if (section.patterns) {
+        if (filterOwnersPatternsList(section.patterns, projectName)) {
+          changed = true;
+        }
+      }
+    }
+  }
+
+  return changed;
+}
+
+function filterOwnersPatternsList(
+  patterns: { projects?: string[] }[],
+  projectName: string
+): boolean {
+  let changed = false;
+  for (const pattern of patterns) {
+    if (!pattern.projects) {
+      continue;
+    }
+
+    const filtered = pattern.projects.filter((entry) => entry !== projectName);
+
+    if (filtered.length !== pattern.projects.length) {
+      pattern.projects = filtered;
+      changed = true;
+    }
+  }
+  return changed;
 }
