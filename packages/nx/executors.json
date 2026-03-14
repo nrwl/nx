@@ -1,18 +1,18 @@
 {
   "executors": {
     "noop": {
-      "implementation": "./src/executors/noop/noop.impl",
-      "schema": "./src/executors/noop/schema.json",
+      "implementation": "./dist/src/executors/noop/noop.impl",
+      "schema": "./dist/src/executors/noop/schema.json",
       "description": "An executor that does nothing"
     },
     "run-commands": {
-      "implementation": "./src/executors/run-commands/run-commands.impl",
-      "schema": "./src/executors/run-commands/schema.json",
+      "implementation": "./dist/src/executors/run-commands/run-commands.impl",
+      "schema": "./dist/src/executors/run-commands/schema.json",
       "description": "Run any custom commands with Nx."
     },
     "run-script": {
-      "implementation": "./src/executors/run-script/run-script.impl",
-      "schema": "./src/executors/run-script/schema.json",
+      "implementation": "./dist/src/executors/run-script/run-script.impl",
+      "schema": "./dist/src/executors/run-script/schema.json",
       "description": "Run an NPM script using Nx."
     }
   }

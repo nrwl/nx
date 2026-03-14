@@ -128,6 +128,7 @@ packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
 packages/dotnet/README.md
 packages/maven/README.md
+packages/nx/README.md
 
 test-output
 test-results
@@ -141,3 +142,10 @@ test-results
 /*.deb
 .nx/polygraph/
 .claude/worktrees
+
+# Nx Typings Output
+packages/nx/**/*.d.ts
+!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
+!packages/nx/src/native/index.d.ts
+e2e/**/*.d.ts
+e2e/**/*.d.ts.map

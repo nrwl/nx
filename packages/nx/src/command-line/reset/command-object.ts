@@ -1,4 +1,5 @@
 import { CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 
 export type ResetCommandOptions = {
   onlyCache?: boolean;
@@ -37,5 +38,6 @@ export const yargsResetCommand: CommandModule<
           'Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc).',
         type: 'boolean',
       }),
-  handler: async (argv) => (await import('./reset')).resetHandler(argv),
+  handler: async (argv) =>
+    (await handleImport('./reset.js', __dirname)).resetHandler(argv),
 };
