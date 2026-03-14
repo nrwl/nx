@@ -33,8 +33,6 @@ expect.addSnapshotSerializer({
         .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
-        // Filter out npm warnings that may vary by npm version
-        .replaceAll(/npm warn .*\n?/g, '')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
