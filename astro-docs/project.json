@@ -86,9 +86,18 @@
       "command": "playwright show-report dist/astro-docs/playwright-report"
     },
     "validate-links": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build",
+        {
+          "projects": ["nx-dev"],
+          "target": "sitemap"
+        }
+      ],
       "cache": true,
       "inputs": [
+        "{projectRoot}/validate-links.ts",
+        "{workspaceRoot}/docs/**/*.md",
+        { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
         "{projectRoot}/sidebar.mts",
