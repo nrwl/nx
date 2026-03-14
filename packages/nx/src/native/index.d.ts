@@ -48,7 +48,7 @@ export declare class FileLock {
 }
 
 export declare class HashPlanInspector {
-  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
   /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
@@ -174,7 +174,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
    * Every task in `hash_plans` must have an entry in `per_task_envs` —
@@ -183,7 +183,7 @@ export declare class TaskHasher {
    * the same env should build `per_task_envs` by keying that env under
    * every task id.
    */
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -213,7 +213,7 @@ export declare class WorkspaceContext {
   hashFilesMatchingGlobs(globGroups: Array<Array<string>>): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
-  updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
+  updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   getFilesInDirectory(directory: string): Array<string>
 }
@@ -242,7 +242,7 @@ export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): P
 
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
-export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
 export declare function copy(src: string, dest: string): number
 
@@ -301,7 +301,7 @@ export interface FileData {
 }
 
 export interface FileMap {
-  projectFileMap: ProjectFiles
+  projectFileMap: Record<string, Array<FileData>>
   nonProjectFiles: Array<FileData>
 }
 
@@ -331,12 +331,6 @@ export declare function getEventDimensions(): EventDimensions
  * for a single task.
  */
 export declare function getFilesForOutputsBatch(directory: string, entriesBatch: Array<Array<string>>): Array<Array<string>>
-
-/**
- * If `workspace_root` is inside a git worktree, returns the main repo root.
- * Returns `None` when already in the main repo (or not in a git repo at all).
- */
-export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
@@ -402,20 +396,11 @@ export interface HashInputs {
 }
 
 /**
- * Initialize telemetry using a DB connection.
- * Gets/creates the session ID from the DB, stores the connection
- * for persisting session refreshes on flush, and returns the session ID
- * so the caller can set it as an env var for child processes.
- * Used by CLI and daemon.
+ * Initialize the global telemetry service.
+ * Reads or creates a session ID from the database so that multiple CLI
+ * invocations within 30 minutes share the same GA4 session.
  */
-export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
-
-/**
- * Initialize telemetry with a pre-fetched session ID.
- * No DB connection — used by plugin workers that inherit the
- * session ID from their parent process via env var.
- */
-export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string
@@ -464,11 +449,11 @@ export interface MetricsUpdate {
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
-  namedInputs?: Record<string, Array<JsInputs>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput>>
 }
 
 export interface NxWorkspaceFiles {
-  projectFileMap: ProjectFiles
+  projectFileMap: Record<string, Array<FileData>>
   globalFiles: Array<FileData>
   externalReferences?: NxWorkspaceFilesExternals
 }
@@ -478,7 +463,7 @@ export interface NxWorkspaceFiles {
  * `FromNapiValue` since `External<T>` only supports `FromNapiRef` in napi v3.
  */
 export interface NxWorkspaceFilesExternals {
-  projectFiles: ExternalObject<ProjectFiles>
+  projectFiles: ExternalObject<Record<string, Array<FileData>>>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
 }
@@ -506,7 +491,7 @@ export interface ProcessMetrics {
 
 export interface Project {
   root: string
-  namedInputs?: Record<string, Array<JsInputs>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput>>
   tags?: Array<string>
   targets: Record<string, Target>
 }
@@ -547,7 +532,7 @@ export interface SystemInfo {
 
 export interface Target {
   executor?: string
-  inputs?: Array<JsInputs>
+  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput>
   outputs?: Array<string>
   options?: string
   configurations?: string
