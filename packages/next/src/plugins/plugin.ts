@@ -239,20 +239,25 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
 }
 
 async function getOutputs(projectRoot, nextConfig) {
-  let dir = '.next';
   const { PHASE_PRODUCTION_BUILD } = require('next/constants');
+  let resolvedConfig: { distDir?: string; output?: string } | undefined;
 
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
-    const configResult = await Promise.resolve(
+    resolvedConfig = await Promise.resolve(
       nextConfig(PHASE_PRODUCTION_BUILD, { defaultConfig: {} })
     );
-    if (configResult?.distDir) {
-      dir = configResult?.distDir;
-    }
-  } else if (typeof nextConfig === 'object' && nextConfig?.distDir) {
-    // If nextConfig is an object, directly use its 'distDir' property.
-    dir = nextConfig.distDir;
+  } else if (typeof nextConfig === 'object') {
+    resolvedConfig = nextConfig;
+  }
+
+  let dir: string;
+  if (resolvedConfig?.distDir) {
+    dir = resolvedConfig.distDir;
+  } else if (resolvedConfig?.output === 'export') {
+    dir = 'out';
+  } else {
+    dir = '.next';
   }
 
   if (projectRoot === '.') {
