@@ -809,6 +809,10 @@
                   "dependencies": {
                     "type": "boolean"
                   },
+                  "dependents": {
+                    "type": "boolean",
+                    "description": "If true, the target will be executed for each project that depends on this project (reverse dependency execution). Should not be specified together with `projects` or `dependencies`."
+                  },
                   "target": {
                     "type": "string",
                     "description": "The name of the target."
@@ -828,6 +832,9 @@
                     "required": ["dependencies", "target"]
                   },
                   {
+                    "required": ["dependents", "target"]
+                  },
+                  {
                     "required": ["target"],
                     "not": {
                       "anyOf": [
@@ -836,6 +843,9 @@
                         },
                         {
                           "required": ["dependencies"]
+                        },
+                        {
+                          "required": ["dependents"]
                         }
                       ]
                     }
