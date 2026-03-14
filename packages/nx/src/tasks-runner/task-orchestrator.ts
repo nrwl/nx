@@ -234,12 +234,17 @@ export class TaskOrchestrator {
         if (this.initializingTaskIds.has(task.id)) {
           await new Promise<void>((res) => {
             runningTask.onExit((code) => {
-              if (!this.tuiEnabled) {
+              if (!this.tuiEnabled && !this.stopRequested) {
                 if (code > 128) {
                   process.exit(code);
                 }
               }
-              res();
+              // When stopping, don't resolve — let cleanup finish via
+              // resolveStopPromise instead of letting Promise.all(threads)
+              // win the Promise.race in run() and exit prematurely.
+              if (!this.stopRequested) {
+                res();
+              }
             });
           });
         }
@@ -1368,9 +1373,11 @@ export class TaskOrchestrator {
       );
     }
 
-    // Kill all processes
-    this.forkedProcessTaskRunner.cleanup();
+    // Kill all processes — await forked runner cleanup for graceful shutdown
+    const forkedCleanup = this.forkedProcessTaskRunner.cleanup();
+    const continuousTaskIds = new Set(continuousSnapshot.map(([id]) => id));
     await Promise.all([
+      forkedCleanup,
       ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
           await runningTask.kill();
@@ -1378,13 +1385,16 @@ export class TaskOrchestrator {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         }
       }),
-      ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
-        try {
-          await t.kill();
-        } catch (e) {
-          console.error(`Unable to terminate ${taskId}\nError:`, e);
-        }
-      }),
+      // Skip tasks already killed via continuousSnapshot to avoid duplicate signals
+      ...Array.from(this.runningRunCommandsTasks)
+        .filter(([taskId]) => !continuousTaskIds.has(taskId))
+        .map(async ([taskId, t]) => {
+          try {
+            await t.kill();
+          } catch (e) {
+            console.error(`Unable to terminate ${taskId}\nError:`, e);
+          }
+        }),
     ]);
 
     // Discrete exit promises resolve promptly (process kill → getResults →
@@ -1394,30 +1404,25 @@ export class TaskOrchestrator {
   }
 
   private setupSignalHandlers() {
-    process.once('SIGINT', () => {
+    // Use process.on (not once) so the handler stays registered and absorbs
+    // re-raised signals from signal-exit. Without this, signal-exit's handler
+    // sees no remaining listeners after our once-handler auto-removes, and
+    // re-raises the signal — killing the process before async cleanup completes.
+    // The cleanup() idempotency guard (cleanupDone) prevents double execution.
+    const handleSignal = (signal: NodeJS.Signals) => {
+      if (this.stopRequested) return;
       this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
         } else {
-          process.exit(signalToCode('SIGINT'));
+          process.exit(signalToCode(signal));
         }
       });
-    });
-    process.once('SIGTERM', () => {
-      this.cleanup().finally(() => {
-        if (this.resolveStopPromise) {
-          this.resolveStopPromise();
-        }
-      });
-    });
-    process.once('SIGHUP', () => {
-      this.cleanup().finally(() => {
-        if (this.resolveStopPromise) {
-          this.resolveStopPromise();
-        }
-      });
-    });
+    };
+    process.on('SIGINT', () => handleSignal('SIGINT'));
+    process.on('SIGTERM', () => handleSignal('SIGTERM'));
+    process.on('SIGHUP', () => handleSignal('SIGHUP'));
   }
 
   private cleanUpUnneededContinuousTasks() {
