@@ -257,6 +257,9 @@ export interface EventDimensions {
   packageName: string
   packageVersion: string
   duration: string
+  taskCount: string
+  projectCount: string
+  cachedTaskCount: string
 }
 
 export declare const enum EventType {

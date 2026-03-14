@@ -8,6 +8,7 @@ import type {
   trackEvent as TrackEventType,
   trackPageView as TrackPageViewType,
   getEventDimensions as GetEventDimensionsType,
+  EventDimensions,
 } from '../native';
 import {
   getPackageManagerVersion,
@@ -37,7 +38,13 @@ if (!IS_WASM) {
   getEventDimensions = nativeModule.getEventDimensions;
 }
 
-const customDimensions = IS_WASM ? null : (getEventDimensions?.() ?? null);
+export const customDimensions = IS_WASM
+  ? null
+  : (getEventDimensions?.() ?? null);
+
+export type EventParameters = Partial<
+  Record<EventDimensions[keyof EventDimensions], string | number | boolean>
+>;
 
 let _telemetryInitialized = false;
 
@@ -127,10 +134,8 @@ export function reportCommandRunEvent(
   trackPageView(command, pageLocation, parameters);
 }
 
-export function reportPerfEvent(name: string, duration: number) {
-  trackEvent(name, {
-    [customDimensions.duration]: duration,
-  });
+export function reportEvent(name: string, eventParameters?: EventParameters) {
+  trackEvent(name, eventParameters);
 }
 
 const SKIP_ARGS_KEYS = new Set([

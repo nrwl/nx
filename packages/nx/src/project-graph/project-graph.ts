@@ -1,6 +1,7 @@
 import { performance } from 'perf_hooks';
 
 import { join } from 'path';
+import { customDimensions } from '../analytics';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -9,7 +10,6 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
-import { measureAndTrack } from '../utils/perf-logging';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
@@ -296,11 +296,18 @@ export async function createProjectGraphAndSourceMapsAsync(
     );
     if (currentProjectGraph) {
       performance.mark('createProjectGraphAsync:end');
-      measureAndTrack(
-        'createProjectGraphAsync',
-        'createProjectGraphAsync:start',
-        'createProjectGraphAsync:end'
-      );
+      performance.measure('createProjectGraphAsync', {
+        start: 'createProjectGraphAsync:start',
+        end: 'createProjectGraphAsync:end',
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(
+              currentProjectGraph.nodes
+            ).length,
+          }),
+        },
+      });
       return {
         projectGraph: currentProjectGraph,
         sourceMaps: currentSourceMaps,
@@ -378,11 +385,17 @@ export async function createProjectGraphAndSourceMapsAsync(
         'build-project-graph-using-project-file-map:end'
       );
       performance.mark('createProjectGraphAsync:end');
-      measureAndTrack(
-        'createProjectGraphAsync',
-        'createProjectGraphAsync:start',
-        'createProjectGraphAsync:end'
-      );
+      performance.measure('createProjectGraphAsync', {
+        start: 'createProjectGraphAsync:start',
+        end: 'createProjectGraphAsync:end',
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(res.projectGraph.nodes)
+              .length,
+          }),
+        },
+      });
       return res;
     } catch (e) {
       handleProjectGraphError(opts, e);
@@ -394,11 +407,18 @@ export async function createProjectGraphAndSourceMapsAsync(
       const projectGraphAndSourceMaps =
         await daemonClient.getProjectGraphAndSourceMaps();
       performance.mark('createProjectGraphAsync:end');
-      measureAndTrack(
-        'createProjectGraphAsync',
-        'createProjectGraphAsync:start',
-        'createProjectGraphAsync:end'
-      );
+      performance.measure('createProjectGraphAsync', {
+        start: 'createProjectGraphAsync:start',
+        end: 'createProjectGraphAsync:end',
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(
+              projectGraphAndSourceMaps.projectGraph.nodes
+            ).length,
+          }),
+        },
+      });
       return projectGraphAndSourceMaps;
     } catch (e) {
       if (e.message && e.message.indexOf('inotify_add_watch') > -1) {
