@@ -260,6 +260,9 @@ patchedDependencies:
   '@astrojs/starlight':
     hash: 228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235
     path: patches/@astrojs__starlight.patch
+  proxy-from-env@1.1.0:
+    hash: ced53adeecce42baaa980515d857b9b20b05b90226160a0c6bf1ad587c75132b
+    path: patches/proxy-from-env@1.1.0.patch
 
 importers:
 
@@ -41815,7 +41818,7 @@ snapshots:
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.1)
       form-data: 4.0.4
-      proxy-from-env: 1.1.0
+      proxy-from-env: 1.1.0(patch_hash=ced53adeecce42baaa980515d857b9b20b05b90226160a0c6bf1ad587c75132b)
     transitivePeerDependencies:
       - debug
 
@@ -53500,7 +53503,7 @@ snapshots:
 
   proxy-from-env@1.0.0: {}
 
-  proxy-from-env@1.1.0: {}
+  proxy-from-env@1.1.0(patch_hash=ced53adeecce42baaa980515d857b9b20b05b90226160a0c6bf1ad587c75132b): {}
 
   prr@1.0.1:
     optional: true
