@@ -1,0 +1,9 @@
+{
+  "name": "e2e-oxlint",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/oxlint",
+  "projectType": "application",
+  "implicitDependencies": ["oxlint"],
+  "// targets": "to see all targets run: nx show project e2e-oxlint --web",
+  "targets": {}
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "title": "OXLint executor",
+  "description": "Run OXLint for a project.",
+  "type": "object",
+  "properties": {
+    "lintFilePatterns": {
+      "type": "array",
+      "description": "List of files/globs to lint.",
+      "items": {
+        "type": "string"
+      },
+      "default": ["{projectRoot}"]
+    },
+    "config": {
+      "type": "string",
+      "description": "Path to an OXLint config file."
+    },
+    "fix": {
+      "type": "boolean",
+      "description": "Automatically fix fixable issues."
+    },
+    "fixSuggestions": {
+      "type": "boolean",
+      "description": "Apply suggested fixes in addition to regular fixes."
+    },
+    "fixDangerously": {
+      "type": "boolean",
+      "description": "Apply dangerous fixes."
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Only show errors."
+    },
+    "maxWarnings": {
+      "type": "number",
+      "description": "Maximum warnings allowed before failing.",
+      "default": -1
+    },
+    "format": {
+      "type": "string",
+      "description": "Output formatter."
+    },
+    "denyWarnings": {
+      "type": "boolean",
+      "description": "Treat warnings as failures."
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Silence all diagnostics output."
+    },
+    "tsconfig": {
+      "type": "string",
+      "description": "Path to tsconfig used by type-aware rules."
+    },
+    "experimentalNestedConfig": {
+      "type": "boolean",
+      "description": "Enable experimental nested config behavior."
+    }
+  },
+  "required": ["lintFilePatterns"]
+}

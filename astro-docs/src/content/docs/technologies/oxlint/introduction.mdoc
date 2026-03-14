@@ -1,0 +1,111 @@
+---
+title: OXLint Plugin for Nx
+description: Learn how to set up and use the @nx/oxlint plugin with inferred tasks, hybrid migration, and experimental module-boundary enforcement.
+sidebar:
+  label: Introduction
+filter: 'type:References'
+---
+
+The `@nx/oxlint` plugin integrates [OXLint](https://oxc.rs/docs/guide/usage/linter/) with Nx for fast lint execution in monorepos.
+
+## Experimental Status
+
+{% aside type="note" title="Experimental" %}
+`@nx/oxlint` and the OXLint JS-plugin boundary bridge are experimental.
+The feature set may evolve quickly while OXLint JS plugins are still stabilizing.
+{% /aside %}
+
+## Setup
+
+Install the plugin:
+
+```shell
+nx add @nx/oxlint
+```
+
+This registers `@nx/oxlint/plugin` (when inference plugins are enabled), installs `oxlint`, and creates a root `.oxlintrc.json` if needed.
+
+## Inferred Tasks
+
+`@nx/oxlint/plugin` infers tasks from OXLint config files:
+
+- `.oxlintrc.json`
+- `.oxlintrc.jsonc`
+- `oxlint.config.ts`
+
+The plugin infers command-based targets and configures caching using Nx inputs.
+
+You can view inferred tasks with:
+
+```shell
+nx show project my-project --web
+```
+
+## Target Naming in Hybrid Workspaces
+
+For mixed ESLint + OXLint workspaces, Nx attempts to avoid target collisions.
+When adding the plugin, it tries target names in this order:
+
+1. `lint`
+2. `oxlint`
+3. `oxlint:lint`
+4. `oxlint-lint`
+
+This enables incremental migration without removing ESLint.
+
+## Explicit Target Fallback
+
+If `useInferencePlugins` is disabled, use explicit targets with `@nx/oxlint:lint`:
+
+```json
+{
+  "targets": {
+    "oxlint": {
+      "executor": "@nx/oxlint:lint",
+      "options": {
+        "lintFilePatterns": ["{projectRoot}"]
+      }
+    }
+  }
+}
+```
+
+## Hybrid Migration from ESLint
+
+Use the migration helper to register OXLint while keeping ESLint targets intact:
+
+```shell
+nx g @nx/oxlint:convert-from-eslint
+```
+
+By default this adds an `oxlint` target per converted project and leaves existing ESLint configuration untouched.
+
+For hybrid setups that still run ESLint for some checks, you can optionally use `eslint-plugin-oxlint` to reduce overlap while migrating.
+
+## Experimental Module Boundaries Bridge
+
+`@nx/oxlint` exposes an experimental JS-plugin bridge at `@nx/oxlint/boundaries-plugin`.
+It reuses Nx project-graph-aware `enforce-module-boundaries` logic from `@nx/eslint-plugin`.
+
+Example config snippet:
+
+```json
+{
+  "jsPlugins": [
+    {
+      "name": "@nx",
+      "specifier": "@nx/oxlint/boundaries-plugin"
+    }
+  ],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "depConstraints": []
+      }
+    ]
+  }
+}
+```
+
+This path is intended for early adopters and may change.

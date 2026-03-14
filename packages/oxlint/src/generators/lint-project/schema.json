@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "LintProjectGenerator",
+  "title": "Add OXLint to project",
+  "description": "Add OXLint to an existing project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Project name",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "Which project should use OXLint?"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "default": false
+    },
+    "addPlugin": {
+      "type": "boolean",
+      "description": "Register @nx/oxlint/plugin when possible."
+    },
+    "addExplicitTargets": {
+      "type": "boolean",
+      "description": "Always add explicit @nx/oxlint:lint target instead of relying on inferred tasks.",
+      "default": false
+    }
+  },
+  "required": ["project"]
+}
