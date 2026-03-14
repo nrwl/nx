@@ -160,7 +160,7 @@ impl TaskHasher {
         #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
             Arc<ProjectGraph>,
         >,
-        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_file_map: &External<
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")] project_file_map: &External<
             Arc<ProjectFiles>,
         >,
         #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
@@ -185,7 +185,7 @@ impl TaskHasher {
         }
     }
 
-    #[napi]
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans(
         &self,
         hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,

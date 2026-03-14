@@ -308,8 +308,8 @@ impl WorkspaceContext {
     #[napi]
     pub fn update_project_files(
         &self,
-        project_root_mappings: ProjectRootMappings,
-        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_files: &External<
+        #[napi(ts_arg_type = "Record<string, string>")] project_root_mappings: ProjectRootMappings,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")] project_files: &External<
             Arc<ProjectFiles>,
         >,
         #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] global_files: &External<
