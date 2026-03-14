@@ -53,6 +53,7 @@ const nxPackages = [
   `@nx/next`,
   `@nx/node`,
   `@nx/nuxt`,
+  `@nx/oxlint`,
   `@nx/plugin`,
   `@nx/playwright`,
   `@nx/rollup`,

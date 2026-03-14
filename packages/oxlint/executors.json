@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "lint": {
+      "implementation": "./src/executors/lint/lint.impl",
+      "schema": "./src/executors/lint/schema.json",
+      "description": "Run OXLint on a project."
+    }
+  }
+}

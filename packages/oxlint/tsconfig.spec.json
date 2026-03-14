@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/packages/oxlint/spec",
+    "module": "commonjs",
+    "types": ["jest", "node"],
+    "composite": true
+  },
+  "include": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*_spec.ts",
+    "**/*_test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/*.spec.js",
+    "**/*.test.js",
+    "**/*.spec.jsx",
+    "**/*.test.jsx",
+    "**/*.d.ts",
+    "jest.config.ts",
+    "*.json"
+  ],
+  "references": [
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

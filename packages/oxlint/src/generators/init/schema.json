@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "InitGenerator",
+  "title": "Initialize OXLint",
+  "description": "Set up @nx/oxlint in the workspace.",
+  "type": "object",
+  "properties": {
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Do not add dependencies to package.json",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "description": "Keep existing dependency versions when possible.",
+      "default": false
+    },
+    "updatePackageScripts": {
+      "type": "boolean",
+      "description": "Update package.json scripts to use inferred targets.",
+      "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false
+    },
+    "addPlugin": {
+      "type": "boolean",
+      "description": "Add @nx/oxlint/plugin to nx.json."
+    }
+  }
+}
