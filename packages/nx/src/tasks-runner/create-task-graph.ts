@@ -14,6 +14,7 @@ import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
+import { reverse } from '../project-graph/operators';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -163,6 +164,15 @@ export class ProcessTasks {
         );
       } else if (dependencyConfig.dependencies) {
         this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
+          dependencyConfig,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else if (dependencyConfig.dependents) {
+        this.processTasksForDependents(
           projectUsedToDeriveDependencies,
           dependencyConfig,
           configuration,
@@ -346,6 +356,84 @@ export class ProcessTasks {
         this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
+      }
+    }
+  }
+
+  private processTasksForDependents(
+    projectUsedToDeriveDependencies: string,
+    dependencyConfig: TargetDependencyConfig,
+    configuration: string,
+    task: Task,
+    taskOverrides: Object | { __overrides_unparsed__: any[] },
+    overrides: Object
+  ): void {
+    const reversedGraph = reverse(this.projectGraph);
+
+    if (
+      !reversedGraph.dependencies.hasOwnProperty(
+        projectUsedToDeriveDependencies
+      )
+    ) {
+      return;
+    }
+
+    for (const dep of reversedGraph.dependencies[
+      projectUsedToDeriveDependencies
+    ]) {
+      const depProject = this.projectGraph.nodes[
+        dep.target
+      ] as ProjectGraphProjectNode;
+
+      // this is to handle external dependencies
+      if (!depProject) continue;
+
+      if (projectHasTarget(depProject, dependencyConfig.target)) {
+        const resolvedConfiguration = this.resolveConfiguration(
+          depProject,
+          dependencyConfig.target,
+          configuration
+        );
+        const depTargetId = createTaskId(
+          depProject.name,
+          dependencyConfig.target,
+          resolvedConfiguration
+        );
+
+        const depTargetConfiguration =
+          this.projectGraph.nodes[depProject.name].data.targets[
+            dependencyConfig.target
+          ];
+
+        if (!this.tasks[depTargetId]) {
+          const newTask = this.createTask(
+            depTargetId,
+            depProject,
+            dependencyConfig.target,
+            resolvedConfiguration,
+            taskOverrides
+          );
+          this.tasks[depTargetId] = newTask;
+          this.dependencies[depTargetId] = [];
+          this.continuousDependencies[depTargetId] = [];
+
+          this.processTask(
+            newTask,
+            newTask.target.project,
+            configuration,
+            overrides
+          );
+        }
+
+        if (task.id !== depTargetId) {
+          // The current task runs AFTER its dependents complete
+          // e.g. lib2:destroy waits for lib1:destroy (lib1 depends on lib2)
+          if (depTargetConfiguration.continuous) {
+            this.continuousDependencies[task.id].push(depTargetId);
+          } else {
+            this.dependencies[task.id].push(depTargetId);
+          }
+        }
       }
     }
   }
