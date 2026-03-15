@@ -1,4 +1,8 @@
-import { ExecutorContext, readJsonFile } from '@nx/devkit';
+import {
+  ExecutorContext,
+  readJsonFile,
+  detectPackageManager,
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { PublishExecutorSchema } from './schema';
 import runExecutor from './release-publish.impl';
@@ -23,6 +27,9 @@ describe('release-publish executor', () => {
   let context: ExecutorContext;
   let options: PublishExecutorSchema;
   const mockExecSync = execSync as jest.MockedFunction<typeof execSync>;
+  const mockDetectPackageManager = detectPackageManager as jest.MockedFunction<
+    typeof detectPackageManager
+  >;
   const mockParseRegistryOptions =
     npmConfigModule.parseRegistryOptions as jest.MockedFunction<
       typeof npmConfigModule.parseRegistryOptions
@@ -195,6 +202,7 @@ describe('release-publish executor', () => {
   describe('npm dist-tag error handling', () => {
     it('returns failure and logs only the dist-tag add error when add fails with empty stdout', async () => {
       mockExecSync
+        .mockReturnValueOnce('11.5.1' as any)
         .mockReturnValueOnce(
           Buffer.from(
             JSON.stringify({
@@ -218,6 +226,66 @@ describe('release-publish executor', () => {
       expect(console.error).not.toHaveBeenCalledWith(
         'Something unexpected went wrong when processing the npm dist-tag add output\n',
         expect.any(Error)
+      );
+    });
+  });
+
+  describe('npm availability check', () => {
+    it('should continue without error when pm is bun and npm is not installed', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+
+      // npm --version throws (npm not installed)
+      mockExecSync
+        .mockImplementationOnce(() => {
+          throw new Error('Command not found: npm');
+        })
+        // bun info call for view command
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        )
+        // bun publish call
+        .mockReturnValueOnce(Buffer.from('bun publish output'));
+
+      jest
+        .spyOn(extractModule, 'extractNpmPublishJsonData')
+        .mockReturnValue(null);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      // Verify the view command used bun info (not npm view)
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('bun info'),
+        expect.anything()
+      );
+      // Verify npm dist-tag add was NOT called (npm not installed)
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringContaining('npm dist-tag add'),
+        expect.anything()
+      );
+    });
+
+    it('should return failure when pm is not bun and npm is not installed', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+
+      // npm --version throws (npm not installed)
+      mockExecSync.mockImplementationOnce(() => {
+        throw new Error('Command not found: npm');
+      });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('npm was not found in the current environment')
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('"pnpm"')
       );
     });
   });
