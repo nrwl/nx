@@ -81,6 +81,9 @@ describe('release-publish executor', () => {
       tag: 'latest',
       registryConfigKey: 'registry',
     });
+
+    // Default mock for npm --version check (first execSync call in the executor)
+    mockExecSync.mockReturnValueOnce('11.5.1' as any);
   });
 
   afterEach(() => {
@@ -109,8 +112,8 @@ describe('release-publish executor', () => {
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('no new version was resolved')
       );
-      // Should NOT have called npm view or npm publish
-      expect(mockExecSync).not.toHaveBeenCalled();
+      // Should only have called npm --version, not npm view or npm publish
+      expect(mockExecSync).toHaveBeenCalledTimes(1);
     });
 
     it('should proceed with publishing when nxReleaseVersionData indicates a new version', async () => {
@@ -157,8 +160,8 @@ describe('release-publish executor', () => {
       const result = await runExecutor(optionsWithVersionData, context);
 
       expect(result.success).toBe(true);
-      // Should have proceeded with npm view and publish
-      expect(mockExecSync).toHaveBeenCalledTimes(2);
+      // Should have proceeded with npm --version, npm view, and publish
+      expect(mockExecSync).toHaveBeenCalledTimes(3);
     });
 
     it('should proceed with publishing when nxReleaseVersionData is not provided', async () => {
@@ -194,15 +197,14 @@ describe('release-publish executor', () => {
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      // Should have proceeded with npm view and publish
-      expect(mockExecSync).toHaveBeenCalledTimes(2);
+      // Should have proceeded with npm --version, npm view, and publish
+      expect(mockExecSync).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('npm dist-tag error handling', () => {
     it('returns failure and logs only the dist-tag add error when add fails with empty stdout', async () => {
       mockExecSync
-        .mockReturnValueOnce('11.5.1' as any)
         .mockReturnValueOnce(
           Buffer.from(
             JSON.stringify({
@@ -233,6 +235,7 @@ describe('release-publish executor', () => {
   describe('npm availability check', () => {
     it('should continue without error when pm is bun and npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
+      mockExecSync.mockReset();
 
       // npm --version throws (npm not installed)
       mockExecSync
@@ -272,6 +275,7 @@ describe('release-publish executor', () => {
 
     it('should return failure when pm is not bun and npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
+      mockExecSync.mockReset();
 
       // npm --version throws (npm not installed)
       mockExecSync.mockImplementationOnce(() => {
