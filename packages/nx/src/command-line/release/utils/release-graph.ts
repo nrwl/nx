@@ -536,10 +536,18 @@ export class ReleaseGraph {
             const depGroup = this.getReleaseGroupForProject(dep);
             if (depGroup) {
               // Check if this group is already in our list by name
-              const groupAlreadyExists = this.releaseGroups.some(
+              const existingGroup = this.releaseGroups.find(
                 (g) => g.name === depGroup.name
               );
-              if (!groupAlreadyExists) {
+              if (existingGroup) {
+                // The group is already being processed, ensure the dependent is included
+                // in its filtered projects so it appears in commit messages, tags, etc.
+                const existingFilteredProjects =
+                  this.releaseGroupToFilteredProjects.get(existingGroup);
+                if (existingFilteredProjects) {
+                  existingFilteredProjects.add(dep);
+                }
+              } else {
                 additionalGroups.set(depGroup.name, depGroup);
               }
             }
