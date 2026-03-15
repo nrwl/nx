@@ -32,18 +32,19 @@ export const createDependencies: CreateDependencies = async (
   );
 
   // Extract and transform dependencies from the mavenData
-  const transformedDependencies = mavenData.createDependenciesResults.map(
-    (dep) => ({
-      ...dep,
-      source: dep.source.startsWith('maven:')
-        ? dep.source
-        : rootToProjectMap.get(dep.source),
-      // External deps use maven: prefix — pass through as-is
-      target: dep.target.startsWith('maven:')
-        ? dep.target
-        : rootToProjectMap.get(dep.target),
-    })
-  );
+  // Filter out deps where source or target can't be resolved to a workspace
+  // project (e.g., external-to-external Maven edges like
+  // maven:org.foo:bar -> maven:org.baz:qux)
+  const transformedDependencies = [];
+  for (const dep of mavenData.createDependenciesResults) {
+    const source = rootToProjectMap.get(dep.source);
+    const target = dep.target.startsWith('maven:')
+      ? dep.target
+      : rootToProjectMap.get(dep.target);
+    if (source && target) {
+      transformedDependencies.push({ ...dep, source, target });
+    }
+  }
 
   return transformedDependencies;
 };
