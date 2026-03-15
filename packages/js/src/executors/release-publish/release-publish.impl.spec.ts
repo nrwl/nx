@@ -80,6 +80,118 @@ describe('release-publish executor', () => {
     jest.restoreAllMocks();
   });
 
+  describe('nxReleaseVersionData skip behavior', () => {
+    it('should skip publishing when nxReleaseVersionData indicates no new version', async () => {
+      const optionsWithVersionData = {
+        ...options,
+        nxReleaseVersionData: {
+          'test-project': {
+            currentVersion: '1.0.0',
+            newVersion: null,
+            dependentProjects: [],
+          },
+        },
+      };
+
+      const result = await runExecutor(optionsWithVersionData, context);
+
+      expect(result.success).toBe(true);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Skipped')
+      );
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('no new version was resolved')
+      );
+      // Should NOT have called npm view or npm publish
+      expect(mockExecSync).not.toHaveBeenCalled();
+    });
+
+    it('should proceed with publishing when nxReleaseVersionData indicates a new version', async () => {
+      mockExecSync
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        ) // npm view
+        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const optionsWithVersionData = {
+        ...options,
+        nxReleaseVersionData: {
+          'test-project': {
+            currentVersion: '0.9.0',
+            newVersion: '1.0.0',
+            dependentProjects: [],
+          },
+        },
+      };
+
+      const result = await runExecutor(optionsWithVersionData, context);
+
+      expect(result.success).toBe(true);
+      // Should have proceeded with npm view and publish
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
+    });
+
+    it('should proceed with publishing when nxReleaseVersionData is not provided', async () => {
+      mockExecSync
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        ) // npm view
+        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      // Should have proceeded with npm view and publish
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('npm dist-tag error handling', () => {
     it('returns failure and logs only the dist-tag add error when add fails with empty stdout', async () => {
       mockExecSync

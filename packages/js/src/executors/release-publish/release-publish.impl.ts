@@ -110,6 +110,24 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     };
   }
 
+  /**
+   * If version data was provided by the nx release version step, check if this project
+   * actually had a new version resolved. If not (newVersion is null), there is nothing
+   * to publish, so we can skip this project entirely.
+   */
+  if (options.nxReleaseVersionData) {
+    const projectVersionData =
+      options.nxReleaseVersionData[context.projectName];
+    if (projectVersionData && projectVersionData.newVersion === null) {
+      console.warn(
+        `Skipped ${packageTxt}, because no new version was resolved for this project`
+      );
+      return {
+        success: true,
+      };
+    }
+  }
+
   const warnFn = (message: string) => {
     console.log(chalk.keyword('orange')(message));
   };
@@ -126,9 +144,14 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     warnFn
   );
 
-  const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
-  ];
+  // Use bun info when bun is the package manager, otherwise use npm view
+  // (npm view works across npm/pnpm/yarn environments and is the established default)
+  const npmViewCommandSegments =
+    pm === 'bun'
+      ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
+      : [
+          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+        ];
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
