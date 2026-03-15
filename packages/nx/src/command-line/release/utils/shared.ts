@@ -206,7 +206,7 @@ export function createCommitMessageValues(
       // not just the explicitly filtered ones. This ensures dependent projects
       // that received side-effect bumps are included in the commit message.
       const versionedProjects = releaseGroup.projects.filter(
-        (p) => versionData[p]?.newVersion !== null
+        (p) => versionData[p] != null && versionData[p].newVersion !== null
       );
       for (const project of versionedProjects) {
         const projectVersionData = versionData[project];
@@ -290,8 +290,9 @@ export function createGitTagValues(
       // that received side-effect bumps get their own tags.
       const versionedProjects = releaseGroup.projects.filter(
         (p) =>
-          versionData[p]?.newVersion !== null ||
-          versionData[p]?.dockerVersion !== null
+          versionData[p] != null &&
+          (versionData[p].newVersion !== null ||
+            versionData[p].dockerVersion !== null)
       );
       for (const project of versionedProjects) {
         const projectVersionData = versionData[project];
