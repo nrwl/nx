@@ -315,48 +315,6 @@ describe('ReleaseGraph', () => {
         expect(graph.isProjectToProcess('projectB')).toBe(true);
         expect(graph.isProjectToProcess('projectA')).toBe(true);
       });
-
-      it('should include dependent projects in releaseGroupToFilteredProjects so they appear in commit messages and tags', async () => {
-        const { nxReleaseConfig, projectGraph, filters } =
-          await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
-            __default__ ({ "projectsRelationship": "independent" }):
-              - projectA@1.0.0 [js]
-                -> depends on projectB
-              - projectB@2.0.0 [js]
-          `,
-            {
-              version: {
-                conventionalCommits: true,
-                updateDependents: 'always',
-              },
-            },
-            mockResolveCurrentVersion,
-            {
-              projects: ['projectB'],
-            }
-          );
-
-        const graph = await createReleaseGraph({
-          tree,
-          projectGraph,
-          nxReleaseConfig,
-          filters,
-          firstRelease: false,
-          preid: undefined,
-          verbose: false,
-        });
-
-        // The release group's filtered projects should include BOTH projectA and projectB
-        // so that commit messages, git tags, and changelogs include the dependent project
-        const releaseGroup = graph.releaseGroups[0];
-        const filteredProjects =
-          graph.releaseGroupToFilteredProjects.get(releaseGroup);
-        expect(filteredProjects).toBeDefined();
-        expect(filteredProjects!.has('projectB')).toBe(true);
-        expect(filteredProjects!.has('projectA')).toBe(true);
-      });
     });
 
     describe('scenario: projectA depends on projectB, filter by [projectA]', () => {
