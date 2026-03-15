@@ -32,18 +32,22 @@ export const createDependencies: CreateDependencies = async (
   );
 
   // Extract and transform dependencies from the mavenData
-  const transformedDependencies = mavenData.createDependenciesResults.map(
-    (dep) => ({
-      ...dep,
-      source: dep.source.startsWith('maven:')
-        ? dep.source
-        : rootToProjectMap.get(dep.source),
-      // External deps use maven: prefix — pass through as-is
-      target: dep.target.startsWith('maven:')
-        ? dep.target
-        : rootToProjectMap.get(dep.target),
-    })
-  );
+  const transformedDependencies = [];
+  for (const dep of mavenData.createDependenciesResults) {
+    // External-to-external edges (e.g., maven:org.foo:bar -> maven:org.baz:qux)
+    // are emitted by the Kotlin plugin but cannot be dependency sources
+    if (dep.source.startsWith('maven:')) {
+      continue;
+    }
+    const source = rootToProjectMap.get(dep.source);
+    // Pass through external targets (maven: prefix) as-is
+    const target = dep.target.startsWith('maven:')
+      ? dep.target
+      : rootToProjectMap.get(dep.target);
+    if (source && target) {
+      transformedDependencies.push({ ...dep, source, target });
+    }
+  }
 
   return transformedDependencies;
 };
