@@ -59,6 +59,7 @@ export const allowedWorkspaceExtensions = [
   'implicitDependencies',
   'affected',
   'defaultBase',
+  'strictProjectGraphCycles',
   'tasksRunnerOptions',
   'workspaceLayout',
   'plugins',

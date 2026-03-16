@@ -29,6 +29,10 @@
       "type": "string",
       "description": "Default --base used by affected logic."
     },
+    "strictProjectGraphCycles": {
+      "type": "boolean",
+      "description": "Fail project graph creation when the workspace contains circular project dependencies."
+    },
     "tasksRunnerOptions": {
       "type": "object",
       "additionalProperties": {
