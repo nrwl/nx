@@ -98,8 +98,8 @@ class NxMaven3(
             cachedProjectGraph = graph
             projectBySelector = graph.allProjects.associateBy { "${it.groupId}:${it.artifactId}" }
 
-            session.projects = graph.sortedProjects
-            session.allProjects = graph.allProjects
+            session.projects = graph.sortedProjects?.toMutableList()
+            session.allProjects = graph.allProjects.toMutableList()
             session.projectDependencyGraph = graph
 
             BuildStateManager.applyBuildStates(graph.allProjects)
@@ -168,17 +168,19 @@ class NxMaven3(
         graph: ProjectDependencyGraph,
         request: MavenExecutionRequest
     ) {
-        session.allProjects = graph.allProjects
+        session.allProjects = graph.allProjects.toMutableList()
         session.projectDependencyGraph = graph
 
+        // Use toMutableList() because Maven's MojoExecutor.executeForkedExecutions
+        // calls list.set() which requires a mutable list
         val selectedProjects = if (request.selectedProjects.isNotEmpty()) {
             request.selectedProjects.mapNotNull { selector ->
                 projectBySelector[selector]
                     ?: graph.allProjects.find { it.artifactId == selector }
-            }
+            }.toMutableList()
         } else {
             graph.allProjects.filter { it.file?.absolutePath == request.pom?.absolutePath }
-                .ifEmpty { graph.sortedProjects ?: emptyList() }
+                .ifEmpty { graph.sortedProjects ?: emptyList() }.toMutableList()
         }
 
         session.projects = selectedProjects
