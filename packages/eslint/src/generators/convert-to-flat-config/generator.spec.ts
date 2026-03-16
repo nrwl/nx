@@ -64,7 +64,6 @@ describe('convert-to-flat-config generator', () => {
           "name": "@proj/source",
           "dependencies": {},
           "devDependencies": {
-            "@eslint/eslintrc": "^2.1.1",
             "@nx/eslint": "0.0.1",
             "@nx/eslint-plugin": "0.0.1",
             "@typescript-eslint/eslint-plugin": "^8.40.0",
@@ -183,7 +182,7 @@ describe('convert-to-flat-config generator', () => {
       expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
         "const { FlatCompat } = require('@eslint/eslintrc');
         const js = require('@eslint/js');
-        const nxEslintPlugin = require('@nx/eslint-plugin');
+        const nx = require('@nx/eslint-plugin');
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -195,7 +194,7 @@ describe('convert-to-flat-config generator', () => {
             ignores: ['**/dist', '**/out-tsc'],
           },
           ...compat.extends('plugin:storybook/recommended'),
-          { plugins: { '@nx': nxEslintPlugin } },
+          ...nx.configs['flat/base'],
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
             rules: {
@@ -214,28 +213,8 @@ describe('convert-to-flat-config generator', () => {
               ],
             },
           },
-          ...compat
-            .config({
-              extends: ['plugin:@nx/typescript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-              rules: {
-                ...config.rules,
-              },
-            })),
-          ...compat
-            .config({
-              extends: ['plugin:@nx/javascript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
-              rules: {
-                ...config.rules,
-              },
-            })),
+          ...nx.configs['flat/typescript'],
+          ...nx.configs['flat/javascript'],
         ];
         "
       `);
@@ -451,20 +430,13 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
-        "const { FlatCompat } = require('@eslint/eslintrc');
-        const js = require('@eslint/js');
-        const nxEslintPlugin = require('@nx/eslint-plugin');
-
-        const compat = new FlatCompat({
-          baseDirectory: __dirname,
-          recommendedConfig: js.configs.recommended,
-        });
+        "const nx = require('@nx/eslint-plugin');
 
         module.exports = [
           {
             ignores: ['**/dist', '**/out-tsc'],
           },
-          { plugins: { '@nx': nxEslintPlugin } },
+          ...nx.configs['flat/base'],
           {
             linterOptions: {
               noInlineConfig: true,
@@ -488,28 +460,8 @@ describe('convert-to-flat-config generator', () => {
               ],
             },
           },
-          ...compat
-            .config({
-              extends: ['plugin:@nx/typescript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-              rules: {
-                ...config.rules,
-              },
-            })),
-          ...compat
-            .config({
-              extends: ['plugin:@nx/javascript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
-              rules: {
-                ...config.rules,
-              },
-            })),
+          ...nx.configs['flat/typescript'],
+          ...nx.configs['flat/javascript'],
         ];
         "
       `);
@@ -679,7 +631,6 @@ describe('convert-to-flat-config generator', () => {
           "name": "@proj/source",
           "dependencies": {},
           "devDependencies": {
-            "@eslint/eslintrc": "^2.1.1",
             "@nx/eslint": "0.0.1",
             "@nx/eslint-plugin": "0.0.1",
             "@typescript-eslint/eslint-plugin": "^8.40.0",
@@ -800,7 +751,7 @@ describe('convert-to-flat-config generator', () => {
         import { dirname } from 'path';
         import { fileURLToPath } from 'url';
         import js from '@eslint/js';
-        import nxEslintPlugin from '@nx/eslint-plugin';
+        import nx from '@nx/eslint-plugin';
 
         const compat = new FlatCompat({
           baseDirectory: dirname(fileURLToPath(import.meta.url)),
@@ -812,7 +763,7 @@ describe('convert-to-flat-config generator', () => {
             ignores: ['**/dist', '**/out-tsc'],
           },
           ...compat.extends('plugin:storybook/recommended'),
-          { plugins: { '@nx': nxEslintPlugin } },
+          ...nx.configs['flat/base'],
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
             rules: {
@@ -831,28 +782,8 @@ describe('convert-to-flat-config generator', () => {
               ],
             },
           },
-          ...compat
-            .config({
-              extends: ['plugin:@nx/typescript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-              rules: {
-                ...config.rules,
-              },
-            })),
-          ...compat
-            .config({
-              extends: ['plugin:@nx/javascript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
-              rules: {
-                ...config.rules,
-              },
-            })),
+          ...nx.configs['flat/typescript'],
+          ...nx.configs['flat/javascript'],
         ];
         "
       `);
@@ -1068,22 +999,13 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
-        "import { FlatCompat } from '@eslint/eslintrc';
-        import { dirname } from 'path';
-        import { fileURLToPath } from 'url';
-        import js from '@eslint/js';
-        import nxEslintPlugin from '@nx/eslint-plugin';
-
-        const compat = new FlatCompat({
-          baseDirectory: dirname(fileURLToPath(import.meta.url)),
-          recommendedConfig: js.configs.recommended,
-        });
+        "import nx from '@nx/eslint-plugin';
 
         export default [
           {
             ignores: ['**/dist', '**/out-tsc'],
           },
-          { plugins: { '@nx': nxEslintPlugin } },
+          ...nx.configs['flat/base'],
           {
             linterOptions: {
               noInlineConfig: true,
@@ -1107,28 +1029,8 @@ describe('convert-to-flat-config generator', () => {
               ],
             },
           },
-          ...compat
-            .config({
-              extends: ['plugin:@nx/typescript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-              rules: {
-                ...config.rules,
-              },
-            })),
-          ...compat
-            .config({
-              extends: ['plugin:@nx/javascript'],
-            })
-            .map((config) => ({
-              ...config,
-              files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
-              rules: {
-                ...config.rules,
-              },
-            })),
+          ...nx.configs['flat/typescript'],
+          ...nx.configs['flat/javascript'],
         ];
         "
       `);
