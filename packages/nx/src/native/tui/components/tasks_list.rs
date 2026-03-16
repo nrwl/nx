@@ -606,31 +606,28 @@ impl TasksList {
                     }
                 }
                 DisplayItem::BatchGroup(batch_group) => {
-                    // Determine batch group status based on nested tasks
-                    let has_in_progress = batch_group.nested_tasks.iter().any(|task_id| {
+                    let batch_id = batch_group.batch_id.clone();
+
+                    // A batch group only exists if start_batch was called, so it's
+                    // in-progress unless all nested tasks have completed
+                    let all_completed = batch_group.nested_tasks.iter().all(|task_id| {
                         self.task_lookup
                             .get(task_id)
                             .map(|task| {
-                                matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
+                                !matches!(
+                                    task.status,
+                                    TaskStatus::InProgress
+                                        | TaskStatus::Shared
+                                        | TaskStatus::NotStarted
+                                )
                             })
                             .unwrap_or(false)
                     });
-                    let has_pending = batch_group.nested_tasks.iter().any(|task_id| {
-                        self.task_lookup
-                            .get(task_id)
-                            .map(|task| matches!(task.status, TaskStatus::NotStarted))
-                            .unwrap_or(false)
-                    });
 
-                    // Add batch group identifier wrapped in SelectionEntry::BatchGroup
-                    let batch_id = batch_group.batch_id.clone();
-
-                    if has_in_progress {
-                        in_progress.push(SelectionEntry::BatchGroup(batch_id.clone()));
-                    } else if has_pending {
-                        pending.push(SelectionEntry::BatchGroup(batch_id.clone()));
-                    } else {
+                    if all_completed {
                         completed.push(SelectionEntry::BatchGroup(batch_id.clone()));
+                    } else {
+                        in_progress.push(SelectionEntry::BatchGroup(batch_id.clone()));
                     }
 
                     // NOTE: We do NOT add individual nested tasks to status vectors here!
@@ -797,17 +794,24 @@ impl TasksList {
                         }
                     }
                     DisplayItem::BatchGroup(batch) => {
-                        // Check if batch has any in-progress or pending tasks
-                        let has_in_progress = batch.nested_tasks.iter().any(|task_id| {
+                        // A batch with a start_time is in-progress
+                        // A batch group only exists if started, so it's
+                        // in-progress unless all nested tasks have completed
+                        let all_completed = batch.nested_tasks.iter().all(|task_id| {
                             self.task_lookup
                                 .get(task_id)
                                 .map(|t| {
-                                    matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared)
+                                    !matches!(
+                                        t.status,
+                                        TaskStatus::InProgress
+                                            | TaskStatus::Shared
+                                            | TaskStatus::NotStarted
+                                    )
                                 })
                                 .unwrap_or(false)
                         });
 
-                        if has_in_progress {
+                        if !all_completed {
                             parallel_count += 1; // Count the batch group itself
                             // Add nested tasks if expanded
                             if batch.is_expanded {
@@ -1309,6 +1313,8 @@ impl TasksList {
 
     /// Updates their status to InProgress and marks for deferred sort.
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+        let mut has_standalone_change = false;
+
         for task in &tasks {
             let task_id = &task.id;
             let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
@@ -1345,10 +1351,13 @@ impl TasksList {
             // Add to in-progress list if standalone task
             if !is_in_batch && !self.in_progress_tasks.iter().any(|id| id == task_id) {
                 self.in_progress_tasks.push(task_id.to_string());
+                has_standalone_change = true;
             }
         }
 
-        self.needs_sort = true;
+        if has_standalone_change {
+            self.needs_sort = true;
+        }
     }
 
     /// Performs initial in-progress task selection if not yet done.
@@ -1515,10 +1524,11 @@ impl TasksList {
                     self.in_progress_tasks.push(task_id.to_string());
                 }
             }
-        }
 
-        // Mark for deferred sort (no immediate sort!)
-        self.needs_sort = true;
+            // Only re-sort when a standalone task changed — batch-nested task
+            // status changes don't affect display order.
+            self.needs_sort = true;
+        }
     }
 
     /// Updates the live duration for all InProgress tasks that have a start_time.
@@ -1545,8 +1555,11 @@ impl TasksList {
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
+        let mut has_standalone_change = false;
+
         for task_result in task_results {
             let task_id = &task_result.task.id;
+            let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
 
             if let Some((start, end)) = task_result.task.start_time.zip(task_result.task.end_time) {
                 // Update in task_lookup
@@ -1568,8 +1581,15 @@ impl TasksList {
                     }
                 }
             }
+
+            if !is_in_batch {
+                has_standalone_change = true;
+            }
         }
-        self.needs_sort = true;
+
+        if has_standalone_change {
+            self.needs_sort = true;
+        }
     }
 
     /// Removes a batch group and ungroups its tasks back to individual display.

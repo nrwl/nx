@@ -54,6 +54,8 @@ pub mod event_dimension {
     pub const GENERATOR_NAME: &str = "ep.generator_name";
     pub const PACKAGE_NAME: &str = "ep.package_name";
     pub const PACKAGE_VERSION: &str = "ep.package_version";
-    pub const CREATE_PROJECT_GRAPH: &str = "ep.create_project_graph";
     pub const DURATION: &str = "epn.duration";
+    pub const TASK_COUNT: &str = "epn.task_count";
+    pub const PROJECT_COUNT: &str = "epn.project_count";
+    pub const CACHED_TASK_COUNT: &str = "epn.cached_task_count";
 }

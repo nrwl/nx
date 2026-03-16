@@ -139,8 +139,10 @@ pub struct EventDimensions {
     pub generator_name: String,
     pub package_name: String,
     pub package_version: String,
-    pub create_project_graph: String,
     pub duration: String,
+    pub task_count: String,
+    pub project_count: String,
+    pub cached_task_count: String,
 }
 
 /// Returns the canonical event dimension names.
@@ -151,8 +153,10 @@ pub fn get_event_dimensions() -> EventDimensions {
         generator_name: event_dimension::GENERATOR_NAME.to_string(),
         package_name: event_dimension::PACKAGE_NAME.to_string(),
         package_version: event_dimension::PACKAGE_VERSION.to_string(),
-        create_project_graph: event_dimension::CREATE_PROJECT_GRAPH.to_string(),
         duration: event_dimension::DURATION.to_string(),
+        task_count: event_dimension::TASK_COUNT.to_string(),
+        project_count: event_dimension::PROJECT_COUNT.to_string(),
+        cached_task_count: event_dimension::CACHED_TASK_COUNT.to_string(),
     }
 }
 

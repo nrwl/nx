@@ -178,15 +178,17 @@ impl TelemetryService {
     }
 
     pub fn flush(&self) -> Result<()> {
-        // 1. Close event channels (stop accepting new events)
-        self.event_tx.lock().take();
-        self.page_view_tx.lock().take();
-
-        // 2. Send flush request and wait for background thread to drain everything
+        // 1. Send flush request FIRST (before closing channels, to avoid race
+        //    where the background thread sees closed channels and exits before
+        //    processing the flush).
         let (tx, rx) = crossbeam_channel::bounded(0); // Rendezvous channel
         self.flush_tx
             .send(tx)
             .map_err(|_| Error::from_reason("Telemetry channel closed"))?;
+
+        // 2. Close event channels (stop accepting new events)
+        self.event_tx.lock().take();
+        self.page_view_tx.lock().take();
 
         // 3. Wait for flush to complete (synchronously)
         match rx.recv() {
@@ -199,6 +201,56 @@ impl TelemetryService {
 // =============================================================================
 // Background sender and helpers
 // =============================================================================
+
+/// Convert an EventData into sanitized params and push onto the queue
+fn enqueue_event(event: EventData, user_params: &ParameterMap, queue: &mut Vec<ParameterMap>) {
+    let mut params = user_params.clone();
+    params.extend(event.parameters);
+    params.insert(
+        event_param::EVENT_NAME.to_string(),
+        truncate_string(&event.name, MAX_EVENT_NAME_LENGTH),
+    );
+    queue.push(sanitize_params(params));
+}
+
+/// Convert a PageViewData into sanitized params and push onto the queue
+fn enqueue_page_view(
+    page_view: PageViewData,
+    user_params: &ParameterMap,
+    queue: &mut Vec<ParameterMap>,
+) {
+    let mut params = user_params.clone();
+    params.extend(page_view.parameters);
+    params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
+    params.insert(
+        event_param::DOCUMENT_TITLE.to_string(),
+        truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH),
+    );
+    params.insert(
+        event_param::DOCUMENT_LOCATION.to_string(),
+        truncate_string(
+            &page_view.location.unwrap_or(page_view.title),
+            MAX_URL_PARAM_VALUE_LENGTH,
+        ),
+    );
+    queue.push(sanitize_params(params));
+}
+
+/// Drain all pending events and page views from channels into queues
+fn drain_channels(
+    event_rx: &Receiver<EventData>,
+    page_view_rx: &Receiver<PageViewData>,
+    user_params: &ParameterMap,
+    event_queue: &mut Vec<ParameterMap>,
+    page_view_queue: &mut Vec<ParameterMap>,
+) {
+    while let Ok(event) = event_rx.try_recv() {
+        enqueue_event(event, user_params, event_queue);
+    }
+    while let Ok(page_view) = page_view_rx.try_recv() {
+        enqueue_page_view(page_view, user_params, page_view_queue);
+    }
+}
 
 /// Background thread that receives events and sends them in batches
 fn background_sender(
@@ -238,12 +290,7 @@ fn background_sender(
                 match msg {
                     Ok(page_view) => {
                         tracing::trace!("Queuing page view: {}", page_view.title);
-                        let mut params = user_params.clone();
-                        params.extend(page_view.parameters);
-                        params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
-                        params.insert(event_param::DOCUMENT_TITLE.to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
-                        params.insert(event_param::DOCUMENT_LOCATION.to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
-                        page_view_queue.push(sanitize_params(params));
+                        enqueue_page_view(page_view, &user_params, &mut page_view_queue);
                     }
                     Err(_) => break,
                 }
@@ -252,10 +299,7 @@ fn background_sender(
                 match msg {
                     Ok(event) => {
                         tracing::trace!("Queuing event: {}", event.name);
-                        let mut params = user_params.clone();
-                        params.extend(event.parameters);
-                        params.insert(event_param::EVENT_NAME.to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
-                        event_queue.push(sanitize_params(params));
+                        enqueue_event(event, &user_params, &mut event_queue);
                     }
                     Err(_) => break,
                 }
@@ -263,23 +307,7 @@ fn background_sender(
             recv(flush_rx) -> msg => {
                 match msg {
                     Ok(reply) => {
-                        // Drain any remaining events
-                        while let Ok(event) = event_rx.try_recv() {
-                            let mut params = user_params.clone();
-                            params.extend(event.parameters);
-                            params.insert(event_param::EVENT_NAME.to_string(), truncate_string(&event.name, MAX_EVENT_NAME_LENGTH));
-                            event_queue.push(sanitize_params(params));
-                        }
-
-                        while let Ok(page_view) = page_view_rx.try_recv() {
-                            let mut params = user_params.clone();
-                            params.extend(page_view.parameters);
-                            params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
-                            params.insert(event_param::DOCUMENT_TITLE.to_string(), truncate_string(&page_view.title, MAX_PARAM_VALUE_LENGTH));
-                            params.insert(event_param::DOCUMENT_LOCATION.to_string(), truncate_string(&page_view.location.unwrap_or(page_view.title), MAX_URL_PARAM_VALUE_LENGTH));
-                            page_view_queue.push(sanitize_params(params));
-                        }
-
+                        drain_channels(&event_rx, &page_view_rx, &user_params, &mut event_queue, &mut page_view_queue);
                         let result = rt.block_on(send_batches(
                             &client,
                             &common_params,
@@ -293,7 +321,13 @@ fn background_sender(
                 }
             }
             default(timeout) => {
-                continue;
+                drain_channels(&event_rx, &page_view_rx, &user_params, &mut event_queue, &mut page_view_queue);
+                let _ = rt.block_on(send_batches(
+                    &client,
+                    &common_params,
+                    &mut event_queue,
+                    &mut page_view_queue,
+                ));
             }
         }
     }

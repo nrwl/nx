@@ -93,6 +93,7 @@ exceptions:
   - ID
   - FAQ
   - SAML
+  - DPE
   - WSL
   - EJS
   - AST

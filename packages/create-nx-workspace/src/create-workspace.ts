@@ -189,6 +189,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     setNeverConnectToCloud(directory);
   }
 
+  // For template flow, save analytics preference directly to nx.json.
+  // For preset flow, this is handled by the workspace generator via createNxJson.
+  if (isTemplate && typeof options.analytics === 'boolean') {
+    setAnalyticsPreference(directory, options.analytics);
+  }
+
   // NXC-4020: Preset flow cloud handling matches v22.1.3 exactly:
   // 1. Read token (cloud was connected during createEmptyWorkspace)
   // 2. Setup CI for specific providers (not 'yes')
@@ -319,6 +325,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     pushedToVcs,
     connectUrl,
   };
+}
+
+function setAnalyticsPreference(directory: string, enabled: boolean): void {
+  const { readFileSync, writeFileSync } = require('fs');
+  const nxJsonPath = join(directory, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  nxJson.analytics = enabled;
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }
 
 export function extractConnectUrl(text: string): string | null {

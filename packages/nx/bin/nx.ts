@@ -31,6 +31,7 @@ import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
 import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
 import { flushAnalytics, startAnalytics } from '../src/analytics';
+import '../src/utils/perf-logging';
 
 async function main() {
   if (
@@ -41,8 +42,6 @@ async function main() {
   ) {
     assertSupportedPlatform();
   }
-
-  require('nx/src/utils/perf-logging');
 
   const workspace = findWorkspaceRoot(process.cwd());
 
