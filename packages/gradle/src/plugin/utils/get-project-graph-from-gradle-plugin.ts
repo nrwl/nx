@@ -189,9 +189,10 @@ export function processNxProjectGraph(
   while (index < projectGraphLines.length) {
     const line = projectGraphLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':nxProjectGraph')) {
+      index++; // Skip the task line before searching for the JSON file path
       while (
         index < projectGraphLines.length &&
-        !projectGraphLines[index].includes('.json')
+        !projectGraphLines[index].trim().endsWith('.json')
       ) {
         index++;
       }
