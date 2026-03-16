@@ -103,7 +103,28 @@ export async function updateLockFile(
     return [];
   }
 
+  // Capture modified/untracked files before the lock file update so we can
+  // detect everything the package-manager command touches on disk.
+  const modifiedBefore = getGitModifiedFiles(cwd);
+
   execLockFileUpdate(command, cwd, env);
+
+  // Capture again after the command to compute the delta.
+  const modifiedAfter = getGitModifiedFiles(cwd);
+  const newlyChanged = [...modifiedAfter].filter((f) => !modifiedBefore.has(f));
+
+  // Always include the lock file itself even if git didn't pick it up
+  // (e.g. it could be .gitignored in unusual setups).
+  if (!newlyChanged.includes(lockFile)) {
+    newlyChanged.push(lockFile);
+  }
+
+  if (verbose && newlyChanged.length > 1) {
+    console.log(`\nDetected additional files changed during lock file update:`);
+    newlyChanged
+      .filter((f) => f !== lockFile)
+      .forEach((f) => console.log(`  ${f}`));
+  }
 
   if (isDaemonEnabled) {
     try {
@@ -120,7 +141,32 @@ export async function updateLockFile(
     }
   }
 
-  return [lockFile];
+  return newlyChanged;
+}
+
+/**
+ * Returns the set of modified, added, and untracked file paths reported by git.
+ * Used to detect all filesystem side-effects of the lock file update command.
+ */
+function getGitModifiedFiles(cwd: string): Set<string> {
+  try {
+    const result = execSync('git status --porcelain', {
+      cwd,
+      encoding: 'utf-8',
+    }).trim();
+    if (!result) {
+      return new Set();
+    }
+    return new Set(
+      result
+        .split('\n')
+        .filter((l) => l.trim().length > 0)
+        .map((l) => l.substring(3))
+    );
+  } catch {
+    // git may not be available or this may not be a git repo
+    return new Set();
+  }
 }
 
 function execLockFileUpdate(command: string, cwd: string, env: object): void {
