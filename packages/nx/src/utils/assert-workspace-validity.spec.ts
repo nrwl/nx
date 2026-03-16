@@ -1,4 +1,8 @@
-import { assertWorkspaceValidity } from './assert-workspace-validity';
+import { DependencyType, ProjectGraph } from '../config/project-graph';
+import {
+  assertWorkspaceProjectGraphValidity,
+  assertWorkspaceValidity,
+} from './assert-workspace-validity';
 
 describe('assertWorkspaceValidity', () => {
   let mockProjects: any;
@@ -55,5 +59,63 @@ describe('assertWorkspaceValidity', () => {
       expect(e.message).toContain('invalid*');
       expect(e.message).toContain('invalid*');
     }
+  });
+
+  describe('assertWorkspaceProjectGraphValidity', () => {
+    const createProjectGraph = (): ProjectGraph => ({
+      nodes: {
+        app1: { name: 'app1', type: 'app', data: { root: 'app1' } },
+        lib1: { name: 'lib1', type: 'lib', data: { root: 'lib1' } },
+        lib2: { name: 'lib2', type: 'lib', data: { root: 'lib2' } },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: DependencyType.static }],
+        lib1: [{ source: 'lib1', target: 'app1', type: DependencyType.static }],
+        lib2: [
+          { source: 'lib2', target: 'npm:react', type: DependencyType.static },
+        ],
+      },
+      externalNodes: {
+        'npm:react': {
+          name: 'npm:react',
+          type: 'npm',
+          data: { packageName: 'react', version: '19.0.0' },
+        },
+      },
+    });
+
+    it('should not throw when strict project graph cycle validation is disabled', () => {
+      expect(() => {
+        assertWorkspaceProjectGraphValidity(createProjectGraph(), {});
+      }).not.toThrow();
+    });
+
+    it('should throw when strict project graph cycle validation is enabled', () => {
+      expect(() =>
+        assertWorkspaceProjectGraphValidity(createProjectGraph(), {
+          strictProjectGraphCycles: true,
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        "[Configuration Error]:
+        The project graph contains a circular dependency:
+          app1 -> lib1 -> app1
+
+        This validation is enabled by \"strictProjectGraphCycles\" in nx.json."
+      `);
+    });
+
+    it('should ignore external nodes when checking project graph cycles', () => {
+      const projectGraph = createProjectGraph();
+      projectGraph.dependencies.app1 = [];
+      projectGraph.dependencies.lib1 = [
+        { source: 'lib1', target: 'npm:react', type: DependencyType.static },
+      ];
+
+      expect(() =>
+        assertWorkspaceProjectGraphValidity(projectGraph, {
+          strictProjectGraphCycles: true,
+        })
+      ).not.toThrow();
+    });
   });
 });
