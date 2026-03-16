@@ -41,12 +41,7 @@
     },
     "update-all-repos": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "update-nx-repo",
-        "update-ocean-repo",
-        "update-nx-examples-repo",
-        "update-nx-console-repo"
-      ],
+      "dependsOn": ["update-ocean-repo", "update-nx-console-repo"],
       "options": {
         "command": "echo '🎉 All repositories updated successfully!'"
       }
