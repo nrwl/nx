@@ -215,10 +215,20 @@ describe('shared', () => {
           new Set(['projectA'])
         );
         // But projectB was also versioned as a side-effect (dependent bump)
+        // projectB depends on projectA, so when projectA is bumped,
+        // projectB gets a patch bump via updateDependents
         const versionData = {
           projectA: {
             currentVersion: '1.0.0',
-            dependentProjects: [],
+            dependentProjects: [
+              {
+                source: 'projectB',
+                target: 'projectA',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.0',
+              },
+            ],
             newVersion: '2.0.0',
             dockerVersion: null,
           },
