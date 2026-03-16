@@ -1,6 +1,6 @@
 ---
 title: Enable TypeScript Batch Mode
-description: Learn how to use TypeScript's batch mode in Nx to significantly improve build performance by batching TypeScript compilation tasks into a single process.
+description: Use the @nx/js:tsc batch implementation to compile multiple TypeScript projects in a single process, reducing build times for large workspaces.
 sidebar:
   label: Enable Typescript Batch Mode
 filter: 'type:Guides'
@@ -10,7 +10,7 @@ filter: 'type:Guides'
 The `@nx/js:tsc` batch implementation was introduced in Nx **16.6.0**.
 {% /aside %}
 
-If you're using the `@nx/js:tsc` to build your projects, you can opt-in to use its batch implementation. For a technology-agnostic overview of batch mode, see [Batch Mode](/docs/guides/tasks--caching/batch-mode). The batch implementation uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript) and batches the execution of the tasks into a single process. This results in a much faster build time when compared to the default implementation (the bigger the task graph to run, the more the performance improvements).
+If you're using `@nx/js:tsc` to build your projects, you can opt in to its batch implementation. It uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript) to batch task execution into a single process, which is faster than the default one-process-per-task approach. The larger the task graph, the bigger the speedup.
 
 {% aside type="caution" title="Experimental feature" %}
 Executing tasks in batch mode is an experimental feature.
