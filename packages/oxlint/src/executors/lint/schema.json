@@ -35,8 +35,7 @@
     },
     "maxWarnings": {
       "type": "number",
-      "description": "Maximum warnings allowed before failing.",
-      "default": -1
+      "description": "Maximum warnings allowed before failing."
     },
     "format": {
       "type": "string",

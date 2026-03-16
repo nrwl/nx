@@ -68,7 +68,7 @@ function createArgs(
     args.push('--quiet');
   }
   if (typeof options.maxWarnings === 'number') {
-    args.push('--max-warnings', String(options.maxWarnings));
+    args.push(`--max-warnings=${options.maxWarnings}`);
   }
   if (options.format) {
     args.push('--format', options.format);
