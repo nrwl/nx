@@ -50,10 +50,11 @@ function readProjectGraphReportCache(
 
 export function writeProjectGraphReportToCache(
   cachePath: string,
-  results: ProjectGraphReport
+  results: ProjectGraphReport,
+  hash: string
 ) {
   let projectGraphReportJson: ProjectGraphReportCache = {
-    hash: gradleCurrentConfigHash,
+    hash,
     ...results,
   };
 
@@ -69,7 +70,6 @@ export function writeProjectGraphReportToCache(
 }
 
 let projectGraphReportCache: ProjectGraphReport;
-let gradleCurrentConfigHash: string;
 let projectGraphReportCachePath: string = join(
   workspaceDataDirectory,
   'gradle-nodes.hash'
@@ -117,14 +117,12 @@ export async function populateProjectGraph(
     hashObject(options),
     process.env.CI,
   ]);
-  projectGraphReportCache ??= readProjectGraphReportCache(
+  const cached = readProjectGraphReportCache(
     projectGraphReportCachePath,
     gradleConfigHash
   );
-  if (
-    projectGraphReportCache &&
-    (!gradleCurrentConfigHash || gradleConfigHash === gradleCurrentConfigHash)
-  ) {
+  if (cached) {
+    projectGraphReportCache = cached;
     return;
   }
 
@@ -167,11 +165,11 @@ export async function populateProjectGraph(
     gradleProjectGraphReportStart.name,
     gradleProjectGraphReportEnd.name
   );
-  gradleCurrentConfigHash = gradleConfigHash;
   projectGraphReportCache = processNxProjectGraph(projectGraphLines);
   writeProjectGraphReportToCache(
     projectGraphReportCachePath,
-    projectGraphReportCache
+    projectGraphReportCache,
+    gradleConfigHash
   );
 }
 
