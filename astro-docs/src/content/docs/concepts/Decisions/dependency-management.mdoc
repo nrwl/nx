@@ -45,8 +45,8 @@ For building and deployment, you'll need to ensure each project only includes it
 
 The main challenge with this approach is coordinating dependency updates across independent teams. When multiple teams work on different, or even the same, applications within the same repo, they need to align on dependency upgrades. While this requires more coordination, it often results in less total work - upgrading a dependency once across all projects is typically more efficient than managing multiple separate upgrades over time.
 
-{% aside type="tip" title="PNPM Catalog Support" %}
-When using PNPM, use [PNPM catalogs](https://pnpm.io/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml` and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+).
+{% aside type="tip" title="Dependency Catalog Support" %}
+When using pnpm or Yarn, use [pnpm catalogs](https://pnpm.io/catalogs) or [Yarn catalogs](https://yarnpkg.com/features/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml` or `yarnrc.yml` respectively and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+ for pnpm and Nx 22.6+ for Yarn).
 {% /aside %}
 
 **Pros:**
