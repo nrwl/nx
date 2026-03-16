@@ -110,7 +110,7 @@ export class TaskOrchestrator {
     { runningTask: RunningTask; stopping: boolean }
   >();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
-  private cleanupPromise: Promise<void> | null = null;
+  private cleanupDone = false;
 
   // endregion internal state
 
@@ -232,23 +232,13 @@ export class TaskOrchestrator {
         const runningTask = await this.startContinuousTask(task, groupId);
 
         if (this.initializingTaskIds.has(task.id)) {
-          // Initiating tasks must block this thread until the task exits.
-          // This is the only onExit callback so we can await it before
-          // calling res(). The one in startContinuousTask is skipped for
-          // initiating tasks — exitCallbacks.forEach doesn't await async
-          // callbacks, so a second callback would create a floating promise
-          // that may not resolve before run() returns.
-          const ownsRunningTasksService =
-            this.runningContinuousTasks.get(task.id)?.ownsRunningTasksService ??
-            true;
           await new Promise<void>((res) => {
-            runningTask.onExit(async (code) => {
-              await this.handleContinuousTaskExit(
-                code,
-                task,
-                groupId,
-                ownsRunningTasksService
-              );
+            runningTask.onExit((code) => {
+              if (!this.tuiEnabled) {
+                if (code > 128) {
+                  process.exit(code);
+                }
+              }
               res();
             });
           });
@@ -954,12 +944,7 @@ export class TaskOrchestrator {
         groupId,
         ownsRunningTasksService: false,
       });
-      // Initiating tasks complete inline in executeNextBatchOfTasksUsingTaskSchedule
-      if (!this.initializingTaskIds.has(task.id)) {
-        runningTask.onExit(async (code) => {
-          await this.handleContinuousTaskExit(code, task, groupId, false);
-        });
-      }
+      this.registerContinuousTaskExitHandler(runningTask, task, groupId, false);
 
       // task is already running by another process, we schedule the next tasks
       // and release the threads
@@ -1012,12 +997,7 @@ export class TaskOrchestrator {
       groupId,
       ownsRunningTasksService: true,
     });
-    // Initiating tasks complete inline in executeNextBatchOfTasksUsingTaskSchedule
-    if (!this.initializingTaskIds.has(task.id)) {
-      childProcess.onExit(async (code) => {
-        await this.handleContinuousTaskExit(code, task, groupId, true);
-      });
-    }
+    this.registerContinuousTaskExitHandler(childProcess, task, groupId, true);
     await this.scheduleNextTasksAndReleaseThreads();
 
     return childProcess;
@@ -1279,40 +1259,42 @@ export class TaskOrchestrator {
 
   // endregion utils
 
-  private async handleContinuousTaskExit(
-    code: number,
+  private registerContinuousTaskExitHandler(
+    runningTask: RunningTask,
     task: Task,
     groupId: number,
     ownsRunningTasksService: boolean
   ) {
-    // If cleanup already completed this task, nothing left to do
-    if (this.completedTasks[task.id] !== undefined) {
-      return;
-    }
+    runningTask.onExit(async (code) => {
+      // If cleanup already completed this task, nothing left to do
+      if (this.completedTasks[task.id] !== undefined) {
+        return;
+      }
 
-    const stoppingReason = this.runningContinuousTasks.get(
-      task.id
-    )?.stoppingReason;
-    if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
-      const reason =
-        stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
-      await this.completeContinuousTask(
-        task,
-        groupId,
-        ownsRunningTasksService,
-        reason
-      );
-    } else {
-      console.error(
-        `Task "${task.id}" is continuous but exited with code ${code}`
-      );
-      await this.completeContinuousTask(
-        task,
-        groupId,
-        ownsRunningTasksService,
-        'crashed'
-      );
-    }
+      const stoppingReason = this.runningContinuousTasks.get(
+        task.id
+      )?.stoppingReason;
+      if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+        const reason =
+          stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
+        await this.completeContinuousTask(
+          task,
+          groupId,
+          ownsRunningTasksService,
+          reason
+        );
+      } else {
+        console.error(
+          `Task "${task.id}" is continuous but exited with code ${code}`
+        );
+        await this.completeContinuousTask(
+          task,
+          groupId,
+          ownsRunningTasksService,
+          'crashed'
+        );
+      }
+    });
   }
 
   private async completeContinuousTask(
@@ -1348,14 +1330,11 @@ export class TaskOrchestrator {
   }
 
   private async cleanup() {
-    if (this.cleanupPromise) {
-      return this.cleanupPromise;
+    if (this.cleanupDone) {
+      return;
     }
-    this.cleanupPromise = this.performCleanup();
-    return this.cleanupPromise;
-  }
+    this.cleanupDone = true;
 
-  private async performCleanup() {
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
     for (const entry of this.runningContinuousTasks.values()) {
@@ -1417,17 +1396,6 @@ export class TaskOrchestrator {
   private setupSignalHandlers() {
     process.once('SIGINT', () => {
       this.stopRequested = true;
-      if (!this.tuiEnabled) {
-        // Silence output immediately — pnpm (and similar wrappers) may
-        // exit before nx finishes cleanup, returning the shell prompt.
-        // Any output after that point would appear after the prompt.
-        const noop = (_chunk, _encoding, callback) => {
-          if (callback) callback();
-          return true;
-        };
-        process.stdout.write = noop as any;
-        process.stderr.write = noop as any;
-      }
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1437,7 +1405,6 @@ export class TaskOrchestrator {
       });
     });
     process.once('SIGTERM', () => {
-      this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1445,7 +1412,6 @@ export class TaskOrchestrator {
       });
     });
     process.once('SIGHUP', () => {
-      this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
