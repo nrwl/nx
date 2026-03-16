@@ -19,7 +19,7 @@ There are many different ways to structure a repository and Nx is designed to su
 - Package-Based Repository - A repository with multiple projects that depend on each other via `package.json` and often have nested `node_modules`
 - Integrated Repository - A repository with multiple projects that depend on each other via typescript imports and often employ a single version policy
 
-Nx's features can be enabled in each of these types of repositories. Just as each repository is unique and may not exactly fit in one of these categories, the way Nx is used will vary between repositories.
+Nx features can be enabled in each of these types of repositories. Just as each repository is unique and may not exactly fit in one of these categories, the way Nx is used will vary between repositories.
 
 {% cardgrid %}
 {% linkcard title="Packaged based vs Integrated Style - Use Nx however it works best for you" description="Choose your style and what works best for you!" href="https://youtu.be/ArmERpNvC8Y" /%}
@@ -27,7 +27,7 @@ Nx's features can be enabled in each of these types of repositories. Just as eac
 {% linkcard title="Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" href="https://youtu.be/weZ7NAzB7PM" /%}
 {% /cardgrid %}
 
-## Package-Based Repos
+## Package-based repos
 
 A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this setup, you typically have [different dependencies for each project](/docs/concepts/decisions/dependency-management). Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. Moving an existing package into a package-based repo is very easy since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo since you have to create all the build tooling from scratch.
 
@@ -41,7 +41,7 @@ Someone who appreciates the flexibility of a package-based repository will be mo
 
 {% linkcard title="TypeScript Monorepo Tutorial" description="Add Nx to an existing TypeScript repo"  href="/docs/getting-started/tutorials/typescript-packages-tutorial" /%}
 
-## Integrated Repos
+## Integrated repos
 
 An integrated repo contains projects that depend on each other through standard import statements. There is typically a [single version of every dependency](/docs/concepts/decisions/dependency-management) defined at the root. Sometimes build tools like Jest and Webpack need to be wrapped to work correctly. It's harder to add an existing package to this repo style because the build tooling for that package may need to be modified. It's straightforward to add a brand-new project to the repo because all the tooling decisions have already been made.
 
@@ -58,7 +58,7 @@ Someone who appreciates the structure and consistency of an integrated repositor
 {% linkcard title="Tutorial: Angular Monorepo" description="Create an Angular monorepo with Nx" href="/docs/getting-started/tutorials/angular-monorepo-tutorial" /%}
 {% /cardgrid %}
 
-## Standalone Applications
+## Standalone applications
 
 Nx plugins, especially the [generators](/docs/features/generate-code), [executors](/docs/concepts/executors-and-configurations) and [migrations](/docs/features/automate-updating-dependencies) that come with them, are not only valuable for a monorepo scenario. In fact, many developers use Nx not primarily for its monorepo support, but for its tooling support, particularly its ability to modularize a codebase and, thus, better scale it. Nx supports standalone applications, which are like an integrated monorepo setup, but with just a single, root-level application. Think of it as an advanced, more capable Create-React-App or Angular CLI. And obviously, you can still leverage all the generators and executors and structure your application into libraries or submodules.
 
@@ -69,7 +69,7 @@ Someone whose main focus is on improving their single application will be most i
 
 {% linkcard title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" href="https://youtu.be/qEaVzh-oBBc" /%}
 
-## How to Choose
+## How to choose
 
 Nx itself doesn't care which style you choose. You can use all the features of Nx whether you are in a package based repo or integrated repo. Certain Nx features will be more or less valuable for a standalone app, but all the features of Nx are still available to be put in place as soon as that repo grows to include more apps.
 

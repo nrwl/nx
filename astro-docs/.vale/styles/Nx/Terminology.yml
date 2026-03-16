@@ -1,0 +1,9 @@
+extends: substitution
+message: "Use '%s' instead of '%s'."
+level: warning
+ignorecase: true
+swap:
+  schematic: generator
+  schematics: generators
+  memoized: cached
+  stored results: cached

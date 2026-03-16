@@ -1,5 +1,5 @@
 ---
-title: Overview of the Nx Rspack Plugin
+title: Rspack Plugin for Nx
 description: The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
 sidebar:
   label: Introduction
@@ -8,7 +8,17 @@ filter: 'type:References'
 
 The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
 
-## Setting Up @nx/rspack
+## Requirements
+
+The `@nx/rspack` plugin supports the following package versions.
+
+| Package        | Supported Versions |
+| -------------- | ------------------ |
+| `@rspack/core` | ^1.6.0             |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/rspack
 
 ### Installation
 
@@ -24,7 +34,7 @@ nx add @nx/rspack
 
 This will install the correct version of `@nx/rspack`.
 
-### How @nx/rspack Infers Tasks
+### How @nx/rspack infers tasks
 
 The `@nx/rspack` plugin will create a task for any project that has a Rspack configuration file present. Any of the following files will be recognized as a Rspack configuration file:
 
@@ -35,11 +45,11 @@ The `@nx/rspack` plugin will create a task for any project that has a Rspack con
 - `rspack.config.cjs`
 - `rspack.config.cts`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/rspack Configuration
+### @nx/rspack configuration
 
 The `@nx/rspack/plugin` is configured in the `plugins` array in `nx.json`.
 

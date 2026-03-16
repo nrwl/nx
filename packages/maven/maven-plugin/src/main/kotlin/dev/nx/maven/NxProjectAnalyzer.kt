@@ -51,8 +51,14 @@ class NxProjectAnalyzer(
     val configCreationTime = System.currentTimeMillis() - configCreationStart
     log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
+    // Build list of external dep node names for target inputs
+    val externalDepNames = project.artifacts
+      .filter { !coordinatesMap.containsKey("${it.groupId}:${it.artifactId}") }
+      .map { "maven:${it.groupId}:${it.artifactId}" }
+      .distinct()
+
     val targetAnalysisStart = System.currentTimeMillis()
-    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project)
+    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project, externalDepNames)
     val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
     log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
@@ -60,16 +66,10 @@ class NxProjectAnalyzer(
 
     // Project metadata including target groups
     val metadataStart = System.currentTimeMillis()
-    val projectMetadata = JsonObject()
-    projectMetadata.addProperty("mavenProject", projectName)
-    projectMetadata.add("targetGroups", targetGroups)
-    nxProject.add("metadata", projectMetadata)
-
-    // Tags
-    val tags = JsonArray()
-    tags.add("maven:${project.groupId}")
-    tags.add("maven:${project.packaging}")
-    nxProject.add("tags", tags)
+    nxProject.add("metadata", buildProjectMetadata(
+      projectName, project.groupId, project.artifactId, targetGroups
+    ))
+    nxProject.add("tags", buildProjectTags(project.groupId, project.packaging))
     val metadataTime = System.currentTimeMillis() - metadataStart
     log.info("Metadata and tags creation took ${metadataTime}ms for project: ${project.artifactId}")
 
@@ -102,6 +102,22 @@ class NxProjectAnalyzer(
       }
     }
 
+    // Collect external dependencies (not in coordinatesMap)
+    // Use project.artifacts (includes transitive deps) instead of project.dependencies (direct only)
+    val externalDependencies = project.artifacts
+      .filter { artifact ->
+        !coordinatesMap.containsKey("${artifact.groupId}:${artifact.artifactId}")
+      }
+      .map { artifact ->
+        ExternalMavenDependency(
+          groupId = artifact.groupId,
+          artifactId = artifact.artifactId,
+          version = artifact.version,
+          scope = artifact.scope,
+          artifactFile = artifact.file
+        )
+      }
+
     val dependenciesJson = dependencies.map { nxDependency ->
       val dependency = JsonObject()
 
@@ -112,7 +128,7 @@ class NxProjectAnalyzer(
       dependency
     }
 
-    return ProjectAnalysis(project.file, root, nxProject, dependenciesJson)
+    return ProjectAnalysis(project.file, root, nxProject, dependenciesJson, externalDependencies)
   }
 
   private fun determineProjectType(packaging: String): String {
@@ -125,10 +141,45 @@ class NxProjectAnalyzer(
   }
 }
 
-data class ProjectAnalysis(val pomFile: File, val root: String, val project: JsonElement, val dependencies: List<JsonElement>)
+data class ProjectAnalysis(
+  val pomFile: File,
+  val root: String,
+  val project: JsonElement,
+  val dependencies: List<JsonElement>,
+  val externalDependencies: List<ExternalMavenDependency>
+)
+
+data class ExternalMavenDependency(
+  val groupId: String,
+  val artifactId: String,
+  val version: String?,
+  val scope: String?,
+  val artifactFile: File?
+)
 
 data class NxDependency(val type: NxDependencyType, val source: String, val target: String, val sourceFile: File)
 
 enum class NxDependencyType {
   Implicit, Static, Dynamic
+}
+
+internal fun buildProjectMetadata(
+  projectName: String, groupId: String, artifactId: String, targetGroups: JsonElement
+): JsonObject {
+  val metadata = JsonObject()
+  metadata.addProperty("mavenProject", projectName)
+  metadata.addProperty("groupId", groupId)
+  metadata.addProperty("artifactId", artifactId)
+  metadata.add("targetGroups", targetGroups)
+  val technologies = JsonArray()
+  technologies.add("maven")
+  metadata.add("technologies", technologies)
+  return metadata
+}
+
+internal fun buildProjectTags(groupId: String, packaging: String): JsonArray {
+  val tags = JsonArray()
+  tags.add("maven:$groupId")
+  tags.add("maven:$packaging")
+  return tags
 }

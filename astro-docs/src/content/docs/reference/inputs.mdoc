@@ -10,21 +10,21 @@ When Nx [computes the hash for a given operation](/docs/concepts/how-caching-wor
 The `inputs` are a list of **file sets**, **runtime** inputs, **environment variables**, and **working directory** that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
-## Types of Inputs
+## Types of inputs
 
 Nx can consider the following types of Inputs when computing the hash for a given operation.
 
-### Project Configuration
+### Project configuration
 
 Nx always considers the configuration of the project of a task and its dependencies when calculating the hash of a task.
 
-### Command Arguments
+### Command arguments
 
 Passing different arguments to an Nx command will often change the behavior of a task. Nx will filter out arguments which are for Nx itself and do not have any effect on running of tasks such as `--parallel` or `--projects`.
 
 For example, running `nx build myreactapp --prod` will not reuse the cached output of running `nx build myreactapp`.
 
-### Source Files
+### Source files
 
 Changing source code will often change the behavior of a task. Nx can consider the contents of files matching a pattern when calculating the computation hash.
 Source file inputs are defined like this:
@@ -50,7 +50,26 @@ Alternatively, you can use the object format with the `fileset` property:
 }
 ```
 
-#### Token Behavior with Nested Projects
+#### Directory paths
+
+When specifying a directory as an input, you must use a trailing slash or a glob pattern. A path without a trailing slash or glob pattern will be treated as a file path and will not match any files within the directory.
+
+```jsonc
+// nx.json
+{
+  "inputs": [
+    "{projectRoot}/src/", // ✓ Matches all files in src (note the trailing slash)
+    "{projectRoot}/src/**/*", // ✓ Matches all files in src using glob
+    "{projectRoot}/src", // ✗ Does NOT match files - treated as a file path
+  ],
+}
+```
+
+{% aside type="note" title="Difference from Outputs" %}
+This behavior differs from `outputs`, which support naked directory paths without a trailing slash. For example, `{projectRoot}/dist` works as an output but would not work as an input.
+{% /aside %}
+
+#### Token behavior with nested projects
 
 These tokens behave differently when dealing with nested projects:
 
@@ -64,14 +83,32 @@ Files listed in `.gitignore` are automatically excluded from inputs. Nx will not
 {% /aside %}
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
-Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself.
+Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself. This allows you to specify exactly which files from dependency projects should be considered as inputs.
+
+```jsonc
+{
+  "inputs": [
+    "{projectRoot}/**/*.ts", // .ts files in the current project
+    "^{projectRoot}/**/*.ts", // .ts files in all dependency projects
+    "^{workspaceRoot}/tools/**/*", // workspace-level files, applied per dependency
+  ],
+}
+```
+
+You can also use the object format with the `dependencies` property to achieve the same result:
+
+```jsonc
+{
+  "inputs": [{ "fileset": "{projectRoot}/**/*.ts", "dependencies": true }],
+}
+```
 
 By default, Nx will use all files in a project as well as all files in the project's dependencies when computing a hash for tasks belonging to the project.
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
 To get a better idea of how to use inputs, you can browse some [common input sets](/docs/guides/tasks--caching/configure-inputs#common-inputs).
 
-### Environment Variables
+### Environment variables
 
 Tools and scripts will often use some environment variables to change their behavior. Nx can consider the value of environment variables when calculating the computation hash in order to invalidate the cache if the environment variable value changes. Environment variable inputs are defined like this:
 
@@ -83,7 +120,7 @@ Tools and scripts will often use some environment variables to change their beha
 }
 ```
 
-### Runtime Inputs
+### Runtime inputs
 
 You can use a Runtime input to provide a script which will output the information you want to include in the computation hash. Runtime inputs are defined like this:
 
@@ -95,7 +132,7 @@ You can use a Runtime input to provide a script which will output the informatio
 
 This kind of input is often used to include versions of tools used to run the task. You should ensure that these scripts work on any platform where the workspace is used. Avoid using `.sh` or `.bat` files as these will not work across Windows and \*nix operating systems.
 
-### Working Directory
+### Working directory
 
 Some tasks may behave differently depending on which directory they are run from. Nx can include the current working directory in the computation hash to ensure that tasks are re-run when the working directory changes. Working directory inputs are defined like this:
 
@@ -112,7 +149,7 @@ The `workingDirectory` input accepts two values:
 - `"relative"` - Hashes the relative path from the workspace root to the current working directory. This is useful when tasks should be invalidated when run from different subdirectories within the workspace.
 - `"absolute"` - Hashes the full absolute path of the current working directory. This is useful when tasks depend on the exact location on the filesystem. Notably, this will invalidate cache entries if the repository is cloned to a different location on the filesystem, such as between CI and local development environments.
 
-### External Dependencies
+### External dependencies
 
 Source code often imports from external dependencies installed through package managers. For example, a React application will likely import `react`. It is not needed to configure those `externalDependencies` directly. Nx will always consider external dependencies depended upon by any source code within the project.
 
@@ -160,7 +197,7 @@ This default behavior can be overridden by adding any external dependency inputs
 
 Targets which use an executor from a Nx Plugin maintained by the Nx Team will have the correct set of external dependencies considered when calculating the hash.
 
-### Outputs of Dependent Tasks
+### Outputs of dependent tasks
 
 When a task depends on another task, it is possible that the outputs of the dependent task will affect the behavior of the task. The Nx caching mechanism can consider the contents of files produced by dependent tasks that match a pattern. Use outputs of dependent tasks as inputs like this:
 
@@ -182,7 +219,7 @@ When a root `tsconfig.json` or `tsconfig.base.json` is present, Nx will always c
 This includes the full `compilerOptions` section and particular path mappings in the `compilerOptions.paths` property.
 This allows Nx to not invalidate every single task when a path mapping is added or removed from the root `tsconfig.json` file
 
-### Named Inputs from Other Projects
+### Named inputs from other projects
 
 You can reference named inputs from specific projects or from project dependencies using the object format with the `input` property:
 
@@ -206,7 +243,17 @@ You can reference named inputs from specific projects or from project dependenci
 
 The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
 
-## Named Inputs
+{% aside type="note" title="^ with filesets vs named inputs" %}
+The `^` prefix behaves differently depending on what follows it:
+
+- `^{projectRoot}/**/*.ts` — treated as a **dependency fileset**, hashing matching files in each dependency project
+- `^{workspaceRoot}/tools/**/*` — treated as a **dependency fileset** with workspace-level files
+- `^production` — treated as a **named input reference**, resolving the `production` named input for each dependency project
+
+In short, if the value after `^` starts with `{projectRoot}` or `{workspaceRoot}`, it is a fileset applied to dependencies. Otherwise, it is interpreted as a named input reference.
+{% /aside %}
+
+## Named inputs
 
 Many tasks will utilize the same sets of inputs with minor differences. Nx allows you to define these sets in the `namedInputs` section of the `nx.json` file.
 
@@ -214,7 +261,7 @@ These sets of inputs can then be referenced and reused in the `inputs` array of 
 
 Named Inputs can be defined for the entire workspace in `nx.json` or for a specific project in `project.json`/`package.json`.
 
-### Workspace Level Named Inputs
+### Workspace level named inputs
 
 Named inputs defined in `nx.json` can be used by any project in the workspace in the `inputs` array. The following example shows how to define named inputs for the entire workspace in `nx.json`.
 
@@ -227,7 +274,7 @@ Named inputs defined in `nx.json` can be used by any project in the workspace in
 }
 ```
 
-### Project Level Named Inputs
+### Project level named inputs
 
 Named inputs defined in `package.json` or `project.json` define the value of the named input for tasks belonging to that specific project.
 
@@ -266,7 +313,7 @@ Naming a set of inputs with the same name as a set of inputs defined for the wor
 {% /tabitem %}
 {% /tabs %}
 
-### Named Input Conventions
+### Named input conventions
 
 By default, Nx Workspaces are generated with the following named inputs:
 
@@ -283,21 +330,21 @@ By default, Nx Workspaces are generated with the following named inputs:
 
 The above inputs follow a convention that Nx recommends for named inputs. Nx generates these by default but you can also introduce your own conventions.
 
-#### Default Inputs
+#### Default inputs
 
 The `default` inputs include all files in a project as well as any shared global inputs which should be considered for all tasks. Defaulting to the set of everything that matters ensures that Nx will always re-run tasks when necessary by default.
 
-#### Shared Global Inputs
+#### Shared global inputs
 
 The `sharedGlobals` inputs include things that Nx should always look at when determining computation hashes. For instance, this could be the OS where the command is being run or the version of Node.
 
-#### Production Inputs
+#### Production inputs
 
 The `production` inputs only include the set of files in a project which will affect behavior of the project in production.
 For instance, the `main.ts` of an application will be compiled as the main application logic and will affect the end user experience while files such as `.eslintrc.json` only affect the tools used by the developers and have no direct impact on the end user experience.
 In general, it is best to define the `production` inputs as the `default` inputs (everything) excluding the specific files which are known not to affect end user experience. This makes it so that by default, all files are considered to affect end user behavior unless excluded from the `production` fileset.
 
-### Using Named Inputs on Project Dependencies
+### Using named inputs on project dependencies
 
 It is common for most tasks to consider a set of inputs for the project it belongs to and a set of inputs for dependencies of the project. For instance, running the tests of a project should consider all files of the project being tested but only production files of its dependencies. The following `inputs` configuration uses named inputs in two different ways:
 

@@ -83,6 +83,13 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+  type ConfigureAiAgentsStatusResponse,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -964,6 +971,20 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  getConfigureAiAgentsStatus(): Promise<ConfigureAiAgentsStatusResponse> {
+    const message: HandleGetConfigureAiAgentsStatusMessage = {
+      type: GET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  resetConfigureAiAgentsStatus(): Promise<{ success: boolean }> {
+    const message: HandleResetConfigureAiAgentsStatusMessage = {
+      type: RESET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
@@ -1038,9 +1059,12 @@ export class DaemonClient {
   private setUpConnection() {
     const socketPath = this.getSocketPath();
 
-    this.socketMessenger = new DaemonSocketMessenger(
-      connect(socketPath)
-    ).listen(
+    const socket = connect(socketPath);
+    // Unref the socket so it doesn't keep the process alive. The
+    // sendMessageToDaemon method uses a keep-alive setTimeout to
+    // explicitly hold the event loop open while awaiting a response.
+    socket.unref();
+    this.socketMessenger = new DaemonSocketMessenger(socket).listen(
       (message) => this.handleMessage(message),
       () => {
         // it's ok for the daemon to terminate if the client doesn't wait on

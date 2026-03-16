@@ -7,6 +7,7 @@ import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Utility for recording build state from Maven projects.
@@ -17,38 +18,68 @@ object BuildStateRecorder {
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
+     * Cache of the last-written BuildState per project (keyed by "groupId:artifactId").
+     * Used to skip redundant JSON serialization and file I/O when the state hasn't changed.
+     */
+    private val lastWrittenState = ConcurrentHashMap<String, BuildState>()
+
+    /**
+     * Cache of canonicalized path mappings to avoid repeated filesystem syscalls.
+     * Key: absolute path, Value: relative path from project root.
+     * File.canonicalPath is a syscall that resolves symlinks — caching it avoids
+     * hundreds of redundant syscalls per recording (especially for classpath entries
+     * pointing to ~/.m2/repository).
+     */
+    private val canonicalPathCache = ConcurrentHashMap<Pair<String, String>, String>()
+
+    private fun toRelativePathCached(absolutePath: String, projectRoot: File): String {
+        val rootPath = projectRoot.absolutePath
+        val key = Pair(absolutePath, rootPath)
+        return canonicalPathCache.getOrPut(key) {
+            PathUtils.toRelativePath(absolutePath, projectRoot, log)
+        }
+    }
+
+    private fun toRelativePathsCached(absolutePaths: Set<String>, projectRoot: File): Set<String> {
+        return absolutePaths.map { toRelativePathCached(it, projectRoot) }.toSet()
+    }
+
+    /**
      * Record the build state of a Maven project to nx-build-state.json.
+     * Computes the full state every time for correctness, but skips the file write
+     * if the state is identical to what was last written.
      *
      * @param project The MavenProject to record
      * @throws Exception if recording fails
      */
     fun recordBuildState(project: MavenProject) {
+        val selector = "${project.groupId}:${project.artifactId}"
         val startTime = System.currentTimeMillis()
         log.debug("  Recording build state for ${project.groupId}:${project.artifactId}...")
         val basedir = project.basedir
 
         // Capture compile source roots
         val compileSourceRootsAbsolute = project.compileSourceRoots.toSet()
-        val compileSourceRoots = PathUtils.toRelativePaths(compileSourceRootsAbsolute, basedir, log)
+        val compileSourceRoots = toRelativePathsCached(compileSourceRootsAbsolute, basedir)
 
         // Capture test compile source roots
         val testCompileSourceRootsAbsolute = project.testCompileSourceRoots.toSet()
-        val testCompileSourceRoots = PathUtils.toRelativePaths(testCompileSourceRootsAbsolute, basedir, log)
+        val testCompileSourceRoots = toRelativePathsCached(testCompileSourceRootsAbsolute, basedir)
 
         // Capture resources
         val resourcesAbsolute = project.resources.map { (it as Resource).directory }.filter { it != null }.toSet()
-        val resources = PathUtils.toRelativePaths(resourcesAbsolute, basedir, log)
+        val resources = toRelativePathsCached(resourcesAbsolute, basedir)
 
         // Capture test resources
         val testResourcesAbsolute = project.testResources.map { (it as Resource).directory }.filter { it != null }.toSet()
-        val testResources = PathUtils.toRelativePaths(testResourcesAbsolute, basedir, log)
+        val testResources = toRelativePathsCached(testResourcesAbsolute, basedir)
 
         // Capture output directories
         val outputDirectory = project.build.outputDirectory?.let {
-            PathUtils.toRelativePath(it, basedir, log)
+            toRelativePathCached(it, basedir)
         }
         val testOutputDirectory = project.build.testOutputDirectory?.let {
-            PathUtils.toRelativePath(it, basedir, log)
+            toRelativePathCached(it, basedir)
         }
 
         // Capture classpaths
@@ -64,7 +95,7 @@ object BuildStateRecorder {
         val defaultPomFile = File(basedir, "pom.xml")
         val currentPomFile = project.file
         val pomFile = if (currentPomFile != null && currentPomFile.canonicalPath != defaultPomFile.canonicalPath) {
-            val relativePath = PathUtils.toRelativePath(currentPomFile.absolutePath, basedir, log)
+            val relativePath = toRelativePathCached(currentPomFile.absolutePath, basedir)
             log.info("Captured non-default pomFile: $relativePath (modified by a plugin like flatten-maven-plugin)")
             relativePath
         } else {
@@ -87,10 +118,19 @@ object BuildStateRecorder {
             pomFile = pomFile
         )
 
-        // Write to file
+        // Skip write if state is identical to what was last written
         val outputFile = File(project.build.directory, BUILD_STATE_FILE)
+        val lastState = lastWrittenState[selector]
+        if (lastState != null && lastState == buildState) {
+            val duration = System.currentTimeMillis() - startTime
+            log.debug("  Skipping write for $selector — state unchanged (took ${duration}ms)")
+            return
+        }
+
+        // Write to file
         outputFile.parentFile?.mkdirs()
         outputFile.writeText(gson.toJson(buildState))
+        lastWrittenState[selector] = buildState
 
         val duration = System.currentTimeMillis() - startTime
         log.debug("    Recorded to ${outputFile.absolutePath} (took ${duration}ms)")
@@ -107,14 +147,14 @@ object BuildStateRecorder {
             log.warn("Failed to capture $classpathType classpath: ${e.message}")
             emptySet<String>()
         }
-        return PathUtils.toRelativePaths(absolutePaths, basedir, log)
+        return toRelativePathsCached(absolutePaths, basedir)
     }
 
     private fun captureMainArtifact(project: MavenProject, basedir: File): ArtifactInfo? {
         val artifactFile = project.artifact?.file
         if (artifactFile != null && artifactFile.exists()) {
             return ArtifactInfo(
-                file = PathUtils.toRelativePath(artifactFile.absolutePath, basedir, log),
+                file = toRelativePathCached(artifactFile.absolutePath, basedir),
                 type = project.artifact.type,
                 classifier = project.artifact.classifier,
                 groupId = project.artifact.groupId,
@@ -144,7 +184,7 @@ object BuildStateRecorder {
                     null
                 }
                 else -> ArtifactInfo(
-                    file = PathUtils.toRelativePath(artifact.file.absolutePath, basedir, log),
+                    file = toRelativePathCached(artifact.file.absolutePath, basedir),
                     type = artifact.type,
                     classifier = artifact.classifier,
                     groupId = artifact.groupId,

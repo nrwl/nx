@@ -15,6 +15,7 @@ import {
   runPreTasksExecution,
 } from '../../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { TaskResult } from '../../tasks-runner/life-cycle';
 import { runCommandForTasks } from '../../tasks-runner/run-command';
 import {
   createOverrides,
@@ -330,6 +331,24 @@ async function runPublishOnProjects(
       code: taskData.code,
     };
   }
+
+  // Check for EOTP errors and provide a helpful re-run command
+  const eotpFailedProjects = getEOTPFailedProjects(taskResults);
+  if (eotpFailedProjects.length > 0) {
+    output.warn({
+      title:
+        'One or more packages failed to publish because a valid OTP was not provided or has expired.',
+      bodyLines: [
+        'Affected projects:',
+        ...eotpFailedProjects.map((p) => `  - ${p}`),
+        '',
+        'You can provide a new OTP and re-run the publish step in isolation:',
+        '',
+        `  ${buildRerunCommand(args)}`,
+      ],
+    });
+  }
+
   await runPostTasksExecution({
     id,
     taskResults,
@@ -341,4 +360,55 @@ async function runPublishOnProjects(
   });
 
   return publishProjectsResult;
+}
+
+/**
+ * Return project names for failed tasks that contain EOTP error indicators in their terminal output.
+ * npm returns error code "EOTP" in JSON output.
+ * pnpm returns "EOTP" in error messages.
+ * Both will appear in the captured terminal output.
+ */
+function getEOTPFailedProjects(
+  taskResults: Record<string, TaskResult>
+): string[] {
+  return Object.values(taskResults)
+    .filter(
+      (result) =>
+        result.code !== 0 &&
+        result.terminalOutput &&
+        (result.terminalOutput.includes('EOTP') ||
+          result.terminalOutput.includes('one-time pass') ||
+          result.terminalOutput.includes('one-time password'))
+    )
+    .map((result) => result.task.target.project);
+}
+
+function buildRerunCommand(args: PublishOptions): string {
+  const parts = ['nx release publish'];
+
+  if (args.registry) {
+    parts.push(`--registry=${args.registry}`);
+  }
+  if (args.tag) {
+    parts.push(`--tag=${args.tag}`);
+  }
+  if (args.access) {
+    parts.push(`--access=${args.access}`);
+  }
+  if (args.projects?.length) {
+    parts.push(`--projects=${args.projects.join(',')}`);
+  }
+  if (args.groups?.length) {
+    parts.push(`--groups=${args.groups.join(',')}`);
+  }
+  if (args.firstRelease) {
+    parts.push('--first-release');
+  }
+  if (args.verbose) {
+    parts.push('--verbose');
+  }
+
+  parts.push('--otp=REPLACE_WITH_NEW_OTP');
+
+  return parts.join(' ');
 }

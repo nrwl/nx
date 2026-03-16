@@ -35,11 +35,13 @@
     "nx-claude-plugins": {
       "source": {
         "source": "github",
-        "repo": "nrwl/nx-ai-agents-config"
+        "repo": "nrwl/nx-ai-agents-config",
+        "ref": "experimental"
       }
     }
   },
   "enabledPlugins": {
-    "nx@nx-claude-plugins": true
+    "nx@nx-claude-plugins": true,
+    "polygraph@nx-claude-plugins": true
   }
 }

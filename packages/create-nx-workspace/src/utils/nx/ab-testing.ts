@@ -142,18 +142,7 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
 export function getBannerVariant(cloudUrl?: string): BannerVariant {
-  // Enterprise URLs always get plain link (variant 0)
-  if (isEnterpriseCloudUrl(cloudUrl)) {
-    return '0';
-  }
-
-  // Docs generation uses variant 0 for deterministic output
-  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
-    return '0';
-  }
-
-  // Standard URLs get variant 2 banner
-  return '2';
+  return '0';
 }
 
 export const NxCloudChoices = [
@@ -163,6 +152,7 @@ export const NxCloudChoices = [
   'bitbucket-pipelines',
   'circleci',
   'skip',
+  'never',
   'yes', // Deprecated but still handled
 ];
 
@@ -191,73 +181,36 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
-   * Locked to "full platform" messaging (CLOUD-4235)
+   * NXC-4020: Restored to v22.1.3 wording
    */
   setupNxCloud: [
     {
-      code: 'cloud-v2-full-platform-visit',
-      message: 'Try the full Nx platform?',
+      code: 'enable-caching2',
+      message: 'Would you like remote caching to make your build faster?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
+        { value: 'skip', name: 'No - I would not like remote caching' },
       ],
       footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
+      hint: '(can be disabled any time)',
       fallback: undefined,
-      completionMessage: 'platform-setup',
+      completionMessage: 'cache-setup',
     },
   ],
   /**
    * Simplified Cloud prompt for template flow
    */
   setupNxCloudV2: [
-    //{
-    //  code: 'cloud-v2-remote-cache-visit',
-    //  message: 'Enable remote caching with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
-    //  fallback: undefined,
-    //  completionMessage: 'cache-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-fast-ci-visit',
-    //  message: 'Speed up CI and reduce compute costs with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-green-prs-visit',
-    //  message: 'Get to green PRs faster with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
     {
-      code: 'cloud-v2-full-platform-visit',
-      message: 'Try the full Nx platform?',
+      code: 'connect-to-cloud',
+      message: 'Connect to Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: "No, don't ask again" },
       ],
       footer:
         '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',

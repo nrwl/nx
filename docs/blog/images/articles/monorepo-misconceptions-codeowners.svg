@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="400" height="220" font-family="system-ui, -apple-system, sans-serif" font-size="13">
+  <!-- Row 1: e2e apps -->
+  <rect x="10" y="10" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="60" y="33" text-anchor="middle">app-a-e2e</text>
+
+  <rect x="150" y="10" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="200" y="33" text-anchor="middle">app-b2-e2e</text>
+
+  <rect x="290" y="10" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="340" y="33" text-anchor="middle">app-b1-e2e</text>
+
+  <!-- Row 2: apps -->
+  <rect x="10" y="90" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="60" y="113" text-anchor="middle">app-a</text>
+
+  <rect x="150" y="90" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="200" y="113" text-anchor="middle">app-b2</text>
+
+  <rect x="290" y="90" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="340" y="113" text-anchor="middle">app-b1</text>
+
+  <!-- Row 3: shared lib (ellipse) -->
+  <ellipse cx="230" cy="185" rx="70" ry="22" fill="#fff3cd" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="230" y="190" text-anchor="middle">shared-b</text>
+
+  <!-- Arrows: e2e -> apps -->
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+  </marker>
+
+  <line x1="60" y1="46" x2="60" y2="88" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="200" y1="46" x2="200" y2="88" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="340" y1="46" x2="340" y2="88" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- Arrows: app-b2 and app-b1 -> shared-b -->
+  <line x1="200" y1="126" x2="218" y2="162" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="340" y1="126" x2="248" y2="164" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+</svg>

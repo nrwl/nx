@@ -3,6 +3,7 @@ import { basename, dirname } from 'node:path';
 
 export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);
 export const GRADLEW_FILES = new Set(['gradlew', 'gradlew.bat']);
+export const GRADLE_VERSION_CATALOG_GLOB = '**/gradle/*.versions.toml';
 export const GRADLE_TEST_FILES = [
   '**/src/test/java/**/*Test.java',
   '**/src/test/kotlin/**/*Test.kt',
@@ -21,7 +22,8 @@ export const gradleConfigAndTestGlob = combineGlobPatterns(
   ...Array.from(GRADLEW_FILES),
   ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
   ...Array.from(GRADLEW_FILES).map((file) => `**/${file}`),
-  ...GRADLE_TEST_FILES
+  ...GRADLE_TEST_FILES,
+  GRADLE_VERSION_CATALOG_GLOB
 );
 
 /**

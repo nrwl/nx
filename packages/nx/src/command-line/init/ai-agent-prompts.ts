@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { isCI } from '../../utils/is-ci';
 import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
+import { detectAiAgent } from '../../ai/detect-ai-agent';
 import * as pc from 'picocolors';
 
 export async function determineAiAgents(
@@ -8,7 +9,11 @@ export async function determineAiAgents(
   interactive?: boolean
 ): Promise<Agent[]> {
   if (interactive === false || isCI()) {
-    return aiAgents ?? [];
+    if (aiAgents) {
+      return aiAgents;
+    }
+    const detected = detectAiAgent();
+    return detected ? [detected] : [];
   }
 
   if (aiAgents) {

@@ -4,6 +4,7 @@ java = "24"
 node = "{{ env['NODE_VERSION'] | default(value='24.11.0') }}"
 maven = "3.9.11"
 rust = "1.90.0"
+vale = "3.13.1"
 
 # dotnet via mise only works on Linux/macOS.
 # On Windows, the vfox plugin is buggy: https://github.com/jdx/mise/discussions/4738

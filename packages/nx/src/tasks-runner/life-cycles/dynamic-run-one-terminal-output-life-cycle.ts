@@ -101,6 +101,7 @@ export async function createRunOneDynamicOutputRenderer({
   let renderDependentTargetsIntervalId: NodeJS.Timeout | undefined;
 
   const moveCursorToStartOfDependentTargetLines = () => {
+    readline.cursorTo(process.stdout, 0);
     readline.moveCursor(process.stdout, 0, -dependentTargetsNumLines);
   };
 

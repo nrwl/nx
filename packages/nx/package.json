@@ -37,6 +37,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
+    "@ltd/j-toml": "^1.38.0",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",
@@ -106,6 +107,8 @@
       "@nx/eslint",
       "@nx/workspace",
       "@nx/angular",
+      "@nx/angular-rspack",
+      "@nx/angular-rspack-compiler",
       "@nx/jest",
       "@nx/cypress",
       "@nx/detox",

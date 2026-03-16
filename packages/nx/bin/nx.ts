@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+
+// TODO: Remove this workaround once picocolors handles FORCE_COLOR=0 correctly
+// See: https://github.com/alexeyraspopov/picocolors/issues/100
+if (process.env.FORCE_COLOR === '0') {
+  process.env.NO_COLOR = '1';
+  delete process.env.FORCE_COLOR;
+}
+
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
@@ -21,6 +29,9 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
+import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
+import { flushAnalytics, startAnalytics } from '../src/analytics';
+import '../src/utils/perf-logging';
 
 async function main() {
   if (
@@ -31,8 +42,6 @@ async function main() {
   ) {
     assertSupportedPlatform();
   }
-
-  require('nx/src/utils/perf-logging');
 
   const workspace = findWorkspaceRoot(process.cwd());
 
@@ -86,13 +95,19 @@ async function main() {
       handleNxVersionCommand(LOCAL_NX_VERSION, GLOBAL_NX_VERSION);
     }
 
-    if (!workspace) {
+    if (!workspace && !isNxCloudCommand(process.argv[2])) {
       handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
     if (!localNx && !isNxCloudCommand(process.argv[2])) {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
+
+    // Prompt for analytics preference if not set
+    try {
+      await ensureAnalyticsPreferenceSet();
+    } catch {}
+    await startAnalytics();
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
@@ -190,6 +205,7 @@ function isNxCloudCommand(command: string): boolean {
     'view-logs',
     'fix-ci',
     'record',
+    'polygraph',
   ];
   return nxCloudCommands.includes(command);
 }
@@ -304,5 +320,6 @@ process.on('exit', () => {
 
 main().catch((error) => {
   console.error(error);
+  flushAnalytics();
   process.exit(1);
 });

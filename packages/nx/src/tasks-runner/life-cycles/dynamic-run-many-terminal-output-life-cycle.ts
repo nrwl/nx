@@ -93,6 +93,7 @@ export async function createRunManyDynamicOutputRenderer({
   let renderIntervalId: NodeJS.Timeout | undefined;
 
   const moveCursorToStartOfPinnedFooter = () => {
+    readline.cursorTo(process.stdout, 0);
     readline.moveCursor(process.stdout, 0, -pinnedFooterNumLines);
   };
 

@@ -139,7 +139,8 @@ export async function hashTasks(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   env: NodeJS.ProcessEnv,
-  taskDetails: TaskDetails | null
+  taskDetails: TaskDetails | null,
+  tasksToHashOverride?: Task[]
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -147,7 +148,9 @@ export async function hashTasks(
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJson = readNxJson();
 
-  const tasks = Object.values(taskGraph.tasks).filter((task) => !task.hash);
+  const tasks = (tasksToHashOverride ?? Object.values(taskGraph.tasks)).filter(
+    (task) => !task.hash
+  );
 
   // Separate tasks with custom hashers from those without
   const tasksWithCustomHashers: Task[] = [];

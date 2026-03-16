@@ -18,21 +18,27 @@ use crate::native::tasks::inputs::{
 };
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
+use std::sync::Arc;
 
 #[napi]
 pub struct HashPlanner {
     nx_json: NxJson,
-    project_graph: External<ProjectGraph>,
+    project_graph: Arc<ProjectGraph>,
 }
 
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
-    pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
+    pub fn new(
+        nx_json: NxJson,
+        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
+            Arc<ProjectGraph>,
+        >,
+    ) -> Self {
         enable_logger();
         Self {
             nx_json,
-            project_graph,
+            project_graph: Arc::clone(project_graph),
         }
     }
 
@@ -73,7 +79,7 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     &external_deps_mapped,
-                    &mut Box::new(hashbrown::HashSet::from([task.target.project.to_string()])),
+                    &mut Box::new(hashbrown::HashSet::from([task.target.project.as_str()])),
                 )?;
 
                 let mut inputs: Vec<HashInstruction> = target
@@ -122,18 +128,20 @@ impl HashPlanner {
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn get_plans(
         &self,
-        task_ids: Vec<&str>,
+        task_ids: Vec<String>,
         task_graph: TaskGraph,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
+        let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         self.get_plans_internal(task_ids, task_graph)
     }
 
     #[napi]
     pub fn get_plans_reference(
         &self,
-        task_ids: Vec<&str>,
+        task_ids: Vec<String>,
         task_graph: TaskGraph,
     ) -> anyhow::Result<External<HashMap<String, Vec<HashInstruction>>>> {
+        let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         let plans = self.get_plans_internal(task_ids, task_graph)?;
         Ok(External::new(plans))
     }
@@ -246,18 +254,16 @@ impl HashPlanner {
         }
     }
 
-    fn self_and_deps_inputs(
-        &self,
+    fn self_and_deps_inputs<'a>(
+        &'a self,
         project_name: &str,
         task: &Task,
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
-        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&String>>,
-        visited: &mut Box<hashbrown::HashSet<String>>,
+        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let project_deps = &self.project_graph.dependencies[project_name]
-            .iter()
-            .collect::<Vec<_>>();
+        let project_deps = &self.project_graph.dependencies[project_name];
         let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
         let deps_inputs = self.gather_dependency_inputs(
             task,
@@ -303,22 +309,23 @@ impl HashPlanner {
         task: &Task,
         inputs: &[Input],
         task_graph: &TaskGraph,
-        project_deps: &[&'a String],
+        project_deps: &'a [String],
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
-        visited: &mut Box<hashbrown::HashSet<String>>,
+        visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let mut deps_inputs: Vec<HashInstruction> = vec![];
+        let mut deps_inputs: Vec<HashInstruction> =
+            Vec::with_capacity(inputs.len() * project_deps.len());
 
         for input in inputs {
             for dep in project_deps {
-                if visited.contains(*dep) {
+                if visited.contains(dep.as_str()) {
                     continue;
                 }
-                visited.insert(dep.to_string());
+                visited.insert(dep.as_str());
 
-                if self.project_graph.nodes.contains_key(*dep) {
+                if self.project_graph.nodes.contains_key(dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
-                        &self.project_graph.nodes[*dep],
+                        &self.project_graph.nodes[dep],
                         &self.nx_json,
                         input,
                     )?
@@ -358,12 +365,14 @@ impl HashPlanner {
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
             .filter_map(|input| match input {
-                Input::FileSet(file_set) => Some(file_set),
+                Input::FileSet { fileset, .. } => Some(*fileset),
                 _ => None,
             })
             .partition(|file_set| {
                 file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
             });
+
+        let project_root = &self.project_graph.nodes[project_name].root;
 
         let project_inputs = if project_file_sets.is_empty() {
             vec![
@@ -374,7 +383,10 @@ impl HashPlanner {
             vec![
                 HashInstruction::ProjectFileSet(
                     project_name.to_string(),
-                    project_file_sets.iter().map(|f| f.to_string()).collect(),
+                    project_file_sets
+                        .iter()
+                        .map(|f| resolve_tokens(f, project_root, project_name))
+                        .collect(),
                 ),
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
@@ -385,7 +397,10 @@ impl HashPlanner {
             vec![]
         } else {
             vec![HashInstruction::WorkspaceFileSet(
-                workspace_file_sets.iter().map(|f| f.to_string()).collect(),
+                workspace_file_sets
+                    .iter()
+                    .map(|f| resolve_tokens(f, project_root, project_name))
+                    .collect(),
             )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
@@ -464,6 +479,18 @@ impl HashPlanner {
         }
         Ok(result)
     }
+}
+
+/// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.
+/// For root-level projects (project_root == "."), strips `{projectRoot}/` instead of
+/// replacing with "." to avoid producing invalid paths like `./**/*`.
+fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> String {
+    let resolved = if project_root == "." {
+        fileset.replace("{projectRoot}/", "")
+    } else {
+        fileset.replace("{projectRoot}", project_root)
+    };
+    resolved.replace("{projectName}", project_name)
 }
 
 fn find_external_dependency_node_name<'a>(

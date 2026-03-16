@@ -6,7 +6,7 @@ filter: 'type:Guides'
 
 If you wish to bypass the versioning prompt, you can configure Nx Release to defer to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard to determine the version bump automatically. This is useful for automating the versioning process in a CI/CD pipeline.
 
-## Enable Automatic Versioning
+## Enable automatic versioning
 
 To enable automatic versioning via conventional commits, set the `release.version.conventionalCommits` property to `true` in `nx.json`:
 
@@ -21,7 +21,7 @@ To enable automatic versioning via conventional commits, set the `release.versio
 }
 ```
 
-## Determine the Version Bump
+## Determine the version bump
 
 Nx Release will use the commit messages since the last release to determine the version bump. It will look at the type of each commit and determine the highest version bump from the following list:
 
@@ -43,7 +43,7 @@ then Nx Release will select the `minor` version bump and elect to release versio
 If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/docs/guides/nx-release/release-projects-independently) as well, allowing for only some projects to be released and some to be skipped.
 {% /aside %}
 
-## Usage with Independent Releases
+## Usage with independent releases
 
 If you are using [independent releases](/docs/guides/nx-release/release-projects-independently), Nx Release will determine the version bump for each project independently. For example, if the git history looks like this:
 

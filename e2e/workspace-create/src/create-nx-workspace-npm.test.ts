@@ -46,6 +46,9 @@ describe('create-nx-workspace --preset=npm', () => {
     } else {
       expect(packageJson.workspaces).toEqual(['packages/*']);
     }
+
+    const nxJson = readJson(`nx.json`);
+    expect(nxJson.nxCloudId).toBeUndefined();
   });
 
   it('should add angular application', () => {

@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { PerformanceObserver } from 'perf_hooks';
+import '../../utils/perf-logging';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
@@ -12,6 +12,7 @@ import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { startAnalytics } from '../../analytics';
 import {
   getInstalledNxVersion,
   isNxVersionMismatch,
@@ -159,9 +160,18 @@ import {
   handleGetNxConsoleStatus,
   handleSetNxConsolePreferenceAndInstall,
 } from './handle-nx-console';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+  isHandleGetConfigureAiAgentsStatusMessage,
+  isHandleResetConfigureAiAgentsStatusMessage,
+} from '../message-types/configure-ai-agents';
+import {
+  handleGetConfigureAiAgentsStatus,
+  handleResetConfigureAiAgentsStatus,
+} from './handle-configure-ai-agents';
 import { deserialize, serialize } from 'v8';
 
-let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
 
@@ -183,14 +193,6 @@ const server = createServer(async (socket) => {
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
-
-  if (!performanceObserver) {
-    performanceObserver = new PerformanceObserver((list) => {
-      const entry = list.getEntries()[0];
-      serverLogger.log(`Time taken for '${entry.name}'`, `${entry.duration}ms`);
-    });
-    performanceObserver.observe({ entryTypes: ['measure'] });
-  }
 
   socket.on(
     'data',
@@ -444,6 +446,20 @@ async function handleMessage(socket: Socket, data: string) {
       () => handleSetNxConsolePreferenceAndInstall(payload.preference),
       mode
     );
+  } else if (isHandleGetConfigureAiAgentsStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_CONFIGURE_AI_AGENTS_STATUS,
+      () => handleGetConfigureAiAgentsStatus(),
+      mode
+    );
+  } else if (isHandleResetConfigureAiAgentsStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      RESET_CONFIGURE_AI_AGENTS_STATUS,
+      () => handleResetConfigureAiAgentsStatus(),
+      mode
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -664,6 +680,9 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 export async function startServer(): Promise<Server> {
   setupWorkspaceContext(workspaceRoot);
 
+  // Initialize analytics for daemon process
+  await startAnalytics();
+
   const socketPath = getFullOsSocketPath();
 
   // Log daemon startup information for debugging
@@ -756,6 +775,11 @@ export async function startServer(): Promise<Server> {
 
           // Kick off Nx Console check in background to prime the cache
           handleGetNxConsoleStatus().catch(() => {
+            // Ignore errors, this is a background operation
+          });
+
+          // Kick off AI agents outdated check in background to prime the cache
+          handleGetConfigureAiAgentsStatus().catch(() => {
             // Ignore errors, this is a background operation
           });
 

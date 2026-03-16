@@ -49,7 +49,10 @@ export function getPackageManagerCommand(
   switch (packageManager) {
     case 'yarn':
       const useBerry = +pmMajor >= 2;
-      const installCommand = 'yarn install --silent';
+      // Don't use --silent so that error output is captured on failure.
+      // Since install is run via exec() (not spawn), output is captured
+      // in memory and never shown to the terminal.
+      const installCommand = 'yarn install';
       return {
         preInstall: `yarn set version ${pmVersion}`,
         install: useBerry
@@ -69,7 +72,7 @@ export function getPackageManagerCommand(
         useExec = true;
       }
       return {
-        install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
+        install: 'pnpm install --no-frozen-lockfile --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
         globalAdd: 'pnpm add -g',
         getRegistryUrl: 'pnpm config get registry',
@@ -77,7 +80,7 @@ export function getPackageManagerCommand(
 
     case 'npm':
       return {
-        install: 'npm install --silent --ignore-scripts',
+        install: 'npm install --ignore-scripts',
         exec: 'npx',
         globalAdd: 'npm i -g',
         getRegistryUrl: 'npm config get registry',
@@ -85,7 +88,7 @@ export function getPackageManagerCommand(
     case 'bun':
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
-        install: 'bun install --silent --ignore-scripts',
+        install: 'bun install --ignore-scripts',
         exec: 'bunx',
         globalAdd: 'bun install -g',
       };

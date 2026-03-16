@@ -382,11 +382,11 @@ async function updateProjectGraphWithPlugins(
       }
 
       performance.mark(`${plugin.name}:createDependencies - end`);
-      performance.measure(
-        `${plugin.name}:createDependencies`,
-        `${plugin.name}:createDependencies - start`,
-        `${plugin.name}:createDependencies - end`
-      );
+      performance.measure(`${plugin.name}:createDependencies`, {
+        start: `${plugin.name}:createDependencies - start`,
+        end: `${plugin.name}:createDependencies - end`,
+        detail: { track: true },
+      });
     })
   );
   performance.mark('createDependencies:end');

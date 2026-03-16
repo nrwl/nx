@@ -78,7 +78,7 @@ those npm scripts to be cacheable. By making those cacheable, running `nx build`
 another layer of cacheability. However, `nx build` must be run instead of `npm run build` to take advantage of the
 cache.
 
-## Inferred Tasks
+## Inferred tasks
 
 You may have noticed that `@nx/next` provides `dev` and `start` tasks in addition to the `next:build` task. Those tasks
 were created by the `@nx/next/plugin` plugin from your existing Next.js configuration. You can see the configuration for
@@ -253,7 +253,7 @@ nx show project my-workspace --web
 The project detail view lists all available tasks, the configuration values for those tasks and where those
 configuration values are being set.
 
-## Configure an Existing Script to Run with Nx
+## Configure an existing script to run with Nx
 
 If you want to run one of your existing scripts with Nx, you need to tell Nx about it.
 
@@ -294,7 +294,7 @@ Now if you run `npm run test` or `nx test` twice, the results will be retrieved 
 this example are as cautious as possible, so you can significantly improve the value of the cache
 by [customizing Nx Inputs](/docs/guides/tasks--caching/configure-inputs) for each task.
 
-## Incrementally Adopting Nx
+## Incrementally adopting Nx
 
 All the features of Nx can be enabled independently of each other. Hence, Nx can easily be adopted incrementally by
 initially using Nx just for a subset of your scripts and then gradually adding more.
@@ -331,7 +331,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 
 1. Commit your existing changes with `git add . && git commit -am "updates"`
 2. [Create a new GitHub repository](https://github.com/new)
-3. Follow GitHub's instructions to push your existing code to the repository
+3. Follow GitHub instructions to push your existing code to the repository
 
 Now connect your repository to Nx Cloud with the following command:
 
@@ -355,7 +355,7 @@ git pull
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow
+### Create a CI workflow
 
 Use the following command to generate a CI workflow file.
 
@@ -395,7 +395,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request
+### Open a pull request
 
 Commit the changes and open a new PR on GitHub.
 
@@ -415,7 +415,7 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out our [detailed tutorial for you CI provider](/docs/guides/nx-cloud/setup-ci).
 
-## Learn More
+## Learn more
 
 {% cardgrid %}
 

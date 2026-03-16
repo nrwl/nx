@@ -13,12 +13,11 @@ Nx provides two types of Webpack plugins:
 2. [_Nx-enhanced_](#nxenhanced-plugins) plugins that work with
    the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) executor.
 
-The basic plugins are used in Nx 18 to provide seamless integration with the Webpack CLI. Prior to Nx 18, apps are
-generated with Nx-enhanced plugins and require `@nx/webpack:webpack` executor to be used.
+The basic plugins integrate directly with the Webpack CLI.
 
-This guide contains information on the plugins provided by Nx. For more information on webpack configuration and the
-difference between basic and Nx-enhanced configuration, refer to
-the [Nx Webpack configuration guide](/docs/technologies/build-tools/webpack/guides/webpack-config-setup).
+For more information on webpack configuration and the
+difference between basic and Nx-enhanced configuration, see
+the [Webpack configuration guide](/docs/technologies/build-tools/webpack/guides/webpack-config-setup).
 
 ## Basic plugins
 
@@ -385,7 +384,7 @@ module.exports = {
 ## Nx-enhanced plugins
 
 The Nx-enhanced plugins work with `@nx/webpack:webpack` executor and receive the target options and context from the
-executor. These are used prior to Nx 18, and are still used when using [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx).
+executor. These are used when using [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx).
 
 The plugins are used in conjunction with `composePlugins` utility to generate a final Webpack configuration object, once all of the plugins have applied their changes.
 

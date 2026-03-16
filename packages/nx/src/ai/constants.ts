@@ -1,4 +1,3 @@
-import { homedir } from 'os';
 import { join } from 'path';
 import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
@@ -42,7 +41,9 @@ export function opencodeMcpPath(root: string): string {
   return join(root, 'opencode.json');
 }
 
-export const codexConfigTomlPath = join(homedir(), '.codex', 'config.toml');
+export function codexConfigTomlPath(root: string): string {
+  return join(root, '.codex', 'config.toml');
+}
 
 export const nxRulesMarkerCommentStart = `<!-- nx configuration start-->`;
 export const nxRulesMarkerCommentDescription = `<!-- Leave the start & end comments to automatically receive updates. -->`;

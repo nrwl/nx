@@ -30,7 +30,6 @@ import {
   resolve,
   sep,
 } from 'node:path';
-import * as posix from 'node:path/posix';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import picomatch = require('picomatch');
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -50,6 +49,7 @@ export interface TscPluginOptions {
     | boolean
     | {
         targetName?: string;
+        configName?: string;
       };
   build?:
     | boolean
@@ -69,6 +69,7 @@ interface NormalizedPluginOptions {
     | false
     | {
         targetName: string;
+        configName: string;
       };
   build:
     | false
@@ -118,8 +119,7 @@ const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
 );
-let tsConfigCacheData: Record<string, TsconfigCacheData>;
-let cache: {
+type InvocationCache = {
   fileHashes: Record<string, string>;
   rawFiles: Record<string, string>;
   picomatchMatchers: Record<string, (input: string) => boolean>;
@@ -128,6 +128,13 @@ let cache: {
   projectContexts: Map<string, ProjectContext>;
   configContexts: Map<string, ConfigContext>;
 };
+
+// Module-level cache store — each invocation gets a unique Symbol key
+const cacheStore = new Map<symbol, InvocationCache>();
+
+// Shared tsconfig cache — initialized once per batch, persisted to disk
+let tsConfigCacheData: Record<string, TsconfigCacheData> = {};
+let tsConfigCacheInitialized = false;
 
 function readFromCache<T extends object>(cachePath: string): T {
   try {
@@ -181,7 +188,7 @@ function createConfigContext(
   return {
     originalPath: configFilePath,
     absolutePath,
-    relativePath: posix.relative(workspaceRoot, absolutePath),
+    relativePath: posixRelative(workspaceRoot, absolutePath),
     basename: basename(configFilePath),
     basenameNoExt: basename(configFilePath, '.json'),
     dirname: dirname(absolutePath),
@@ -191,7 +198,8 @@ function createConfigContext(
 
 function getConfigContext(
   configPath: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): ConfigContext {
   const absolutePath =
     configPath.startsWith('/') || configPath.startsWith(workspaceRoot)
@@ -209,7 +217,7 @@ function getConfigContext(
   if (!cache.projectContexts.has(projectRoot)) {
     cache.projectContexts.set(projectRoot, {
       root: projectRoot,
-      normalized: posix.normalize(projectRoot),
+      normalized: normalizePath(projectRoot),
       absolute: join(workspaceRoot, projectRoot),
     });
   }
@@ -245,7 +253,10 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     );
     const targetsCache =
       readFromCache<Record<string, TscProjectResult>>(targetsCachePath);
-    cache = {
+
+    // Each invocation gets a unique Symbol key — guaranteed no collisions
+    const cacheKey = Symbol('tsc-invocation');
+    cacheStore.set(cacheKey, {
       fileHashes: {},
       rawFiles: {},
       picomatchMatchers: {},
@@ -253,8 +264,10 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       configOwners: new Map(),
       projectContexts: new Map(),
       configContexts: new Map(),
-    };
-    initializeTsConfigCache(configFilePaths, context.workspaceRoot);
+    });
+    const cache = cacheStore.get(cacheKey)!;
+
+    initializeTsConfigCache(configFilePaths, context.workspaceRoot, cache);
 
     const normalizedOptions = normalizePluginOptions(options);
 
@@ -266,7 +279,8 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       configFilePaths,
       normalizedOptions,
       optionsHash,
-      context
+      context,
+      cache
     );
 
     try {
@@ -274,22 +288,24 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
         (configFilePath, options, context, idx) => {
           const projectRoot = projectRoots[idx];
           const hash = hashes[idx];
-          const cacheKey = `${hash}_${configFilePath}`;
+          const targetsCacheKey = `${hash}_${configFilePath}`;
 
           const absolutePath = join(context.workspaceRoot, configFilePath);
           const configContext = getConfigContext(
             absolutePath,
-            context.workspaceRoot
+            context.workspaceRoot,
+            cache
           );
 
-          targetsCache[cacheKey] ??= buildTscTargets(
+          targetsCache[targetsCacheKey] ??= buildTscTargets(
             configContext,
             options,
             context,
-            validConfigFilePaths
+            validConfigFilePaths,
+            cache
           );
 
-          const { targets } = targetsCache[cacheKey];
+          const { targets } = targetsCache[targetsCacheKey];
 
           return {
             projects: {
@@ -308,8 +324,13 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       writeTsConfigCache(
         toRelativePaths(tsConfigCacheData, context.workspaceRoot)
       );
-      // Release memory after plugin invocation
-      cache = null as any;
+      // Delete this invocation's cache — unique Symbol means no cross-invocation impact
+      cacheStore.delete(cacheKey);
+      // Reset shared tsconfig cache when all invocations are done
+      if (cacheStore.size === 0) {
+        tsConfigCacheData = {};
+        tsConfigCacheInitialized = false;
+      }
     }
   },
 ];
@@ -320,7 +341,8 @@ async function resolveValidConfigFilesAndHashes(
   configFilePaths: readonly string[],
   options: NormalizedPluginOptions,
   optionsHash: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  cache: InvocationCache
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
@@ -341,17 +363,23 @@ async function resolveValidConfigFilesAndHashes(
   for await (const configFilePath of configFilePaths) {
     const projectRoot = dirname(configFilePath);
     const absolutePath = join(context.workspaceRoot, configFilePath);
-    const configContext = getConfigContext(absolutePath, context.workspaceRoot);
+    const configContext = getConfigContext(
+      absolutePath,
+      context.workspaceRoot,
+      cache
+    );
 
     // Skip configs that can't produce any targets based on plugin options
-    const isTypecheckConfig = configContext.basename === 'tsconfig.json';
+    const isTypecheckConfig =
+      configContext.basename ===
+      (options.typecheck ? options.typecheck.configName : 'tsconfig.json');
     const isBuildConfig =
       options.build && configContext.basename === options.build.configName;
     if (!isTypecheckConfig && !isBuildConfig) {
       continue;
     }
 
-    if (!checkIfConfigFileShouldBeProject(configContext)) {
+    if (!checkIfConfigFileShouldBeProject(configContext, cache)) {
       continue;
     }
 
@@ -363,7 +391,8 @@ async function resolveValidConfigFilesAndHashes(
         context.workspaceRoot,
         configContext.project,
         optionsHash,
-        lockFileHash
+        lockFileHash,
+        cache
       )
     );
   }
@@ -388,21 +417,32 @@ async function getConfigFileHash(
   workspaceRoot: string,
   project: ProjectContext,
   optionsHash: string,
-  lockFileHash: string
+  lockFileHash: string,
+  cache: InvocationCache
 ): Promise<string> {
   const fullConfigPath = join(workspaceRoot, configFilePath);
 
-  const tsConfig = retrieveTsConfigFromCache(fullConfigPath, workspaceRoot);
-  const extendedConfigFiles = getExtendedConfigFiles(tsConfig, workspaceRoot);
+  const tsConfig = retrieveTsConfigFromCache(
+    fullConfigPath,
+    workspaceRoot,
+    cache
+  );
+  const extendedConfigFiles = getExtendedConfigFiles(
+    tsConfig,
+    workspaceRoot,
+    cache
+  );
   const internalReferencedFiles = resolveInternalProjectReferences(
     tsConfig,
     workspaceRoot,
-    project
+    project,
+    cache
   );
   const externalProjectReferences = resolveShallowExternalProjectReferences(
     tsConfig,
     workspaceRoot,
-    project
+    project,
+    cache
   );
 
   let packageJson = null;
@@ -418,7 +458,7 @@ async function getConfigFileHash(
       ...extendedConfigFiles.files.sort(),
       ...Object.keys(internalReferencedFiles).sort(),
       ...Object.keys(externalProjectReferences).sort(),
-    ].map((file) => getFileHash(file, workspaceRoot)),
+    ].map((file) => getFileHash(file, workspaceRoot, cache)),
     ...extendedConfigFiles.packages.sort(),
     lockFileHash,
     optionsHash,
@@ -426,7 +466,10 @@ async function getConfigFileHash(
   ]);
 }
 
-function checkIfConfigFileShouldBeProject(config: ConfigContext): boolean {
+function checkIfConfigFileShouldBeProject(
+  config: ConfigContext,
+  cache: InvocationCache
+): boolean {
   // Do not create a project for the workspace root tsconfig files.
   if (config.project.root === '.') {
     return false;
@@ -469,30 +512,34 @@ function buildTscTargets(
   config: ConfigContext,
   options: NormalizedPluginOptions,
   context: CreateNodesContextV2,
-  configFiles: readonly string[]
+  configFiles: readonly string[],
+  cache: InvocationCache
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(config.project.root, context);
   const tsConfig = retrieveTsConfigFromCache(
     config.absolutePath,
-    context.workspaceRoot
+    context.workspaceRoot,
+    cache
   );
 
   let internalProjectReferences: Record<string, ParsedTsconfigData>;
   if (
-    config.basename === 'tsconfig.json' &&
     options.typecheck &&
+    config.basename === options.typecheck.configName &&
     tsConfig.raw?.['nx']?.addTypecheckTarget !== false
   ) {
     internalProjectReferences = resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
-      config.project
+      config.project,
+      cache
     );
     const externalProjectReferences = resolveShallowExternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
-      config.project
+      config.project,
+      cache
     );
     const targetName = options.typecheck.targetName;
     const compiler = options.compiler;
@@ -527,7 +574,11 @@ function buildTscTargets(
           configFiles.some((f) => f === buildConfigPath) &&
           (options.build.skipBuildCheck ||
             isValidPackageJsonBuildConfig(
-              retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),
+              retrieveTsConfigFromCache(
+                buildConfigPath,
+                context.workspaceRoot,
+                cache
+              ),
               context.workspaceRoot,
               config.project.root
             ))
@@ -546,7 +597,8 @@ function buildTscTargets(
           config,
           tsConfig,
           internalProjectReferences,
-          context.workspaceRoot
+          context.workspaceRoot,
+          cache
         ),
         outputs: getOutputs(
           config,
@@ -584,7 +636,8 @@ function buildTscTargets(
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
-      config.project
+      config.project,
+      cache
     );
     const targetName = options.build.targetName;
     const compiler = options.compiler;
@@ -601,7 +654,8 @@ function buildTscTargets(
         config,
         tsConfig,
         internalProjectReferences,
-        context.workspaceRoot
+        context.workspaceRoot,
+        cache
       ),
       outputs: getOutputs(
         config,
@@ -644,14 +698,19 @@ function getInputs(
   config: ConfigContext,
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): TargetConfiguration['inputs'] {
   const configFiles = new Set<string>();
   // TODO(leo): temporary disable external dependencies until we support hashing
   // glob patterns from external dependencies
   // const externalDependencies = ['typescript'];
 
-  const extendedConfigFiles = getExtendedConfigFiles(tsConfig, workspaceRoot);
+  const extendedConfigFiles = getExtendedConfigFiles(
+    tsConfig,
+    workspaceRoot,
+    cache
+  );
   extendedConfigFiles.files.forEach((configPath) => {
     configFiles.add(configPath);
   });
@@ -811,19 +870,33 @@ function getInputs(
     );
   }
 
-  if (
-    hasExternalProjectReferences(
-      config.originalPath,
-      tsConfig,
-      workspaceRoot,
-      config.project
-    )
-  ) {
-    // Importing modules from a referenced project will load its output declaration files (d.ts)
-    // https://www.typescriptlang.org/docs/handbook/project-references.html#what-is-a-project-reference
-    inputs.push({ dependentTasksOutputFiles: '**/*.d.ts' });
-  } else {
-    inputs.push('production' in namedInputs ? '^production' : '^default');
+  // tsc --build reads .d.ts and .tsbuildinfo files from dependent tasks, not
+  // the source files of dependencies. This correctly tracks build outputs from
+  // both external project references and same-project task dependencies (e.g.
+  // build-native producing .d.ts files that may be excluded from file watching
+  // via .nxignore).
+  inputs.push({
+    dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
+    transitive: true,
+  });
+
+  const externalRefConfigFiles = getExternalProjectReferenceConfigFiles(
+    tsConfig,
+    internalProjectReferences,
+    workspaceRoot,
+    config.project,
+    cache,
+    configFiles
+  );
+  if (externalRefConfigFiles.length > 0) {
+    // tsc --build also reads the tsconfig files from external project
+    // references (and their extended configs) when processing project
+    // references, so we need to add them as inputs
+    inputs.push(
+      ...externalRefConfigFiles.map((p) =>
+        pathToInputOrOutput(p, workspaceRoot, config.project)
+      )
+    );
   }
 
   // inputs.push({ externalDependencies });
@@ -833,7 +906,7 @@ function getInputs(
 
 function getOutputs(
   config: ConfigContext,
-  tsConfig: ParsedTsconfigData,
+  rootTsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   emitDeclarationOnly: boolean
@@ -844,163 +917,170 @@ function getOutputs(
   // user could override them through the command line and that wouldn't be
   // reflected in the outputs. So, we just include everything that could be
   // produced by the tsc command.
-  [tsConfig, ...Object.values(internalProjectReferences)].forEach(
-    (tsconfig) => {
-      if (tsconfig.options.outFile) {
-        const outFileName = basename(tsconfig.options.outFile, '.js');
-        const outFileDir = dirname(tsconfig.options.outFile);
-        outputs.add(
-          pathToInputOrOutput(
-            tsconfig.options.outFile,
-            workspaceRoot,
-            config.project
-          )
-        );
-        // outFile is not be used with .cjs, .mjs, .jsx, so the list is simpler
-        const outDir = relative(workspaceRoot, outFileDir);
-        outputs.add(
-          pathToInputOrOutput(
-            joinPathFragments(outDir, `${outFileName}.js.map`),
-            workspaceRoot,
-            config.project
-          )
-        );
-        outputs.add(
-          pathToInputOrOutput(
-            joinPathFragments(outDir, `${outFileName}.d.ts`),
-            workspaceRoot,
-            config.project
-          )
-        );
-        outputs.add(
-          pathToInputOrOutput(
-            joinPathFragments(outDir, `${outFileName}.d.ts.map`),
-            workspaceRoot,
-            config.project
-          )
-        );
-        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-        outputs.add(
-          tsConfig.options.tsBuildInfoFile
-            ? pathToInputOrOutput(
-                tsConfig.options.tsBuildInfoFile,
-                workspaceRoot,
-                config.project
-              )
-            : pathToInputOrOutput(
-                joinPathFragments(outDir, `${outFileName}.tsbuildinfo`),
-                workspaceRoot,
-                config.project
-              )
-        );
-      } else if (tsconfig.options.outDir) {
-        if (emitDeclarationOnly) {
-          outputs.add(
-            pathToInputOrOutput(
-              joinPathFragments(tsconfig.options.outDir, '**/*.d.ts'),
+  [
+    { configBaseNameNoExt: config.basenameNoExt, tsConfig: rootTsConfig },
+    ...Object.entries(internalProjectReferences).map(
+      ([internalConfigPath, internalConfig]) => ({
+        configBaseNameNoExt: basename(internalConfigPath, '.json'),
+        tsConfig: internalConfig,
+      })
+    ),
+  ].forEach(({ configBaseNameNoExt, tsConfig }) => {
+    if (tsConfig.options.outFile) {
+      const outFileName = basename(tsConfig.options.outFile, '.js');
+      const outFileDir = dirname(tsConfig.options.outFile);
+      outputs.add(
+        pathToInputOrOutput(
+          tsConfig.options.outFile,
+          workspaceRoot,
+          config.project
+        )
+      );
+      // outFile is not be used with .cjs, .mjs, .jsx, so the list is simpler
+      const outDir = relative(workspaceRoot, outFileDir);
+      outputs.add(
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.js.map`),
+          workspaceRoot,
+          config.project
+        )
+      );
+      outputs.add(
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.d.ts`),
+          workspaceRoot,
+          config.project
+        )
+      );
+      outputs.add(
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.d.ts.map`),
+          workspaceRoot,
+          config.project
+        )
+      );
+      // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      outputs.add(
+        tsConfig.options.tsBuildInfoFile
+          ? pathToInputOrOutput(
+              tsConfig.options.tsBuildInfoFile,
               workspaceRoot,
               config.project
             )
-          );
-          if (tsConfig.options.declarationMap) {
-            outputs.add(
-              pathToInputOrOutput(
-                joinPathFragments(tsconfig.options.outDir, '**/*.d.ts.map'),
-                workspaceRoot,
-                config.project
-              )
-            );
-          }
-        } else {
-          outputs.add(
-            pathToInputOrOutput(
-              tsconfig.options.outDir,
+          : pathToInputOrOutput(
+              joinPathFragments(outDir, `${outFileName}.tsbuildinfo`),
               workspaceRoot,
               config.project
             )
-          );
-        }
-
-        if (tsconfig.options.tsBuildInfoFile) {
-          if (
-            emitDeclarationOnly ||
-            !normalize(tsconfig.options.tsBuildInfoFile).startsWith(
-              `${normalize(tsconfig.options.outDir)}${sep}`
-            )
-          ) {
-            // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-            outputs.add(
-              pathToInputOrOutput(
-                tsconfig.options.tsBuildInfoFile,
-                workspaceRoot,
-                config.project
-              )
-            );
-          }
-        } else if (
-          tsconfig.options.rootDir &&
-          tsconfig.options.rootDir !== '.'
-        ) {
-          // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
-          const relativeRootDir = relative(
-            tsconfig.options.rootDir,
-            join(workspaceRoot, config.project.root)
-          );
+      );
+    } else if (tsConfig.options.outDir) {
+      if (emitDeclarationOnly) {
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(tsConfig.options.outDir, '**/*.d.ts'),
+            workspaceRoot,
+            config.project
+          )
+        );
+        if (tsConfig.options.declarationMap) {
           outputs.add(
             pathToInputOrOutput(
-              joinPathFragments(
-                tsconfig.options.outDir,
-                relativeRootDir,
-                `*.tsbuildinfo`
-              ),
-              workspaceRoot,
-              config.project
-            )
-          );
-        } else if (emitDeclarationOnly) {
-          // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-          const name = config.basenameNoExt;
-          outputs.add(
-            pathToInputOrOutput(
-              joinPathFragments(tsconfig.options.outDir, `${name}.tsbuildinfo`),
+              joinPathFragments(tsConfig.options.outDir, '**/*.d.ts.map'),
               workspaceRoot,
               config.project
             )
           );
         }
-      } else if (
-        tsconfig.raw?.include?.length ||
-        tsconfig.raw?.files?.length ||
-        (!tsconfig.raw?.include && !tsconfig.raw?.files)
-      ) {
-        // tsc produce files in place when no outDir or outFile is set
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.cjs'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.mjs'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.js.map')); // should also include .cjs and .mjs data
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx.map'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts.map'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts.map'));
-        outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts.map'));
-
-        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
-        const name = config.basenameNoExt;
+      } else {
         outputs.add(
-          tsConfig.options.tsBuildInfoFile
-            ? pathToInputOrOutput(
-                tsConfig.options.tsBuildInfoFile,
-                workspaceRoot,
-                config.project
-              )
-            : joinPathFragments('{projectRoot}', `${name}.tsbuildinfo`)
+          pathToInputOrOutput(
+            tsConfig.options.outDir,
+            workspaceRoot,
+            config.project
+          )
         );
       }
+
+      if (tsConfig.options.tsBuildInfoFile) {
+        if (
+          emitDeclarationOnly ||
+          !normalize(tsConfig.options.tsBuildInfoFile).startsWith(
+            `${normalize(tsConfig.options.outDir)}${sep}`
+          )
+        ) {
+          // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+          outputs.add(
+            pathToInputOrOutput(
+              tsConfig.options.tsBuildInfoFile,
+              workspaceRoot,
+              config.project
+            )
+          );
+        }
+      } else if (tsConfig.options.rootDir && tsConfig.options.rootDir !== '.') {
+        // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
+        const relativeRootDir = relative(
+          tsConfig.options.rootDir,
+          join(workspaceRoot, config.project.root)
+        );
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(
+              tsConfig.options.outDir,
+              relativeRootDir,
+              `*.tsbuildinfo`
+            ),
+            workspaceRoot,
+            config.project
+          )
+        );
+      } else if (emitDeclarationOnly) {
+        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(
+              tsConfig.options.outDir,
+              `${configBaseNameNoExt}.tsbuildinfo`
+            ),
+            workspaceRoot,
+            config.project
+          )
+        );
+      }
+    } else if (
+      tsConfig.raw?.include?.length ||
+      tsConfig.raw?.files?.length ||
+      (!tsConfig.raw?.include && !tsConfig.raw?.files)
+    ) {
+      // tsc produce files in place when no outDir or outFile is set
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.cjs'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.mjs'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.js.map')); // should also include .cjs and .mjs data
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts.map'));
+
+      // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      outputs.add(
+        tsConfig.options.tsBuildInfoFile
+          ? pathToInputOrOutput(
+              tsConfig.options.tsBuildInfoFile,
+              workspaceRoot,
+              config.project
+            )
+          : joinPathFragments(
+              '{projectRoot}',
+              `${configBaseNameNoExt}.tsbuildinfo`
+            )
+      );
     }
-  );
+  });
 
   return Array.from(outputs);
 }
@@ -1028,6 +1108,7 @@ function pathToInputOrOutput(
 function getExtendedConfigFiles(
   tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
+  cache: InvocationCache,
   extendedConfigFiles = new Set<string>(),
   extendedExternalPackages = new Set<string>()
 ): {
@@ -1040,8 +1121,13 @@ function getExtendedConfigFiles(
     } else if (extendedConfigFile.filePath) {
       extendedConfigFiles.add(extendedConfigFile.filePath);
       getExtendedConfigFiles(
-        retrieveTsConfigFromCache(extendedConfigFile.filePath, workspaceRoot),
+        retrieveTsConfigFromCache(
+          extendedConfigFile.filePath,
+          workspaceRoot,
+          cache
+        ),
         workspaceRoot,
+        cache,
         extendedConfigFiles,
         extendedExternalPackages
       );
@@ -1058,6 +1144,7 @@ function resolveInternalProjectReferences(
   tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
   project: ProjectContext,
+  cache: InvocationCache,
   projectReferences: Record<string, ParsedTsconfigData> = {}
 ): Record<string, ParsedTsconfigData> {
   if (!tsConfig.projectReferences?.length) {
@@ -1078,20 +1165,22 @@ function resolveInternalProjectReferences(
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
 
-    const refContext = getConfigContext(refConfigPath, workspaceRoot);
+    const refContext = getConfigContext(refConfigPath, workspaceRoot, cache);
 
-    if (isExternalProjectReference(refContext, project, workspaceRoot)) {
+    if (isExternalProjectReference(refContext, project, workspaceRoot, cache)) {
       continue;
     }
     projectReferences[refConfigPath] = retrieveTsConfigFromCache(
       refConfigPath,
-      workspaceRoot
+      workspaceRoot,
+      cache
     );
 
     resolveInternalProjectReferences(
       projectReferences[refConfigPath],
       workspaceRoot,
       project,
+      cache,
       projectReferences
     );
   }
@@ -1103,6 +1192,7 @@ function resolveShallowExternalProjectReferences(
   tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
   project: ProjectContext,
+  cache: InvocationCache,
   projectReferences: Record<string, ParsedTsconfigData> = {}
 ): Record<string, ParsedTsconfigData> {
   if (!tsConfig.projectReferences?.length) {
@@ -1123,12 +1213,13 @@ function resolveShallowExternalProjectReferences(
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
 
-    const refContext = getConfigContext(refConfigPath, workspaceRoot);
+    const refContext = getConfigContext(refConfigPath, workspaceRoot, cache);
 
-    if (isExternalProjectReference(refContext, project, workspaceRoot)) {
+    if (isExternalProjectReference(refContext, project, workspaceRoot, cache)) {
       projectReferences[refConfigPath] = retrieveTsConfigFromCache(
         refConfigPath,
-        workspaceRoot
+        workspaceRoot,
+        cache
       );
     }
   }
@@ -1136,58 +1227,69 @@ function resolveShallowExternalProjectReferences(
   return projectReferences;
 }
 
-function hasExternalProjectReferences(
-  tsConfigPath: string,
+/**
+ * Collects config file paths from external project references, including their
+ * extended config files. It checks the root tsconfig and all internal project
+ * references for their direct external references.
+ */
+function getExternalProjectReferenceConfigFiles(
   tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   project: ProjectContext,
-  seen = new Set<string>()
-): boolean {
-  if (!tsConfig.projectReferences?.length) {
-    return false;
-  }
-  seen.add(tsConfigPath);
+  cache: InvocationCache,
+  existingConfigFiles: Set<string>
+): string[] {
+  const externalRefs: Record<string, ParsedTsconfigData> = {};
 
-  for (const ref of tsConfig.projectReferences) {
-    let refConfigPath = ref.path;
-    if (seen.has(refConfigPath)) {
-      continue;
-    }
+  // Collect direct external references from the root tsconfig
+  resolveShallowExternalProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    project,
+    cache,
+    externalRefs
+  );
 
-    if (!existsSync(refConfigPath)) {
-      continue;
-    }
-
-    if (!refConfigPath.endsWith('.json')) {
-      refConfigPath = join(refConfigPath, 'tsconfig.json');
-    }
-
-    const refContext = getConfigContext(refConfigPath, workspaceRoot);
-
-    if (isExternalProjectReference(refContext, project, workspaceRoot)) {
-      return true;
-    }
-    const refTsConfig = retrieveTsConfigFromCache(refConfigPath, workspaceRoot);
-    const result = hasExternalProjectReferences(
-      refConfigPath,
+  // Collect external references from internal project references
+  for (const refTsConfig of Object.values(internalProjectReferences)) {
+    resolveShallowExternalProjectReferences(
       refTsConfig,
       workspaceRoot,
       project,
-      seen
+      cache,
+      externalRefs
     );
+  }
 
-    if (result) {
-      return true;
+  const result: string[] = [];
+  const seen = new Set<string>();
+  for (const [refConfigPath, refTsConfig] of Object.entries(externalRefs)) {
+    if (!existingConfigFiles.has(refConfigPath) && !seen.has(refConfigPath)) {
+      result.push(refConfigPath);
+      seen.add(refConfigPath);
+    }
+    const extendedFiles = getExtendedConfigFiles(
+      refTsConfig,
+      workspaceRoot,
+      cache
+    );
+    for (const extFile of extendedFiles.files) {
+      if (!existingConfigFiles.has(extFile) && !seen.has(extFile)) {
+        result.push(extFile);
+        seen.add(extFile);
+      }
     }
   }
 
-  return false;
+  return result;
 }
 
 function isExternalProjectReference(
   refConfig: ConfigContext,
   project: ProjectContext,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): boolean {
   const owner = cache.configOwners.get(refConfig.relativePath);
   if (owner !== undefined) {
@@ -1217,7 +1319,8 @@ function isExternalProjectReference(
 
 function retrieveTsConfigFromCache(
   tsConfigPath: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): ParsedTsconfigData {
   const relativePath = posixRelative(workspaceRoot, tsConfigPath);
 
@@ -1225,28 +1328,33 @@ function retrieveTsConfigFromCache(
   // checked it when we initially populated the cache
   return tsConfigCacheData[relativePath]
     ? tsConfigCacheData[relativePath].data
-    : readTsConfigAndCache(tsConfigPath, workspaceRoot);
+    : readTsConfigAndCache(tsConfigPath, workspaceRoot, cache);
 }
 
 function initializeTsConfigCache(
   configFilePaths: readonly string[],
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): void {
-  tsConfigCacheData = toAbsolutePaths(readTsConfigCacheData(), workspaceRoot);
+  if (!tsConfigCacheInitialized) {
+    tsConfigCacheData = toAbsolutePaths(readTsConfigCacheData(), workspaceRoot);
+    tsConfigCacheInitialized = true;
+  }
 
   // ensure hashes are checked and the cache is invalidated and populated as needed
   for (const configFilePath of configFilePaths) {
     const fullConfigPath = join(workspaceRoot, configFilePath);
-    readTsConfigAndCache(fullConfigPath, workspaceRoot);
+    readTsConfigAndCache(fullConfigPath, workspaceRoot, cache);
   }
 }
 
 function readTsConfigAndCache(
   tsConfigPath: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): ParsedTsconfigData {
   const relativePath = posixRelative(workspaceRoot, tsConfigPath);
-  const hash = getFileHash(tsConfigPath, workspaceRoot);
+  const hash = getFileHash(tsConfigPath, workspaceRoot, cache);
 
   let extendedFilesHash: string;
   if (
@@ -1255,7 +1363,8 @@ function readTsConfigAndCache(
   ) {
     extendedFilesHash = getExtendedFilesHash(
       tsConfigCacheData[relativePath].data.extendedConfigFiles,
-      workspaceRoot
+      workspaceRoot,
+      cache
     );
     if (
       tsConfigCacheData[relativePath].extendedFilesHash === extendedFilesHash
@@ -1264,7 +1373,7 @@ function readTsConfigAndCache(
     }
   }
 
-  const tsConfig = readTsConfig(tsConfigPath, workspaceRoot);
+  const tsConfig = readTsConfig(tsConfigPath, workspaceRoot, cache);
   const extendedConfigFiles: ExtendedConfigFile[] = [];
   if (tsConfig.raw?.extends) {
     const extendsArray =
@@ -1283,7 +1392,8 @@ function readTsConfigAndCache(
   }
   extendedFilesHash ??= getExtendedFilesHash(
     extendedConfigFiles,
-    workspaceRoot
+    workspaceRoot,
+    cache
   );
 
   tsConfigCacheData[relativePath] = {
@@ -1302,7 +1412,8 @@ function readTsConfigAndCache(
 
 function getExtendedFilesHash(
   extendedConfigFiles: ExtendedConfigFile[],
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): string {
   if (!extendedConfigFiles.length) {
     return '';
@@ -1324,12 +1435,18 @@ function getExtendedFilesHash(
     if (extendedConfigFile.externalPackage) {
       hashes.push(extendedConfigFile.externalPackage);
     } else if (extendedConfigFile.filePath) {
-      hashes.push(getFileHash(extendedConfigFile.filePath, workspaceRoot));
+      hashes.push(
+        getFileHash(extendedConfigFile.filePath, workspaceRoot, cache)
+      );
       hashes.push(
         getExtendedFilesHash(
-          readTsConfigAndCache(extendedConfigFile.filePath, workspaceRoot)
-            .extendedConfigFiles,
-          workspaceRoot
+          readTsConfigAndCache(
+            extendedConfigFile.filePath,
+            workspaceRoot,
+            cache
+          ).extendedConfigFiles,
+          workspaceRoot,
+          cache
         )
       );
     }
@@ -1343,15 +1460,22 @@ function getExtendedFilesHash(
 
 function readTsConfig(
   tsConfigPath: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: InvocationCache
 ): ParsedCommandLine {
   if (!ts) {
     ts = require('typescript');
   }
 
+  // Normalize to forward slashes for TypeScript compatibility on Windows.
+  // TypeScript's parser normalizes paths inconsistently — diagnostics use
+  // normalized paths but the source file retains the original, causing
+  // assertion failures when backslashes are present.
+  tsConfigPath = tsConfigPath.replaceAll('\\', '/');
+
   const tsSys: System = {
     ...ts.sys,
-    readFile: (path) => readFile(path, workspaceRoot),
+    readFile: (path) => readFile(path, workspaceRoot, cache),
     readDirectory: () => [],
   };
   const readResult = ts.readConfigFile(tsConfigPath, tsSys.readFile);
@@ -1372,7 +1496,9 @@ function normalizePluginOptions(
   const compiler = pluginOptions.compiler ?? defaultCompiler;
 
   const defaultTypecheckTargetName = 'typecheck';
+  const defaultTypecheckConfigName = 'tsconfig.json';
   let typecheck: NormalizedPluginOptions['typecheck'] = {
+    configName: defaultTypecheckConfigName,
     targetName: defaultTypecheckTargetName,
   };
   if (pluginOptions.typecheck === false) {
@@ -1382,6 +1508,8 @@ function normalizePluginOptions(
     typeof pluginOptions.typecheck !== 'boolean'
   ) {
     typecheck = {
+      configName:
+        pluginOptions.typecheck.configName ?? defaultTypecheckConfigName,
       targetName:
         pluginOptions.typecheck.targetName ?? defaultTypecheckTargetName,
     };
@@ -1444,17 +1572,25 @@ function resolveExtendedTsConfigPath(
   }
 }
 
-function getFileHash(filePath: string, workspaceRoot: string): string {
+function getFileHash(
+  filePath: string,
+  workspaceRoot: string,
+  cache: InvocationCache
+): string {
   const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.fileHashes[relativePath]) {
-    const content = readFile(filePath, workspaceRoot);
+    const content = readFile(filePath, workspaceRoot, cache);
     cache.fileHashes[relativePath] = hashArray([content]);
   }
 
   return cache.fileHashes[relativePath];
 }
 
-function readFile(filePath: string, workspaceRoot: string): string {
+function readFile(
+  filePath: string,
+  workspaceRoot: string,
+  cache: InvocationCache
+): string {
   const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.rawFiles[relativePath]) {
     const content = readFileSync(filePath, 'utf8');
@@ -1584,5 +1720,5 @@ function toRelativePaths(
 }
 
 function posixRelative(workspaceRoot: string, path: string): string {
-  return posix.normalize(relative(workspaceRoot, path));
+  return normalizePath(relative(workspaceRoot, path));
 }

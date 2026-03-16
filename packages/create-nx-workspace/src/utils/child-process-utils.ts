@@ -1,7 +1,7 @@
 import { spawn, exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
-import { CreateNxWorkspaceError } from './error-utils';
+import { CnwError } from './error-utils';
 
 /**
  * Use spawn only for interactive shells
@@ -47,7 +47,12 @@ export function execAndWait(
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
     exec(
       command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: false },
+      {
+        cwd,
+        env: { ...process.env, NX_DAEMON: 'false' },
+        windowsHide: false,
+        maxBuffer: 1024 * 1024 * 10, // 10MB — default 1MB can be exceeded by verbose PM output
+      },
       (error, stdout, stderr) => {
         if (error) {
           if (silenceErrors) {
@@ -55,8 +60,15 @@ export function execAndWait(
           } else {
             const logFile = join(cwd, 'error.log');
             writeFileSync(logFile, `${stdout}\n${stderr}`);
-            const message = stderr && stderr.trim().length ? stderr : stdout;
-            rej(new CreateNxWorkspaceError(message, error.code, logFile));
+            const message =
+              stderr && stderr.trim().length
+                ? stderr
+                : stdout && stdout.trim().length
+                  ? stdout
+                  : `Command failed with exit code ${error.code ?? 'unknown'}. See ${logFile} for details.`;
+            rej(
+              new CnwError('UNKNOWN', message, logFile, error.code ?? undefined)
+            );
           }
         } else {
           res({ code: 0, stdout });

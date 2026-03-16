@@ -46,6 +46,8 @@ import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
 import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
+import { yargsPolygraphCommand } from './nx-cloud/polygraph/command-object';
+import { yargsApplyLocallyCommand } from './nx-cloud/apply-locally/command-object';
 import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-client/command-object';
 import {
   yargsPrintAffectedCommand,
@@ -54,6 +56,7 @@ import {
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
 import { yargsMcpCommand } from './mcp/command-object';
+import { reportCommandRunEvent } from '../analytics';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -115,11 +118,22 @@ export const commandsObject = yargs
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)
+  .command(yargsPolygraphCommand)
+  .command(yargsApplyLocallyCommand)
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
+  .middleware((args) => {
+    const context = (commandsObject as any).getInternalMethods().getContext();
+    const command =
+      (context.commands ?? []).join(' ') ||
+      (args._ ?? []).slice(0, 1).join(' ');
+    if (command) {
+      reportCommandRunEvent(command, undefined, args);
+    }
+  })
   .help(false)
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
   // so that it shows up in help. The default yargs implementation of --version is not

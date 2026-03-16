@@ -194,12 +194,11 @@ export function newProject({
       newProjectEnd.name
     );
 
-    if (isVerbose()) {
-      logInfo(
-        `NX`,
-        `E2E created a project: ${projectDirectory} in ${
-          perfMeasure.duration / 1000
-        } seconds
+    logInfo(
+      `NX`,
+      `E2E created a project: ${projectDirectory} in ${
+        perfMeasure.duration / 1000
+      } seconds
 ${
   createNxWorkspaceMeasure
     ? `create-nx-workspace: ${
@@ -207,14 +206,11 @@ ${
       } seconds\n`
     : ''
 }${
-          packageInstallMeasure
-            ? `packageInstall: ${
-                packageInstallMeasure.duration / 1000
-              } seconds\n`
-            : ''
-        }`
-      );
-    }
+        packageInstallMeasure
+          ? `packageInstall: ${packageInstallMeasure.duration / 1000} seconds\n`
+          : ''
+      }`
+    );
 
     openInEditor(projectDirectory);
     return projScope;
@@ -297,7 +293,7 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --nxCloud=skip --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --no-interactive`;
 
   if (preset) {
     command += ` --preset=${preset}`;

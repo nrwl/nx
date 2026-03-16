@@ -24,6 +24,9 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../ui-icons/tsconfig.lib.json"
+    },
+    {
       "path": "../ui-common/tsconfig.lib.json"
     },
     {

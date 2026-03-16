@@ -8,7 +8,7 @@ filter: 'type:Guides'
 
 Within an Nx workspace, you gain many capabilities that help you build applications and libraries. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
 
-## Migrating to a Standalone Angular App with Nx
+## Migrating to a standalone Angular app with Nx
 
 You can migrate to a standalone Angular app with the command:
 
@@ -83,7 +83,7 @@ After the changes are applied, your workspace file structure should look similar
 
 {% /filetree %}
 
-### Modified Folder Structure
+### Modified folder structure
 
 The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. It supports workspaces using the following executors (builders):
 
@@ -116,7 +116,7 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 > Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
 
-## Set Up CI for Your Angular Workspace
+## Set up CI for your Angular workspace
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -133,7 +133,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 
 1. Commit your existing changes with `git add . && git commit -am "updates"`
 2. [Create a new GitHub repository](https://github.com/new)
-3. Follow GitHub's instructions to push your existing code to the repository
+3. Follow GitHub instructions to push your existing code to the repository
 
 Now connect your repository to Nx Cloud with the following command:
 
@@ -157,7 +157,7 @@ git pull
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow
+### Create a CI workflow
 
 Use the following command to generate a CI workflow file.
 
@@ -197,7 +197,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request
+### Open a pull request
 
 Commit the changes and open a new PR on GitHub.
 
@@ -217,7 +217,7 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, [check out our details CI guides](/docs/guides/nx-cloud/setup-ci).
 
-## Learn More
+## Learn more
 
 Learn more about the advantages of Nx in the following guides:
 

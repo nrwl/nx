@@ -97,7 +97,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -147,7 +150,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -200,7 +206,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -255,7 +264,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -308,7 +320,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -364,7 +379,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -418,7 +436,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -473,7 +494,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -530,7 +554,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -584,7 +611,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -642,7 +672,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -678,7 +711,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -773,7 +809,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -829,7 +868,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -887,7 +929,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -963,7 +1008,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -1026,7 +1074,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1088,7 +1139,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1155,7 +1209,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.cts",
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1226,7 +1283,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1297,7 +1357,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1373,7 +1436,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1444,7 +1510,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1518,7 +1587,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1605,7 +1677,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1708,8 +1783,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress.config.ts",
                       "{projectRoot}/**/*.cy.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
+                      "{projectRoot}/nested-project/tsconfig.json",
+                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1731,6 +1809,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                       "{projectRoot}/cypress/dist/**/*.d.ts",
                       "{projectRoot}/cypress/dist/tsconfig.tsbuildinfo",
                     ],
@@ -1753,7 +1833,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1846,7 +1929,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tests/**/*.mts",
                       "{projectRoot}/tests/**/*.d.mts",
                       "{projectRoot}/tests/**/*.mjs",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1868,6 +1954,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -1915,7 +2003,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -1951,7 +2042,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -1987,7 +2081,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -2023,7 +2120,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -2063,7 +2163,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             "!{projectRoot}/src/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
       });
@@ -2087,7 +2190,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2157,7 +2263,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2217,7 +2326,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2284,7 +2396,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -2321,7 +2436,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2377,7 +2495,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2483,8 +2604,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
+                      "{projectRoot}/nested-project/tsconfig.json",
+                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2510,7 +2634,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/**/*.d.ts",
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.tsbuildinfo",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.spec.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/**/*.d.ts",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/tsconfig.tsbuildinfo",
                     ],
@@ -2531,7 +2655,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2592,7 +2719,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2653,7 +2783,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2725,7 +2858,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2786,7 +2922,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2843,7 +2982,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -3040,7 +3182,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3113,7 +3258,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3184,7 +3332,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3270,7 +3421,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3342,7 +3496,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3417,7 +3574,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3478,7 +3638,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3541,7 +3704,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3626,7 +3792,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3693,7 +3862,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3763,7 +3935,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.cts",
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3837,7 +4012,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3908,7 +4086,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3987,7 +4168,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4063,7 +4247,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4140,7 +4327,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4232,7 +4422,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4312,8 +4505,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.ts",
                       "{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
+                      "{workspaceRoot}/libs/other-lib/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4396,7 +4591,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.d.mts",
                       "{projectRoot}/other/**/*.json",
                       "{projectRoot}/src/**/foo.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4463,7 +4661,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -4494,7 +4695,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -4525,7 +4729,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -4556,7 +4763,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
 
@@ -4591,7 +4801,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             "!{projectRoot}/src/**/bar.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
           ]
         `);
       });
@@ -4623,7 +4836,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4688,7 +4904,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4755,7 +4974,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4815,7 +5037,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4900,7 +5125,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4970,7 +5198,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5036,7 +5267,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5113,7 +5347,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5179,7 +5416,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5242,7 +5482,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5312,7 +5555,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/typescript/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5379,7 +5625,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5477,7 +5726,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5544,7 +5796,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5611,7 +5866,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/source/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5709,7 +5967,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/**/src/**/*.ts",
                     "{projectRoot}/utils/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5776,7 +6037,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5843,7 +6107,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5937,7 +6204,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6030,7 +6300,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6127,7 +6400,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/lib/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6172,6 +6448,33 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }
       `);
     });
+  });
+
+  it('should handle concurrent invocations without crashing', async () => {
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+      'libs/my-lib/tsconfig.json': JSON.stringify({
+        compilerOptions: { outDir: '../../dist/libs/my-lib' },
+        files: [],
+      }),
+      'libs/my-lib/package.json': `{}`,
+      'libs/other-lib/tsconfig.json': JSON.stringify({
+        compilerOptions: { outDir: '../../dist/libs/other-lib' },
+        files: [],
+      }),
+      'libs/other-lib/package.json': `{}`,
+    });
+
+    const [result1, result2] = await Promise.all([
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {}),
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {}),
+    ]);
+
+    expect(result1.projects['libs/my-lib']).toBeDefined();
+    expect(result1.projects['libs/other-lib']).toBeDefined();
+    expect(result2.projects['libs/my-lib']).toBeDefined();
+    expect(result2.projects['libs/other-lib']).toBeDefined();
+    expect(result1.projects['libs/my-lib'].targets.typecheck).toBeDefined();
+    expect(result2.projects['libs/my-lib'].targets.typecheck).toBeDefined();
   });
 });
 

@@ -14,4 +14,5 @@ export interface VitestGeneratorSchema {
   // internal options
   projectType?: 'application' | 'library';
   viteVersion?: 5 | 6 | 7;
+  zoneless?: boolean;
 }

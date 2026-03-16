@@ -1,8 +1,9 @@
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use napi::bindgen_prelude::External;
 #[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use napi::threadsafe_function::ThreadsafeFunction;
+#[cfg(not(test))]
+use napi::{Status, bindgen_prelude::Unknown};
 use parking_lot::Mutex;
 use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
@@ -574,7 +575,7 @@ impl App {
     pub fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         debug!("Registering interactive task: {}", task_id);
         let pty =
@@ -1412,7 +1413,7 @@ impl App {
     #[cfg(not(test))]
     pub fn set_done_callback(
         &mut self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) {
         self.core.state().lock().set_done_callback(done_callback);
     }
@@ -1420,7 +1421,7 @@ impl App {
     #[cfg(not(test))]
     pub fn set_forced_shutdown_callback(
         &mut self,
-        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        forced_shutdown_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) {
         self.core
             .state()
@@ -1896,10 +1897,8 @@ impl App {
                         continue;
                     }
 
-                    // With shared dimensions, we only need to call resize once per PTY instance
-                    // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
-                    let mut pty_clone = pty.as_ref().clone();
-                    pty_clone.resize(pty_height, pty_width)?;
+                    // Async resize avoids blocking the event loop for large terminal outputs
+                    pty.resize_async(pty_height, pty_width);
 
                     // If dimensions changed, mark for sort
                     if current_rows != pty_height {
@@ -2087,10 +2086,9 @@ impl App {
                 allow_interactive && in_progress && pty.can_be_interactive();
             terminal_pane_data.pty = Some(pty.clone());
 
-            // Resize PTY to match terminal pane dimensions
+            // Resize PTY to match terminal pane dimensions (async to avoid blocking render)
             let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
-            let mut pty_clone = pty.as_ref().clone();
-            pty_clone.resize(pty_height, pty_width).ok();
+            pty.resize_async(pty_height, pty_width);
         } else {
             terminal_pane_data.pty = None;
             terminal_pane_data.can_be_interactive = false;
@@ -2321,15 +2319,14 @@ impl App {
         if let Some(pty_instance) = state.get_pty_instance(&selection_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
-            // Immediately resize PTY to match the current terminal pane dimensions
+            // Async resize PTY to match the current terminal pane dimensions
             if let Some(pane_area) = self
                 .layout_areas
                 .as_ref()
                 .and_then(|la| la.terminal_panes.get(pane_idx))
             {
                 let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
-                let mut pty_clone = pty_instance.as_ref().clone();
-                pty_clone.resize(pty_height, pty_width).ok();
+                pty_instance.resize_async(pty_height, pty_width);
             }
         } else {
             self.terminal_pane_data[pane_idx].pty = None;
@@ -2542,6 +2539,10 @@ impl TuiApp for App {
 
     fn on_tasks_started(&mut self, tasks: &[Task]) {
         self.dispatch_action(Action::StartTasks(tasks.to_vec()));
+    }
+
+    fn set_task_timing(&mut self, task_id: String, start_time: i64, end_time: i64) {
+        self.dispatch_action(Action::SetTaskTiming(task_id, start_time, end_time));
     }
 
     fn on_tasks_ended(&mut self, task_results: &[TaskResult]) {

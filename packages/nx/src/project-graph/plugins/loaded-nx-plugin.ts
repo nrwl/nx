@@ -1,5 +1,6 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import { type PluginConfiguration } from '../../config/nx-json';
+import { customDimensions } from '../../analytics';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -89,8 +90,13 @@ export class LoadedNxPlugin {
       const inner = this.createNodes[1];
       this.createNodes[1] = async (...args) => {
         performance.mark(`${plugin.name}:createNodes - start`);
+        let projectCount = 0;
         try {
-          return await inner(...args);
+          const result = await inner(...args);
+          for (const [, , r] of result) {
+            projectCount += Object.keys(r.projects ?? {}).length;
+          }
+          return result;
         } catch (e) {
           if (isAggregateCreateNodesError(e)) {
             throw e;
@@ -99,11 +105,16 @@ export class LoadedNxPlugin {
           throw new AggregateCreateNodesError([[null, e]], []);
         } finally {
           performance.mark(`${plugin.name}:createNodes - end`);
-          performance.measure(
-            `${plugin.name}:createNodes`,
-            `${plugin.name}:createNodes - start`,
-            `${plugin.name}:createNodes - end`
-          );
+          performance.measure(`${plugin.name}:createNodes`, {
+            start: `${plugin.name}:createNodes - start`,
+            end: `${plugin.name}:createNodes - end`,
+            detail: {
+              track: true,
+              ...(customDimensions && {
+                [customDimensions.projectCount]: projectCount,
+              }),
+            },
+          });
         }
       };
     }

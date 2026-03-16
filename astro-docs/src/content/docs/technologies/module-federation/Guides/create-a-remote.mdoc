@@ -14,7 +14,7 @@ This is the key difference between a `remote` and `host`.
 **Nx** includes first-class support for helping you to scaffold a Module Federation Architecture for your React and
 Angular application(s).
 
-## Generating a Remote
+## Generating a remote
 
 To generate a remote application in your workspace, cd into the right folder and run the following command:
 
@@ -120,7 +120,7 @@ the [create a host guide](/docs/technologies/module-federation/guides/create-a-h
 this.
 {% /aside %}
 
-### Let Nx add your Remote to your Host
+### Let Nx add your remote to your host
 
 The `remote` generators also allow you to specify a `--host` option, which will allow the generator to add your remote
 to your host automatically. This can save you time by skipping the manual step above.  
@@ -192,7 +192,7 @@ UPDATE tsconfig.base.json
 {% /tabitem %}
 {% /tabs %}
 
-## Building your Remote
+## Building your remote
 
 Your `remote` application acts like any other application in the context of Nx, and therefore building it as simple as
 running:
@@ -201,7 +201,7 @@ running:
 nx build myremote
 ```
 
-## Serving your Remote
+## Serving your remote
 
 The `remote` application is generated with two serve-like targets. These are:
 
@@ -215,12 +215,12 @@ nx serve myremote
 nx serve-static myremote
 ```
 
-### Serve Target
+### Serve target
 
 The `serve` target will use `webpack-dev-server` to serve your application, allowing for HMR and Live Reload. This is
 useful when you're working locally on that specific remote application.
 
-### Serve-Static Target
+### Serve-static target
 
 The `serve-static` target will first build your application, storing the build artifact in the defined output directory
 _(usually `dist/path/to/remote`)_. It will then use `http-server` to serve the built application locally.  
@@ -232,7 +232,7 @@ the `remote` applications it depends on without being too resource intensive.
 This has been further expanded upon. When you serve the `host` application, Nx will build (or pull from cache) your
 `remote` applications and serve them all via a single file server, to further reduce resource consumption.
 
-### Serving your Remote via your Host
+### Serving your remote via your host
 
 Generally, your `host` is the main application that you deploy and that users visit. It consumes modules from `remote`
 applications, but those `remote` applications are usually never visited directly by a user.  

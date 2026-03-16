@@ -18,6 +18,7 @@ import {
   agentDisplayMap,
   supportedAgents,
 } from '../create-workspace-options';
+import { detectAiAgentName } from '../utils/ai/ai-output';
 import { CnwError } from '../utils/error-utils';
 
 export async function determineNxCloud(
@@ -34,10 +35,12 @@ export async function determineNxCloud(
 
 export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
-): Promise<'github' | 'skip'> {
+): Promise<'yes' | 'skip' | 'never'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
-    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'github';
+    if (parsedArgs.nxCloud === 'skip') return 'skip';
+    if (parsedArgs.nxCloud === 'never') return 'never';
+    return 'yes';
   }
 
   // Non-interactive mode
@@ -45,9 +48,10 @@ export async function determineNxCloudV2(
     return 'skip';
   }
 
-  // Auto-select GitHub flow for deferred connection (variant 2 locked in - CLOUD-4255)
-  // Note: skipCloudConnect=true prevents actual connection, but we still get the banner
-  return 'github';
+  const result = await nxCloudPrompt('setupNxCloudV2');
+  if (result === 'never') return 'never';
+  if (result === 'skip') return 'skip';
+  return 'yes';
 }
 
 export async function determineIfGitHubWillBeUsed(
@@ -103,54 +107,20 @@ export async function determineTemplate(
   }>
 ): Promise<string | 'custom'> {
   if (parsedArgs.template) return parsedArgs.template;
-  if (parsedArgs.preset) return 'custom';
-  if (!parsedArgs.interactive || isCI()) return 'custom';
-  // Docs generation needs preset flow to document all presets
-  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
-  // Template flow requires git for cloning - fall back to custom preset if git is not available
-  if (!isGitAvailable()) return 'custom';
-  const { template } = await enquirer.prompt<{ template: string }>([
-    {
-      name: 'template',
-      message: 'Which starter do you want to use?',
-      type: 'autocomplete',
-      choices: [
-        {
-          name: 'nrwl/empty-template',
-          message: 'Minimal           (empty monorepo without projects)',
-        },
-        {
-          name: 'nrwl/react-template',
-          message:
-            'React             (fullstack monorepo with React and Express)',
-        },
-        {
-          name: 'nrwl/angular-template',
-          message:
-            'Angular           (fullstack monorepo with Angular and Express)',
-        },
-        {
-          name: 'nrwl/typescript-template',
-          message:
-            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
-        },
-        {
-          name: 'custom',
-          message:
-            'Custom            (advanced setup with additional frameworks)',
-        },
-      ],
-      initial: 0,
-    },
-  ]);
-
-  return template;
+  return 'custom';
 }
 
 export async function determineAiAgents(
   parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
 ): Promise<Agent[]> {
-  return parsedArgs.aiAgents ?? [];
+  if (parsedArgs.aiAgents) {
+    return parsedArgs.aiAgents;
+  }
+  const detected = detectAiAgentName();
+  if (detected) {
+    return [detected as Agent];
+  }
+  return [];
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
@@ -170,6 +140,32 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
       ),
   };
   return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
+}
+
+export async function determineAnalytics(
+  parsedArgs: yargs.Arguments<{ analytics?: boolean }>
+): Promise<boolean> {
+  if (typeof parsedArgs.analytics === 'boolean') {
+    return parsedArgs.analytics;
+  }
+
+  if (!parsedArgs.interactive || isCI()) {
+    // Default to false in non-interactive/CI
+    return false;
+  }
+
+  const { enableAnalytics } = await enquirer.prompt<{
+    enableAnalytics: 'Yes' | 'No';
+  }>([
+    {
+      name: 'enableAnalytics',
+      message: 'Help improve Nx by sharing your usage data?',
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return enableAnalytics === 'Yes';
 }
 
 export async function determineDefaultBase(

@@ -59,14 +59,11 @@ async function promptPackages(): Promise<typeof packages> {
   const { prompt } = require('enquirer');
   // Reserve lines for the prompt header, input, footer hint, and breathing room
   const visibleChoices = Math.max(5, termSize().rows - 4);
-  const result: { packages: typeof packages } = await prompt({
+  const result: { packages: string[] } = await prompt({
     type: 'autocomplete',
     name: 'packages',
     message: 'Select packages to copy',
-    choices: packages.map((p) => ({
-      name: p.npmName,
-      value: p,
-    })),
+    choices: packages.map((p) => p.nxName),
     multiple: true,
     limit: visibleChoices,
     suggest(input: string, choices: { name: string; message: string }[]) {
@@ -82,7 +79,9 @@ async function promptPackages(): Promise<typeof packages> {
     console.error('No packages selected.');
     process.exit(1);
   }
-  return result.packages;
+  return result.packages.map(
+    (nxName) => packages.find((p) => p.nxName === nxName)!
+  );
 }
 
 yargs(hideBin(process.argv))

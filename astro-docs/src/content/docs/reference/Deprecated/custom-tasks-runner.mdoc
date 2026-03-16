@@ -14,18 +14,18 @@ This page guides you on how to migrate off the now deprecated Custom Task Runner
 - choosing the best remote cache option for your organization
 - implementing pre/post processing logic when running tasks
 
-## Remote Cache
+## Remote cache
 
 There are several ways to set up remote caching with Nx.
 [Read more about remote cache options](/docs/guides/tasks--caching/self-hosted-caching).
 
 ## The preTasksExecution and postTasksExecution hooks
 
-Starting with Nx 20.4, a dedicated plugin-based API has been introduced that allows you to safely hook into the task running lifecycle. This new approach provides pre and post execution hooks without compromising Nx's internal operations. For comprehensive documentation on this feature, see [Hook into the Task Running Lifecycle](/docs/extending-nx/task-running-lifecycle).
+Starting with Nx 20.4, a dedicated plugin-based API has been introduced that allows you to safely hook into the task running lifecycle. This new approach provides pre and post execution hooks without compromising Nx internal operations. For comprehensive documentation on this feature, see [Hook into the Task Running Lifecycle](/docs/extending-nx/task-running-lifecycle).
 
 Let's look into some concrete examples of how you can migrate from the previous custom task runners to this new API.
 
-### Before: Custom Tasks Runner Version
+### Before: custom tasks runner version
 
 Let's imagine that you have implemented a custom task runner as follows:
 
@@ -142,7 +142,7 @@ Because it's a regular plugin, it can be configured as follows in `nx.json`:
 
 As with all plugin hooks, the `preTasksExecution` and `postTasksExecution` hooks must be exported so that they load properly when the "npm-package-with-the-plugin" is initialized.
 
-### Multiple Tasks Runners
+### Multiple tasks runners
 
 You can implement multiple tasks runners using the new hooks.
 
@@ -190,18 +190,18 @@ export async function postTasksExecution(options, tasksResults) {
 
 You can then choose which hooks to use by setting the RUNNER env variable.
 
-### Passing Options
+### Passing options
 
 You can no longer augment options passed to the default tasks runner, so instead you need to set env variables in the `preTasksExecution` hook.
 
-### Composing Plugins
+### Composing plugins
 
 Implementing hooks in plugins offers several advantages. It allows multiple plugins to be loaded simultaneously, enabling a clean separation of concerns.
 
-### Keeping State Across Command Invocations
+### Keeping state across command invocations
 
 By default, every plugin initiates a long-running process, allowing you to maintain state across command invocations, which can be very useful for advanced analytics.
 
-## Unhandled Custom Tasks Runner Use Cases?
+## Unhandled custom tasks runner use cases?
 
 If you have a use case that the new API doesn't handle, please [open an issue](http://github.com/nrwl/nx).

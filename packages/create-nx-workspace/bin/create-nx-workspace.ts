@@ -19,6 +19,7 @@ import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-thir
 import { detectInvokedPackageManager } from '../src/utils/package-manager';
 import {
   determineAiAgents,
+  determineAnalytics,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
@@ -28,6 +29,7 @@ import {
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
+  withAnalytics,
   withGitOptions,
   withNxCloud,
   withOptions,
@@ -292,7 +294,8 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         withUseGitHub,
         withAllPrompts,
         withPackageManager,
-        withGitOptions
+        withGitOptions,
+        withAnalytics
       ),
 
     async function handler(argv: yargs.ArgumentsCamelCase<Arguments>) {
@@ -306,7 +309,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         const errorFile =
           error instanceof Error ? extractErrorFile(error) : undefined;
 
-        useCloud = argv.nxCloud !== 'skip';
+        useCloud = argv.nxCloud !== 'skip' && argv.nxCloud !== 'never';
 
         await recordStat({
           nxVersion,
@@ -451,7 +454,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: parsedArgs.nxCloud !== 'skip',
+    useCloud: parsedArgs.nxCloud !== 'skip' && parsedArgs.nxCloud !== 'never',
     meta: {
       type: 'complete',
       flowVariant: getFlowVariant(),
@@ -569,6 +572,16 @@ async function normalizeArgsMiddleware(
     if (!templateProvided && !presetProvided) {
       const workspaceName = (argv.name as string) || (argv._[0] as string);
       writeAiOutput(buildTemplateRequiredResult(workspaceName));
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: false,
+        meta: {
+          type: 'cancel',
+          flowVariant: getFlowVariant(),
+          aiAgent: true,
+        },
+      });
       process.exit(0); // Exit 0 - JSON output has success: false, AI parses that
     }
 
@@ -604,7 +617,7 @@ async function normalizeArgsMiddleware(
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: argv.nxCloud !== 'skip',
+    useCloud: argv.nxCloud !== 'skip' && argv.nxCloud !== 'never',
     meta: {
       type: 'start',
       flowVariant: getFlowVariant(),
@@ -629,35 +642,48 @@ async function normalizeArgsMiddleware(
 
       let nxCloud: string;
       let completionMessageKey: string | undefined;
+      let skipCloudConnect = false;
+      let neverConnectToCloud = false;
 
       if (argv.skipGit === true) {
         nxCloud = 'skip';
         completionMessageKey = undefined;
       } else {
-        // Always show cloud prompt with "full platform" message (CLOUD-4147)
-        // Flow variant only affects completion banners, not this prompt
-        nxCloud = await determineNxCloudV2(argv);
+        const cloudChoice = await determineNxCloudV2(argv);
+        if (cloudChoice === 'yes') {
+          nxCloud = 'yes';
+          skipCloudConnect = false;
+        } else if (cloudChoice === 'skip') {
+          nxCloud = 'skip';
+        } else {
+          nxCloud = 'never';
+          neverConnectToCloud = true;
+        }
         completionMessageKey =
-          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
+          cloudChoice === 'never'
+            ? undefined
+            : getCompletionMessageKeyForVariant();
       }
 
+      const analytics = await determineAnalytics(argv);
       packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
-        useGitHub: nxCloud !== 'skip',
-        // Deferred connection: skip cloud connect but show banner (CLOUD-4255)
-        skipCloudConnect: nxCloud !== 'skip',
+        useGitHub: nxCloud !== 'skip' && nxCloud !== 'never',
+        skipCloudConnect,
+        neverConnectToCloud,
         completionMessageKey,
         packageManager,
         defaultBase: 'main',
         aiAgents,
         ghAvailable,
+        analytics,
       });
 
       await recordStat({
         nxVersion,
         command: 'create-nx-workspace',
-        useCloud: nxCloud !== 'skip',
+        useCloud: nxCloud !== 'skip' && nxCloud !== 'never',
         meta: {
           type: 'precreate',
           flowVariant: getFlowVariant(),
@@ -691,42 +717,23 @@ async function normalizeArgsMiddleware(
       const aiAgents = await determineAiAgents(argv);
       const defaultBase = await determineDefaultBase(argv);
 
-      // Check if CLI arg was provided (use rawArgs to check original input)
-      const cliNxCloudArgProvided = rawArgs.nxCloud !== undefined;
+      // NXC-4020: Restored v22.1.3 simple flow (CI prompt → caching fallback)
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
 
-      let nxCloud: string;
-      let useGitHub: boolean | undefined;
-      let completionMessageKey: string | undefined;
-      let skipCloudConnect = false;
-
-      if (argv.skipGit === true) {
-        nxCloud = 'skip';
-        useGitHub = undefined;
-      } else if (cliNxCloudArgProvided) {
-        // CLI arg provided: use existing flow (CI provider selection if needed)
-        nxCloud = await determineNxCloud(argv);
-        useGitHub =
-          nxCloud === 'skip'
-            ? undefined
-            : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
-      } else {
-        // No CLI arg: use simplified prompt (same as template flow)
-        nxCloud = await determineNxCloudV2(argv);
-        useGitHub = nxCloud !== 'skip';
-        completionMessageKey =
-          nxCloud === 'skip' ? undefined : getCompletionMessageKeyForVariant();
-        // Deferred connection: skip cloud connect but show banner (CLOUD-4255)
-        skipCloudConnect = nxCloud !== 'skip';
-      }
+      const analytics = await determineAnalytics(argv);
 
       Object.assign(argv, {
         nxCloud,
         useGitHub,
-        skipCloudConnect,
-        completionMessageKey,
         packageManager,
         defaultBase,
         aiAgents,
+        analytics,
       });
 
       chosenPreset = argv.preset ?? '';
@@ -734,7 +741,7 @@ async function normalizeArgsMiddleware(
       await recordStat({
         nxVersion,
         command: 'create-nx-workspace',
-        useCloud: nxCloud !== 'skip',
+        useCloud: nxCloud !== 'skip' && nxCloud !== 'never',
         meta: {
           type: 'precreate',
           flowVariant: getFlowVariant(),
