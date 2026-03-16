@@ -2,7 +2,8 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { findMatchingProjects } from './find-matching-projects';
 import { output } from './output';
-import { ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { findCycle } from '../tasks-runner/task-graph-utils';
 import { WorkspaceValidityError } from '../devkit-internals';
 
 export function assertWorkspaceValidity(
@@ -101,6 +102,47 @@ export function assertWorkspaceValidity(
   }
 
   throw new WorkspaceValidityError(message);
+}
+
+export function assertWorkspaceProjectGraphValidity(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  if (!nxJson.strictProjectGraphCycles) {
+    return;
+  }
+
+  const cycle = findProjectGraphCycle(projectGraph);
+  if (!cycle) {
+    return;
+  }
+
+  throw new WorkspaceValidityError(
+    [
+      'The project graph contains a circular dependency:',
+      `  ${cycle.join(' -> ')}`,
+      '',
+      'This validation is enabled by "strictProjectGraphCycles" in nx.json.',
+    ].join('\n')
+  );
+}
+
+function findProjectGraphCycle(projectGraph: ProjectGraph): string[] | null {
+  return findCycle({
+    dependencies: Object.keys(projectGraph.nodes).reduce(
+      (graph, projectName) => {
+        graph[projectName] = [
+          ...new Set(
+            (projectGraph.dependencies[projectName] ?? [])
+              .map((dependency) => dependency.target)
+              .filter((target) => !!projectGraph.nodes[target])
+          ),
+        ];
+        return graph;
+      },
+      {} as Record<string, string[]>
+    ),
+  });
 }
 
 function detectAndSetInvalidProjectGlobValues(

@@ -12,7 +12,10 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { hashObject } from '../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../native';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
-import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
+import {
+  assertWorkspaceProjectGraphValidity,
+  assertWorkspaceValidity,
+} from '../utils/assert-workspace-validity';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
@@ -175,6 +178,15 @@ export async function buildProjectGraphUsingProjectFileMap(
       plugins,
       sourceMap
     );
+    try {
+      assertWorkspaceProjectGraphValidity(projectGraph, nxJson);
+    } catch (e) {
+      if (isWorkspaceValidityError(e)) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
+    }
     projectFileMapCache = createProjectFileMapCache(
       nxJson,
       packageJsonDeps,
