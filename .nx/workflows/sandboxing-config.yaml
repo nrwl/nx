@@ -1,8 +1,0 @@
-exclude-reads:
-  - '**/node_modules/**'
-  - .nx/**/*
-  - .git/**/*
-  - '**/package.json'
-  - pnpm-workspace.yaml
-exclude-writes:
-  - nx/**/*
