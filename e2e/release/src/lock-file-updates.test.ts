@@ -121,6 +121,38 @@ describe('nx release lock file updates', () => {
     `);
   });
 
+  it('should include lock file and all package.json files in the git commit when using npm', async () => {
+    initializeProject('npm');
+
+    updateJson('package.json', (json) => {
+      json.workspaces = [pkg1, pkg2, pkg3];
+      return json;
+    });
+
+    runCommand(`npm install`);
+
+    // workaround for NXC-143
+    runCLI('reset');
+
+    runCommand(`git add .`);
+    runCommand(`git commit -m "chore: initial commit"`);
+
+    const versionOutput = runCLI(`release version 999.9.9 --git-commit`);
+
+    expect(versionOutput.match(/NX   Updating npm lock file/g).length).toBe(1);
+
+    // Verify the COMMITTED files (not just working tree changes)
+    const committedFiles = runCommand('git show --name-only --pretty="" HEAD');
+
+    expect(committedFiles).toMatchInlineSnapshot(`
+      {project-name}/package.json
+      {project-name}/package.json
+      {project-name}/package.json
+      package-lock.json
+
+    `);
+  });
+
   it('should not update package-lock.json when package manager is npm and workspaces are not enabled', async () => {
     initializeProject('npm');
 
