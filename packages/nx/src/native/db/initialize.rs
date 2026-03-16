@@ -125,15 +125,10 @@ fn create_db_error(operation: &str, error: anyhow::Error) -> anyhow::Error {
 
 pub(super) struct LockFile {
     file: File,
-    path: PathBuf,
 }
 
 pub(super) fn unlock_file(lock_file: &LockFile) {
-    if lock_file.path.exists() {
-        fs4::fs_std::FileExt::unlock(&lock_file.file)
-            .and_then(|_| remove_file(&lock_file.path))
-            .ok();
-    }
+    fs4::fs_std::FileExt::unlock(&lock_file.file).ok();
 }
 
 pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
@@ -146,10 +141,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
     fs4::fs_std::FileExt::lock_exclusive(&lock_file)
         .inspect(|_| trace!("Got lock on db lock file"))
         .map_err(|e| create_io_error("acquire exclusive lock", &lock_file_path, e))?;
-    Ok(LockFile {
-        file: lock_file,
-        path: lock_file_path,
-    })
+    Ok(LockFile { file: lock_file })
 }
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
