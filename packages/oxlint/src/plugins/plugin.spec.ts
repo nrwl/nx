@@ -9,8 +9,11 @@ describe('@nx/oxlint/plugin', () => {
   let context: CreateNodesContextV2;
   let workspaceRoot: string;
   let configFiles: string[] = [];
+  let nxCacheProjectGraphEnv: string | undefined;
 
   beforeEach(() => {
+    nxCacheProjectGraphEnv = process.env.NX_CACHE_PROJECT_GRAPH;
+    process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     workspaceRoot = mkdtempSync(join(tmpdir(), 'oxlint-plugin-'));
     context = {
       nxJsonConfiguration: {
@@ -27,6 +30,11 @@ describe('@nx/oxlint/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     rmSync(workspaceRoot, { recursive: true, force: true });
+    if (nxCacheProjectGraphEnv === undefined) {
+      delete process.env.NX_CACHE_PROJECT_GRAPH;
+    } else {
+      process.env.NX_CACHE_PROJECT_GRAPH = nxCacheProjectGraphEnv;
+    }
   });
 
   it('should not create nodes without config files', async () => {
@@ -51,9 +59,8 @@ describe('@nx/oxlint/plugin', () => {
     });
 
     expect(results.projects['libs/a'].targets.oxlint).toMatchObject({
-      command: 'oxlint .',
+      command: 'oxlint libs/a',
       cache: true,
-      options: { cwd: 'libs/a' },
     });
   });
 

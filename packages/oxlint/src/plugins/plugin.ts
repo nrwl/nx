@@ -17,6 +17,7 @@ import { OXLINT_CONFIG_FILENAMES } from '../utils/config-file';
 
 const pmc = getPackageManagerCommand();
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
+const TARGETS_CACHE_VERSION = 2;
 const OXLINT_CONFIG_GLOB_V2 = combineGlobPatterns([
   ...OXLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
   ...PROJECT_CONFIG_FILENAMES.map((f) => `**/${f}`),
@@ -45,7 +46,10 @@ export const createNodes: CreateNodesV2<OxlintPluginOptions> = [
   OXLINT_CONFIG_GLOB_V2,
   async (configFiles, options, context) => {
     options = normalizeOptions(options);
-    const optionsHash = hashObject(options);
+    const optionsHash = hashObject({
+      ...options,
+      __cacheVersion: TARGETS_CACHE_VERSION,
+    });
     const cachePath = join(
       workspaceDataDirectory,
       `oxlint-${optionsHash}.hash`
@@ -205,14 +209,15 @@ function buildOxlintTargets(
   standaloneSrcPath?: string
 ): Record<string, TargetConfiguration> {
   const isRootProject = projectRoot === '.';
+  const lintPath =
+    isRootProject && standaloneSrcPath
+      ? `./${standaloneSrcPath}`
+      : isRootProject
+        ? '.'
+        : projectRoot;
   const targetConfig: TargetConfiguration = {
-    command: `oxlint ${
-      isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.'
-    }`,
+    command: `oxlint ${lintPath}`,
     cache: true,
-    options: {
-      cwd: projectRoot,
-    },
     inputs: [
       'default',
       '^default',
