@@ -61,9 +61,10 @@ function removeProjectFromConformanceRules(
   }
 
   let changed = false;
-  for (const rule of conformance.rules) {
+
+  const filteredRules = conformance.rules.filter((rule) => {
     if (!rule.projects) {
-      continue;
+      return true;
     }
 
     const filtered = rule.projects.filter((entry) => {
@@ -77,9 +78,18 @@ function removeProjectFromConformanceRules(
     });
 
     if (filtered.length !== rule.projects.length) {
-      rule.projects = filtered;
       changed = true;
+      if (filtered.length === 0) {
+        return false;
+      }
+      rule.projects = filtered;
     }
+
+    return true;
+  });
+
+  if (changed) {
+    conformance.rules = filteredRules;
   }
 
   return changed;
@@ -129,17 +139,30 @@ function filterOwnersPatternsList(
   projectName: string
 ): boolean {
   let changed = false;
-  for (const pattern of patterns) {
+
+  const remaining = patterns.filter((pattern) => {
     if (!pattern.projects) {
-      continue;
+      return true;
     }
 
     const filtered = pattern.projects.filter((entry) => entry !== projectName);
 
     if (filtered.length !== pattern.projects.length) {
-      pattern.projects = filtered;
       changed = true;
+      if (filtered.length === 0) {
+        return false;
+      }
+      pattern.projects = filtered;
     }
+
+    return true;
+  });
+
+  if (changed) {
+    // Mutate the array in-place so callers see the removal
+    patterns.length = 0;
+    patterns.push(...remaining);
   }
+
   return changed;
 }
