@@ -4,7 +4,25 @@ description: Learn how to identify and fix circular dependencies in your Nx work
 filter: 'type:References'
 ---
 
-A circular dependency is when a project transitively depends on itself. This can cause problems in the design of your software and also makes Nx affected algorithm less effective. The lint rule, `@nx/enforce-module-boundaries`, will produce an error if any circular dependencies are created and ensures that any `import` statements going across projects only `import` from the defined public apis in a project's root `index.ts` file.
+A circular dependency is when a project transitively depends on itself.
+This can cause problems in the design of your software and also makes the Nx affected algorithm less effective.
+The lint rule, `@nx/enforce-module-boundaries`, produces an error when source imports create a circular dependency and ensures that imports across projects only use the public API from a project's root `index.ts` file.
+
+If you want Nx to fail earlier, enable `strictProjectGraphCycles` in `nx.json`:
+
+```jsonc
+// nx.json
+{
+  "strictProjectGraphCycles": true,
+}
+```
+
+This validates the workspace project graph itself during graph creation.
+Use it when you want CI to fail on the first detected project cycle instead of waiting for a later command to create a cyclic command graph or task graph.
+
+This option complements `@nx/enforce-module-boundaries`.
+The lint rule checks source imports.
+`strictProjectGraphCycles` checks the final workspace project graph, including dependencies Nx infers while building the graph.
 
 When migrating a new codebase into an nx workspace, you'll likely begin to uncover existing circular dependencies. Let's look at the simplest possible circular dependency, where `projectA` depends on `projectB` and vice versa.
 
