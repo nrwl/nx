@@ -161,6 +161,65 @@ describe('removeProjectReferencesInConfig', () => {
       ]);
     });
 
+    it('should remove conformance rule when removed project is the only project', () => {
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        conformance: {
+          rules: [
+            {
+              rule: './some-rule',
+              projects: ['ng-app'],
+            },
+            {
+              rule: './other-rule',
+              projects: ['other-project'],
+            },
+          ],
+        },
+      } as any);
+
+      schema = {
+        projectName: 'ng-app',
+        skipFormat: false,
+        forceRemove: false,
+      };
+
+      removeProjectReferencesInConfig(tree, schema);
+
+      const updatedNxJson = readNxJson(tree) as any;
+      expect(updatedNxJson.conformance.rules).toHaveLength(1);
+      expect(updatedNxJson.conformance.rules[0].rule).toBe('./other-rule');
+    });
+
+    it('should remove conformance rule with matcher object when it is the only project', () => {
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        conformance: {
+          rules: [
+            {
+              rule: './some-rule',
+              projects: [
+                { matcher: 'ng-app', explanation: 'some reason' },
+              ],
+            },
+          ],
+        },
+      } as any);
+
+      schema = {
+        projectName: 'ng-app',
+        skipFormat: false,
+        forceRemove: false,
+      };
+
+      removeProjectReferencesInConfig(tree, schema);
+
+      const updatedNxJson = readNxJson(tree) as any;
+      expect(updatedNxJson.conformance.rules).toHaveLength(0);
+    });
+
     it('should not modify conformance rules without projects', () => {
       const nxJson = readNxJson(tree);
       updateNxJson(tree, {
@@ -281,6 +340,76 @@ describe('removeProjectReferencesInConfig', () => {
       expect(updatedNxJson.owners.patterns[0].projects).toEqual([
         'ng-app-e2e',
         'other-project',
+      ]);
+    });
+
+    it('should remove owners pattern when removed project is the only project', () => {
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        owners: {
+          patterns: [
+            {
+              projects: ['ng-app'],
+              owners: ['@team-a'],
+            },
+            {
+              projects: ['other-project'],
+              owners: ['@team-b'],
+            },
+          ],
+        },
+      } as any);
+
+      schema = {
+        projectName: 'ng-app',
+        skipFormat: false,
+        forceRemove: false,
+      };
+
+      removeProjectReferencesInConfig(tree, schema);
+
+      const updatedNxJson = readNxJson(tree) as any;
+      expect(updatedNxJson.owners.patterns).toHaveLength(1);
+      expect(updatedNxJson.owners.patterns[0].owners).toEqual(['@team-b']);
+    });
+
+    it('should remove owners section pattern when removed project is the only project (GitLab)', () => {
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        owners: {
+          format: 'gitlab',
+          sections: [
+            {
+              name: 'Frontend',
+              patterns: [
+                {
+                  projects: ['ng-app'],
+                  owners: ['@frontend-team'],
+                },
+                {
+                  projects: ['other-project'],
+                  owners: ['@backend-team'],
+                },
+              ],
+            },
+          ],
+        },
+      } as any);
+
+      schema = {
+        projectName: 'ng-app',
+        skipFormat: false,
+        forceRemove: false,
+      };
+
+      removeProjectReferencesInConfig(tree, schema);
+
+      const updatedNxJson = readNxJson(tree) as any;
+      expect(updatedNxJson.owners.sections[0].patterns).toHaveLength(1);
+      expect(updatedNxJson.owners.sections[0].patterns[0].owners).toEqual([
+        '@backend-team',
       ]);
     });
 
