@@ -99,11 +99,12 @@ private fun processClass(
     return
   }
 
-  // Only include regular classes - skip data classes, object declarations, enum classes, etc.
+  // Only include regular classes - skip data classes, object declarations, enum classes, annotation classes, etc.
   if (ktClass.hasModifier(KtTokens.DATA_KEYWORD) ||
       ktClass.hasModifier(KtTokens.ENUM_KEYWORD) ||
       ktClass.hasModifier(KtTokens.SEALED_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.ABSTRACT_KEYWORD)) {
+      ktClass.hasModifier(KtTokens.ABSTRACT_KEYWORD) ||
+      ktClass.isAnnotation()) {
     return
   }
 
