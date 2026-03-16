@@ -29,9 +29,6 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
-import { flushAnalytics, startAnalytics } from '../src/analytics';
-import '../src/utils/perf-logging';
 
 async function main() {
   if (
@@ -99,22 +96,33 @@ async function main() {
       handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
-    if (!localNx && !isNxCloudCommand(process.argv[2])) {
+    // nx-cloud commands can run without local Nx installation
+    if (isNxCloudCommand(process.argv[2])) {
+      process.env.NX_DAEMON = 'false';
+      require('nx/src/command-line/nx-commands').commandsObject.argv;
+      return;
+    }
+
+    if (!localNx) {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
+    // Load perf-logging and analytics dynamically to avoid pulling in
+    // native modules when running cloud commands via npx without a local install.
+    require('../src/utils/perf-logging');
+
     // Prompt for analytics preference if not set
     try {
+      const {
+        ensureAnalyticsPreferenceSet,
+      } = require('../src/utils/analytics-prompt');
       await ensureAnalyticsPreferenceSet();
     } catch {}
+    const { startAnalytics } = require('../src/analytics');
     await startAnalytics();
 
     // this file is already in the local workspace
-    if (isNxCloudCommand(process.argv[2])) {
-      // nx-cloud commands can run without local Nx installation
-      process.env.NX_DAEMON = 'false';
-      require('nx/src/command-line/nx-commands').commandsObject.argv;
-    } else if (isLocalInstall) {
+    if (isLocalInstall) {
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
@@ -321,6 +329,8 @@ process.on('exit', () => {
 
 main().catch((error) => {
   console.error(error);
-  flushAnalytics();
+  try {
+    require('../src/analytics').flushAnalytics();
+  } catch {}
   process.exit(1);
 });
