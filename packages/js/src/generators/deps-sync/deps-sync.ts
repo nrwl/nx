@@ -61,7 +61,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     // Collect the expected set of internal dependency package names
     const expectedInternalDeps = new Set<string>();
-    for (const dep of projectGraph.dependencies[projectName]) {
+    for (const dep of projectGraph.dependencies[projectName] || []) {
       const targetNode = projectGraph.nodes[dep.target];
       if (!targetNode || dep.type === 'implicit') {
         continue;
