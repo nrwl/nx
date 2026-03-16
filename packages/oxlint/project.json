@@ -8,6 +8,9 @@
       "outputs": ["{workspaceRoot}/dist/packages/oxlint/README.md"],
       "command": "node ./scripts/copy-readme.js oxlint"
     },
+    "lint": {
+      "dependsOn": ["build-native", "^build-native", "eslint-plugin:build"]
+    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
