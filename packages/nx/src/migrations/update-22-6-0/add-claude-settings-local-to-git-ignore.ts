@@ -1,7 +1,8 @@
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 
-export default function addClaudeSettingsLocalToGitIgnore(tree: Tree) {
+export default async function addClaudeSettingsLocalToGitIgnore(tree: Tree) {
   if (!tree.exists('.gitignore')) {
     return;
   }
@@ -10,4 +11,6 @@ export default function addClaudeSettingsLocalToGitIgnore(tree: Tree) {
     return;
   }
   addEntryToGitIgnore(tree, '.gitignore', '.claude/settings.local.json');
+
+  await formatChangedFilesWithPrettierIfAvailable(tree);
 }
