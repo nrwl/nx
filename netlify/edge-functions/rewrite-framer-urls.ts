@@ -116,8 +116,6 @@ export const config = {
     '/module-federation/*',
     '/nx-api',
     '/nx-api/*',
-    '/nx-cloud',
-    '/nx-cloud/*',
     '/nx-enterprise',
     '/nx-enterprise/*',
     '/packages',
