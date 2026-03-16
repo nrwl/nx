@@ -200,9 +200,7 @@ describe('removeProjectReferencesInConfig', () => {
           rules: [
             {
               rule: './some-rule',
-              projects: [
-                { matcher: 'ng-app', explanation: 'some reason' },
-              ],
+              projects: [{ matcher: 'ng-app', explanation: 'some reason' }],
             },
           ],
         },
