@@ -1150,7 +1150,9 @@ export class TaskOrchestrator {
     // All entries in the chain have form `-> {key}`, since root is represented as `$0 ->`
     const taskKey = `-> ${task.target.project}:${task.target.target}`;
 
-    if (invocationChain.includes(taskKey)) {
+    const chainTasks = invocationChain.split(' -> ').slice(1); // Skip '$0'
+    const currentTaskKey = `${task.target.project}:${task.target.target}`;
+    if (chainTasks.includes(currentTaskKey)) {
       output.error({
         title: 'Recursive task invocation detected',
         bodyLines: [
