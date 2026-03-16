@@ -149,6 +149,12 @@
       "description": "Adds .nx/polygraph to .gitignore",
       "implementation": "./src/migrations/update-22-7-0/add-polygraph-to-git-ignore"
     },
+    "22-6-0-add-claude-settings-local-to-git-ignore": {
+      "cli": "nx",
+      "version": "22.6.0-rc.0",
+      "description": "Adds .claude/settings.local.json to .gitignore",
+      "implementation": "./src/migrations/update-22-6-0/add-claude-settings-local-to-git-ignore"
+    },
     "22-6-0-enable-analytics-prompt": {
       "cli": "nx",
       "version": "22.6.0-beta.11",
