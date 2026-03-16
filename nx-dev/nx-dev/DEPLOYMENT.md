@@ -27,10 +27,10 @@ When a request hits nx.dev, it goes through the following stages in order:
 
 Edge functions run first, before any other routing. Located at `/netlify/edge-functions/` in the repository root (see [Why repo root?](#why-are-edge-functions-at-the-repo-root)).
 
-| Edge Function            | Path Pattern    | Purpose                                                   |
-| ------------------------ | --------------- | --------------------------------------------------------- |
-| `rewrite-framer-urls.ts` | `/*`            | Proxies marketing pages to Framer                         |
-| `framer-sitemap.ts`      | `/sitemap-1.xml`| Proxies Framer's sitemap with URL rewriting               |
+| Edge Function            | Path Pattern     | Purpose                                     |
+| ------------------------ | ---------------- | ------------------------------------------- |
+| `rewrite-framer-urls.ts` | `/*`             | Proxies marketing pages to Framer           |
+| `framer-sitemap.ts`      | `/sitemap-1.xml` | Proxies Framer's sitemap with URL rewriting |
 
 ### 2. Netlify Redirects (`_redirects`)
 
@@ -46,13 +46,13 @@ Rules are processed **top-to-bottom, first match wins**. Specific rules must com
 
 If no redirect matches, Next.js rewrites handle:
 
-| Pattern             | Destination                      | Description                    |
-| ------------------- | -------------------------------- | ------------------------------ |
-| `/docs`             | `${ASTRO_URL}/docs`              | Documentation root             |
-| `/docs/:path*`      | `${ASTRO_URL}/docs/:path*`       | All documentation pages        |
-| `/.netlify/:path*`  | `${ASTRO_URL}/.netlify/:path*`   | Netlify functions/assets       |
-| `/llms.txt`         | `${ASTRO_URL}/docs/llms.txt`     | LLM-friendly docs index        |
-| `/llms-full.txt`    | `${ASTRO_URL}/docs/llms-full.txt`| Full LLM documentation         |
+| Pattern            | Destination                       | Description              |
+| ------------------ | --------------------------------- | ------------------------ |
+| `/docs`            | `${ASTRO_URL}/docs`               | Documentation root       |
+| `/docs/:path*`     | `${ASTRO_URL}/docs/:path*`        | All documentation pages  |
+| `/.netlify/:path*` | `${ASTRO_URL}/.netlify/:path*`    | Netlify functions/assets |
+| `/llms.txt`        | `${ASTRO_URL}/docs/llms.txt`      | LLM-friendly docs index  |
+| `/llms-full.txt`   | `${ASTRO_URL}/docs/llms-full.txt` | Full LLM documentation   |
 
 ### 4. Next.js App Router
 
@@ -200,13 +200,13 @@ included_files = [
 
 ## Environment Variables
 
-| Variable                 | Description                                              | Example                                          |
-| ------------------------ | -------------------------------------------------------- | ------------------------------------------------ |
-| `NEXT_PUBLIC_FRAMER_URL` | Framer site URL for marketing pages                      | `https://ready-knowledge-238309.framer.app`      |
-| `NEXT_PUBLIC_ASTRO_URL`  | Astro docs site URL                                      | `https://master--nx-docs.netlify.app`            |
-| `NEXT_PUBLIC_BANNER_URL` | Framer CMS URL for banner data                           | `https://your-site.framer.app/api/banners/main`  |
-| `NX_DEV_URL`             | Canonical site URL for sitemap                           | `https://nx.dev`                                 |
-| `NEXT_PUBLIC_NO_INDEX`   | Set to `true` to add noindex robots directive            | `true`                                           |
+| Variable                 | Description                                   | Example                                         |
+| ------------------------ | --------------------------------------------- | ----------------------------------------------- |
+| `NEXT_PUBLIC_FRAMER_URL` | Framer site URL for marketing pages           | `https://ready-knowledge-238309.framer.app`     |
+| `NEXT_PUBLIC_ASTRO_URL`  | Astro docs site URL                           | `https://master--nx-docs.netlify.app`           |
+| `NEXT_PUBLIC_BANNER_URL` | Framer CMS URL for banner data                | `https://your-site.framer.app/api/banners/main` |
+| `NX_DEV_URL`             | Canonical site URL for sitemap                | `https://nx.dev`                                |
+| `NEXT_PUBLIC_NO_INDEX`   | Set to `true` to add noindex robots directive | `true`                                          |
 
 ## Sitemap Configuration
 
@@ -249,10 +249,7 @@ If you need a path to be served by Next.js instead of Framer:
    ```
 3. Or add to `excludedPath` in the config export (for patterns):
    ```typescript
-   excludedPath: [
-     '/your-new-path',
-     '/your-new-path/*',
-   ]
+   excludedPath: ['/your-new-path', '/your-new-path/*'];
    ```
 
 ### Adding a Path to Framer
