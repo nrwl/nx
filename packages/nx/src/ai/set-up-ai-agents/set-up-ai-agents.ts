@@ -311,6 +311,12 @@ export async function setupAiAgentsGeneratorImpl(
     '.claude/worktrees'
   );
 
+  addEntryToGitIgnore(
+    tree,
+    join(options.directory, '.gitignore'),
+    '.claude/settings.local.json'
+  );
+
   await formatChangedFilesWithPrettierIfAvailable(tree);
 
   // we use the check variable to determine if we should actually make changes or just report what would be changed
