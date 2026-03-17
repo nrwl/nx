@@ -123,15 +123,11 @@ fn create_db_error(operation: &str, error: anyhow::Error) -> anyhow::Error {
     )
 }
 
-pub(super) struct LockFile {
-    file: File,
+pub(super) fn unlock_file(lock_file: &File) {
+    fs4::fs_std::FileExt::unlock(lock_file).ok();
 }
 
-pub(super) fn unlock_file(lock_file: &LockFile) {
-    fs4::fs_std::FileExt::unlock(&lock_file.file).ok();
-}
-
-pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
+pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<File> {
     let lock_file_path = db_path.with_extension("lock");
     trace!("Creating lock file at {:?}", lock_file_path);
     let lock_file = File::create(&lock_file_path)
@@ -141,7 +137,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
     fs4::fs_std::FileExt::lock_exclusive(&lock_file)
         .inspect(|_| trace!("Got lock on db lock file"))
         .map_err(|e| create_io_error("acquire exclusive lock", &lock_file_path, e))?;
-    Ok(LockFile { file: lock_file })
+    Ok(lock_file)
 }
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
@@ -214,8 +210,8 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                         trace!("Incompatible database because: {:?}", reason);
                         trace!("Disconnecting from existing incompatible database");
                         c.close()?;
-                        trace!("Removing existing incompatible database");
-                        remove_file(db_path)?;
+                        trace!("Removing existing incompatible database and auxiliary files");
+                        remove_all_database_files(db_path)?;
 
                         trace!("Initializing a new database");
                         return initialize_db(nx_version, db_path);
@@ -229,8 +225,8 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                     "Unable to connect to existing database because: {:?}",
                     reason
                 );
-                trace!("Removing existing incompatible database");
-                remove_file(db_path)?;
+                trace!("Removing existing database and auxiliary files");
+                remove_all_database_files(db_path)?;
 
                 trace!("Initializing a new database");
                 return initialize_db(nx_version, db_path);
