@@ -62,12 +62,15 @@ function removeProjectFromConformanceRules(
 
   let changed = false;
 
-  const filteredRules = conformance.rules.filter((rule) => {
+  // Iterate backwards so that splicing doesn't shift unvisited indices
+  for (let i = conformance.rules.length - 1; i >= 0; i--) {
+    const rule = conformance.rules[i];
     if (!rule.projects) {
-      return true;
+      continue;
     }
 
-    const filtered = rule.projects.filter((entry) => {
+    const originalLength = rule.projects.length;
+    rule.projects = rule.projects.filter((entry) => {
       if (typeof entry === 'string') {
         return entry !== projectName;
       }
@@ -77,19 +80,12 @@ function removeProjectFromConformanceRules(
       return true;
     });
 
-    if (filtered.length !== rule.projects.length) {
+    if (rule.projects.length !== originalLength) {
       changed = true;
-      if (filtered.length === 0) {
-        return false;
+      if (rule.projects.length === 0) {
+        conformance.rules.splice(i, 1);
       }
-      rule.projects = filtered;
     }
-
-    return true;
-  });
-
-  if (changed) {
-    conformance.rules = filteredRules;
   }
 
   return changed;
@@ -140,28 +136,24 @@ function filterOwnersPatternsList(
 ): boolean {
   let changed = false;
 
-  const remaining = patterns.filter((pattern) => {
+  // Iterate backwards so that splicing doesn't shift unvisited indices
+  for (let i = patterns.length - 1; i >= 0; i--) {
+    const pattern = patterns[i];
     if (!pattern.projects) {
-      return true;
+      continue;
     }
 
-    const filtered = pattern.projects.filter((entry) => entry !== projectName);
+    const originalLength = pattern.projects.length;
+    pattern.projects = pattern.projects.filter(
+      (entry) => entry !== projectName
+    );
 
-    if (filtered.length !== pattern.projects.length) {
+    if (pattern.projects.length !== originalLength) {
       changed = true;
-      if (filtered.length === 0) {
-        return false;
+      if (pattern.projects.length === 0) {
+        patterns.splice(i, 1);
       }
-      pattern.projects = filtered;
     }
-
-    return true;
-  });
-
-  if (changed) {
-    // Mutate the array in-place so callers see the removal
-    patterns.length = 0;
-    patterns.push(...remaining);
   }
 
   return changed;
