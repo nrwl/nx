@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "ConvertFromEslintGenerator",
   "title": "Convert from ESLint (hybrid-safe)",
-  "description": "Register @nx/oxlint and add optional hybrid OXLint targets without removing ESLint.",
+  "description": "Register @nx/oxlint and add optional hybrid Oxlint targets without removing ESLint.",
   "type": "object",
   "properties": {
     "project": {
@@ -11,7 +11,7 @@
     },
     "targetName": {
       "type": "string",
-      "description": "Name for added OXLint target in hybrid mode.",
+      "description": "Name for added Oxlint target in hybrid mode.",
       "default": "oxlint"
     },
     "addExplicitTargets": {

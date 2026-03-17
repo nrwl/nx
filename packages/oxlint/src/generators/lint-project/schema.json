@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "LintProjectGenerator",
-  "title": "Add OXLint to project",
-  "description": "Add OXLint to an existing project.",
+  "title": "Add Oxlint to project",
+  "description": "Add Oxlint to an existing project.",
   "type": "object",
   "properties": {
     "project": {
@@ -11,7 +11,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "Which project should use OXLint?"
+      "x-prompt": "Which project should use Oxlint?"
     },
     "skipFormat": {
       "type": "boolean",

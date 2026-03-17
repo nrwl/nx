@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "InitGenerator",
-  "title": "Initialize OXLint",
+  "title": "Initialize Oxlint",
   "description": "Set up @nx/oxlint in the workspace.",
   "type": "object",
   "properties": {

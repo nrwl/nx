@@ -1,13 +1,13 @@
-# Nx OXLint Plugin
+# Nx Oxlint Plugin
 
-The Nx OXLint plugin integrates [OXLint](https://oxc.rs/docs/guide/usage/linter/) with Nx.
+The Nx Oxlint plugin integrates [Oxlint](https://oxc.rs/docs/guide/usage/linter/) with Nx.
 
 It provides:
 
-- Inferred OXLint tasks via `@nx/oxlint/plugin`
+- Inferred Oxlint tasks via `@nx/oxlint/plugin`
 - A compatibility executor (`@nx/oxlint:lint`) for explicit targets
 - Generators for setup and hybrid migration
-- Experimental module-boundary enforcement bridge for OXLint JS plugins
+- Experimental module-boundary enforcement bridge for Oxlint JS plugins
 
 ## Installation
 

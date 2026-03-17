@@ -1,18 +1,18 @@
 ---
-title: OXLint Plugin for Nx
+title: Oxlint Plugin for Nx
 description: Learn how to set up and use the @nx/oxlint plugin with inferred tasks, hybrid migration, and experimental module-boundary enforcement.
 sidebar:
   label: Introduction
 filter: 'type:References'
 ---
 
-The `@nx/oxlint` plugin integrates [OXLint](https://oxc.rs/docs/guide/usage/linter/) with Nx for fast lint execution in monorepos.
+The `@nx/oxlint` plugin integrates [Oxlint](https://oxc.rs/docs/guide/usage/linter/) with Nx for fast lint execution in monorepos.
 
 ## Experimental status
 
 {% aside type="note" title="Experimental" %}
-`@nx/oxlint` and the OXLint JS-plugin boundary bridge are experimental.
-The feature set may evolve quickly while OXLint JS plugins are still stabilizing.
+`@nx/oxlint` and the Oxlint JS-plugin boundary bridge are experimental.
+The feature set may evolve quickly while Oxlint JS plugins are still stabilizing.
 {% /aside %}
 
 ## Setup
@@ -27,7 +27,7 @@ This registers `@nx/oxlint/plugin` (when inference plugins are enabled), install
 
 ## Inferred tasks
 
-`@nx/oxlint/plugin` infers tasks from OXLint config files:
+`@nx/oxlint/plugin` infers tasks from Oxlint config files:
 
 - `.oxlintrc.json`
 - `.oxlintrc.jsonc`
@@ -43,7 +43,7 @@ nx show project my-project --web
 
 ## Target naming in hybrid workspaces
 
-For mixed ESLint + OXLint workspaces, Nx attempts to avoid target collisions.
+For mixed ESLint + Oxlint workspaces, Nx attempts to avoid target collisions.
 When adding the plugin, it tries target names in this order:
 
 1. `lint`
@@ -72,7 +72,7 @@ If `useInferencePlugins` is disabled, use explicit targets with `@nx/oxlint:lint
 
 ## Hybrid migration from ESLint
 
-Use the migration helper to register OXLint while keeping ESLint targets intact:
+Use the migration helper to register Oxlint while keeping ESLint targets intact:
 
 ```shell
 nx g @nx/oxlint:convert-from-eslint

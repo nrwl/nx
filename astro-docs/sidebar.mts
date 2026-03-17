@@ -446,7 +446,7 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/module-federation/introduction',
           },
           { label: 'ESLint', link: 'technologies/eslint/introduction' },
-          { label: 'OXLint', link: 'technologies/oxlint/introduction' },
+          { label: 'Oxlint', link: 'technologies/oxlint/introduction' },
         ],
       },
       {
@@ -969,7 +969,7 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        label: 'OXLint',
+        label: 'Oxlint',
         collapsed: true,
         items: [...getTechnologyKBItems('oxlint')],
       },
@@ -1110,9 +1110,9 @@ const referenceGroups: SidebarItems = [
         ],
       },
       {
-        label: 'OXLint',
+        label: 'Oxlint',
         collapsed: true,
-        items: [...getTechnologyAPIItems('oxlint', undefined, 'OXLint')],
+        items: [...getTechnologyAPIItems('oxlint', undefined, 'Oxlint')],
       },
       {
         label: 'Webpack',

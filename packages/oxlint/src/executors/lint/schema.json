@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "version": 2,
-  "title": "OXLint executor",
-  "description": "Run OXLint for a project.",
+  "title": "Oxlint executor",
+  "description": "Run Oxlint for a project.",
   "type": "object",
   "properties": {
     "lintFilePatterns": {
@@ -15,7 +15,7 @@
     },
     "config": {
       "type": "string",
-      "description": "Path to an OXLint config file."
+      "description": "Path to an Oxlint config file."
     },
     "fix": {
       "type": "boolean",

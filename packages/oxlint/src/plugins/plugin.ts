@@ -226,7 +226,7 @@ function buildOxlintTargets(
     ],
     metadata: {
       technologies: ['oxlint'],
-      description: 'Runs OXLint on project',
+      description: 'Runs Oxlint on project',
       help: {
         command: `${pmc.exec} oxlint --help`,
         example: {
