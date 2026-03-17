@@ -33,13 +33,11 @@ export function installPackagesTask(
   }
 
   const packageJsonValue = tree.read(packageJsonPath, 'utf-8');
-  let storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
-  // Skip if install already ran this cycle — the previous install already
-  // picked up all filesystem changes (e.g. pnpm-workspace.yaml for symlinks).
-  if (storedPackageJsonValue != null && ensureInstall) {
-    return;
-  }
-  if (storedPackageJsonValue != packageJsonValue || ensureInstall) {
+  const storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
+  const installAlreadyRan = storedPackageJsonValue != null;
+  const packageJsonDiffers = storedPackageJsonValue != packageJsonValue;
+
+  if (packageJsonDiffers || (ensureInstall && !installAlreadyRan)) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
     const pmc = getPackageManagerCommand(packageManager);
     const execSyncOptions: ExecSyncOptions = {
