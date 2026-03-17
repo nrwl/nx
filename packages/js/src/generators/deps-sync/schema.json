@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/schema",
-  "$id": "action",
-  "type": "object",
-  "description": "Synchronize package.json dependencies for internal packages based on the project graph.",
-  "properties": {},
-  "required": []
-}

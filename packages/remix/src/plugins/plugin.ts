@@ -263,7 +263,7 @@ function buildTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    buildTarget.syncGenerators = ['@nx/js:typescript-sync', '@nx/js:deps-sync'];
+    buildTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return buildTarget;
@@ -285,7 +285,7 @@ function devTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    devTarget.syncGenerators = ['@nx/js:typescript-sync', '@nx/js:deps-sync'];
+    devTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return devTarget;
@@ -315,7 +315,7 @@ function startTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    startTarget.syncGenerators = ['@nx/js:typescript-sync', '@nx/js:deps-sync'];
+    startTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return startTarget;
@@ -361,10 +361,7 @@ function typecheckTarget(
 
   if (isUsingTsSolutionSetup) {
     typecheckTarget.dependsOn = [`^${typecheckTargetName}`];
-    typecheckTarget.syncGenerators = [
-      '@nx/js:typescript-sync',
-      '@nx/js:deps-sync',
-    ];
+    typecheckTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return typecheckTarget;

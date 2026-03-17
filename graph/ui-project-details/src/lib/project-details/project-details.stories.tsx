@@ -85,7 +85,6 @@ export const Primary = {
             configurations: {},
             syncGenerators: [
               '@nx/js:typescript-sync',
-              '@nx/js:deps-sync',
               '@foo/bar:sync',
               '@baz/qux:sync',
             ],
