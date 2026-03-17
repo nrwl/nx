@@ -9,8 +9,7 @@
   "devDependencies": {
     "@nx/module-federation": "workspace:*",
     "@rspack/core": "catalog:rspack",
-    "@rspack/cli": "catalog:rspack",
-    "examples-angular-rspack-mf-remote": "workspace:*"
+    "@rspack/cli": "catalog:rspack"
   },
   "nx": {
     "targets": {

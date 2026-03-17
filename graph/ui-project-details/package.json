@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "devDependencies": {
-    "jest": "catalog:jest"
+    "jest": "catalog:jest",
+    "@nx/devkit": "workspace:*"
   },
   "dependencies": {
     "@nx/graph-ui-code-block": "workspace:",

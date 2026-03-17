@@ -43,9 +43,7 @@
     "metro-resolver": ">= 0.82.0"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/detox": "workspace:*",
-    "@nx/rollup": "workspace:*"
+    "nx": "workspace:*"
   },
   "optionalDependencies": {
     "@nx/detox": "workspace:*",

@@ -26,8 +26,5 @@
     "@nx/nx-dev-ui-podcast": "workspace:*",
     "@nx/nx-dev-ui-pricing": "workspace:*",
     "@nx/nx-dev-ui-video-courses": "workspace:*"
-  },
-  "devDependencies": {
-    "@nx/nx-dev-models-package": "workspace:*"
   }
 }

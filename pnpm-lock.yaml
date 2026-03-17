@@ -1785,9 +1785,6 @@ importers:
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.6.8(@swc/helpers@0.5.18)
-      examples-angular-rspack-mf-remote:
-        specifier: workspace:*
-        version: link:../remote
 
   examples/angular-rspack/module-federation/remote:
     dependencies:
@@ -1977,6 +1974,9 @@ importers:
         specifier: 'workspace:'
         version: link:../../nx-dev/ui-fence
     devDependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
       jest:
         specifier: catalog:jest
         version: 30.0.2(@types/node@20.19.19)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.27.3))(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2))
@@ -2189,10 +2189,6 @@ importers:
       ai:
         specifier: 3.0.19
         version: 3.0.19(react@19.1.0)(solid-js@1.9.7)(svelte@5.35.5)(vue@3.5.30(typescript@5.9.2))(zod@4.3.6)
-    devDependencies:
-      '@nx/nx-dev-models-package':
-        specifier: workspace:*
-        version: link:../models-package
 
   nx-dev/ui-animations:
     dependencies:
@@ -2368,10 +2364,6 @@ importers:
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
-    devDependencies:
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
 
   nx-dev/util-ai:
     dependencies:
