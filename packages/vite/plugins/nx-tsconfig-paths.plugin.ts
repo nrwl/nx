@@ -46,6 +46,16 @@ export interface nxViteTsPathsOptions {
    * @default true
    */
   buildLibsFromSource?: boolean;
+  /**
+   * The target to use for building the library dependencies.
+   * @default 'build'
+   */
+  buildTarget?: string;
+  /**
+   * The target to use for testing the library.
+   * @default 'test'
+   */
+  testTarget?: string;
 }
 
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
@@ -70,6 +80,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     '.less',
   ];
   options.mainFields ??= [['exports', '.', 'import'], 'module', 'main'];
+  options.buildTarget ??= 'build';
+  options.testTarget ??= 'test';
   options.buildLibsFromSource ??= true;
   let projectRoot = '';
   let projectRootFromWorkspaceRoot: string;
@@ -104,8 +116,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         // we need to get the deps for the 'build' target instead.
         const depsBuildTarget =
           process.env.NX_TASK_TARGET_TARGET === 'serve' ||
-          process.env.NX_TASK_TARGET_TARGET === 'test'
-            ? 'build'
+          process.env.NX_TASK_TARGET_TARGET === options.testTarget
+            ? options.buildTarget
             : process.env.NX_TASK_TARGET_TARGET;
         const { dependencies } = calculateProjectBuildableDependencies(
           undefined,
