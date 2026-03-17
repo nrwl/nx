@@ -276,21 +276,27 @@ export async function setupAiAgentsGeneratorImpl(
   if (aiConfigRepoPath) {
     const repoPath = aiConfigRepoPath;
 
-    const agentDirs: { agent: Agent; src: string; dest: string }[] = [
-      { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
-      { agent: 'copilot', src: 'generated/.github', dest: '.github' },
-      { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
-      {
-        agent: 'codex',
-        src: 'generated/.codex/agents',
-        dest: '.codex/agents',
-      },
-      { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
-    ];
+    const agentDirs: { agent: Agent | Agent[]; src: string; dest: string }[] =
+      [
+        { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
+        { agent: 'copilot', src: 'generated/.github', dest: '.github' },
+        { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
+        {
+          agent: ['codex', 'cursor', 'gemini'],
+          src: 'generated/.agents',
+          dest: '.agents',
+        },
+        {
+          agent: 'codex',
+          src: 'generated/.codex/agents',
+          dest: '.codex/agents',
+        },
+        { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
+      ];
 
     for (const { agent, src, dest } of agentDirs) {
-      if (hasAgent(agent)) {
+      const agents = Array.isArray(agent) ? agent : [agent];
+      if (agents.some((a) => hasAgent(a))) {
         const srcPath = join(repoPath, src);
         if (existsSync(srcPath)) {
           generateFiles(tree, srcPath, join(options.directory, dest), {});
