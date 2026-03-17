@@ -312,6 +312,32 @@ export function postcss(pluginOptions: PostCSSPluginOptions = {}): Plugin {
         }
       }
 
+      // Fallback: if extracted CSS was not matched to any chunk
+      // (e.g. because Rollup tree-shook the CSS module out of the chunk),
+      // associate it with the first entry chunk so it still gets emitted.
+      const emittedCSSIds = new Set<string>();
+      for (const cssFiles of cssPerChunk.values()) {
+        for (const css of cssFiles) {
+          emittedCSSIds.add(css.id);
+        }
+      }
+      const unmatched: ExtractedCSS[] = [];
+      for (const [id, css] of extracted) {
+        if (!emittedCSSIds.has(id)) {
+          unmatched.push(css);
+        }
+      }
+      if (unmatched.length > 0) {
+        const entryChunkId = Object.keys(bundle).find((key) => {
+          const item = bundle[key];
+          return item.type === 'chunk' && item.isEntry;
+        });
+        if (entryChunkId) {
+          const existing = cssPerChunk.get(entryChunkId) || [];
+          cssPerChunk.set(entryChunkId, [...existing, ...unmatched]);
+        }
+      }
+
       // Emit CSS files for each chunk
       for (const [chunkId, cssFiles] of cssPerChunk) {
         const chunk = bundle[chunkId];

@@ -231,6 +231,59 @@ describe('postcss plugin', () => {
     });
   });
 
+  describe('generateBundle', () => {
+    let mockContext: Partial<PluginContext>;
+
+    beforeEach(() => {
+      mockContext = {
+        warn: jest.fn(),
+        addWatchFile: jest.fn(),
+      };
+    });
+
+    it('should emit extracted CSS even when CSS module is not in chunk.modules', async () => {
+      const plugin = postcss({ inject: false, extract: true });
+      const transform = plugin.transform as Function;
+      const generateBundle = plugin.generateBundle as Function;
+
+      // Transform the CSS file so it gets stored in the extracted map
+      await transform.call(
+        mockContext,
+        '.foo { color: red; }',
+        '/path/to/styles.css'
+      );
+
+      // Simulate a bundle where the CSS module is NOT in chunk.modules
+      // (this happens when Rollup tree-shakes the empty CSS module away)
+      const emittedFiles: Array<{
+        type: string;
+        fileName: string;
+        source: string;
+      }> = [];
+      const bundleContext = {
+        emitFile: (file: any) => emittedFiles.push(file),
+      };
+      const bundle = {
+        'index.esm.js': {
+          type: 'chunk' as const,
+          isEntry: true,
+          fileName: 'index.esm.js',
+          modules: {
+            '/path/to/index.ts': {},
+          },
+        },
+      };
+
+      await generateBundle.call(bundleContext, {}, bundle);
+
+      // The CSS should still be emitted via the fallback path
+      expect(emittedFiles.length).toBe(1);
+      expect(emittedFiles[0].fileName).toBe('index.esm.css');
+      expect(emittedFiles[0].source).toContain('.foo');
+      expect(emittedFiles[0].source).toContain('color: red');
+    });
+  });
+
   describe('file filtering', () => {
     let mockContext: Partial<PluginContext>;
 

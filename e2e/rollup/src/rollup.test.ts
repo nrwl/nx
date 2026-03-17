@@ -3,6 +3,7 @@ import {
   cleanupProject,
   newProject,
   packageInstall,
+  readFile,
   readJson,
   rmDist,
   runCLI,
@@ -232,6 +233,45 @@ export default config;
     expect(output).toContain('Successfully ran target build for project test');
     checkFilesExist(`libs/test/dist/bundle.js`);
     checkFilesExist(`libs/test/dist/bundle.es.js`);
+  });
+
+  it('should extract imported CSS files into the output', () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=rollup`
+    );
+
+    // Add a CSS file and import it from the main entry point
+    updateFile(
+      `libs/${myPkg}/src/styles.css`,
+      `.container { max-width: 1200px; margin: 0 auto; }`
+    );
+    updateFile(
+      `libs/${myPkg}/src/index.ts`,
+      `import './styles.css';\nexport const greeting = 'hello';\n`
+    );
+    updateFile(
+      `libs/${myPkg}/rollup.config.cjs`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports = withNx({
+        outputPath: '../../dist/libs/${myPkg}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'swc',
+        format: ['esm'],
+      });
+    `
+    );
+
+    rmDist();
+    runCLI(`build ${myPkg}`);
+
+    // CSS should be extracted into the dist output
+    checkFilesExist(`dist/libs/${myPkg}/index.esm.css`);
+    const cssContent = readFile(`dist/libs/${myPkg}/index.esm.css`);
+    expect(cssContent).toContain('.container');
+    expect(cssContent).toContain('max-width: 1200px');
   });
 
   describe('useLegacyTypescriptPlugin', () => {
