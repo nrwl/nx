@@ -16,7 +16,7 @@ import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
-import { GradlePluginOptions } from './gradle-plugin-options';
+import { GradlePluginOptions, normalizeOptions } from './gradle-plugin-options';
 import { hashObject } from 'nx/src/devkit-internals';
 
 // the output json file from the gradle plugin
@@ -112,9 +112,10 @@ export async function populateProjectGraph(
   gradlewFiles: string[],
   options: GradlePluginOptions
 ): Promise<void> {
+  const normalizedOptions = normalizeOptions(options);
   const gradleConfigHash = hashArray([
     await hashWithWorkspaceContext(workspaceRoot, [gradleConfigAndTestGlob]),
-    hashObject(options),
+    hashObject(normalizedOptions),
     process.env.CI,
   ]);
   const cached = readProjectGraphReportCache(
@@ -142,7 +143,7 @@ export async function populateProjectGraph(
       const currentLines = await getNxProjectGraphLines(
         gradlewFile,
         gradleConfigHash,
-        options
+        normalizedOptions
       );
       const getNxProjectGraphLinesEnd = performance.mark(
         `${gradlewFile}GetNxProjectGraphLines:end`
