@@ -8,6 +8,7 @@ export interface ParsedCliCommand {
   name?: string;
   command?: string;
   description?: string;
+  supportedVersionRange?: string;
   aliases?: string[];
   options?: Array<{
     name: string[];
@@ -205,6 +206,17 @@ function generateExamplesSection(
   return section;
 }
 
+function generateVersionNote(
+  commandName: string,
+  supportedVersionRange?: string
+): string {
+  if (!supportedVersionRange) {
+    return '';
+  }
+
+  return `\n**Requires ${supportedVersionRange}**\n\n`;
+}
+
 function generateCLIMarkdown(
   commands: Record<string, ParsedCliCommand>
 ): string {
@@ -222,6 +234,7 @@ ${flattenedCommands
 
     let section = `${headingLevel} \`nx ${fullName}\`\n`;
 
+    section += generateVersionNote(fullName, cmd.supportedVersionRange);
     section += cmd.description || 'No description available';
 
     if (cmd.aliases && cmd.aliases.length > 0) {
