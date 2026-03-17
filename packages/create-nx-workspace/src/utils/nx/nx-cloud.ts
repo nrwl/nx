@@ -1,7 +1,11 @@
 import { VcsPushStatus } from '../git/git';
 import { CLIOutput } from '../output';
-import { getCompletionMessage, getSkippedCloudMessage } from './messages';
-import { getFlowVariant } from './ab-testing';
+import {
+  getCompletionMessage,
+  getSkippedCloudMessage,
+  CompletionMessageKey,
+} from './messages';
+import { getBannerVariant, getFlowVariant } from './ab-testing';
 import { nxVersion } from './nx-version';
 import * as ora from 'ora';
 
@@ -66,8 +70,7 @@ export function readNxCloudToken(directory: string) {
   ) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
   const { accessToken, nxCloudId } = getCloudOptions(directory);
-  // NXC-4020: Restored to v22.1.3 wording
-  nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+  nxCloudSpinner.succeed('Nx Cloud configuration was successfully added');
   return accessToken || nxCloudId;
 }
 
@@ -110,22 +113,32 @@ export async function createNxCloudOnboardingUrl(
   );
 }
 
-// NXC-4020: Restored v22.1.3 signature — determines message from nxCloud value,
-// uses rawNxCloud to decide whether to show URL (hide when user passed --nxCloud explicitly).
-// Previous signature: (connectCloudUrl, pushedToVcs, completionMessageKey?, workspaceName?)
 export async function getNxCloudInfo(
-  nxCloud: NxCloud,
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  rawNxCloud?: NxCloud
+  completionMessageKey?: CompletionMessageKey,
+  workspaceName?: string
 ) {
-  const completionMessageKey = nxCloud === 'yes' ? 'cache-setup' : 'ci-setup';
   const out = new CLIOutput(false);
-  // When rawNxCloud is a string (user explicitly passed --nxCloud), hide the URL
-  // because the user "already knows" where to go
-  const url = typeof rawNxCloud === 'string' ? null : connectCloudUrl;
-  const message = getCompletionMessage(completionMessageKey, url, pushedToVcs);
-  out.success(message);
+  // Get the banner variant based on the cloud URL
+  // Enterprise URLs automatically get variant 0 (plain link)
+  const bannerVariant = getBannerVariant(connectCloudUrl);
+  const message = getCompletionMessage(
+    completionMessageKey,
+    connectCloudUrl,
+    pushedToVcs,
+    workspaceName,
+    bannerVariant
+  );
+
+  // Variant 2 (deferred connection): No title, just output the banner directly
+  // without the NX badge since nothing was actually configured
+  if (!message.title) {
+    out.addNewline();
+    out.writeLines(message.bodyLines ?? []);
+  } else {
+    out.success(message);
+  }
   return out.getOutput();
 }
 

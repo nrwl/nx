@@ -99,9 +99,8 @@ describe('ab-testing', () => {
       ).toBe('0');
     });
 
-    // NXC-4020: Locked to variant 0 to match v22.1.3
-    it('should return 0 for standard URLs (NXC-4020)', () => {
-      expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('0');
+    it('should return 2 for standard URLs', () => {
+      expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('2');
     });
   });
 
