@@ -276,18 +276,27 @@ export async function setupAiAgentsGeneratorImpl(
   if (aiConfigRepoPath) {
     const repoPath = aiConfigRepoPath;
 
+    // Shared skills directory used by codex, cursor, and gemini
+    const sharedSkillsSrc = join(repoPath, 'generated/.agents');
+    if (existsSync(sharedSkillsSrc)) {
+      generateFiles(
+        tree,
+        sharedSkillsSrc,
+        join(options.directory, '.agents'),
+        {}
+      );
+    }
+
+    // Agent-specific directories (commands, agents, config)
     const agentDirs: { agent: Agent; src: string; dest: string }[] = [
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      { agent: 'cursor', src: 'generated/.agents', dest: '.agents' },
-      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
       {
         agent: 'codex',
         src: 'generated/.codex/agents',
         dest: '.codex/agents',
       },
-      { agent: 'gemini', src: 'generated/.agents', dest: '.agents' },
       { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
     ];
 
