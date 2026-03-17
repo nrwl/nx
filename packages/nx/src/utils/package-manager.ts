@@ -69,7 +69,9 @@ export function detectPackageManager(dir: string = ''): PackageManager {
         ? 'yarn'
         : existsSync(join(dir, 'pnpm-lock.yaml'))
           ? 'pnpm'
-          : detectInvokedPackageManager())
+          : existsSync(join(dir, 'package-lock.json'))
+            ? 'npm'
+            : detectInvokedPackageManager())
   );
 }
 
