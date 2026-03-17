@@ -267,27 +267,33 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         importPath === normalizedImport ||
         importPath.startsWith(normalizedImport + '/')
       ) {
-        const joinedPath = joinPathFragments(
-          tsconfig.absoluteBaseUrl,
-          paths[0].replace(/\/\*$/, '')
-        );
-
-        resolvedFile = findFile(
-          importPath.replace(normalizedImport, joinedPath),
-          options.extensions
-        );
-
-        if (
-          resolvedFile === undefined &&
-          options.extensions.some((ext) => importPath.endsWith(ext))
-        ) {
-          const foundExtension = options.extensions.find((ext) =>
-            importPath.endsWith(ext)
+        for (const path of paths) {
+          const joinedPath = joinPathFragments(
+            tsconfig.absoluteBaseUrl,
+            path.replace(/\/\*$/, '')
           );
-          const pathWithoutExtension = importPath
-            .replace(normalizedImport, joinedPath)
-            .slice(0, -foundExtension.length);
-          resolvedFile = findFile(pathWithoutExtension, options.extensions);
+
+          resolvedFile = findFile(
+            importPath.replace(normalizedImport, joinedPath),
+            options.extensions
+          );
+
+          if (
+            resolvedFile === undefined &&
+            options.extensions.some((ext) => importPath.endsWith(ext))
+          ) {
+            const foundExtension = options.extensions.find((ext) =>
+              importPath.endsWith(ext)
+            );
+            const pathWithoutExtension = importPath
+              .replace(normalizedImport, joinedPath)
+              .slice(0, -foundExtension.length);
+            resolvedFile = findFile(pathWithoutExtension, options.extensions);
+          }
+
+          if (resolvedFile !== undefined) {
+            return resolvedFile;
+          }
         }
       }
     }
