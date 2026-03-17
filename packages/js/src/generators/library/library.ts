@@ -241,9 +241,9 @@ export async function libraryGeneratorInternal(
     tasks.push(await releaseTasks(tree));
   }
 
-  // Always run install to link packages.
+  // Run install to link packages in TS solution workspaces.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(tree, true));
+    tasks.push(() => installPackagesTask(tree));
   }
 
   tasks.push(() => {
