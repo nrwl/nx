@@ -166,9 +166,9 @@ export async function reactNativeLibraryGeneratorInternal(
     await formatFiles(host);
   }
 
-  // Always run install to link packages.
+  // Run install to link packages in TS solution workspaces.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host, true));
+    tasks.push(() => installPackagesTask(host));
   }
 
   tasks.push(() => {
