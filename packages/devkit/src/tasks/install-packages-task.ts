@@ -36,7 +36,13 @@ export function installPackagesTask(
     'utf-8'
   );
   let storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
-  // Don't install again if install was already executed with package.json
+  // Don't install again if install was already executed with package.json.
+  // When alwaysRun is set, still skip if install already ran this cycle —
+  // the previous install already picked up all filesystem changes (e.g.
+  // pnpm-workspace.yaml updates for symlinks).
+  if (alwaysRun && storedPackageJsonValue != null) {
+    return;
+  }
   if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
     const pmc = getPackageManagerCommand(packageManager);
