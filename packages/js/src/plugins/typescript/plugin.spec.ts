@@ -122,7 +122,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -175,7 +174,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -231,7 +229,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -289,7 +286,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -345,7 +341,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -404,7 +399,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -461,7 +455,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -519,7 +512,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -579,7 +571,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -636,7 +627,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -699,7 +689,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "typecheck": {
@@ -736,7 +725,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -834,7 +822,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -893,7 +880,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -954,7 +940,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "outputs": [],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -1036,7 +1021,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -1102,7 +1086,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1167,7 +1150,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1237,7 +1219,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1311,7 +1292,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1385,7 +1365,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1464,7 +1443,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1538,7 +1516,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1615,7 +1592,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1705,7 +1681,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1815,7 +1790,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1860,7 +1834,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2065,7 +2038,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2335,7 +2307,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2400,7 +2371,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2460,7 +2430,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2530,7 +2499,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                   "typecheck": {
@@ -2570,7 +2538,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2640,7 +2607,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2745,7 +2711,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2788,7 +2753,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2855,7 +2819,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2927,7 +2890,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2991,7 +2953,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3055,7 +3016,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3115,7 +3075,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3314,7 +3273,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3390,7 +3348,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3464,7 +3421,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3553,7 +3509,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3628,7 +3583,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3706,7 +3660,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3770,7 +3723,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3836,7 +3788,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3924,7 +3875,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3994,7 +3944,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4067,7 +4016,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4144,7 +4092,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4218,7 +4165,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4300,7 +4246,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4379,7 +4324,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4459,7 +4403,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4554,7 +4497,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4637,7 +4579,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4765,7 +4706,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5010,7 +4950,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5082,7 +5021,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5148,7 +5086,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5223,7 +5160,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5304,7 +5240,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5376,7 +5311,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5453,7 +5387,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5522,7 +5455,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5590,7 +5522,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5656,7 +5587,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5729,7 +5659,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -5799,7 +5728,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -5900,7 +5828,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -5970,7 +5897,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6040,7 +5966,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6141,7 +6066,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6211,7 +6135,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6281,7 +6204,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6378,7 +6300,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6474,7 +6395,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6586,7 +6506,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },

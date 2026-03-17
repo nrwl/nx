@@ -435,7 +435,6 @@ async function buildViteTargets(
       ];
       targets[options.typecheckTargetName].syncGenerators = [
         '@nx/js:typescript-sync',
-        '@nx/js:deps-sync',
       ];
     }
   }
@@ -494,7 +493,7 @@ async function buildTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    buildTarget.syncGenerators = ['@nx/js:typescript-sync', '@nx/js:deps-sync'];
+    buildTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return buildTarget;
@@ -522,10 +521,7 @@ function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   };
 
   if (isUsingTsSolutionSetup) {
-    targetConfig.syncGenerators = [
-      '@nx/js:typescript-sync',
-      '@nx/js:deps-sync',
-    ];
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return targetConfig;
@@ -607,10 +603,7 @@ function serveStaticTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    targetConfig.syncGenerators = [
-      '@nx/js:typescript-sync',
-      '@nx/js:deps-sync',
-    ];
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return targetConfig;

@@ -249,7 +249,6 @@ async function createRsbuildTargets(
       ];
       targets[options.typecheckTargetName].syncGenerators = [
         '@nx/js:typescript-sync',
-        '@nx/js:deps-sync',
       ];
     }
   }
