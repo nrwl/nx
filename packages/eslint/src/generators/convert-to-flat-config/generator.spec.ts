@@ -6,6 +6,7 @@ import {
   ProjectConfiguration,
   Tree,
   addProjectConfiguration,
+  logger,
   readJson,
   updateJson,
 } from '@nx/devkit';
@@ -578,6 +579,39 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
       expect(tree.exists('eslint.config.cjs')).toBeTruthy();
       expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
+    });
+
+    it('should warn and skip project with eslint config but no lint target', async () => {
+      addProjectConfiguration(tree, 'no-lint-lib', {
+        root: 'libs/no-lint-lib',
+        targets: {},
+      });
+      tree.write(
+        'libs/no-lint-lib/.eslintrc.json',
+        JSON.stringify({ extends: ['../../.eslintrc.json'] })
+      );
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        delete json.plugins;
+        return json;
+      });
+
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+
+      const warnSpy = jest.spyOn(logger, 'warn');
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.exists('libs/no-lint-lib/.eslintrc.json')).toBeTruthy();
+      expect(tree.exists('libs/no-lint-lib/eslint.config.cjs')).toBeFalsy();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping "no-lint-lib"')
+      );
+      warnSpy.mockRestore();
     });
 
     it('should handle parser options even if parser is extended', async () => {
