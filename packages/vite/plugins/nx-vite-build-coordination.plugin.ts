@@ -17,14 +17,18 @@ export function nxViteBuildCoordinationPlugin(
   let unregisterFileWatcher: UnregisterCallback | undefined;
 
   async function buildChangedProjects() {
-    await new Promise<void>((res) => {
+    await new Promise<void>((res, rej) => {
       activeBuildProcess = exec(options.buildCommand, {
         windowsHide: false,
       });
       activeBuildProcess.stdout.pipe(process.stdout);
       activeBuildProcess.stderr.pipe(process.stderr);
-      activeBuildProcess.on('exit', () => {
-        res();
+      activeBuildProcess.on('exit', (code) => {
+        if (code !== 0) {
+          rej(new Error(`Build failed with exit code ${code}`));
+        } else {
+          res();
+        }
       });
       activeBuildProcess.on('error', () => {
         res();
