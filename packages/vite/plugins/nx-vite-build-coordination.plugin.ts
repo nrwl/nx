@@ -37,7 +37,7 @@ export function nxViteBuildCoordinationPlugin(
     const runner = new BatchFunctionRunner(() => buildChangedProjects());
     return daemonClient.registerFileWatcher(
       { watchProjects: 'all' },
-      (err, { changedProjects, changedFiles }) => {
+      (err, data) => {
         if (err === 'reconnecting') {
           // Silent - daemon restarts automatically on lockfile changes
           return;
@@ -60,7 +60,10 @@ export function nxViteBuildCoordinationPlugin(
           activeBuildProcess = undefined;
         }
 
-        runner.enqueue(changedProjects, changedFiles);
+        if (data) {
+          const { changedProjects, changedFiles } = data;
+          runner.enqueue(changedProjects, changedFiles);
+        }
       }
     );
   }
