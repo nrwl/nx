@@ -131,14 +131,16 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
             true
           );
           process.env.NX_GENERATED_TSCONFIG_PATH = foundTsConfigPath;
-        }
-        if (config.command === 'serve') {
-          const buildableLibraryDependencies = dependencies
-            .filter((dep) => dep.node.type === 'lib')
-            .map((dep) => dep.node.name)
-            .join(',');
-          const buildCommand = `npx nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
-          config.plugins.push(nxViteBuildCoordinationPlugin({ buildCommand }));
+          if (config.command === 'serve') {
+            const buildableLibraryDependencies = dependencies
+              .filter((dep) => dep.node.type === 'lib')
+              .map((dep) => dep.node.name)
+              .join(',');
+            const buildCommand = `npx nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
+            config.plugins.push(
+              nxViteBuildCoordinationPlugin({ buildCommand })
+            );
+          }
         }
       }
 
