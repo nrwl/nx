@@ -250,21 +250,7 @@ export default config;
       `libs/${myPkg}/src/index.ts`,
       `import './styles.css';\nexport const greeting = 'hello';\n`
     );
-    updateFile(
-      `libs/${myPkg}/rollup.config.cjs`,
-      `
-      const { withNx } = require('@nx/rollup/with-nx');
-      module.exports = withNx({
-        outputPath: '../../dist/libs/${myPkg}',
-        main: './src/index.ts',
-        tsConfig: './tsconfig.lib.json',
-        compiler: 'swc',
-        format: ['esm'],
-      });
-    `
-    );
 
-    rmDist();
     runCLI(`build ${myPkg}`);
 
     // CSS should be extracted into the dist output
