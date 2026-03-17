@@ -357,6 +357,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     // Early exit if a newer recomputation has started - chain to the newer one
     if (isStale()) {
+      notifyPluginsGraphAborted(plugins);
       return cachedSerializedProjectGraphPromise;
     }
 
@@ -381,6 +382,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     // Early exit if a newer recomputation has started - chain to the newer one
     if (isStale()) {
+      notifyPluginsGraphAborted(plugins);
       return cachedSerializedProjectGraphPromise;
     }
 
@@ -546,6 +548,15 @@ async function resetInternalStateIfNxDepsMissing() {
     }
   } catch (e) {
     await resetInternalState();
+  }
+}
+
+function notifyPluginsGraphAborted(plugins: LoadedNxPlugin[]) {
+  // At both abort sites, only createNodes has been called.
+  // createDependencies and createMetadata are called later in
+  // createAndSerializeProjectGraph, which hasn't run yet.
+  for (const plugin of plugins) {
+    plugin.abortGraphPhase?.('createNodes');
   }
 }
 
