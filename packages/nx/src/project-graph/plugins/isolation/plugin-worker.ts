@@ -37,7 +37,7 @@ const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
 
 let connectErrorTimeout = setErrorTimeout(
-  10_000,
+  30_000,
   `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within 5 seconds. ` +
     'Plugin workers expect to receive a socket connection from the parent process shortly after being started. ' +
     'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
