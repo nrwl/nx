@@ -176,5 +176,17 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "devDependencies": {
+    "@nx/nx-darwin-arm64": "workspace:*",
+    "@nx/nx-darwin-x64": "workspace:*",
+    "@nx/nx-freebsd-x64": "workspace:*",
+    "@nx/nx-linux-arm-gnueabihf": "workspace:*",
+    "@nx/nx-linux-arm64-gnu": "workspace:*",
+    "@nx/nx-linux-arm64-musl": "workspace:*",
+    "@nx/nx-linux-x64-gnu": "workspace:*",
+    "@nx/nx-linux-x64-musl": "workspace:*",
+    "@nx/nx-win32-arm64-msvc": "workspace:*",
+    "@nx/nx-win32-x64-msvc": "workspace:*"
   }
 }

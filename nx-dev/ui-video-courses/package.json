@@ -9,5 +9,8 @@
     "@nx/nx-dev-data-access-courses": "workspace:*",
     "@nx/nx-dev-ui-primitives": "workspace:*",
     "@nx/nx-dev-ui-common": "workspace:*"
+  },
+  "devDependencies": {
+    "@nx/nx-dev-ui-icons": "workspace:*"
   }
 }
