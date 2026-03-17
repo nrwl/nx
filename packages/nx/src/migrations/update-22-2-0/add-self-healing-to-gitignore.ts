@@ -1,40 +1,20 @@
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
-import ignore = require('ignore');
+import { addEntryToGitIgnore } from '../../utils/ignore';
 
 export default async function addSelfHealingToGitignore(tree: Tree) {
-  updateGitIgnore(tree);
-  updatePrettierIgnore(tree);
-}
-
-export function updateGitIgnore(tree: Tree) {
-  const gitignore = tree.exists('.gitignore')
-    ? tree.read('.gitignore', 'utf-8')
-    : '';
-  const ig = ignore();
-  ig.add(gitignore);
-
-  // If .nx/self-healing is already covered by existing patterns (e.g., .nx, .nx/*, etc.), skip
-  if (!ig.ignores('.nx/self-healing')) {
-    const updatedLines = gitignore.length
-      ? [gitignore, '.nx/self-healing']
-      : ['.nx/self-healing'];
-    tree.write('.gitignore', updatedLines.join('\n'));
-  }
-}
-
-export function updatePrettierIgnore(tree: Tree) {
-  if (!tree.exists('.prettierignore')) {
+  if (!tree.exists('.gitignore')) {
     return;
   }
-
-  const prettierignore = tree.read('.prettierignore', 'utf-8');
-  const ig = ignore();
-  ig.add(prettierignore);
-
-  if (!ig.ignores('.nx/self-healing')) {
-    tree.write(
-      '.prettierignore',
-      [prettierignore, '/.nx/self-healing'].join('\n')
-    );
+  // Lerna users that don't use nx.json may not expect .nx directory changes
+  if (tree.exists('lerna.json') && !tree.exists('nx.json')) {
+    return;
   }
+  addEntryToGitIgnore(tree, '.gitignore', '.nx/self-healing');
+
+  if (tree.exists('.prettierignore')) {
+    addEntryToGitIgnore(tree, '.prettierignore', '.nx/self-healing');
+  }
+
+  await formatChangedFilesWithPrettierIfAvailable(tree);
 }

@@ -1,99 +1,88 @@
-import { createTree } from '../../generators/testing-utils/create-tree';
-import addSelfHealingToGitignore, {
-  updateGitIgnore,
-  updatePrettierIgnore,
-} from './add-self-healing-to-gitignore';
+import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import { Tree } from '../../generators/tree';
+import addSelfHealingToGitignore from './add-self-healing-to-gitignore';
 
-describe('addSelfHealingToGitignore', () => {
-  describe('updateGitIgnore', () => {
-    it('should add .nx/self-healing to gitignore', () => {
-      const tree = createTree();
-      tree.write('.gitignore', 'node_modules');
-      updateGitIgnore(tree);
-      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-        "node_modules
-        .nx/self-healing"
-      `);
-    });
+describe('add-self-healing-to-gitignore migration', () => {
+  let tree: Tree;
 
-    it('should work if .gitignore does not exist', () => {
-      const tree = createTree();
-      tree.delete('.gitignore');
-      updateGitIgnore(tree);
-      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
-        `".nx/self-healing"`
-      );
-    });
-
-    it('should not change gitignore if .nx/self-healing is directly ignored', () => {
-      const tree = createTree();
-      tree.write('.gitignore', 'node_modules\n.nx/self-healing');
-      updateGitIgnore(tree);
-      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-        "node_modules
-        .nx/self-healing"
-      `);
-    });
-
-    it('should not change gitignore if .nx is ignored (covers .nx/self-healing)', () => {
-      const tree = createTree();
-      tree.write('.gitignore', 'node_modules\n.nx');
-      updateGitIgnore(tree);
-      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-        "node_modules
-        .nx"
-      `);
-    });
-
-    it('should not change gitignore if ignored by glob pattern like .nx/*', () => {
-      const tree = createTree();
-      tree.write('.gitignore', 'node_modules\n.nx/*');
-      updateGitIgnore(tree);
-      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-        "node_modules
-        .nx/*"
-      `);
-    });
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
   });
 
-  describe('updatePrettierIgnore', () => {
-    it('should add .nx/self-healing to prettierignore', () => {
-      const tree = createTree();
-      tree.write('.prettierignore', '/dist');
-      updatePrettierIgnore(tree);
-      expect(tree.read('.prettierignore', 'utf-8')).toMatchInlineSnapshot(`
-        "/dist
-        /.nx/self-healing"
-      `);
-    });
+  it('should not create .gitignore if it does not exist', async () => {
+    tree.delete('.gitignore');
 
-    it('should not add if .prettierignore does not exist', () => {
-      const tree = createTree();
-      tree.delete('.prettierignore');
-      updatePrettierIgnore(tree);
-      expect(tree.exists('.prettierignore')).toBeFalsy();
-    });
+    await addSelfHealingToGitignore(tree);
 
-    it('should not add if already covered by pattern', () => {
-      const tree = createTree();
-      tree.write('.prettierignore', '/.nx');
-      updatePrettierIgnore(tree);
-      expect(tree.read('.prettierignore', 'utf-8')).toBe('/.nx');
-    });
+    expect(tree.exists('.gitignore')).toBe(false);
   });
 
-  describe('full migration', () => {
-    it('should update both gitignore and prettierignore', async () => {
-      const tree = createTree();
-      tree.write('.gitignore', 'node_modules');
-      tree.write('.prettierignore', '/dist');
+  it('should add .nx/self-healing to existing .gitignore', async () => {
+    tree.write('.gitignore', 'node_modules\ndist\n');
 
-      await addSelfHealingToGitignore(tree);
+    await addSelfHealingToGitignore(tree);
 
-      expect(tree.read('.gitignore', 'utf-8')).toContain('.nx/self-healing');
-      expect(tree.read('.prettierignore', 'utf-8')).toContain(
-        '.nx/self-healing'
-      );
-    });
+    const gitignore = tree.read('.gitignore')?.toString();
+    expect(gitignore).toContain('node_modules');
+    expect(gitignore).toContain('.nx/self-healing');
+  });
+
+  it('should not duplicate if .nx/self-healing is already present', async () => {
+    tree.write('.gitignore', 'node_modules\n.nx/self-healing\n');
+
+    await addSelfHealingToGitignore(tree);
+
+    const gitignore = tree.read('.gitignore')?.toString();
+    const matches = gitignore.match(/\.nx\/self-healing/g);
+    expect(matches).toHaveLength(1);
+  });
+
+  it('should not add if a broader pattern already covers it', async () => {
+    tree.write('.gitignore', '.nx/\n');
+
+    await addSelfHealingToGitignore(tree);
+
+    const gitignore = tree.read('.gitignore')?.toString();
+    expect(gitignore).not.toContain('.nx/self-healing');
+  });
+
+  it('should skip for lerna workspaces without nx.json', async () => {
+    tree.write('.gitignore', 'node_modules\n');
+    tree.write('lerna.json', '{}');
+    tree.delete('nx.json');
+
+    await addSelfHealingToGitignore(tree);
+
+    const gitignore = tree.read('.gitignore')?.toString();
+    expect(gitignore).not.toContain('.nx/self-healing');
+  });
+
+  it('should not skip for lerna workspaces that also have nx.json', async () => {
+    tree.write('.gitignore', 'node_modules\n');
+    tree.write('lerna.json', '{}');
+    // nx.json already exists from createTreeWithEmptyWorkspace
+
+    await addSelfHealingToGitignore(tree);
+
+    const gitignore = tree.read('.gitignore')?.toString();
+    expect(gitignore).toContain('.nx/self-healing');
+  });
+
+  it('should add .nx/self-healing to .prettierignore if it exists', async () => {
+    tree.write('.gitignore', 'node_modules\n');
+    tree.write('.prettierignore', '/dist\n');
+
+    await addSelfHealingToGitignore(tree);
+
+    const prettierignore = tree.read('.prettierignore')?.toString();
+    expect(prettierignore).toContain('.nx/self-healing');
+  });
+
+  it('should not modify .prettierignore if it does not exist', async () => {
+    tree.write('.gitignore', 'node_modules\n');
+
+    await addSelfHealingToGitignore(tree);
+
+    expect(tree.exists('.prettierignore')).toBe(false);
   });
 });
