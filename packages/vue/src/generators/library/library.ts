@@ -201,9 +201,9 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (!options.skipFormat) await formatFiles(tree);
 
-  // Run install to link packages in TS solution workspaces.
+  // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(tree));
+    tasks.push(() => installPackagesTask(tree, true));
   }
 
   tasks.push(() => {

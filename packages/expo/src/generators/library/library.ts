@@ -157,9 +157,9 @@ export async function expoLibraryGeneratorInternal(
     await formatFiles(host);
   }
 
-  // Run install to link packages in TS solution workspaces.
+  // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host));
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {

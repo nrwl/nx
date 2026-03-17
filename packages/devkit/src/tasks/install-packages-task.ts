@@ -14,36 +14,32 @@ import {
  * `package.json` hasn't changed at all or it hasn't changed since the last invocation.
  *
  * @param tree - the file system tree
- * @param alwaysRun - always run the command even if `package.json` hasn't changed.
+ * @param ensureInstall - ensure install runs even if `package.json` hasn't changed,
+ * unless install already ran this generator cycle.
  */
 export function installPackagesTask(
   tree: Tree,
-  alwaysRun: boolean = false,
+  ensureInstall: boolean = false,
   cwd: string = '',
   packageManager: PackageManager = detectPackageManager(join(tree.root, cwd))
 ): void {
-  if (
-    !tree
-      .listChanges()
-      .find((f) => f.path === joinPathFragments(cwd, 'package.json')) &&
-    !alwaysRun
-  ) {
+  const packageJsonPath = joinPathFragments(cwd, 'package.json');
+  const packageJsonChanged = tree
+    .listChanges()
+    .some((f) => f.path === packageJsonPath);
+
+  if (!packageJsonChanged && !ensureInstall) {
     return;
   }
 
-  const packageJsonValue = tree.read(
-    joinPathFragments(cwd, 'package.json'),
-    'utf-8'
-  );
+  const packageJsonValue = tree.read(packageJsonPath, 'utf-8');
   let storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
-  // Don't install again if install was already executed with package.json.
-  // When alwaysRun is set, still skip if install already ran this cycle —
-  // the previous install already picked up all filesystem changes (e.g.
-  // pnpm-workspace.yaml updates for symlinks).
-  if (alwaysRun && storedPackageJsonValue != null) {
+  // Skip if install already ran this cycle — the previous install already
+  // picked up all filesystem changes (e.g. pnpm-workspace.yaml for symlinks).
+  if (storedPackageJsonValue != null && ensureInstall) {
     return;
   }
-  if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
+  if (storedPackageJsonValue != packageJsonValue || ensureInstall) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
     const pmc = getPackageManagerCommand(packageManager);
     const execSyncOptions: ExecSyncOptions = {
