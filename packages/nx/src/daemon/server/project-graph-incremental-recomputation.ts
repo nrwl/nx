@@ -556,7 +556,7 @@ function notifyPluginsGraphAborted(plugins: LoadedNxPlugin[]) {
   // createDependencies and createMetadata are called later in
   // createAndSerializeProjectGraph, which hasn't run yet.
   for (const plugin of plugins) {
-    plugin.abortGraphPhase?.('createNodes');
+    plugin.notifyPhaseAborted?.('graph', 'createNodes');
   }
 }
 

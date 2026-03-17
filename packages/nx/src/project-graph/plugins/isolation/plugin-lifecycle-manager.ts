@@ -191,7 +191,7 @@ export class PluginLifecycleManager {
    *   the session — decrementing again would steal another caller's count.
    * @returns true if the worker should shut down, false otherwise
    */
-  abortPhase(phase: Phase, lastCompletedHook: Hook): boolean {
+  notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): boolean {
     const phaseHooks = this.registeredPhases[phase];
     if (!phaseHooks) {
       return false;
