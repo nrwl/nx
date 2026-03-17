@@ -366,6 +366,7 @@ function resolveTargetInfoData(
       : {}),
     cache: targetConfig.cache ?? false,
     parallelism: targetConfig.parallelism ?? true,
+    continuous: targetConfig.continuous ?? false,
   };
 }
 
@@ -657,6 +658,7 @@ function renderTargetInfo(
 
   console.log(`${c.bold('Cache')}: ${data.cache}`);
   console.log(`${c.bold('Parallelism')}: ${data.parallelism}`);
+  console.log(`${c.bold('Continuous')}: ${data.continuous}`);
 }
 
 function renderInputs(
