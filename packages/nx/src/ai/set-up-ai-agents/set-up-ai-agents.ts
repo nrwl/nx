@@ -276,26 +276,23 @@ export async function setupAiAgentsGeneratorImpl(
   if (aiConfigRepoPath) {
     const repoPath = aiConfigRepoPath;
 
-    const agentDirs: { agent: Agent | Agent[]; src: string; dest: string }[] = [
+    const agentDirs: { agent: Agent; src: string; dest: string }[] = [
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      {
-        agent: ['codex', 'cursor', 'gemini'],
-        src: 'generated/.agents',
-        dest: '.agents',
-      },
+      { agent: 'cursor', src: 'generated/.agents', dest: '.agents' },
+      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
       {
         agent: 'codex',
         src: 'generated/.codex/agents',
         dest: '.codex/agents',
       },
+      { agent: 'gemini', src: 'generated/.agents', dest: '.agents' },
       { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
     ];
 
     for (const { agent, src, dest } of agentDirs) {
-      const agents = Array.isArray(agent) ? agent : [agent];
-      if (agents.some((a) => hasAgent(a))) {
+      if (hasAgent(agent)) {
         const srcPath = join(repoPath, src);
         if (existsSync(srcPath)) {
           generateFiles(tree, srcPath, join(options.directory, dest), {});
