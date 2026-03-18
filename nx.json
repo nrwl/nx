@@ -206,6 +206,7 @@
     }
   },
   "plugins": [
+    "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
       "include": [
@@ -292,6 +293,14 @@
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static"
       }
+    },
+    {
+      "plugin": "@nx/gradle",
+      "options": {
+        "targetNamePrefix": "gradle:",
+        "ciTestTargetName": "test-ci"
+      },
+      "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
     {
       "plugin": "@nx/storybook/plugin",
