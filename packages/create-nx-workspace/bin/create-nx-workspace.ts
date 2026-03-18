@@ -408,6 +408,17 @@ process.on('uncaughtException', (error: unknown) => {
 
 // Handle Ctrl+C gracefully - show helpful message if workspace was already created
 process.on('SIGINT', async () => {
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud: false,
+    meta: {
+      type: 'cancel',
+      flowVariant: getFlowVariant(),
+      aiAgent: isAiAgent(),
+    },
+  });
+
   const { directory, connectUrl } = getInterruptedWorkspaceState();
 
   if (directory) {
@@ -775,15 +786,10 @@ function invariant(
 export function validateWorkspaceName(name: string): void {
   const pattern = /^[a-zA-Z]/;
   if (!pattern.test(name)) {
-    output.error({
-      title: 'Invalid workspace name',
-      bodyLines: [
-        `The workspace name "${name}" is invalid.`,
-        `Workspace names must start with a letter.`,
-        `Examples of valid names: myapp, MyApp, my-app, my_app`,
-      ],
-    });
-    process.exit(1);
+    throw new CnwError(
+      'INVALID_WORKSPACE_NAME',
+      `The workspace name "${name}" is invalid. Workspace names must start with a letter. Examples of valid names: myapp, MyApp, my-app, my_app`
+    );
   }
 }
 
