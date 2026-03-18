@@ -1,3 +1,9 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+
 # Disable gradle and maven plugins on Netlify
 # (Netlify only supports Java 8 but these plugins require Java 17)
 [build.environment]

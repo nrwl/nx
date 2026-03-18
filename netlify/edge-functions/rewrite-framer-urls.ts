@@ -127,6 +127,8 @@ export default async function handler(
   const newHeaders = new Headers(response.headers);
   newHeaders.set('x-nx-edge-function', 'framer-proxy');
   newHeaders.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+  newHeaders.set('X-Frame-Options', 'DENY');
+  newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
 
   return new Response(rewrittenHtml, {
     status: response.status,
