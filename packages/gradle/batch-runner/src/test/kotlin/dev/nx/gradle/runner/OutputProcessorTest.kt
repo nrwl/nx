@@ -66,7 +66,8 @@ class OutputProcessorTest {
         val tasks =
             mapOf(
                 "task1" to GradleTask(taskName = ":project:build"),
-                "task2" to GradleTask(taskName = ":project:test"))
+                "task2" to GradleTask(taskName = ":project:test"),
+            )
 
         val taskResults = mutableMapOf<String, TaskResult>()
 
@@ -85,7 +86,13 @@ class OutputProcessorTest {
 
         val result =
             OutputProcessor.finalizeTaskResults(
-                tasks, taskResults, globalOutput, errorStream, startTime, endTime)
+                tasks,
+                taskResults,
+                globalOutput,
+                errorStream,
+                startTime,
+                endTime,
+            )
 
         assertEquals(2, result.size)
         assertTrue(result["task1"]!!.terminalOutput.contains("Build output here"))
@@ -104,7 +111,13 @@ class OutputProcessorTest {
 
         val result =
             OutputProcessor.finalizeTaskResults(
-                tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                tasks,
+                taskResults,
+                globalOutput,
+                errorStream,
+                1000L,
+                2000L,
+            )
 
         assertEquals(globalOutput, result["task1"]!!.terminalOutput)
       }
@@ -124,7 +137,13 @@ class OutputProcessorTest {
 
         val result =
             OutputProcessor.finalizeTaskResults(
-                tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                tasks,
+                taskResults,
+                globalOutput,
+                errorStream,
+                1000L,
+                2000L,
+            )
 
         val output = result["task1"]!!.terminalOutput
         assertTrue(output.contains("Build output"))
@@ -145,7 +164,13 @@ class OutputProcessorTest {
 
         val result =
             OutputProcessor.finalizeTaskResults(
-                tasks, taskResults, globalOutput, errorStream, startTime, endTime)
+                tasks,
+                taskResults,
+                globalOutput,
+                errorStream,
+                startTime,
+                endTime,
+            )
 
         assertEquals(1, result.size)
         assertNotNull(result["task1"])
@@ -160,7 +185,11 @@ class OutputProcessorTest {
 
         val existingResult =
             TaskResult(
-                success = true, startTime = 500L, endTime = 1500L, terminalOutput = "old output")
+                success = true,
+                startTime = 500L,
+                endTime = 1500L,
+                terminalOutput = "old output",
+            )
         val taskResults = mutableMapOf("task1" to existingResult)
 
         val globalOutput = "> Task :project:build\nNew build output"
@@ -169,7 +198,13 @@ class OutputProcessorTest {
 
         val result =
             OutputProcessor.finalizeTaskResults(
-                tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                tasks,
+                taskResults,
+                globalOutput,
+                errorStream,
+                1000L,
+                2000L,
+            )
 
         assertEquals(true, result["task1"]!!.success)
         assertEquals(500L, result["task1"]!!.startTime)
@@ -183,7 +218,8 @@ class OutputProcessorTest {
             mapOf(
                 "task1" to GradleTask(taskName = ":app:compileKotlin"),
                 "task2" to GradleTask(taskName = ":lib:test"),
-                "task3" to GradleTask(taskName = ":app:build"))
+                "task3" to GradleTask(taskName = ":app:build"),
+            )
 
         val taskResults = mutableMapOf<String, TaskResult>()
 
@@ -202,7 +238,13 @@ class OutputProcessorTest {
 
         val result =
             OutputProcessor.finalizeTaskResults(
-                tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                tasks,
+                taskResults,
+                globalOutput,
+                errorStream,
+                1000L,
+                2000L,
+            )
 
         assertEquals(3, result.size)
         assertTrue(result["task1"]!!.terminalOutput.contains("Compiling Kotlin sources"))
@@ -230,7 +272,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val output = result["task1"]!!.terminalOutput
           assertTrue(output.contains("> Task :project:build"))
@@ -249,7 +297,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val output = result["task1"]!!.terminalOutput
           assertTrue(output.contains("> Task :project:build"))
@@ -273,7 +327,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val output = result["task1"]!!.terminalOutput
           assertTrue(output.contains("> Task :project:compileKotlin"))
@@ -298,7 +358,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val output = result["task1"]!!.terminalOutput
           assertTrue(output.contains("First execution"))
@@ -322,7 +388,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           assertTrue(result["task1"]!!.terminalOutput.contains("Compiling nested project"))
         }
@@ -346,7 +418,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val output = result["task1"]!!.terminalOutput
           assertTrue(output.contains("Build cache key"))
@@ -373,7 +451,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val output = result["task1"]!!.terminalOutput
           assertTrue(output.contains("> Task :project:build"))
@@ -385,7 +469,8 @@ class OutputProcessorTest {
           val tasks =
               mapOf(
                   "task1" to GradleTask(taskName = ":app:compileKotlin"),
-                  "task2" to GradleTask(taskName = ":app:test"))
+                  "task2" to GradleTask(taskName = ":app:test"),
+              )
 
           val taskResults = mutableMapOf<String, TaskResult>()
 
@@ -404,7 +489,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           val compileOutput = result["task1"]!!.terminalOutput
           val testOutput = result["task2"]!!.terminalOutput
@@ -435,7 +526,13 @@ class OutputProcessorTest {
 
           val result =
               OutputProcessor.finalizeTaskResults(
-                  tasks, taskResults, globalOutput, errorStream, 1000L, 2000L)
+                  tasks,
+                  taskResults,
+                  globalOutput,
+                  errorStream,
+                  1000L,
+                  2000L,
+              )
 
           assertTrue(result["task1"]!!.terminalOutput.contains("Compilation output"))
         }

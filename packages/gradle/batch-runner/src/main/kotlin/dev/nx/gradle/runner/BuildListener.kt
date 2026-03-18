@@ -18,7 +18,7 @@ fun normalizeTaskPath(taskPath: String): String = taskPath.trimStart(':')
 fun buildListener(
     tasks: Map<String, GradleTask>,
     taskStartTimes: MutableMap<String, Long>,
-    taskResults: MutableMap<String, TaskResult>
+    taskResults: MutableMap<String, TaskResult>,
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {

@@ -39,14 +39,16 @@ fun main(args: Array<String>) {
             options.tasks,
             options.args,
             options.excludeTasks,
-            options.excludeTestTasks)
+            options.excludeTestTasks,
+        )
 
     val reportJson = Gson().toJson(results)
     println(reportJson)
 
     val summary = results.values.groupBy { it.success }
     logger.info(
-        "📊 Summary: ✅ ${summary[true]?.size ?: 0} succeeded, ❌ ${summary[false]?.size ?: 0} failed")
+        "📊 Summary: ✅ ${summary[true]?.size ?: 0} succeeded, ❌ ${summary[false]?.size ?: 0} failed"
+    )
   } catch (e: Exception) {
     logger.severe("💥 Failed to run tasks: ${e.message}")
     exitProcess(1)

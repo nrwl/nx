@@ -9,8 +9,8 @@ val essentialTestAnnotations =
         "@RepeatedTest",
         "@TestFactory",
         "@org.junit.Test", // JUnit 4
-        "@org.testng.annotations.Test" // TestNG
-        )
+        "@org.testng.annotations.Test", // TestNG
+    )
 
 // Class-level test annotation names (without @ prefix for AST parsing)
 val classTestAnnotationNames =
@@ -27,7 +27,8 @@ val methodTestAnnotationNames =
         "BeforeEach",
         "AfterEach",
         "BeforeAll",
-        "AfterAll")
+        "AfterAll",
+    )
 
 // Combined test annotation names for general use
 val testAnnotationNames = classTestAnnotationNames + methodTestAnnotationNames
@@ -39,7 +40,8 @@ val classQualifiedTestAnnotations =
         "org.junit.jupiter.api.TestInstance",
         "org.junit.jupiter.api.TestMethodOrder",
         "org.junit.jupiter.api.DisplayName",
-        "org.junit.jupiter.api.extension.ExtendWith")
+        "org.junit.jupiter.api.extension.ExtendWith",
+    )
 
 // Method-level qualified annotation names
 val methodQualifiedTestAnnotations =
@@ -55,7 +57,8 @@ val methodQualifiedTestAnnotations =
         "org.junit.jupiter.api.BeforeAll",
         "org.junit.jupiter.api.AfterAll",
         "org.testng.annotations.Test",
-        "kotlin.test.Test")
+        "kotlin.test.Test",
+    )
 
 // Combined qualified annotation names for general use
 val qualifiedTestAnnotations = classQualifiedTestAnnotations + methodQualifiedTestAnnotations

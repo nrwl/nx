@@ -6,5 +6,5 @@ data class NxBatchOptions(
     val args: String,
     val quiet: Boolean,
     val excludeTasks: List<String>,
-    val excludeTestTasks: List<String>
+    val excludeTestTasks: List<String>,
 )

@@ -59,7 +59,8 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        gitIgnoreClassifier = gitIgnoreClassifier,
+    )
 
     // Assert each test file created a CI target
     assertTrue(targets.containsKey("ci--MyFirstTest"))
@@ -90,7 +91,8 @@ class AddTestCiTargetsTest {
           replaceRootInPath(file.path, projectRoot.absolutePath, workspaceRoot.absolutePath)
       assertTrue(
           expectedInput in actualInputStrings,
-          "Expected input '$expectedInput' not found in actual inputs: $actualInputStrings")
+          "Expected input '$expectedInput' not found in actual inputs: $actualInputStrings",
+      )
     }
 
     assertEquals("nx:noop", parentCi["executor"])
@@ -120,7 +122,8 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        gitIgnoreClassifier = gitIgnoreClassifier,
+    )
 
     // Should create targets using regex-based approach since no compiled classes exist
     assertTrue(targets.containsKey("ci--DefaultTest"))
@@ -157,7 +160,8 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        gitIgnoreClassifier = gitIgnoreClassifier,
+    )
 
     val ciTarget = targets["ci--DependentTest"]
     assertTrue(ciTarget != null, "CI target should be created")
@@ -167,10 +171,12 @@ class AddTestCiTargetsTest {
     assertNotNull(dependsOn, "Same-project dependsOn should be present")
     assertTrue(
         dependsOn!!.any { (it as? DependsOnEntry)?.target == "compileTestKotlin" },
-        "Expected dependsOn to contain 'compileTestKotlin', got $dependsOn")
+        "Expected dependsOn to contain 'compileTestKotlin', got $dependsOn",
+    )
     assertTrue(
         dependsOn.all { (it as? DependsOnEntry)?.projects == null },
-        "Same-project deps should not have projects field")
+        "Same-project deps should not have projects field",
+    )
   }
 
   @Test
@@ -188,7 +194,8 @@ class AddTestCiTargetsTest {
                   void testMethod() {}
               }
               """
-                  .trimIndent())
+                  .trimIndent()
+          )
         }
 
     val concreteTestFile =
@@ -204,7 +211,8 @@ class AddTestCiTargetsTest {
                   void testMethod() {}
               }
               """
-                  .trimIndent())
+                  .trimIndent()
+          )
         }
 
     val testFiles = project.files(abstractTestFile, concreteTestFile)
@@ -222,16 +230,20 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        gitIgnoreClassifier = gitIgnoreClassifier,
+    )
 
     // Abstract class should not create a CI target
     assertTrue(
         !targets.containsKey("ci--AbstractTest"),
-        "Abstract test classes should not create CI targets")
+        "Abstract test classes should not create CI targets",
+    )
 
     // Concrete class should create a CI target
     assertTrue(
-        targets.containsKey("ci--ConcreteTest"), "Concrete test classes should create CI targets")
+        targets.containsKey("ci--ConcreteTest"),
+        "Concrete test classes should create CI targets",
+    )
     assertTrue(targets.containsKey("ci"))
   }
 
@@ -270,7 +282,8 @@ class AddTestCiTargetsTest {
         ciTestTargetName = ciTestTargetName,
         gitIgnoreClassifier = gitIgnoreClassifier,
         targetNameOverrides = emptyMap(),
-        targetNamePrefix = targetNamePrefix)
+        targetNamePrefix = targetNamePrefix,
+    )
 
     val ciTarget = targets["gradle-ci--PrefixedTest"]
     assertTrue(ciTarget != null, "CI target should be created")
@@ -282,13 +295,16 @@ class AddTestCiTargetsTest {
     val targetNames = dependsOn.mapNotNull { (it as? DependsOnEntry)?.target }
     assertTrue(
         targetNames.all { it.startsWith("gradle-") },
-        "All dependsOn targets should have the prefix 'gradle-', got: $targetNames")
+        "All dependsOn targets should have the prefix 'gradle-', got: $targetNames",
+    )
     assertTrue(
         targetNames.contains("gradle-compileTestKotlin"),
-        "Expected dependsOn to contain 'gradle-compileTestKotlin', got: $targetNames")
+        "Expected dependsOn to contain 'gradle-compileTestKotlin', got: $targetNames",
+    )
     assertTrue(
         targetNames.contains("gradle-classes"),
-        "Expected dependsOn to contain 'gradle-classes', got: $targetNames")
+        "Expected dependsOn to contain 'gradle-classes', got: $targetNames",
+    )
   }
 
   @Test
@@ -331,7 +347,8 @@ class AddTestCiTargetsTest {
         ciTestTargetName = ciTestTargetName,
         gitIgnoreClassifier = gitIgnoreClassifier,
         targetNameOverrides = targetNameOverrides,
-        targetNamePrefix = targetNamePrefix)
+        targetNamePrefix = targetNamePrefix,
+    )
 
     val ciTarget = targets["gradle-ci--OverriddenTest"]
     assertTrue(ciTarget != null, "CI target should be created")
@@ -342,6 +359,7 @@ class AddTestCiTargetsTest {
     val targetNames = dependsOn.mapNotNull { (it as? DependsOnEntry)?.target }
     assertTrue(
         targetNames.contains("gradle-unit-test"),
-        "Expected dependsOn to contain 'gradle-unit-test' (prefixed overridden name for 'test' task), got: $targetNames")
+        "Expected dependsOn to contain 'gradle-unit-test' (prefixed overridden name for 'test' task), got: $targetNames",
+    )
   }
 }

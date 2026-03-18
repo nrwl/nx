@@ -5,15 +5,18 @@ import java.io.File
 // Regex patterns for fallback parsing (kept for compatibility and fallback scenarios)
 private val classDeclarationRegex =
     Regex(
-        """^\s*(?:@\w+\s*)*(?:public|open|sealed|final|enum|annotation)?\s*(class)\s+([A-Za-z_][A-Za-z0-9_]*)""")
+        """^\s*(?:@\w+\s*)*(?:public|open|sealed|final|enum|annotation)?\s*(class)\s+([A-Za-z_][A-Za-z0-9_]*)"""
+    )
 private val excludedClassRegex =
     Regex("""^\s*(?:@\w+\s*)*(?:private|internal)\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
 private val fakeClassRegex =
     Regex(
-        """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+|internal\s+|open\s+)*class\s+(Fake[A-Za-z_][A-Za-z0-9_]*)""")
+        """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+|internal\s+|open\s+)*class\s+(Fake[A-Za-z_][A-Za-z0-9_]*)"""
+    )
 private val abstractClassRegex =
     Regex(
-        """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+)?abstract\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+        """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+)?abstract\s+class\s+([A-Za-z_][A-Za-z0-9_]*)"""
+    )
 
 /** Fallback to original regex-based parsing when AST parsing fails */
 fun parseTestClassesWithRegex(file: File): MutableMap<String, String>? {

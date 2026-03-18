@@ -22,7 +22,7 @@ fun createNodeForProject(
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
     atomized: Boolean,
-    targetNamePrefix: String = ""
+    targetNamePrefix: String = "",
 ): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
@@ -36,7 +36,13 @@ fun createNodeForProject(
   try {
     val gradleTargets: GradleTargets =
         processTargetsForProject(
-            project, dependencies, targetNameOverrides, workspaceRoot, atomized, targetNamePrefix)
+            project,
+            dependencies,
+            targetNameOverrides,
+            workspaceRoot,
+            atomized,
+            targetNamePrefix,
+        )
 
     try {
       val configDependencies = getDependenciesForProject(project)
@@ -44,7 +50,8 @@ fun createNodeForProject(
       logger.info("${Date()} ${project.name} createNodeForProject: got configuration dependencies")
     } catch (e: Exception) {
       logger.info(
-          "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}")
+          "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}"
+      )
     }
     val projectRoot = project.projectDir.path
 
@@ -62,11 +69,13 @@ fun createNodeForProject(
             metadata =
                 NodeMetadata(gradleTargets.targetGroups, listOf("gradle"), projectDescription),
             name = projectName,
-            nxConfig = nxConfig)
+            nxConfig = nxConfig,
+        )
     nodes = mapOf(projectRoot to projectNode)
     externalNodes = gradleTargets.externalNodes
     logger.info(
-        "${Date()} ${project.name} createNodeForProject: get nodes and external nodes for $projectRoot")
+        "${Date()} ${project.name} createNodeForProject: get nodes and external nodes for $projectRoot"
+    )
   } catch (e: Exception) {
     logger.info("${project.name}: get nodes error: ${e.message}")
     nodes = emptyMap()
@@ -79,7 +88,11 @@ fun createNodeForProject(
         null
       }
   return GradleNodeReport(
-      nodes, dependencies, externalNodes, buildFileRelativePath?.let { listOf(it) } ?: emptyList())
+      nodes,
+      dependencies,
+      externalNodes,
+      buildFileRelativePath?.let { listOf(it) } ?: emptyList(),
+  )
 }
 
 /**
@@ -93,7 +106,7 @@ fun processTargetsForProject(
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
     atomized: Boolean,
-    targetNamePrefix: String = ""
+    targetNamePrefix: String = "",
 ): GradleTargets {
   val targets: NxTargets = mutableMapOf()
   val targetGroups: TargetGroups = mutableMapOf()
@@ -128,7 +141,8 @@ fun processTargetsForProject(
   val testTasksByPrefixedName = testTasks.associateBy { applyPrefix(it.name) }
 
   logger.info(
-      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
+      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)"
+  )
 
   // Create a snapshot of all tasks to avoid ConcurrentModificationException
   // with Kotlin Multiplatform which adds tasks dynamically
@@ -155,7 +169,8 @@ fun processTargetsForProject(
               targetNameOverrides,
               gitIgnoreClassifier,
               targetNamePrefix,
-              project)
+              project,
+          )
 
       targets[targetName] = target
 
@@ -164,17 +179,16 @@ fun processTargetsForProject(
       if (hasCiTestTarget && isCompileTestTask) {
         // Find the matching test task for this compile task
         // We need to match based on the actual dependencies between tasks
-        val matchingTestTasks =
-            testTasks.filter { testTask ->
-              if (testTask is Test) {
-                // Check if the test task's classpath includes the compile task's outputs
-                val testClasspath = testTask.classpath.files
-                val compileOutputs = task.outputs.files.files
-                compileOutputs.any { output -> testClasspath.contains(output) }
-              } else {
-                false
-              }
-            }
+        val matchingTestTasks = testTasks.filter { testTask ->
+          if (testTask is Test) {
+            // Check if the test task's classpath includes the compile task's outputs
+            val testClasspath = testTask.classpath.files
+            val compileOutputs = task.outputs.files.files
+            compileOutputs.any { output -> testClasspath.contains(output) }
+          } else {
+            false
+          }
+        }
 
         matchingTestTasks.forEach {
           val ciTestTargetName =
@@ -195,7 +209,8 @@ fun processTargetsForProject(
               ciTestTargetName,
               gitIgnoreClassifier,
               targetNameOverrides,
-              targetNamePrefix)
+              targetNamePrefix,
+          )
         }
       }
 
@@ -218,14 +233,20 @@ fun processTargetsForProject(
         if (task.name == "check") {
           val ciCheckDependsOn =
               buildCiDependsOn(
-                  task, project, targetNameOverrides, targetNamePrefix, ciTestReplacements)
+                  task,
+                  project,
+                  targetNameOverrides,
+                  targetNamePrefix,
+                  ciTestReplacements,
+              )
 
           targets[ciCheckTargetName] =
               mutableMapOf(
                   "dependsOn" to ciCheckDependsOn,
                   "executor" to "nx:noop",
                   "cache" to true,
-                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
+                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"),
+              )
           ensureTargetGroupExists(targetGroups, testCiTargetGroup)
           targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
         }
@@ -239,14 +260,16 @@ fun processTargetsForProject(
                   project,
                   targetNameOverrides,
                   targetNamePrefix,
-                  mapOf(applyPrefix("check") to ciCheckTargetName))
+                  mapOf(applyPrefix("check") to ciCheckTargetName),
+              )
 
           targets[ciBuildTargetName] =
               mutableMapOf(
                   "dependsOn" to ciBuildDependsOn,
                   "executor" to "nx:noop",
                   "cache" to true,
-                  "metadata" to getMetadata("Runs Gradle Build in CI", projectBuildPath, "build"))
+                  "metadata" to getMetadata("Runs Gradle Build in CI", projectBuildPath, "build"),
+              )
           ensureTargetGroupExists(targetGroups, "build")
           targetGroups["build"]?.add(ciBuildTargetName)
         }
@@ -272,7 +295,7 @@ fun buildCiDependsOn(
     project: Project,
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String,
-    sameProjectReplacements: Map<String, String> = emptyMap()
+    sameProjectReplacements: Map<String, String> = emptyMap(),
 ): List<DependsOnEntry> {
   val allDeps = getDependsOnTask(task)
   val result = mutableListOf<DependsOnEntry>()
@@ -305,7 +328,7 @@ fun buildCiDependsOn(
 fun resolveTargetName(
     depTask: Task,
     targetNameOverrides: Map<String, String>,
-    targetNamePrefix: String
+    targetNamePrefix: String,
 ): String {
   val baseName =
       if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {

@@ -9,7 +9,7 @@ import org.gradle.api.Task
  */
 fun getAllVisibleClassesWithNestedAnnotation(
     file: File,
-    testTask: Task? = null
+    testTask: Task? = null,
 ): MutableMap<String, String>? {
   val logger = testTask?.logger
 
@@ -24,21 +24,25 @@ fun getAllVisibleClassesWithNestedAnnotation(
             val astResult = parseJavaFileWithAst(file)
             if (astResult != null && astResult.isNotEmpty()) {
               logger?.info(
-                  "Java AST parsing successful for: ${file.name}, found ${astResult.size} classes: ${astResult.keys}")
+                  "Java AST parsing successful for: ${file.name}, found ${astResult.size} classes: ${astResult.keys}"
+              )
               astResult
             } else {
               logger?.info(
-                  "Java AST parsing returned empty/null, falling back to regex for: ${file.name}")
+                  "Java AST parsing returned empty/null, falling back to regex for: ${file.name}"
+              )
               parseTestClassesWithRegex(file)
             }
           } catch (e: Exception) {
             logger?.warn(
-                "Java AST parsing exception for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+                "Java AST parsing exception for ${file.name}: ${e.javaClass.simpleName} - ${e.message}"
+            )
             logger?.info("Falling back to regex parsing for: ${file.name}")
             parseTestClassesWithRegex(file)
           } catch (e: Error) {
             logger?.warn(
-                "Java AST parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+                "Java AST parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}"
+            )
             logger?.info("Falling back to regex parsing for: ${file.name}")
             parseTestClassesWithRegex(file)
           }
@@ -50,7 +54,8 @@ fun getAllVisibleClassesWithNestedAnnotation(
             if (!isKotlinCompilerAvailable(logger)) {
               logger?.info("Kotlin compiler not available, using regex parsing for: ${file.name}")
               logger?.debug(
-                  "Kotlin AST parsing failed: Required Kotlin compiler classes not found on classpath")
+                  "Kotlin AST parsing failed: Required Kotlin compiler classes not found on classpath"
+              )
               return parseTestClassesWithRegex(file)
             }
 
@@ -76,15 +81,18 @@ fun getAllVisibleClassesWithNestedAnnotation(
             }
           } catch (e: Exception) {
             logger?.warn(
-                "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+                "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}"
+            )
             logger?.debug(
-                "Exception details: ${e.stackTrace.take(3).joinToString { it.toString() }}")
+                "Exception details: ${e.stackTrace.take(3).joinToString { it.toString() }}"
+            )
             logger?.info("Falling back to regex parsing for: ${file.name}")
             parseTestClassesWithRegex(file)
           } catch (e: Error) {
             // Catch JVM errors like NoClassDefFoundError, LinkageError, etc.
             logger?.warn(
-                "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+                "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}"
+            )
             logger?.debug("Error details: ${e.stackTrace.take(3).joinToString { it.toString() }}")
             logger?.info("Falling back to regex parsing for: ${file.name}")
             parseTestClassesWithRegex(file)

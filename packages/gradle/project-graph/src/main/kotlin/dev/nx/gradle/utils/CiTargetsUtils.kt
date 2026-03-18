@@ -23,7 +23,7 @@ fun addTestCiTargets(
     ciTestTargetName: String,
     gitIgnoreClassifier: GitIgnoreClassifier,
     targetNameOverrides: Map<String, String> = emptyMap(),
-    targetNamePrefix: String = ""
+    targetNamePrefix: String = "",
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
@@ -41,7 +41,8 @@ fun addTestCiTargets(
       ciDependsOn,
       gitIgnoreClassifier,
       targetNameOverrides,
-      targetNamePrefix)
+      targetNamePrefix,
+  )
 
   ensureParentCiTarget(
       targets,
@@ -52,7 +53,8 @@ fun addTestCiTargets(
       projectRoot,
       workspaceRoot,
       ciDependsOn,
-      gitIgnoreClassifier)
+      gitIgnoreClassifier,
+  )
 }
 
 private fun processTestFiles(
@@ -67,7 +69,7 @@ private fun processTestFiles(
     ciDependsOn: MutableList<DependsOnEntry>,
     gitIgnoreClassifier: GitIgnoreClassifier,
     targetNameOverrides: Map<String, String>,
-    targetNamePrefix: String
+    targetNamePrefix: String,
 ) {
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
@@ -85,7 +87,8 @@ private fun processTestFiles(
                   workspaceRoot,
                   gitIgnoreClassifier,
                   targetNameOverrides,
-                  targetNamePrefix)
+                  targetNamePrefix,
+              )
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(DependsOnEntry(target = targetName, params = DependsOnParams.FORWARD))
@@ -116,7 +119,7 @@ private fun buildTestCiTarget(
     workspaceRoot: String,
     gitIgnoreClassifier: GitIgnoreClassifier,
     targetNameOverrides: Map<String, String>,
-    targetNamePrefix: String
+    targetNamePrefix: String,
 ): MutableMap<String, Any?> {
   val taskInputs =
       getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
@@ -127,12 +130,17 @@ private fun buildTestCiTarget(
           "options" to
               mapOf(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
-                  "testClassName" to testClassPackagePath),
+                  "testClassName" to testClassPackagePath,
+              ),
           "metadata" to
               getMetadata(
-                  "Runs Gradle test $testClassPackagePath in CI.", projectBuildPath, "test"),
+                  "Runs Gradle test $testClassPackagePath in CI.",
+                  projectBuildPath,
+                  "test",
+              ),
           "cache" to true,
-          "inputs" to taskInputs)
+          "inputs" to taskInputs,
+      )
 
   getOutputsForTask(testTask, projectRoot, workspaceRoot)
       ?.takeIf { it.isNotEmpty() }
@@ -157,7 +165,7 @@ private fun ensureParentCiTarget(
     projectRoot: String,
     workspaceRoot: String,
     ciDependsOn: List<DependsOnEntry>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
 ) {
   if (ciDependsOn.isNotEmpty()) {
     val taskInputs =
@@ -169,7 +177,8 @@ private fun ensureParentCiTarget(
             "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, "test"),
             "cache" to true,
             "inputs" to taskInputs,
-            "dependsOn" to ciDependsOn)
+            "dependsOn" to ciDependsOn,
+        )
 
     targetGroups[testCiTargetGroup]?.add(ciTestTargetName)
 

@@ -27,7 +27,8 @@ class GitIgnoreClassifierTest {
         dist
         build
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     val classifier = GitIgnoreClassifier(tempDir)
 
@@ -58,7 +59,8 @@ class GitIgnoreClassifierTest {
         .gradle
         out
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     val classifier = GitIgnoreClassifier(tempDir)
 
@@ -88,7 +90,8 @@ class GitIgnoreClassifierTest {
         *.log
         **/*.tmp
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     val classifier = GitIgnoreClassifier(tempDir)
 
@@ -116,7 +119,8 @@ class GitIgnoreClassifierTest {
         /build/
         /dist/
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     // Create the directories so they exist
     File(tempDir, "build").mkdirs()
@@ -139,7 +143,8 @@ class GitIgnoreClassifierTest {
         *.log
         !important.log
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     val classifier = GitIgnoreClassifier(tempDir)
 
@@ -185,7 +190,8 @@ class GitIgnoreClassifierTest {
         # OS
         .DS_Store
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     val classifier = GitIgnoreClassifier(tempDir)
 
@@ -261,7 +267,8 @@ class GitIgnoreClassifierTest {
 
         # Yet another comment
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     val classifier = GitIgnoreClassifier(tempDir)
 

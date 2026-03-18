@@ -65,7 +65,13 @@ fun processTask(
 
   val inputs =
       getInputsForTask(
-          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+          dependsOnTasks,
+          task,
+          projectRoot,
+          workspaceRoot,
+          externalNodes,
+          gitIgnoreClassifier,
+      )
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
@@ -75,7 +81,10 @@ fun processTask(
 
   val metadata =
       getMetadata(
-          task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
+          task.description ?: "Run ${projectBuildPath}.${task.name}",
+          projectBuildPath,
+          task.name,
+      )
   target["metadata"] = metadata
 
   target["options"] = buildMap {
@@ -105,7 +114,8 @@ private val GRADLE_INPUT_FILES =
     listOf(
         "gradle/wrapper/gradle-wrapper.jar",
         "gradle/wrapper/gradle-wrapper.properties",
-        "gradle.properties")
+        "gradle.properties",
+    )
 
 /**
  * Get gradle wrapper and properties files that should be included as inputs. These files affect
@@ -136,7 +146,7 @@ fun getInputsForTask(
     projectRoot: String,
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>? = null,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
 ): List<Any>? {
   return try {
     val inputs = mutableListOf<Any>()
@@ -247,7 +257,8 @@ fun getDependsOnTask(task: Task): Set<Task> {
           task.dependsOn.filterIsInstance<Task>().toSet()
         } catch (e: Exception) {
           task.logger.info(
-              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
+              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}"
+          )
           emptySet()
         }
 
@@ -258,7 +269,8 @@ fun getDependsOnTask(task: Task): Set<Task> {
           task.taskDependencies.getDependencies(task)
         } catch (e: UnsupportedOperationException) {
           task.logger.info(
-              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
+              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions"
+          )
           emptySet()
         } catch (e: Exception) {
           task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
@@ -287,15 +299,16 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
-internal val taskDependencyCache =
-    ThreadLocal.withInitial { mutableMapOf<String, List<DependsOnEntry>?>() }
+internal val taskDependencyCache = ThreadLocal.withInitial {
+  mutableMapOf<String, List<DependsOnEntry>?>()
+}
 
 fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
     task: Task,
     dependencies: MutableSet<Dependency>? = null,
     targetNameOverrides: Map<String, String> = emptyMap(),
-    targetNamePrefix: String = ""
+    targetNamePrefix: String = "",
 ): List<DependsOnEntry>? {
 
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
@@ -315,15 +328,19 @@ fun getDependsOnForTask(
     tasks.forEach { depTask ->
       val depProject = depTask.project
 
-      if (task.name != "buildDependents" &&
-          depProject != taskProject &&
-          dependencies != null &&
-          taskProject.buildFile.exists()) {
+      if (
+          task.name != "buildDependents" &&
+              depProject != taskProject &&
+              dependencies != null &&
+              taskProject.buildFile.exists()
+      ) {
         dependencies.add(
             Dependency(
                 taskProject.projectDir.path,
                 depProject.projectDir.path,
-                taskProject.buildFile.path))
+                taskProject.buildFile.path,
+            )
+        )
       }
 
       if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
@@ -338,10 +355,9 @@ fun getDependsOnForTask(
       }
     }
 
-    val crossProjectDependsOn =
-        crossProjectByTarget.map { (targetName, projects) ->
-          DependsOnEntry(target = targetName, projects = projects.distinct())
-        }
+    val crossProjectDependsOn = crossProjectByTarget.map { (targetName, projects) ->
+      DependsOnEntry(target = targetName, projects = projects.distinct())
+    }
 
     return sameProjectDependsOn + crossProjectDependsOn
   }
@@ -398,7 +414,7 @@ fun getMetadata(
     description: String?,
     projectBuildPath: String,
     helpTaskName: String,
-    nonAtomizedTarget: String? = null
+    nonAtomizedTarget: String? = null,
 ): Map<String, Any?> {
   val gradlewCommand = getGradlewCommand()
   return mapOf(
@@ -406,7 +422,8 @@ fun getMetadata(
       "technologies" to arrayOf("gradle"),
       "help" to
           mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${helpTaskName}"),
-      "nonAtomizedTarget" to nonAtomizedTarget)
+      "nonAtomizedTarget" to nonAtomizedTarget,
+  )
 }
 
 /**
@@ -420,7 +437,7 @@ fun getMetadata(
 fun getExternalDepFromInputFile(
     inputFile: String,
     externalNodes: MutableMap<String, ExternalNode>?,
-    logger: org.gradle.api.logging.Logger
+    logger: org.gradle.api.logging.Logger,
 ): String? {
   try {
     val segments = inputFile.split("/")
@@ -509,7 +526,8 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
               val producer = dep.producer
               if (producer.isKnown) {
                 producer.visitProducerTasks(
-                    Action { producerTask -> producerTasks.add(producerTask.path) })
+                    Action { producerTask -> producerTasks.add(producerTask.path) }
+                )
               }
             } catch (e: Exception) {
               logger.debug("Could not get producer from provider: ${e.message}")

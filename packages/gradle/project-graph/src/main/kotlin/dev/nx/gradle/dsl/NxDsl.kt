@@ -16,11 +16,13 @@ internal fun asJson(value: Any?): Any? =
       is Enum<*> -> value.name
       else ->
           throw IllegalArgumentException(
-              "Unsupported JSON value type: ${value::class.qualifiedName}")
+              "Unsupported JSON value type: ${value::class.qualifiedName}"
+          )
     }
 
-internal fun asJsonMap(map: Map<String, *>): Map<String, Any?> =
-    map.mapValues { (_, v) -> asJson(v) }
+internal fun asJsonMap(map: Map<String, *>): Map<String, Any?> = map.mapValues { (_, v) ->
+  asJson(v)
+}
 
 // --- Builders ---
 

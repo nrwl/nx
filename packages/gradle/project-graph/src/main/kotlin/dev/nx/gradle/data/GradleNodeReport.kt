@@ -8,5 +8,5 @@ data class GradleNodeReport(
     @Nested val nodes: Map<String, ProjectNode>,
     @Input val dependencies: Set<Dependency>,
     @Nested val externalNodes: Map<String, ExternalNode>,
-    @Input val buildFiles: List<String>
+    @Input val buildFiles: List<String>,
 ) : Serializable

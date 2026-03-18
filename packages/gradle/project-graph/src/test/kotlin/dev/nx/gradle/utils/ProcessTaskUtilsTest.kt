@@ -30,7 +30,8 @@ class ProcessTaskUtilsTest {
     assertEquals("{projectRoot}/src/main/java", replaceRootInPath(path, projectRoot, workspaceRoot))
     assertEquals(
         "{workspaceRoot}/project/src/main/java",
-        replaceRootInPath(path, "/other/path", workspaceRoot))
+        replaceRootInPath(path, "/other/path", workspaceRoot),
+    )
     assertNull(replaceRootInPath("/external/other", projectRoot, workspaceRoot))
   }
 
@@ -107,7 +108,8 @@ class ProcessTaskUtilsTest {
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
             gitIgnoreClassifier = gitIgnoreClassifier,
-            project = project)
+            project = project,
+        )
 
     assertEquals(true, result["cache"])
     assertEquals(result["executor"], "@nx/gradle:gradle")
@@ -152,7 +154,13 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+          )
 
       assertNotNull(result)
 
@@ -179,7 +187,13 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+          )
 
       assertNotNull(result)
 
@@ -188,8 +202,9 @@ class ProcessTaskUtilsTest {
       assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
 
       // Should only have 2 dependentTasksOutputFiles entries (one per extension)
-      val dependentTasksOutputFilesCount =
-          result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
+      val dependentTasksOutputFilesCount = result.count {
+        it is Map<*, *> && it.containsKey("dependentTasksOutputFiles")
+      }
       assertEquals(2, dependentTasksOutputFilesCount)
     }
 
@@ -220,12 +235,19 @@ class ProcessTaskUtilsTest {
               projectRoot,
               workspaceRoot,
               mutableMapOf(),
-              gitIgnoreClassifier)
+              gitIgnoreClassifier,
+          )
 
       // Test without pre-computed (should compute internally)
       val resultWithoutPreComputed =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+          )
 
       // Both results should be identical
       assertNotNull(resultWithPreComputed)
@@ -236,11 +258,13 @@ class ProcessTaskUtilsTest {
       assertTrue(
           resultWithPreComputed.any {
             it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
-          })
+          }
+      )
       assertTrue(
           resultWithoutPreComputed.any {
             it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
-          })
+          }
+      )
 
       // Should contain the input file
       assertTrue(resultWithPreComputed.any { it == "{projectRoot}/src/main.kt" })
@@ -273,13 +297,16 @@ class ProcessTaskUtilsTest {
 
       // Same-project dependencies use object format without projects field
       assertNotNull(
-          resultWithPreComputed, "Same-project dependsOn should be present (pre-computed)")
+          resultWithPreComputed,
+          "Same-project dependsOn should be present (pre-computed)",
+      )
       assertNotNull(resultWithoutPreComputed, "Same-project dependsOn should be present (computed)")
       assertEquals(2, resultWithPreComputed!!.size)
       assertEquals(2, resultWithoutPreComputed!!.size)
       assertTrue(
           resultWithPreComputed.all { it.projects == null },
-          "Same-project deps should not have projects field")
+          "Same-project deps should not have projects field",
+      )
     }
 
     @Test
@@ -301,7 +328,8 @@ class ProcessTaskUtilsTest {
       val multipleOutputs =
           listOf(
               java.io.File("$workspaceRoot/reports/test.xml"),
-              java.io.File("$workspaceRoot/reports/another.jar"))
+              java.io.File("$workspaceRoot/reports/another.jar"),
+          )
       dependentTask3.outputs.files(multipleOutputs)
 
       // Create main task that depends on all three
@@ -312,7 +340,8 @@ class ProcessTaskUtilsTest {
       val inputFiles =
           listOf(
               java.io.File("$workspaceRoot/src/main.kt"),
-              java.io.File("$workspaceRoot/config/app.properties"))
+              java.io.File("$workspaceRoot/config/app.properties"),
+          )
       mainTask.inputs.files(inputFiles)
 
       // Get dependsOnTasks once and reuse
@@ -325,7 +354,8 @@ class ProcessTaskUtilsTest {
               projectRoot,
               workspaceRoot,
               mutableMapOf(),
-              gitIgnoreClassifier)
+              gitIgnoreClassifier,
+          )
 
       assertNotNull(result)
 
@@ -340,8 +370,9 @@ class ProcessTaskUtilsTest {
 
       // Verify we have exactly 3 dependentTasksOutputFiles entries (one per unique extension: jar,
       // class, xml)
-      val dependentTasksOutputFilesCount =
-          result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
+      val dependentTasksOutputFilesCount = result.count {
+        it is Map<*, *> && it.containsKey("dependentTasksOutputFiles")
+      }
       assertEquals(3, dependentTasksOutputFilesCount)
 
       // Verify we have the expected number of regular input files (2)
@@ -364,7 +395,8 @@ class ProcessTaskUtilsTest {
           *.log
           dist
           """
-              .trimIndent())
+              .trimIndent()
+      )
 
       val mainTask = project.tasks.register("mainTask").get()
 
@@ -382,7 +414,13 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+          )
 
       assertNotNull(result)
 
@@ -412,7 +450,8 @@ class ProcessTaskUtilsTest {
           target
           dist
           """
-              .trimIndent())
+              .trimIndent()
+      )
 
       val mainTask = project.tasks.register("mainTask").get()
 
@@ -427,7 +466,13 @@ class ProcessTaskUtilsTest {
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier,
+          )
 
       assertNotNull(result)
 
@@ -470,7 +515,8 @@ class ProcessTaskUtilsTest {
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
             gitIgnoreClassifier = gitIgnoreClassifier,
-            project = project)
+            project = project,
+        )
 
     assertNotNull(result)
 
@@ -485,7 +531,8 @@ class ProcessTaskUtilsTest {
     assertNotNull(dependsOn, "Same-project dependsOn should be present")
     assertTrue(
         dependsOn!!.any { (it as? DependsOnEntry)?.target == "compile" },
-        "Expected dependsOn to contain 'compile', got $dependsOn")
+        "Expected dependsOn to contain 'compile', got $dependsOn",
+    )
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
@@ -519,7 +566,8 @@ class ProcessTaskUtilsTest {
       val producerProvider =
           project.tasks.register("producer") { task ->
             task.outputs.file(
-                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
+                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar")
+            )
           }
       val consumerProvider = project.tasks.register("consumer")
       consumerProvider.configure { it.dependsOn(producerProvider.map { p -> p.outputs.files }) }
@@ -604,10 +652,12 @@ class ProcessTaskUtilsTest {
         assertEquals(2, result.size, "Expected 2 gradle wrapper files")
         assertTrue(
             result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
-            "Expected gradle-wrapper.jar in $result")
+            "Expected gradle-wrapper.jar in $result",
+        )
         assertTrue(
             result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
-            "Expected gradle-wrapper.properties in $result")
+            "Expected gradle-wrapper.properties in $result",
+        )
       } finally {
         tempDir.deleteRecursively()
       }
@@ -630,7 +680,8 @@ class ProcessTaskUtilsTest {
         assertEquals(1, result.size, "Expected 1 gradle file")
         assertTrue(
             result.contains("{workspaceRoot}/gradle.properties"),
-            "Expected gradle.properties in $result")
+            "Expected gradle.properties in $result",
+        )
       } finally {
         tempDir.deleteRecursively()
       }
@@ -657,12 +708,16 @@ class ProcessTaskUtilsTest {
         assertEquals(3, result.size, "Expected 3 gradle files")
         assertTrue(
             result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
-            "Expected gradle-wrapper.jar")
+            "Expected gradle-wrapper.jar",
+        )
         assertTrue(
             result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
-            "Expected gradle-wrapper.properties")
+            "Expected gradle-wrapper.properties",
+        )
         assertTrue(
-            result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
+            result.contains("{workspaceRoot}/gradle.properties"),
+            "Expected gradle.properties",
+        )
       } finally {
         tempDir.deleteRecursively()
       }
@@ -693,15 +748,23 @@ class ProcessTaskUtilsTest {
         val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
         val result =
             getInputsForTask(
-                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+                null,
+                mainTask,
+                projectRoot,
+                workspaceRoot,
+                mutableMapOf(),
+                gitIgnoreClassifier,
+            )
 
         assertNotNull(result)
         assertTrue(
             result!!.any { it == "{workspaceRoot}/gradle.properties" },
-            "Expected gradle.properties in inputs: $result")
+            "Expected gradle.properties in inputs: $result",
+        )
         assertTrue(
             result.any { it == "{projectRoot}/src/main.kt" },
-            "Expected src/main.kt in inputs: $result")
+            "Expected src/main.kt in inputs: $result",
+        )
       } finally {
         tempDir.deleteRecursively()
       }
@@ -730,16 +793,24 @@ class ProcessTaskUtilsTest {
         val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
         val result =
             getInputsForTask(
-                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+                null,
+                mainTask,
+                projectRoot,
+                workspaceRoot,
+                mutableMapOf(),
+                gitIgnoreClassifier,
+            )
 
         assertNotNull(result)
         // Should have src/main.kt but no gradle files
         assertTrue(
             result!!.any { it == "{projectRoot}/src/main.kt" },
-            "Expected src/main.kt in inputs: $result")
+            "Expected src/main.kt in inputs: $result",
+        )
         assertFalse(
             result.any { it.toString().contains("gradle") },
-            "Did not expect any gradle files in inputs: $result")
+            "Did not expect any gradle files in inputs: $result",
+        )
       } finally {
         tempDir.deleteRecursively()
       }
@@ -819,10 +890,14 @@ class ProcessTaskUtilsTest {
         assertNotNull(dependsOn)
         val libEntry = dependsOn!!.find { it.target == "compileJava" }
         assertNotNull(
-            libEntry, "Expected dependsOn entry with target 'compileJava' but got $dependsOn")
+            libEntry,
+            "Expected dependsOn entry with target 'compileJava' but got $dependsOn",
+        )
         assertNotNull(libEntry!!.projects, "Expected 'projects' field for cross-project dependency")
         assertTrue(
-            libEntry.projects!!.contains(":lib"), "Expected project ':lib' in ${libEntry.projects}")
+            libEntry.projects!!.contains(":lib"),
+            "Expected project ':lib' in ${libEntry.projects}",
+        )
       } finally {
         rootDir.deleteRecursively()
       }

@@ -37,7 +37,7 @@ fun isKotlinCompilerAvailable(logger: org.gradle.api.logging.Logger? = null): Bo
 fun parseKotlinFileWithAst(
     file: File,
     psiManager: PsiManager,
-    logger: org.gradle.api.logging.Logger? = null
+    logger: org.gradle.api.logging.Logger? = null,
 ): MutableMap<String, String>? {
   return try {
     val content = file.readText()
@@ -50,7 +50,8 @@ fun parseKotlinFileWithAst(
           psiManager.findFile(virtualFile) as? KtFile
         } catch (e: Exception) {
           logger?.warn(
-              "PSI parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+              "PSI parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}"
+          )
           return null
         } ?: return null
 
@@ -65,7 +66,8 @@ fun parseKotlinFileWithAst(
   } catch (e: Exception) {
     // Fall back to regex parsing if AST parsing fails
     logger?.warn(
-        "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+        "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}"
+    )
     null
   }
 }
@@ -78,7 +80,10 @@ fun createKotlinEnvironment():
     val compilerConfiguration = CompilerConfiguration()
     val environment =
         KotlinCoreEnvironment.createForProduction(
-            disposable, compilerConfiguration, EnvironmentConfigFiles.JVM_CONFIG_FILES)
+            disposable,
+            compilerConfiguration,
+            EnvironmentConfigFiles.JVM_CONFIG_FILES,
+        )
     val psiManager = PsiManager.getInstance(environment.project)
     disposable to psiManager
   } catch (e: Exception) {
@@ -90,7 +95,7 @@ private fun processClass(
     ktClass: KtClass,
     packageName: String,
     parentClass: KtClass?,
-    result: MutableMap<String, String>
+    result: MutableMap<String, String>,
 ) {
   val className = ktClass.name ?: return
 
@@ -100,10 +105,12 @@ private fun processClass(
   }
 
   // Only include regular classes - skip data classes, object declarations, enum classes, etc.
-  if (ktClass.hasModifier(KtTokens.DATA_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.ENUM_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.SEALED_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.ABSTRACT_KEYWORD)) {
+  if (
+      ktClass.hasModifier(KtTokens.DATA_KEYWORD) ||
+          ktClass.hasModifier(KtTokens.ENUM_KEYWORD) ||
+          ktClass.hasModifier(KtTokens.SEALED_KEYWORD) ||
+          ktClass.hasModifier(KtTokens.ABSTRACT_KEYWORD)
+  ) {
     return
   }
 

@@ -60,7 +60,8 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
             targetNameOverrides.get(),
             workspaceRoot.get(),
             atomized.get(),
-            targetNamePrefix.get()) // Compute report at execution time
+            targetNamePrefix.get(),
+        ) // Compute report at execution time
     val reportJson = gson.toJson(report)
 
     if (outputFile.exists() && outputFile.readText() == reportJson) {

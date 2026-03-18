@@ -4,5 +4,5 @@ data class TaskResult(
     val success: Boolean,
     val startTime: Long,
     val endTime: Long,
-    var terminalOutput: String
+    var terminalOutput: String,
 )

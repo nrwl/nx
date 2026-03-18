@@ -20,7 +20,7 @@ object OutputProcessor {
       globalOutput: String,
       errorStream: ByteArrayOutputStream,
       globalStart: Long,
-      globalEnd: Long
+      globalEnd: Long,
   ): Map<String, TaskResult> {
     val perTaskOutput = splitOutputPerTask(globalOutput)
 
@@ -43,7 +43,8 @@ object OutputProcessor {
                   success = false,
                   startTime = globalStart,
                   endTime = globalEnd,
-                  terminalOutput = finalOutput)
+                  terminalOutput = finalOutput,
+              )
     }
 
     return taskResults

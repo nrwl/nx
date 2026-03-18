@@ -41,7 +41,8 @@ class CompileTestCiTargetsTest {
                 fun testService() {}
               }
               """
-                  .trimIndent())
+                  .trimIndent()
+          )
         }
 
     val testFile2 =
@@ -57,7 +58,8 @@ class CompileTestCiTargetsTest {
                 fun testRepository() {}
               }
               """
-                  .trimIndent())
+                  .trimIndent()
+          )
         }
 
     val testFiles = project.files(testFile1, testFile2)
@@ -75,7 +77,8 @@ class CompileTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        gitIgnoreClassifier = gitIgnoreClassifier,
+    )
 
     // Should generate targets based on JUnit discovery and AST parsing
     assertTrue(targets.containsKey("ci--UserServiceTest"))
@@ -131,7 +134,8 @@ class CompileTestCiTargetsTest {
             project = project,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = true)
+            atomized = true,
+        )
 
     // Should succeed without errors and always try compiled test analysis
     // Verify that the report was generated successfully (contains nodes or is valid empty report)

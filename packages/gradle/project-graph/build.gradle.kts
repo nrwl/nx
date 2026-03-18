@@ -54,7 +54,8 @@ afterEvaluate {
       pom {
         name.set("Nx Gradle Project Graph Plugin")
         description.set(
-            "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx")
+            "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx"
+        )
         url.set("https://github.com/nrwl/nx")
 
         licenses { license { name.set("MIT") } }
@@ -87,7 +88,8 @@ afterEvaluate {
       pom {
         name.set("Nx Gradle Project Graph Plugin")
         description.set(
-            "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx")
+            "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx"
+        )
         url.set("https://github.com/nrwl/nx")
 
         licenses { license { name.set("MIT") } }

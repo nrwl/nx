@@ -32,9 +32,11 @@ private fun buildDependenciesForProject(project: Project): Set<Dependency> {
               if (requested is ProjectComponentSelector) {
                 val dependentProject = project.findProject(requested.projectPath)
 
-                if (dependentProject != null &&
-                    dependentProject.projectDir.exists() &&
-                    dependentProject.buildFile.exists()) {
+                if (
+                    dependentProject != null &&
+                        dependentProject.projectDir.exists() &&
+                        dependentProject.buildFile.exists()
+                ) {
 
                   val targetPath = dependentProject.projectDir.absolutePath
 
@@ -43,7 +45,8 @@ private fun buildDependenciesForProject(project: Project): Set<Dependency> {
                           source = sourcePath,
                           target = targetPath,
                           sourceFile = sourceFilePath,
-                      ))
+                      )
+                  )
                 }
               }
             }

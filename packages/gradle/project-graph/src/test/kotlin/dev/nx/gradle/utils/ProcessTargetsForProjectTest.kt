@@ -55,7 +55,8 @@ class ProcessTargetsForProjectTest {
         mapOf(
             "ciTestTargetName" to "ci-test",
             "ciCheckTargetName" to "ci-check",
-            "ciBuildTargetName" to "ci-build")
+            "ciBuildTargetName" to "ci-build",
+        )
 
     val dependencies = mutableSetOf<Dependency>() // Empty for this test's scope
 
@@ -66,20 +67,24 @@ class ProcessTargetsForProjectTest {
             dependencies = dependencies,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = true)
+            atomized = true,
+        )
 
     // Assert
     // Verify 'ci-test' should not be presented
     // But 'ci-check' and 'ci-build' targets should be present in the returned targets
     assertNull(
         gradleTargets.targets["ci-test"],
-        "Expected ci-test target to NOT be present in processed targets")
+        "Expected ci-test target to NOT be present in processed targets",
+    )
     assertNotNull(
         gradleTargets.targets["ci-check"],
-        "Expected ci-check target to be present in processed targets")
+        "Expected ci-check target to be present in processed targets",
+    )
     assertNotNull(
         gradleTargets.targets["ci-build"],
-        "Expected ci-build target to be present in processed targets")
+        "Expected ci-build target to be present in processed targets",
+    )
 
     // Same-project dependsOn are included as object format without projects field
     val checkTarget = gradleTargets.targets["check"]
@@ -94,7 +99,8 @@ class ProcessTargetsForProjectTest {
     assertNotNull(checkCiDependsOn, "Check CI dependsOn should not be null in processed targets")
     assertTrue(
         checkCiDependsOn.any { (it as? DependsOnEntry)?.target == "ci-test" },
-        "Expected 'ci-check' to depend on 'ci-test' in processed targets, got $checkCiDependsOn")
+        "Expected 'ci-check' to depend on 'ci-test' in processed targets, got $checkCiDependsOn",
+    )
 
     val buildCiTarget = gradleTargets.targets["ci-build"]
     assertNotNull(buildCiTarget, "Build CI target should exist in processed targets")
@@ -102,7 +108,8 @@ class ProcessTargetsForProjectTest {
     assertNotNull(buildCiDependsOn, "Build CI dependsOn should not be null in processed targets")
     assertTrue(
         buildCiDependsOn.any { (it as? DependsOnEntry)?.target == "ci-check" },
-        "Expected 'ci-build' to depend on 'ci-check' in processed targets, got $buildCiDependsOn")
+        "Expected 'ci-build' to depend on 'ci-check' in processed targets, got $buildCiDependsOn",
+    )
   }
 
   @Test
@@ -150,7 +157,8 @@ class ProcessTargetsForProjectTest {
         mapOf(
             "ciTestTargetName" to "ci-test",
             "ciCheckTargetName" to "ci-check",
-            "ciBuildTargetName" to "ci-build")
+            "ciBuildTargetName" to "ci-build",
+        )
 
     val dependencies = mutableSetOf<Dependency>() // Empty for this test's scope
 
@@ -161,13 +169,15 @@ class ProcessTargetsForProjectTest {
             dependencies = dependencies,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = false) // Test with atomized = false
+            atomized = false,
+        ) // Test with atomized = false
 
     // Assert
     // Verify that individual atomized targets are NOT created
     assertFalse(
         gradleTargets.targets.containsKey("ci--MyFirstTest"),
-        "Expected ci--MyFirstTest target NOT to be present in processed targets")
+        "Expected ci--MyFirstTest target NOT to be present in processed targets",
+    )
 
     // Verify 'test' and 'check' targets are present but not their 'ci' counterparts if atomized is
     // false
@@ -180,13 +190,16 @@ class ProcessTargetsForProjectTest {
     // regardless of atomized value
     assertFalse(
         gradleTargets.targets.containsKey("ci-test"),
-        "Expected ci-test target NOT to be present as a main target")
+        "Expected ci-test target NOT to be present as a main target",
+    )
     assertTrue(
         gradleTargets.targets.containsKey("ci-check"),
-        "Expected ci-check target to be present as a main target")
+        "Expected ci-check target to be present as a main target",
+    )
     assertTrue(
         gradleTargets.targets.containsKey("ci-build"),
-        "Expected ci-build target to be present as a main target")
+        "Expected ci-build target to be present as a main target",
+    )
 
     // Same-project dependsOn are included as object format without projects field
     val checkTarget = gradleTargets.targets["check"]
@@ -202,10 +215,12 @@ class ProcessTargetsForProjectTest {
     // When atomized is false, ci-check should depend on 'test' (not 'ci-test')
     assertFalse(
         checkCiDependsOn.any { (it as? DependsOnEntry)?.target == "ci-test" },
-        "Expected 'ci-check' to NOT depend on 'ci-test' in processed targets")
+        "Expected 'ci-check' to NOT depend on 'ci-test' in processed targets",
+    )
     assertTrue(
         checkCiDependsOn.any { (it as? DependsOnEntry)?.target == "test" },
-        "Expected 'ci-check' to depend on 'test' in processed targets, got $checkCiDependsOn")
+        "Expected 'ci-check' to depend on 'test' in processed targets, got $checkCiDependsOn",
+    )
 
     val buildCiTarget = gradleTargets.targets["ci-build"]
     assertNotNull(buildCiTarget, "Build CI target should exist in processed targets")
@@ -213,7 +228,8 @@ class ProcessTargetsForProjectTest {
     assertNotNull(buildCiDependsOn, "Build CI dependsOn should not be null in processed targets")
     assertTrue(
         buildCiDependsOn.any { (it as? DependsOnEntry)?.target == "ci-check" },
-        "Expected 'ci-build' to depend on 'ci-check' in processed targets, got $buildCiDependsOn")
+        "Expected 'ci-build' to depend on 'ci-check' in processed targets, got $buildCiDependsOn",
+    )
   }
 
   @Test
@@ -304,7 +320,8 @@ class ProcessTargetsForProjectTest {
             dependencies = dependencies,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = true)
+            atomized = true,
+        )
 
     // Assert
     // CI test targets should be created as group targets when atomized
@@ -312,10 +329,12 @@ class ProcessTargetsForProjectTest {
     // But ci-test and ci-test-integrationTest should exist as parent targets
     assertNotNull(
         gradleTargets.targets["ci-test"],
-        "Expected ci-test target to be present for default test task")
+        "Expected ci-test target to be present for default test task",
+    )
     assertNotNull(
         gradleTargets.targets["ci-test-integrationTest"],
-        "Expected ci-test-integrationTest target to be present for integration test task")
+        "Expected ci-test-integrationTest target to be present for integration test task",
+    )
 
     // Check that ci-check depends on both ci test targets
     val checkCiTarget = gradleTargets.targets["ci-check"]
@@ -325,24 +344,30 @@ class ProcessTargetsForProjectTest {
 
     assertTrue(
         checkCiDependsOn.any { (it as? DependsOnEntry)?.target == "ci-test" },
-        "Expected 'ci-check' to depend on 'ci-test' in processed targets, got $checkCiDependsOn")
+        "Expected 'ci-check' to depend on 'ci-test' in processed targets, got $checkCiDependsOn",
+    )
     assertTrue(
         checkCiDependsOn.any { (it as? DependsOnEntry)?.target == "ci-test-integrationTest" },
-        "Expected 'ci-check' to depend on 'ci-test-integrationTest' in processed targets, got $checkCiDependsOn")
+        "Expected 'ci-check' to depend on 'ci-test-integrationTest' in processed targets, got $checkCiDependsOn",
+    )
 
     // Verify that individual atomized test targets exist
     assertTrue(
         gradleTargets.targets.containsKey("ci-test--UnitTest1"),
-        "Expected atomized target ci-test--UnitTest1 to exist")
+        "Expected atomized target ci-test--UnitTest1 to exist",
+    )
     assertTrue(
         gradleTargets.targets.containsKey("ci-test--UnitTest2"),
-        "Expected atomized target ci-test--UnitTest2 to exist")
+        "Expected atomized target ci-test--UnitTest2 to exist",
+    )
     assertTrue(
         gradleTargets.targets.containsKey("ci-test-integrationTest--IntegrationTest1"),
-        "Expected atomized target ci-test-integrationTest--IntegrationTest1 to exist")
+        "Expected atomized target ci-test-integrationTest--IntegrationTest1 to exist",
+    )
     assertTrue(
         gradleTargets.targets.containsKey("ci-test-integrationTest--IntegrationTest2"),
-        "Expected atomized target ci-test-integrationTest--IntegrationTest2 to exist")
+        "Expected atomized target ci-test-integrationTest--IntegrationTest2 to exist",
+    )
   }
 
   @Test
@@ -384,7 +409,8 @@ class ProcessTargetsForProjectTest {
         mapOf(
             "ciTestTargetName" to "ci-test",
             "ciCheckTargetName" to "ci-check",
-            "ciBuildTargetName" to "ci-build")
+            "ciBuildTargetName" to "ci-build",
+        )
     val dependencies = mutableSetOf<Dependency>()
 
     val gradleTargets =
@@ -393,13 +419,15 @@ class ProcessTargetsForProjectTest {
             dependencies = dependencies,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = true)
+            atomized = true,
+        )
 
     // Same-project dependsOn are included as object format without projects field
     // CI targets compute dependencies directly from Gradle's task graph
     val ciCheckDependsOn = gradleTargets.targets["ci-check"]?.get("dependsOn") as? List<*>
     assertTrue(
         ciCheckDependsOn?.any { (it as? DependsOnEntry)?.target == "ci-test" } == true,
-        "Expected ci-check to depend on 'ci-test', got $ciCheckDependsOn")
+        "Expected ci-check to depend on 'ci-test', got $ciCheckDependsOn",
+    )
   }
 }

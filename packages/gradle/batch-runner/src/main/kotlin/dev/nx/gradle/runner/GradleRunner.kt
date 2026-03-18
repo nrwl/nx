@@ -15,7 +15,7 @@ fun runTasksInParallel(
     tasks: Map<String, GradleTask>,
     additionalArgs: String,
     excludeTasks: List<String>,
-    excludeTestTasks: List<String>
+    excludeTestTasks: List<String>,
 ): Map<String, TaskResult> {
   logger.info("▶️ Running all tasks in a single Gradle run: ${tasks.keys.joinToString(", ")}")
 
@@ -41,7 +41,8 @@ fun runTasksInParallel(
           "--continue",
           "-Dorg.gradle.daemon.idletimeout=0",
           "--parallel",
-          "-Dorg.gradle.workers.max=$workersMax")
+          "-Dorg.gradle.workers.max=$workersMax",
+      )
 
   if (additionalArgs.isNotBlank()) {
     val splitResult = additionalArgs.split(" ")
@@ -61,7 +62,8 @@ fun runTasksInParallel(
             args,
             excludeTasks,
             outputStream1,
-            errorStream1)
+            errorStream1,
+        )
     allResults.putAll(buildResults)
   }
 
@@ -73,7 +75,8 @@ fun runTasksInParallel(
             args,
             excludeTestTasks,
             outputStream2,
-            errorStream2)
+            errorStream2,
+        )
     allResults.putAll(testResults)
   }
 
@@ -86,7 +89,7 @@ fun runBuildLauncher(
     args: List<String>,
     excludeTasks: List<String>,
     outputStream: ByteArrayOutputStream,
-    errorStream: ByteArrayOutputStream
+    errorStream: ByteArrayOutputStream,
 ): Map<String, TaskResult> {
   val taskNames = tasks.values.map { it.taskName }.distinct().toTypedArray()
   logger.info("📋 Collected ${taskNames.size} unique task names: ${taskNames.joinToString(", ")}")
@@ -125,9 +128,11 @@ fun runBuildLauncher(
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
   val minStartTime = taskResults.values.map { it.startTime }.minOrNull() ?: globalStart
   logger.info(
-      "⏱️ Build start timing gap: ${minStartTime - globalStart}ms (time between first task start and build launcher start) ")
+      "⏱️ Build start timing gap: ${minStartTime - globalStart}ms (time between first task start and build launcher start) "
+  )
   logger.info(
-      "⏱️ Build completion timing gap: ${globalEnd - maxEndTime}ms (time between last task finish and build end)")
+      "⏱️ Build completion timing gap: ${globalEnd - maxEndTime}ms (time between last task finish and build end)"
+  )
 
   finalizeTaskResults(
       tasks = tasks,
@@ -135,7 +140,8 @@ fun runBuildLauncher(
       globalOutput = globalOutput,
       errorStream = errorStream,
       globalStart = globalStart,
-      globalEnd = globalEnd)
+      globalEnd = globalEnd,
+  )
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
@@ -147,7 +153,7 @@ fun runTestLauncher(
     args: List<String>,
     excludeTestTasks: List<String>,
     outputStream: ByteArrayOutputStream,
-    errorStream: ByteArrayOutputStream
+    errorStream: ByteArrayOutputStream,
 ): Map<String, TaskResult> {
   val testTaskStatus = mutableMapOf<String, Boolean>()
   val testStartTimes = mutableMapOf<String, Long>()
@@ -174,11 +180,14 @@ fun runTestLauncher(
           addArguments("-Djunit.jupiter.execution.parallel.enabled=true") // Add JUnit 5 parallelism
           // arguments here
           addArguments(
-              *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
+              *(args + excludeArgs).toTypedArray()
+          ) // Combine your existing args with JUnit args
           setStandardOutput(TeeOutputStream(outputStream, System.err))
           setStandardError(TeeOutputStream(errorStream, System.err))
           addProgressListener(
-              testListener(tasks, testTaskStatus, testStartTimes, testEndTimes), eventTypes)
+              testListener(tasks, testTaskStatus, testStartTimes, testEndTimes),
+              eventTypes,
+          )
           withDetailedFailure()
         }
         .run()
@@ -200,9 +209,11 @@ fun runTestLauncher(
   val maxEndTime = testEndTimes.values.maxOrNull() ?: globalEnd
   val minStartTime = testStartTimes.values.minOrNull() ?: globalStart
   logger.info(
-      "⏱️ Test start timing gap: ${minStartTime - globalStart}ms (time between first test start and test launcher start) ")
+      "⏱️ Test start timing gap: ${minStartTime - globalStart}ms (time between first test start and test launcher start) "
+  )
   logger.info(
-      "⏱️ Test completion timing gap: ${globalEnd - maxEndTime}ms (time between last test finish and test launcher end)")
+      "⏱️ Test completion timing gap: ${globalEnd - maxEndTime}ms (time between last test finish and test launcher end)"
+  )
 
   val taskResults = mutableMapOf<String, TaskResult>()
   tasks.forEach { (nxTaskId, taskConfig) ->
@@ -221,7 +232,8 @@ fun runTestLauncher(
       globalOutput = globalOutput,
       errorStream = errorStream,
       globalStart = globalStart,
-      globalEnd = globalEnd)
+      globalEnd = globalEnd,
+  )
 
   logger.info("\u2705 Finished test tasks")
   return taskResults

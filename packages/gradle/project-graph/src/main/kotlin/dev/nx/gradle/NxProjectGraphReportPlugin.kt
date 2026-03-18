@@ -16,7 +16,8 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
               project.findProperty("hash")?.toString()
                   ?: run {
                     project.logger.warn(
-                        "No 'hash' property was provided for $project. Using default hash value: 'default-hash'")
+                        "No 'hash' property was provided for $project. Using default hash value: 'default-hash'"
+                    )
                     "default-hash"
                   }
 
@@ -24,7 +25,8 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
               project.findProperty("workspaceRoot")?.toString()
                   ?: run {
                     project.logger.warn(
-                        "No 'workspaceRoot' property was provided for $project. Using default hash value: ${System.getProperty("user.dir")}")
+                        "No 'workspaceRoot' property was provided for $project. Using default hash value: ${System.getProperty("user.dir")}"
+                    )
                     System.getProperty("user.dir")
                   }
 
@@ -42,12 +44,11 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
           task.targetNamePrefix.set(targetNamePrefix)
           task.workspaceRoot.set(workspaceRootProperty)
 
-          val conflictingTargetNames =
-              targetNameOverrides.filter { (propertyKey, overrideValue) ->
-                val originalTaskName = propertyKey.removeSuffix("TargetName")
-                // Check if the override value conflicts with a different existing task
-                overrideValue != originalTaskName && project.tasks.any { it.name == overrideValue }
-              }
+          val conflictingTargetNames = targetNameOverrides.filter { (propertyKey, overrideValue) ->
+            val originalTaskName = propertyKey.removeSuffix("TargetName")
+            // Check if the override value conflicts with a different existing task
+            overrideValue != originalTaskName && project.tasks.any { it.name == overrideValue }
+          }
 
           if (conflictingTargetNames.isNotEmpty()) {
             val conflicts =
@@ -55,7 +56,8 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
                   "'$overrideValue' (from property '$propertyKey')"
                 }
             throw GradleException(
-                "Target name overrides from your gradle plugin configuration conflict with existing gradle tasks: $conflicts. Please rename your overrides to prevent name collision.")
+                "Target name overrides from your gradle plugin configuration conflict with existing gradle tasks: $conflicts. Please rename your overrides to prevent name collision."
+            )
           }
 
           task.description = "Create Nx project report for ${project.name}"

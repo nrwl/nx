@@ -42,5 +42,6 @@ fun parseArgs(args: Array<String>): NxBatchOptions {
       args = argMap["--args"] ?: "",
       quiet = argMap["--quiet"]?.toBoolean() ?: false,
       excludeTasks = excludeTasks,
-      excludeTestTasks = excludeTestTasks)
+      excludeTestTasks = excludeTestTasks,
+  )
 }

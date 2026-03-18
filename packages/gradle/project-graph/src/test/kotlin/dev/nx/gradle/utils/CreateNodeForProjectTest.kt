@@ -34,7 +34,8 @@ class CreateNodeForProjectTest {
             project = project,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = true)
+            atomized = true,
+        )
 
     // Assert
     val projectRoot = project.projectDir.absolutePath
@@ -74,7 +75,8 @@ class CreateNodeForProjectTest {
             project = appProject,
             targetNameOverrides = emptyMap(),
             workspaceRoot = workspaceRoot,
-            atomized = false)
+            atomized = false,
+        )
 
     val projectNode = result.nodes[appProject.projectDir.absolutePath]
     assertNotNull(projectNode)
