@@ -8,7 +8,7 @@
       "command": "node ./scripts/copy-readme.js plugin",
       "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",

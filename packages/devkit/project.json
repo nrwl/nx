@@ -7,10 +7,10 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
       "command": "node ./scripts/copy-readme.js devkit",
-      "dependsOn": ["^build", "build-base", "legacy-post-build"]
+      "dependsOn": ["^build", "build-base", "legacy-pre-build"]
     },
 
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",

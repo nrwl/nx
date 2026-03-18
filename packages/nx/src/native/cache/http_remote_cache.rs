@@ -226,7 +226,12 @@ impl HttpRemoteCache {
                 let path_on_disk = output_dir.join(entry_path);
                 trace!("Extracting entry to {}", path_on_disk.display());
                 fs::create_dir_all(path_on_disk.parent().expect("This will have a parent, we just joined it above so there is at least one dir."))?;
-                // Ensure the directory exists before extracting
+                // Use current mtime instead of the archived mtime.
+                // tsc --build checks if source files are newer than outputs
+                // to determine staleness. Preserved mtimes from the archive
+                // can be older than freshly cloned source files, causing
+                // false TS6305 "output has not been built from source" errors.
+                entry.set_preserve_mtime(false);
                 match entry.unpack(&path_on_disk) {
                     Err(e) => {
                         return Err(anyhow::anyhow!("Failed to unpack entry: {}", e));
