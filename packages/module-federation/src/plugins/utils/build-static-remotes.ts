@@ -39,7 +39,6 @@ export async function buildStaticRemotes(
           ...process.env,
           WEBPACK_SERVE: 'false',
         },
-        windowsHide: true,
       }
     );
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'

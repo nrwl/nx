@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 
 export function resolveEas(workspaceRoot: string): string {
   try {
-    execSync('eas --version');
+    execSync('eas --version', { windowsHide: true });
   } catch {
     throw new Error(
       'EAS is not installed. Please run `npm install --global eas-cli` or `yarn global add eas-cli`.'
