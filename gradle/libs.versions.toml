@@ -3,17 +3,17 @@
 
 [versions]
 kotlin = "2.2.10"
-gson = "2.10.1"
-javaparser = "3.25.8"
-junit = "5.10.1"
-kotlinx-coroutines = "1.7.3"
-slf4j = "1.7.10"
-gradle-tooling-api = "8.13"
-shadow = "8.1.1"
+gson = "2.13.1"
+javaparser = "3.27.0"
+junit = "5.12.2"
+kotlinx-coroutines = "1.10.2"
+slf4j = "2.0.17"
+gradle-tooling-api = "9.4.0"
+shadow = "9.4.0"
 ktfmt = "0.52.0"
 nx-project-graph = "0.1.15"
-gradle-plugin-publish = "1.2.1"
-jgit = "6.8.0.202311291450-r"
+gradle-plugin-publish = "2.1.0"
+jgit = "7.3.0.202506031305-r"
 
 [libraries]
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
@@ -28,7 +28,7 @@ jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "+" }
 nx-project-graph = { id = "dev.nx.gradle.project-graph", version.ref = "nx-project-graph" }
 gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }

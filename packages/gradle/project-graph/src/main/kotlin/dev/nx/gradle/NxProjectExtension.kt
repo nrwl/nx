@@ -39,7 +39,7 @@ import org.gradle.api.provider.MapProperty
  */
 open class NxProjectExtension @Inject constructor(objects: ObjectFactory) {
   /** JSON root for project-level Nx config */
-  val json: MapProperty<String, Any?> = objects.mapProperty(String::class.java, Any::class.java)
+  val json: MapProperty<String, Any> = objects.mapProperty(String::class.java, Any::class.java)
 
   // DSL methods for building JSON config
 
@@ -65,7 +65,8 @@ open class NxProjectExtension @Inject constructor(objects: ObjectFactory) {
     json.put(key, arr)
   }
 
-  fun merge(map: Map<String, Any?>) = json.putAll(asJsonMap(map))
+  fun merge(map: Map<String, Any?>) =
+      json.putAll(asJsonMap(map).filterValues { it != null }.mapValues { it.value!! })
 }
 
 /**
