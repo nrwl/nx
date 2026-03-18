@@ -68,15 +68,17 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash> {
     const plans = this.planner.getPlansReference([task.id], taskGraph);
-    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
+    const shouldCollectInputs =
+      collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
     const hashes = this.hasher.hashPlans(
       plans,
       env,
       cwd ?? process.cwd(),
-      collectInputs
+      shouldCollectInputs
     );
 
     return hashes[task.id];
@@ -86,18 +88,20 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash[]> {
     const plans = this.planner.getPlansReference(
       tasks.map((t) => t.id),
       taskGraph
     );
-    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
+    const shouldCollectInputs =
+      collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
     const hashes = this.hasher.hashPlans(
       plans,
       env,
       cwd ?? process.cwd(),
-      collectInputs
+      shouldCollectInputs
     );
     return tasks.map((t) => hashes[t.id]);
   }
