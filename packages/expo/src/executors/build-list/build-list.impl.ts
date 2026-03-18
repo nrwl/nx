@@ -48,7 +48,6 @@ export function runCliBuildList(
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: ['inherit', 'pipe', 'inherit', 'ipc'], // only stream stdout on child process
-        windowsHide: true,
       }
     );
 

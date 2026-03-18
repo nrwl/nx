@@ -54,7 +54,6 @@ export function prebuildAsync(
       {
         cwd: join(workspaceRoot, projectRoot),
         env: process.env,
-        windowsHide: true,
       }
     );
 

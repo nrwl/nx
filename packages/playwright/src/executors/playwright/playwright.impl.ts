@@ -146,7 +146,6 @@ function runPlaywright(args: string[], cwd: string, env?: NodeJS.ProcessEnv) {
       stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
       cwd,
       ...(env ? { env } : {}),
-      windowsHide: true,
     });
   } catch (e) {
     console.error(e);

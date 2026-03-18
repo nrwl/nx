@@ -10,9 +10,6 @@ ruleTester.run(RULE_NAME, rule, {
     // spawn with windowsHide: true
     `import { spawn } from 'child_process';
      spawn('echo', ['hello'], { stdio: 'inherit', windowsHide: true });`,
-    // fork with windowsHide: true
-    `import { fork } from 'child_process';
-     fork('script.js', { stdio: 'inherit', windowsHide: true });`,
     // execSync with windowsHide: true
     `import { execSync } from 'child_process';
      execSync('echo hello', { windowsHide: true });`,
@@ -21,6 +18,10 @@ ruleTester.run(RULE_NAME, rule, {
      spawnSync('echo', ['hello'], { windowsHide: true });`,
     // Not a spawn function, should not report
     `someOtherFunction({ stdio: 'inherit' });`,
+    // Variable as last arg (could be options) - skip
+    `import { spawn } from 'child_process';
+     const opts = { windowsHide: true };
+     spawn('echo', ['hello'], opts);`,
     // Test file should be ignored
     {
       code: `import { spawn } from 'child_process';
@@ -41,16 +42,23 @@ ruleTester.run(RULE_NAME, rule, {
              spawn('echo', ['hello'], { stdio: 'inherit', windowsHide: false });`,
       errors: [{ messageId: 'windowsHideMustBeTrue' }],
     },
-    // fork missing windowsHide
-    {
-      code: `import { fork } from 'child_process';
-             fork('script.js', { stdio: ['inherit', 'pipe', 'pipe', 'ipc'] });`,
-      errors: [{ messageId: 'missingWindowsHide' }],
-    },
     // execSync missing windowsHide
     {
       code: `import { execSync } from 'child_process';
              execSync('echo hello', { encoding: 'utf-8' });`,
+      errors: [{ messageId: 'missingWindowsHide' }],
+    },
+    // execSync with no options at all
+    {
+      code: `import { execSync } from 'child_process';
+             execSync('echo hello');`,
+      errors: [{ messageId: 'missingWindowsHide' }],
+    },
+    // spawn with variable command but no options
+    {
+      code: `import { spawn } from 'child_process';
+             const cmd = 'echo';
+             spawn(cmd, ['hello']);`,
       errors: [{ messageId: 'missingWindowsHide' }],
     },
     // Member expression: child_process.spawn

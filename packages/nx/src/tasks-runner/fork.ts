@@ -18,7 +18,6 @@ const childProcess = fork(script, {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
   env: process.env,
   execArgv,
-  windowsHide: true,
 });
 
 const pseudoIPC = new PseudoIPCClient(pseudoIPCPath);

@@ -246,7 +246,6 @@ export default async function* fileServerExecutor(
       FORCE_COLOR: 'true',
       ...process.env,
     },
-    windowsHide: true,
   });
 
   const processExitListener = () => {

@@ -34,7 +34,6 @@ async function runBuild(
     const p = fork(remixBin, args, {
       cwd: join(context.root, projectRoot),
       stdio: 'inherit',
-      windowsHide: true,
     });
     p.on('exit', (code) => {
       if (code === 0) resolve();

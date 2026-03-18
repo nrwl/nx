@@ -52,7 +52,6 @@ function startAsync(
           RCT_METRO_PORT: options.port.toString(),
           ...process.env,
         },
-        windowsHide: true,
       }
     );
 

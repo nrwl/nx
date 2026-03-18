@@ -6,7 +6,6 @@ export const RULE_NAME = 'require-windows-hide';
 const SPAWN_FUNCTIONS = new Set([
   'spawn',
   'spawnSync',
-  'fork',
   'exec',
   'execSync',
   'execFile',
@@ -19,7 +18,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     type: 'problem',
     docs: {
       description:
-        'Ensures that child_process spawn/exec/fork calls include windowsHide: true to prevent console windows from flashing on Windows.',
+        'Ensures that child_process spawn/exec calls include windowsHide: true to prevent console windows from flashing on Windows.',
     },
     schema: [],
     messages: {
@@ -53,18 +52,19 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
         );
 
         if (!optionsArg) {
-          // If there's a spread or variable reference we can't statically analyze, skip
-          const hasNonLiteralObject = node.arguments.some(
-            (arg) =>
-              arg.type === 'Identifier' ||
-              arg.type === 'SpreadElement' ||
-              (arg.type === 'ObjectExpression' &&
-                arg.properties.some((p) => p.type === 'SpreadElement'))
-          );
-          // Only report if all args are literals and none is an options object
-          if (!hasNonLiteralObject) {
+          // Check if the last argument could be options passed as a variable
+          const lastArg = node.arguments[node.arguments.length - 1];
+          const hasVariableOptions =
+            lastArg &&
+            (lastArg.type === 'Identifier' || lastArg.type === 'SpreadElement');
+          if (hasVariableOptions) {
             return;
           }
+          // No options object provided at all - report error
+          context.report({
+            messageId: 'missingWindowsHide',
+            node: node,
+          });
           return;
         }
 

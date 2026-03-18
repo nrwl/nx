@@ -97,7 +97,6 @@ function startVerdaccio(
             : {}),
         },
         stdio: 'inherit',
-        windowsHide: true,
       }
     );
 

@@ -111,6 +111,7 @@ export function generateWorkspaceId(cwd?: string): string | null {
     const remoteUrl = execSync('git remote get-url origin', {
       stdio: 'pipe',
       cwd: root,
+      windowsHide: true,
     })
       .toString()
       .trim();
@@ -127,6 +128,7 @@ export function generateWorkspaceId(cwd?: string): string | null {
     const firstCommit = execSync('git rev-list --max-parents=0 HEAD', {
       stdio: 'pipe',
       cwd: root,
+      windowsHide: true,
     })
       .toString()
       .trim()

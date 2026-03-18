@@ -43,7 +43,6 @@ function runCliSubmit(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-        windowsHide: true,
       }
     );
 

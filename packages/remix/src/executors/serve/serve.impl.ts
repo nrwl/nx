@@ -65,7 +65,6 @@ export default async function* serveExecutor(
       const server = fork(remixBin, ['dev', ...args], {
         cwd: join(workspaceRoot, projectRoot),
         stdio: 'inherit',
-        windowsHide: true,
       });
 
       server.once('exit', (code) => {

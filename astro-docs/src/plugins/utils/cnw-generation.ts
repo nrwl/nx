@@ -40,7 +40,6 @@ export async function loadCnwPackage(
     const child = fork(subprocessPath, [], {
       cwd: workspaceRoot,
       silent: true,
-      windowsHide: true,
     });
 
     let stdout = '';
