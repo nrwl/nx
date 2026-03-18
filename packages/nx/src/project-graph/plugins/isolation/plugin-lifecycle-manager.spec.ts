@@ -349,7 +349,7 @@ describe('PluginLifecycleManager', () => {
     });
   });
 
-  describe('abortPhase', () => {
+  describe('notifyPhaseAborted', () => {
     it('should decrement session count when last completed hook is not the last registered hook', () => {
       const lifecycle = new PluginLifecycleManager([
         'createNodes',
@@ -363,7 +363,10 @@ describe('PluginLifecycleManager', () => {
       expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
 
       // Abort after createNodes — createDependencies and createMetadata remain
-      const shouldShutdown = lifecycle.abortPhase('graph', 'createNodes');
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
+        'graph',
+        'createNodes'
+      );
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
       expect(shouldShutdown).toBe(true); // graph is the only registered phase
     });
@@ -377,8 +380,11 @@ describe('PluginLifecycleManager', () => {
       lifecycle.exitHook('createNodes');
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
 
-      // abortPhase with createNodes as last completed — it's the last registered hook
-      const shouldShutdown = lifecycle.abortPhase('graph', 'createNodes');
+      // notifyPhaseAborted with createNodes as last completed — it's the last registered hook
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
+        'graph',
+        'createNodes'
+      );
       expect(shouldShutdown).toBe(false);
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
     });
@@ -397,7 +403,7 @@ describe('PluginLifecycleManager', () => {
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
 
       // Abort after createDependencies — it's the last registered hook, session closed
-      const shouldShutdown = lifecycle.abortPhase(
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
         'graph',
         'createDependencies'
       );
@@ -417,7 +423,10 @@ describe('PluginLifecycleManager', () => {
       expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
 
       // Caller A aborts — createNodes is the last registered hook, no-op
-      const shouldShutdown = lifecycle.abortPhase('graph', 'createNodes');
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
+        'graph',
+        'createNodes'
+      );
       expect(shouldShutdown).toBe(false);
       expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
 
@@ -431,7 +440,10 @@ describe('PluginLifecycleManager', () => {
       const lifecycle = new PluginLifecycleManager(['createDependencies']);
 
       // Abort with createNodes — not registered, so no session was opened
-      const shouldShutdown = lifecycle.abortPhase('graph', 'createNodes');
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
+        'graph',
+        'createNodes'
+      );
       expect(shouldShutdown).toBe(false);
     });
 
@@ -441,7 +453,10 @@ describe('PluginLifecycleManager', () => {
         'createDependencies',
       ]);
 
-      const shouldShutdown = lifecycle.abortPhase('graph', 'createNodes');
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
+        'graph',
+        'createNodes'
+      );
       expect(shouldShutdown).toBe(false);
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
     });
@@ -449,7 +464,7 @@ describe('PluginLifecycleManager', () => {
     it('should return false for unregistered phase', () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
 
-      const shouldShutdown = lifecycle.abortPhase(
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
         'pre-task',
         'preTasksExecution'
       );
@@ -465,7 +480,10 @@ describe('PluginLifecycleManager', () => {
 
       lifecycle.enterHook('createNodes');
       lifecycle.exitHook('createNodes');
-      const shouldShutdown = lifecycle.abortPhase('graph', 'createNodes');
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
+        'graph',
+        'createNodes'
+      );
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
       expect(shouldShutdown).toBe(false); // post-task phase still registered
     });
@@ -485,11 +503,11 @@ describe('PluginLifecycleManager', () => {
       expect(lifecycle.getPhaseRefCount('graph')).toBe(2);
 
       // First caller aborts after createNodes
-      expect(lifecycle.abortPhase('graph', 'createNodes')).toBe(false);
+      expect(lifecycle.notifyPhaseAborted('graph', 'createNodes')).toBe(false);
       expect(lifecycle.getPhaseRefCount('graph')).toBe(1);
 
       // Second caller aborts after createNodes
-      expect(lifecycle.abortPhase('graph', 'createNodes')).toBe(true);
+      expect(lifecycle.notifyPhaseAborted('graph', 'createNodes')).toBe(true);
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
     });
 
@@ -508,7 +526,7 @@ describe('PluginLifecycleManager', () => {
       expect(lifecycle.getPhaseRefCount('graph')).toBe(1); // session still open
 
       // Abort after createDependencies — createMetadata remains
-      const shouldShutdown = lifecycle.abortPhase(
+      const shouldShutdown = lifecycle.notifyPhaseAborted(
         'graph',
         'createDependencies'
       );
@@ -526,7 +544,7 @@ describe('PluginLifecycleManager', () => {
       // First recomputation enters but gets aborted after createNodes
       lifecycle.enterHook('createNodes');
       lifecycle.exitHook('createNodes');
-      lifecycle.abortPhase('graph', 'createNodes');
+      lifecycle.notifyPhaseAborted('graph', 'createNodes');
       expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
 
       // Second recomputation runs to completion

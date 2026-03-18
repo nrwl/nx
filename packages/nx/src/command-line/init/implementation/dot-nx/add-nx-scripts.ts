@@ -89,7 +89,12 @@ export function writeMinimalNxJson(host: Tree, version: string) {
 
 export function updateGitIgnore(host: Tree) {
   let contents = host.read('.gitignore', 'utf-8') ?? '';
-  ['.nx/installation', '.nx/cache', '.nx/workspace-data'].forEach((file) => {
+  [
+    '.nx/installation',
+    '.nx/cache',
+    '.nx/workspace-data',
+    '.nx/self-healing',
+  ].forEach((file) => {
     if (!contents.includes(file)) {
       contents = [contents, file].join('\n');
     }

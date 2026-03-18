@@ -590,7 +590,7 @@ function buildTscTargets(
       targets[targetName] = {
         dependsOn,
         command,
-        options: { cwd: config.project.root },
+        options: { cwd: config.project.normalized },
         cache: true,
         inputs: getInputs(
           namedInputs,
@@ -647,7 +647,7 @@ function buildTscTargets(
       command: `${compiler} --build ${options.build.configName}${
         options.verboseOutput ? ' --verbose' : ''
       }`,
-      options: { cwd: config.project.root },
+      options: { cwd: config.project.normalized },
       cache: true,
       inputs: getInputs(
         namedInputs,
