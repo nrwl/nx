@@ -83,10 +83,12 @@ export async function addLinterToPlaywrightProject(
         tree,
         projectConfig.root,
         'flat/recommended',
-        'playwright',
-        'eslint-plugin-playwright',
-        false,
-        false
+        {
+          moduleName: 'playwright',
+          moduleImportPath: 'eslint-plugin-playwright',
+          spread: false,
+          insertAtTheEnd: false,
+        }
       );
       addOverrideToLintConfig(tree, projectConfig.root, {
         files: ['*.ts', '*.js'],

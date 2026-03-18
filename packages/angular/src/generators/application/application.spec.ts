@@ -761,6 +761,8 @@ describe('app', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
               ...baseConfig,
               {
                   files: [
@@ -777,8 +779,6 @@ describe('app', () => {
                       }
                   }
               },
-              ...nx.configs["flat/angular"],
-              ...nx.configs["flat/angular-template"],
               {
                   files: [
                       "**/*.ts"
