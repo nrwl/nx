@@ -23,12 +23,10 @@ import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
   initCloud,
-  isCRA,
   isMonorepo,
   printFinalMessage,
   updateGitIgnore,
 } from './implementation/utils';
-import { addNxToCraRepo } from './implementation/react';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
 import { isAiAgent } from '../../native';
@@ -51,7 +49,6 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
-  force?: boolean;
   aiAgents?: Agent[];
   plugins?: string; // 'skip' | 'all' | comma-separated list
   cacheable?: string[]; // Cacheable operations (e.g., ['build', 'test', 'lint'])
@@ -148,11 +145,10 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     : readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
   const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
-  const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
-  if (options.interactive && !(_isTurborepo || _isCRA || _isNonJs)) {
+  if (options.interactive && !(_isTurborepo || _isNonJs)) {
     const setupType = await prompt<{ setupPreference: string }>([
       {
         type: 'select',
@@ -185,19 +181,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 
   const pmc = getPackageManagerCommand();
 
-  if (_isCRA) {
-    if (aiMode) {
-      logProgress('detecting', 'Detected Create React App project');
-    }
-    await addNxToCraRepo({
-      addE2e: false,
-      force: options.force,
-      vite: true,
-      integrated: false,
-      interactive: options.interactive,
-      nxCloud: false,
-    });
-  } else if (_isMonorepo) {
+  if (_isMonorepo) {
     if (aiMode) {
       logProgress('detecting', 'Detected monorepo project');
     }
@@ -255,17 +239,11 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
       // Need to detect plugins for 'all' or to return needs_input
       logProgress('detecting', 'Checking for recommended plugins...');
 
-      let detectedPluginNames: string[];
-      if (_isCRA) {
-        detectedPluginNames = ['@nx/vite'];
-      } else {
-        const { plugins: detected } = await detectPlugins(
-          nxJson,
-          packageJson,
-          false // non-interactive
-        );
-        detectedPluginNames = detected;
-      }
+      const { plugins: detectedPluginNames } = await detectPlugins(
+        nxJson,
+        packageJson,
+        false // non-interactive
+      );
 
       if (parsedPlugins === 'all') {
         // Install all detected plugins
@@ -315,15 +293,10 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     // Non-AI guided mode: existing behavior with interactive prompts
     output.log({ title: '🧐 Checking dependencies' });
 
-    if (_isCRA) {
-      pluginsToInstall = ['@nx/vite'];
-      updatePackageScripts = true;
-    } else {
-      const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
-        await detectPlugins(nxJson, packageJson, options.interactive);
-      pluginsToInstall = _plugins;
-      updatePackageScripts = _updatePackageScripts;
-    }
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, packageJson, options.interactive);
+    pluginsToInstall = _plugins;
+    updatePackageScripts = _updatePackageScripts;
 
     if (pluginsToInstall.length > 0) {
       output.log({ title: '📦 Installing Nx' });
