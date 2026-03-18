@@ -295,14 +295,6 @@
       }
     },
     {
-      "plugin": "@nx/gradle",
-      "options": {
-        "targetNamePrefix": "gradle:",
-        "ciTestTargetName": "test-ci"
-      },
-      "exclude": ["packages/react-native/src/generators/application/files/**/*"]
-    },
-    {
       "plugin": "@nx/storybook/plugin",
       "options": {
         "serveStorybookTargetName": "serve:storybook",
