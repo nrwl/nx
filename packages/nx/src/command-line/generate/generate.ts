@@ -420,7 +420,8 @@ export async function generate(args: { [k: string]: any }) {
           generatorOptions: combinedOpts,
         },
         projectsConfigurations.projects,
-        args.verbose
+        args.verbose,
+        projectGraph
       );
     }
   });
