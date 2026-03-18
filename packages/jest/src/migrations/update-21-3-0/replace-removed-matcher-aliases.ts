@@ -125,8 +125,9 @@ async function resolveTestPaths(
   try {
     config = await readConfig({ _: [], $0: undefined }, fullConfigPath);
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
     logger.warn(
-      `Could not read Jest config "${jestConfigFile}": ${e.message}. Skipping this project for matcher alias replacement.`
+      `Could not read Jest config "${jestConfigFile}": ${message}. Skipping this project for matcher alias replacement.`
     );
     return null;
   }
@@ -138,8 +139,9 @@ async function resolveTestPaths(
       watchman: false,
     });
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
     logger.warn(
-      `Could not create Jest context for "${jestConfigFile}": ${e.message}. Skipping this project for matcher alias replacement.`
+      `Could not create Jest context for "${jestConfigFile}": ${message}. Skipping this project for matcher alias replacement.`
     );
     return null;
   }
