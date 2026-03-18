@@ -1,4 +1,4 @@
-import { formatFiles, globAsync, type Tree } from '@nx/devkit';
+import { formatFiles, globAsync, logger, type Tree } from '@nx/devkit';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { SearchSource } from 'jest';
 import { readConfig } from 'jest-config';
@@ -98,23 +98,56 @@ async function getTestFilePaths(tree: Tree): Promise<string[]> {
       continue;
     }
 
-    const config = await readConfig(
-      { _: [], $0: undefined },
-      join(tree.root, jestConfigFile)
-    );
-    const jestContext = await Runtime.createContext(config.projectConfig, {
-      maxWorkers: 1,
-      watchman: false,
-    });
-    const source = new SearchSource(jestContext);
-    const specs = await source.getTestPaths(
-      config.globalConfig,
-      config.projectConfig
-    );
-    for (const testPath of specs.tests) {
-      testFilePaths.add(posix.normalize(relative(tree.root, testPath.path)));
+    const resolvedPaths = await resolveTestPaths(tree, jestConfigFile);
+    if (resolvedPaths) {
+      for (const testPath of resolvedPaths) {
+        testFilePaths.add(testPath);
+      }
     }
   }
 
   return Array.from(testFilePaths);
+}
+
+/**
+ * Resolves test file paths for a single jest config by loading the config
+ * through Jest's own resolution. Returns null if the config cannot be
+ * resolved (e.g. missing files, uninstalled transform modules, invalid
+ * presets), logging a warning so the user knows which project was skipped.
+ */
+async function resolveTestPaths(
+  tree: Tree,
+  jestConfigFile: string
+): Promise<string[] | null> {
+  const fullConfigPath = join(tree.root, jestConfigFile);
+
+  let config: Awaited<ReturnType<typeof readConfig>>;
+  try {
+    config = await readConfig({ _: [], $0: undefined }, fullConfigPath);
+  } catch (e) {
+    logger.warn(
+      `Could not read Jest config "${jestConfigFile}": ${e.message}. Skipping this project for matcher alias replacement.`
+    );
+    return null;
+  }
+
+  let jestContext: Awaited<ReturnType<(typeof Runtime)['createContext']>>;
+  try {
+    jestContext = await Runtime.createContext(config.projectConfig, {
+      maxWorkers: 1,
+      watchman: false,
+    });
+  } catch (e) {
+    logger.warn(
+      `Could not create Jest context for "${jestConfigFile}": ${e.message}. Skipping this project for matcher alias replacement.`
+    );
+    return null;
+  }
+
+  const source = new SearchSource(jestContext);
+  const specs = await source.getTestPaths(
+    config.globalConfig,
+    config.projectConfig
+  );
+  return specs.tests.map((t) => posix.normalize(relative(tree.root, t.path)));
 }
