@@ -277,14 +277,16 @@ export async function setupAiAgentsGeneratorImpl(
     const repoPath = aiConfigRepoPath;
 
     // Shared skills directory used by codex, cursor, and gemini
-    const sharedSkillsSrc = join(repoPath, 'generated/.agents');
-    if (existsSync(sharedSkillsSrc)) {
-      generateFiles(
-        tree,
-        sharedSkillsSrc,
-        join(options.directory, '.agents'),
-        {}
-      );
+    if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
+      const sharedSkillsSrc = join(repoPath, 'generated/.agents');
+      if (existsSync(sharedSkillsSrc)) {
+        generateFiles(
+          tree,
+          sharedSkillsSrc,
+          join(options.directory, '.agents'),
+          {}
+        );
+      }
     }
 
     // Agent-specific directories (commands, agents, config)
