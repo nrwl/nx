@@ -206,7 +206,6 @@
     }
   },
   "plugins": [
-    "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
       "include": [
