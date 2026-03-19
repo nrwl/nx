@@ -1,5 +1,5 @@
 diff --git a/src/daemon/client/client.js b/src/daemon/client/client.js
-index bb399296f1299044c0a06d2bf098ae15e6281b6c..514cfe01d12cdee19ef0ae0ec448d2b21767597e 100644
+index bb399296f1299044c0a06d2bf098ae15e6281b6c..fd6e1cf84d821ba1ff438bc6e627093c155d0e36 100644
 --- a/src/daemon/client/client.js
 +++ b/src/daemon/client/client.js
 @@ -869,7 +869,7 @@ class DaemonClient {
@@ -7,7 +7,7 @@ index bb399296f1299044c0a06d2bf098ae15e6281b6c..514cfe01d12cdee19ef0ae0ec448d2b2
          // alive, so we set a timeout here and clear it when we hear
          // back
 -        const keepAlive = setTimeout(() => { }, 10 * 60 * 1000);
-+        const keepAlive = setTimeout(() => { }, 4 * 60 * 1000);
++        const keepAlive = setTimeout(() => { }, 4 * 3 * 60 * 1000);
          return new Promise((resolve, reject) => {
              perf_hooks_1.performance.mark('sendMessageToDaemon-start');
              this.currentMessage = message;

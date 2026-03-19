@@ -1219,7 +1219,7 @@ export class DaemonClient {
     // TIMEOUT in ../../project-graph/plugins/isolated-plugin, or the daemon
     // will timeout before the plugin worker, thus allowing the CLI process to exit
     // as its awaiting a promise and the event loop drains.
-    const keepAlive = setTimeout(() => {}, 4 * 60 * 1000);
+    const keepAlive = setTimeout(() => {}, 4 * 3 * 60 * 1000);
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
 
