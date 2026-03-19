@@ -287,6 +287,7 @@ export class ReleaseGroupProcessor {
       const {
         handleDockerVersion: _handleDockerVersion,
         // nx-ignore-next-line
+        // eslint-disable-next-line @nx/enforce-module-boundaries
       } = require(// @ts-ignore
       '@nx/docker/release/version-utils');
       handleDockerVersion = _handleDockerVersion;
