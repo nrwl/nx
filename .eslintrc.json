@@ -4,7 +4,7 @@
   "env": {
     "node": true
   },
-  "ignorePatterns": ["**/*.ts", "**/test-output"],
+  "ignorePatterns": ["**/*.ts", "**/test-output", "**/dist"],
   "plugins": ["@typescript-eslint", "@nx"],
   "extends": ["plugin:storybook/recommended"],
   "rules": {
