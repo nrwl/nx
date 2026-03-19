@@ -655,6 +655,13 @@ describe('nx release version plans check command', () => {
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
+      NX   Touched projects based on changed files under release group "independent-group"
+
+      - {project-name}
+
+      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
+
+
       NX   Touched projects missing version plans
 
       The following touched projects under release group "fixed-group" do not feature in any version plan files:
@@ -663,13 +670,6 @@ describe('nx release version plans check command', () => {
       Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
 
       Run with --verbose to see the full list of changed files used for the touched projects logic.
-
-
-      NX   Touched projects based on changed files under release group "independent-group"
-
-      - {project-name}
-
-      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
       NX   Touched projects missing version plans
@@ -715,19 +715,19 @@ describe('nx release version plans check command', () => {
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
+      NX   Touched projects based on changed files under release group "independent-group"
+
+      - {project-name}
+
+      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
+
+
       NX   Touched projects missing version plans
 
       The following touched projects under release group "fixed-group" do not feature in any version plan files:
       - {project-name}
 
       Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
-
-
-      NX   Touched projects based on changed files under release group "independent-group"
-
-      - {project-name}
-
-      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
       NX   Touched projects missing version plans
