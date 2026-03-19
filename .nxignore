@@ -4,3 +4,4 @@ _files
 _solution
 nx-dev/tutorial/**/templates
 *.hprof
+*.hprof.*
