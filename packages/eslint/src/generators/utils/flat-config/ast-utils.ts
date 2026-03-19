@@ -187,7 +187,7 @@ export function hasOverride(
   }
   for (const node of exportsArray) {
     if (isOverride(node)) {
-      let data: Partial<Linter.ConfigOverride<Linter.RulesRecord>>;
+      let data: Partial<Record<string, unknown>>;
 
       if (ts.isObjectLiteralExpression(node)) {
         data = extractPropertiesFromObjectLiteral(node);
@@ -201,7 +201,9 @@ export function hasOverride(
         }
       }
 
-      if (lookup(data as Linter.ConfigOverride<Linter.RulesRecord>)) {
+      if (
+        lookup(data as unknown as Linter.ConfigOverride<Linter.RulesRecord>)
+      ) {
         return true;
       }
     }
@@ -279,7 +281,7 @@ function extractLiteralValue(node: ts.Node): unknown {
  */
 function extractPropertiesFromObjectLiteral(
   node: ts.ObjectLiteralExpression
-): Partial<Linter.ConfigOverride<Linter.RulesRecord>> {
+): Partial<Record<string, unknown>> {
   const result: Record<string, unknown> = {};
   for (const prop of node.properties) {
     if (ts.isPropertyAssignment(prop)) {
@@ -291,7 +293,7 @@ function extractPropertiesFromObjectLiteral(
     }
   }
 
-  return result as Partial<Linter.ConfigOverride<Linter.RulesRecord>>;
+  return result as Partial<Record<string, unknown>>;
 }
 
 /**
@@ -398,11 +400,13 @@ export function replaceOverride(
 
     // Use AST-based extraction to handle variable references (e.g., plugins: { 'abc': abc })
     const data = extractPropertiesFromObjectLiteral(objectLiteralNode);
-    if (lookup(data as Linter.ConfigOverride<Linter.RulesRecord>)) {
+    if (lookup(data as unknown as Linter.ConfigOverride<Linter.RulesRecord>)) {
       // Deep clone before update (update functions may mutate nested objects)
       const originalData = structuredClone(data);
 
-      let updatedData = update?.(data);
+      let updatedData = update?.(
+        data as Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+      );
       if (updatedData) {
         updatedData = mapFilePaths(updatedData);
 
@@ -448,7 +452,10 @@ export function replaceOverride(
             changes.push({
               type: ChangeType.Insert,
               index: insertPos,
-              text: `${needsComma}\n    "${propName}": ${serializeValue(updatedValue, format)}`,
+              text: `${needsComma}\n    "${propName}": ${serializeValue(
+                updatedValue,
+                format
+              )}`,
             });
           }
         }
@@ -1892,9 +1899,7 @@ export function generateAst<T>(
 ): T {
   if (Array.isArray(input)) {
     return ts.factory.createArrayLiteralExpression(
-      input.map((item) =>
-        generateAst<ts.Expression>(item, propertyAssignmentReplacer)
-      ),
+      input.map((item) => generateAst(item, propertyAssignmentReplacer)),
       true // Always treat as multiline, using item.length does not work in all cases
     ) as T;
   }
@@ -1945,7 +1950,7 @@ function generatePropertyAssignmentsFromObjectEntries(
     .map(([key, value]) => {
       const original = ts.factory.createPropertyAssignment(
         isValidKey(key) ? key : ts.factory.createStringLiteral(key),
-        generateAst<ts.Expression>(value, propertyAssignmentReplacer)
+        generateAst(value, propertyAssignmentReplacer)
       );
       if (
         propertyAssignmentReplacer &&
