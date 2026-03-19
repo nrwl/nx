@@ -156,10 +156,33 @@ describe('package-manager', () => {
       try {
         const packageManager = detectPackageManager();
         expect(packageManager).toEqual('npm');
-        expect(fs.existsSync).toHaveBeenCalledTimes(4);
+        expect(fs.existsSync).toHaveBeenCalledTimes(5);
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }
+    });
+
+    it('should detect npm package manager from package-lock.json', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn.lock':
+            return false;
+          case 'pnpm-lock.yaml':
+            return false;
+          case 'package-lock.json':
+            return true;
+          case 'bun.lockb':
+            return false;
+          case 'bun.lock':
+            return false;
+          default:
+            return jest.requireActual('fs').existsSync(p);
+        }
+      });
+      const packageManager = detectPackageManager();
+      expect(packageManager).toEqual('npm');
+      expect(fs.existsSync).toHaveBeenCalledTimes(5);
     });
 
     it('should detect pnpm from npm_config_user_agent when no lock file exists', () => {

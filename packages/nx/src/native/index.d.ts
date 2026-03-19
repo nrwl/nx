@@ -168,7 +168,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap<string, HashDetails>
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -380,11 +380,20 @@ export interface HashInputs {
 }
 
 /**
- * Initialize the global telemetry service.
- * Reads or creates a session ID from the database so that multiple CLI
- * invocations within 30 minutes share the same GA4 session.
+ * Initialize telemetry using a DB connection.
+ * Gets/creates the session ID from the DB, stores the connection
+ * for persisting session refreshes on flush, and returns the session ID
+ * so the caller can set it as an env var for child processes.
+ * Used by CLI and daemon.
  */
-export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
+
+/**
+ * Initialize telemetry with a pre-fetched session ID.
+ * No DB connection — used by plugin workers that inherit the
+ * session ID from their parent process via env var.
+ */
+export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string

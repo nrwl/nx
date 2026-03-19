@@ -114,7 +114,7 @@ interface ConfigContext {
 let ts: typeof import('typescript');
 const pmc = getPackageManagerCommand();
 
-const TSCONFIG_CACHE_VERSION = 1;
+const TSCONFIG_CACHE_VERSION = 2;
 const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
@@ -590,7 +590,7 @@ function buildTscTargets(
       targets[targetName] = {
         dependsOn,
         command,
-        options: { cwd: config.project.root },
+        options: { cwd: config.project.normalized },
         cache: true,
         inputs: getInputs(
           namedInputs,
@@ -647,7 +647,7 @@ function buildTscTargets(
       command: `${compiler} --build ${options.build.configName}${
         options.verboseOutput ? ' --verbose' : ''
       }`,
-      options: { cwd: config.project.root },
+      options: { cwd: config.project.normalized },
       cache: true,
       inputs: getInputs(
         namedInputs,
@@ -1646,12 +1646,28 @@ function toAbsolutePaths(
   for (const [key, { data, extendedFilesHash, hash }] of Object.entries(
     cache
   )) {
+    const raw: Record<string, unknown> = {
+      nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+    };
+    if (data.raw?.include) {
+      raw.include = data.raw.include;
+    }
+    if (data.raw?.exclude) {
+      raw.exclude = data.raw.exclude;
+    }
+    if (data.raw?.files) {
+      raw.files = data.raw.files;
+    }
     updatedCache[key] = {
       data: {
-        options: { noEmit: data.options.noEmit },
-        raw: {
-          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        options: {
+          noEmit: data.options.noEmit,
+          allowJs: data.options.allowJs,
+          resolveJsonModule: data.options.resolveJsonModule,
+          emitDeclarationOnly: data.options.emitDeclarationOnly,
+          declarationMap: data.options.declarationMap,
         },
+        raw,
         extendedConfigFiles: data.extendedConfigFiles,
       },
       extendedFilesHash,
@@ -1704,12 +1720,28 @@ function toRelativePaths(
   for (const [key, { data, extendedFilesHash, hash }] of Object.entries(
     cache
   )) {
+    const raw: Record<string, unknown> = {
+      nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+    };
+    if (data.raw?.include) {
+      raw.include = data.raw.include;
+    }
+    if (data.raw?.exclude) {
+      raw.exclude = data.raw.exclude;
+    }
+    if (data.raw?.files) {
+      raw.files = data.raw.files;
+    }
     updatedCache[key] = {
       data: {
-        options: { noEmit: data.options.noEmit },
-        raw: {
-          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        options: {
+          noEmit: data.options.noEmit,
+          allowJs: data.options.allowJs,
+          resolveJsonModule: data.options.resolveJsonModule,
+          emitDeclarationOnly: data.options.emitDeclarationOnly,
+          declarationMap: data.options.declarationMap,
         },
+        raw,
         extendedConfigFiles: data.extendedConfigFiles,
       },
       extendedFilesHash,

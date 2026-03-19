@@ -26,21 +26,11 @@ async function sendToGA4(
 
   const clientId = getClientId(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
-  // Anthropic:   ClaudeBot (training), Claude-User (user fetch), Claude-SearchBot (search index),
-  //              Claude-Web (web crawler), anthropic-ai (legacy training)
-  // OpenAI:      GPTBot (training), ChatGPT-User (user browsing), OAI-SearchBot (search index)
-  // Perplexity:  PerplexityBot (search index), Perplexity-User (user fetch)
-  // Google:      Google-Extended (AI/Gemini training)
-  // Other:       Bytespider (ByteDance training)
-  const isAITool =
-    /ClaudeBot|Claude-User|Claude-SearchBot|Claude-Web|anthropic-ai|GPTBot|ChatGPT-User|OAI-SearchBot|PerplexityBot|Perplexity-User|Google-Extended|Bytespider/i.test(
-      userAgent
-    );
-  // Generic bots (SEO crawlers, social previews, etc.)
-  const isGenericBot =
-    /Googlebot|Amazonbot|CCBot|BingBot|YandexBot|DuckDuckBot|Applebot|crawler|spider|slurp|facebook|twitter|linkedin|slack|discord|telegram/i.test(
-      userAgent
-    );
+  // Use Netlify's built-in agent categorization header
+  // See: https://docs.netlify.com/build/user-agent-categories/
+  const agentCategory = request.headers.get('netlify-agent-category') || 'none';
+  const isAITool = agentCategory.startsWith('ai-agent');
+  const isGenericBot = agentCategory.startsWith('crawler');
 
   const payload = {
     client_id: clientId,
@@ -82,7 +72,6 @@ export default async function handler(
 ): Promise<Response> {
   const pathname = new URL(request.url).pathname;
 
-  // Always track - filtering is done at config level via `accept: ['text/html']`
   context.waitUntil(sendToGA4(request, context, pathname));
 
   const response = await context.next();
@@ -97,32 +86,44 @@ export default async function handler(
 }
 
 export const config = {
-  path: ['/docs/*'],
-  // Only track requests from clients that want HTML (browsers)
-  // This filters out curl, AI agents, and other non-browser clients
+  path: ['/*'],
   accept: ['text/html'],
   excludedPath: [
-    // Text/code files (handled by track-asset-requests or not tracked)
-    '/docs/*.md',
-    '/docs/*.js',
-    '/docs/*.txt',
+    // API routes
+    '/api/*',
+    // Next.js internals
+    '/_next/*',
+    '/.netlify/*',
+    // Static assets
+    '/assets/*',
+    '/images/*',
+    '/fonts/*',
+    '/videos/*',
+    '/data/*',
+    '/socials/*',
+    '/favicon/*',
+    '/favicon.ico',
+    '/sitemap.xml',
+    '/sitemap-*.xml',
+    // Text/code files (handled by track-asset-requests)
+    '/**/*.md',
+    '/**/*.js',
+    '/**/*.txt',
     // Images
-    '/docs/*.svg',
-    '/docs/*.png',
-    '/docs/*.jpg',
-    '/docs/*.jpeg',
-    '/docs/*.gif',
-    '/docs/*.webp',
-    '/docs/*.ico',
-    '/docs/images/*',
-    '/docs/og/*',
+    '/**/*.svg',
+    '/**/*.png',
+    '/**/*.jpg',
+    '/**/*.jpeg',
+    '/**/*.gif',
+    '/**/*.webp',
+    '/**/*.ico',
     // Fonts
-    '/docs/fonts/*',
-    '/docs/*.woff',
-    '/docs/*.woff2',
-    // Search index (pagefind)
-    '/docs/pagefind/*',
+    '/**/*.woff',
+    '/**/*.woff2',
     // Astro build assets
     '/docs/_*',
+    // Search index (pagefind)
+    '/docs/pagefind/*',
+    '/docs/og/*',
   ],
 };

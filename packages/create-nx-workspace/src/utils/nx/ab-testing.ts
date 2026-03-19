@@ -142,7 +142,18 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
 export function getBannerVariant(cloudUrl?: string): BannerVariant {
-  return '0';
+  // Enterprise URLs always get plain link (variant 0)
+  if (isEnterpriseCloudUrl(cloudUrl)) {
+    return '0';
+  }
+
+  // Docs generation uses variant 0 for deterministic output
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    return '0';
+  }
+
+  // Standard URLs get variant 2 banner
+  return '2';
 }
 
 export const NxCloudChoices = [
@@ -181,22 +192,21 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
-   * NXC-4020: Restored to v22.1.3 wording
+   * Locked to "full platform" messaging (CLOUD-4235)
    */
   setupNxCloud: [
     {
-      code: 'enable-caching2',
-      message: 'Would you like remote caching to make your build faster?',
+      code: 'cloud-v2-full-platform-visit',
+      message: 'Try the full Nx platform?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'No - I would not like remote caching' },
+        { value: 'skip', name: 'Skip' },
       ],
       footer:
-        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
-      hint: '(can be disabled any time)',
+        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
       fallback: undefined,
-      completionMessage: 'cache-setup',
+      completionMessage: 'platform-setup',
     },
   ],
   /**

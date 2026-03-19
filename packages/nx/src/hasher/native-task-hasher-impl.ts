@@ -13,6 +13,7 @@ import {
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
 
@@ -70,7 +71,13 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     cwd?: string
   ): Promise<PartialHash> {
     const plans = this.planner.getPlansReference([task.id], taskGraph);
-    const hashes = this.hasher.hashPlans(plans, env, cwd ?? process.cwd());
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
+    const hashes = this.hasher.hashPlans(
+      plans,
+      env,
+      cwd ?? process.cwd(),
+      collectInputs
+    );
 
     return hashes[task.id];
   }
@@ -85,7 +92,13 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       tasks.map((t) => t.id),
       taskGraph
     );
-    const hashes = this.hasher.hashPlans(plans, env, cwd ?? process.cwd());
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
+    const hashes = this.hasher.hashPlans(
+      plans,
+      env,
+      cwd ?? process.cwd(),
+      collectInputs
+    );
     return tasks.map((t) => hashes[t.id]);
   }
 }

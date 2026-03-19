@@ -186,8 +186,16 @@ export const createNodes: CreateNodesV2<EslintPluginOptions> = [
       if (eslintConfigFiles.length === 0) {
         return [];
       }
+      // Determine flat vs legacy from root config, matching ESLint's own
+      // behavior (find-up from cwd). Nested .eslintrc.* files are irrelevant
+      // when a root flat config exists. Prefer flat config at root when both
+      // flat and legacy root configs coexist (e.g., mid-migration).
+      const rootConfigs = eslintConfigFiles.filter((f) => dirname(f) === '.');
+      const rootConfig = rootConfigs.find(isFlatConfig) ?? rootConfigs[0];
       const ESLint = await resolveESLintClass({
-        useFlatConfigOverrideVal: isFlatConfig(eslintConfigFiles[0]),
+        useFlatConfigOverrideVal: isFlatConfig(
+          rootConfig ?? eslintConfigFiles[0]
+        ),
       });
       return await createNodesFromFiles(
         (configFile, options, context) =>

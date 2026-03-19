@@ -107,7 +107,48 @@ export async function determineTemplate(
   }>
 ): Promise<string | 'custom'> {
   if (parsedArgs.template) return parsedArgs.template;
-  return 'custom';
+  if (parsedArgs.preset) return 'custom';
+  if (!parsedArgs.interactive || isCI()) return 'custom';
+  // Docs generation needs preset flow to document all presets
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
+  // Template flow requires git for cloning - fall back to custom preset if git is not available
+  if (!isGitAvailable()) return 'custom';
+  const { template } = await enquirer.prompt<{ template: string }>([
+    {
+      name: 'template',
+      message: 'Which starter do you want to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'nrwl/empty-template',
+          message: 'Minimal           (empty monorepo without projects)',
+        },
+        {
+          name: 'nrwl/react-template',
+          message:
+            'React             (fullstack monorepo with React and Express)',
+        },
+        {
+          name: 'nrwl/angular-template',
+          message:
+            'Angular           (fullstack monorepo with Angular and Express)',
+        },
+        {
+          name: 'nrwl/typescript-template',
+          message:
+            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+        },
+        {
+          name: 'custom',
+          message:
+            'Custom            (advanced setup with additional frameworks)',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+
+  return template;
 }
 
 export async function determineAiAgents(

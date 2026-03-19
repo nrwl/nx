@@ -28,7 +28,11 @@ import type {
   PluginWorkerResult,
 } from './messaging';
 import { isPluginWorkerResult, sendMessageOverSocket } from './messaging';
-import { Hook, PluginLifecycleManager } from './plugin-lifecycle-manager';
+import {
+  Hook,
+  Phase,
+  PluginLifecycleManager,
+} from './plugin-lifecycle-manager';
 
 const PLUGIN_TIMEOUT_HINT_TEXT =
   'As a last resort, you can set NX_PLUGIN_NO_TIMEOUTS=true to bypass this timeout.';
@@ -432,6 +436,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       `[isolated-plugin] shutting down worker for "${this.name}" after last hook`
     );
     this.shutdown();
+  }
+
+  notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): void {
+    if (this.lifecycle?.notifyPhaseAborted(phase, lastCompletedHook)) {
+      this.shutdownIfInactive();
+    }
   }
 
   shutdown(): void {

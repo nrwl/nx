@@ -103,21 +103,19 @@ async function main() {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
-    // Prompt for analytics preference if not set
-    try {
-      await ensureAnalyticsPreferenceSet();
-    } catch {}
-    await startAnalytics();
-
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
+      await initAnalytics();
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
     } else if (isLocalInstall) {
+      await initAnalytics();
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
+      // Don't start analytics or connect to the DB here — the local Nx
+      // will handle it when it runs its own bin/nx.ts
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
@@ -209,6 +207,13 @@ function isNxCloudCommand(command: string): boolean {
     'download-cloud-client',
   ];
   return nxCloudCommands.includes(command);
+}
+
+async function initAnalytics() {
+  try {
+    await ensureAnalyticsPreferenceSet();
+  } catch {}
+  await startAnalytics();
 }
 
 function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {

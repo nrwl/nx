@@ -24,28 +24,43 @@ pub(crate) struct PageViewData {
     pub parameters: ParameterMap,
 }
 
+/// Configuration for initializing the telemetry service.
+pub(crate) struct TelemetryOptions {
+    pub session_id: String,
+    pub workspace_id: String,
+    pub user_id: String,
+    pub nx_version: String,
+    pub package_manager_name: String,
+    pub package_manager_version: Option<String>,
+    pub node_version: String,
+    pub os_arch: String,
+    pub os_platform: String,
+    pub os_release: String,
+    pub is_ci: bool,
+    pub is_nx_cloud: bool,
+    pub db_connection: Option<DbConnection>,
+}
+
+/// Type alias for the DB connection shared between modules.
+pub(crate) type DbConnection =
+    std::sync::Arc<std::sync::Mutex<crate::native::db::connection::NxDbConnection>>;
+
 /// Internal telemetry service - not exposed to JavaScript
 pub struct TelemetryService {
     event_tx: Mutex<Option<Sender<EventData>>>,
     page_view_tx: Mutex<Option<Sender<PageViewData>>>,
     flush_tx: Sender<Sender<Result<()>>>,
+    /// Receives new session IDs from the background thread when it
+    /// refreshes a stale session. The main thread drains this and
+    /// persists to the DB.
+    session_refresh_rx: Receiver<String>,
+    /// Optional DB connection for persisting session refreshes.
+    /// Only set by CLI/daemon, not by plugin workers.
+    db_connection: Option<DbConnection>,
 }
 
 impl TelemetryService {
-    pub fn new(
-        workspace_id: String,
-        user_id: String,
-        session_id: String,
-        nx_version: String,
-        package_manager_name: String,
-        package_manager_version: Option<String>,
-        node_version: String,
-        os_arch: String,
-        os_platform: String,
-        os_release: String,
-        is_ci: bool,
-        is_nx_cloud: bool,
-    ) -> Result<Self> {
+    pub fn new(opts: TelemetryOptions) -> Result<Self> {
         let client = ClientBuilder::new()
             .build()
             .map_err(|e| Error::from_reason(format!("Failed to create HTTP client: {}", e)))?;
@@ -56,23 +71,26 @@ impl TelemetryService {
         let mut common_request_parameters = HashMap::new();
         common_request_parameters
             .insert(request_param::PROTOCOL_VERSION.to_string(), "2".to_string());
-        common_request_parameters
-            .insert(request_param::CLIENT_ID.to_string(), workspace_id.clone());
-        common_request_parameters.insert(request_param::USER_ID.to_string(), user_id.clone());
+        common_request_parameters.insert(
+            request_param::CLIENT_ID.to_string(),
+            opts.workspace_id.clone(),
+        );
+        common_request_parameters.insert(request_param::USER_ID.to_string(), opts.user_id.clone());
         common_request_parameters.insert(
             request_param::TRACKING_ID.to_string(),
             TRACKING_ID_PROD.to_string(),
         );
-        common_request_parameters.insert(request_param::SESSION_ID.to_string(), session_id);
         common_request_parameters.insert(
             request_param::USER_AGENT_ARCHITECTURE.to_string(),
-            os_arch.clone(),
+            opts.os_arch.clone(),
         );
-        common_request_parameters
-            .insert(request_param::USER_AGENT_PLATFORM.to_string(), os_platform);
+        common_request_parameters.insert(
+            request_param::USER_AGENT_PLATFORM.to_string(),
+            opts.os_platform,
+        );
         common_request_parameters.insert(
             request_param::USER_AGENT_PLATFORM_VERSION.to_string(),
-            os_release,
+            opts.os_release,
         );
         common_request_parameters.insert(
             request_param::USER_AGENT_MOBILE.to_string(),
@@ -91,32 +109,36 @@ impl TelemetryService {
         }
 
         let mut user_parameters = HashMap::new();
-        user_parameters.insert(user_dimension::OS_ARCHITECTURE.to_string(), os_arch);
-        user_parameters.insert(user_dimension::USER_ID.to_string(), user_id);
-        user_parameters.insert(user_dimension::NODE_VERSION.to_string(), node_version);
+        user_parameters.insert(user_dimension::OS_ARCHITECTURE.to_string(), opts.os_arch);
+        user_parameters.insert(user_dimension::USER_ID.to_string(), opts.user_id);
+        user_parameters.insert(user_dimension::NODE_VERSION.to_string(), opts.node_version);
         user_parameters.insert(
             user_dimension::PACKAGE_MANAGER.to_string(),
-            package_manager_name,
+            opts.package_manager_name,
         );
-        if let Some(version) = package_manager_version {
+        if let Some(version) = opts.package_manager_version {
             user_parameters.insert(user_dimension::PACKAGE_MANAGER_VERSION.to_string(), version);
         }
-        user_parameters.insert(user_dimension::NX_VERSION.to_string(), nx_version.clone());
-        user_parameters.insert(event_dimension::NX_VERSION.to_string(), nx_version);
+        user_parameters.insert(
+            user_dimension::NX_VERSION.to_string(),
+            opts.nx_version.clone(),
+        );
+        user_parameters.insert(event_dimension::NX_VERSION.to_string(), opts.nx_version);
         user_parameters.insert(
             event_dimension::IS_AI_AGENT.to_string(),
             is_ai_agent.to_string(),
         );
-        user_parameters.insert(user_dimension::IS_CI.to_string(), is_ci.to_string());
+        user_parameters.insert(user_dimension::IS_CI.to_string(), opts.is_ci.to_string());
         user_parameters.insert(
             user_dimension::NX_CLOUD_ENABLED.to_string(),
-            is_nx_cloud.to_string(),
+            opts.is_nx_cloud.to_string(),
         );
 
         // Create channels
         let (event_tx, event_rx) = crossbeam_channel::unbounded();
         let (page_view_tx, page_view_rx) = crossbeam_channel::unbounded();
         let (flush_tx, flush_rx) = crossbeam_channel::unbounded();
+        let (session_refresh_tx, session_refresh_rx) = crossbeam_channel::unbounded();
 
         // Spawn background sender thread
         let common_params = common_request_parameters.clone();
@@ -126,9 +148,11 @@ impl TelemetryService {
                 client,
                 common_params,
                 user_params,
+                opts.session_id,
                 event_rx,
                 page_view_rx,
                 flush_rx,
+                session_refresh_tx,
             )
         });
 
@@ -136,7 +160,33 @@ impl TelemetryService {
             event_tx: Mutex::new(Some(event_tx)),
             page_view_tx: Mutex::new(Some(page_view_tx)),
             flush_tx,
+            session_refresh_rx,
+            db_connection: opts.db_connection,
         })
+    }
+
+    /// Drain any session refreshes from the background thread, persist
+    /// the latest one to the DB (if a connection is available), and
+    /// update the env var so child processes inherit the new session.
+    pub fn persist_session_refreshes(&self) {
+        let mut latest = None;
+        while let Ok(session_id) = self.session_refresh_rx.try_recv() {
+            latest = Some(session_id);
+        }
+        if let Some(ref new_session_id) = latest {
+            // SAFETY: Called from Node's main JS thread during flush.
+            // No concurrent env access — Node is single-threaded for JS
+            // and our Rust background thread doesn't read env vars.
+            unsafe {
+                std::env::set_var("NX_ANALYTICS_SESSION_ID", new_session_id);
+            }
+
+            if let Some(conn) = &self.db_connection {
+                if let Ok(mut conn) = conn.lock() {
+                    persist_session_to_db(&mut conn, new_session_id);
+                }
+            }
+        }
     }
 
     pub fn track_event_impl(
@@ -257,15 +307,25 @@ fn background_sender(
     client: Client,
     common_params: ParameterMap,
     user_params: ParameterMap,
+    initial_session_id: String,
     event_rx: Receiver<EventData>,
     page_view_rx: Receiver<PageViewData>,
     flush_rx: Receiver<Sender<Result<()>>>,
+    session_refresh_tx: Sender<String>,
 ) {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .expect("Failed to create tokio runtime for telemetry");
 
+    let mut common_params = common_params;
+    // Insert initial session ID into common params. SessionState.touch()
+    // will update it in-place only when the session actually refreshes.
+    common_params.insert(
+        request_param::SESSION_ID.to_string(),
+        initial_session_id.clone(),
+    );
+    let mut session = SessionState::new(initial_session_id, session_refresh_tx);
     let mut event_queue = Vec::new();
     let mut page_view_queue = Vec::new();
     let mut last_send = std::time::Instant::now();
@@ -289,6 +349,7 @@ fn background_sender(
             recv(page_view_rx) -> msg => {
                 match msg {
                     Ok(page_view) => {
+                        session.touch(&mut common_params);
                         tracing::trace!("Queuing page view: {}", page_view.title);
                         enqueue_page_view(page_view, &user_params, &mut page_view_queue);
                     }
@@ -298,6 +359,7 @@ fn background_sender(
             recv(event_rx) -> msg => {
                 match msg {
                     Ok(event) => {
+                        session.touch(&mut common_params);
                         tracing::trace!("Queuing event: {}", event.name);
                         enqueue_event(event, &user_params, &mut event_queue);
                     }
@@ -339,6 +401,64 @@ fn background_sender(
         &mut event_queue,
         &mut page_view_queue,
     ));
+}
+
+/// Write a session ID and activity timestamp to the metadata table
+/// inside a single transaction.
+pub(crate) fn persist_session_to_db(
+    conn: &mut crate::native::db::connection::NxDbConnection,
+    session_id: &str,
+) {
+    let sid = session_id.to_string();
+    let _ = conn.transaction(move |tx| {
+        tx.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
+            [&sid],
+        )?;
+        tx.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) \
+             VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
+            [],
+        )?;
+        Ok(())
+    });
+}
+
+/// Tracks the current session ID and refreshes it after inactivity.
+/// When a refresh happens, the new session ID is sent to the main thread
+/// via a channel so it can be persisted to the DB.
+struct SessionState {
+    session_id: String,
+    last_activity: std::time::Instant,
+    refresh_tx: Sender<String>,
+}
+
+impl SessionState {
+    fn new(session_id: String, refresh_tx: Sender<String>) -> Self {
+        Self {
+            session_id,
+            last_activity: std::time::Instant::now(),
+            refresh_tx,
+        }
+    }
+
+    /// Called when a new event or page view is received.
+    /// If the session has been idle for longer than the timeout,
+    /// generates a new session ID, updates common_params in-place,
+    /// and notifies the main thread so it can persist to the DB.
+    fn touch(&mut self, common_params: &mut ParameterMap) {
+        if self.last_activity.elapsed() >= Duration::from_secs(SESSION_TIMEOUT_SECS) {
+            self.session_id = uuid::Uuid::new_v4().to_string();
+            let id = self.session_id.clone();
+            common_params.insert(request_param::SESSION_ID.to_string(), id.clone());
+            let _ = self.refresh_tx.send(id);
+            tracing::debug!(
+                "Session idle for >30 min, starting new session: {}",
+                self.session_id
+            );
+        }
+        self.last_activity = std::time::Instant::now();
+    }
 }
 
 fn log_page_view(level: &str, prefix: &str, title: &Option<String>, location: &Option<String>) {

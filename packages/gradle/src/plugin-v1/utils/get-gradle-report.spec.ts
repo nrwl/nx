@@ -22,9 +22,10 @@ describe('processProjectReports', () => {
       Object.keys(Object.fromEntries(report.gradleProjectToTasksTypeMap))
     ).toEqual(['', ':app', ':list', ':utilities']);
 
-    writeGradleReportToCache(tmpFile.name, report);
+    writeGradleReportToCache(tmpFile.name, report, 'test-hash');
     expect(readFileSync(tmpFile.name).toString()).toMatchInlineSnapshot(`
       "{
+        "hash": "test-hash",
         "gradleFileToGradleProjectMap": {},
         "gradleProjectToDepsMap": {
           "": [
@@ -67,9 +68,10 @@ describe('processProjectReports', () => {
       Object.keys(Object.fromEntries(report.gradleProjectToTasksTypeMap))
     ).toEqual(['', ':app', ':list', ':utilities']);
 
-    writeGradleReportToCache(tmpFile.name, report);
+    writeGradleReportToCache(tmpFile.name, report, 'test-hash');
     expect(readFileSync(tmpFile.name).toString()).toMatchInlineSnapshot(`
       "{
+        "hash": "test-hash",
         "gradleFileToGradleProjectMap": {},
         "gradleProjectToDepsMap": {
           "": [

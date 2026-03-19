@@ -1,20 +1,14 @@
 import type { Context } from 'https://edge.netlify.com';
 
-// Configuration - set these in Netlify environment variables
 const GA_MEASUREMENT_ID =
   Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
 const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
 
 function getClientId(request: Request): string {
-  // Try to extract existing GA client ID from cookie
   const cookies = request.headers.get('cookie') || '';
   const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
-  if (gaMatch) {
-    return gaMatch[1];
-  }
+  if (gaMatch) return gaMatch[1];
 
-  // Generate a new client ID for this request
-  // For non-browser clients (AI tools), this creates a session-based ID
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 1000000000);
   return `${random}.${timestamp}`;
@@ -32,22 +26,11 @@ async function sendToGA4(
 
   const clientId = getClientId(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
-
-  // Anthropic:   ClaudeBot (training), Claude-User (user fetch), Claude-SearchBot (search index),
-  //              Claude-Web (web crawler), anthropic-ai (legacy training)
-  // OpenAI:      GPTBot (training), ChatGPT-User (user browsing), OAI-SearchBot (search index)
-  // Perplexity:  PerplexityBot (search index), Perplexity-User (user fetch)
-  // Google:      Google-Extended (AI/Gemini training)
-  // Other:       Bytespider (ByteDance training)
-  const isAITool =
-    /ClaudeBot|Claude-User|Claude-SearchBot|Claude-Web|anthropic-ai|GPTBot|ChatGPT-User|OAI-SearchBot|PerplexityBot|Perplexity-User|Google-Extended|Bytespider/i.test(
-      userAgent
-    );
-  // Generic bots (SEO crawlers, social previews, etc.)
-  const isGenericBot =
-    /Googlebot|Amazonbot|CCBot|BingBot|YandexBot|DuckDuckBot|Applebot|crawler|spider|slurp|facebook|twitter|linkedin|slack|discord|telegram/i.test(
-      userAgent
-    );
+  // Use Netlify's built-in agent categorization header
+  // See: https://docs.netlify.com/build/user-agent-categories/
+  const agentCategory = request.headers.get('netlify-agent-category') || 'none';
+  const isAITool = agentCategory.startsWith('ai-agent');
+  const isGenericBot = agentCategory.startsWith('crawler');
 
   const payload = {
     client_id: clientId,
@@ -58,7 +41,6 @@ async function sendToGA4(
           page_location: request.url,
           page_title: pathname,
           page_path: pathname,
-          // Custom parameters for filtering
           content_type: pathname.endsWith('.txt')
             ? 'text/plain'
             : 'text/markdown',
@@ -82,7 +64,6 @@ async function sendToGA4(
       body: JSON.stringify(payload),
     });
   } catch (error) {
-    // Log but don't fail the request
     console.error('Failed to send to GA4:', error);
   }
 }
@@ -91,16 +72,11 @@ export default async function handler(
   request: Request,
   context: Context
 ): Promise<Response> {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
+  const pathname = new URL(request.url).pathname;
 
-  // Send analytics in background (non-blocking)
   context.waitUntil(sendToGA4(request, context, pathname));
 
-  // Continue to serve the actual file
   const response = await context.next();
-
-  // Netlify Edge Function responses are immutable, so create a new Response
   const newHeaders = new Headers(response.headers);
   newHeaders.set('x-nx-edge-function', 'track-asset-requests');
 
@@ -113,6 +89,5 @@ export default async function handler(
 
 export const config = {
   path: ['/**/*.txt', '/**/*.md'],
-  // Something is adding .png.md and .svg.md to get image paths, exclude those.
   excludedPath: ['/docs/og/*', '/docs/*.svg.md', '/docs/*.png.md'],
 };

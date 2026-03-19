@@ -613,6 +613,7 @@ module.exports.GroupType = nativeBinding.GroupType
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
 module.exports.initializeTelemetry = nativeBinding.initializeTelemetry
+module.exports.initializeTelemetryWithSessionId = nativeBinding.initializeTelemetryWithSessionId
 module.exports.installNxConsole = nativeBinding.installNxConsole
 module.exports.installNxConsoleForEditor = nativeBinding.installNxConsoleForEditor
 module.exports.IS_WASM = nativeBinding.IS_WASM
