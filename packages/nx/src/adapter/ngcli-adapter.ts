@@ -44,8 +44,10 @@ import {
 } from '../generators/utils/project-configuration';
 import {
   createProjectGraphAsync,
+  readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
+import type { ProjectGraph } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { parseJson } from '../utils/json';
@@ -76,6 +78,14 @@ import {
 } from '../config/schema-utils';
 import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils';
 
+function getProjectGraph(): Promise<ProjectGraph> {
+  try {
+    return Promise.resolve(readCachedProjectGraph());
+  } catch {
+    return createProjectGraphAsync();
+  }
+}
+
 export async function createBuilderContext(
   builderInfo: {
     builderName: string;
@@ -85,7 +95,10 @@ export async function createBuilderContext(
   context: ExecutorContext
 ) {
   require('./compat');
-  const fsHost = new NxScopedHostForBuilders(context.root);
+  const fsHost = new NxScopedHostForBuilders(
+    context.root,
+    context.projectGraph
+  );
   // the top level import is not patched because it is imported before the
   // patching happens so we require it here to use the patched version below
   const { workspaces } = require('@angular-devkit/core');
@@ -213,12 +226,13 @@ export async function scheduleTarget(
     runOptions: any;
     projects: Record<string, ProjectConfiguration>;
   },
-  verbose: boolean
+  verbose: boolean,
+  projectGraph: ProjectGraph
 ): Promise<Observable<import('@angular-devkit/architect').BuilderOutput>> {
   const { Architect } = require('@angular-devkit/architect');
 
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHostForBuilders(root);
+  const fsHost = new NxScopedHostForBuilders(root, projectGraph);
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
@@ -456,7 +470,10 @@ async function runSchematic(
 type AngularProjectConfiguration = ProjectConfiguration & { prefix?: string };
 
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
-  constructor(private root: string) {
+  constructor(
+    private root: string,
+    protected _projectGraph?: ProjectGraph
+  ) {
     super(new NodeJsSyncHost(), normalize(root));
   }
 
@@ -466,7 +483,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       isAngularPluginInstalled()
     ) {
       return this.readMergedWorkspaceConfiguration().pipe(
-        map((r) => stringToArrayBuffer(JSON.stringify(toOldFormat(r))))
+        // structuredClone to avoid toOldFormat mutating shared graph objects
+        map((r) =>
+          stringToArrayBuffer(JSON.stringify(toOldFormat(structuredClone(r))))
+        )
       );
     } else {
       return super.read(path);
@@ -475,7 +495,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
 
   protected readMergedWorkspaceConfiguration() {
     return zip(
-      from(createProjectGraphAsync()),
+      this._projectGraph ? of(this._projectGraph) : from(getProjectGraph()),
       this.readExistingAngularJson(),
       this.readJson<NxJsonConfiguration>('nx.json')
     ).pipe(
@@ -704,9 +724,13 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
  * the project graph to access the expanded targets.
  */
 export class NxScopedHostForBuilders extends NxScopedHost {
+  constructor(root: string, projectGraph: ProjectGraph) {
+    super(root, projectGraph);
+  }
+
   protected readMergedWorkspaceConfiguration() {
     return zip(
-      from(createProjectGraphAsync()),
+      of(this._projectGraph),
       this.readExistingAngularJson(),
       this.readJson<NxJsonConfiguration>('nx.json')
     ).pipe(
@@ -754,9 +778,10 @@ export function arrayBufferToString(buffer: any) {
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
   constructor(
     root: string,
-    private readonly host: Tree
+    private readonly host: Tree,
+    projectGraph: ProjectGraph
   ) {
-    super(root);
+    super(root, projectGraph);
   }
 
   read(path: Path): Observable<FileBuffer> {
@@ -867,7 +892,8 @@ export async function generate(
   root: string,
   opts: GenerateOptions,
   projects: Record<string, ProjectConfiguration>,
-  verbose: boolean
+  verbose: boolean,
+  projectGraph: ProjectGraph
 ) {
   const logger = getLogger(verbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
@@ -876,7 +902,8 @@ export async function generate(
       root,
       verbose,
       `ng-cli generator: ${opts.collectionName}:${opts.generatorName}`
-    )
+    ),
+    projectGraph
   );
   const workflow = createWorkflow(fsHost, root, opts, projects);
   const collection = getCollection(workflow, opts.collectionName);
@@ -961,7 +988,8 @@ export async function runMigration(
   packageName: string,
   migrationName: string,
   projects: Record<string, ProjectConfiguration>,
-  isVerbose: boolean
+  isVerbose: boolean,
+  projectGraph: ProjectGraph
 ) {
   const logger = getLogger(isVerbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
@@ -970,7 +998,8 @@ export async function runMigration(
       root,
       isVerbose,
       `ng-cli migration: ${packageName}:${migrationName}`
-    )
+    ),
+    projectGraph
   );
   const workflow = createWorkflow(fsHost, root, {}, projects);
   const collection = resolveMigrationsCollection(packageName);
@@ -1084,7 +1113,7 @@ export function wrapAngularDevkitSchematic(
     host: Tree,
     generatorOptions: { [k: string]: any }
   ): Promise<GeneratorCallback> => {
-    const graph = await createProjectGraphAsync();
+    const graph = await getProjectGraph();
     const { projects } = readProjectsConfigurationFromProjectGraph(graph);
 
     if (
@@ -1124,7 +1153,11 @@ export function wrapAngularDevkitSchematic(
       }
     };
 
-    const fsHost = new NxScopeHostUsedForWrappedSchematics(host.root, host);
+    const fsHost = new NxScopeHostUsedForWrappedSchematics(
+      host.root,
+      host,
+      graph
+    );
 
     const logger = getLogger(generatorOptions.verbose);
     const options = {
