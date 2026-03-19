@@ -349,7 +349,8 @@ export class DaemonClient {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd: string
+    cwd: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -361,6 +362,7 @@ export class DaemonClient {
       tasks,
       taskGraph,
       cwd,
+      collectInputs,
     });
   }
 
