@@ -37,7 +37,7 @@ import {
 const PLUGIN_TIMEOUT_HINT_TEXT =
   'As a last resort, you can set NX_PLUGIN_NO_TIMEOUTS=true to bypass this timeout.';
 
-const MINUTES = 10;
+const MINUTES = 3;
 
 // **IMPORTANT** THIS CANNOT BE THE SAME AS THE MAX_MESSAGE_WORKER
 // TIMEOUT in ../../project-graph/plugins/isolated-plugin, or the daemon
