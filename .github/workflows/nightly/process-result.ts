@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { MatrixItem } from './process-matrix';
+import { collectFailureDetails } from './analyze-failures';
 
 interface MatrixResult extends MatrixItem {
   status: 'success' | 'failure' | 'cancelled';
@@ -180,7 +181,7 @@ function setOutput(key: string, value: string) {
   }
 }
 
-try {
+async function main() {
   const combinedInput = process.argv[2]
     ? process.argv[2]
     : fs.readFileSync(0, 'utf-8').trim();
@@ -188,10 +189,32 @@ try {
   const combined: MatrixResult[] = JSON.parse(combinedInput);
   const results = processResults(combined);
 
+  // Collect detailed failure info if golden failures exist
+  if (results.has_golden_failures === 'true') {
+    try {
+      const failedProjects = [
+        ...new Set(
+          combined
+            .filter((c) => c.is_golden && (c.status === 'failure' || c.status === 'cancelled'))
+            .map((c) => c.project)
+        ),
+      ];
+      const details = await collectFailureDetails(combined, failedProjects);
+      if (details) {
+        results.slack_message += '\n\n' + details;
+      }
+    } catch (e) {
+      console.error('Failed to collect failure details (brief report will still be posted):', e);
+      results.slack_message += '\n\n⚠️ _Failed to collect detailed failure information_';
+    }
+  }
+
   Object.entries(results).forEach(([key, value]) => {
     setOutput(key, value);
   });
-} catch (error) {
+}
+
+main().catch((error) => {
   console.error('Error processing results:', error);
   process.exit(1);
-}
+});
