@@ -14,5 +14,10 @@
     "**/__fixtures__/**/*.*",
     "./src/internal-testing-utils/**/*.ts"
   ],
-  "include": ["**/*.ts", "**/*.json", "migrations.json"]
+  "include": ["**/*.ts", "**/*.json", "migrations.json"],
+  "references": [
+    {
+      "path": "../docker/tsconfig.lib.json"
+    }
+  ]
 }
