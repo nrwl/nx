@@ -38438,7 +38438,7 @@ snapshots:
       '@module-federation/runtime-tools': 0.5.1
       '@rspack/binding': 1.1.8
       '@rspack/lite-tapable': 1.0.1
-      caniuse-lite: 1.0.30001731
+      caniuse-lite: 1.0.30001774
     optionalDependencies:
       '@swc/helpers': 0.5.18
 
