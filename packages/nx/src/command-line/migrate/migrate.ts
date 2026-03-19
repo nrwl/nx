@@ -2,6 +2,7 @@ import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
+import { joinPathFragments } from '../../utils/path';
 import {
   clean,
   coerce,
@@ -978,7 +979,10 @@ function createFetcher() {
         setCache(packageName, resolvedVersion);
         return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
       })
-      .catch(() => {
+      .catch((e) => {
+        logger.verbose(
+          `Failed to get migrations from registry for ${packageName}@${packageVersion}: ${e.message}. Falling back to install.`
+        );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
 
         return getPackageMigrationsUsingInstall(packageName, packageVersion);
@@ -1115,7 +1119,7 @@ async function downloadPackageMigrationsFromRegistry(
 
     const migrations = await extractFileFromTarball(
       join(dir, tarballPath),
-      join('package', migrationsFilePath),
+      joinPathFragments('package', migrationsFilePath),
       join(dir, migrationsFilePath)
     ).then((path) => readJsonFile<MigrationsJson>(path));
 
@@ -1148,6 +1152,10 @@ async function getPackageMigrationsUsingInstall(
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
+      env: {
+        ...process.env,
+        npm_config_legacy_peer_deps: 'true',
+      },
     });
 
     const {
@@ -1163,11 +1171,9 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } catch (e) {
-    output.warn({
-      title: `Failed to fetch migrations for ${packageName}@${packageVersion}`,
-      bodyLines: [e.message],
-    });
-    return {};
+    throw new Error(
+      `Failed to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+    );
   } finally {
     await cleanup();
   }
