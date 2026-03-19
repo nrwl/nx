@@ -36,8 +36,7 @@
       },
       "inputs": [
         "{workspaceRoot}/docs/**/*",
-        "{workspaceRoot}/dist/nx-dev/nx-dev/public/sitemap*.xml",
-        "{workspaceRoot}/astro-docs/dist/sitemap*.xml",
+        { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{workspaceRoot}/scripts/tsconfig.scripts.json",
         "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
       ]
@@ -46,6 +45,7 @@
       "dependsOn": ["check-links"]
     },
     "sitemap": {
+      "dependsOn": ["build-base"],
       "executor": "nx:run-commands",
       "inputs": [
         "{workspaceRoot}/docs/**/*",

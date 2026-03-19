@@ -37,6 +37,10 @@ module.exports = withNx({
     cpus: 1,
     // Exclude large, unnecessary packages from the server function trace.
     // We have to say under 250MB for Neltify
+    // Include changelog content in the function bundle so on-demand rendering works
+    outputFileTracingIncludes: {
+      '/changelog': ['./public/documentation/changelog/**'],
+    },
     outputFileTracingExcludes: {
       '*': [
         // Native binaries - not needed at runtime for the website
