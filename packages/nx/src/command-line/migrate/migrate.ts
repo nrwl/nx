@@ -1669,13 +1669,14 @@ export async function runNxOrAngularMigration(
     logger.info('');
   } else {
     const ngCliAdapter = await getNgCompatLayer();
+    const migrationProjectGraph = await createProjectGraphAsync();
     const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
       root,
       migration.package,
       migration.name,
-      readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
-        .projects,
-      isVerbose
+      readProjectsConfigurationFromProjectGraph(migrationProjectGraph).projects,
+      isVerbose,
+      migrationProjectGraph
     );
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);

@@ -220,7 +220,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
         runOptions: combinedOptions,
         projects: projectsConfigurations.projects,
       },
-      isVerbose
+      isVerbose,
+      projectGraph
     );
     const { eachValueFrom } = await import('../../adapter/rxjs-for-await');
     return eachValueFrom(observable as any);
