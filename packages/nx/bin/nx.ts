@@ -89,7 +89,8 @@ async function main() {
       localNx = null;
     }
 
-    const isLocalInstall = localNx === resolveNx(null);
+    const isLocalInstall =
+      localNx === resolveNx(null) || localNx === __filename;
     const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
       localNx,
       workspace,
