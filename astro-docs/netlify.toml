@@ -49,6 +49,11 @@ to = "/docs/extending-nx/create-preset"
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
 to = "/docs/guides/adopting-nx/adding-to-monorepo"
 
+# Angular multiple workspace migration page removed (DOC-419)
+[[redirects]]
+from = "/docs/technologies/angular/migration/angular-multiple"
+to = "/docs/technologies/angular/migration/angular"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
