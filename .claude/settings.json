@@ -28,20 +28,17 @@
     "deny": []
   },
   "enableAllProjectMcpServers": true,
-  "env": {
-    "BASH_MAX_TIMEOUT_MS": "1800000"
-  },
-  "extraKnownMarketplaces": {
-    "nx-claude-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "nrwl/nx-ai-agents-config",
-        "ref": "experimental"
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx block-no-verify@1.1.2"
+          }
+        ]
       }
-    }
-  },
-  "enabledPlugins": {
-    "nx@nx-claude-plugins": true,
-    "polygraph@nx-claude-plugins": true
+    ]
   }
 }
