@@ -363,6 +363,22 @@ module.exports = { transform: { '^.+\\.[tj]s$': ['@swc/jest', swcConfig] } };`
       );
     });
 
+    it('should not fail and warn when test path resolution throws (e.g. broken regex)', async () => {
+      const { SearchSource } = require('jest');
+      const spy = jest
+        .spyOn(SearchSource.prototype, 'getTestPaths')
+        .mockRejectedValue(new Error('Invalid regular expression'));
+
+      writeFile(tree, 'packages/broken/jest.config.js', `module.exports = {};`);
+
+      await expect(migration(tree)).resolves.not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('packages/broken/jest.config.js')
+      );
+
+      spy.mockRestore();
+    });
+
     it('should still process valid projects when another has a broken config', async () => {
       // Broken project: references a file that does not exist
       writeFile(

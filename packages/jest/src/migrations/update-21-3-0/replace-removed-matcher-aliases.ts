@@ -146,10 +146,19 @@ async function resolveTestPaths(
     return null;
   }
 
-  const source = new SearchSource(jestContext);
-  const specs = await source.getTestPaths(
-    config.globalConfig,
-    config.projectConfig
-  );
+  let specs: Awaited<ReturnType<SearchSource['getTestPaths']>>;
+  try {
+    const source = new SearchSource(jestContext);
+    specs = await source.getTestPaths(
+      config.globalConfig,
+      config.projectConfig
+    );
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    logger.warn(
+      `Could not resolve test paths for "${jestConfigFile}": ${message}. Skipping this project for matcher alias replacement.`
+    );
+    return null;
+  }
   return specs.tests.map((t) => posix.normalize(relative(tree.root, t.path)));
 }
