@@ -39,6 +39,10 @@ const PLUGIN_TIMEOUT_HINT_TEXT =
 
 const MINUTES = 10;
 
+// **IMPORTANT** THIS CANNOT BE THE SAME AS THE MAX_MESSAGE_WORKER
+// TIMEOUT in ../../project-graph/plugins/isolated-plugin, or the daemon
+// will timeout before the plugin worker, thus allowing the CLI process to exit
+// as its awaiting a promise and the event loop drains.
 const MAX_MESSAGE_WAIT =
   process.env.NX_PLUGIN_NO_TIMEOUTS === 'true'
     ? // Registering a timeout prevents the process from exiting

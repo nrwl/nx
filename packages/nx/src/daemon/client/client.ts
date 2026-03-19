@@ -42,6 +42,13 @@ import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { clientLogger } from '../logger';
 import {
+  type ConfigureAiAgentsStatusResponse,
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+} from '../message-types/configure-ai-agents';
+import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
@@ -83,13 +90,6 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
-import {
-  GET_CONFIGURE_AI_AGENTS_STATUS,
-  RESET_CONFIGURE_AI_AGENTS_STATUS,
-  type ConfigureAiAgentsStatusResponse,
-  type HandleGetConfigureAiAgentsStatusMessage,
-  type HandleResetConfigureAiAgentsStatusMessage,
-} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -1215,8 +1215,11 @@ export class DaemonClient {
     await this.startDaemonIfNecessary();
     // An open promise isn't enough to keep the event loop
     // alive, so we set a timeout here and clear it when we hear
-    // back
-    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
+    // back. **IMPORTANT** - THIS CANNOT BE THE SAME AS THE MAX_MESSAGE_WORKER
+    // TIMEOUT in ../../project-graph/plugins/isolated-plugin, or the daemon
+    // will timeout before the plugin worker, thus allowing the CLI process to exit
+    // as its awaiting a promise and the event loop drains.
+    const keepAlive = setTimeout(() => {}, 12 * 60 * 1000);
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
 
