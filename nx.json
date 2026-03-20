@@ -269,17 +269,17 @@
   "conformance": {
     "rules": [
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": { "mdGlobPattern": "{blog,shared}/**/!(sitemap).md" }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-cover-image",
         "projects": ["docs"],
         "options": { "mdGlobPattern": "blog/**/!(sitemap).md" }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -313,7 +313,7 @@
         ]
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -365,13 +365,13 @@
         }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+        "rule": "./dist/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/codeblock-language"
+        "rule": "./dist/workspace-plugin/src/conformance-rules/codeblock-language"
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
+        "rule": "./dist/workspace-plugin/src/conformance-rules/relative-image-imports"
       }
     ]
   },

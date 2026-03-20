@@ -5,10 +5,17 @@
     "declaration": true,
     "types": ["node"],
     "composite": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json"],
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/files/**"
+  ],
   "references": [
     {
       "path": "../../packages/nx/tsconfig.lib.json"
