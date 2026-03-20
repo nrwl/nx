@@ -84,7 +84,7 @@
     },
     "check-links": {
       "cache": true,
-      "dependsOn": ["nx-dev:next:build", "astro-docs:build"],
+      "dependsOn": ["nx-dev:sitemap", "astro-docs:build"],
       "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts",
       "inputs": [
         "{workspaceRoot}/docs/**/*",
