@@ -284,12 +284,10 @@ export class ReleaseGroupProcessor {
       versionActionsVersion?: string
     ) => Promise<{ newVersion: string; logs: string[] }>;
     try {
-      const {
-        handleDockerVersion: _handleDockerVersion,
-        // nx-ignore-next-line
-        // eslint-disable-next-line @nx/enforce-module-boundaries
-      } = require(// @ts-ignore
-      '@nx/docker/release/version-utils');
+      const dockerVersionUtilsPath = '@nx/docker/release/version-utils';
+      const { handleDockerVersion: _handleDockerVersion } = require(
+        dockerVersionUtilsPath
+      );
       handleDockerVersion = _handleDockerVersion;
     } catch (e) {
       console.error(
