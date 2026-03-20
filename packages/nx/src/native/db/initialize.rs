@@ -23,6 +23,11 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
         .connect()
         .map_err(|e| anyhow::anyhow!("Failed to connect to database: {:?}", e))?;
 
+    // Set busy timeout — retries internally with exponential backoff (1ms, 2ms, ... up to 100ms)
+    // when another process holds the write lock
+    conn.busy_timeout(std::time::Duration::from_secs(12))
+        .map_err(|e| anyhow::anyhow!("Failed to set busy timeout: {:?}", e))?;
+
     let c = NxDbConnection::new(rt, db, conn);
 
     // Enable WAL mode for multi-process read/write access
