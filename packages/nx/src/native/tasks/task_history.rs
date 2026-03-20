@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use tracing::trace;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_history (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     hash TEXT NOT NULL,
     status TEXT NOT NULL,
     code INTEGER NOT NULL,
@@ -84,9 +84,7 @@ impl NxTaskHistory {
         let params: Vec<DbValue> = hashes.into_iter().map(DbValue::from).collect();
 
         let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
-        rows.iter()
-            .map(|row| row.get_str(0))
-            .collect()
+        rows.iter().map(|row| row.get_str(0)).collect()
     }
 
     #[napi]
@@ -109,8 +107,9 @@ impl NxTaskHistory {
             .collect();
 
         // Use IN (?,?,?) with dynamic placeholders instead of rarray
-        let placeholders: Vec<String> =
-            (1..=target_strings.len()).map(|i| format!("?{}", i)).collect();
+        let placeholders: Vec<String> = (1..=target_strings.len())
+            .map(|i| format!("?{}", i))
+            .collect();
         let sql = format!(
             "SELECT
                 CONCAT_WS(':', project, target, configuration) AS target_string,

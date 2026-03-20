@@ -105,7 +105,7 @@ fn value_from_row(row: &turso::Row, idx: usize) -> DbValue {
 }
 
 // =============================================================================
-// NxDbConnection — wraps turso::Connection (MVCC, no file locks needed)
+// NxDbConnection — wraps turso::Connection (WAL mode, pure Rust)
 // =============================================================================
 
 pub struct NxDbConnection {
@@ -126,11 +126,7 @@ impl Default for NxDbConnection {
 }
 
 impl NxDbConnection {
-    pub fn new(
-        rt: tokio::runtime::Runtime,
-        db: turso::Database,
-        conn: turso::Connection,
-    ) -> Self {
+    pub fn new(rt: tokio::runtime::Runtime, db: turso::Database, conn: turso::Connection) -> Self {
         Self {
             rt: Some(rt),
             conn: Some(conn),
@@ -140,12 +136,16 @@ impl NxDbConnection {
 
     /// Get the runtime, or bail.
     fn rt(&self) -> Result<&tokio::runtime::Runtime> {
-        self.rt.as_ref().ok_or_else(|| anyhow::anyhow!("No database runtime available"))
+        self.rt
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No database runtime available"))
     }
 
     /// Get the connection, or bail.
     fn conn(&self) -> Result<&turso::Connection> {
-        self.conn.as_ref().ok_or_else(|| anyhow::anyhow!("No database connection available"))
+        self.conn
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No database connection available"))
     }
 
     // =========================================================================
@@ -214,20 +214,10 @@ impl NxDbConnection {
     }
 
     // =========================================================================
-    // begin / commit / rollback — MVCC transaction control
+    // begin / commit / rollback — transaction control
     // =========================================================================
 
-    /// Begin a concurrent transaction (MVCC).
-    /// Allows multiple writers without SQLITE_BUSY errors.
-    /// Use `begin_exclusive_transaction()` for DDL (CREATE TABLE, etc.).
     pub fn begin_transaction(&self) -> Result<()> {
-        self.execute("BEGIN CONCURRENT", &[])?;
-        Ok(())
-    }
-
-    /// Begin an exclusive transaction for DDL statements (CREATE TABLE, etc.).
-    /// DDL requires exclusive access and cannot use BEGIN CONCURRENT.
-    pub fn begin_exclusive_transaction(&self) -> Result<()> {
         self.execute("BEGIN", &[])?;
         Ok(())
     }

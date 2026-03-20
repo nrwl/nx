@@ -25,15 +25,13 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
 
     let c = NxDbConnection::new(rt, db, conn);
 
-    // Enable MVCC journal mode for concurrent write support
-    c.query_row("PRAGMA journal_mode = 'mvcc'", &[])?;
-    trace!("MVCC journal mode enabled");
+    // Enable WAL mode for multi-process read/write access
+    c.query_row("PRAGMA journal_mode = 'wal'", &[])?;
+    c.execute("PRAGMA synchronous = NORMAL", &[])?;
+    trace!("WAL journal mode enabled");
 
     // Check if the database already has the right version
-    let db_version = c.query_row(
-        "SELECT value FROM metadata WHERE key='NX_VERSION'",
-        &[],
-    );
+    let db_version = c.query_row("SELECT value FROM metadata WHERE key='NX_VERSION'", &[]);
 
     match db_version {
         Ok(Some(row)) => {
@@ -42,7 +40,10 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                 trace!("Database is compatible with Nx {}", nx_version);
                 Ok(c)
             } else {
-                trace!("Incompatible version {} (need {}), recreating", version, nx_version);
+                trace!(
+                    "Incompatible version {} (need {}), recreating",
+                    version, nx_version
+                );
                 c.close()?;
                 remove_database_files(db_path)?;
                 initialize_db(nx_version, db_path)
@@ -73,7 +74,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
 
 fn create_metadata_table(c: &NxDbConnection, nx_version: &str) -> anyhow::Result<()> {
     debug!("Creating metadata table");
-    c.begin_exclusive_transaction()?;
+    c.begin_transaction()?;
     c.execute(
         "CREATE TABLE metadata (
             key TEXT NOT NULL PRIMARY KEY,
@@ -92,7 +93,7 @@ fn create_metadata_table(c: &NxDbConnection, nx_version: &str) -> anyhow::Result
 
 fn create_all_tables(c: &NxDbConnection) -> anyhow::Result<()> {
     debug!("Creating all database tables");
-    c.begin_exclusive_transaction()?;
+    c.begin_transaction()?;
     // Order matters: tables with no FK dependencies first
     c.execute_batch(TASK_DETAILS_SCHEMA)?;
     c.execute_batch(RUNNING_TASKS_SCHEMA)?;
@@ -111,7 +112,11 @@ fn remove_database_files(db_path: &Path) -> anyhow::Result<()> {
         if let Ok(entries) = std::fs::read_dir(parent) {
             for entry in entries.flatten() {
                 let name = entry.path().as_os_str().to_os_string();
-                if name.len() > db_name.len() && name.to_string_lossy().starts_with(&db_name.to_string_lossy().as_ref()) {
+                if name.len() > db_name.len()
+                    && name
+                        .to_string_lossy()
+                        .starts_with(&db_name.to_string_lossy().as_ref())
+                {
                     trace!("Removing auxiliary file: {:?}", entry.path());
                     let _ = remove_file(entry.path());
                 }
