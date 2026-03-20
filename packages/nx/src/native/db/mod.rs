@@ -31,6 +31,16 @@ pub fn connect_to_nx_db(
 
     trace_span!("process", id = process::id()).in_scope(|| {
         trace!("Creating connection to {:?}", db_path);
+
+        // Check if turso backend is requested via env var
+        #[cfg(feature = "turso-backend")]
+        if std::env::var("NX_DB_ENGINE").unwrap_or_default() == "turso" {
+            trace!("NX_DB_ENGINE=turso — using turso/libsql backend (MVCC)");
+            let c = initialize::initialize_turso_db(nx_version, &db_path)?;
+            return Ok(External::new(Arc::new(Mutex::new(c))));
+        }
+
+        // Default: rusqlite backend
         let lock_file = initialize::create_lock_file(&db_path)?;
 
         let c = initialize::initialize_db(nx_version, &db_path)

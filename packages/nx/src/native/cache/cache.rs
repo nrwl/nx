@@ -280,25 +280,22 @@ impl NxCache {
         if user_specified_max_cache_size < full_cache_size {
             let mut cache_size = full_cache_size;
             let db = self.db.lock().unwrap();
-            let mut stmt = db.prepare(
-                "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
-            )?;
-            'outer: while cache_size > target_cache_size {
-                let rows = stmt.query_map([], |r| {
-                    let hash: String = r.get(0)?;
-                    let size: i64 = r.get(1)?;
-                    Ok((hash, size))
-                })?;
-                for row in rows {
-                    if let Ok((hash, size)) = row {
+            while cache_size > target_cache_size {
+                let rows = db.query_rows(
+                    "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
+                    &[],
+                )?;
+                if rows.is_empty() {
+                    break;
+                }
+                for row in &rows {
+                    if let (Ok(hash), Ok(size)) = (row.get_str(0), row.get_i64(1)) {
                         cache_size -= size;
                         db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
                         remove_items(&[self.cache_path.join(&hash)])?;
                     }
-                    // We've deleted enough cache entries to be under the
-                    // target cache size, stop looking for more.
                     if cache_size < target_cache_size {
-                        break 'outer;
+                        break;
                     }
                 }
             }
@@ -353,24 +350,22 @@ impl NxCache {
 
     #[napi]
     pub fn remove_old_cache_records(&self) -> anyhow::Result<()> {
-        let outdated_cache = self
-            .db
-            .lock()
-            .unwrap()
-            .prepare(
-                "DELETE FROM cache_outputs WHERE accessed_at < datetime('now', '-7 days') RETURNING hash",
-            )?
-            .query_map(params![], |row| {
-                let hash: String = row.get(0)?;
+        let rows = self.db.lock().unwrap().query_rows(
+            "DELETE FROM cache_outputs WHERE accessed_at < datetime('now', '-7 days') RETURNING hash",
+            &[],
+        )?;
 
-                Ok(vec![
+        let outdated_cache: Vec<_> = rows
+            .iter()
+            .filter_map(|row| {
+                let hash = row.get_str(0).ok()?;
+                Some(vec![
                     self.cache_path.join(&hash),
                     self.get_task_outputs_path_internal(&hash),
                 ])
-            })?
-            .filter_map(anyhow::Result::ok)
+            })
             .flatten()
-            .collect::<Vec<_>>();
+            .collect();
 
         remove_items(&outdated_cache)?;
 

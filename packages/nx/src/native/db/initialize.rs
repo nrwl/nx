@@ -522,6 +522,96 @@ fn diagnose_filesystem_issue(
     )
 }
 
+// =============================================================================
+// Turso / libsql initialization — skips file locking and WAL pragma dance
+// =============================================================================
+
+#[cfg(feature = "turso-backend")]
+pub(super) fn initialize_turso_db(
+    nx_version: String,
+    db_path: &Path,
+) -> anyhow::Result<NxDbConnection> {
+    trace!("Initializing turso/libsql database at {:?}", db_path);
+
+    // Build a local libsql database — no lock file needed (MVCC)
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| anyhow::anyhow!("Failed to create tokio runtime: {:?}", e))?;
+
+    let db = rt
+        .block_on(libsql::Builder::new_local(db_path).build())
+        .map_err(|e| create_db_error("open turso database", e.into()))?;
+
+    let conn_handle = db
+        .connect()
+        .map_err(|e| create_db_error("connect to turso database", e.into()))?;
+
+    let c = NxDbConnection::new_turso(db, conn_handle);
+
+    // Check if the database already has the right version
+    let db_version = c.query_row(
+        "SELECT value FROM metadata WHERE key='NX_VERSION'",
+        [],
+        |row| {
+            let r: String = row.get(0)?;
+            Ok(r)
+        },
+    );
+
+    match db_version {
+        Ok(Some(version)) if version == nx_version => {
+            trace!("Turso database is compatible with Nx {}", nx_version);
+            Ok(c)
+        }
+        Err(s) if s.to_string().contains("metadata") => {
+            // No metadata table — fresh database, create schema
+            trace!("Turso: creating metadata and schema tables");
+            turso_create_metadata_table(&c, &nx_version)?;
+            turso_create_all_tables(&c)?;
+            Ok(c)
+        }
+        _ => {
+            // Incompatible version — drop and recreate
+            trace!("Turso: incompatible version, recreating database");
+            c.close()?;
+            std::fs::remove_file(db_path)?;
+            initialize_turso_db(nx_version, db_path)
+        }
+    }
+}
+
+#[cfg(feature = "turso-backend")]
+fn turso_create_metadata_table(c: &NxDbConnection, nx_version: &str) -> anyhow::Result<()> {
+    debug!("Turso: creating metadata table");
+    c.begin_transaction()?;
+    c.execute(
+        "CREATE TABLE metadata (
+            key TEXT NOT NULL PRIMARY KEY,
+            value TEXT NOT NULL
+        )",
+        [],
+    )?;
+    trace!("Recording Nx Version: {}", nx_version);
+    c.execute(
+        "INSERT INTO metadata (key, value) VALUES ('NX_VERSION', ?1)",
+        [nx_version],
+    )?;
+    c.commit_transaction()?;
+    Ok(())
+}
+
+#[cfg(feature = "turso-backend")]
+fn turso_create_all_tables(c: &NxDbConnection) -> anyhow::Result<()> {
+    debug!("Turso: creating all database tables");
+    c.begin_transaction()?;
+    c.execute_batch(TASK_DETAILS_SCHEMA)?;
+    c.execute_batch(RUNNING_TASKS_SCHEMA)?;
+    c.execute_batch(TASK_HISTORY_SCHEMA)?;
+    c.commit_transaction()?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::native::logger::enable_logger;

@@ -1,6 +1,5 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use napi::bindgen_prelude::External;
-use rusqlite::params;
 use std::sync::{Arc, Mutex};
 use tracing::trace;
 
@@ -39,16 +38,23 @@ impl TaskDetails {
     #[napi]
     pub fn record_task_details(&mut self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
         trace!("Recording task details");
-        self.db.lock().unwrap().transaction(|conn| {
-            let mut stmt = conn.prepare("INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)")?;
-            for task in tasks.iter() {
-                stmt.execute(
-                    params![task.hash, task.project, task.target, task.configuration],
-                )?;
-            }
-            Ok(())
-        })?;
-
+        let db = self.db.lock().unwrap();
+        db.begin_transaction()?;
+        for task in tasks.iter() {
+            db.execute_with_values(
+                "INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)",
+                &[
+                    DbValue::from(task.hash.as_str()),
+                    DbValue::from(task.project.as_str()),
+                    DbValue::from(task.target.as_str()),
+                    match &task.configuration {
+                        Some(c) => DbValue::from(c.as_str()),
+                        None => DbValue::Null,
+                    },
+                ],
+            )?;
+        }
+        db.commit_transaction()?;
         Ok(())
     }
 }
