@@ -54,7 +54,7 @@
         }
       }
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "dependsOn": ["build-base", "build-analyzer"],
       "outputs": ["{projectRoot}/dist"],

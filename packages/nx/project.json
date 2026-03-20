@@ -65,7 +65,7 @@
         "^build-client",
         "build-base",
         "build-native",
-        "legacy-post-build"
+        "legacy-pre-build"
       ],
       "inputs": [
         "production",
@@ -133,7 +133,7 @@
         }
       }
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "main": "./bin/nx.js",

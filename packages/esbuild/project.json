@@ -8,7 +8,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
       "commands": ["node ./scripts/copy-readme.js esbuild"]
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",

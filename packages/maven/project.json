@@ -19,7 +19,7 @@
       ],
       "outputs": ["{projectRoot}/README.md"]
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{options.outputPath}"],
       "dependsOn": ["build-base", "maven-batch-runner:_package"],

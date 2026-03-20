@@ -8,7 +8,7 @@
       "command": "node ./scripts/copy-readme.js vitest",
       "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",

@@ -8,7 +8,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/vite/README.md"],
       "command": "node ./scripts/copy-readme.js vite"
     },
-    "legacy-post-build": {
+    "legacy-pre-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
