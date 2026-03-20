@@ -14,6 +14,9 @@ private val fakeClassRegex =
 private val abstractClassRegex =
     Regex(
         """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+)?abstract\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+private val annotationClassRegex =
+    Regex(
+        """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+)?annotation\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
 
 /** Fallback to original regex-based parsing when AST parsing fails */
 fun parseTestClassesWithRegex(file: File): MutableMap<String, String>? {
@@ -30,9 +33,10 @@ fun parseTestClassesWithRegex(file: File): MutableMap<String, String>? {
     val trimmed = line.trimStart()
     val indent = line.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 } ?: 0
 
-    // Skip private, internal, abstract, and fake classes
+    // Skip private, internal, abstract, annotation, and fake classes
     if (excludedClassRegex.containsMatchIn(trimmed)) continue
     if (abstractClassRegex.containsMatchIn(trimmed)) continue
+    if (annotationClassRegex.containsMatchIn(trimmed)) continue
     if (fakeClassRegex.containsMatchIn(trimmed)) continue
 
     val match = classDeclarationRegex.find(trimmed)
