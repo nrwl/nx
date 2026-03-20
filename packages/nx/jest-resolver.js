@@ -1,3 +1,4 @@
+// eslint-disable-next-line @nx/enforce-module-boundaries
 const baseResolver = require('../../scripts/patched-jest-resolver');
 const enhancedResolve = require('enhanced-resolve');
 
