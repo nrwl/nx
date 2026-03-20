@@ -51,6 +51,11 @@ const FULL_HELP_WIDTH: u16 = 86; // Full help text width
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Cloud and Help
 const SCROLLBAR_WIDTH: u16 = 3; // Width for scrollbar area (1 scrollbar + 2 padding)
+// Rows consumed by the table header area: top_margin(1) + header content(1) + spacing row(1)
+const TABLE_HEADER_OVERHEAD_ROWS: u16 = 3;
+// Rows before the scrollbar track starts: top_margin(1) + header content(1)
+// The scrollbar spans from the spacing row (which is part of the visual table area) downward
+const SCROLLBAR_Y_OFFSET: u16 = 2;
 
 // Constants for column layout calculation
 const STATUS_ICON_WIDTH: u16 = 6; // Width for status icon with NX logo
@@ -1823,8 +1828,8 @@ impl TasksList {
 
     /// Checks if the scrollbar will be needed for the given table height
     fn will_need_scrollbar(&self, table_height: u16) -> bool {
-        let header_and_spacing_rows = 4;
-        let dynamic_viewport_height = table_height.saturating_sub(header_and_spacing_rows) as usize;
+        let dynamic_viewport_height =
+            table_height.saturating_sub(TABLE_HEADER_OVERHEAD_ROWS) as usize;
         let total_entries = self.selection_manager.lock().get_total_entries();
         total_entries > dynamic_viewport_height
     }
@@ -2178,15 +2183,12 @@ impl TasksList {
 
         // Render scrollbar if needed
         if let Some(scrollbar_area) = scrollbar_area {
-            // Position scrollbar to align with actual table content (below header and empty rows)
-            let header_and_spacing_rows = 2; // Header + 1 empty spacing row
+            // Position scrollbar below top_margin + header, spanning the spacing row and content
             let content_scrollbar_area = Rect {
                 x: scrollbar_area.x,
-                y: scrollbar_area.y + header_and_spacing_rows, // Start at actual content
+                y: scrollbar_area.y + SCROLLBAR_Y_OFFSET,
                 width: scrollbar_area.width,
-                height: scrollbar_area
-                    .height
-                    .saturating_sub(header_and_spacing_rows), // Adjust height accordingly
+                height: scrollbar_area.height.saturating_sub(SCROLLBAR_Y_OFFSET),
             };
 
             // Ensure the scrollbar area is within frame bounds
@@ -2730,7 +2732,9 @@ impl Component for TasksList {
         // Compute scroll metrics once here to reduce lock contention in render_task_table
         let scroll_metrics = {
             let mut manager = self.selection_manager.lock();
-            manager.update_viewport_and_get_metrics(table_area.height.saturating_sub(4) as usize)
+            manager.update_viewport_and_get_metrics(
+                table_area.height.saturating_sub(TABLE_HEADER_OVERHEAD_ROWS) as usize,
+            )
         };
         self.render_task_table(
             f,
