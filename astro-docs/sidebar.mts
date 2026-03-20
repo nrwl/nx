@@ -572,7 +572,7 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/include-all-packagejson',
           },
           {
-            label: 'Disable Graph Links from Source Analysis',
+            label: 'Configure JS/TS Dependency Detection',
             link: 'guides/tips-n-tricks/analyze-source-files',
           },
           {

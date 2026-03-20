@@ -269,7 +269,7 @@ Nx provides two methods to exclude glob patterns (files and folders) from `affec
 
 ## Marking projects affected by dependency updates
 
-By default, Nx will mark all projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. If you'd like to opt into smarter behavior, you can configure Nx to only mark projects as affected if they actually depend on the updated packages.
+By default, Nx will mark **all** projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. You can configure this behavior with the `projectsAffectedByDependencyUpdates` option in `nx.json`:
 
 ```json
 // nx.json
@@ -282,7 +282,17 @@ By default, Nx will mark all projects as affected whenever your package manager'
 }
 ```
 
-The flag `projectsAffectedByDependencyUpdates` can be set to `auto`, `all`, or an array that contains project specifiers. The default value is `all`.
+The `projectsAffectedByDependencyUpdates` option accepts the following values:
+
+| Value      | Description                                                                                                                                                                                                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`    | **(default)** Every project in the workspace is marked as affected when the lock file changes. This is the safest option but may result in unnecessary CI work.                                                                                                                                                                                |
+| `"auto"`   | Only projects whose dependencies actually changed in the lock file are marked as affected. **This currently only works with pnpm.** It inspects the `importers` section of `pnpm-lock.yaml` to determine which workspace projects had their resolved dependencies change. See the warning below for details on other package manager behavior. |
+| `string[]` | An array of project names or glob patterns (e.g., `["app-*", "shared-lib"]`). Only the matching projects are marked as affected when the lock file changes.                                                                                                                                                                                    |
+
+{% aside type="caution" title="'auto' is pnpm-only" %}
+The `"auto"` value relies on the `importers` field in `pnpm-lock.yaml` to determine which projects had dependency changes. Other lock file formats (`package-lock.json`, `yarn.lock`, `bun.lock`) do not have an equivalent structure, so `"auto"` will not detect affected projects from lock file changes when using npm, yarn, or bun. If you use one of those package managers and want to narrow the set of affected projects, use an explicit array of project names instead.
+{% /aside %}
 
 ## Not using git
 
