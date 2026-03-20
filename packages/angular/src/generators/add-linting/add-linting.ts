@@ -56,12 +56,14 @@ export async function addLintingGenerator(
       addPredefinedConfigToFlatLintConfig(
         tree,
         options.projectRoot,
-        'flat/angular'
+        'flat/angular',
+        { checkBaseConfig: true }
       );
       addPredefinedConfigToFlatLintConfig(
         tree,
         options.projectRoot,
-        'flat/angular-template'
+        'flat/angular-template',
+        { checkBaseConfig: true }
       );
       addOverrideToLintConfig(tree, options.projectRoot, {
         files: ['*.ts'],
