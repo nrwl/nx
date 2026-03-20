@@ -139,6 +139,10 @@ pub fn get_main_worktree_root(workspace_root: String) -> anyhow::Result<Option<S
         PathBuf::from(&workspace_root).join(&git_common_dir)
     };
 
+    // Resolve symlinks and ".." segments so the path is clean and
+    // comparable across worktrees (e.g., in reset's equality check)
+    let abs_path = abs_path.canonicalize().unwrap_or(abs_path);
+
     // The common dir is the .git directory — its parent is the repo root
     let main_root = abs_path
         .parent()
