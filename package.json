@@ -389,7 +389,7 @@
     "license-checker": "^25.0.1",
     "next": "14.2.35",
     "next-seo": "^5.13.0",
-    "node-machine-id": "1.1.12",
+
     "npm-run-path": "^4.0.1",
     "picomatch": "catalog:",
     "preact": "10.25.4",

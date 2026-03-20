@@ -7,7 +7,7 @@ export async function requireNxKey(): Promise<typeof import('@nx/key')> {
     if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
       try {
         execSync(`${getPackageManagerCommand().addDev} @nx/key@latest`, {
-          windowsHide: false,
+          windowsHide: true,
         });
 
         // @ts-ignore

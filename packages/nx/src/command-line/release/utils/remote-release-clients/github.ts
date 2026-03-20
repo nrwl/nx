@@ -57,6 +57,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       const remoteUrl = execSync(`git remote get-url ${remoteName}`, {
         encoding: 'utf8',
         stdio: 'pipe',
+        windowsHide: true,
       }).trim();
 
       // Use the default provider if custom one is not specified or releases are disabled
@@ -121,7 +122,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
           const token = execSync(`gh auth token`, {
             encoding: 'utf8',
             stdio: 'pipe',
-            windowsHide: false,
+            windowsHide: true,
           }).trim();
           return { token, headerName: 'Authorization' };
         }

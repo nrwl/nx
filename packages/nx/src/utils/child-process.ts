@@ -64,7 +64,6 @@ export async function runNxAsync(
 ): Promise<void> {
   options ??= {};
   options.cwd ??= process.cwd();
-  options.windowsHide ??= true;
   let { silent, packageManagerCommand, ...execSyncOptions } = options;
   silent ??= true;
 
@@ -75,7 +74,7 @@ export async function runNxAsync(
   return new Promise<void>((resolve, reject) => {
     const child = exec(
       `${baseCmd} ${cmd}`,
-      options,
+      { ...execSyncOptions, windowsHide: true },
       (error, stdout, stderr) => {
         if (error) {
           reject(stderr || stdout || error.message);
