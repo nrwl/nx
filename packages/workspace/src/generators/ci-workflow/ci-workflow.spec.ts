@@ -401,7 +401,7 @@ describe('CI Workflow generator', () => {
                   cache: 'npm'
 
               - run: npm ci
-              - uses: nrwl/nx-set-shas@v4
+              - uses: nrwl/nx-set-shas@v5
 
               # Prepend any command with "nx record --" to record its logs to Nx Cloud
               # - run: npx nx record -- echo Hello World
