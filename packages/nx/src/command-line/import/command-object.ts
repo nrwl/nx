@@ -62,7 +62,7 @@ export const yargsImportCommand: CommandModule = {
       try {
         return await (await import('./import')).importHandler(args as any);
       } catch (error) {
-        if (isAiAgent()) {
+        if (isAiAgent(process.env)) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           const errorCode = determineImportErrorCode(error);

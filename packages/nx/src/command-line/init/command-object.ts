@@ -47,7 +47,7 @@ export const yargsInitCommand: CommandModule = {
       process.exit(0);
     } catch (error) {
       // Output structured error for AI agents
-      if (isAiAgent()) {
+      if (isAiAgent(process.env)) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         const errorCode = determineErrorCode(error);
