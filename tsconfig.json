@@ -354,12 +354,6 @@
     },
     {
       "path": "./nx-dev/ui-resources"
-    },
-    {
-      "path": "./packages/oxlint"
-    },
-    {
-      "path": "./e2e/oxlint"
     }
   ],
   "extends": "./tsconfig.base.json"
