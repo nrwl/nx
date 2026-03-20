@@ -1,4 +1,4 @@
-import { names } from '@nx/devkit';
+import { names, stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -7,6 +7,7 @@ import {
   readFile,
   runCLI,
   runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -173,5 +174,51 @@ describe('Angular Module Federation', () => {
         output.includes(`Build at:`)
     );
     await killProcessAndPorts(processSwc.pid, remotePort);
+  }, 20_000_000);
+
+  it('should load remote app in the browser via ESM module federation', async () => {
+    const hostApp = uniq('host');
+    const remoteApp = uniq('remote');
+    const hostPort = 4200;
+    const remotePort = 4401;
+
+    // generate host with playwright e2e runner
+    runCLI(
+      `generate @nx/angular:host ${hostApp} --style=css --bundler=rspack --e2eTestRunner=playwright --no-interactive`
+    );
+
+    // generate remote
+    runCLI(
+      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --bundler=rspack --port=${remotePort} --style=css --no-interactive`
+    );
+
+    // Write playwright e2e test that navigates to the remote route.
+    // This catches ESM-related runtime errors like "Unexpected token 'export'"
+    // which only surface in the browser when loading remoteEntry.js.
+    updateFile(
+      `${hostApp}-e2e/src/example.spec.ts`,
+      stripIndents`
+        import { test, expect } from '@playwright/test';
+
+        test('should load the host app', async ({ page }) => {
+          await page.goto('/');
+          expect(await page.locator('h1').innerText()).toContain('Welcome');
+        });
+
+        test('should load the remote app via module federation', async ({ page }) => {
+          await page.goto('/${remoteApp}');
+          expect(await page.locator('app-nx-welcome').count()).toBeGreaterThan(0);
+        });
+      `
+    );
+
+    if (runE2ETests('playwright')) {
+      const e2eProcess = await runCommandUntil(
+        `e2e ${hostApp}-e2e`,
+        (output) => output.includes('Successfully ran target e2e for project'),
+        { timeout: 120000 }
+      );
+      await killProcessAndPorts(e2eProcess.pid, hostPort, remotePort);
+    }
   }, 20_000_000);
 });
