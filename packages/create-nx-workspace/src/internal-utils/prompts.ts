@@ -152,10 +152,16 @@ export async function determineTemplate(
 }
 
 export async function determineAiAgents(
-  parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
+  parsedArgs: yargs.Arguments<{
+    aiAgents?: (Agent | 'none')[];
+    interactive?: boolean;
+  }>
 ): Promise<Agent[]> {
   if (parsedArgs.aiAgents) {
-    return parsedArgs.aiAgents;
+    if (parsedArgs.aiAgents.includes('none')) {
+      return [];
+    }
+    return parsedArgs.aiAgents as Agent[];
   }
   const detected = detectAiAgentName();
   if (detected) {

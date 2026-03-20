@@ -93,8 +93,16 @@ async function withInitOptions(yargs: Argv) {
       .option('aiAgents', {
         type: 'array',
         string: true,
-        description: 'List of AI agents to set up.',
-        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini', 'opencode'],
+        description: 'List of AI agents to set up. Use "none" to skip.',
+        choices: [
+          'claude',
+          'codex',
+          'copilot',
+          'cursor',
+          'gemini',
+          'opencode',
+          'none',
+        ],
       })
       .option('plugins', {
         type: 'string',
