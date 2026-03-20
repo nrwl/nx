@@ -7,7 +7,6 @@ import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { getProcessMetricsService } from './process-metrics-service';
 import {
   createPseudoTerminal as createPseudoTerminalWithShutdown,
   PseudoTerminal,
@@ -19,7 +18,10 @@ import {
   NodeChildProcessWithNonDirectOutput,
 } from './running-tasks/node-child-process';
 import { RunningTask } from './running-tasks/running-task';
-import { registerTaskProcessStart } from './task-io-service';
+import {
+  registerBatchProcessStart,
+  registerTaskProcessStart,
+} from './task-io-service';
 import { Batch } from './tasks-schedule';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 
@@ -73,10 +75,10 @@ export class ForkedProcessTaskRunner {
       },
     });
 
-    // Register batch worker process with all tasks
+    // Register batch worker process with all tasks in both IO and metrics services
     if (p.pid) {
       const taskIds = Object.keys(batchTaskGraph.tasks);
-      getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
+      registerBatchProcessStart(batchId, taskIds, p.pid);
     }
 
     const cp = new BatchProcess(p, executorName);

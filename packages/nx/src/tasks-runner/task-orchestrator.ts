@@ -42,6 +42,7 @@ import {
   getEnvVariablesForTask,
   getTaskSpecificEnv,
 } from './task-env';
+import { getTaskIOService } from './task-io-service';
 import { TaskStatus } from './tasks-runner';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
@@ -470,6 +471,11 @@ export class TaskOrchestrator {
       taskIds: Object.keys(batch.taskGraph.tasks),
     });
 
+    // Register batch with TaskIOService so inputs/outputs are buffered
+    const ioService = getTaskIOService();
+    const allBatchTaskIds = Object.keys(batch.taskGraph.tasks);
+    ioService.registerBatch(batch.id, allBatchTaskIds);
+
     const { cachedResults, needsRehashAfterExecution } =
       await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
@@ -514,9 +520,15 @@ export class TaskOrchestrator {
       }
     }
 
+    // Emit combined inputs for all tasks in the batch now that all hashing is done
+    ioService.finalizeBatchInputs(batch.id);
+
     if (batchResults.length > 0) {
       await this.postRunSteps(batchResults, doNotSkipCache, { groupId });
     }
+
+    // Emit combined outputs for all tasks in the batch now that caching is done
+    ioService.finalizeBatchOutputs(batch.id);
 
     // Update batch status based on all task results
     const hasFailures = taskEntries.some(([taskId]) => {
@@ -549,6 +561,9 @@ export class TaskOrchestrator {
         groupId
       );
     }
+    // Clean up batch IO state
+    ioService.clearBatch(batch.id);
+
     // Batch is done, mark it as completed
     const applyFromCacheOrRunBatchEnd = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:end'
