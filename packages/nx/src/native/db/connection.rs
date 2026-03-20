@@ -218,7 +218,8 @@ impl NxDbConnection {
     // =========================================================================
 
     /// Begin a transaction.
-    /// TODO: Switch to `BEGIN CONCURRENT` once libsql MVCC support is enabled.
+    // NOTE: `BEGIN CONCURRENT` (MVCC) requires engine-level enablement in libsql.
+    // Investigate libsql Builder options or compile flags to enable it.
     pub fn begin_transaction(&self) -> Result<()> {
         self.execute("BEGIN", &[])?;
         Ok(())
