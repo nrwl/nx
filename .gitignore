@@ -141,3 +141,4 @@ test-results
 /*.deb
 .nx/polygraph
 .claude/worktrees
+.worktrees

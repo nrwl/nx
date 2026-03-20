@@ -190,7 +190,7 @@ The following properties affect the way Nx runs tasks and can be set at the root
 | skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
 | cacheDirectory          | defines where the local cache is stored (defaults to `.nx/cache`)                                                                                                                                                                                                                                                                       |
 | encryptionKey           | (when using `"nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
-| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                        |
+| selectivelyHashTsConfig | only hash the path mapping of the active project in the root TypeScript config (`tsconfig.base.json` or `tsconfig.json`) (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                            |
 
 You can configure `parallel` in `nx.json`, but you can also set a `--parallel` flag in the terminal `nx run-many -t test --parallel=5`.
 
@@ -884,6 +884,33 @@ pass `--buildable=true` when creating new libraries with the `@nx/js` plugin.
   }
 }
 ```
+
+## Plugins config
+
+The `pluginsConfig` property configures options for Nx plugins. Currently, the `@nx/js` plugin supports the following options that control how Nx detects dependencies and determines affected projects:
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": true,
+      "analyzePackageJson": true,
+      "analyzeLockfile": true,
+      "projectsAffectedByDependencyUpdates": "all"
+    }
+  }
+}
+```
+
+| Property                              | Description                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `analyzeSourceFiles`                  | When `true`, Nx analyzes TypeScript/JavaScript source files to discover dependencies between projects. Defaults to `true` for Nx workspaces.                                                                                                                                                               |
+| `analyzePackageJson`                  | When `true`, Nx reads `package.json` files to discover dependencies between projects. Defaults to `true` when a root `package.json` exists.                                                                                                                                                                |
+| `analyzeLockfile`                     | When `true`, Nx parses the lock file to create external nodes in the project graph for more granular cache invalidation. Defaults to `true`.                                                                                                                                                               |
+| `projectsAffectedByDependencyUpdates` | Controls which projects are affected by lock file changes. `"all"` (default) marks every project, `"auto"` detects from lock file changes (pnpm only), or provide an array of project names/patterns. See [affected](/docs/features/ci-features/affected#marking-projects-affected-by-dependency-updates). |
+
+See [Configure JS/TS Dependency Detection](/docs/guides/tips-n-tricks/analyze-source-files) for more details on `analyzeSourceFiles`, `analyzePackageJson`, and `analyzeLockfile`.
 
 ## Extends
 
