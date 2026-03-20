@@ -19,7 +19,6 @@ const sitemapIndexPath = path.join(distDir, 'sitemap-index.xml');
 const sitemapFallbackPath = path.join(distDir, 'sitemap-0.xml');
 const nxDevSitemapPath = path.join(
   workspaceRoot,
-  'dist',
   'nx-dev',
   'nx-dev',
   'public',
