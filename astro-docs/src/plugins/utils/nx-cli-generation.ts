@@ -43,6 +43,7 @@ export async function loadNxCliPackage(
       cwd: workspaceRoot,
       silent: true,
       stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+      windowsHide: true,
     });
 
     child.on('message', (message: any) => {

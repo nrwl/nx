@@ -89,11 +89,16 @@ export async function handleResetConfigureAiAgentsStatus(): Promise<HandlerResul
 
 async function computeAgentStatuses(): Promise<ConfigureAiAgentsStatusResponse> {
   try {
-    const tmpPath = await getLatestNxTmpPath();
-
-    const modulePath = require.resolve('nx/src/ai/utils.js', {
-      paths: [tmpPath],
-    });
+    let modulePath: string;
+    if (process.env.NX_USE_LOCAL === 'true') {
+      log('Using local implementation (NX_USE_LOCAL=true)');
+      modulePath = require.resolve('nx/src/ai/utils.js');
+    } else {
+      const tmpPath = await getLatestNxTmpPath();
+      modulePath = require.resolve('nx/src/ai/utils.js', {
+        paths: [tmpPath],
+      });
+    }
 
     const { getAgentConfigurations, supportedAgents } = await import(
       modulePath

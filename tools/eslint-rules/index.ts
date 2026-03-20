@@ -7,6 +7,10 @@ import {
   rule as validCommandObject,
 } from './rules/valid-command-object';
 import {
+  RULE_NAME as requireWindowsHideName,
+  rule as requireWindowsHide,
+} from './rules/require-windows-hide';
+import {
   RULE_NAME as validSchemaDescriptionName,
   rule as validSchemaDescription,
 } from './rules/valid-schema-description';
@@ -39,5 +43,6 @@ module.exports = {
     [validSchemaDescriptionName]: validSchemaDescription,
     [validCommandObjectName]: validCommandObject,
     [ensurePnpmLockVersionName]: ensurePnpmLockVersion,
+    [requireWindowsHideName]: requireWindowsHide,
   },
 };
