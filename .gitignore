@@ -25,6 +25,9 @@ jest.debug.config.js
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
+/nx-dev/nx-dev/public/robots.txt
+/nx-dev/nx-dev/public/sitemap-0.xml
+/nx-dev/nx-dev/public/sitemap.xml
 
 # Banner JSON files are generated during static builds
 /nx-dev/nx-dev/lib/banner.json

@@ -73,6 +73,15 @@ module.exports = withNx({
       ],
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/blog',
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
     // Remove trailing slash to prevent double slashes in rewrite destinations
@@ -146,10 +155,6 @@ module.exports = withNx({
     '@nx/nx-dev-ui-video-courses',
     '@nx/nx-dev-util-ai',
   ],
-  // For both client and server
-  env: {
-    VERCEL: process.env.VERCEL,
-  },
   async headers() {
     return [
       {
