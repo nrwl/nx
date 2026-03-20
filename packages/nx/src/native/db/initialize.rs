@@ -9,6 +9,9 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
+/// Bump this ONLY when the database schema changes.
+pub const DB_VERSION: &str = "1";
+
 // Error reporting constants - static strings to avoid allocations in error paths
 const REPORTING_INSTRUCTIONS_PERSISTENT: &str = "If the issue persists, please help us improve Nx by capturing logs and reporting this issue:\n\
       1. Run: NX_NATIVE_FILE_LOGGING=nx::native::db=trace nx <your-command>\n\
@@ -140,7 +143,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<File> {
     Ok(lock_file)
 }
 
-pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
+pub(super) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
     // Track if DB existed before we opened it for safety check on new DB creation
     let db_existed_before_open = db_path.exists();
     let mut database_recreated = false;
@@ -148,21 +151,18 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
     loop {
         match open_database_connection(db_path) {
             Ok(mut c) => {
-                trace!(
-                    "Checking if current existing database is compatible with Nx {}",
-                    nx_version
-                );
-                let db_version = c.query_row(
-                    "SELECT value FROM metadata WHERE key='NX_VERSION'",
+                trace!("Checking if database has metadata table");
+                let has_metadata = c.query_row(
+                    "SELECT value FROM metadata WHERE key='DB_VERSION'",
                     [],
                     |row| {
                         let r: String = row.get(0)?;
                         Ok(r)
                     },
                 );
-                let c = match db_version {
-                    Ok(Some(version)) if version == nx_version => {
-                        trace!("Database is compatible with Nx {}", nx_version);
+                let c = match has_metadata {
+                    Ok(Some(_)) => {
+                        trace!("Database is initialized with DB_VERSION {}", DB_VERSION);
                         c
                     }
                     // No metadata table found - database needs initialization
@@ -191,7 +191,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                         // Safe: DB didn't exist before, we just created it, no other process has it open
                         match configure_database(&c, db_path, database_recreated) {
                             Ok(_) => {
-                                create_metadata_table(&mut c, &nx_version)?;
+                                create_metadata_table(&mut c)?;
                                 create_all_tables(&mut c)?;
                                 c
                             }
@@ -207,14 +207,14 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                         }
                     }
                     reason => {
-                        trace!("Incompatible database because: {:?}", reason);
-                        trace!("Disconnecting from existing incompatible database");
+                        trace!("Unexpected metadata query result: {:?}", reason);
+                        trace!("Disconnecting from database");
                         c.close()?;
-                        trace!("Removing existing incompatible database and auxiliary files");
+                        trace!("Removing database and auxiliary files");
                         remove_all_database_files(db_path)?;
 
                         trace!("Initializing a new database");
-                        return initialize_db(nx_version, db_path);
+                        return initialize_db(db_path);
                     }
                 };
 
@@ -229,13 +229,13 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                 remove_all_database_files(db_path)?;
 
                 trace!("Initializing a new database");
-                return initialize_db(nx_version, db_path);
+                return initialize_db(db_path);
             }
         }
     }
 }
 
-fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Result<()> {
+fn create_metadata_table(c: &mut NxDbConnection) -> anyhow::Result<()> {
     debug!("Creating table for metadata");
     c.transaction(|conn| {
         conn.execute(
@@ -245,10 +245,10 @@ fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Re
             )",
             [],
         )?;
-        trace!("Recording Nx Version: {}", nx_version);
+        trace!("Recording DB_VERSION: {}", DB_VERSION);
         conn.execute(
-            "INSERT INTO metadata (key, value) VALUES ('NX_VERSION', ?)",
-            [nx_version],
+            "INSERT INTO metadata (key, value) VALUES ('DB_VERSION', ?)",
+            [DB_VERSION],
         )?;
         Ok(())
     })?;
@@ -524,8 +524,6 @@ fn diagnose_filesystem_issue(
 
 #[cfg(test)]
 mod tests {
-    use crate::native::logger::enable_logger;
-
     use super::*;
 
     #[test]
@@ -533,16 +531,16 @@ mod tests {
         let temp_dir = tempfile::tempdir()?;
         let db_path = temp_dir.path().join("test.db");
 
-        let _ = initialize_db("1.0.0".to_string(), &db_path)?;
+        let _ = initialize_db(&db_path)?;
 
         let conn = Connection::open(&db_path)?;
         let version: String = conn.query_row(
-            "SELECT value FROM metadata WHERE key='NX_VERSION'",
+            "SELECT value FROM metadata WHERE key='DB_VERSION'",
             [],
             |row| row.get(0),
         )?;
 
-        assert_eq!(version, "1.0.0");
+        assert_eq!(version, DB_VERSION);
         Ok(())
     }
 
@@ -552,41 +550,19 @@ mod tests {
         let db_path = temp_dir.path().join("test.db");
 
         // Create initial db
-        let _ = initialize_db("1.0.0".to_string(), &db_path)?;
+        let _ = initialize_db(&db_path)?;
 
-        // Try to initialize again with same version
-        let _ = initialize_db("1.0.0".to_string(), &db_path)?;
+        // Try to initialize again — should reuse existing db
+        let _ = initialize_db(&db_path)?;
 
         let conn = Connection::open(&db_path)?;
         let version: String = conn.query_row(
-            "SELECT value FROM metadata WHERE key='NX_VERSION'",
+            "SELECT value FROM metadata WHERE key='DB_VERSION'",
             [],
             |row| row.get(0),
         )?;
 
-        assert_eq!(version, "1.0.0");
-        Ok(())
-    }
-
-    #[test]
-    fn initialize_db_recreates_incompatible_db() -> anyhow::Result<()> {
-        enable_logger();
-        let temp_dir = tempfile::tempdir()?;
-        let db_path = temp_dir.path().join("test.db");
-        //
-        // Create initial db
-        let _ = initialize_db("1.0.0".to_string(), &db_path)?;
-
-        // Try to initialize with different version
-        let conn = initialize_db("2.0.0".to_string(), &db_path)?;
-
-        let version: Option<String> = conn.query_row(
-            "SELECT value FROM metadata WHERE key='NX_VERSION'",
-            [],
-            |row| row.get(0),
-        )?;
-
-        assert_eq!(version.unwrap(), "2.0.0");
+        assert_eq!(version, DB_VERSION);
         Ok(())
     }
 }

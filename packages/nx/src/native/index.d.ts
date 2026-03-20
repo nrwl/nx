@@ -227,7 +227,9 @@ export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): P
 
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
-export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+
+export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
 export declare function copy(src: string, dest: string): number
 
