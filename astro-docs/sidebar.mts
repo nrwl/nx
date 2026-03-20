@@ -794,6 +794,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/nx-cloud/source-control-integration',
           },
           {
+            label: 'Set Up CI with Bun',
+            link: 'guides/nx-cloud/use-bun',
+          },
+          {
             label: 'GitHub App Permissions',
             link: 'guides/nx-cloud/source-control-integration/github-app-permissions',
           },
