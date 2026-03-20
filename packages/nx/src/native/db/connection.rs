@@ -38,14 +38,14 @@ impl From<f64> for DbValue {
     }
 }
 
-fn to_libsql_params(params: &[DbValue]) -> Vec<libsql::Value> {
+fn to_turso_params(params: &[DbValue]) -> Vec<turso::Value> {
     params
         .iter()
         .map(|v| match v {
-            DbValue::Text(s) => libsql::Value::Text(s.clone()),
-            DbValue::Integer(i) => libsql::Value::Integer(*i),
-            DbValue::Real(f) => libsql::Value::Real(*f),
-            DbValue::Null => libsql::Value::Null,
+            DbValue::Text(s) => turso::Value::Text(s.clone()),
+            DbValue::Integer(i) => turso::Value::Integer(*i),
+            DbValue::Real(f) => turso::Value::Real(*f),
+            DbValue::Null => turso::Value::Null,
         })
         .collect()
 }
@@ -92,27 +92,27 @@ impl DbRow {
     }
 }
 
-/// Extract a DbValue from a libsql row column.
-fn value_from_row(row: &libsql::Row, idx: i32) -> DbValue {
+/// Extract a DbValue from a turso row column.
+fn value_from_row(row: &turso::Row, idx: usize) -> DbValue {
     match row.get_value(idx) {
-        Ok(libsql::Value::Integer(i)) => DbValue::Integer(i),
-        Ok(libsql::Value::Real(f)) => DbValue::Real(f),
-        Ok(libsql::Value::Text(s)) => DbValue::Text(s),
-        Ok(libsql::Value::Null) => DbValue::Null,
-        Ok(libsql::Value::Blob(_)) => DbValue::Null, // blobs not supported in DbValue
+        Ok(turso::Value::Integer(i)) => DbValue::Integer(i),
+        Ok(turso::Value::Real(f)) => DbValue::Real(f),
+        Ok(turso::Value::Text(s)) => DbValue::Text(s),
+        Ok(turso::Value::Null) => DbValue::Null,
+        Ok(turso::Value::Blob(_)) => DbValue::Null,
         Err(_) => DbValue::Null,
     }
 }
 
 // =============================================================================
-// NxDbConnection — wraps libsql::Connection (MVCC, no file locks needed)
+// NxDbConnection — wraps turso::Connection (MVCC, no file locks needed)
 // =============================================================================
 
 pub struct NxDbConnection {
     rt: Option<tokio::runtime::Runtime>,
-    conn: Option<libsql::Connection>,
+    conn: Option<turso::Connection>,
     /// Keep the Database alive — Connection may reference it internally.
-    _db: Option<libsql::Database>,
+    _db: Option<turso::Database>,
 }
 
 impl Default for NxDbConnection {
@@ -128,8 +128,8 @@ impl Default for NxDbConnection {
 impl NxDbConnection {
     pub fn new(
         rt: tokio::runtime::Runtime,
-        db: libsql::Database,
-        conn: libsql::Connection,
+        db: turso::Database,
+        conn: turso::Connection,
     ) -> Self {
         Self {
             rt: Some(rt),
@@ -144,7 +144,7 @@ impl NxDbConnection {
     }
 
     /// Get the connection, or bail.
-    fn conn(&self) -> Result<&libsql::Connection> {
+    fn conn(&self) -> Result<&turso::Connection> {
         self.conn.as_ref().ok_or_else(|| anyhow::anyhow!("No database connection available"))
     }
 
@@ -155,9 +155,9 @@ impl NxDbConnection {
     pub fn execute(&self, sql: &str, params: &[DbValue]) -> Result<usize> {
         let rt = self.rt()?;
         let conn = self.conn()?;
-        let libsql_params = to_libsql_params(params);
+        let turso_params = to_turso_params(params);
         let n = rt
-            .block_on(conn.execute(sql, libsql_params))
+            .block_on(conn.execute(sql, turso_params))
             .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))?;
         Ok(n as usize)
     }
@@ -181,9 +181,9 @@ impl NxDbConnection {
     pub fn query_rows(&self, sql: &str, params: &[DbValue]) -> Result<Vec<DbRow>> {
         let rt = self.rt()?;
         let conn = self.conn()?;
-        let libsql_params = to_libsql_params(params);
+        let turso_params = to_turso_params(params);
         let mut rows = rt
-            .block_on(conn.query(sql, libsql_params))
+            .block_on(conn.query(sql, turso_params))
             .map_err(|e| anyhow::anyhow!("DB query_rows error: \"{}\", {:?}", sql, e))?;
 
         let col_count = rows.column_count() as usize;
@@ -193,7 +193,7 @@ impl NxDbConnection {
                 Ok(Some(row)) => {
                     let mut values = Vec::with_capacity(col_count);
                     for i in 0..col_count {
-                        values.push(value_from_row(&row, i as i32));
+                        values.push(value_from_row(&row, i));
                     }
                     result.push(DbRow { values });
                 }
@@ -217,10 +217,17 @@ impl NxDbConnection {
     // begin / commit / rollback — MVCC transaction control
     // =========================================================================
 
-    /// Begin a transaction.
-    // NOTE: `BEGIN CONCURRENT` (MVCC) requires engine-level enablement in libsql.
-    // Investigate libsql Builder options or compile flags to enable it.
+    /// Begin a concurrent transaction (MVCC).
+    /// Allows multiple writers without SQLITE_BUSY errors.
+    /// Use `begin_exclusive_transaction()` for DDL (CREATE TABLE, etc.).
     pub fn begin_transaction(&self) -> Result<()> {
+        self.execute("BEGIN CONCURRENT", &[])?;
+        Ok(())
+    }
+
+    /// Begin an exclusive transaction for DDL statements (CREATE TABLE, etc.).
+    /// DDL requires exclusive access and cannot use BEGIN CONCURRENT.
+    pub fn begin_exclusive_transaction(&self) -> Result<()> {
         self.execute("BEGIN", &[])?;
         Ok(())
     }
@@ -241,7 +248,7 @@ impl NxDbConnection {
 
     pub fn close(self) -> Result<()> {
         trace!("Closing database connection");
-        // libsql connections are closed on drop
+        // turso connections are closed on drop
         drop(self.conn);
         drop(self._db);
         drop(self.rt);

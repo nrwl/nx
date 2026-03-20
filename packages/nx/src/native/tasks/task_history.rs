@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use tracing::trace;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    id INTEGER PRIMARY KEY NOT NULL,
     hash TEXT NOT NULL,
     status TEXT NOT NULL,
     code INTEGER NOT NULL,

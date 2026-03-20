@@ -2,12 +2,13 @@ use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
+use std::ffi::OsString;
 use std::fs::remove_file;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    trace!("Initializing libsql database at {:?}", db_path);
+    trace!("Initializing turso database at {:?}", db_path);
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -15,7 +16,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
         .map_err(|e| anyhow::anyhow!("Failed to create tokio runtime: {:?}", e))?;
 
     let db = rt
-        .block_on(libsql::Builder::new_local(db_path).build())
+        .block_on(turso::Builder::new_local(&db_path.to_string_lossy()).build())
         .map_err(|e| anyhow::anyhow!("Failed to open database: {:?}", e))?;
 
     let conn = db
@@ -23,6 +24,10 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
         .map_err(|e| anyhow::anyhow!("Failed to connect to database: {:?}", e))?;
 
     let c = NxDbConnection::new(rt, db, conn);
+
+    // Enable MVCC journal mode for concurrent write support
+    c.query_row("PRAGMA journal_mode = 'mvcc'", &[])?;
+    trace!("MVCC journal mode enabled");
 
     // Check if the database already has the right version
     let db_version = c.query_row(
@@ -39,7 +44,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
             } else {
                 trace!("Incompatible version {} (need {}), recreating", version, nx_version);
                 c.close()?;
-                remove_file(db_path)?;
+                remove_database_files(db_path)?;
                 initialize_db(nx_version, db_path)
             }
         }
@@ -60,7 +65,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
         Err(e) => {
             trace!("Database error: {:?}, recreating", e);
             c.close()?;
-            let _ = remove_file(db_path);
+            remove_database_files(db_path)?;
             initialize_db(nx_version, db_path)
         }
     }
@@ -68,7 +73,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
 
 fn create_metadata_table(c: &NxDbConnection, nx_version: &str) -> anyhow::Result<()> {
     debug!("Creating metadata table");
-    c.begin_transaction()?;
+    c.begin_exclusive_transaction()?;
     c.execute(
         "CREATE TABLE metadata (
             key TEXT NOT NULL PRIMARY KEY,
@@ -87,13 +92,32 @@ fn create_metadata_table(c: &NxDbConnection, nx_version: &str) -> anyhow::Result
 
 fn create_all_tables(c: &NxDbConnection) -> anyhow::Result<()> {
     debug!("Creating all database tables");
-    c.begin_transaction()?;
+    c.begin_exclusive_transaction()?;
     // Order matters: tables with no FK dependencies first
     c.execute_batch(TASK_DETAILS_SCHEMA)?;
     c.execute_batch(RUNNING_TASKS_SCHEMA)?;
     // Tables with FK dependencies
     c.execute_batch(TASK_HISTORY_SCHEMA)?;
     c.commit_transaction()?;
+    Ok(())
+}
+
+/// Remove the database file and all associated files (WAL, SHM, MVCC logs).
+fn remove_database_files(db_path: &Path) -> anyhow::Result<()> {
+    let _ = remove_file(db_path);
+    // Clean up all auxiliary files by globbing for files with same prefix
+    let db_name = db_path.as_os_str().to_os_string();
+    if let Some(parent) = db_path.parent() {
+        if let Ok(entries) = std::fs::read_dir(parent) {
+            for entry in entries.flatten() {
+                let name = entry.path().as_os_str().to_os_string();
+                if name.len() > db_name.len() && name.to_string_lossy().starts_with(&db_name.to_string_lossy().as_ref()) {
+                    trace!("Removing auxiliary file: {:?}", entry.path());
+                    let _ = remove_file(entry.path());
+                }
+            }
+        }
+    }
     Ok(())
 }
 
