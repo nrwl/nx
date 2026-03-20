@@ -5,16 +5,11 @@ import {
   MultipleProjectsWithSameNameError,
   ProjectsWithNoNameError,
 } from '../../error-types';
-import {
-  mergeMetadata,
-  mergeTargetConfigurations,
-  resolveCommandSyntacticSugar,
-} from './target-merging';
+import { mergeMetadata, mergeTargetConfigurations, resolveCommandSyntacticSugar, } from './target-merging';
 import { validateProject } from './target-normalization';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
-import { targetSourceMapKey } from './source-maps';
-
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
+import { targetSourceMapKey } from './source-maps';
 
 import { minimatch } from 'minimatch';
 import { isGlobPattern } from '../../../utils/globs';
@@ -192,15 +187,14 @@ export function mergeProjectConfigurationIntoRootMap(
       }
 
       for (const matchingTargetName of matchingTargets) {
-        const mergedTarget = mergeTargetConfigurations(
-          normalizedTarget,
-          matchingProject.targets?.[matchingTargetName],
-          sourceMap,
-          sourceInformation,
-          `targets.${matchingTargetName}`
-        );
-
-        updatedProjectConfiguration.targets[matchingTargetName] = mergedTarget;
+        updatedProjectConfiguration.targets[matchingTargetName] =
+          mergeTargetConfigurations(
+            normalizedTarget,
+            matchingProject.targets?.[matchingTargetName],
+            sourceMap,
+            sourceInformation,
+            `targets.${matchingTargetName}`
+          );
       }
     }
   }
@@ -295,10 +289,6 @@ export class ProjectNodesManager {
 
   getRootMap(): Record<string, ProjectConfiguration> {
     return this.rootMap;
-  }
-
-  getNameMap(): Record<string, ProjectConfiguration> {
-    return this.nameMap;
   }
 
   /**
