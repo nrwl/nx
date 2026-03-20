@@ -33,6 +33,11 @@ import type {
   SourceInformation,
 } from './project-configuration/source-maps';
 
+export {
+  mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
+} from './project-configuration/target-merging';
+
 export type ConfigurationResult = {
   /**
    * A map of project configurations, keyed by project root.
