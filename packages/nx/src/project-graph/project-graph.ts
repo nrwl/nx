@@ -43,6 +43,7 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
+import { handleImport } from '../utils/handle-import';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -291,8 +292,9 @@ export async function createProjectGraphAndSourceMapsAsync(
   // If we're already on the daemon, return the in-memory graph directly
   // instead of making an IPC call back to ourselves.
   if (isOnDaemon()) {
-    const { currentProjectGraph, currentSourceMaps } = await import(
-      '../daemon/server/project-graph-incremental-recomputation'
+    const { currentProjectGraph, currentSourceMaps } = await handleImport(
+      '../daemon/server/project-graph-incremental-recomputation.js',
+      __dirname
     );
     if (currentProjectGraph) {
       performance.mark('createProjectGraphAsync:end');

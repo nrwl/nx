@@ -1,4 +1,10 @@
-import * as enquirer from 'enquirer';
+const mocks = {
+  prompt: jest.fn(),
+};
+const mockPrompt = mocks.prompt;
+jest.mock('enquirer', () => ({
+  prompt: (...args: any[]) => mocks.prompt(...args),
+}));
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
@@ -746,9 +752,7 @@ describe('Migration', () => {
       });
 
       it('should prompt when --interactive and there is a package updates group with confirmation prompts', async () => {
-        jest
-          .spyOn(enquirer, 'prompt')
-          .mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -800,7 +804,7 @@ describe('Migration', () => {
           },
           minVersionWithSkippedUpdates: undefined,
         });
-        expect(enquirer.prompt).toHaveBeenCalledWith(
+        expect(mockPrompt).toHaveBeenCalledWith(
           expect.arrayContaining([
             expect.objectContaining({ message: promptMessage }),
           ])
@@ -808,9 +812,7 @@ describe('Migration', () => {
       });
 
       it('should filter out updates when prompt answer is false', async () => {
-        jest
-          .spyOn(enquirer, 'prompt')
-          .mockReturnValue(Promise.resolve({ shouldApply: false }));
+        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -859,13 +861,11 @@ describe('Migration', () => {
           },
           minVersionWithSkippedUpdates: '2.0.0',
         });
-        expect(enquirer.prompt).toHaveBeenCalled();
+        expect(mockPrompt).toHaveBeenCalled();
       });
 
       it('should not prompt and get all updates when --interactive=false', async () => {
-        jest
-          .spyOn(enquirer, 'prompt')
-          .mockReturnValue(Promise.resolve({ shouldApply: false }));
+        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -916,7 +916,7 @@ describe('Migration', () => {
           },
           minVersionWithSkippedUpdates: undefined,
         });
-        expect(enquirer.prompt).not.toHaveBeenCalled();
+        expect(mockPrompt).not.toHaveBeenCalled();
       });
     });
 
@@ -1085,9 +1085,7 @@ describe('Migration', () => {
       });
 
       it('should prompt when requirements are met', async () => {
-        jest
-          .spyOn(enquirer, 'prompt')
-          .mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -1131,7 +1129,7 @@ describe('Migration', () => {
           },
           minVersionWithSkippedUpdates: undefined,
         });
-        expect(enquirer.prompt).toHaveBeenCalledWith(
+        expect(mockPrompt).toHaveBeenCalledWith(
           expect.arrayContaining([
             expect.objectContaining({ message: promptMessage }),
           ])
@@ -1139,9 +1137,7 @@ describe('Migration', () => {
       });
 
       it('should not prompt when requirements are not met', async () => {
-        jest
-          .spyOn(enquirer, 'prompt')
-          .mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -1184,7 +1180,7 @@ describe('Migration', () => {
           },
           minVersionWithSkippedUpdates: undefined,
         });
-        expect(enquirer.prompt).not.toHaveBeenCalled();
+        expect(mockPrompt).not.toHaveBeenCalled();
       });
     });
   });
@@ -1354,9 +1350,7 @@ describe('Migration', () => {
     });
 
     it('should not generate migrations for packages which confirmation prompt answer was false', async () => {
-      jest
-        .spyOn(enquirer, 'prompt')
-        .mockReturnValue(Promise.resolve({ shouldApply: false }));
+      mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
       const migrator = new Migrator({
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', child2: '1.0.0' },
@@ -1429,7 +1423,7 @@ describe('Migration', () => {
         },
         minVersionWithSkippedUpdates: '2.0.0',
       });
-      expect(enquirer.prompt).toHaveBeenCalled();
+      expect(mockPrompt).toHaveBeenCalled();
     });
 
     it('should generate migrations that meet requirements and leave out those that do not meet them', async () => {

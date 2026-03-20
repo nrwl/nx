@@ -20,7 +20,13 @@
       "dependsOn": [
         "prebuild-banner",
         {
-          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
+          "projects": [
+            "nx",
+            "devkit",
+            "create-nx-workspace",
+            "dotnet",
+            "maven"
+          ],
           "target": "build"
         }
       ],
@@ -33,7 +39,13 @@
       "dependsOn": [
         "prebuild-banner",
         {
-          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
+          "projects": [
+            "nx",
+            "devkit",
+            "create-nx-workspace",
+            "dotnet",
+            "maven"
+          ],
           "target": "build"
         }
       ],

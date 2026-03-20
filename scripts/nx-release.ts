@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
 import { ReleaseType, major, parse } from 'semver';
-import * as yargs from 'yargs';
+import yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -78,6 +78,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/angular-rspack-compiler',
     'packages/dotnet',
     'packages/maven',
+    'packages/nx',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};

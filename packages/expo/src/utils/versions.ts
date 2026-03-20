@@ -16,6 +16,7 @@ export const typesReactV54Version = '^19.1.0';
 export const reactNativeV54Version = '0.81.5';
 export const metroV54Version = '~0.83.0';
 export const reactNativeWebV54Version = '~0.21.0';
+export const reactTestRendererV54Version = '^19.1.0';
 
 // Expo v53 versions (for existing workspaces)
 export const expoV53Version = '~53.0.10';
@@ -33,6 +34,7 @@ export const typesReactV53Version = '~19.0.10';
 export const reactNativeV53Version = '0.79.3';
 export const metroV53Version = '~0.82.4';
 export const reactNativeWebV53Version = '~0.20.0';
+export const reactTestRendererV53Version = '^19.0.0';
 
 // Default exports point to v54 (latest)
 export const expoVersion = expoV54Version;
