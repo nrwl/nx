@@ -27,11 +27,13 @@ npx create-nx-workspace@latest
 This interactive command guides you through the setup:
 
 - **Workspace name** - The name of your root directory
-- **Template** - Choose from [various technology stacks](/docs/reference/create-nx-workspace#presets) (React, Angular, Node, etc.)
-- **Package manager** - npm, yarn, pnpm, or bun
-- **Additional options** - Styling, testing frameworks, and more depending on your template
+- **Starter template** - Choose from [various technology stacks](/docs/reference/create-nx-workspace#presets) (React, Angular, Node, etc.)
 
-For a minimal setup, choose the **empty workspace** template (`--preset=ts`). This gives you a bare TypeScript monorepo that you can extend incrementally.
+For a minimal setup, use the empty template. This gives you a bare TypeScript monorepo that you can extend incrementally.
+
+```shell
+npx create-nx-workspace@latest --template=nrwl/empty-template
+```
 
 ## Option 2: Create via Nx Cloud
 
