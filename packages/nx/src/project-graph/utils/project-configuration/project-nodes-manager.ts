@@ -5,7 +5,11 @@ import {
   MultipleProjectsWithSameNameError,
   ProjectsWithNoNameError,
 } from '../../error-types';
-import { mergeMetadata, mergeTargetConfigurations, resolveCommandSyntacticSugar, } from './target-merging';
+import {
+  mergeMetadata,
+  mergeTargetConfigurations,
+  resolveCommandSyntacticSugar,
+} from './target-merging';
 import { validateProject } from './target-normalization';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
