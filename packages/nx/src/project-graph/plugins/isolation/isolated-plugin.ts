@@ -501,7 +501,7 @@ async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
-  const workerPath = path.join(__dirname, 'plugin-worker');
+  const workerPath = path.join(__dirname, 'plugin-worker.js');
 
   const env: Record<string, string> = {
     ...process.env,
