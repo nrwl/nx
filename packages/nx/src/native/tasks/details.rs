@@ -41,7 +41,7 @@ impl TaskDetails {
         let db = self.db.lock().unwrap();
         db.begin_transaction()?;
         for task in tasks.iter() {
-            db.execute_with_values(
+            db.execute(
                 "INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)",
                 &[
                     DbValue::from(task.hash.as_str()),

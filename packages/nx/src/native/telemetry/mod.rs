@@ -241,12 +241,14 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
                  AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
                 SESSION_TIMEOUT_SECS as i64
             ),
-            [],
-            |row| row.get::<_, String>(0),
+            &[],
         )
         .map_err(|e| Error::from_reason(format!("Failed to query session: {}", e)))?;
 
-    let session_id = if let Some(id) = active_session {
+    let session_id = if let Some(row) = active_session {
+        let id = row
+            .get_str(0)
+            .map_err(|e| Error::from_reason(format!("Failed to read session ID: {}", e)))?;
         tracing::trace!("Reusing existing analytics session: {}", id);
         id
     } else {

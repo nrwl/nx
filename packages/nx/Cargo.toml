@@ -72,9 +72,6 @@ serde_json = "1.0.140"
 static_assertions = "1.1"
 wrap-ansi = "0.1"
 
-[features]
-turso-backend = ["libsql"]
-
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi", "psapi"] }
 
@@ -99,8 +96,7 @@ ratatui = { version = "0.29" }
 reqwest = { version = "0.12.22", default-features = false, features = [
     "rustls-tls-native-roots",
 ] }
-rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
-libsql = { version = "0.6", optional = true, default-features = false, features = ["core"] }
+libsql = { version = "0.6", default-features = false, features = ["core"] }
 watchexec = "8.0.1"
 watchexec-events = "6.0.0"
 watchexec-signals = "5.0.1"

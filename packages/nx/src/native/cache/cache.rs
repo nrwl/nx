@@ -5,12 +5,11 @@ use tracing::{debug, trace};
 
 use fs_extra::remove_items;
 use regex::Regex;
-use rusqlite::params;
 use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
@@ -90,11 +89,7 @@ impl NxCache {
             "
         };
 
-        self.db
-            .lock()
-            .unwrap()
-            .execute(query, [])
-            .map_err(anyhow::Error::from)?;
+        self.db.lock().unwrap().execute_batch(query)?;
         Ok(())
     }
 
@@ -103,10 +98,9 @@ impl NxCache {
         let start = Instant::now();
         trace!("GET {}", &hash);
         let task_dir = self.cache_path.join(&hash);
-
         let terminal_output_path = self.get_task_outputs_path_internal(&hash);
 
-        let r = self
+        let row = self
             .db
             .lock()
             .unwrap()
@@ -115,25 +109,26 @@ impl NxCache {
                     SET accessed_at = CURRENT_TIMESTAMP
                     WHERE hash = ?1
                     RETURNING code, size",
-                params![hash],
-                |row| {
-                    let code: i16 = row.get(0)?;
-                    let size: i64 = row.get(1)?;
-
-                    let start = Instant::now();
-                    let terminal_output =
-                        read_to_string(terminal_output_path).unwrap_or(String::from(""));
-                    trace!("TIME reading terminal outputs {:?}", start.elapsed());
-
-                    Ok(CachedResult {
-                        code,
-                        terminal_output: Some(terminal_output),
-                        outputs_path: task_dir.to_normalized_string(),
-                        size: Some(size),
-                    })
-                },
+                &[DbValue::from(hash.as_str())],
             )
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
+
+        let r = row.map(|row| {
+            let code = row.get_i64(0).unwrap_or(0) as i16;
+            let size = row.get_i64(1).unwrap_or(0);
+
+            let start = Instant::now();
+            let terminal_output = read_to_string(terminal_output_path).unwrap_or(String::from(""));
+            trace!("TIME reading terminal outputs {:?}", start.elapsed());
+
+            CachedResult {
+                code,
+                terminal_output: Some(terminal_output),
+                outputs_path: task_dir.to_normalized_string(),
+                size: Some(size),
+            }
+        });
+
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(r)
     }
@@ -238,7 +233,11 @@ impl NxCache {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
         self.db.lock().unwrap().execute(
             "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
-            params![hash, code, size],
+            &[
+                DbValue::from(hash.as_str()),
+                DbValue::Integer(code as i64),
+                DbValue::Integer(size),
+            ],
         )?;
         if self.max_cache_size != 0 {
             self.ensure_cache_size_within_limit()?
@@ -248,23 +247,16 @@ impl NxCache {
 
     #[napi]
     pub fn get_cache_size(&self) -> anyhow::Result<i64> {
-        self.db
+        let row = self
+            .db
             .lock()
             .unwrap()
-            .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
-                row.get::<_, Option<i64>>(0)
-                    // If there are no cache entries, the result is
-                    // a single row with a NULL value. This would look like:
-                    // Ok(None). We need to convert this to Ok(0).
-                    .transpose()
-                    .unwrap_or(Ok(0))
-            })
-            // The query_row returns an Result<Option<T>> to account for
-            // a query that returned no rows. This isn't possible when using
-            // SUM, so we can safely unwrap the Option, but need to transpose
-            // to access it. The result represents a db error or mapping error.
-            .transpose()
-            .unwrap_or(Ok(0))
+            .query_row("SELECT SUM(size) FROM cache_outputs", &[])?;
+        // SUM returns NULL when there are no rows
+        match row {
+            Some(r) => r.get_i64(0).or(Ok(0)),
+            None => Ok(0),
+        }
     }
 
     fn ensure_cache_size_within_limit(&self) -> anyhow::Result<()> {
@@ -291,7 +283,10 @@ impl NxCache {
                 for row in &rows {
                     if let (Ok(hash), Ok(size)) = (row.get_str(0), row.get_i64(1)) {
                         cache_size -= size;
-                        db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                        db.execute(
+                            "DELETE FROM cache_outputs WHERE hash = ?1",
+                            &[DbValue::from(hash.as_str())],
+                        )?;
                         remove_items(&[self.cache_path.join(&hash)])?;
                     }
                     if cache_size < target_cache_size {
@@ -377,14 +372,15 @@ impl NxCache {
         // Checks that the number of cache records in the database
         // matches the number of cache directories on the filesystem.
         // If they don't match, it means that the cache is out of sync.
-        let cache_records_exist = self
+        let row = self
             .db
             .lock()
             .unwrap()
-            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
-                let exists: bool = row.get(0)?;
-                Ok(exists)
-            })?
+            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", &[])?;
+
+        let cache_records_exist = row
+            .and_then(|r| r.get_i64(0).ok())
+            .map(|v| v == 1)
             .unwrap_or(false);
 
         if !cache_records_exist {

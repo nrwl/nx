@@ -48,7 +48,7 @@ impl NxTaskHistory {
         let db = self.db.lock().unwrap();
         db.begin_transaction()?;
         for task_run in task_runs.iter() {
-            db.execute_with_values(
+            db.execute(
                 "INSERT OR REPLACE INTO task_history
                     (hash, status, code, start, end)
                     VALUES (?1, ?2, ?3, ?4, ?5)",
@@ -73,7 +73,6 @@ impl NxTaskHistory {
         }
 
         // Use IN (?,?,?) with dynamic placeholders instead of rarray
-        // for compatibility with both rusqlite and turso backends
         let placeholders: Vec<String> = (1..=hashes.len()).map(|i| format!("?{}", i)).collect();
         let sql = format!(
             "SELECT hash FROM task_history

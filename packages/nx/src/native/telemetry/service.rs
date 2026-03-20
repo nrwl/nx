@@ -409,16 +409,17 @@ pub(crate) fn persist_session_to_db(
     conn: &mut crate::native::db::connection::NxDbConnection,
     session_id: &str,
 ) {
+    use crate::native::db::connection::DbValue;
     let _ = (|| -> anyhow::Result<()> {
         conn.begin_transaction()?;
         conn.execute(
             "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
-            [session_id],
+            &[DbValue::from(session_id)],
         )?;
         conn.execute(
             "INSERT OR REPLACE INTO metadata (key, value) \
              VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
-            [],
+            &[],
         )?;
         conn.commit_transaction()?;
         Ok(())

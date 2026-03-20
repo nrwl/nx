@@ -1,4 +1,4 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use crate::native::utils::Normalize;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
@@ -50,17 +50,16 @@ impl RunningTasksService {
     }
 
     fn is_task_running(&self, task_id: &String) -> anyhow::Result<bool> {
-        if let Some((pid, db_process_command, db_process_cwd)) = self.db.lock().unwrap().query_row(
+        let row = self.db.lock().unwrap().query_row(
             "SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?",
-            [task_id],
-            |row| {
-                let pid: u32 = row.get(0)?;
-                let command: String = row.get(1)?;
-                let cwd: String = row.get(2)?;
+            &[DbValue::from(task_id.as_str())],
+        )?;
 
-                Ok((pid, command, cwd))
-            },
-        )? {
+        if let Some(row) = row {
+            let pid = row.get_i64(0)? as u32;
+            let db_process_command = row.get_str(1)?;
+            let db_process_cwd = row.get_str(2)?;
+
             debug!("Checking if {} exists", pid);
 
             let mut sys = System::new();
@@ -108,8 +107,13 @@ impl RunningTasksService {
             .expect("The current working directory does not exist")
             .to_normalized_string();
         self.db.lock().unwrap().execute(
-            "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
-            [&task_id, &pid.to_string(), &command_str, &cwd],
+            "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?1, ?2, ?3, ?4)",
+            &[
+                DbValue::from(task_id.as_str()),
+                DbValue::from(pid.to_string().as_str()),
+                DbValue::from(command_str.as_str()),
+                DbValue::from(cwd.as_str()),
+            ],
         )?;
         debug!("Added {} to running tasks", &task_id);
         self.added_tasks.insert(task_id);
@@ -121,7 +125,10 @@ impl RunningTasksService {
         self.db
             .lock()
             .unwrap()
-            .execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
+            .execute(
+                "DELETE FROM running_tasks WHERE task_id = ?",
+                &[DbValue::from(task_id.as_str())],
+            )?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())
     }
