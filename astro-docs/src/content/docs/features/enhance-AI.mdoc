@@ -29,6 +29,10 @@ This sets up:
 - **Agent skills**: Domain-specific knowledge for monorepo workflows — workspace exploration, code generation, task execution, CI monitoring, and package linking. Skills teach agents _how_ to work with Nx rather than dumping data into context.
 - **Nx MCP server**: Provides connectivity to Nx Cloud CI pipelines, self-healing fixes, running processes, and Nx documentation — things agents can't easily reach on their own
 
+### Creating new workspaces
+
+For creating new Nx workspaces, use `npx create-nx-workspace@latest --template=nrwl/<name>-template` (e.g. `react-template`, `angular-template`, `typescript-template`). For existing projects, use `npx nx init`.
+
 ## What this enables
 
 ### Self-healing CI integration

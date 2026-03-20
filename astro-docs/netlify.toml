@@ -54,6 +54,10 @@ to = "/docs/guides/adopting-nx/adding-to-monorepo"
 from = "/docs/technologies/angular/migration/angular-multiple"
 to = "/docs/technologies/angular/migration/angular"
 
+[[redirects]]
+from = "/docs/getting-started/nx-cloud"
+to = "/docs/features/ci-features"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
