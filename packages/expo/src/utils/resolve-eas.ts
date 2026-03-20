@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 
 export function resolveEas(workspaceRoot: string): string {
   try {
-    execSync('eas --version');
+    execSync('eas --version', { windowsHide: true });
   } catch {
     throw new Error(
       'EAS is not installed. Please run `npm install --global eas-cli` or `yarn global add eas-cli`.'
@@ -11,13 +11,13 @@ export function resolveEas(workspaceRoot: string): string {
 
   let npmGlobalPath: string, yarnGlobalPath: string;
   try {
-    npmGlobalPath = execSync('npm root -g', { windowsHide: false })
+    npmGlobalPath = execSync('npm root -g', { windowsHide: true })
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
   } catch {}
   try {
-    yarnGlobalPath = execSync('yarn global dir', { windowsHide: false })
+    yarnGlobalPath = execSync('yarn global dir', { windowsHide: true })
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes

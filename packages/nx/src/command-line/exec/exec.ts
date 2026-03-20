@@ -54,7 +54,7 @@ export async function nxExecCommand(
         NX_PROJECT_ROOT_PATH:
           projectGraph.nodes?.[process.env.NX_TASK_TARGET_PROJECT]?.data?.root,
       },
-      windowsHide: false,
+      windowsHide: true,
     });
   } else {
     // nx exec is being ran inside of Nx's context
@@ -105,7 +105,7 @@ async function runScriptAsNxTarget(
             projectGraph.nodes?.[projectName]?.data?.root
           )
         : workspaceRoot,
-      windowsHide: false,
+      windowsHide: true,
     });
   });
 }
@@ -132,7 +132,7 @@ function runTargetOnProject(
   execSync(command, {
     stdio: 'inherit',
 
-    windowsHide: false,
+    windowsHide: true,
   });
 }
 

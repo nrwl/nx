@@ -349,7 +349,8 @@ export class DaemonClient {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd: string
+    cwd: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -361,6 +362,7 @@ export class DaemonClient {
       tasks,
       taskGraph,
       cwd,
+      collectInputs,
     });
   }
 
@@ -1314,7 +1316,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: false,
+        windowsHide: true,
         shell: false,
         env: {
           ...DAEMON_ENV_OVERRIDABLE_SETTINGS,

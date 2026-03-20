@@ -90,12 +90,6 @@ async function withInitOptions(yargs: Argv) {
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
         default: false,
       })
-      .option('force', {
-        describe:
-          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
-        type: 'boolean',
-        default: false,
-      })
       .option('aiAgents', {
         type: 'array',
         string: true,
@@ -127,13 +121,7 @@ async function withInitOptions(yargs: Argv) {
       .option('integrated', {
         type: 'boolean',
         description:
-          'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces and CRA projects.',
-        default: false,
-      })
-      .option('addE2e', {
-        describe:
-          'Set up Cypress E2E tests in integrated workspaces. Only for CRA projects.',
-        type: 'boolean',
+          'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces.',
         default: false,
       })
       .option('useDotNxInstallation', {
@@ -141,17 +129,6 @@ async function withInitOptions(yargs: Argv) {
         description:
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
         default: false,
-      })
-      .option('force', {
-        describe:
-          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
-        type: 'boolean',
-        default: false,
-      })
-      .option('vite', {
-        type: 'boolean',
-        description: 'Use Vite as the bundler. Only for CRA projects.',
-        default: true,
       })
       .option('cacheable', {
         type: 'string',
