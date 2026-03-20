@@ -32,10 +32,8 @@ import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from '../logger';
 import { NxWorkspaceFilesExternals } from '../../native';
-import {
-  ConfigurationResult,
-  ConfigurationSourceMaps,
-} from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,

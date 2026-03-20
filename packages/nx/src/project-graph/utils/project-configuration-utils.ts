@@ -33,27 +33,6 @@ import type {
   SourceInformation,
 } from './project-configuration/source-maps';
 
-// Re-export moved functions for consumers that haven't updated their imports yet.
-// Also re-export types that were previously exported from this file.
-export type { ConfigurationSourceMaps, SourceInformation };
-export {
-  mergeProjectConfigurationIntoRootMap,
-  readProjectConfigurationsFromRootMap,
-  validateProject,
-} from './project-configuration/project-nodes-manager';
-export {
-  mergeMetadata,
-  mergeTargetConfigurations,
-  isCompatibleTarget,
-  mergeTargetDefaultWithTargetDefinition,
-  resolveNxTokensInOptions,
-  readTargetDefaultsForTarget,
-} from './project-configuration/target-merging';
-export {
-  normalizeTarget,
-  validateAndNormalizeProjectRootMap,
-} from './project-configuration/target-normalization';
-
 export type ConfigurationResult = {
   /**
    * A map of project configurations, keyed by project root.
