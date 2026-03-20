@@ -60,7 +60,7 @@ export function normalizeDependencyConfigDefinition(
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
-      expandDependencyConfigSyntaxSugar(definition, graph),
+      expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
       graph
     ),
@@ -89,7 +89,8 @@ export function normalizeDependencyConfigProjects(
 
 export function expandDependencyConfigSyntaxSugar(
   dependencyConfigString: string | TargetDependencyConfig,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  currentProject?: string
 ): TargetDependencyConfig {
   if (typeof dependencyConfigString !== 'string') {
     return dependencyConfigString;
@@ -110,7 +111,8 @@ export function expandDependencyConfigSyntaxSugar(
 
   const { projects, target } = readProjectAndTargetFromTargetString(
     targetString,
-    graph.nodes
+    graph.nodes,
+    currentProject
   );
 
   return projects ? { projects, target } : { target };
@@ -163,13 +165,14 @@ export function expandWildcardTargetConfiguration(
 
 export function readProjectAndTargetFromTargetString(
   targetString: string,
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, ProjectGraphProjectNode>,
+  currentProject?: string
 ): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitTarget(
     targetString,
     { nodes: projects } as ProjectGraph,
-    { silent: true }
+    { silent: true, currentProject }
   );
 
   if (!segments.length) {

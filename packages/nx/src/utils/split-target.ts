@@ -109,38 +109,46 @@ function findAllMatchingSegments(
 }
 
 /**
- * Deterministic precedence sort for ambiguous target matches.
+ * Returns whether `a` should be preferred over `b` using deterministic
+ * precedence rules:
  *
- * 1. Bare-target matches (currentProject) rank highest — indicated by the
- *    match's project equalling currentProject.
+ * 1. Bare-target matches (currentProject) rank highest.
  * 2. Longest (most-specific) project name.
  * 3. Longest target name.
  * 4. Longest configuration name.
  */
-function sortMatchesByPrecedence(
+function isHigherPrecedence(
+  a: TargetTuple,
+  b: TargetTuple,
+  currentProject?: string
+): boolean {
+  const aIsBare = currentProject && a[0] === currentProject ? 1 : 0;
+  const bIsBare = currentProject && b[0] === currentProject ? 1 : 0;
+  if (aIsBare !== bIsBare) return aIsBare > bIsBare;
+
+  if (a[0].length !== b[0].length) return a[0].length > b[0].length;
+
+  const aTarget = (a[1] ?? '').length;
+  const bTarget = (b[1] ?? '').length;
+  if (aTarget !== bTarget) return aTarget > bTarget;
+
+  return (a[2] ?? '').length > (b[2] ?? '').length;
+}
+
+/**
+ * Single-pass selection of the highest-precedence match.
+ */
+function bestMatch(
   matches: TargetTuple[],
   currentProject?: string
-): TargetTuple[] {
-  return matches.slice().sort((a, b) => {
-    // Bare-target matches (currentProject) rank highest
-    const aIsBare = currentProject && a[0] === currentProject ? 1 : 0;
-    const bIsBare = currentProject && b[0] === currentProject ? 1 : 0;
-    if (aIsBare !== bIsBare) return bIsBare - aIsBare;
-
-    // Longest project name
-    if (a[0].length !== b[0].length) return b[0].length - a[0].length;
-
-    // Longest target name
-    const aTarget = a[1] ?? '';
-    const bTarget = b[1] ?? '';
-    if (aTarget.length !== bTarget.length)
-      return bTarget.length - aTarget.length;
-
-    // Longest configuration name
-    const aConfig = a[2] ?? '';
-    const bConfig = b[2] ?? '';
-    return bConfig.length - aConfig.length;
-  });
+): TargetTuple {
+  let best = matches[0];
+  for (let i = 1; i < matches.length; i++) {
+    if (isHigherPrecedence(matches[i], best, currentProject)) {
+      best = matches[i];
+    }
+  }
+  return best;
 }
 
 function formatMatch(match: TargetTuple): string {
@@ -164,17 +172,17 @@ function splitTargetImpl(
   const matches = findAllMatchingSegments(segments, lookup, currentProject);
 
   if (matches.length > 0) {
-    const sorted = sortMatchesByPrecedence(matches, currentProject);
+    const best = bestMatch(matches, currentProject);
 
-    if (sorted.length > 1 && !silent) {
+    if (matches.length > 1 && !silent) {
       output.warn({
         title: `Ambiguous target specifier "${s}"`,
         bodyLines: [
           `This string can be interpreted in multiple ways:`,
-          ...sorted.map(
-            (m, i) =>
-              `  ${i === 0 ? '→' : ' '} ${formatMatch(m)}${
-                i === 0 ? ' (selected)' : ''
+          ...matches.map(
+            (m) =>
+              `  ${m === best ? '→' : ' '} ${formatMatch(m)}${
+                m === best ? ' (selected)' : ''
               }`
           ),
           ``,
@@ -183,7 +191,7 @@ function splitTargetImpl(
       });
     }
 
-    return sorted[0];
+    return best;
   }
 
   // --- Fallback: no exact match found in the graph ---
@@ -219,9 +227,9 @@ function splitTargetImpl(
       currentProject
     );
     if (restMatches.length > 0) {
-      const sorted = sortMatchesByPrecedence(restMatches, currentProject);
-      if (sorted[0].length === 2) {
-        return [...(sorted[0] as [string, string]), configuration];
+      const best = bestMatch(restMatches, currentProject);
+      if (best.length === 2) {
+        return [...(best as [string, string]), configuration];
       }
     }
     // no project-target pair found, do the naive matching
