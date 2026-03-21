@@ -16,6 +16,33 @@ The `@nx/vite` plugin generators take care of configuring Vite for you. However,
 
 You need to use the `nxViteTsPaths()` plugin to make sure that your TypeScript paths are resolved correctly in your monorepo.
 
+## TypeScript custom conditions (TS solution setup)
+
+If you are using a [TypeScript solution setup](/docs/concepts/typescript-project-linking), Nx configures `customConditions` in your `tsconfig.base.json` so that TypeScript can resolve library source files through `package.json` exports. Vite has its own module resolver and does not read tsconfig, so you need the `nxTsPlugin()` to bridge this gap.
+
+The plugin reads `customConditions` from `tsconfig.base.json` and passes them to Vite's `resolve.conditions`, allowing Vite to resolve your workspace libraries correctly.
+
+```ts
+// apps/my-app/vite.config.mts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxTsPlugin } from '@nx/vite/plugins/nx-ts.plugin';
+
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+  plugins: [nxTsPlugin(), react()],
+  // ...
+}));
+```
+
+{% aside type="note" title="When to use which plugin" %}
+
+- **TS solution setup**: Use `nxTsPlugin()` — libraries have their own `package.json` with exports, and Vite resolves them natively. The plugin just tells Vite about the custom export condition.
+- **Non-TS-solution setup**: Use `nxViteTsPaths()` — resolves imports using tsconfig `paths` mappings.
+
+New projects use the correct plugin automatically. If you migrate to a TS solution setup, the `add-nx-ts-plugin` migration will update your configs.
+{% /aside %}
+
 ## Framework plugins
 
 If you are using React, you need to use the [`@vitejs/plugin-react` plugin](https://www.npmjs.com/package/@vitejs/plugin-react). If you're using Vue, you need to use the [`@vitejs/plugin-vue` plugin](https://www.npmjs.com/package/@vitejs/plugin-vue).
