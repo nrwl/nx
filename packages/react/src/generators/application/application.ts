@@ -1,4 +1,8 @@
 import {
+  logShowProjectCommand,
+  promptWhenInteractive,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -9,7 +13,6 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
@@ -45,7 +48,6 @@ import {
 } from './lib/bundlers/add-vite';
 import { Schema } from './schema';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export async function applicationGenerator(
   tree: Tree,

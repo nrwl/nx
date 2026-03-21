@@ -1,3 +1,4 @@
+import { camelize, dasherize } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -5,7 +6,6 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
 import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,

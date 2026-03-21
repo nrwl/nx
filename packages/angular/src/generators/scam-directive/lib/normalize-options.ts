@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, names } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { getModuleTypeSeparator } from '../../utils/artifact-types';
 import { validateClassName } from '../../utils/validations';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';

@@ -2,7 +2,7 @@ import type { TargetConfiguration, Tree } from '@nx/devkit';
 import {
   processTargetOutputs,
   toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+} from '@nx/devkit/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { WebpackExecutorOptions } from '../../../executors/webpack/schema';

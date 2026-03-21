@@ -1,4 +1,10 @@
 import {
+  getNamedInputs,
+  calculateHashesForCreateNodes,
+  clearRequireCache,
+  loadConfigFile,
+} from '@nx/devkit/internal';
+import {
   type CreateNodesV2,
   type CreateNodesContextV2,
   detectPackageManager,
@@ -13,17 +19,11 @@ import {
 
 import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import {
-  clearRequireCache,
-  loadConfigFile,
-} from '@nx/devkit/src/utils/config-utils';
 
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;

@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 import { processGenericOptions } from './process-generic-options';
 
 export function processServeOptions(

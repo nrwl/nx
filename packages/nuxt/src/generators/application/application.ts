@@ -1,3 +1,4 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -25,7 +26,6 @@ import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import {

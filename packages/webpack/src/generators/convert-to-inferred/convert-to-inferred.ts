@@ -1,4 +1,9 @@
 import {
+  AggregatedLog,
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
@@ -6,11 +11,6 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';

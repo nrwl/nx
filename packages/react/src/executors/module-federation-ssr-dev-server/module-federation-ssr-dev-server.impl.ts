@@ -2,7 +2,7 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import {
   combineAsyncIterables,
   createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
+} from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';

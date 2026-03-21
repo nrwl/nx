@@ -1,3 +1,4 @@
+import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -19,8 +20,6 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {

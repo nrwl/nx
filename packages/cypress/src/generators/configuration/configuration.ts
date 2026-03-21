@@ -1,3 +1,4 @@
+import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -19,8 +20,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,

@@ -1,3 +1,4 @@
+import { ensureRootProjectName } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -31,7 +32,6 @@ import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
 

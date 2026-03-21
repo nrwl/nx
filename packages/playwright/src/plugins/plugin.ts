@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   createNodesFromFiles,
   type CreateNodesContextV2,
   type CreateNodesV2,
@@ -10,9 +15,6 @@ import {
   type TargetConfiguration,
   type TargetDependencyConfig,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';

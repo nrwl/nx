@@ -1,5 +1,5 @@
 import { type Tree, readNxJson } from '@nx/devkit';
-import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
+import { getE2EWebServerInfo } from '@nx/devkit/internal';
 
 export async function getWebpackE2EWebServerInfo(
   tree: Tree,

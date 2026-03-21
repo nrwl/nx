@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addProjectConfiguration,
@@ -7,7 +8,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nextVersion } from '../../../utils/versions';
 import { reactDomVersion, reactVersion } from '@nx/react';

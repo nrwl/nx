@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import type {
   Language,
   NestGeneratorWithLanguageOption,

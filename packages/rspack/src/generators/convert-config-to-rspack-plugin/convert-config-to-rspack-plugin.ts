@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   getProjects,
@@ -7,7 +8,6 @@ import {
   updateProjectConfiguration,
   ProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { RspackExecutorSchema } from '../../executors/rspack/schema';
 import { extractRspackOptions } from './lib/extract-rspack-options';
 import { normalizePathOptions } from './lib/normalize-path-options';

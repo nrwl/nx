@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -7,7 +8,6 @@ import {
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';

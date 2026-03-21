@@ -1,5 +1,5 @@
 import { type Tree, type TargetConfiguration } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import { AggregatedLog } from '@nx/devkit/internal';
 import { REMIX_PROPERTY_MAPPINGS } from './utils';
 
 export function servePostTargetTransformer(migrationLogs: AggregatedLog) {

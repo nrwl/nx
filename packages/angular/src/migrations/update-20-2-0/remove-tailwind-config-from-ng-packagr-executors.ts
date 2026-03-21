@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
@@ -6,7 +7,6 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export const executors = ['@nx/angular:ng-packagr-lite', '@nx/angular:package'];
 

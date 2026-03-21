@@ -7,7 +7,8 @@ import {
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
-import { classify } from '@nx/devkit/src/utils/string-utils';
+import { names } from '@nx/devkit';
+const classify = (s: string) => names(s).className;
 
 describe('Move Angular Project', () => {
   let proj: string;

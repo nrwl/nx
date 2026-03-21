@@ -1,3 +1,4 @@
+import { getE2EWebServerInfo } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -7,7 +8,6 @@ import {
   GeneratorCallback,
   writeJson,
 } from '@nx/devkit';
-import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';

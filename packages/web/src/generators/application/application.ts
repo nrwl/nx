@@ -1,4 +1,11 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+  addBuildTargetDefaults,
+  logShowProjectCommand,
+  E2EWebServerDetails,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
@@ -20,10 +27,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
@@ -39,10 +42,7 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
-import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,

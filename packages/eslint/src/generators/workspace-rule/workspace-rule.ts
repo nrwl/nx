@@ -1,3 +1,4 @@
+import { camelize } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -11,7 +12,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { camelize } from '@nx/devkit/src/utils/string-utils';
 import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';

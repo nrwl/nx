@@ -1,14 +1,14 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   logger,
   parseTargetString,
   readTargetOptions,
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import {

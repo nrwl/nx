@@ -1,3 +1,8 @@
+import {
+  calculateHashForCreateNodes,
+  getNamedInputs,
+  loadConfigFile,
+} from '@nx/devkit/internal';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -13,9 +18,6 @@ import {
   type TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';

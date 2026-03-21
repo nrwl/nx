@@ -1,14 +1,13 @@
 import * as rollup from 'rollup';
 import { parse, resolve } from 'path';
 import { type ExecutorContext, logger } from '@nx/devkit';
+import { loadConfigFile, createAsyncIterable } from '@nx/devkit/internal';
 
 import { RollupExecutorOptions } from './schema';
 import {
   NormalizedRollupExecutorOptions,
   normalizeRollupExecutorOptions,
 } from './lib/normalize';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { withNx } from '../../plugins/with-nx/with-nx';
 import { pluginName as generatePackageJsonPluginName } from '../../plugins/package-json/generate-package-json';
 import { calculateProjectBuildableDependencies } from '@nx/js/src/utils/buildable-libs-utils';

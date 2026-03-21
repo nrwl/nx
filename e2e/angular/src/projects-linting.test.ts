@@ -23,17 +23,21 @@ describe('Angular Projects - Linting', () => {
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {
     const { app1, lib1 } = setup;
 
-    // disable the prefer-standalone rule for app1 which is not standalone
-    let app1EslintConfig = readFile(`${app1}/eslint.config.mjs`);
-    app1EslintConfig = app1EslintConfig.replace(
-      `'@angular-eslint/directive-selector': [`,
-      `'@angular-eslint/prefer-standalone': 'off',
+    // disable the prefer-standalone rule for app1 and lib1 which are not standalone
+    for (const project of [app1, lib1]) {
+      let eslintConfig = readFile(`${project}/eslint.config.mjs`);
+      eslintConfig = eslintConfig.replace(
+        `'@angular-eslint/directive-selector': [`,
+        `'@angular-eslint/prefer-standalone': 'off',
       '@angular-eslint/directive-selector': [`
-    );
-    updateFile(`${app1}/eslint.config.mjs`, app1EslintConfig);
+      );
+      updateFile(`${project}/eslint.config.mjs`, eslintConfig);
+    }
 
     // check apps and lib pass linting for initial generated code
-    runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`);
+    runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`, {
+      redirectStderr: true,
+    });
 
     // External HTML template file
     const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;

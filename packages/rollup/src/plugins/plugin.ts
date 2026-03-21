@@ -1,3 +1,7 @@
+import {
+  calculateHashForCreateNodes,
+  getNamedInputs,
+} from '@nx/devkit/internal';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
@@ -13,9 +17,7 @@ import {
   type TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';

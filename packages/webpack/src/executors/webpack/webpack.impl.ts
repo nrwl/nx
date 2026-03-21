@@ -1,10 +1,10 @@
+import { eachValueFrom } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   logger,
   stripIndents,
   targetToTargetString,
 } from '@nx/devkit';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { getRootTsConfigPath } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { resolve } from 'path';

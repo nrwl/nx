@@ -1,4 +1,4 @@
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { loadConfigFile } from '@nx/devkit/internal';
 
 export async function resolveUserDefinedRspackConfig(
   path: string,
