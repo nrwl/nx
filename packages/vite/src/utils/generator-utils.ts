@@ -448,7 +448,12 @@ export function createOrEditViteConfig(
     );
   }
 
-  if (!isTsSolutionSetup) {
+  if (isTsSolutionSetup) {
+    imports.push(
+      `import { nxTsconfigResolveConditionsPlugin } from '@nx/vite/plugins/nx-tsconfig-resolve-conditions.plugin'`
+    );
+    plugins.push(`nxTsconfigResolveConditionsPlugin()`);
+  } else {
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
