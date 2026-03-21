@@ -199,7 +199,16 @@ function resolveTargetIdentifier(
     process.exit(1);
   }
 
-  const [project, target, config] = splitTarget(args.target, graph);
+  const defaultProjectName = calculateDefaultProjectName(
+    process.cwd(),
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(graph),
+    nxJson
+  );
+
+  const [project, target, config] = splitTarget(args.target, graph, {
+    currentProject: defaultProjectName,
+  });
 
   if (project && target) {
     return {
@@ -210,12 +219,7 @@ function resolveTargetIdentifier(
   }
 
   const targetName = project; // splitTarget returns the string as the first element
-  const projectName = calculateDefaultProjectName(
-    process.cwd(),
-    workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(graph),
-    nxJson
-  );
+  const projectName = defaultProjectName;
 
   if (!projectName) {
     output.error({

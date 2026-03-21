@@ -63,9 +63,15 @@ export function parseTargetString(
     targetString = `${projectGraphOrCtx.projectName}:${targetString}`;
   }
 
+  const currentProject =
+    projectGraphOrCtx && 'projectName' in projectGraphOrCtx
+      ? projectGraphOrCtx.projectName
+      : undefined;
+
   const [project, target, configuration] = splitTarget(
     targetString,
-    projectGraph
+    projectGraph,
+    { currentProject }
   );
 
   if (!project || !target) {
