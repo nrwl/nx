@@ -253,13 +253,23 @@ impl TelemetryService {
 // =============================================================================
 
 /// Convert an EventData into sanitized params and push onto the queue
-fn enqueue_event(event: EventData, user_params: &ParameterMap, queue: &mut Vec<ParameterMap>) {
+fn enqueue_event(
+    event: EventData,
+    user_params: &ParameterMap,
+    current_page_title: Option<&str>,
+    queue: &mut Vec<ParameterMap>,
+) {
     let mut params = user_params.clone();
     params.extend(event.parameters);
     params.insert(
         event_param::EVENT_NAME.to_string(),
         truncate_string(&event.name, MAX_EVENT_NAME_LENGTH),
     );
+    if let Some(title) = current_page_title {
+        params
+            .entry(event_param::DOCUMENT_TITLE.to_string())
+            .or_insert_with(|| title.to_string());
+    }
     queue.push(sanitize_params(params));
 }
 
@@ -291,13 +301,15 @@ fn drain_channels(
     event_rx: &Receiver<EventData>,
     page_view_rx: &Receiver<PageViewData>,
     user_params: &ParameterMap,
+    current_page_title: &mut Option<String>,
     event_queue: &mut Vec<ParameterMap>,
     page_view_queue: &mut Vec<ParameterMap>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
-        enqueue_event(event, user_params, event_queue);
+        enqueue_event(event, user_params, current_page_title.as_deref(), event_queue);
     }
     while let Ok(page_view) = page_view_rx.try_recv() {
+        *current_page_title = Some(page_view.title.clone());
         enqueue_page_view(page_view, user_params, page_view_queue);
     }
 }
@@ -326,6 +338,7 @@ fn background_sender(
         initial_session_id.clone(),
     );
     let mut session = SessionState::new(initial_session_id, session_refresh_tx);
+    let mut current_page_title: Option<String> = None;
     let mut event_queue = Vec::new();
     let mut page_view_queue = Vec::new();
     let mut last_send = std::time::Instant::now();
@@ -351,6 +364,7 @@ fn background_sender(
                     Ok(page_view) => {
                         session.touch(&mut common_params);
                         tracing::trace!("Queuing page view: {}", page_view.title);
+                        current_page_title = Some(page_view.title.clone());
                         enqueue_page_view(page_view, &user_params, &mut page_view_queue);
                     }
                     Err(_) => break,
@@ -361,7 +375,7 @@ fn background_sender(
                     Ok(event) => {
                         session.touch(&mut common_params);
                         tracing::trace!("Queuing event: {}", event.name);
-                        enqueue_event(event, &user_params, &mut event_queue);
+                        enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
                     }
                     Err(_) => break,
                 }
@@ -369,7 +383,7 @@ fn background_sender(
             recv(flush_rx) -> msg => {
                 match msg {
                     Ok(reply) => {
-                        drain_channels(&event_rx, &page_view_rx, &user_params, &mut event_queue, &mut page_view_queue);
+                        drain_channels(&event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
                         let result = rt.block_on(send_batches(
                             &client,
                             &common_params,
@@ -383,7 +397,7 @@ fn background_sender(
                 }
             }
             default(timeout) => {
-                drain_channels(&event_rx, &page_view_rx, &user_params, &mut event_queue, &mut page_view_queue);
+                drain_channels(&event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
                 let _ = rt.block_on(send_batches(
                     &client,
                     &common_params,
