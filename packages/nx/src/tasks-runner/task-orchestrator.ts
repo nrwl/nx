@@ -90,6 +90,7 @@ export class TaskOrchestrator {
   private waitingForTasks: Function[] = [];
 
   private groups = [];
+  private continuousTasksStarted = 0;
 
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
@@ -110,7 +111,8 @@ export class TaskOrchestrator {
     { runningTask: RunningTask; stopping: boolean }
   >();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
-  private cleanupDone = false;
+  private continuousTaskExitHandled = new Map<string, Promise<void>>();
+  private cleanupPromise: Promise<void> | null = null;
 
   // endregion internal state
 
@@ -152,17 +154,23 @@ export class TaskOrchestrator {
 
     performance.mark('task-execution:start');
 
-    const threadCount = getThreadCount(this.options, this.taskGraph);
+    const { discrete, continuous, total } = getThreadPoolSize(
+      this.options,
+      this.taskGraph
+    );
 
     const threads = [];
 
-    process.stdout.setMaxListeners(threadCount + defaultMaxListeners);
-    process.stderr.setMaxListeners(threadCount + defaultMaxListeners);
-    process.setMaxListeners(threadCount + defaultMaxListeners);
+    process.stdout.setMaxListeners(total + defaultMaxListeners);
+    process.stderr.setMaxListeners(total + defaultMaxListeners);
+    process.setMaxListeners(total + defaultMaxListeners);
 
     // initial seeding of the queue
-    for (let i = 0; i < threadCount; ++i) {
-      threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
+    for (let i = 0; i < discrete; ++i) {
+      threads.push(this.executeDiscreteTaskLoop());
+    }
+    for (let i = 0; i < continuous; ++i) {
+      threads.push(this.executeContinuousTaskLoop(continuous));
     }
 
     await Promise.race([
@@ -202,60 +210,75 @@ export class TaskOrchestrator {
     return this.tasksSchedule.nextBatch();
   }
 
-  private async executeNextBatchOfTasksUsingTaskSchedule() {
-    // completed all the tasks
-    if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
-      return null;
-    }
-
+  private async executeDiscreteTaskLoop() {
     const doNotSkipCache =
       this.options.skipNxCache === false ||
       this.options.skipNxCache === undefined;
 
-    this.processAllScheduledTasks();
-    const batch = this.nextBatch();
-    if (batch) {
-      const groupId = this.closeGroup();
+    while (true) {
+      // completed all the tasks
+      if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
+        return null;
+      }
 
-      await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
+      this.processAllScheduledTasks();
 
-      this.openGroup(groupId);
+      const batch = this.nextBatch();
+      if (batch) {
+        const groupId = this.closeGroup();
+        await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
+        this.openGroup(groupId);
+        continue;
+      }
 
-      return this.executeNextBatchOfTasksUsingTaskSchedule();
+      const task = this.tasksSchedule.nextTask((t) => !t.continuous);
+      if (task) {
+        const groupId = this.closeGroup();
+        await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+        this.openGroup(groupId);
+        continue;
+      }
+
+      // block until some other task completes, then try again
+      await new Promise((res) => this.waitingForTasks.push(res));
     }
+  }
 
-    const task = this.tasksSchedule.nextTask();
-    if (task) {
-      const groupId = this.closeGroup();
+  private async executeContinuousTaskLoop(continuousTaskCount: number) {
+    while (true) {
+      // completed all the tasks
+      if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
+        return null;
+      }
 
-      if (task.continuous) {
+      this.processAllScheduledTasks();
+
+      const task = this.tasksSchedule.nextTask((t) => t.continuous);
+      if (task) {
+        // Use a separate groupId space (parallel..parallel+N) so continuous tasks
+        // don't consume discrete group slots
+        const groupId = this.options.parallel + this.continuousTasksStarted++;
         const runningTask = await this.startContinuousTask(task, groupId);
 
         if (this.initializingTaskIds.has(task.id)) {
-          await new Promise<void>((res) => {
-            runningTask.onExit((code) => {
-              if (!this.tuiEnabled) {
-                if (code > 128) {
-                  process.exit(code);
-                }
-              }
-              res();
-            });
-          });
+          await this.continuousTaskExitHandled.get(task.id);
         }
-      } else {
-        await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+
+        // all continuous tasks have been started, thread can exit
+        if (this.continuousTasksStarted >= continuousTaskCount) {
+          return null;
+        }
+        continue;
       }
 
-      this.openGroup(groupId);
+      // all continuous tasks have been started, thread can exit
+      if (this.continuousTasksStarted >= continuousTaskCount) {
+        return null;
+      }
 
-      return this.executeNextBatchOfTasksUsingTaskSchedule();
+      // block until some other task completes, then try again
+      await new Promise((res) => this.waitingForTasks.push(res));
     }
-
-    // block until some other task completes, then try again
-    return new Promise((res) => this.waitingForTasks.push(res)).then(() =>
-      this.executeNextBatchOfTasksUsingTaskSchedule()
-    );
   }
 
   private processTasks(taskIds: string[]) {
@@ -944,7 +967,15 @@ export class TaskOrchestrator {
         groupId,
         ownsRunningTasksService: false,
       });
-      this.registerContinuousTaskExitHandler(runningTask, task, groupId, false);
+      this.continuousTaskExitHandled.set(
+        task.id,
+        new Promise<void>((resolve) => {
+          runningTask.onExit(async (code) => {
+            await this.handleContinuousTaskExit(code, task, groupId, false);
+            resolve();
+          });
+        })
+      );
 
       // task is already running by another process, we schedule the next tasks
       // and release the threads
@@ -997,7 +1028,15 @@ export class TaskOrchestrator {
       groupId,
       ownsRunningTasksService: true,
     });
-    this.registerContinuousTaskExitHandler(childProcess, task, groupId, true);
+    this.continuousTaskExitHandled.set(
+      task.id,
+      new Promise<void>((resolve) => {
+        childProcess.onExit(async (code) => {
+          await this.handleContinuousTaskExit(code, task, groupId, true);
+          resolve();
+        });
+      })
+    );
     await this.scheduleNextTasksAndReleaseThreads();
 
     return childProcess;
@@ -1230,7 +1269,7 @@ export class TaskOrchestrator {
     );
   }
 
-  private closeGroup() {
+  private closeGroup(): number {
     for (let i = 0; i < this.options.parallel; i++) {
       if (!this.groups[i]) {
         this.groups[i] = true;
@@ -1259,42 +1298,40 @@ export class TaskOrchestrator {
 
   // endregion utils
 
-  private registerContinuousTaskExitHandler(
-    runningTask: RunningTask,
+  private async handleContinuousTaskExit(
+    code: number,
     task: Task,
     groupId: number,
     ownsRunningTasksService: boolean
   ) {
-    runningTask.onExit(async (code) => {
-      // If cleanup already completed this task, nothing left to do
-      if (this.completedTasks[task.id] !== undefined) {
-        return;
-      }
+    // If cleanup already completed this task, nothing left to do
+    if (this.completedTasks[task.id] !== undefined) {
+      return;
+    }
 
-      const stoppingReason = this.runningContinuousTasks.get(
-        task.id
-      )?.stoppingReason;
-      if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
-        const reason =
-          stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
-        await this.completeContinuousTask(
-          task,
-          groupId,
-          ownsRunningTasksService,
-          reason
-        );
-      } else {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        await this.completeContinuousTask(
-          task,
-          groupId,
-          ownsRunningTasksService,
-          'crashed'
-        );
-      }
-    });
+    const stoppingReason = this.runningContinuousTasks.get(
+      task.id
+    )?.stoppingReason;
+    if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+      const reason =
+        stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        reason
+      );
+    } else {
+      console.error(
+        `Task "${task.id}" is continuous but exited with code ${code}`
+      );
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        'crashed'
+      );
+    }
   }
 
   private async completeContinuousTask(
@@ -1330,11 +1367,14 @@ export class TaskOrchestrator {
   }
 
   private async cleanup() {
-    if (this.cleanupDone) {
-      return;
+    if (this.cleanupPromise) {
+      return this.cleanupPromise;
     }
-    this.cleanupDone = true;
+    this.cleanupPromise = this.performCleanup();
+    return this.cleanupPromise;
+  }
 
+  private async performCleanup() {
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
     for (const entry of this.runningContinuousTasks.values()) {
@@ -1396,6 +1436,27 @@ export class TaskOrchestrator {
   private setupSignalHandlers() {
     process.once('SIGINT', () => {
       this.stopRequested = true;
+      if (!this.tuiEnabled) {
+        // Synchronously remove DB entries before async cleanup to prevent
+        // new nx processes from seeing stale "Waiting for ..." messages.
+        // This replicates the cleanup that process.exit() + Rust Drop
+        // previously provided.
+        for (const [taskId, { ownsRunningTasksService }] of this
+          .runningContinuousTasks) {
+          if (ownsRunningTasksService) {
+            this.runningTasksService?.removeRunningTask(taskId);
+          }
+        }
+        // Silence output — pnpm (and similar wrappers) may exit before nx
+        // finishes cleanup, returning the shell prompt. Any output after
+        // that point would appear after the prompt.
+        const noop = (_chunk, _encoding, callback) => {
+          if (callback) callback();
+          return true;
+        };
+        process.stdout.write = noop as any;
+        process.stderr.write = noop as any;
+      }
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1405,6 +1466,7 @@ export class TaskOrchestrator {
       });
     });
     process.once('SIGTERM', () => {
+      this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1412,6 +1474,7 @@ export class TaskOrchestrator {
       });
     });
     process.once('SIGHUP', () => {
+      this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1447,10 +1510,10 @@ export class TaskOrchestrator {
   }
 }
 
-export function getThreadCount(
+export function getThreadPoolSize(
   options: NxArgs & DefaultTasksRunnerOptions,
   taskGraph: TaskGraph
-) {
+): { discrete: number; continuous: number; total: number } {
   if (
     (options as any)['parallel'] === 'false' ||
     (options as any)['parallel'] === false
@@ -1465,9 +1528,13 @@ export function getThreadCount(
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
   }
 
-  const maxParallel =
-    options['parallel'] +
-    Object.values(taskGraph.tasks).filter((t) => t.continuous).length;
-  const totalTasks = Object.keys(taskGraph.tasks).length;
-  return Math.min(maxParallel, totalTasks);
+  const continuousCount = Object.values(taskGraph.tasks).filter(
+    (t) => t.continuous
+  ).length;
+
+  const discrete = options['parallel'];
+  const continuous = continuousCount;
+  const total = discrete + continuous;
+
+  return { discrete, continuous, total };
 }

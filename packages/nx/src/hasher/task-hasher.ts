@@ -12,6 +12,7 @@ import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -84,14 +85,16 @@ export interface TaskHasherImpl {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash[]>;
 
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash>;
 }
 
@@ -108,12 +111,14 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
     return this.daemonClient.hashTasks(
       this.runnerOptions,
       tasks,
       taskGraph,
       env ?? process.env,
-      process.cwd()
+      process.cwd(),
+      collectInputs
     );
   }
 
@@ -122,13 +127,15 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv
   ): Promise<Hash> {
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
     return (
       await this.daemonClient.hashTasks(
         this.runnerOptions,
         [task],
         taskGraph,
         env ?? process.env,
-        process.cwd()
+        process.cwd(),
+        collectInputs
       )
     )[0];
   }
@@ -158,13 +165,15 @@ export class InProcessTaskHasher implements TaskHasher {
     tasks: Task[],
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
       taskGraph,
       env ?? process.env,
-      cwd ?? process.cwd()
+      cwd ?? process.cwd(),
+      collectInputs
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
@@ -175,13 +184,15 @@ export class InProcessTaskHasher implements TaskHasher {
     task: Task,
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
       taskGraph,
       env ?? process.env,
-      cwd ?? process.cwd()
+      cwd ?? process.cwd(),
+      collectInputs
     );
     return this.createHashDetails(task, res);
   }

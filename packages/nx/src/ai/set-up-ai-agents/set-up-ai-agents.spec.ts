@@ -9,6 +9,19 @@ import * as packageJsonUtils from '../../utils/package-json';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
 
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    existsSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.existsSync(...args)),
+    readFileSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
+  };
+});
+
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
   let readModulePackageJsonSpy: jest.SpyInstance;

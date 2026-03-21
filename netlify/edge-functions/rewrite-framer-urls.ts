@@ -147,6 +147,7 @@ export const config = {
     '/api/*',
     '/blog/*',
     '/courses/*',
+    '/changelog',
     '/_next/*',
     '/.netlify/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire

@@ -25,7 +25,7 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
         ESLINT_USE_FLAT_CONFIG: process.env.ESLINT_USE_FLAT_CONFIG ?? 'true',
       },
       shell: true,
-      windowsHide: false,
+      windowsHide: true,
     });
 
     childProcess.on('exit', (code, signal) => {
@@ -50,7 +50,7 @@ export function execAndWait(
       {
         cwd,
         env: { ...process.env, NX_DAEMON: 'false' },
-        windowsHide: false,
+        windowsHide: true,
         maxBuffer: 1024 * 1024 * 10, // 10MB — default 1MB can be exceeded by verbose PM output
       },
       (error, stdout, stderr) => {

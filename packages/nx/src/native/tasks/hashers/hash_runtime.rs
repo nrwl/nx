@@ -1,16 +1,9 @@
 use crate::native::hasher::hash;
+use crate::native::utils::command::create_shell_command;
 use dashmap::DashMap;
 use std::collections::HashMap;
-use std::process::Command;
 use std::sync::Arc;
 use tracing::trace;
-
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
-
-// Windows API constant to prevent creating a window
-#[cfg(target_os = "windows")]
-const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 pub fn hash_runtime(
     workspace_root: &str,
@@ -24,7 +17,7 @@ pub fn hash_runtime(
         return Ok(cache_results.clone());
     }
 
-    let mut command_builder = create_command_builder();
+    let mut command_builder = create_shell_command();
 
     command_builder.arg(command);
 
@@ -51,26 +44,6 @@ fn runtime_cache_key(command: &str, env: &HashMap<String, String>) -> String {
     let mut entries: Vec<_> = env.iter().collect();
     entries.sort_by(|(a, _), (b, _)| a.cmp(b));
     format!("{}-{:?}", command, entries)
-}
-
-#[cfg(target_os = "windows")]
-pub fn create_command_builder() -> Command {
-    let comspec = std::env::var("COMSPEC");
-    let shell = comspec
-        .as_ref()
-        .map(|v| v.as_str())
-        .unwrap_or_else(|_| "cmd.exe");
-    let mut command = Command::new(shell);
-    command.creation_flags(CREATE_NO_WINDOW);
-    command.arg("/C");
-    command
-}
-
-#[cfg(not(target_os = "windows"))]
-pub fn create_command_builder() -> Command {
-    let mut command = Command::new("sh");
-    command.arg("-c");
-    command
 }
 
 #[cfg(test)]

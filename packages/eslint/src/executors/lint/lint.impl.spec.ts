@@ -2,6 +2,22 @@ import type { ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as fs from 'fs';
 import { resolve } from 'path';
+
+const realFs = jest.requireActual<typeof import('fs')>('fs');
+
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    existsSync: jest.fn((path: any) => actual.existsSync(path)),
+    writeFileSync: jest.fn((path: any, data: any, options?: any) =>
+      actual.writeFileSync(path, data, options)
+    ),
+    mkdirSync: jest.fn((path: any, options?: any) =>
+      actual.mkdirSync(path, options)
+    ),
+  };
+});
 import type { Schema } from './schema';
 
 const formattedReports = 'formatted report 1';
@@ -38,7 +54,8 @@ const mockResolveAndInstantiateESLint = jest.fn().mockReturnValue(
 
 jest.mock('./utility/eslint-utils', () => {
   return {
-    resolveAndInstantiateESLint: mockResolveAndInstantiateESLint,
+    resolveAndInstantiateESLint: (...args) =>
+      mockResolveAndInstantiateESLint(...args),
   };
 });
 import lintExecutor from './lint.impl';
@@ -78,6 +95,17 @@ function createValidRunBuilderOptions(
 function setupMocks() {
   jest.resetModules();
   jest.clearAllMocks();
+  // Reset fs mocks to pass-through real implementations
+  (fs.existsSync as jest.Mock).mockImplementation((path: fs.PathLike) =>
+    realFs.existsSync(path)
+  );
+  (fs.writeFileSync as jest.Mock).mockImplementation(
+    (path: fs.PathOrFileDescriptor, data: any, options?: any) =>
+      realFs.writeFileSync(path, data, options)
+  );
+  (fs.mkdirSync as jest.Mock).mockImplementation(
+    (path: fs.PathLike, options?: any) => realFs.mkdirSync(path, options)
+  );
   jest.spyOn(process, 'chdir').mockImplementation(mockChdir);
   console.warn = jest.fn();
   console.error = jest.fn();
@@ -870,7 +898,6 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
   it('should not attempt to write the lint results to the output file, if not specified', async () => {
     setupMocks();
-    jest.spyOn(fs, 'writeFileSync').mockImplementation();
     await lintExecutor(
       createValidRunBuilderOptions({
         eslintConfig: './.eslintrc.json',
@@ -912,7 +939,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
   it('should pass path to eslint.config.cjs to resolveAndInstantiateESLint if it is unspecified and we are using flag configuration', async () => {
     setupMocks();
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
       `${mockContext.root}/apps/proj/eslint.config.cjs`,
@@ -944,6 +971,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
   describe('Bulk Suppression Support', () => {
     it('should pass suppressAll option to ESLint when enabled', async () => {
       setupMocks();
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       MockESLint.version = '9.24.0';
       await lintExecutor(
         createValidRunBuilderOptions({
@@ -962,6 +990,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
     it('should pass suppressRule option to ESLint when specified', async () => {
       setupMocks();
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       MockESLint.version = '9.24.0';
       await lintExecutor(
         createValidRunBuilderOptions({
@@ -1003,6 +1032,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
     it('should not pass suppression options when not specified', async () => {
       setupMocks();
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       MockESLint.version = '9.24.0';
       await lintExecutor(createValidRunBuilderOptions(), mockContext);
       expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(

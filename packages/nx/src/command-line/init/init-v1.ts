@@ -7,19 +7,16 @@ import { addNxToNest } from './implementation/add-nx-to-nest';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToAngularCliRepo } from './implementation/angular';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
-import { addNxToCraRepo } from './implementation/react';
+
 import { runNxSync } from '../../utils/child-process';
-import { directoryExists, readJsonFile } from '../../utils/fileutils';
+import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { isMonorepo, printFinalMessage } from './implementation/utils';
 
 export interface InitArgs {
-  addE2e: boolean;
-  force: boolean;
   integrated: boolean;
   interactive: boolean;
-  vite: boolean;
   nxCloud?: boolean;
   cacheable?: string[];
   useDotNxInstallation?: boolean;
@@ -43,15 +40,6 @@ export async function initHandler(options: InitArgs) {
 
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
-      });
-      return;
-    } else if (isCRA(packageJson)) {
-      await addNxToCraRepo(options);
-
-      printFinalMessage({
-        learnMoreLink: options.integrated
-          ? 'https://nx.dev/getting-started/tutorials/react-monorepo-tutorial'
-          : 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial',
       });
       return;
     } else if (isNestCLI(packageJson)) {
@@ -95,28 +83,10 @@ export async function initHandler(options: InitArgs) {
     } else {
       execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
         stdio: [0, 1, 2],
-        windowsHide: false,
+        windowsHide: true,
       });
     }
   }
-}
-
-function isCRA(packageJson: PackageJson) {
-  const combinedDependencies = {
-    ...packageJson.dependencies,
-    ...packageJson.devDependencies,
-  };
-  return (
-    // Required dependencies for CRA projects
-    combinedDependencies['react'] &&
-    combinedDependencies['react-dom'] &&
-    combinedDependencies['react-scripts'] &&
-    // // Don't convert customized CRA projects
-    !combinedDependencies['react-app-rewired'] &&
-    !combinedDependencies['@craco/craco'] &&
-    directoryExists('src') &&
-    directoryExists('public')
-  );
 }
 
 function isNestCLI(packageJson: PackageJson) {
