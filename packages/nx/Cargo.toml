@@ -96,7 +96,7 @@ ratatui = { version = "0.29" }
 reqwest = { version = "0.12.22", default-features = false, features = [
     "rustls-tls-native-roots",
 ] }
-turso = { version = "0.5.1", default-features = false }
+turso = { git = "https://github.com/tursodatabase/turso", branch = "multi-process", default-features = false }
 watchexec = "8.0.1"
 watchexec-events = "6.0.0"
 watchexec-signals = "5.0.1"

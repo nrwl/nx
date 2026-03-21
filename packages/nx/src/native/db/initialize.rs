@@ -165,6 +165,48 @@ mod tests {
     }
 
     #[test]
+    fn initialize_db_concurrent_connections() -> anyhow::Result<()> {
+        let temp_dir = tempfile::tempdir()?;
+        let db_path = temp_dir.path().join("test.db");
+
+        // Open first connection
+        let conn1 = initialize_db("1.0.0".to_string(), &db_path)?;
+
+        // Open second connection to the same DB — this used to fail with
+        // "Locking error: Failed locking file. File is locked by another process"
+        let conn2 = initialize_db("1.0.0".to_string(), &db_path)?;
+
+        // Both connections should be able to read
+        let row1 = conn1
+            .query_row("SELECT value FROM metadata WHERE key='NX_VERSION'", &[])?
+            .expect("conn1 should read NX_VERSION");
+        let row2 = conn2
+            .query_row("SELECT value FROM metadata WHERE key='NX_VERSION'", &[])?
+            .expect("conn2 should read NX_VERSION");
+
+        assert_eq!(row1.get_str(0)?, "1.0.0");
+        assert_eq!(row2.get_str(0)?, "1.0.0");
+
+        // Both connections should be able to write
+        conn1.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('test1', 'from_conn1')",
+            &[],
+        )?;
+        conn2.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('test2', 'from_conn2')",
+            &[],
+        )?;
+
+        // Verify writes are visible
+        let r = conn1
+            .query_row("SELECT value FROM metadata WHERE key='test2'", &[])?
+            .expect("conn1 should see conn2's write");
+        assert_eq!(r.get_str(0)?, "from_conn2");
+
+        Ok(())
+    }
+
+    #[test]
     fn initialize_db_recreates_incompatible_db() -> anyhow::Result<()> {
         let temp_dir = tempfile::tempdir()?;
         let db_path = temp_dir.path().join("test.db");
