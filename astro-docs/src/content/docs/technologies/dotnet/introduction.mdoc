@@ -1,5 +1,5 @@
 ---
-title: Overview of the Nx Plugin for .NET
+title: .NET Plugin for Nx
 description: This plugin allows .NET projects to be run through Nx.
 sidebar:
   label: 'Introduction'
@@ -64,7 +64,7 @@ sudo apt install nx
 {% /tabitem %}
 {% /tabs %}
 
-### Add Nx to a .NET Workspace
+### Add Nx to a .NET workspace
 
 In any .NET workspace, run the following command to add Nx and the `@nx/dotnet` plugin:
 
@@ -78,7 +78,7 @@ Then, you can run .NET tasks using Nx. For example:
 nx build <your dotnet project>
 ```
 
-### Add .NET to an Existing Nx Workspace
+### Add .NET to an existing Nx workspace
 
 If you already have an Nx workspace set up, you can add the `@nx/dotnet` plugin by running the following command:
 
@@ -98,7 +98,7 @@ dotnet new webapi -o ./apps/my-api
 
 Full project creation docs can be found here [on the official Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new).
 
-## How @nx/dotnet Infers Tasks
+## How @nx/dotnet infers tasks
 
 The `@nx/dotnet` plugin uses MSBuild to analyze your .NET solution and project structure. When using `nx add`, the plugin is automatically configured in your `nx.json` file.
 
@@ -114,11 +114,11 @@ The plugin analyzes your MSBuild project files to determine:
 - Available build targets (build, test, clean, etc.)
 - Project outputs and configuration
 
-## View Inferred Tasks
+## View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
 
-## @nx/dotnet Configuration
+## @nx/dotnet configuration
 
 The `@nx/dotnet` is configured in the `plugins` array in `nx.json`.
 
@@ -167,7 +167,7 @@ Once a .NET project file has been identified, the targets are created with the c
 - `watch` - Watches the project for changes and rebuilds (automatically marked as continuous)
 - `run` - Runs the application (for executable projects)
 
-### Target Availability
+### Target availability
 
 Not all targets are available for every project type. The plugin intelligently determines which targets to create based on the project type:
 
@@ -175,7 +175,7 @@ Not all targets are available for every project type. The plugin intelligently d
 - **Class Libraries**: build, clean, restore, pack, watch
 - **Test Projects**: build, clean, restore, test, watch
 
-### Continuous Tasks
+### Continuous tasks
 
 The `@nx/dotnet` plugin automatically marks the `watch` target as [continuous](/docs/reference/project-configuration#continuous), ensuring Nx handles it correctly during development. Unlike watch, `run` is not automatically marked as continuous as it may exit depending on the type of application. To mark `run` as continuous, you can configure it manually in `project.json` or `nx.json`.
 
@@ -217,9 +217,9 @@ Alternatively, you can create a new `project.json` file in the root of your proj
 {% /tabitem %}
 {% /tabs %}
 
-## Working with Configurations
+## Working with configurations
 
-The `@nx/dotnet` plugin supports MSBuild configurations (Debug, Release, etc.) through Nx's configuration system. You can run tasks with specific configurations:
+The `@nx/dotnet` plugin supports MSBuild configurations (Debug, Release, etc.) through Nx configuration system. You can run tasks with specific configurations:
 
 ```shell
 # Build with Release configuration

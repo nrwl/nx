@@ -60,15 +60,15 @@ There are a few ways to setup the Nx MCP server.
 {% /tabitem %}
 {% /tabs %}
 
-### Via Nx Console Extension
+### Via Nx Console extension
 
 If you're using Cursor or VS Code, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
 
-## Client-Specific Setup
+## Client-specific setup
 
 > If your preferred client is not listed, configure your client to run `npx nx mcp` (Nx >= 21.4) or `npx nx-mcp@latest` (older versions) to start the Nx MCP server.
 
-### Claude Code
+### Claude code
 
 {% tabs syncKey="nx-version" %}
 {% tabitem label="Nx >= 21.4" %}
@@ -124,7 +124,7 @@ If you miss the notification, run the `nx.configureMcpServer` command from the c
 
 If you miss the notification, run the `Nx: Setup MCP Server` command from the command palette (`Ctrl/Cmd + Shift + A`).
 
-## Command-Line Options
+## Command-line options
 
 The `nx mcp` command (or `npx nx-mcp` for older versions) accepts the following options:
 
@@ -139,7 +139,7 @@ The `nx mcp` command (or `npx nx-mcp` for older versions) accepts the following 
 | `--debugLogs`           |       | Enable debug logging                                                                                                                |
 | `--help`                |       | Display help information                                                                                                            |
 
-### HTTP Transport
+### HTTP transport
 
 If you want to host the server instead of communicating via `stdio`, use the `--transport` and `--port` flags:
 
@@ -162,7 +162,7 @@ npx nx-mcp@latest --transport sse --port 9921
 
 The HTTP transport supports multiple concurrent connections, allowing different clients to connect simultaneously with independent sessions.
 
-### Filtering Tools
+### Filtering tools
 
 You can limit which tools are available using the `--tools` option with glob patterns:
 
@@ -205,7 +205,7 @@ npx nx-mcp@latest --tools "nx_workspace" "nx_project_details" "nx_docs"
 
 This is useful when you want to restrict the LLM's capabilities or reduce noise in the tool list.
 
-### Minimal Mode (Default)
+### Minimal mode (Default)
 
 By default, the MCP server runs in **minimal mode** (`--minimal`), which hides workspace analysis and generator tools. These capabilities are now handled more efficiently by [agent skills](/docs/features/enhance-ai), which provide domain knowledge as incrementally-loaded instructions rather than tool-call-based data dumps. This reduces token usage and keeps the tool list focused on what MCP does best: connectivity to Nx Cloud and running processes.
 
@@ -230,28 +230,28 @@ npx nx-mcp@latest --no-minimal
 
 When the Nx Console extension manages the MCP server in VS Code or Cursor, it automatically enables minimal mode if it detects that agent skills are installed in the workspace.
 
-## Available Tools
+## Available tools
 
-### Documentation Tools
+### Documentation tools
 
 | Tool      | Description                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------- |
 | `nx_docs` | Returns documentation sections relevant to user queries about Nx configuration and best practices |
 
-### Task Monitoring Tools
+### Task monitoring tools
 
 | Tool                               | Description                                                      |
 | ---------------------------------- | ---------------------------------------------------------------- |
 | `nx_current_running_tasks_details` | Lists currently running Nx TUI processes and their task statuses |
 | `nx_current_running_task_output`   | Returns terminal output for specific running tasks               |
 
-### Visualization Tools
+### Visualization tools
 
 | Tool                 | Description                                                                                              |
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `nx_visualize_graph` | Opens interactive project or task graph visualizations (requires a running IDE instance with Nx Console) |
 
-### Nx Cloud CI Tools
+### Nx Cloud CI tools
 
 These tools enable AI agents to interact with CI pipelines and self-healing capabilities:
 
@@ -260,7 +260,7 @@ These tools enable AI agents to interact with CI pipelines and self-healing capa
 | `ci_information`          | Retrieves CI pipeline execution information from Nx Cloud for the current branch. Returns pipeline status, failed tasks, and self-healing status. |
 | `update_self_healing_fix` | Apply or reject a self-healing CI fix from Nx Cloud. Records the decision on the suggested fix.                                                   |
 
-### Nx Cloud Analytics Tools
+### Nx Cloud analytics tools
 
 These tools provide analytics and insights into your CI/CD data:
 
@@ -273,11 +273,11 @@ These tools provide analytics and insights into your CI/CD data:
 | `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
 | `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
 
-### Extended Tools (--no-minimal)
+### Extended tools (--no-minimal)
 
 The following tools are hidden by default in minimal mode. They're available when running with `--no-minimal`, which is useful for AI clients that don't support skills or instruction files.
 
-#### Workspace Tools
+#### Workspace tools
 
 | Tool                   | Description                                                                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -286,7 +286,7 @@ The following tools are hidden by default in minimal mode. They're available whe
 | `nx_project_details`   | Returns complete project configuration in JSON format for a specific project, including targets, dependencies, and metadata         |
 | `nx_available_plugins` | Lists available Nx plugins from the core team and local workspace plugins                                                           |
 
-#### Generator Tools
+#### Generator tools
 
 | Tool                  | Description                                                                                               |
 | --------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -298,7 +298,7 @@ The following tools are hidden by default in minimal mode. They're available whe
 When no workspace path is specified, only the `nx_docs` tool will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
 {% /aside %}
 
-## Available Resources
+## Available resources
 
 When connected to an Nx Cloud-enabled workspace, the Nx MCP server automatically exposes recent CI Pipeline Executions (CIPEs) as MCP resources. Resources appear in your AI tool's resource picker, allowing the LLM to access detailed information about CI runs including:
 
@@ -307,9 +307,9 @@ When connected to an Nx Cloud-enabled workspace, the Nx MCP server automatically
 - Affected files in the pipeline run
 - Build timing and performance data
 
-## Tool Usage Examples
+## Tool usage examples
 
-### Accessing Documentation
+### Accessing documentation
 
 Get accurate guidance without hallucinations:
 
@@ -320,7 +320,7 @@ What are the caching options for tasks?
 
 The `nx_docs` tool retrieves relevant, up-to-date documentation based on your query.
 
-### Analyzing CI Failures
+### Analyzing CI failures
 
 When a CI build fails, your AI assistant can:
 
@@ -335,7 +335,7 @@ Using the Nx Cloud tools, the AI can:
 2. Retrieve terminal output from failed tasks
 3. Understand what changed and suggest fixes
 
-### Autonomous CI Monitoring
+### Autonomous CI monitoring
 
 With the `ci_information` and `update_self_healing_fix` tools, AI agents can monitor CI pipelines and interact with self-healing. For a ready-to-use implementation, see the [CI monitoring skill](/docs/features/enhance-ai#self-healing-ci-integration) in Claude Code:
 
@@ -350,7 +350,7 @@ The AI agent can:
 3. Apply verified fixes via `update_self_healing_fix`
 4. Continue iterating until CI passes
 
-### Workspace Exploration and Code Generation
+### Workspace exploration and code generation
 
 For workspace exploration, code generation, and task execution, agents use [skills](/docs/features/enhance-ai) rather than MCP tools. Skills teach agents how to use the Nx CLI directly — running commands like `nx show projects`, `nx show project myapp`, and `nx generate` — which is more token-efficient than fetching large JSON payloads via MCP.
 

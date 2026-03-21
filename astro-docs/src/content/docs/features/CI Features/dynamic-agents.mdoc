@@ -23,7 +23,7 @@ jobs:
 
 This works great, but may not be the most cost-effective way to run your tasks. The goal is to **balance cost and speed**. For example, you might want to run a small PR on a few agents to save costs, but use many agents for a large PR to get the fastest possible build time.
 
-## Configure Dynamic Agents based on PR size
+## Configure dynamic agents based on PR size
 
 You can configure Nx Cloud to execute a different number of agents based on the size of your PR's affected changes. Define any number of **changesets** (the number of agents and types of agents) to use for different sized PRs and pass them in a configuration file to your `start-ci-run` command.
 
@@ -55,7 +55,7 @@ You can have as many changesets as you want. Based on the number of changesets s
 Nx Cloud calculates the relationship between the number of [affected projects](/docs/features/ci-features/affected) and the total number of projects in the workspace to determine the size of a PR.
 {% /callout %}
 
-## Setting up Dynamic Agents in your CI Pipeline
+## Setting up dynamic agents in your CI pipeline
 
 In the example below, each changeset would be assigned an equal percentage range out of 100%. If Nx Cloud determines that 30% of your projects have been affected, then it will use the medium changeset to distribute the workload on. If Nx Cloud determines that 55% of your projects have been affected, it will use the large changeset.
 

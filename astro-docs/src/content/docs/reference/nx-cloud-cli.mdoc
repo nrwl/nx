@@ -9,7 +9,7 @@ filter: 'type:References'
 The Nx Cloud command line interface provides various commands to connect and interact with Nx Cloud, manage distributed task execution, and handle authentication.
 Below is a complete reference for all available commands and their options.
 
-## Available Commands
+## Available commands
 
 ### `nx-cloud login`
 
@@ -29,7 +29,7 @@ npx nx-cloud login [nxCloudUrl]
 | ------------ | ------ | ---------------------------------------------- | ---------------------- |
 | `nxCloudUrl` | string | The URL of the Nx Cloud instance to connect to | `https://cloud.nx.app` |
 
-#### Configuration File Location
+#### Configuration file location
 
 {% tabs %}
 {% tabitem label="macOS & Linux" %}
@@ -142,7 +142,7 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--auto-apply-fixes`            | string  | Comma-separated glob patterns for [self-healing](/docs/features/ci-features/self-healing-ci) tasks to auto-apply to PRs without manual review                                             |         |
 | `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                                     |         |
 
-#### Detailed Option Usage
+#### Detailed option usage
 
 ##### `--distribute-on`
 
@@ -249,7 +249,7 @@ To address this, you can pass an optional `configuration` to make your `target`s
 - run: nx affected -t build --configuration=locale-es
 ```
 
-##### --with-env-vars (Nx Agents Only)
+##### --with-env-vars (Nx Agents only)
 
 By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Nx Agents.
 This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
@@ -294,7 +294,7 @@ npx nx-cloud start-ci-run --auto-apply-fixes="*lint*" --no-distribution
 npx nx-cloud start-ci-run --auto-apply-fixes="*lint*,*format*" --no-distribution
 ```
 
-#### Enabling/Disabling Distribution
+#### Enabling/Disabling distribution
 
 Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for
 individual commands as follows:
@@ -348,7 +348,7 @@ npx nx-cloud start-agent
 | ----------- | ------- | ------------------------------------ | ------- |
 | `--verbose` | boolean | Enable verbose logging for debugging | `false` |
 
-#### Environment Variables
+#### Environment variables
 
 Use the `NX_AGENT_NAME` environment variable to assign a name to the agent for identification in logs and the Nx Cloud UI:
 
@@ -392,7 +392,7 @@ Remove temporary marker files created by `start-ci-run` if accidentally run loca
 npx nx-cloud cleanup
 ```
 
-## Getting Help
+## Getting help
 
 You can get help for any command by adding the `--help` flag:
 

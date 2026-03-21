@@ -453,15 +453,19 @@ export function createAPI(
       const projects = args.projects?.length
         ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group, plus any dependents
           Array.from(
-            releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
-          ).flatMap((project) => {
-            return [
-              project,
-              ...(projectsVersionData[project]?.dependentProjects.map(
-                (dep) => dep.source
-              ) || []),
-            ];
-          })
+            new Set(
+              Array.from(
+                releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+              ).flatMap((project) => {
+                return [
+                  project,
+                  ...(projectsVersionData[project]?.dependentProjects.map(
+                    (dep) => dep.source
+                  ) || []),
+                ];
+              })
+            )
+          )
         : // Otherwise, we use the full list of projects within the release group
           releaseGroup.projects;
       const projectNodes = projects.map((name) => projectGraph.nodes[name]);

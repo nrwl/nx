@@ -23,7 +23,7 @@ export async function setupVerdaccio(
     generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {
       npmUplinkRegistry:
         execSync('npm config get registry', {
-          windowsHide: false,
+          windowsHide: true,
         })
           ?.toString()
           ?.trim() ?? 'https://registry.npmjs.org',

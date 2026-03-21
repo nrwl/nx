@@ -454,6 +454,7 @@ function ProjectsShellInner() {
                 traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white hover:bg-sky-600 dark:hover:bg-sky-700 border-sky-500 dark:border-sky-600"
                 traceableProjectItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 justify-between"
                 traceableProjectSelectedItemClassName="bg-sky-500/10 dark:bg-sky-600/10 text-slate-900 dark:text-slate-100"
+                traceEndFilterInputClassName="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-sky-500 dark:focus:border-sky-400"
                 onViewProjectDetailsClick={() =>
                   onViewProjectDetailsClick(element)
                 }

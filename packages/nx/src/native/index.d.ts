@@ -15,12 +15,13 @@ export declare class AppLifeCycle {
   printTaskTerminalOutput(task: Task, status: string, output: string): void
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
   endCommand(): void
-  __init(doneCallback: () => any): void
+  __init(doneCallback: (() => unknown)): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
-  registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
+  setTaskTiming(taskId: string, startTime: number, endTime: number): void
+  registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
@@ -167,7 +168,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -178,7 +179,7 @@ export declare class Watcher {
    * watcher-specific patterns like vite/vitest timestamp files.
    */
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
-  watch(callback: (err: string | null, events: WatchEvent[]) => void): void
+  watch(callbackTsfn: (err: string | null, events: WatchEvent[]) => void): void
   stop(): Promise<void>
 }
 
@@ -220,15 +221,15 @@ export interface CachedResult {
   size?: number
 }
 
-export declare export declare function canInstallNxConsole(): Promise<boolean>
+export declare function canInstallNxConsole(): Promise<boolean>
 
-export declare export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
+export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
-export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
+export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
-export declare export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
-export declare export declare function copy(src: string, dest: string): number
+export declare function copy(src: string, dest: string): number
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
@@ -240,10 +241,25 @@ export interface DepsOutputsInput {
  * Returns None if no agent is detected.
  * Filtering against supported agents should be done on the TypeScript side.
  */
-export declare export declare function detectAiAgent(): string | null
+export declare function detectAiAgent(): string | null
 
 export interface EnvironmentInput {
   env: string
+}
+
+/**
+ * Canonical event dimension and metric names for GA4.
+ * TypeScript imports these from the native module instead of redefining the strings.
+ */
+export interface EventDimensions {
+  command: string
+  generatorName: string
+  packageName: string
+  packageVersion: string
+  duration: string
+  taskCount: string
+  projectCount: string
+  cachedTaskCount: string
 }
 
 export declare const enum EventType {
@@ -252,7 +268,7 @@ export declare const enum EventType {
   create = 'create'
 }
 
-export declare export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
+export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
   externalDependencies: Array<string>
@@ -279,19 +295,28 @@ export interface FileSetInput {
   dependencies?: boolean
 }
 
-export declare export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
+export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
-export declare export declare function getBinaryTarget(): string
+/**
+ * Flush all pending telemetry data
+ * This should be called before process exit
+ */
+export declare function flushTelemetry(): void
 
-export declare export declare function getDefaultMaxCacheSize(cachePath: string): number
+export declare function getBinaryTarget(): string
+
+export declare function getDefaultMaxCacheSize(cachePath: string): number
+
+/** Returns the canonical event dimension names. */
+export declare function getEventDimensions(): EventDimensions
 
 /**
  * Expands the given outputs into a list of existing files.
  * This is used when hashing outputs
  */
-export declare export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 
-export declare export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
+export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
  * Group information - union of different process group types
@@ -318,7 +343,7 @@ export declare const enum GroupType {
   Batch = 'Batch'
 }
 
-export declare export declare function hashArray(input: Array<string | undefined | null>): string
+export declare function hashArray(input: Array<string | undefined | null>): string
 
 export interface HashDetails {
   value: string
@@ -338,7 +363,7 @@ export interface HasherOptions {
   selectivelyHashTsConfig: boolean
 }
 
-export declare export declare function hashFile(file: string): string | null
+export declare function hashFile(file: string): string | null
 
 /** NAPI-compatible struct for returning hash inputs to JavaScript */
 export interface HashInputs {
@@ -354,24 +379,40 @@ export interface HashInputs {
   external: Array<string>
 }
 
+/**
+ * Initialize telemetry using a DB connection.
+ * Gets/creates the session ID from the DB, stores the connection
+ * for persisting session refreshes on flush, and returns the session ID
+ * so the caller can set it as an env var for child processes.
+ * Used by CLI and daemon.
+ */
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
+
+/**
+ * Initialize telemetry with a pre-fetched session ID.
+ * No DB connection — used by plugin workers that inherit the
+ * session ID from their parent process via env var.
+ */
+export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+
 export interface InputsInput {
   input: string
   dependencies?: boolean
   projects?: string | Array<string>
 }
 
-export declare export declare function installNxConsole(): Promise<boolean>
+export declare function installNxConsole(): Promise<boolean>
 
-export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
+export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export const IS_WASM: boolean
 
 /** Detects if the current process is being run by an AI agent */
-export declare export declare function isAiAgent(): boolean
+export declare function isAiAgent(): boolean
 
-export declare export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
+export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
-export declare export declare function logDebug(message: string): void
+export declare function logDebug(message: string): void
 
 /** Combined metadata for groups and processes */
 export interface Metadata {
@@ -399,13 +440,17 @@ export interface NxWorkspaceFiles {
   externalReferences?: NxWorkspaceFilesExternals
 }
 
+/**
+ * Return-only struct (Rust → JS). `object_from_js = false` skips generating
+ * `FromNapiValue` since `External<T>` only supports `FromNapiRef` in napi v3.
+ */
 export interface NxWorkspaceFilesExternals {
   projectFiles: ExternalObject<ProjectFiles>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
 }
 
-export declare export declare function parseTaskStatus(stringStatus: string): TaskStatus
+export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {
@@ -439,9 +484,9 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
-export declare export declare function remove(src: string): void
+export declare function remove(src: string): void
 
-export declare export declare function restoreTerminal(): void
+export declare function restoreTerminal(): void
 
 export declare const enum RunMode {
   RunOne = 0,
@@ -527,13 +572,19 @@ export interface TaskTarget {
   configuration?: string
 }
 
-export declare export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/** Track an event using the global telemetry instance */
+export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void
+
+/** Track a page view using the global telemetry instance */
+export declare function trackPageView(pageTitle: string, pageLocation?: string | undefined | null, parameters?: Record<string, string> | undefined | null): void
 
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker
  * This wont be needed once the project graph is created in Rust
  */
-export declare export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
 
 export interface TuiCliArgs {
   targets?: string[] | undefined
@@ -550,7 +601,7 @@ export interface UpdatedWorkspaceFiles {
   externalReferences: NxWorkspaceFilesExternals
 }
 
-export declare export declare function validateOutputs(outputs: Array<string>): void
+export declare function validateOutputs(outputs: Array<string>): void
 
 export interface WatchEvent {
   path: string
@@ -566,4 +617,3 @@ export declare const enum WorkspaceErrors {
   ParseError = 'ParseError',
   Generic = 'Generic'
 }
-

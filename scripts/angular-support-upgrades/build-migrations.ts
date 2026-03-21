@@ -9,23 +9,45 @@ async function addMigrationPackageGroup(
   packageVersionMap: Map<string, string>,
   isPrerelease: boolean
 ) {
+  const existingEntry =
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion];
   angularPackageMigrations.packageJsonUpdates[targetNxVersion] = {
     version: `${targetNxMigrationVersion}`,
   };
 
   const promptAndRequirements =
     await getPromptAndRequiredVersions(packageVersionMap);
-  if (!promptAndRequirements) {
-    console.warn(
-      '❗️ - The `@angular/core` latest version is greater than the next version. Skipping generating migration prompt and requirements.\n' +
-        '     Please review the migrations and manually add the prompt and requirements if needed.'
-    );
-  } else {
+  if (promptAndRequirements) {
     angularPackageMigrations.packageJsonUpdates[targetNxVersion]['x-prompt'] =
       `Do you want to update the Angular version to ${promptAndRequirements.promptVersion}?`;
     angularPackageMigrations.packageJsonUpdates[targetNxVersion].requires = {
       '@angular/core': promptAndRequirements.angularCoreRequirement,
     };
+  } else if (existingEntry?.['x-prompt'] && existingEntry?.requires) {
+    // latest >= next: preserve x-prompt from the pre-release entry and
+    // update the requires upper bound to the stable major.minor.0
+    const angularCoreVersion = packageVersionMap.get('@angular/core');
+    const { major: majorVersion, minor: minorVersion } =
+      parse(angularCoreVersion)!;
+    const existingReq = existingEntry.requires['@angular/core'] as string;
+    const updatedReq = existingReq.replace(
+      /<.*$/,
+      `<${majorVersion}.${minorVersion}.0`
+    );
+
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion]['x-prompt'] =
+      existingEntry['x-prompt'];
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion].requires = {
+      '@angular/core': updatedReq,
+    };
+    console.log(
+      'ℹ️ - The `@angular/core` latest version is greater than the next version. Preserving existing migration prompt and requirements.'
+    );
+  } else {
+    console.warn(
+      '❗️ - The `@angular/core` latest version is greater than the next version and no existing entry found.\n' +
+        '     Please manually add the x-prompt and requires fields.'
+    );
   }
 
   angularPackageMigrations.packageJsonUpdates[targetNxVersion].packages = {};

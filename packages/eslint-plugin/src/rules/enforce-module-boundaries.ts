@@ -13,7 +13,7 @@ import {
 } from '@typescript-eslint/utils';
 import { isBuiltinModuleImport } from '@nx/js/src/internal';
 import { isRelativePath } from 'nx/src/utils/fileutils';
-import { basename, dirname, join, relative } from 'path';
+import { basename, dirname, join, relative, resolve } from 'path';
 import {
   getBarrelEntryPointByImportScope,
   getBarrelEntryPointProjectNode,
@@ -255,25 +255,14 @@ export default ESLintUtils.RuleCreator(
       );
 
     function run(
+      imp: string,
       node:
         | TSESTree.ImportDeclaration
         | TSESTree.ImportExpression
         | TSESTree.ExportAllDeclaration
         | TSESTree.ExportNamedDeclaration
+        | TSESTree.CallExpression
     ) {
-      // Ignoring ExportNamedDeclarations like:
-      // export class Foo {}
-      if (!node.source) {
-        return;
-      }
-
-      // accept only literals because template literals have no value
-      if (node.source.type !== AST_NODE_TYPES.Literal) {
-        return;
-      }
-
-      const imp = node.source.value as string;
-
       // whitelisted import
       if (allow.some((a) => matchImportWithWildcard(a, imp))) {
         return;
@@ -335,16 +324,50 @@ export default ESLintUtils.RuleCreator(
                 const importsToRemap = [];
 
                 for (const entryPointPath of indexTsPaths) {
+                  // Resolve wildcard paths before passing to getRelativeImportPath
+                  let resolvedPath = entryPointPath.path;
+                  let targetImportScope = entryPointPath.importScope;
+                  if (resolvedPath.includes('*')) {
+                    // For wildcard paths resolve using the actual file path from the relative import
+                    // Step 1: Resolve the relative import to an absolute path
+                    // Example: imp='../../models/user', fileName='/root/libs/mylib/src/main.ts'
+                    //          => absoluteImportPath='/root/libs/models/user'
+                    const absoluteImportPath = resolve(dirname(fileName), imp);
+
+                    // Step 2: Get the path relative to project path (which is the workspace root in practice)
+                    // Example: absoluteImportPath='/root/libs/models/user', projectPath='/root'
+                    //          => workspaceRelativePath='libs/models/user'
+                    const workspaceRelativePath = normalizePath(
+                      relative(projectPath, absoluteImportPath)
+                    );
+
+                    // Step 3: Extract the dynamic part after the base path
+                    // Example: resolvedPath='libs/models/*', workspaceRelativePath='libs/models/user'
+                    //          => basePath='libs/models/', dynamicPart='user'
+                    //          => resolvedPath='libs/models/user', targetImportScope='@myorg/models/user'
+                    const basePath = resolvedPath.replace('*', '');
+                    if (workspaceRelativePath.startsWith(basePath)) {
+                      const dynamicPart = workspaceRelativePath.substring(
+                        basePath.length
+                      );
+                      resolvedPath = resolvedPath.replace('*', dynamicPart);
+                      targetImportScope = targetImportScope.replace(
+                        '*',
+                        dynamicPart
+                      );
+                    }
+                  }
+
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      join(workspaceRoot, entryPointPath.path)
+                      join(workspaceRoot, resolvedPath)
                     );
                     // we cannot remap, so leave it as is
                     if (importPath) {
                       importsToRemap.push({
                         member: importMember,
-                        importPath: entryPointPath.importScope,
+                        importPath: targetImportScope,
                       });
                     }
                   }
@@ -615,7 +638,9 @@ export default ESLintUtils.RuleCreator(
       }
 
       // if we import a library using loadChildren, we should not import it using es6imports
+      // this check only applies to ES import/export statements, not require() calls
       if (
+        node.type !== AST_NODE_TYPES.CallExpression &&
         !checkDynamicDependenciesExceptions.some((a) =>
           matchImportWithWildcard(a, imp)
         ) &&
@@ -760,18 +785,79 @@ export default ESLintUtils.RuleCreator(
       }
     }
 
+    function getImportFromSourceNode(
+      node:
+        | TSESTree.ImportDeclaration
+        | TSESTree.ImportExpression
+        | TSESTree.ExportAllDeclaration
+        | TSESTree.ExportNamedDeclaration
+    ): string | undefined {
+      if (!node.source) {
+        return undefined;
+      }
+      if (node.source.type !== AST_NODE_TYPES.Literal) {
+        return undefined;
+      }
+      return node.source.value as string;
+    }
+
+    function getImportFromRequireCall(
+      node: TSESTree.CallExpression
+    ): string | undefined {
+      const callee = node.callee;
+      const isRequire =
+        callee.type === AST_NODE_TYPES.Identifier && callee.name === 'require';
+      const isRequireResolve =
+        callee.type === AST_NODE_TYPES.MemberExpression &&
+        callee.object.type === AST_NODE_TYPES.Identifier &&
+        callee.object.name === 'require' &&
+        callee.property.type === AST_NODE_TYPES.Identifier &&
+        callee.property.name === 'resolve';
+
+      if (!isRequire && !isRequireResolve) {
+        return undefined;
+      }
+
+      const arg = node.arguments[0];
+      if (
+        arg?.type === AST_NODE_TYPES.Literal &&
+        typeof arg.value === 'string'
+      ) {
+        return arg.value;
+      }
+      return undefined;
+    }
+
     return {
       ImportDeclaration(node: TSESTree.ImportDeclaration) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
       ImportExpression(node: TSESTree.ImportExpression) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
       ExportAllDeclaration(node: TSESTree.ExportAllDeclaration) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
       ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
+      },
+      CallExpression(node: TSESTree.CallExpression) {
+        const imp = getImportFromRequireCall(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
     };
   },

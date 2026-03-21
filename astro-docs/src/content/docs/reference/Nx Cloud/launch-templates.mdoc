@@ -9,12 +9,12 @@ Nx Cloud provides several pre-built launch templates for common use-cases. You c
 
 {% github_repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
 
-## Getting Started with Custom Launch Templates
+## Getting started with custom launch templates
 
 The easiest way to create a new custom launch template is to modify one of the pre-built ones. To do that, create a file in the
 `.nx/workflows` folder and copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
 
-## Launch Template Structure
+## Launch template structure
 
 ### `launch-templates`
 
@@ -76,7 +76,7 @@ A launch template's `image` defines the available base software for the agent ma
 // .nx/workflows/agents.yaml
 launch-templates:
   template-one:
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
 ```
 
 Nx Cloud provides the following images:
@@ -84,20 +84,26 @@ Nx Cloud provides the following images:
 > Changes added in previous images are included in newer images unless otherwise denoted
 > Images also have [go 1.22](https://go.dev/) installed
 
-- `ubuntu22.04-node20.11-v5`
-  - added elevated permission access via `sudo`
-- `ubuntu22.04-node20.11-v6`
-  - `corepack` is enabled by default
-  - default global package manager versions:
-    - `npm` v10
-    - `yarn` v1
-    - `pnpm` v8
-    - See how to install a [specific package manger version](#specific-package-manager-version)
+**Ubuntu:**
 
-- `ubuntu22.04-node20.11-v7`
-  - added java version 17
-- `ubuntu22.04-node20.11-v9`
-  - added [nvm](https://github.com/nvm-sh/nvm)
+- `ubuntu22.04-node20.11-v5`: added elevated permission access via `sudo`
+- `ubuntu22.04-node20.11-v6`: `corepack` enabled by default with global pnpm v8, yarn v1, npm v10. See how to install a [specific package manager version](#specific-package-manager-version)
+- `ubuntu22.04-node20.11-v7`: added Java 17
+- `ubuntu22.04-node20.11-v8`: added [nvm](https://github.com/nvm-sh/nvm)
+- `ubuntu22.04-node20.11-v9`: prevented corepack from auto-updating `package.json` and removed corepack enable from sudo user
+- `ubuntu22.04-node20.11-v10`: added Docker support (Docker 24.0.2 binaries)
+- `ubuntu22.04-node20.11-v11`: bumped default `pnpm` from v8 to v9
+- `ubuntu22.04-node20.11-v12`: updated Playwright system dependencies
+- `ubuntu22.04-node20.11-dockerd-v2`: Docker daemon via `get-docker.sh` script with pnpm bumped to v9
+- `ubuntu22.04-node20.11-dockerd-v3`: updated Playwright system dependencies
+- `ubuntu22.04-node20.19-v1`: upgrade default node version to Node 20.19.1
+- `ubuntu22.04-node20.19-v2`: updated Playwright system dependencies
+- `ubuntu22.04-node20.19-v3`: upgraded Docker from 24.0.2 to 28.3.1
+- `ubuntu22.04-node22.21-v1`: upgrade default node version to Node 22.21
+- `ubuntu22.04-node24.11-v1`: upgrade default node version to Node 24.11
+
+**Windows:**
+
 - `windows-2022`
 
 > Note: Windows-based images can only run on Windows-based [resource classes](#launch-templatestemplate-nameresourceclass).
@@ -298,7 +304,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
         base-branch: 'main'
 ```
 
-## Full Example
+## Full example
 
 This is an example of a launch template using all pre-built features:
 
@@ -363,7 +369,7 @@ launch-templates:
   # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     # Define environment variables shared among all steps in this launch template
     env:
       MY_ENV_VAR: shared
@@ -376,7 +382,7 @@ launch-templates:
   # You're not required to define a template for every resource class, only define what you need!
   my-linux-large-js:
     resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     env:
       MY_ENV_VAR: shared
     # note we are using yaml anchors to reduce duplication with the above launch-template (they have the same init-steps)
@@ -385,7 +391,7 @@ launch-templates:
   # template that installs rust
   my-linux-rust-large:
     resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps: *common-rust-init-steps
 ```
 
@@ -403,7 +409,7 @@ nx-cloud start-ci-run --distribute-on="4 my-linux-large-js"
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
 ```
 
-## Validating Launch Templates
+## Validating launch templates
 
 {% aside type="note" %}
 **Commit before Validation**
@@ -419,7 +425,7 @@ To do this, run the `nx-cloud validate` command, with the path to the launch tem
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
-## Pass Environment Variables
+## Pass environment variables
 
 If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
@@ -427,7 +433,7 @@ If you need to send environment variables to agents, you can use the [--with-env
 nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
-## Pass Values Between Steps
+## Pass values between steps
 
 If you need to pass a value from one step to another step, such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.
 
@@ -448,7 +454,7 @@ launch-templates:
           cargo --version
 ```
 
-## Private NPM Registry
+## Private npm registry
 
 {% aside type="caution" title="Protect sensitive values" %}
 To prevent any sensitive values from showing up in a `git diff`, we recommend using the `user` level location for the `.npmrc` or `.yarnrc` file.
@@ -461,7 +467,7 @@ If your project consumes packages from a private registry, you'll have to set up
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -483,14 +489,38 @@ Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```
 
-## Custom Node Version
+## Custom node version
 
 Nx Agents come with node LTS installed. If you want to use a different version, you can add a step to install the desired node version.
 
 {% tabs %}
-{% tabitem label="Pre-Built Step" %}
+{% tabitem label="mise" %}
 
-Nx Cloud provides a [pre-built step to install a custom node version](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-node) within your workflow. This step is available as of `v4` of the workflow steps and requires the minimum image version to be `ubuntu22.04-node20.11-v9`.
+You can use [mise](#install-tools-with-mise) to manage node versions alongside other toolchains.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  node-21:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.19-v3'
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - name: Install mise
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+        inputs:
+          # you can also define a mise.toml in your repo instead of inline tools
+          tools: |
+            node=21
+      - name: Install Node Modules
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+```
+
+{% /tabitem %}
+{% tabitem label="nvm" %}
+
+Nx Cloud provides a [pre-built step to install a custom node version](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-node) within your workflow. This step is available as of `v4` of the workflow steps and requires the minimum image version to be `ubuntu22.04-node20.11-v9` or later.
 
 ```yaml
 // .nx/workflows/agents.yaml
@@ -499,7 +529,7 @@ launch-templates:
     resource-class: 'docker_linux_amd64/medium'
     # note the image version of v9,
     # earlier versions of the base image will not work
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -527,7 +557,7 @@ The steps follow the general pattern of:
 launch-templates:
   node-21:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -552,7 +582,7 @@ launch-templates:
 {% /tabitem %}
 {% /tabs %}
 
-## Specific Package Manager Version
+## Specific package manager version
 
 Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack) by default, allowing you to define the yarn or pnpm version via the `package.json`.
 
@@ -569,7 +599,7 @@ Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack)
 Currently, corepack [only supports yarn or pnpm](https://nodejs.org/api/corepack.html#supported-package-managers) as package managers. If you need to use a specific npm version, you will need to create a custom launch template and install the specific npm version, i.e. `npm install -g npm@<version>`
 {% /aside %}
 
-## Installing Packages
+## Installing packages
 
 You can use `apt` to install popular linux packages. This is helpful in streamlining setting up various toolchains needed for your workspace.
 
@@ -580,7 +610,7 @@ For example, you can install the [GitHub CLI](https://cli.github.com/) on the ag
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps:
       - name: Install Extras
         script: |
@@ -592,6 +622,62 @@ launch-templates:
 
 If you're trying to install a package that isn't available on `apt`, check that packages install steps for Debian base linux. Usually there are a handful of installation scripts that can be used [similar to `nvm`](#custom-node-version)
 {% /aside %}
+
+## Install tools with mise
+
+[mise](https://mise.jdx.dev/) is a polyglot version manager that can install and manage multiple tools and runtimes (node, Rust, Python, Go, and more) in a single step. Nx Cloud provides a [pre-built step](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-mise) to install mise and configure tools on your agents.
+
+{% tabs %}
+{% tabitem label="With mise.toml" %}
+
+If your repo already has a `mise.toml` file, mise automatically installs the tools defined there.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  my-linux-medium-js:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.19-v3'
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - name: Install mise
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+      - name: Install Node Modules
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+```
+
+{% /tabitem %}
+{% tabitem label="With inline tools" %}
+
+You can define tools inline using the `tools` input. Each line specifies a tool and version separated by `=`, `@`, or a space.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  my-linux-medium-js:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.19-v3'
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - name: Install mise
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+        inputs:
+          tools: |
+            node=22
+            rust=1.90
+            python=3.12
+      - name: Install Node Modules
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+```
+
+{% aside type="caution" %}
+Defining tools inline overrides any `mise.toml` in your repo. This can cause differences between CI and local environments. Use inline tools only when your repo does not have a `mise.toml`.
+{% /aside %}
+
+{% /tabitem %}
+{% /tabs %}
 
 ## AWS CLI
 
@@ -616,7 +702,7 @@ Using the pre-built step simplifies and provides debugging checks to make sure t
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps:
       - name: Install AWS CLI
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-aws-cli/main.yaml'
@@ -635,7 +721,7 @@ It is helpful to run `aws sts get-caller-identity` command to make sure you're p
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     init-steps:
       # step assumes you've passed all required AWS_* environment variables from the main agent via --with-env-vars
       - name: Install AWS CLI
@@ -657,7 +743,7 @@ launch-templates:
 {% /tabitem %}
 {% /tabs %}
 
-## Dynamic Changesets
+## Dynamic changesets
 
 NxCloud can calculate how big your pull request is based on how many projects in your workspace it affects. You can then configure Nx Agents to dynamically use a different number of agents based on your changeset size.
 
@@ -693,7 +779,7 @@ Exercise caution when printing out environment variables, they will be shown in 
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     env:
       # enable verbose logging for all steps
       NX_VERBOSE_LOGGING: true
@@ -739,7 +825,7 @@ launch-templates:
           echo "SOME_VALUE: $SOME_VALUE"
 ```
 
-## Nx Workspace in a Subdirectory
+## Nx workspace in a subdirectory
 
 If your Nx workspace is in a subdirectory of your repository, set `NX_WORKING_DIRECTORY` in your launch template:
 
@@ -747,7 +833,7 @@ If your Nx workspace is in a subdirectory of your repository, set `NX_WORKING_DI
 launch-templates:
   my-template:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
+    image: 'ubuntu22.04-node20.19-v3'
     env:
       NX_WORKING_DIRECTORY: './client'
     init-steps:

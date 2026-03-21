@@ -28,7 +28,11 @@ import type {
   PluginWorkerResult,
 } from './messaging';
 import { isPluginWorkerResult, sendMessageOverSocket } from './messaging';
-import { Hook, PluginLifecycleManager } from './plugin-lifecycle-manager';
+import {
+  Hook,
+  Phase,
+  PluginLifecycleManager,
+} from './plugin-lifecycle-manager';
 
 const PLUGIN_TIMEOUT_HINT_TEXT =
   'As a last resort, you can set NX_PLUGIN_NO_TIMEOUTS=true to bypass this timeout.';
@@ -89,7 +93,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   // Typed response handlers keyed by transaction ID
   private responseHandlers = new Map<
     string,
-    (msg: PluginWorkerResult) => void
+    {
+      onMessage: (msg: PluginWorkerResult) => void;
+      onError: (error: Error) => void;
+    }
   >();
 
   // Configuration for restart
@@ -159,15 +166,11 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         this.worker.stderr.unpipe(process.stderr);
       }
       // Reject all pending requests
-      for (const handler of this.responseHandlers.values()) {
-        handler({
-          type: 'loadResult',
-          tx: '',
-          payload: {
-            success: false,
-            error: new Error(`Plugin worker ${this.name} exited unexpectedly.`),
-          },
-        } as PluginWorkerResult);
+      const error = new Error(
+        `Plugin worker "${this.name}" exited unexpectedly.`
+      );
+      for (const { onError } of this.responseHandlers.values()) {
+        onError(error);
       }
       this.responseHandlers.clear();
     };
@@ -204,16 +207,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     if (!isPluginWorkerResult(message)) {
       return;
     }
-    const handler = this.responseHandlers.get(message.tx);
-    if (handler) {
+    const pending = this.responseHandlers.get(message.tx);
+    if (pending) {
       this.responseHandlers.delete(message.tx);
-      handler(message);
+      pending.onMessage(message);
     }
   };
 
   private sendLoadMessage(): Promise<LoadResultPayload> {
     return new Promise((resolve, reject) => {
-      const tx = 'load';
+      const tx = this.generateTxId('load');
 
       const timeout = setTimeout(() => {
         this.responseHandlers.delete(tx);
@@ -226,19 +229,25 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         );
       }, MAX_MESSAGE_WAIT);
 
-      this.responseHandlers.set(tx, (msg) => {
-        clearTimeout(timeout);
-        if (msg.type !== 'loadResult') {
-          reject(new Error(`Expected loadResult, got ${msg.type}`));
-          return;
-        }
-        const payload = msg.payload as PluginWorkerLoadResult['payload'];
-        if (payload.success === false) {
-          reject(payload.error);
-        } else {
-          this._alive = true;
-          resolve(payload);
-        }
+      this.responseHandlers.set(tx, {
+        onMessage: (msg) => {
+          clearTimeout(timeout);
+          if (msg.type !== 'loadResult') {
+            reject(new Error(`Expected loadResult, got ${msg.type}`));
+            return;
+          }
+          const payload = msg.payload as PluginWorkerLoadResult['payload'];
+          if (payload.success === false) {
+            reject(payload.error);
+          } else {
+            this._alive = true;
+            resolve(payload);
+          }
+        },
+        onError: (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        },
       });
 
       sendMessageOverSocket(this.socket, {
@@ -387,16 +396,25 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         );
       }, MAX_MESSAGE_WAIT);
 
-      this.responseHandlers.set(tx, (msg) => {
-        clearTimeout(timeout);
-        this.pendingCount--;
+      this.responseHandlers.set(tx, {
+        onMessage: (msg) => {
+          clearTimeout(timeout);
+          this.pendingCount--;
 
-        if (msg.type !== expectedResultType) {
-          reject(new Error(`Expected ${expectedResultType}, got ${msg.type}`));
-          return;
-        }
+          if (msg.type !== expectedResultType) {
+            reject(
+              new Error(`Expected ${expectedResultType}, got ${msg.type}`)
+            );
+            return;
+          }
 
-        resolve(msg.payload as MessageResult<TType>['payload']);
+          resolve(msg.payload as MessageResult<TType>['payload']);
+        },
+        onError: (error) => {
+          clearTimeout(timeout);
+          this.pendingCount--;
+          reject(error);
+        },
       });
 
       sendMessageOverSocket(this.socket, {
@@ -418,6 +436,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       `[isolated-plugin] shutting down worker for "${this.name}" after last hook`
     );
     this.shutdown();
+  }
+
+  notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): void {
+    if (this.lifecycle?.notifyPhaseAborted(phase, lastCompletedHook)) {
+      this.shutdownIfInactive();
+    }
   }
 
   shutdown(): void {
@@ -450,10 +474,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     if (!this.worker?.pid) return;
     (async () => {
       try {
-        const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+        const { isOnDaemon } = await require(
+          require.resolve('../../../daemon/is-on-daemon')
+        );
         if (!isOnDaemon()) {
-          const { getProcessMetricsService } = await import(
-            '../../../tasks-runner/process-metrics-service'
+          const { getProcessMetricsService } = await require(
+            require.resolve('../../../tasks-runner/process-metrics-service')
           );
           getProcessMetricsService().registerMainCliSubprocess(
             this.worker.pid,
@@ -475,7 +501,10 @@ async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
-  const workerPath = path.join(__dirname, 'plugin-worker');
+  const workerPath = path.join(
+    __dirname,
+    isWorkerTypescript ? 'plugin-worker.ts' : 'plugin-worker.js'
+  );
 
   const env: Record<string, string> = {
     ...process.env,
@@ -485,6 +514,10 @@ async function startPluginWorker(name: string) {
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
+          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+            moduleResolution: 'node',
+            module: 'commonjs',
+          }),
         }
       : {}),
   };

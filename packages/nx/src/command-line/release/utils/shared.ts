@@ -34,7 +34,7 @@ export interface VersionDataEntry {
    * dockerVersion will be populated if the project is a docker project and has been
    * included within this release.
    */
-  dockerVersion?: string;
+  dockerVersion?: string | null;
   /**
    * The list of projects which depend upon the current project.
    */
@@ -200,13 +200,15 @@ export function createCommitMessageValues(
   ]);
 
   for (const releaseGroup of releaseGroups) {
-    const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
-    );
-
     // One entry per project for independent groups
     if (releaseGroup.projectsRelationship === 'independent') {
-      for (const project of releaseGroupProjectNames) {
+      // Include all projects in the release group that were actually versioned,
+      // not just the explicitly filtered ones. This ensures dependent projects
+      // that received side-effect bumps are included in the commit message.
+      const versionedProjects = releaseGroup.projects.filter(
+        (p) => versionData[p] != null && versionData[p].newVersion !== null
+      );
+      for (const project of versionedProjects) {
         const projectVersionData = versionData[project];
         if (projectVersionData.newVersion !== null) {
           const releaseVersion = new ReleaseVersion({
@@ -224,6 +226,9 @@ export function createCommitMessageValues(
     }
 
     // One entry for the whole group for fixed groups
+    const releaseGroupProjectNames = Array.from(
+      releaseGroupToFilteredProjects.get(releaseGroup)
+    );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     if (projectVersionData.newVersion !== null) {
       const releaseVersion = new ReleaseVersion({
@@ -278,12 +283,18 @@ export function createGitTagValues(
   const tags = [];
 
   for (const releaseGroup of releaseGroups) {
-    const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
-    );
     // For independent groups we want one tag per project, not one for the overall group
     if (releaseGroup.projectsRelationship === 'independent') {
-      for (const project of releaseGroupProjectNames) {
+      // Include all projects in the release group that were actually versioned,
+      // not just the explicitly filtered ones. This ensures dependent projects
+      // that received side-effect bumps get their own tags.
+      const versionedProjects = releaseGroup.projects.filter(
+        (p) =>
+          versionData[p] != null &&
+          (versionData[p].newVersion !== null ||
+            versionData[p].dockerVersion !== null)
+      );
+      for (const project of versionedProjects) {
         const projectVersionData = versionData[project];
         if (
           projectVersionData.newVersion !== null ||
@@ -313,22 +324,30 @@ export function createGitTagValues(
               );
             }
           } else {
-            // Use either docker version or semver version based on preference
-            tags.push(
-              interpolate(releaseGroup.releaseTag.pattern, {
-                version: preferDockerVersion
-                  ? projectVersionData.dockerVersion
-                  : projectVersionData.newVersion,
-                projectName: sanitizeProjectNameForGitTag(project),
-                releaseGroupName: releaseGroup.name,
-              })
-            );
+            // Use either docker version or semver version based on preference, with null fallback
+            const version = preferDockerVersion
+              ? (projectVersionData.dockerVersion ??
+                projectVersionData.newVersion)
+              : (projectVersionData.newVersion ??
+                projectVersionData.dockerVersion);
+            if (version) {
+              tags.push(
+                interpolate(releaseGroup.releaseTag.pattern, {
+                  version,
+                  projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
+                })
+              );
+            }
           }
         }
       }
       continue;
     }
     // For fixed groups we want one tag for the overall group
+    const releaseGroupProjectNames = Array.from(
+      releaseGroupToFilteredProjects.get(releaseGroup)
+    );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     if (
       projectVersionData.newVersion !== null ||
@@ -356,15 +375,18 @@ export function createGitTagValues(
           );
         }
       } else {
-        // Use either docker version or semver version based on preference
-        tags.push(
-          interpolate(releaseGroup.releaseTag.pattern, {
-            version: preferDockerVersion
-              ? projectVersionData.dockerVersion
-              : projectVersionData.newVersion,
-            releaseGroupName: releaseGroup.name,
-          })
-        );
+        // Use either docker version or semver version based on preference, with null fallback
+        const version = preferDockerVersion
+          ? (projectVersionData.dockerVersion ?? projectVersionData.newVersion)
+          : (projectVersionData.newVersion ?? projectVersionData.dockerVersion);
+        if (version) {
+          tags.push(
+            interpolate(releaseGroup.releaseTag.pattern, {
+              version,
+              releaseGroupName: releaseGroup.name,
+            })
+          );
+        }
       }
     }
   }

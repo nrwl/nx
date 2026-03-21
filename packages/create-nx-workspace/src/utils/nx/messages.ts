@@ -11,7 +11,7 @@ export type BannerVariant = '0' | '2';
  * Generates a simple box banner with the setup URL.
  */
 function generateSimpleBanner(url: string): string[] {
-  const content = `Finish your set up here: ${url}`;
+  const content = `Finish setup: ${url}`;
   // Add padding around content (3 spaces on each side)
   const innerWidth = content.length + 6;
   const horizontalBorder = '+' + '-'.repeat(innerWidth) + '+';

@@ -3,6 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/workspace-plugin/src",
   "projectType": "library",
-  "targets": {},
+  "targets": {
+    "build": {
+      "command": "tsc --build tsconfig.lib.json",
+      "options": {
+        "cwd": "tools/workspace-plugin"
+      }
+    }
+  },
   "tags": []
 }

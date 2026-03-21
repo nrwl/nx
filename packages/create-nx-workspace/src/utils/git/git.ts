@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { deduceDefaultBase } from './default-base';
 import { output } from '../output';
 import { execAndWait, spawnAndWait } from '../child-process-utils';
-import * as enquirer from 'enquirer';
+import enquirer from 'enquirer';
 
 export enum VcsPushStatus {
   PushedToVcs = 'PushedToVcs',
@@ -36,7 +36,7 @@ export async function checkGitVersion(): Promise<string | null | undefined> {
  */
 export function isGitAvailable(): boolean {
   try {
-    execSync('git --version', { stdio: 'ignore' });
+    execSync('git --version', { stdio: 'ignore', windowsHide: true });
     return true;
   } catch {
     return false;
@@ -49,7 +49,7 @@ export function isGitAvailable(): boolean {
  */
 export function isGhCliAvailable(): boolean {
   try {
-    execSync('gh --version', { stdio: 'ignore' });
+    execSync('gh --version', { stdio: 'ignore', windowsHide: true });
     return true;
   } catch {
     return false;

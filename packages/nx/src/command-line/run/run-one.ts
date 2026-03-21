@@ -1,5 +1,6 @@
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { readNxJson } from '../../config/configuration';
+import { handleImport } from '../../utils/handle-import';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -60,7 +61,7 @@ export async function runOne(
 
   if (nxArgs.help) {
     await (
-      await import('./run')
+      await handleImport('./run.js', __dirname)
     ).printTargetRunHelp(
       {
         ...opts,
@@ -178,7 +179,8 @@ export function parseRunOneOptions(
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs[PROJECT_TARGET_CONFIG],
-      projectGraph
+      projectGraph,
+      { currentProject: defaultProjectName }
     );
     // this is to account for "nx npmscript:dev"
     if (project && !target && defaultProjectName) {

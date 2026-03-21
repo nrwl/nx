@@ -1,5 +1,3 @@
-import { ProjectGraph } from '../config/project-graph';
-import { TaskGraph } from '../config/task-graph';
 import { getProcessMetricsService } from './process-metrics-service';
 
 /**
@@ -41,30 +39,16 @@ export type TaskOutputsCallback = (update: TaskOutputsUpdate) => void;
  * Subscribes to ProcessMetricsService for PID discovery.
  * IO information comes from hash inputs (populated during hashing).
  * Output files are reported when tasks are stored to cache.
+ *
+ * Data is only stored when subscribers are registered. Without subscribers,
+ * notifications are no-ops to avoid unbounded memory growth in long-lived
+ * processes (e.g. the Nx daemon).
  */
 class TaskIOService {
-  // Used to call subscribers that were late to the party
-  protected taskToPids: Map<string, number> = new Map();
-  protected taskToInputs: Map<string, TaskInputInfo> = new Map();
-  protected taskToOutputs: Map<string, string[]> = new Map();
-
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
   private taskInputCallbacks: TaskInputCallback[] = [];
   private taskOutputsCallbacks: TaskOutputsCallback[] = [];
-
-  // Project graph and task graph for resolving task information
-  protected projectGraph: ProjectGraph | null = null;
-  protected taskGraph: TaskGraph | null = null;
-
-  constructor(projectGraph?: ProjectGraph, taskGraph?: TaskGraph) {
-    if (projectGraph) {
-      this.projectGraph = projectGraph;
-    }
-    if (taskGraph) {
-      this.taskGraph = taskGraph;
-    }
-  }
 
   /**
    * Subscribe to task PID updates.
@@ -72,14 +56,14 @@ class TaskIOService {
    */
   subscribeToTaskPids(callback: TaskPidCallback): void {
     this.pidCallbacks.push(callback);
+  }
 
-    // Emit current state to new subscriber
-    for (const [taskId, pid] of this.taskToPids) {
-      callback({
-        taskId,
-        pid,
-      });
-    }
+  /**
+   * Returns true if any callbacks are registered for task input notifications.
+   * Used to avoid expensive input collection in the hasher when nobody is listening.
+   */
+  hasTaskInputSubscribers(): boolean {
+    return this.taskInputCallbacks.length > 0;
   }
 
   /**
@@ -88,11 +72,6 @@ class TaskIOService {
    */
   subscribeToTaskInputs(callback: TaskInputCallback): void {
     this.taskInputCallbacks.push(callback);
-
-    // Emit current state to new subscriber
-    for (const [, taskInputInfo] of this.taskToInputs) {
-      callback(taskInputInfo);
-    }
   }
 
   /**
@@ -101,14 +80,6 @@ class TaskIOService {
    */
   subscribeToTaskOutputs(callback: TaskOutputsCallback): void {
     this.taskOutputsCallbacks.push(callback);
-
-    // Emit current state to new subscriber
-    for (const [task, outputs] of this.taskToOutputs) {
-      callback({
-        taskId: task,
-        outputs: outputs,
-      });
-    }
   }
 
   /**
@@ -129,7 +100,6 @@ class TaskIOService {
       taskId,
       inputs,
     };
-    this.taskToInputs.set(taskId, taskInputInfo);
 
     for (const cb of this.taskInputCallbacks) {
       try {
@@ -145,8 +115,6 @@ class TaskIOService {
    * Called from the cache when outputs are stored.
    */
   notifyTaskOutputs(taskId: string, outputs: string[]): void {
-    this.taskToOutputs.set(taskId, outputs);
-
     const update: TaskOutputsUpdate = {
       taskId,
       outputs,
@@ -166,7 +134,6 @@ class TaskIOService {
    * @param update The TaskPidUpdate containing taskId and pid.
    */
   notifyPidUpdate(update: TaskPidUpdate): void {
-    this.taskToPids.set(update.taskId, update.pid);
     for (const cb of this.pidCallbacks) {
       try {
         cb(update);
@@ -182,14 +149,10 @@ let instance: TaskIOService | null = null;
 
 /**
  * Get or create the singleton TaskIOService instance.
- * Optionally provide projectGraph and taskGraph to initialize with context.
  */
-export function getTaskIOService(
-  projectGraph?: ProjectGraph,
-  taskGraph?: TaskGraph
-): TaskIOService {
+export function getTaskIOService(): TaskIOService {
   if (!instance) {
-    instance = new TaskIOService(projectGraph, taskGraph);
+    instance = new TaskIOService();
   }
   return instance;
 }

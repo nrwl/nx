@@ -5,6 +5,7 @@ authors: ['Max Kless']
 tags: [nx, ai, mcp]
 cover_image: /blog/images/articles/bg-mcp-to-skills.avif
 description: 'How the shift from MCP tools to agent skills changed the way AI assistants work with Nx monorepos — and why MCP still matters.'
+pinned: true
 ---
 
 Remember when MCP was the hot new thing? That was barely a year ago. We built [MCP tools for Nx](/blog/nx-made-cursor-smarter) — surfacing project graphs, generator schemas, task pipelines directly into LLM conversations — and for the first time AI assistants could actually _understand_ your workspace. We shipped integrations for Cursor, VS Code Copilot, and JetBrains, and it worked well.

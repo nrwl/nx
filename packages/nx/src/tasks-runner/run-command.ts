@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
+
 const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
@@ -55,18 +56,19 @@ import { StoreRunInformationLifeCycle } from './life-cycles/store-run-informatio
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
-  getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
+import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -131,7 +133,10 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await import('../native');
+    const { AppLifeCycle, restoreTerminal } = await handleImport(
+      '../native/index.js',
+      __dirname
+    );
     let appLifeCycle;
 
     const isRunOne = initiatingProject != null;
@@ -558,7 +563,7 @@ export async function runCommandForTasks(
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskGraph, taskResults),
+      completed: didCommandComplete(tasks, taskResults),
     };
   } catch (e) {
     restoreTerminal?.();
@@ -584,34 +589,18 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   }
 }
 
-function didCommandComplete(
-  tasks: Task[],
-  taskGraph: TaskGraph,
-  taskResults: TaskResults
-): boolean {
-  // If no tasks, then we can consider it complete
-  if (tasks.length === 0) {
-    return true;
-  }
+function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
+  if (tasks.length === 0) return true;
 
-  let continousLeafTasks = false;
-  const leafTasks = getLeafTasks(taskGraph);
   for (const task of tasks) {
     if (!task.continuous) {
-      // If any discrete task does not have a result then it did not run
-      if (!taskResults[task.id]) {
-        return false;
-      }
-    } else {
-      if (leafTasks.has(task.id)) {
-        continousLeafTasks = true;
-      }
+      // Discrete task must have a result (was started and finished)
+      if (!taskResults[task.id]) return false;
     }
   }
 
-  // If a leaf task is continous, we must have cancelled it.
-  // Otherwise, we've looped through all the discrete tasks and they have results
-  return !continousLeafTasks;
+  // Any stopped task means the run was interrupted
+  return !Object.values(taskResults).some((r) => r.status === 'stopped');
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -1083,6 +1072,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
+  lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);
   return lifeCycles;

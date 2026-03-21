@@ -8,7 +8,7 @@ filter: 'type:Guides'
 
 Feature-based testing is a strategy that co-locates tests with the features they verify. This approach helps you test only what's changed, reducing unnecessary test execution and improving feedback loops.
 
-## The Problem: Monolithic Test Projects
+## The problem: monolithic test projects
 
 Many projects have a single, large test project that depends on the entire application, such as e2e projects. While this setup ensures tests run when any dependency changes, it also means **all tests run even when only one subset of the app changes**.
 
@@ -96,11 +96,11 @@ In this example, when `feat-cart` changes, **all tests in `fancy-app-e2e` run**,
 
 Since these features have minimal overlap, you can optimize testing by splitting the monolithic test project into smaller, feature-scoped test projects.
 
-## The Solution: Feature-Scoped Testing
+## The solution: Feature-scoped testing
 
 Instead of keeping all tests in one large project, break them down by feature and co-locate them with the feature libraries they test. This way, only the tests for changed features run.
 
-### How to Implement Feature-Based Testing
+### How to implement feature-Based testing
 
 To set up feature-based testing, add test configurations directly to your feature projects.
 Nx provides plugins to automate and speed up the test configuration for common testing tools.
@@ -117,9 +117,9 @@ This includes adding relevant configuration files for the testing framework and 
 With this setup, when you run `nx affected -t e2e`, only the tests for changed features will execute.
 For example, when `feat-cart` changes, only `feat-cart:e2e` runs and `feat-products:e2e` does not run since it wasn't affected.
 
-## Best Practices
+## Best practices
 
-### Combining with Automated Task Splitting (Atomizer)
+### Combining with automated task splitting (Atomizer)
 
 Typically, teams enable [Atomizer, also known as task splitting](/docs/features/ci-features/split-e2e-tasks), for a quick win to improve CI times when using [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 Combining both strategies yields the best results.
@@ -136,7 +136,7 @@ For example, if `feat-cart` has 10 test files and `feat-products` has 15 test fi
 
 Learn more about [setting up Automated Task Splitting](/docs/features/ci-features/split-e2e-tasks).
 
-### Keep the Top-Level Test Project
+### Keep the top-Level test project
 
 Don't delete your top level test project, `fancy-app-e2e` in this example. Instead, repurpose it for:
 
@@ -146,19 +146,19 @@ Don't delete your top level test project, `fancy-app-e2e` in this example. Inste
 
 This gives you a balanced testing strategy: focused feature tests that run frequently, plus comprehensive integration tests when needed.
 
-### Running Tests in Parallel
+### Running tests in parallel
 
 When running tests from multiple features in parallel, be mindful of shared resources. Since all feature tests run against the same application instance, avoid conflicts by:
 
 - **Using unique test data**: Don't rely on specific database records or application state
 - **Managing ports**: Configure each test to use different ports, or let the test framework find free ports automatically
-  - For Cypress, use the [`--port` flag](/nx-api/cypress/executors/cypress#port) to specify or auto-detect ports
+  - For Cypress, use the [`--port` flag](/docs/technologies/test-tools/cypress/executors) to specify or auto-detect ports
   - For Playwright, the `webServerAddress` can be dynamically assigned
 - **Isolating state**: Use test-specific user accounts, temporary data, or cleanup between tests
 
-### Running Affected Tests
+### Running affected tests
 
-With feature-based testing, you can leverage Nx's affected commands to run only the tests that matter:
+With feature-based testing, you can leverage Nx affected commands to run only the tests that matter:
 
 ```shell
 # Run all affected tests based on your changes

@@ -1,6 +1,6 @@
 ---
-title: Overview of the Nx Jest Plugin
-description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest. This page also explains how to configure Jest on your Nx workspace.
+title: Jest Plugin for Nx
+description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest, including setup and configuration for your Nx workspace.
 sidebar:
   label: Introduction
 filter: 'type:References'
@@ -11,6 +11,16 @@ filter: 'type:References'
 The `@nx/jest` plugin adds [inferred Jest targets](#configuration), a [Jest configuration generator](#add-jest-to-a-project), and CI-ready [test splitting](#unit-and-e2e-configurations).
 
 You can use Jest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+## Requirements
+
+The `@nx/jest` plugin supports the following package versions.
+
+| Package | Supported Versions   |
+| ------- | -------------------- |
+| `jest`  | ^29.0.0 \|\| ^30.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setup
 
@@ -85,7 +95,7 @@ nx g @nx/node:app apps/my-api --unitTestRunner=jest
 
 {% /aside %}
 
-## Local Development
+## Local development
 
 Run tests:
 
@@ -155,12 +165,13 @@ Configure the plugin in `nx.json`:
 }
 ```
 
-| Option               | Type    | Default | Description                                                                                                                    |
-| -------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `targetName`         | string  | `test`  | Name of the inferred Jest target.                                                                                              |
-| `ciTargetName`       | string  | none    | Creates a CI-only target for atomized test tasks.                                                                              |
-| `ciGroupName`        | string  | none    | Custom group name for atomized tasks in Nx Cloud/UI.                                                                           |
-| `disableJestRuntime` | boolean | `true`  | When `true`, Nx skips creating the Jest runtime and computes inputs/outputs itself. Set to `false` to enable the Jest runtime. |
+| Option               | Type    | Default                        | Description                                                                                                                                                                                                      |
+| -------------------- | ------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `targetName`         | string  | `test`                         | Name of the inferred Jest target.                                                                                                                                                                                |
+| `ciTargetName`       | string  | none                           | Creates a CI-only target for atomized test tasks.                                                                                                                                                                |
+| `ciGroupName`        | string  | none                           | Custom group name for atomized tasks in Nx Cloud/UI.                                                                                                                                                             |
+| `disableJestRuntime` | boolean | `true`                         | When `true`, Nx skips creating the Jest runtime and computes inputs/outputs itself. Set to `false` to enable the Jest runtime.                                                                                   |
+| `useJestResolver`    | boolean | `true` when runtime is enabled | Whether to use Jest's resolver for resolving config file references as task inputs. Follows symlinks and honors custom `moduleDirectories`/`modulePaths`. Faster path-based classification is used when `false`. |
 
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 
@@ -201,11 +212,11 @@ Open the project details view in Nx Console or run:
 nx show project my-app
 ```
 
-## CI Considerations
+## CI considerations
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-### Build and Test Only What Changed
+### Build and test only what changed
 
 ```shell
 nx affected -t build test typecheck lint
@@ -214,7 +225,7 @@ nx affected -t build test typecheck lint
 This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
 Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-### Remote Caching
+### Remote caching
 
 Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
@@ -222,21 +233,21 @@ Share build and typecheck cache results across your team and CI with [remote cac
 nx connect
 ```
 
-### Task Splitting for Slow Tests
+### Task splitting for slow tests
 
 For slow test suites (e.g. E2E or integration tests), set `ciTargetName` to split tests by file for distributed CI runs. Each test file becomes its own cacheable CI task with better caching and retries. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
 
-### Feature-Based Testing
+### Feature-based testing
 
 Organize tests by feature to get better cache hits and more targeted CI runs. See the [feature-based testing guide](/docs/guides/tips-n-tricks/feature-based-testing) for strategies on structuring tests in a monorepo.
 
-### Performance with Parallelization
+### Performance with parallelization
 
 Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] --runInBand` for the best performance.
 
-This is because each jest process creates workers based on system resources, running multiple projects via Nx and using jest workers will create too many processes overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process. You can then leverage Nx parallelism to run multiple jest projects at once.
+This is because each Jest process creates workers based on system resources, and running multiple projects via Nx with Jest workers will create too many processes overall, causing the system to run slower than desired. Using the `--runInBand` flag tells Jest to run in a single process. You can then use Nx parallelism to run multiple Jest projects at once.
 
-### Batch Mode
+### Batch mode
 
 For large monorepos with many Jest projects, Batch mode can improve performance by batching compilation across projects into a single process.
 
@@ -244,7 +255,7 @@ For large monorepos with many Jest projects, Batch mode can improve performance 
 NX_BATCH_MODE=true nx run-many -t test
 ```
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="Jest Configuration" description="Explore all Jest configuration options." href="https://jestjs.io/docs/configuration" /%}

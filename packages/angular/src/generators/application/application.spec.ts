@@ -563,12 +563,45 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.scss')).toEqual(true);
     });
+
+    it('should generate nx-welcome component with CSS syntax for scss', async () => {
+      await generateApp(appTree, 'my-app', { style: 'scss' });
+      const nxWelcomeContent = appTree.read(
+        'my-app/src/app/nx-welcome.ts',
+        'utf-8'
+      );
+      const styleMatch = nxWelcomeContent.match(/<style>([\s\S]*?)<\/style>/);
+      expect(styleMatch).toBeTruthy();
+      const styleContent = styleMatch[1];
+      // CSS/SCSS syntax should contain { and }
+      expect(styleContent).toContain('{');
+      expect(styleContent).toContain('}');
+    });
   });
 
   describe('--style sass', () => {
     it('should generate sass styles', async () => {
       await generateApp(appTree, 'my-app', { style: 'sass' });
       expect(appTree.exists('my-app/src/app/app.sass')).toEqual(true);
+    });
+
+    it('should generate nx-welcome component with SASS indented syntax', async () => {
+      await generateApp(appTree, 'my-app', { style: 'sass' });
+      const nxWelcomeContent = appTree.read(
+        'my-app/src/app/nx-welcome.ts',
+        'utf-8'
+      );
+      const styleMatch = nxWelcomeContent.match(/<style>([\s\S]*?)<\/style>/);
+      expect(styleMatch).toBeTruthy();
+      const styleContent = styleMatch[1];
+      // SASS indented syntax should not contain { or }
+      expect(styleContent).not.toContain('{');
+      expect(styleContent).not.toContain('}');
+      // SASS indented syntax should not contain ; at end of property lines
+      expect(styleContent).not.toMatch(/;\s*$/m);
+      // Should contain valid SASS selectors
+      expect(styleContent).toContain('html');
+      expect(styleContent).toContain('body');
     });
   });
 
@@ -580,9 +613,18 @@ describe('app', () => {
   });
 
   describe('format files', () => {
-    it('should format files', async () => {
-      const formatFilesSpy = jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest.spyOn(devkitModule, 'formatFiles');
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
       await generateApp(appTree, 'my-app', { skipFormat: false });
 
       expect(formatFilesSpy).toHaveBeenCalled();
@@ -728,6 +770,8 @@ describe('app', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
               ...baseConfig,
               {
                   files: [
@@ -744,8 +788,6 @@ describe('app', () => {
                       }
                   }
               },
-              ...nx.configs["flat/angular"],
-              ...nx.configs["flat/angular-template"],
               {
                   files: [
                       "**/*.ts"
@@ -1139,6 +1181,17 @@ describe('app', () => {
       });
       expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
+    });
+
+    it('should keep skipLibCheck in tsconfig.json when there is no tsconfig.base.json', async () => {
+      appTree.delete('tsconfig.base.json');
+
+      await generateApp(appTree, '.', {
+        name: 'my-app',
+      });
+
+      const tsconfig = readJson(appTree, 'tsconfig.json');
+      expect(tsconfig.compilerOptions.skipLibCheck).toBe(true);
     });
   });
 

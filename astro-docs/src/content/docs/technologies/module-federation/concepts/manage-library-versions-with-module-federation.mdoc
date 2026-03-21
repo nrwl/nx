@@ -23,7 +23,7 @@ The Shared API maintains a registry of all the downloaded dependencies. When a f
 If you are not familiar with the concepts of federated modules, remotes, and hosts, please read the [Faster builds with module federation](/docs/technologies/module-federation/concepts/faster-builds-with-module-federation) for an introduction.
 {% /aside %}
 
-## Our Approach
+## Our approach
 
 Although the Shared API is a powerful tool, it can be challenging to manage. The Shared API is configured in the Module Federation Config File, which is a JavaScript or TypeScript file. This file is not part of the build process, so should you want to use a different version of a workspace dependency, you would have to manually record the change outside of the build process which can be tedious and error-prone.
 
@@ -37,11 +37,11 @@ Ensuring that all federated modules rely on the same version of a shared depende
 
 Mixing multiple versions of a library or module in the same runtime can lead to conflicts. This is especially problematic with libraries that maintain internal state or have side effects.
 
-### 3. API Compatibility
+### 3. API compatibility
 
 As a library evolves, functions and methods get added, removed or changed. By ensuring a single version, you eliminate the risk of using incompatible APIs in one version but not another.
 
-### 4. Singleton Libraries
+### 4. Singleton libraries
 
 Some libraries are designed to be singletons (React, Angular, Redux, etc.). These libraries are intended to be instantiated once and shared across the entire application. Multiple versions of such libraries can break the intended behaviour or even cause runtime errors.
 
@@ -146,7 +146,7 @@ module.exports = {
 {% /tabitem %}
 {% /tabs %}
 
-### Github Repository Example
+### Github repository example
 
 Here is a working example of how to opt in and out of sharing library versions:
 

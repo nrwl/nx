@@ -16,9 +16,19 @@ You don't need the plugin to use Remix with Nx. Any project already benefits fro
 React Router is the successor to Remix. For new projects, consider using [React Router](/docs/technologies/react/guides/react-router) instead. Existing Remix projects continue to work with `@nx/remix`.
 {% /aside %}
 
-## Setting Up @nx/remix
+## Requirements
 
-### Add to an Existing Nx Workspace
+The `@nx/remix` plugin supports the following package versions.
+
+| Package          | Supported Versions |
+| ---------------- | ------------------ |
+| `@remix-run/dev` | ^2.17.3            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/remix
+
+### Add to an existing Nx workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
@@ -53,7 +63,7 @@ Verify the plugin is setup:
 
 {% /steps %}
 
-### Generate a New Application
+### Generate a new application
 
 ```shell
 nx g @nx/remix:app apps/my-app
@@ -61,7 +71,7 @@ nx g @nx/remix:app apps/my-app
 
 To start the application in development mode, run `nx dev my-app`. Read more about the options available for the [application generator](/docs/technologies/react/remix/generators#application).
 
-### Generate a Library
+### Generate a library
 
 When developing your application, it often makes sense to split your codebase into smaller, more focused libraries.
 
@@ -71,9 +81,9 @@ nx g @nx/remix:lib libs/my-lib
 
 Read more about the options available for the [library generator](/docs/technologies/react/remix/generators#library). Libraries let you share code between applications, enforce architectural boundaries with the [project graph](/docs/features/explore-graph), and speed up CI by only rebuilding what changed.
 
-## Develop Remix Applications
+## Develop Remix applications
 
-### Generate Routes
+### Generate routes
 
 ```shell
 nx g @nx/remix:route apps/my-app/app/routes/admin
@@ -81,7 +91,7 @@ nx g @nx/remix:route apps/my-app/app/routes/admin
 
 This creates a new route file in your application's `routes` directory following Remix's file-based routing conventions. Read more about the options available for the [route generator](/docs/technologies/react/remix/generators#route).
 
-### Add Loaders, Actions, and Meta
+### Add loaders, actions, and meta
 
 ```shell
 nx g @nx/remix:loader apps/my-app/app/routes/admin
@@ -91,7 +101,7 @@ nx g @nx/remix:meta apps/my-app/app/routes/admin
 
 These generators add loader, action, and meta functions to existing route files. Read more about the options available for the [loader](/docs/technologies/react/remix/generators#loader), [action](/docs/technologies/react/remix/generators#action), and [meta](/docs/technologies/react/remix/generators#meta) generators.
 
-### Serve for Development
+### Serve for development
 
 ```shell
 nx dev my-app
@@ -99,7 +109,7 @@ nx dev my-app
 
 This starts the Remix development server with hot module replacement at `http://localhost:3000`.
 
-### Build for Production
+### Build for production
 
 ```shell
 nx build my-app
@@ -107,7 +117,7 @@ nx build my-app
 
 Compiles the application for production deployment. The output is written to the `build` directory inside your project folder by default.
 
-### Start Production Server
+### Start production server
 
 ```shell
 nx start my-app
@@ -115,7 +125,7 @@ nx start my-app
 
 Serves the production build using `remix-serve`. Depends on `build` completing first.
 
-### Use Libraries in Your Application
+### Use libraries in your application
 
 Import library code directly into your route files:
 
@@ -144,7 +154,7 @@ export const loader = myLoader;
 
 ## Configure @nx/remix
 
-### How @nx/remix Infers Tasks
+### How @nx/remix infers tasks
 
 The `@nx/remix` plugin creates tasks for any project that has a Remix configuration file. The plugin recognizes two setups:
 
@@ -156,7 +166,7 @@ The `@nx/remix` plugin creates tasks for any project that has a Remix configurat
 
 **Remix with Vite** -- looks for `vite.config.{js,ts,mjs,mts,cjs,cts}` files that import the Remix plugin from `@remix-run/dev`.
 
-### Plugin Options
+### Plugin options
 
 Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
 
@@ -184,7 +194,7 @@ Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
 | `startTargetName`     | Name of the production server task  | `start`     |
 | `typecheckTargetName` | Name of the typecheck task          | `typecheck` |
 
-### Exclude or Include Specific Projects
+### Exclude or include specific projects
 
 Use `include`/`exclude` glob patterns in the plugin configuration:
 
@@ -207,7 +217,7 @@ Use `include`/`exclude` glob patterns in the plugin configuration:
 }
 ```
 
-### View Inferred Tasks
+### View inferred tasks
 
 To see what tasks Nx inferred for a project:
 
@@ -217,11 +227,11 @@ nx show project my-app
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI Considerations
+## CI considerations
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
 
-### Build and Test Only What Changed
+### Build and test only what changed
 
 ```shell
 nx affected -t build test typecheck lint
@@ -230,7 +240,7 @@ nx affected -t build test typecheck lint
 This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
 Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
 
-### Remote Caching
+### Remote caching
 
 Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
 
@@ -238,7 +248,7 @@ Share build and typecheck cache results across your team and CI with [remote cac
 nx connect
 ```
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="React Router Guide" description="React Router is the successor to Remix. Learn how to use it with Nx." href="/docs/technologies/react/guides/react-router" /%}

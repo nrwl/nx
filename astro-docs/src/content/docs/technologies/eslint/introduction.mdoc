@@ -6,9 +6,19 @@ sidebar:
 filter: 'type:References'
 ---
 
-The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows you to run ESLint through Nx with caching enabled. It also includes code generators to help you set up ESLint in your workspace.
+The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. Run ESLint through Nx with caching enabled, and use the included code generators to set up ESLint in your workspace.
 
-## Setting Up @nx/eslint
+## Requirements
+
+The `@nx/eslint` plugin supports the following package versions.
+
+| Package  | Supported Versions |
+| -------- | ------------------ |
+| `eslint` | ^8.0.0 \|\| ^9.0.0 |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/eslint
 
 ### Installation
 
@@ -24,7 +34,7 @@ nx add @nx/eslint
 
 This will install the correct version of `@nx/eslint`.
 
-### How @nx/eslint Infers Tasks
+### How @nx/eslint infers tasks
 
 The `@nx/eslint` plugin will create a task for any project that has an ESLint configuration file present and files to lint. Any of the following files will be recognized as an ESLint configuration file:
 
@@ -43,11 +53,11 @@ Because ESLint applies configuration files to all subdirectories, the `@nx/eslin
 
 Even if a project has an ESLint configuration file, it will only have an inferred ESLint task if there are files to lint. Otherwise, the task will not be created. Therefore, if you don't want an ESLint task to be inferred for a particular project, make sure the project files are properly excluded from ESLint.
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/eslint Configuration
+### @nx/eslint configuration
 
 The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 

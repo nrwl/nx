@@ -90,7 +90,7 @@ describe('Vite Plugin', () => {
 
         it('should generate a coverage file specified by the executor', async () => {
           updateJson(`${myApp}/project.json`, (json) => {
-            json.targets.test.options.reportsDirectory = '../coverage/test-dir';
+            json.targets.test.options.reportsDirectory = 'coverage/test-dir';
             return json;
           });
 

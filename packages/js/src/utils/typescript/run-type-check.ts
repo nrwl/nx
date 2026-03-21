@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import * as path from 'path';
 import type { BuilderProgram, Diagnostic, Program } from 'typescript';
 import { codeFrameColumns } from 'nx/src/utils/code-frames';
@@ -140,7 +140,7 @@ async function setupTypeScript(options: TypeCheckOptions) {
               ? options.outDir.replace(projectRoot, '')
               : undefined,
         }
-      : { noEmit: true };
+      : { noEmit: true, composite: false };
 
   const compilerOptions = {
     ...config.options,

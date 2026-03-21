@@ -16,7 +16,7 @@ This means that whenever we update `project-b` we need to consider the side-effe
 
 Nx can handle this cascade of updates automatically, across any number of [Release Group](/docs/guides/nx-release/release-groups) boundaries, and this behavior is configurable via the `version.updateDependents` option.
 
-### Update Dependents Configuration
+### Update dependents configuration
 
 - **`"always"`** (introduced in v22 and now the default): Always update dependents when a dependency is versioned, regardless of which group they belong to, or what filters are applied to the release command/programmatic API.
 - **`"auto"`**: (old default) Update dependents within the same release group, and only when not filtered out by `--projects` or `--groups`

@@ -1,5 +1,7 @@
 import { performance } from 'perf_hooks';
 
+import { join } from 'path';
+import { customDimensions } from '../analytics';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -7,8 +9,14 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
+import { isOnDaemon } from '../daemon/is-on-daemon';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import { FileLock, IS_WASM } from '../native';
+import { workspaceDataDirectory } from '../utils/cache-directory';
+import { getCallSites } from '../utils/call-sites';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 import { fileExists } from '../utils/fileutils';
+import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -29,18 +37,13 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
+import { getPlugins } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import { getPlugins } from './plugins/get-plugins';
-import { logger } from '../utils/logger';
-import { FileLock, IS_WASM } from '../native';
-import { join } from 'path';
-import { workspaceDataDirectory } from '../utils/cache-directory';
-import { DelayedSpinner } from '../utils/delayed-spinner';
-import { getCallSites } from '../utils/call-sites';
+import { handleImport } from '../utils/handle-import';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -284,7 +287,35 @@ export async function createProjectGraphAndSourceMapsAsync(
     resetDaemonClient: false,
   }
 ) {
-  performance.mark('create-project-graph-async:start');
+  performance.mark('createProjectGraphAsync:start');
+
+  // If we're already on the daemon, return the in-memory graph directly
+  // instead of making an IPC call back to ourselves.
+  if (isOnDaemon()) {
+    const { currentProjectGraph, currentSourceMaps } = await handleImport(
+      '../daemon/server/project-graph-incremental-recomputation.js',
+      __dirname
+    );
+    if (currentProjectGraph) {
+      performance.mark('createProjectGraphAsync:end');
+      performance.measure('createProjectGraphAsync', {
+        start: 'createProjectGraphAsync:start',
+        end: 'createProjectGraphAsync:end',
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(
+              currentProjectGraph.nodes
+            ).length,
+          }),
+        },
+      });
+      return {
+        projectGraph: currentProjectGraph,
+        sourceMaps: currentSourceMaps,
+      };
+    }
+  }
 
   if (!daemonClient.enabled()) {
     const lock = !IS_WASM
@@ -341,26 +372,32 @@ export async function createProjectGraphAndSourceMapsAsync(
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
       performance.measure(
-        'create-project-graph-async >> retrieve-project-configurations',
+        'createProjectGraphAsync >> retrieve-project-configurations',
         'retrieve-project-configurations:start',
         'retrieve-project-configurations:end'
       );
       performance.measure(
-        'create-project-graph-async >> retrieve-workspace-files',
+        'createProjectGraphAsync >> retrieve-workspace-files',
         'retrieve-workspace-files:start',
         'retrieve-workspace-files:end'
       );
       performance.measure(
-        'create-project-graph-async >> build-project-graph-using-project-file-map',
+        'createProjectGraphAsync >> build-project-graph-using-project-file-map',
         'build-project-graph-using-project-file-map:start',
         'build-project-graph-using-project-file-map:end'
       );
-      performance.mark('create-project-graph-async:end');
-      performance.measure(
-        'create-project-graph-async',
-        'create-project-graph-async:start',
-        'create-project-graph-async:end'
-      );
+      performance.mark('createProjectGraphAsync:end');
+      performance.measure('createProjectGraphAsync', {
+        start: 'createProjectGraphAsync:start',
+        end: 'createProjectGraphAsync:end',
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(res.projectGraph.nodes)
+              .length,
+          }),
+        },
+      });
       return res;
     } catch (e) {
       handleProjectGraphError(opts, e);
@@ -371,12 +408,19 @@ export async function createProjectGraphAndSourceMapsAsync(
     try {
       const projectGraphAndSourceMaps =
         await daemonClient.getProjectGraphAndSourceMaps();
-      performance.mark('create-project-graph-async:end');
-      performance.measure(
-        'create-project-graph-async',
-        'create-project-graph-async:start',
-        'create-project-graph-async:end'
-      );
+      performance.mark('createProjectGraphAsync:end');
+      performance.measure('createProjectGraphAsync', {
+        start: 'createProjectGraphAsync:start',
+        end: 'createProjectGraphAsync:end',
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.projectCount]: Object.keys(
+              projectGraphAndSourceMaps.projectGraph.nodes
+            ).length,
+          }),
+        },
+      });
       return projectGraphAndSourceMaps;
     } catch (e) {
       if (e.message && e.message.indexOf('inotify_add_watch') > -1) {
@@ -416,10 +460,36 @@ export async function createProjectGraphAndSourceMapsAsync(
 }
 
 export function preventRecursionInGraphConstruction() {
-  // preventRecursionInGraphConstruction -> callee -> ...
-  // slice removes preventRecursionInGraphConstruction and its caller,
-  // which is useful when using this function to detect recursion in buildProjectGraphAndSourceMapsWithoutDaemon
-  const stackframes = getCallSites().slice(2);
+  const allFrames = getCallSites();
+
+  // Find the first occurrence of buildProjectGraphAndSourceMapsWithoutDaemon in the call stack.
+  // This represents the current invocation and should be skipped for the recursion check.
+  const firstOccurrenceIndex = allFrames.findIndex(
+    (f) =>
+      f.getFunctionName() === buildProjectGraphAndSourceMapsWithoutDaemon.name
+  );
+
+  let stackframes: NodeJS.CallSite[];
+
+  if (firstOccurrenceIndex !== -1) {
+    // Skip the current invocation frame and any consecutive frames with the same function name.
+    // Some runtimes (e.g. Bun) include extra async frames for the same call, which would
+    // otherwise cause a false positive loop detection.
+    let startIndex = firstOccurrenceIndex + 1;
+    while (
+      startIndex < allFrames.length &&
+      allFrames[startIndex].getFunctionName() ===
+        buildProjectGraphAndSourceMapsWithoutDaemon.name
+    ) {
+      startIndex++;
+    }
+    stackframes = allFrames.slice(startIndex);
+  } else {
+    // If buildProjectGraphAndSourceMapsWithoutDaemon is not in the stack (e.g., when called
+    // from daemon client), fall back to the original slice(2) behavior.
+    // preventRecursionInGraphConstruction -> callee -> ...
+    stackframes = allFrames.slice(2);
+  }
 
   if (
     stackframes.some((f) => {

@@ -26,6 +26,7 @@ import type {
   ShowTargetInputsOptions,
   ShowTargetOutputsOptions,
 } from './command-object';
+import { handleImport } from '../../utils/handle-import';
 
 // ── Entry points ─────────────────────────────────────────────────────
 
@@ -73,11 +74,8 @@ export async function showTargetInputsHandler(
   const graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
 
-  const { projectName, targetName } = resolveTargetIdentifier(
-    args,
-    graph,
-    nxJson
-  );
+  const { projectName, targetName, configurationName } =
+    resolveTargetIdentifier(args, graph, nxJson);
 
   const node = resolveProjectNode(projectName, graph);
   const targetConfig = node.data.targets?.[targetName];
@@ -86,10 +84,11 @@ export async function showTargetInputsHandler(
     return reportTargetNotFound(projectName, targetName, node);
   }
 
+  const configuration = configurationName ?? args.configuration;
   const hashInputs = await resolveInputFiles(
     projectName,
     targetName,
-    undefined,
+    configuration,
     graph,
     nxJson
   );
@@ -201,7 +200,16 @@ function resolveTargetIdentifier(
     process.exit(1);
   }
 
-  const [project, target, config] = splitTarget(args.target, graph);
+  const defaultProjectName = calculateDefaultProjectName(
+    process.cwd(),
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(graph),
+    nxJson
+  );
+
+  const [project, target, config] = splitTarget(args.target, graph, {
+    currentProject: defaultProjectName,
+  });
 
   if (project && target) {
     return {
@@ -212,12 +220,7 @@ function resolveTargetIdentifier(
   }
 
   const targetName = project; // splitTarget returns the string as the first element
-  const projectName = calculateDefaultProjectName(
-    process.cwd(),
-    workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(graph),
-    nxJson
-  );
+  const projectName = defaultProjectName;
 
   if (!projectName) {
     output.error({
@@ -368,6 +371,7 @@ function resolveTargetInfoData(
       : {}),
     cache: targetConfig.cache ?? false,
     parallelism: targetConfig.parallelism ?? true,
+    continuous: targetConfig.continuous ?? false,
   };
 }
 
@@ -383,8 +387,9 @@ async function resolveInputFiles(
   graph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): Promise<HashInputs> {
-  const { HashPlanInspector } = (await import(
-    '../../hasher/hash-plan-inspector'
+  const { HashPlanInspector } = (await handleImport(
+    '../../hasher/hash-plan-inspector.js',
+    __dirname
   )) as typeof import('../../hasher/hash-plan-inspector');
   const inspector = new HashPlanInspector(graph, workspaceRoot, nxJson);
   await inspector.init();
@@ -395,16 +400,18 @@ async function resolveInputFiles(
     configuration,
   });
 
-  const taskId = `${projectName}:${targetName}`;
-  return (
-    plan[taskId] ?? {
-      files: [],
-      runtime: [],
-      environment: [],
-      depOutputs: [],
-      external: [],
-    }
-  );
+  const targetConfig = graph.nodes[projectName]?.data?.targets?.[targetName];
+  const effectiveConfig = configuration ?? targetConfig?.defaultConfiguration;
+  const taskId = effectiveConfig
+    ? `${projectName}:${targetName}:${effectiveConfig}`
+    : `${projectName}:${targetName}`;
+  const result = plan[taskId];
+  if (!result) {
+    throw new Error(
+      `Could not find hash plan for task "${taskId}". Available tasks: ${Object.keys(plan).join(', ')}`
+    );
+  }
+  return result;
 }
 
 function resolveCheckFromInputs(
@@ -657,6 +664,7 @@ function renderTargetInfo(
 
   console.log(`${c.bold('Cache')}: ${data.cache}`);
   console.log(`${c.bold('Parallelism')}: ${data.parallelism}`);
+  console.log(`${c.bold('Continuous')}: ${data.continuous}`);
 }
 
 function renderInputs(

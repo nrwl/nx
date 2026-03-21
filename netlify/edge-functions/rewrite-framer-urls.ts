@@ -1,22 +1,92 @@
 import type { Context } from 'https://edge.netlify.com';
 
 const framerUrl = Netlify.env.get('NEXT_PUBLIC_FRAMER_URL');
-const framerPaths = new Set(
-  (Netlify.env.get('NEXT_PUBLIC_FRAMER_REWRITES') || '')
-    .split(',')
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0)
-    .map((p) => (p.startsWith('/') ? p : `/${p}`))
-);
+const GA_MEASUREMENT_ID =
+  Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
+const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
+
+// GA4 tracking — must live here because Framer-proxied responses skip context.next(),
+// so track-page-requests.ts never fires for these paths due to alphabetical ordering.
+// https://docs.netlify.com/build/edge-functions/declarations/#declaration-processing-order
+
+function getClientId(request: Request): string {
+  const cookies = request.headers.get('cookie') || '';
+  const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
+  if (gaMatch) return gaMatch[1];
+
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000000000);
+  return `${random}.${timestamp}`;
+}
+
+async function sendToGA4(
+  request: Request,
+  context: Context,
+  pathname: string
+): Promise<void> {
+  if (!GA_API_SECRET) return;
+
+  const clientId = getClientId(request);
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+  // https://docs.netlify.com/build/user-agent-categories/
+  const agentCategory = request.headers.get('netlify-agent-category') || 'none';
+  const isAITool = agentCategory.startsWith('ai-agent');
+  const isGenericBot = agentCategory.startsWith('crawler');
+
+  const payload = {
+    client_id: clientId,
+    events: [
+      {
+        name: 'server_page_view',
+        params: {
+          page_location: request.url,
+          page_title: pathname,
+          page_path: pathname,
+          content_type: 'text/html',
+          file_extension: '.html',
+          user_agent: userAgent,
+          is_ai_tool: isAITool ? 'true' : 'false',
+          is_bot: isGenericBot ? 'true' : 'false',
+          country: context.geo?.country?.code || 'unknown',
+        },
+      },
+    ],
+  };
+
+  const endpoint = `https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
+
+  try {
+    await fetch(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error('Failed to send to GA4:', error);
+  }
+}
+
+/**
+ * Paths that should be served by the Next.js app instead of Framer.
+ * Everything else is proxied to Framer.
+ */
+const nextjsPaths = new Set([
+  '/blog',
+  '/courses',
+  '/pricing',
+  '/podcast',
+  '/ai-chat',
+  '/changelog',
+  '/resources-library',
+  '/whitepaper-fast-ci',
+  '/500',
+]);
 
 /**
  * Proxies requests to Framer and rewrites URLs in responses.
  *
- * This edge function:
- * 1. Checks if the request path matches a Framer-proxied path
- * 2. If yes, fetches directly from Framer
- * 3. Rewrites Framer URLs to nx.dev in the response
- * 4. If not a Framer path, passes through to Next.js
+ * This edge function proxies all requests to Framer by default.
+ * Only paths explicitly listed in `nextjsPaths` (and those in
+ * the `excludedPath` config) are passed through to Next.js.
  *
  * This ensures canonical URLs and other references point to nx.dev
  * instead of the Framer domain, avoiding duplicate indexing issues.
@@ -28,7 +98,7 @@ export default async function handler(
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  if (!framerUrl || !framerPaths.has(pathname)) return context.next();
+  if (!framerUrl || nextjsPaths.has(pathname)) return context.next();
 
   const framerDestination = new URL(pathname, framerUrl);
   url.searchParams.forEach((value, key) => {
@@ -52,9 +122,13 @@ export default async function handler(
   // This handles canonical URLs, og:url, and any other references
   const rewrittenHtml = html.replaceAll(framerUrl, 'https://nx.dev');
 
+  context.waitUntil(sendToGA4(request, context, pathname));
+
   const newHeaders = new Headers(response.headers);
   newHeaders.set('x-nx-edge-function', 'framer-proxy');
   newHeaders.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+  newHeaders.set('X-Frame-Options', 'DENY');
+  newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
 
   return new Response(rewrittenHtml, {
     status: response.status,
@@ -67,5 +141,91 @@ export const config = {
   path: ['/*'],
   // Only process HTML requests to save on compute
   accept: ['text/html'],
-  excludedPath: ['/docs/*', '/api/*', '/_next/*', '/favicon.ico'],
+  excludedPath: [
+    '/docs',
+    '/docs/*',
+    '/api/*',
+    '/blog/*',
+    '/courses/*',
+    '/changelog',
+    '/_next/*',
+    '/.netlify/*',
+    // Legacy docs paths — must bypass Framer so _redirects 301 rules fire
+    '/ci',
+    '/ci/*',
+    '/cli',
+    '/cli/*',
+    '/code-owners',
+    '/concepts',
+    '/concepts/*',
+    '/configuration',
+    '/configuration/*',
+    '/core-features',
+    '/core-features/*',
+    '/deprecated',
+    '/deprecated/*',
+    '/examples',
+    '/examples/*',
+    '/executors',
+    '/executors/*',
+    '/extending-nx',
+    '/extending-nx/*',
+    '/features',
+    '/features/*',
+    '/generators',
+    '/generators/*',
+    '/getting-started',
+    '/getting-started/*',
+    '/guides',
+    '/guides/*',
+    '/migration',
+    '/migration/*',
+    '/module-federation',
+    '/module-federation/*',
+    '/nx-api',
+    '/nx-api/*',
+    '/nx-enterprise',
+    '/nx-enterprise/*',
+    '/packages',
+    '/packages/*',
+    '/plugin-registry',
+    '/powerpack',
+    '/powerpack/*',
+    '/recipe',
+    '/recipe/*',
+    '/recipes',
+    '/recipes/*',
+    '/reference',
+    '/reference/*',
+    '/see-also',
+    '/see-also/*',
+    '/showcase',
+    '/showcase/*',
+    '/structure',
+    '/structure/*',
+    '/technologies',
+    '/technologies/*',
+    '/troubleshooting',
+    '/troubleshooting/*',
+    '/using-nx',
+    '/using-nx/*',
+    '/ai',
+    '/advent-of-code',
+    '/launch-nx',
+    '/terminal-ui',
+    '/pricing/special-offer',
+    '/favicon.ico',
+    '/webinar',
+    '/sitemap.xml',
+    '/sitemap-*.xml',
+    // Static asset directories from public/ — must not be proxied to Framer
+    '/documentation/*',
+    '/assets/*',
+    '/images/*',
+    '/fonts/*',
+    '/videos/*',
+    '/data/*',
+    '/socials/*',
+    '/favicon/*',
+  ],
 };

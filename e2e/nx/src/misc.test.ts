@@ -543,6 +543,48 @@ describe('Nx Commands', () => {
         );
       }
     }, 120000);
+
+    it('should list plugins as JSON with --json flag', () => {
+      const jsonOutput = runCLI('list --json');
+      const parsed = JSON.parse(jsonOutput);
+
+      expect(parsed.installedPlugins).toBeDefined();
+      expect(Array.isArray(parsed.installedPlugins)).toBe(true);
+      expect(parsed.localWorkspacePlugins).toBeDefined();
+      expect(Array.isArray(parsed.localWorkspacePlugins)).toBe(true);
+
+      const workspacePlugin = parsed.installedPlugins.find(
+        (p) => p.name === '@nx/workspace'
+      );
+      expect(workspacePlugin).toBeDefined();
+      expect(workspacePlugin.path).toBeDefined();
+      expect(workspacePlugin.capabilities).toBeDefined();
+      expect(Array.isArray(workspacePlugin.capabilities)).toBe(true);
+    }, 120000);
+
+    it('should list plugin capabilities as JSON with --json flag', () => {
+      const jsonOutput = runCLI('list @nx/js --json');
+      const parsed = JSON.parse(jsonOutput);
+
+      expect(parsed.name).toBe('@nx/js');
+      expect(parsed.path).toContain('node_modules/@nx/js');
+
+      // check generator values
+      const libGen = parsed.generators['library'];
+      expect(libGen).toBeDefined();
+      expect(libGen.description).toEqual(expect.any(String));
+      expect(libGen.path).toContain('node_modules/@nx/js');
+      expect(libGen.schema).toContain('node_modules/@nx/js');
+      expect(libGen.schema).toContain('schema.json');
+
+      // check executor values
+      const tscExec = parsed.executors['tsc'];
+      expect(tscExec).toBeDefined();
+      expect(tscExec.description).toEqual(expect.any(String));
+      expect(tscExec.path).toContain('node_modules/@nx/js');
+      expect(tscExec.schema).toContain('node_modules/@nx/js');
+      expect(tscExec.schema).toContain('schema.json');
+    }, 120000);
   });
 
   describe('format', () => {
@@ -776,7 +818,7 @@ describe('migrate', () => {
     );
 
     updateFile(
-      './node_modules/nx/src/command-line/migrate/migrate.js',
+      './node_modules/nx/dist/src/command-line/migrate/migrate.js',
       (content) => {
         const start = content.indexOf('// testing-fetch-start');
         const end = content.indexOf('// testing-fetch-end');
@@ -1384,19 +1426,26 @@ describe('global installation', () => {
   });
 
   describe('inside nx directory', () => {
-    beforeAll(() => {
+    beforeEach(() => {
       newProject({ packages: [] });
     });
 
+    afterEach(() => {
+      cleanupProject();
+    });
+
     it('should invoke Nx commands from local repo', () => {
-      const nxJsContents = readFile('node_modules/nx/bin/nx.js');
-      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+      const nxJsContents = readFile('node_modules/nx/dist/bin/nx.js');
+      updateFile(
+        'node_modules/nx/dist/bin/nx.js',
+        `console.log('local install');`
+      );
       let output: string;
       expect(() => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
       expect(output).toContain('local install');
-      updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+      updateFile('node_modules/nx/dist/bin/nx.js', nxJsContents);
     });
 
     it('should warn if local Nx has higher major version', () => {

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   AggregateCreateNodesError,
   hashArray,
+  logger,
   ProjectConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
@@ -15,7 +16,7 @@ import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
-import { GradlePluginOptions } from './gradle-plugin-options';
+import { GradlePluginOptions, normalizeOptions } from './gradle-plugin-options';
 import { hashObject } from 'nx/src/devkit-internals';
 
 // the output json file from the gradle plugin
@@ -49,18 +50,26 @@ function readProjectGraphReportCache(
 
 export function writeProjectGraphReportToCache(
   cachePath: string,
-  results: ProjectGraphReport
+  results: ProjectGraphReport,
+  hash: string
 ) {
   let projectGraphReportJson: ProjectGraphReportCache = {
-    hash: gradleCurrentConfigHash,
+    hash,
     ...results,
   };
 
-  writeJsonFile(cachePath, projectGraphReportJson);
+  try {
+    writeJsonFile(cachePath, projectGraphReportJson);
+  } catch (e) {
+    logger.warn(
+      `Failed to write Gradle project graph report cache to ${cachePath}: ${
+        e instanceof Error ? e.message : 'unknown error'
+      }`
+    );
+  }
 }
 
 let projectGraphReportCache: ProjectGraphReport;
-let gradleCurrentConfigHash: string;
 let projectGraphReportCachePath: string = join(
   workspaceDataDirectory,
   'gradle-nodes.hash'
@@ -103,19 +112,18 @@ export async function populateProjectGraph(
   gradlewFiles: string[],
   options: GradlePluginOptions
 ): Promise<void> {
+  const normalizedOptions = normalizeOptions(options);
   const gradleConfigHash = hashArray([
     await hashWithWorkspaceContext(workspaceRoot, [gradleConfigAndTestGlob]),
-    hashObject(options),
+    hashObject(normalizedOptions),
     process.env.CI,
   ]);
-  projectGraphReportCache ??= readProjectGraphReportCache(
+  const cached = readProjectGraphReportCache(
     projectGraphReportCachePath,
     gradleConfigHash
   );
-  if (
-    projectGraphReportCache &&
-    (!gradleCurrentConfigHash || gradleConfigHash === gradleCurrentConfigHash)
-  ) {
+  if (cached) {
+    projectGraphReportCache = cached;
     return;
   }
 
@@ -135,7 +143,7 @@ export async function populateProjectGraph(
       const currentLines = await getNxProjectGraphLines(
         gradlewFile,
         gradleConfigHash,
-        options
+        normalizedOptions
       );
       const getNxProjectGraphLinesEnd = performance.mark(
         `${gradlewFile}GetNxProjectGraphLines:end`
@@ -158,11 +166,11 @@ export async function populateProjectGraph(
     gradleProjectGraphReportStart.name,
     gradleProjectGraphReportEnd.name
   );
-  gradleCurrentConfigHash = gradleConfigHash;
   projectGraphReportCache = processNxProjectGraph(projectGraphLines);
   writeProjectGraphReportToCache(
     projectGraphReportCachePath,
-    projectGraphReportCache
+    projectGraphReportCache,
+    gradleConfigHash
   );
 }
 
@@ -180,9 +188,10 @@ export function processNxProjectGraph(
   while (index < projectGraphLines.length) {
     const line = projectGraphLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':nxProjectGraph')) {
+      index++; // Skip the task line before searching for the JSON file path
       while (
         index < projectGraphLines.length &&
-        !projectGraphLines[index].includes('.json')
+        !projectGraphLines[index].trim().endsWith('.json')
       ) {
         index++;
       }

@@ -11,6 +11,7 @@ import {
 } from 'fs';
 import { createGunzip } from 'zlib';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { createApiAxiosInstance } from './utilities/axios';
 import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
@@ -59,11 +60,14 @@ export interface NxCloudClient {
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
   getRemoteCache: () => RemoteCacheV2;
 }
-export async function verifyOrUpdateNxCloudClient(
-  options: CloudTaskRunnerOptions
-): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
+export async function verifyOrUpdateNxCloudClient(options?: {
+  url?: string;
+  customProxyConfigPath?: string;
+}): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
   debugLog('Verifying current cloud bundle');
   const currentBundle = getLatestInstalledRunnerBundle();
+  const apiUrl =
+    process.env.NX_CLOUD_API || options?.url || 'https://cloud.nx.app';
 
   if (shouldVerifyInstalledRunnerBundle(currentBundle)) {
     const axios = createApiAxiosInstance(options);
@@ -73,8 +77,8 @@ export async function verifyOrUpdateNxCloudClient(
       verifyBundleResponse = await verifyCurrentBundle(axios, currentBundle);
     } catch (e: any) {
       // Enterprise image compatibility, to be removed
-      if (e.message === 'Request failed with status code 404' && options.url) {
-        throw new NxCloudEnterpriseOutdatedError(options.url);
+      if (e.message === 'Request failed with status code 404' && apiUrl) {
+        throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
       debugLog(
@@ -88,12 +92,12 @@ export async function verifyOrUpdateNxCloudClient(
       }
 
       if (currentBundle.version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
-        throw new NxCloudEnterpriseOutdatedError(options.url);
+        throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
       const nxCloudClient = require(currentBundle.fullPath);
       if (nxCloudClient.commands === undefined) {
-        throw new NxCloudEnterpriseOutdatedError(options.url);
+        throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
       return {
@@ -120,7 +124,7 @@ export async function verifyOrUpdateNxCloudClient(
     );
 
     if (version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
-      throw new NxCloudEnterpriseOutdatedError(options.url);
+      throw new NxCloudEnterpriseOutdatedError(apiUrl);
     }
 
     const fullPath = await downloadAndExtractClientBundle(
@@ -135,7 +139,7 @@ export async function verifyOrUpdateNxCloudClient(
     const nxCloudClient = require(fullPath);
 
     if (nxCloudClient.commands === undefined) {
-      throw new NxCloudEnterpriseOutdatedError(options.url);
+      throw new NxCloudEnterpriseOutdatedError(apiUrl);
     }
     return { version, nxCloudClient };
   }
@@ -153,6 +157,18 @@ export async function verifyOrUpdateNxCloudClient(
 }
 
 export function getBundleInstallDefaultLocation() {
+  // When not in an Nx workspace (no nx.json), avoid creating a .nx folder
+  // in the current directory. Instead, use a temp directory unique to the
+  // NX_CLOUD_API URL so different cloud instances don't conflict.
+  if (!existsSync(join(workspaceRoot, 'nx.json'))) {
+    const apiUrl = process.env.NX_CLOUD_API || 'https://cloud.nx.app';
+    const apiHash = createHash('sha256')
+      .update(apiUrl)
+      .digest('hex')
+      .slice(0, 16);
+    return join(tmpdir(), 'nx-cloud-client', apiHash);
+  }
+
   const legacyPath = join(
     workspaceRoot,
     'node_modules',

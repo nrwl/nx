@@ -19,6 +19,7 @@ const config: ConfigArray = tseslint.config(
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
   },
   {
+    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
     plugins: { '@typescript-eslint': tseslint.plugin },
     languageOptions: {
       parser: tseslint.parser,

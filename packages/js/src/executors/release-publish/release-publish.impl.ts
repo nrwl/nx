@@ -33,6 +33,28 @@ export default async function runExecutor(
   context: ExecutorContext
 ) {
   const pm = detectPackageManager();
+
+  // Check if npm is installed (needed for dist-tag management and as fallback for view command)
+  let isNpmInstalled = false;
+  try {
+    isNpmInstalled =
+      execSync('npm --version', {
+        encoding: 'utf-8',
+        windowsHide: true,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim() !== '';
+  } catch {
+    // Allow missing npm only when using bun
+    if (pm !== 'bun') {
+      console.error(
+        `npm was not found in the current environment. This is only supported when using \`bun\` as a package manager, but your detected package manager is "${pm}"`
+      );
+      return {
+        success: false,
+      };
+    }
+  }
+
   /**
    * We need to check both the env var and the option because the executor may have been triggered
    * indirectly via dependsOn, in which case the env var will be set, but the option will not.
@@ -110,6 +132,24 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     };
   }
 
+  /**
+   * If version data was provided by the nx release version step, check if this project
+   * actually had a new version resolved. If not (newVersion is null), there is nothing
+   * to publish, so we can skip this project entirely.
+   */
+  if (options.nxReleaseVersionData) {
+    const projectVersionData =
+      options.nxReleaseVersionData[context.projectName];
+    if (projectVersionData && projectVersionData.newVersion === null) {
+      console.warn(
+        `Skipped ${packageTxt}, because no new version was resolved for this project`
+      );
+      return {
+        success: true,
+      };
+    }
+  }
+
   const warnFn = (message: string) => {
     console.log(chalk.keyword('orange')(message));
   };
@@ -126,9 +166,14 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     warnFn
   );
 
-  const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
-  ];
+  // Use bun info when bun is the package manager, otherwise use npm view
+  // (npm view works across npm/pnpm/yarn environments and is the established default)
+  const npmViewCommandSegments =
+    pm === 'bun'
+      ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
+      : [
+          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+        ];
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
@@ -148,7 +193,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         env: processEnv(true),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: false,
+        windowsHide: true,
       });
 
       const resultJson = JSON.parse(result.toString());
@@ -162,103 +207,134 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         };
       }
 
-      // If only one version of a package exists in the registry, versions will be a string instead of an array.
-      const versions = Array.isArray(resultJson.versions)
-        ? resultJson.versions
-        : [resultJson.versions];
+      if (isNpmInstalled) {
+        // If only one version of a package exists in the registry, versions will be a string instead of an array.
+        const versions = Array.isArray(resultJson.versions)
+          ? resultJson.versions
+          : [resultJson.versions];
 
-      if (versions.includes(currentVersion)) {
-        try {
-          if (!isDryRun) {
-            execSync(npmDistTagAddCommandSegments.join(' '), {
-              env: processEnv(true),
-              cwd: context.root,
-              stdio: 'ignore',
-              windowsHide: false,
-            });
-            console.log(
-              `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
-            );
-          } else {
-            console.log(
-              `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
-                'orange'
-              )('[dry-run]')} was set.\n`
-            );
-          }
-          return {
-            success: true,
-          };
-        } catch (err) {
+        if (versions.includes(currentVersion)) {
           try {
-            const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+            if (!isDryRun) {
+              execSync(npmDistTagAddCommandSegments.join(' '), {
+                env: processEnv(true),
+                cwd: context.root,
+                stdio: 'ignore',
+                windowsHide: true,
+              });
+              console.log(
+                `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+              );
+            } else {
+              console.log(
+                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
+                  'orange'
+                )('[dry-run]')} was set.\n`
+              );
+            }
+            return {
+              success: true,
+            };
+          } catch (err) {
+            try {
+              const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
-            // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-            if (
-              !(
-                stdoutData.error?.code?.includes('E404') &&
-                stdoutData.error?.summary?.includes('no such package available')
-              ) &&
-              !(
-                err.stderr?.toString().includes('E404') &&
-                err.stderr?.toString().includes('no such package available')
-              )
-            ) {
-              console.error('npm dist-tag add error:');
-              // npm returns error.summary and error.detail
-              if (stdoutData.error?.summary) {
-                console.error(stdoutData.error.summary);
-              }
-              if (stdoutData.error?.detail) {
-                console.error(stdoutData.error.detail);
-              }
-              // pnpm returns error.code and error.message
-              if (stdoutData.error?.code && !stdoutData.error?.summary) {
-                console.error(`Error code: ${stdoutData.error.code}`);
-              }
-              if (stdoutData.error?.message && !stdoutData.error?.summary) {
-                console.error(stdoutData.error.message);
-              }
+              // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
+              if (
+                !(
+                  stdoutData.error?.code?.includes('E404') &&
+                  stdoutData.error?.summary?.includes(
+                    'no such package available'
+                  )
+                ) &&
+                !(
+                  err.stderr?.toString().includes('E404') &&
+                  err.stderr?.toString().includes('no such package available')
+                )
+              ) {
+                console.error('npm dist-tag add error:');
+                // npm returns error.summary and error.detail
+                if (stdoutData.error?.summary) {
+                  console.error(stdoutData.error.summary);
+                }
+                if (stdoutData.error?.detail) {
+                  console.error(stdoutData.error.detail);
+                }
+                // pnpm returns error.code and error.message
+                if (stdoutData.error?.code && !stdoutData.error?.summary) {
+                  console.error(`Error code: ${stdoutData.error.code}`);
+                }
+                if (stdoutData.error?.message && !stdoutData.error?.summary) {
+                  console.error(stdoutData.error.message);
+                }
 
-              if (context.isVerbose) {
-                console.error('npm dist-tag add stdout:');
-                console.error(JSON.stringify(stdoutData, null, 2));
+                if (context.isVerbose) {
+                  console.error('npm dist-tag add stdout:');
+                  console.error(JSON.stringify(stdoutData, null, 2));
+                }
+                return {
+                  success: false,
+                };
               }
+            } catch (err) {
+              console.error(
+                'Something unexpected went wrong when processing the npm dist-tag add output\n',
+                err
+              );
               return {
                 success: false,
               };
             }
-          } catch (err) {
-            console.error(
-              'Something unexpected went wrong when processing the npm dist-tag add output\n',
-              err
-            );
-            return {
-              success: false,
-            };
           }
         }
       }
     } catch (err) {
-      const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-      // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-      if (
-        !(
-          stdoutData.error?.code?.includes('E404') &&
-          stdoutData.error?.summary?.toLowerCase().includes('not found')
-        ) &&
-        !(
-          err.stderr?.toString().includes('E404') &&
-          err.stderr?.toString().toLowerCase().includes('not found')
-        )
-      ) {
-        console.error(
-          `Something unexpected went wrong when checking for existing dist-tags.\n`,
-          err
-        );
-        return {
-          success: false,
-        };
+      try {
+        const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+        // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
+        if (
+          !(
+            stdoutData.error?.code?.includes('E404') &&
+            stdoutData.error?.summary?.toLowerCase().includes('not found')
+          ) &&
+          !(
+            err.stderr?.toString().includes('E404') &&
+            err.stderr?.toString().toLowerCase().includes('not found')
+          ) &&
+          // bun uses plain '404' instead of 'E404'
+          !(
+            err.stderr?.toString().includes('404') &&
+            err.stderr?.toString().toLowerCase().includes('not found')
+          )
+        ) {
+          console.error(
+            `Something unexpected went wrong when checking for existing dist-tags.\n`,
+            err
+          );
+          return {
+            success: false,
+          };
+        }
+      } catch {
+        // JSON parse failed entirely — check stderr/stdout for plain 404
+        const stderrStr = err.stderr?.toString() || '';
+        const stdoutStr = err.stdout?.toString() || '';
+        if (
+          !(
+            (stderrStr.includes('404') &&
+              stderrStr.toLowerCase().includes('not found')) ||
+            (stdoutStr.includes('404') &&
+              stdoutStr.toLowerCase().includes('not found'))
+          )
+        ) {
+          console.error(
+            `Something unexpected went wrong when checking for existing dist-tags.\n`,
+            err
+          );
+          return {
+            success: false,
+          };
+        }
       }
     }
   }
@@ -295,7 +371,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: false,
+      windowsHide: true,
     });
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';

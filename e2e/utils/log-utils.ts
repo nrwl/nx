@@ -1,7 +1,10 @@
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 
-export const E2E_LOG_PREFIX = `${chalk.reset.inverse.bold.keyword('orange')(
-  ' E2E '
+const orangeColor = (text) => `\x1b[38;5;214m${text}\x1b[39m`;
+
+export const E2E_LOG_PREFIX = `${styleText(
+  ['reset', 'inverse', 'bold'],
+  orangeColor(' E2E ')
 )}`;
 
 export function e2eConsoleLogger(message: string, body?: string) {
@@ -14,22 +17,25 @@ export function e2eConsoleLogger(message: string, body?: string) {
 }
 
 export function logInfo(title: string, body?: string) {
-  const message = `${chalk.reset.inverse.bold.white(
+  const message = `${styleText(
+    ['reset', 'inverse', 'bold', 'white'],
     ' INFO '
-  )} ${chalk.bold.white(title)}`;
+  )} ${styleText(['bold', 'white'], title)}`;
   return e2eConsoleLogger(message, body);
 }
 
 export function logError(title: string, body?: string) {
-  const message = `${chalk.reset.inverse.bold.red(' ERROR ')} ${chalk.bold.red(
-    title
-  )}`;
+  const message = `${styleText(
+    ['reset', 'inverse', 'bold', 'red'],
+    ' ERROR '
+  )} ${styleText(['bold', 'red'], title)}`;
   return e2eConsoleLogger(message, body);
 }
 
 export function logSuccess(title: string, body?: string) {
-  const message = `${chalk.reset.inverse.bold.green(
+  const message = `${styleText(
+    ['reset', 'inverse', 'bold', 'green'],
     ' SUCCESS '
-  )} ${chalk.bold.green(title)}`;
+  )} ${styleText(['bold', 'green'], title)}`;
   return e2eConsoleLogger(message, body);
 }

@@ -1,4 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { parseCSV } from '../yargs-utils/shared-options';
 import { isAiAgent } from '../../native';
 import {
@@ -66,8 +67,8 @@ export const yargsInitCommand: CommandModule = {
 async function isInitV2() {
   return (
     process.env['NX_ADD_PLUGINS'] !== 'false' &&
-    (await import('../../config/nx-json')).readNxJson().useInferencePlugins !==
-      false
+    (await handleImport('../../config/nx-json.js', __dirname)).readNxJson()
+      .useInferencePlugins !== false
   );
 }
 
@@ -88,12 +89,6 @@ async function withInitOptions(yargs: Argv) {
         type: 'boolean',
         description:
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
-        default: false,
-      })
-      .option('force', {
-        describe:
-          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
-        type: 'boolean',
         default: false,
       })
       .option('aiAgents', {
@@ -127,13 +122,7 @@ async function withInitOptions(yargs: Argv) {
       .option('integrated', {
         type: 'boolean',
         description:
-          'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces and CRA projects.',
-        default: false,
-      })
-      .option('addE2e', {
-        describe:
-          'Set up Cypress E2E tests in integrated workspaces. Only for CRA projects.',
-        type: 'boolean',
+          'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces.',
         default: false,
       })
       .option('useDotNxInstallation', {
@@ -141,17 +130,6 @@ async function withInitOptions(yargs: Argv) {
         description:
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
         default: false,
-      })
-      .option('force', {
-        describe:
-          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
-        type: 'boolean',
-        default: false,
-      })
-      .option('vite', {
-        type: 'boolean',
-        description: 'Use Vite as the bundler. Only for CRA projects.',
-        default: true,
       })
       .option('cacheable', {
         type: 'string',

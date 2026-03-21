@@ -16,6 +16,7 @@ import {
   Schema,
 } from '../../utils/params';
 import { handleErrors } from '../../utils/handle-errors';
+import { handleImport } from '../../utils/handle-import';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -23,6 +24,7 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
 import { getCwd } from '../../utils/path';
+import { reportNxGenerateCommand } from '../../analytics';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -369,6 +371,10 @@ export async function generate(args: { [k: string]: any }) {
       args.verbose
     );
 
+    reportNxGenerateCommand(
+      `${opts.collectionName}:${normalizedGeneratorName}`
+    );
+
     if (
       getGeneratorInformation(
         opts.collectionName,
@@ -408,14 +414,17 @@ export async function generate(args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
+      return (
+        await handleImport('../../adapter/ngcli-adapter.js', __dirname)
+      ).generate(
         workspaceRoot,
         {
           ...opts,
           generatorOptions: combinedOpts,
         },
         projectsConfigurations.projects,
-        args.verbose
+        args.verbose,
+        projectGraph
       );
     }
   });

@@ -12,7 +12,7 @@ filter: 'type:Guides'
 Unlike [E2E testing](/docs/technologies/test-tools/cypress/introduction), component testing does not create a new project. Instead, Cypress component testing is added
 directly to a project, like [Jest](/docs/technologies/test-tools/jest/introduction)
 
-## Add Component Testing to a Project
+## Add component testing to a project
 
 > Currently only [@nx/react](/docs/technologies/react/generators#cypress-component-configuration), [@nx/angular](/docs/technologies/angular/generators#cypress-component-configuration), and [@nx/next](/docs/technologies/react/next/generators#cypress-component-configuration) plugins support component testing
 
@@ -60,20 +60,20 @@ export default defineConfig({
 });
 ```
 
-## Testing Projects
+## Testing projects
 
 Run `nx component-test your-lib` to execute the component tests with Cypress.
 
 By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
 terminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-lib/screenshots` and `dist/cypress/libs/your-lib/videos`.
 
-## Watching for Changes (Headed Mode)
+## Watching for changes (Headed mode)
 
 With, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
 
 Running Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.
 
-## Splitting Component Testing Tasks by File
+## Splitting component testing tasks by file
 
 {% aside type="note" title="Available since Nx 21.6.1" %}
 Splitting component testing tasks by file is available since Nx 21.6.1.
@@ -109,6 +109,6 @@ The plugin will infer the `component-test-ci` task, which depends on individual 
 +     - run: pnpm exec nx affected -t lint test build component-test-ci
 ```
 
-## More Information
+## More information
 
 You can read more on component testing in the [Cypress documentation](https://docs.cypress.io/guides/component-testing/writing-your-first-component-test).

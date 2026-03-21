@@ -1,6 +1,5 @@
 // nx-ignore-next-line
 const { withNx } = require('@nx/next/plugins/with-nx');
-const redirectRules = require('./redirect-rules');
 
 // For deploy previews, always point to the matching astro-docs preview
 // (overrides any site-level env var that would otherwise point to production).
@@ -38,6 +37,10 @@ module.exports = withNx({
     cpus: 1,
     // Exclude large, unnecessary packages from the server function trace.
     // We have to say under 250MB for Neltify
+    // Include changelog content in the function bundle so on-demand rendering works
+    outputFileTracingIncludes: {
+      '/changelog': ['./public/documentation/changelog/**'],
+    },
     outputFileTracingExcludes: {
       '*': [
         // Native binaries - not needed at runtime for the website
@@ -69,6 +72,15 @@ module.exports = withNx({
         'node_modules/sass/**',
       ],
     },
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/blog',
+        permanent: false,
+      },
+    ];
   },
   async rewrites() {
     // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
@@ -119,7 +131,6 @@ module.exports = withNx({
     '@nx/nx-dev-data-access-packages',
     '@nx/nx-dev-data-access-menu',
     '@nx/nx-dev-data-access-courses',
-    '@nx/nx-dev-data-access-careers',
     '@nx/nx-dev-models-document',
     '@nx/nx-dev-models-package',
     '@nx/nx-dev-models-menu',
@@ -138,35 +149,12 @@ module.exports = withNx({
     '@nx/nx-dev-feature-ai',
     '@nx/nx-dev-ui-animations',
     '@nx/nx-dev-ui-blog',
-    '@nx/nx-dev-ui-brands',
-    '@nx/nx-dev-ui-careers',
-    '@nx/nx-dev-ui-cloud',
-    '@nx/nx-dev-ui-commands',
-    '@nx/nx-dev-ui-community',
-    '@nx/nx-dev-ui-company',
-    '@nx/nx-dev-ui-contact',
     '@nx/nx-dev-ui-courses',
-    '@nx/nx-dev-ui-customers',
-    '@nx/nx-dev-ui-enterprise',
-    '@nx/nx-dev-ui-gradle',
-    '@nx/nx-dev-ui-home',
-    '@nx/nx-dev-ui-member-card',
-    '@nx/nx-dev-ui-partners',
     '@nx/nx-dev-ui-podcast',
-    '@nx/nx-dev-ui-powerpack',
     '@nx/nx-dev-ui-pricing',
-    '@nx/nx-dev-ui-react',
-    '@nx/nx-dev-ui-remote-cache',
-    '@nx/nx-dev-ui-scrollable-content',
-    '@nx/nx-dev-ui-sponsor-card',
     '@nx/nx-dev-ui-video-courses',
-    '@nx/nx-dev-ui-webinar',
     '@nx/nx-dev-util-ai',
   ],
-  // For both client and server
-  env: {
-    VERCEL: process.env.VERCEL,
-  },
   async headers() {
     return [
       {
@@ -184,22 +172,6 @@ module.exports = withNx({
         ],
       },
     ];
-  },
-  async redirects() {
-    const rules = [];
-
-    // Apply all the redirects from the redirect-rules.js file
-    for (const section of Object.keys(redirectRules)) {
-      for (const source of Object.keys(redirectRules[section])) {
-        rules.push({
-          source: source,
-          destination: redirectRules[section][source],
-          permanent: true,
-        });
-      }
-    }
-
-    return rules;
   },
   webpack: (config, { dev }) => {
     if (!dev) {

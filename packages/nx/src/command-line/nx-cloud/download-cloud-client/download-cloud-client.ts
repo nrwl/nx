@@ -4,7 +4,6 @@ import { getCloudOptions } from '../../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
 import { handleErrors } from '../../../utils/handle-errors';
 import { output } from '../../../utils/output';
-import { warnNotConnectedToCloud } from '../utils';
 
 export interface DownloadCloudClientArgs {
   verbose?: boolean;
@@ -13,13 +12,19 @@ export interface DownloadCloudClientArgs {
 export function downloadCloudClientHandler(
   args: DownloadCloudClientArgs
 ): Promise<number> {
-  if (!isNxCloudUsed(readNxJson())) {
-    warnNotConnectedToCloud();
-    return Promise.resolve(1);
-  }
-
   return handleErrors(args.verbose, async () => {
-    const options = getCloudOptions();
+    // Try to get cloud options from nx.json if available, otherwise
+    // fall back to defaults (env vars / https://cloud.nx.app).
+    let options: { url?: string; customProxyConfigPath?: string } = {};
+    try {
+      const nxJson = readNxJson();
+      if (isNxCloudUsed(nxJson)) {
+        options = getCloudOptions();
+      }
+    } catch {
+      // Not in an Nx workspace — use defaults
+    }
+
     const result = await verifyOrUpdateNxCloudClient(options);
 
     if (result) {

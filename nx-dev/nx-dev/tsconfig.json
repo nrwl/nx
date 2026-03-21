@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "es2021", "esnext"],
-    "outDir": "../../dist/nx-dev/nx-dev",
-    "tsBuildInfoFile": "../../dist/nx-dev/nx-dev/tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -34,58 +33,27 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts",
     "public/documentation/**/*.json",
-    "dist/nx-dev/nx-dev/.next/types/**/*.ts"
+    "../../nx-dev/nx-dev/.next/types/**/*.ts"
   ],
   "references": [
     {
-      "path": "../ui-cloud"
+      "path": "../ui-resources"
     },
     {
       "path": "../ui-blog"
     },
     {
-      "path": "../ui-resources"
-    },
-    {
       "path": "../ui-fence"
     },
     {
-      "path": "../ui-sponsor-card"
-    },
-    {
-      "path": "../ui-member-card"
-    },
-    {
       "path": "../ui-references"
-    },
-    {
-      "path": "../ui-partners"
-    },
-    {
-      "path": "../ui-home"
-    },
-    {
-      "path": "../ui-customers"
-    },
-    {
-      "path": "../ui-contact"
     },
     {
       "path": "../feature-search"
     },
     {
       "path": "../ui-animations"
-    },
-    {
-      "path": "../ui-enterprise"
-    },
-    {
-      "path": "../ui-company"
-    },
-    {
-      "path": "../ui-community"
     },
     {
       "path": "../feature-ai"
@@ -97,7 +65,10 @@
       "path": "../feature-feedback"
     },
     {
-      "path": "../ui-scrollable-content"
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../feature-analytics"
     },
     {
       "path": "../ui-markdoc"
@@ -121,46 +92,16 @@
       "path": "../util-ai"
     },
     {
-      "path": "../ui-webinar"
-    },
-    {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../ui-remote-cache"
-    },
-    {
-      "path": "../ui-react"
-    },
-    {
       "path": "../ui-pricing"
     },
     {
-      "path": "../ui-powerpack"
-    },
-    {
       "path": "../ui-podcast"
-    },
-    {
-      "path": "../ui-gradle"
     },
     {
       "path": "../ui-video-courses"
     },
     {
       "path": "../ui-courses"
-    },
-    {
-      "path": "../data-access-careers"
-    },
-    {
-      "path": "../ui-careers"
-    },
-    {
-      "path": "../ui-brands"
-    },
-    {
-      "path": "../feature-analytics"
     }
   ],
   "exclude": [

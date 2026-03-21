@@ -1,5 +1,7 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.data.DependsOnEntry
+import dev.nx.gradle.data.DependsOnParams
 import dev.nx.gradle.data.NxTargets
 import dev.nx.gradle.data.TargetGroups
 import dev.nx.gradle.utils.parsing.containsEssentialTestAnnotations
@@ -19,11 +21,13 @@ fun addTestCiTargets(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String> = emptyMap(),
+    targetNamePrefix: String = ""
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
-  val ciDependsOn = mutableListOf<Map<String, String>>()
+  val ciDependsOn = mutableListOf<DependsOnEntry>()
 
   processTestFiles(
       testFiles,
@@ -35,7 +39,9 @@ fun addTestCiTargets(
       workspaceRoot,
       ciTestTargetName,
       ciDependsOn,
-      gitIgnoreClassifier)
+      gitIgnoreClassifier,
+      targetNameOverrides,
+      targetNamePrefix)
 
   ensureParentCiTarget(
       targets,
@@ -58,8 +64,10 @@ private fun processTestFiles(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    ciDependsOn: MutableList<Map<String, String>>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    ciDependsOn: MutableList<DependsOnEntry>,
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String
 ) {
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
@@ -75,11 +83,12 @@ private fun processTestFiles(
                   testTask,
                   projectRoot,
                   workspaceRoot,
-                  gitIgnoreClassifier)
+                  gitIgnoreClassifier,
+                  targetNameOverrides,
+                  targetNamePrefix)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
-          ciDependsOn.add(
-              mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
+          ciDependsOn.add(DependsOnEntry(target = targetName, params = DependsOnParams.FORWARD))
         }
       }
 }
@@ -105,7 +114,9 @@ private fun buildTestCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String
 ): MutableMap<String, Any?> {
   val taskInputs =
       getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
@@ -130,6 +141,10 @@ private fun buildTestCiTarget(
         target["outputs"] = it
       }
 
+  getDependsOnForTask(null, testTask, null, targetNameOverrides, targetNamePrefix)
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { target["dependsOn"] = it }
+
   return target
 }
 
@@ -141,7 +156,7 @@ private fun ensureParentCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    ciDependsOn: List<Map<String, String>>,
+    ciDependsOn: List<DependsOnEntry>,
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {

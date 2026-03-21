@@ -1,6 +1,6 @@
 ---
 title: 'Gradle Tutorial'
-description: In this tutorial you'll add Nx to an existing Gradle repo
+description: You'll add Nx to an existing Gradle repo
 sidebar:
   label: 'Gradle Monorepo'
 filter: 'type:Guides'
@@ -11,9 +11,9 @@ This tutorial walks you through adding Nx to an existing Gradle project. You'll 
 What you'll learn:
 
 - How to integrate Nx with your existing Gradle build system
-- How Nx's caching speeds up your Gradle builds locally and in CI
+- How Nx caching speeds up your Gradle builds locally and in CI
 - How to visualize and understand project dependencies in your Gradle workspace
-- How to run Gradle tasks more efficiently with Nx's task runner
+- How to run Gradle tasks more efficiently with Nx task runner
 - How to set up Nx Cloud for faster and self-healing CI
 
 ## Ready to start?
@@ -107,7 +107,7 @@ Root project 'gradle-tutorial'
 ## Add Nx
 
 Nx is a monorepo platform with built in tooling and advanced CI capabilities. It helps you maintain and scale monorepos,
-both locally and on CI. We will explore the features of Nx in this tutorial by adding it to the Gradle workspace above.
+Both locally and on CI. Explore the features of Nx by adding it to the Gradle workspace above.
 
 To add Nx, run
 
@@ -141,7 +141,7 @@ Please verify closely that you have the following setup:
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
-## Explore Your Workspace
+## Explore your workspace
 
 Like Gradle, Nx understands your workspace as a graph of projects. Nx uses this graph for many things which we will
 learn about in following sections. To visualize this graph in your browser, Run the following command and click the
@@ -1123,11 +1123,11 @@ nx graph
 
 {% /graph %}
 
-## Running Tasks
+## Running tasks
 
 Nx is a task runner built for monorepos. It can run a single task for a single project, a task for all projects, and
 even intelligently run a subset of tasks based on the changes you've made in your repository. Nx also has sophisticated
-computation caching to reuse the results of tasks. We will explore how Nx adds to the task running Gradle provides.
+Computation caching to reuse the results of tasks. Explore how Nx adds to the task running Gradle provides.
 
 Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
 that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/docs/getting-started/editor-setup) or from the terminal:
@@ -2451,7 +2451,7 @@ Again, because Nx cached the tasks when the application was built, most of the t
 ones which needed to be done is the root project's build. Running the command one more time, will be near instant as
 then all the tasks will be restored from the cache.
 
-### Remote Cache for Faster Development
+### Remote cache for faster development
 
 With Nx Cloud connected, your task results are now cached remotely. This means that if another developer runs the same tasks, or if you run them in CI, the results will be retrieved from the remote cache instead of being re-executed.
 
@@ -2465,7 +2465,7 @@ You'll notice that only the affected projects need to rebuild, while others are 
 
 ## Self-Healing CI with Nx Cloud
 
-In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI.
+Explore how Nx Cloud can help your pull request get to green faster with self-healing CI.
 
 You can copy the example GitHub Action workflow file and place it in the `.github/workflows/ci.yml` directory of your repository. This workflow will run the `lint`, `test`, and `build` tasks for all projects in your repository whenever a pull request is opened or updated.
 
@@ -2513,7 +2513,7 @@ You will also need to install the [Nx Console](/docs/getting-started/editor-setu
 
 {% install_nx_console /%}
 
-### Open a Pull Request
+### Open a pull request
 
 Start by making a new branch to work on.
 
@@ -2559,12 +2559,12 @@ Now that you have added Nx to this sample Gradle repository, you have learned se
 organization:
 
 - Nx reflects the Gradle graph into the Nx graph
-- Nx's dependency graph visualisation helps you understand your codebase
+- Nx dependency graph visualisation helps you understand your codebase
 - Nx caches task results and reuses them when the same task is rerun later
 - Nx Cloud provides self-healing CI and remote caching to speed up CI
 - Nx [intelligently determines which tasks are `affected`](/docs/features/ci-features/affected) by code changes to reduce waste in CI
 
-## Next Steps
+## Next steps
 
 Connect with the rest of the Nx community with these resources:
 
