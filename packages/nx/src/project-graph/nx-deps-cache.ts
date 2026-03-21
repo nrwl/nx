@@ -25,7 +25,7 @@ import {
   ProjectGraphErrorTypes,
   StaleProjectGraphCacheError,
 } from './error-types';
-import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 
 export interface FileMapCache {
   version: string;

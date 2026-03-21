@@ -26,7 +26,7 @@ import {
   PreTasksExecutionContext,
 } from '../../project-graph/plugins/public-api';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { isCI } from '../../utils/is-ci';

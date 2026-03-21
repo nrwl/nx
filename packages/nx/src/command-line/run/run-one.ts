@@ -179,7 +179,8 @@ export function parseRunOneOptions(
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs[PROJECT_TARGET_CONFIG],
-      projectGraph
+      projectGraph,
+      { currentProject: defaultProjectName }
     );
     // this is to account for "nx npmscript:dev"
     if (project && !target && defaultProjectName) {

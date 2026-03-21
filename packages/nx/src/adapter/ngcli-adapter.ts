@@ -76,8 +76,8 @@ import {
   resolveImplementation,
   resolveSchema,
 } from '../config/schema-utils';
-import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils';
 import { handleImport } from '../utils/handle-import';
+import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration/target-merging';
 
 function getProjectGraph(): Promise<ProjectGraph> {
   try {

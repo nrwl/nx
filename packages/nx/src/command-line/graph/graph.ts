@@ -53,7 +53,7 @@ import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
