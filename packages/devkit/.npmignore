@@ -1,0 +1,12 @@
+node_modules/
+.eslintrc.json
+jest.config.cts
+jest-resolver.js
+migrations.spec.ts
+project.json
+tsconfig.json
+tsconfig.lib.json
+tsconfig.spec.json
+dist/tsconfig.tsbuildinfo
+**/*.ts
+!**/*.d.ts

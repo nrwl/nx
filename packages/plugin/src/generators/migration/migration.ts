@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   generateFiles,
@@ -9,7 +10,6 @@ import {
   writeJson,
   type Tree,
 } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'node:path';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';

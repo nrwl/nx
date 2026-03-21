@@ -31,7 +31,7 @@ const isWorkspaceFile = (p) => {
  * - Without this resolver, Jest will fail to resolve these imports correctly
  */
 const enhancedResolver = require('enhanced-resolve').create.sync({
-  conditionNames: ['require', 'node', 'default'],
+  conditionNames: ['@nx/nx-source', 'require', 'node', 'default'],
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 

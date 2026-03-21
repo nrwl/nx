@@ -1,4 +1,8 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   type CreateNodesV2,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -8,12 +12,10 @@ import {
   CreateNodesContextV2,
   workspaceRoot,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
 import { interpolateObject } from '../utils/interpolate-pattern';
 

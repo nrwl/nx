@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { names } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { validateClassName } from '../../utils/validations';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema, Schema } from '../schema';

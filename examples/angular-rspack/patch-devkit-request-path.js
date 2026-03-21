@@ -8,7 +8,7 @@ module.exports = {
     Module._resolveFilename = function (request, parent, isMain) {
       if (request === '@nx/devkit') {
         const possiblePaths = [
-          path.resolve(__dirname, '../../dist/packages/devkit'),
+          path.resolve(__dirname, '../../packages/devkit'),
         ];
 
         for (const tryPath of possiblePaths) {

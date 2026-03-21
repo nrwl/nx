@@ -1,3 +1,4 @@
+import { findPluginForConfigFile } from '@nx/devkit/internal';
 import {
   formatFiles,
   globAsync,

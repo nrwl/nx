@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -15,7 +16,6 @@ import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 

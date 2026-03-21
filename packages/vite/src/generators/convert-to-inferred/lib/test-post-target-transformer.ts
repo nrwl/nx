@@ -1,6 +1,6 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
+import { processTargetOutputs } from '@nx/devkit/internal';
 import { toProjectRelativePath } from './utils';
-import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function testPostTargetTransformer(
   target: TargetConfiguration,

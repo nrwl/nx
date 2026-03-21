@@ -1,4 +1,8 @@
 import {
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   createProjectGraphAsync,
   formatFiles,
   names,
@@ -6,10 +10,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, PlaywrightPluginOptions } from '../../plugins/plugin';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
   project?: string;

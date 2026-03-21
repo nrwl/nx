@@ -1,4 +1,8 @@
 import {
+  getNamedInputs,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/internal';
+import {
   type ProjectConfiguration,
   type TargetConfiguration,
   readJsonFile,
@@ -10,11 +14,9 @@ import {
   getPackageManagerCommand,
   detectPackageManager,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';

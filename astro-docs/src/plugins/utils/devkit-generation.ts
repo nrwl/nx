@@ -24,7 +24,6 @@ export async function loadDevkitPackage(
   // generate main @nx/devkit docs
   const devkitEntryPoint = join(
     workspaceRoot,
-    'dist',
     'packages',
     'devkit',
     'index.d.ts'
@@ -47,7 +46,6 @@ export async function loadDevkitPackage(
   // generate ngcli docs in same dir
   const ngcliEntryPoint = join(
     workspaceRoot,
-    'dist',
     'packages',
     'devkit',
     'ngcli-adapter.d.ts'

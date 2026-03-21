@@ -2,13 +2,13 @@ import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
 import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+  AggregatedLog,
+} from '@nx/devkit/internal';
 import { createNodesV2, VitePluginOptions } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
 import { previewPostTargetTransformer } from './lib/preview-post-target-transformer';
 import { testPostTargetTransformer } from './lib/test-post-target-transformer';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 interface Schema {
   project?: string;

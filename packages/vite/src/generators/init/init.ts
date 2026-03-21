@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
   formatFiles,
@@ -7,7 +8,6 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
 import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
 import { createNodesV2 } from '../../plugins/plugin';

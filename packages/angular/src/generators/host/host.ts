@@ -1,4 +1,8 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   getProjects,
   joinPathFragments,
@@ -7,10 +11,6 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
 import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';

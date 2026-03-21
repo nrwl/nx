@@ -11,7 +11,6 @@ import { join, resolve as pathResolve } from 'path';
 import { cpSync, existsSync, writeFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { gte } from 'semver';
-import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
 import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
@@ -19,7 +18,7 @@ import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
 import { ChildProcess, fork } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode, checkAndCleanWithSemver } from '@nx/devkit/internal';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
 
 let childProcess: ChildProcess;

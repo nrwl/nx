@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -12,7 +13,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
