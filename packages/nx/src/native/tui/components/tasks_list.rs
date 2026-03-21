@@ -2147,12 +2147,6 @@ impl TasksList {
             constraints.push(Constraint::Length(DURATION_COLUMN_WIDTH));
         }
 
-        // Use pre-computed scroll metrics passed from main render method
-        // This completely eliminates lock acquisitions in this method
-        let total_task_count = scroll_metrics.total_task_count;
-        let visible_task_count = scroll_metrics.visible_task_count;
-        let selected_task_index = scroll_metrics.selected_task_index;
-
         // Split the area to reserve space for scrollbar and padding when needed
         let (table_render_area, scrollbar_area) = if needs_scrollbar {
             let horizontal_layout = Layout::default()
@@ -2195,15 +2189,19 @@ impl TasksList {
 
             // Only render if we have a valid visible area
             if safe_scrollbar_area.width > 0 && safe_scrollbar_area.height > 0 {
-                // Update scrollbar state using task-centric metrics for consistent task navigation
-                // This ensures thumb positioning accurately reflects progress through tasks
-
-                let selected_position = selected_task_index.unwrap_or(0);
+                // Drive the scrollbar from scroll offset so the thumb accurately
+                // reflects which portion of the list is currently in view.
+                // Clamp inputs to keep the (content, viewport, position) triple
+                // consistent even during resizes or transitional frames.
+                let content_len = scroll_metrics.total_entries.max(1);
+                let viewport_len = scroll_metrics.viewport_height.clamp(1, content_len);
+                let max_pos = content_len.saturating_sub(viewport_len);
+                let pos = scroll_metrics.scroll_offset.min(max_pos);
 
                 let mut scrollbar_state = ScrollbarState::default()
-                    .content_length(total_task_count) // Total tasks excluding spacers
-                    .viewport_content_length(visible_task_count) // Tasks visible in viewport (no spacers)
-                    .position(selected_position); // Selected task's index among tasks
+                    .content_length(content_len)
+                    .viewport_content_length(viewport_len)
+                    .position(pos);
 
                 // Determine scrollbar style based on focus state
                 let base_style = Style::default().fg(THEME.info);
@@ -4774,9 +4772,17 @@ mod tests {
         let mut tasks_list = create_large_tasks_list(40); // 40 tasks to force scrollbar
         let mut terminal = create_test_terminal(80, 20);
 
-        // Scroll down several positions to test scrollbar thumb position
-        for _ in 0..10 {
-            tasks_list.update(Action::ScrollDown).ok();
+        // Set up parallel section and populate filtered_display_items
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list.apply_filter();
+
+        // Scroll down via repeated next() calls which move both selection and
+        // scroll offset together, avoiding ensure_selected_visible pulling back
+        {
+            let mut mgr = tasks_list.selection_manager.lock();
+            for _ in 0..25 {
+                mgr.next();
+            }
         }
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
