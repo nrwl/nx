@@ -37,6 +37,11 @@
       "version": "22.2.0-beta.2",
       "description": "Migrate Vitest usage from @nx/vite to @nx/vitest package.",
       "implementation": "./src/migrations/update-22-2-0/migrate-vitest-to-vitest-package"
+    },
+    "add-nx-ts-plugin": {
+      "version": "22.7.0-beta.0",
+      "description": "Add nxTsPlugin to Vite configs in TS solution setups to sync tsconfig customConditions with Vite resolve.conditions.",
+      "implementation": "./src/migrations/update-22-7-0/add-nx-ts-plugin"
     }
   },
   "packageJsonUpdates": {
