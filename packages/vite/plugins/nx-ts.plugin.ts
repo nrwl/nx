@@ -1,5 +1,5 @@
-import { workspaceRoot } from '@nx/devkit';
-import { existsSync, readFileSync } from 'node:fs';
+import { readJsonFile, workspaceRoot } from '@nx/devkit';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Plugin } from 'vite';
 
@@ -19,12 +19,7 @@ export function nxTsPlugin(): Plugin {
       }
 
       try {
-        const tsconfigContent = readFileSync(tsconfigPath, 'utf-8');
-        // Strip single-line and block comments for JSON parsing
-        const stripped = tsconfigContent
-          .replace(/\/\/.*$/gm, '')
-          .replace(/\/\*[\s\S]*?\*\//g, '');
-        const tsconfig = JSON.parse(stripped);
+        const tsconfig = readJsonFile(tsconfigPath);
         const customConditions: string[] =
           tsconfig.compilerOptions?.customConditions;
 
