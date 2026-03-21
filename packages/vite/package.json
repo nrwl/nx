@@ -67,7 +67,7 @@
     "./src/generators/*/schema": "./src/generators/*/schema.d.ts",
     "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
     "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
-    "./plugins/nx-tsconfig-resolve-conditions.plugin": "./plugins/nx-tsconfig-resolve-conditions.plugin.js",
+    "./plugins/nx-ts.plugin": "./plugins/nx-ts.plugin.js",
     "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
   }
 }

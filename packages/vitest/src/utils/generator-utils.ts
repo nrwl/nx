@@ -163,10 +163,8 @@ export function createOrEditViteConfig(
   }
 
   if (isTsSolutionSetup) {
-    imports.push(
-      `import { nxTsconfigResolveConditionsPlugin } from '@nx/vite/plugins/nx-tsconfig-resolve-conditions.plugin'`
-    );
-    plugins.push(`nxTsconfigResolveConditionsPlugin()`);
+    imports.push(`import { nxTsPlugin } from '@nx/vite/plugins/nx-ts.plugin'`);
+    plugins.push(`nxTsPlugin()`);
   } else {
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,

@@ -9,9 +9,9 @@ import { Plugin } from 'vite';
  * that use those conditions (e.g. the TypeScript source condition used
  * in TS solution setups).
  */
-export function nxTsconfigResolveConditionsPlugin(): Plugin {
+export function nxTsPlugin(): Plugin {
   return {
-    name: 'nx-tsconfig-resolve-conditions',
+    name: 'nx-ts',
     config() {
       const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
       if (!existsSync(tsconfigPath)) {
