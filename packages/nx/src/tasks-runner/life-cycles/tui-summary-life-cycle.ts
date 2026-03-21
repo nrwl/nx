@@ -74,6 +74,10 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
+    // Task already completed and output was finalized by endTasks — discard late-arriving data
+    if (!taskOutputChunks[taskId]) {
+      return;
+    }
     taskOutputChunks[taskId].push(output);
   };
 
