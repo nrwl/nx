@@ -1,3 +1,4 @@
+// prettier-ignore
 import {
   addProjectConfiguration,
   readProjectConfiguration,
