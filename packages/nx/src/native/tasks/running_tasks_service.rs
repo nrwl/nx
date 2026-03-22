@@ -122,13 +122,10 @@ impl RunningTasksService {
 
     #[napi]
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
-        self.db
-            .lock()
-            .unwrap()
-            .execute(
-                "DELETE FROM running_tasks WHERE task_id = ?",
-                &[DbValue::from(task_id.as_str())],
-            )?;
+        self.db.lock().unwrap().execute(
+            "DELETE FROM running_tasks WHERE task_id = ?",
+            &[DbValue::from(task_id.as_str())],
+        )?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())
     }
