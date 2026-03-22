@@ -152,7 +152,7 @@ describe('@nx/vite/plugin', () => {
         {
           "description": "Runs type-checking for the project.",
           "help": {
-            "command": "npx tsc -p tsconfig.json --help",
+            "command": "pnpm exec tsc -p tsconfig.json --help",
             "example": {
               "options": {
                 "noEmit": true,
@@ -196,7 +196,7 @@ describe('@nx/vite/plugin', () => {
         {
           "description": "Runs type-checking for the project.",
           "help": {
-            "command": "npx tsc --build --help",
+            "command": "pnpm exec tsc --build --help",
             "example": {
               "args": [
                 "--force",
@@ -428,7 +428,7 @@ describe('@nx/vite/plugin', () => {
                       "metadata": {
                         "description": "Run Vite build",
                         "help": {
-                          "command": "npx vite build --help",
+                          "command": "pnpm exec vite build --help",
                           "example": {
                             "options": {
                               "manifest": "manifest.json",
@@ -458,7 +458,7 @@ describe('@nx/vite/plugin', () => {
                       "metadata": {
                         "description": "Starts Vite dev server",
                         "help": {
-                          "command": "npx vite --help",
+                          "command": "pnpm exec vite --help",
                           "example": {
                             "options": {
                               "port": 3000,
@@ -482,7 +482,7 @@ describe('@nx/vite/plugin', () => {
                       "metadata": {
                         "description": "Locally preview Vite production build",
                         "help": {
-                          "command": "npx vite preview --help",
+                          "command": "pnpm exec vite preview --help",
                           "example": {
                             "options": {
                               "port": 3000,
@@ -504,7 +504,7 @@ describe('@nx/vite/plugin', () => {
                         "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
                         "help": {
-                          "command": "npx vite --help",
+                          "command": "pnpm exec vite --help",
                           "example": {
                             "options": {
                               "port": 3000,
@@ -528,7 +528,7 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "watch-deps": {
-                      "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "command": "pnpm exec nx watch --projects my-lib --includeDependentProjects -- pnpm exec nx build-deps my-lib",
                       "continuous": true,
                       "dependsOn": [
                         "build-deps",
