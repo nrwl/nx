@@ -58,7 +58,65 @@ to keep both environments in sync:
     node-version-file: '.nvmrc'
 ```
 
-### Option 2: Create a custom launch template
+### Option 2: Use mise
+
+[Mise](https://mise.jdx.dev/) is a polyglot toolchain manager that can pin
+Node.js (and other tools) in a single `mise.toml` file.
+Nx Cloud launch templates have built-in support for mise
+via the [`install-mise`](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-mise)
+workflow step.
+
+Create a `mise.toml` at the workspace root:
+
+```toml
+// mise.toml
+[tools]
+node = "24"
+```
+
+Then create a custom launch template in `.nx/workflows/agents.yaml`
+that uses `install-mise` instead of `install-node`:
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  linux-medium-js:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.19-v2'
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - name: Setup toolchains
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+      - name: Restore Node Modules Cache
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**'
+          paths: 'node_modules'
+          base-branch: 'main'
+      - name: Install Node Modules
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+```
+
+The `install-mise` step reads `mise.toml` and installs the specified Node version on the agent.
+This is especially useful when you need to manage multiple tools
+(Node, bun, Rust, Python, etc.) through a single config file.
+
+On your CI runner, use the [jdx/mise-action](https://github.com/jdx/mise-action)
+to keep versions in sync:
+
+```yaml
+- name: Setup toolchains with mise
+  uses: jdx/mise-action@v3
+```
+
+{% aside type="tip" title="Use mise with bun" %}
+If you also use bun as your package manager, see the
+[Set Up Bun with Mise on CI](/docs/guides/nx-cloud/use-bun) guide
+for a complete setup including custom `bun install` steps.
+{% /aside %}
+
+### Option 3: Create a custom launch template
 
 If you'd rather keep Node version configuration
 in the launch template itself, create `.nx/workflows/agents.yaml`:
@@ -94,7 +152,7 @@ overrides all other resolution methods.
 For more details on custom launch templates, see the
 [launch templates reference](/docs/reference/nx-cloud/launch-templates).
 
-### Option 3: Set an environment variable
+### Option 4: Set an environment variable
 
 Set the `NODE_VERSION` env var in your CI workflow.
 The `install-node` step reads it as a fallback
