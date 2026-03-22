@@ -229,8 +229,6 @@ export declare function closeDbConnection(connection: ExternalObject<NxDbConnect
 
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
-export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
-
 export declare function copy(src: string, dest: string): number
 
 export interface DepsOutputsInput {
@@ -317,6 +315,12 @@ export declare function getEventDimensions(): EventDimensions
  * This is used when hashing outputs
  */
 export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+
+/**
+ * If `workspace_root` is inside a git worktree, returns the main repo root.
+ * Returns `None` when already in the main repo (or not in a git repo at all).
+ */
+export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
