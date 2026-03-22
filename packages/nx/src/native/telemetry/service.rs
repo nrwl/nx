@@ -306,7 +306,12 @@ fn drain_channels(
     page_view_queue: &mut Vec<ParameterMap>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
-        enqueue_event(event, user_params, current_page_title.as_deref(), event_queue);
+        enqueue_event(
+            event,
+            user_params,
+            current_page_title.as_deref(),
+            event_queue,
+        );
     }
     while let Ok(page_view) = page_view_rx.try_recv() {
         *current_page_title = Some(page_view.title.clone());
