@@ -15,7 +15,8 @@
   ],
   "main": "nx.linux-x64-gnu.node",
   "files": [
-    "nx.linux-x64-gnu.node"
+    "nx.linux-x64-gnu.node",
+    "nx-completion"
   ],
   "libc": [
     "glibc"

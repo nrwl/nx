@@ -15,7 +15,8 @@
   ],
   "main": "nx.linux-arm64-gnu.node",
   "files": [
-    "nx.linux-arm64-gnu.node"
+    "nx.linux-arm64-gnu.node",
+    "nx-completion"
   ],
   "publishConfig": {
     "access": "public"

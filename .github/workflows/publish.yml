@@ -389,6 +389,13 @@ jobs:
         if: ${{ !matrix.settings.docker }}
         shell: bash
 
+      - name: Build completion binary
+        run: |
+          cargo build --release -p nx-completion --target=${{ matrix.settings.target }}
+          mkdir -p packages/nx/src/native/completion-bin
+          cp dist/target/${{ matrix.settings.target }}/release/nx-completion${{ contains(matrix.settings.target, 'windows') && '.exe' || '' }} packages/nx/src/native/completion-bin/nx-completion-${{ matrix.settings.target }}${{ contains(matrix.settings.target, 'windows') && '.exe' || '' }}
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -396,6 +403,7 @@ jobs:
           path: |
             packages/nx/src/native/*.node
             packages/nx/src/native/*.wasm
+            packages/nx/src/native/completion-bin/*
           if-no-files-found: error
 
   build-freebsd:
