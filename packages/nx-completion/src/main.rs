@@ -216,9 +216,7 @@ fn build_cli() -> Command {
         .subcommand(
             Command::new("sync")
                 .about("Sync workspace files")
-                .subcommand(
-                    Command::new("check").about("Check that no sync changes are needed"),
-                ),
+                .subcommand(Command::new("check").about("Check that no sync changes are needed")),
         )
         // Workspace info
         .subcommand(Command::new("graph").about("Graph dependencies within workspace"))
