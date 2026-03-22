@@ -39,11 +39,19 @@ const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
+  // Shell tab-completion: fast path that skips all heavy initialization.
+  // Reads the cached project graph directly from disk using only fs/path.
+  if (process.argv.includes('--get-yargs-completions')) {
+    handleShellCompletions();
+    return;
+  }
+
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help' &&
-    process.argv[2] !== 'reset'
+    process.argv[2] !== 'reset' &&
+    process.argv[2] !== 'completion'
   ) {
     assertSupportedPlatform();
   }
@@ -116,7 +124,9 @@ async function main() {
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
     } else if (isLocalInstall) {
-      await initAnalytics();
+      if (!process.argv.includes('--get-yargs-completions')) {
+        await initAnalytics();
+      }
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
@@ -341,6 +351,29 @@ const getLatestVersionOfNx = ((fn: () => string) => {
 process.on('exit', () => {
   removeDbConnections();
 });
+
+/**
+ * Ultra-fast shell completion handler. Reads the cached project graph
+ * directly from disk using only fs/path — no nx module imports.
+ * This keeps TAB response time under ~100ms.
+ */
+function handleShellCompletions(): void {
+  const {
+    completionHandler,
+  } = require('../src/command-line/completion/completion-handler');
+  const flagIndex = process.argv.indexOf('--get-yargs-completions');
+  const completionArgs = process.argv.slice(flagIndex + 1);
+  // Strip script name if present (fish passes 'nx show project' → strip 'nx')
+  const args =
+    completionArgs[0] === 'nx' ? completionArgs.slice(1) : completionArgs;
+  const current = args.length > 0 ? args[args.length - 1] : '';
+  completionHandler(current, { _: args }, (completions: string[]) => {
+    if (completions.length > 0) {
+      console.log(completions.join('\n'));
+    }
+    process.exit(0);
+  });
+}
 
 main().catch((error) => {
   console.error(error);

@@ -35,12 +35,16 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
     }
 
     // Ensure NxConsole is installed if the user has it configured.
-    try {
-      await ensureNxConsoleInstalledViaDaemon();
-    } catch {}
+    if (process.argv[2] !== 'completion') {
+      try {
+        await ensureNxConsoleInstalledViaDaemon();
+      } catch {}
+    }
 
     const command = process.argv[2];
-    if (command === 'run' || command === 'g' || command === 'generate') {
+    if (command === 'completion') {
+      commandsObject.parse(process.argv.slice(2));
+    } else if (command === 'run' || command === 'g' || command === 'generate') {
       commandsObject.parse(process.argv.slice(2));
     } else if (isKnownCommand(command)) {
       const newArgs = rewriteTargetsAndProjects(process.argv);
@@ -115,14 +119,7 @@ function isKnownCommand(command: string) {
 
 function shouldDelegateToAngularCLI() {
   const command = process.argv[2];
-  const commands = [
-    'analytics',
-    'cache',
-    'completion',
-    'config',
-    'doc',
-    'update',
-  ];
+  const commands = ['analytics', 'cache', 'config', 'doc', 'update'];
   return commands.indexOf(command) > -1;
 }
 
@@ -194,11 +191,8 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
     );
     console.log(`If you need to use it, run "FORCE_NG_UPDATE=true ng update".`);
   } else if (process.argv[2] === 'completion') {
-    if (!process.argv[3]) {
-      console.log(`"ng completion" is not natively supported by Nx.
-  Instead, you could try an Nx Editor Plugin for a visual tool to run Nx commands. If you're using VSCode, you can use the Nx Console plugin, or if you're using WebStorm, you could use one of the available community plugins.
-  For more information, see https://nx.dev/getting-started/editor-setup`);
-    }
+    // Forward to Nx's own completion command
+    require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else if (process.argv[2] === 'cache') {
     console.log(`"ng cache" is not natively supported by Nx.
 To clear the cache, you can delete the ".angular/cache" directory (or the directory configured by "cli.cache.path" in the "nx.json" file).

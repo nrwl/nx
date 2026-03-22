@@ -36,6 +36,7 @@
       }
     },
     "build-native": {
+      "dependsOn": ["nx-completion:build"],
       "outputs": [
         "{projectRoot}/src/native/*.node",
         "{projectRoot}/src/native/!(index|browser).js",
@@ -57,7 +58,7 @@
       "command": "node scripts/copy.js packages/nx/dist/native-packages/* dist/packages"
     },
     "copy-local-native": {
-      "dependsOn": ["build-native"],
+      "dependsOn": ["build-native", "nx-completion:copy-to-native"],
       "inputs": [
         "{projectRoot}/src/native/**/*.{node,wasm,js,mjs,cjs}",
         "{workspaceRoot}/scripts/copy-local-native.js"
@@ -66,7 +67,7 @@
       "command": "node ./scripts/copy-local-native.js nx"
     },
     "artifacts": {
-      "dependsOn": ["copy-native-package-directories"],
+      "dependsOn": ["copy-native-package-directories", "nx-completion:copy-artifacts"],
       "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
     },
     "echo": {
