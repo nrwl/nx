@@ -3,6 +3,7 @@
 resolver = '2'
 members = [
 	'packages/nx',
+	'packages/nx-completion',
 ]
 
 [profile.release]
