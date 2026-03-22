@@ -1,0 +1,129 @@
+---
+title: Configure Node Version for Nx Agents
+description: Learn how to control which Node.js version Nx Agents use when running distributed tasks with Nx Cloud
+sidebar:
+  label: Configure Node version
+filter: 'type:Guides'
+---
+
+When you distribute tasks with `--distribute-on`,
+the Nx Agents that run your tasks use a pre-built
+[launch template](/docs/reference/nx-cloud/launch-templates)
+such as `linux-medium-js`.
+These templates include an `install-node` step that determines which
+Node.js version to use on the agent.
+
+Your CI runner (for example, a GitHub Actions `ubuntu-latest` machine)
+only orchestrates the run. It doesn't execute the actual tasks.
+The Nx Agents do.
+If your CI workflow sets Node 24 via `actions/setup-node` but the
+agents default to Node 20, your tasks run on Node 20.
+
+## How the agent resolves the Node version
+
+The `install-node` workflow step checks for a Node version
+in this order:
+
+1. The `node_version` step input
+   (set via `NX_CLOUD_INPUT_node_version` or `NODE_VERSION` env var)
+1. A `.nvmrc` file in the repo root
+1. A Volta `node` pin in the root `package.json`
+1. The base image default (Node 20)
+
+The first match wins.
+If none of these are set, the agent falls back to whatever
+version the base image ships.
+
+## Set the node version
+
+Pick **one** of the following approaches.
+
+### Option 1: Add a `.nvmrc` file
+
+The quickest option.
+Create a `.nvmrc` file at the workspace root:
+
+```plaintext
+// .nvmrc
+24
+```
+
+The `install-node` step picks this up automatically.
+You can also reference the same file from `actions/setup-node`
+to keep both environments in sync:
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version-file: '.nvmrc'
+```
+
+### Option 2: Create a custom launch template
+
+If you'd rather keep Node version configuration
+in the launch template itself, create `.nx/workflows/agents.yaml`:
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  linux-medium-js:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.19-v2'
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - name: Restore Node Modules Cache
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**'
+          paths: 'node_modules'
+          base-branch: 'main'
+      - name: Install Node
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
+        inputs:
+          node_version: '24'
+      - name: Install Node Modules
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+      - name: Install Browsers (if needed)
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-browsers/main.yaml'
+```
+
+The `node_version` input on the `Install Node` step
+overrides all other resolution methods.
+
+For more details on custom launch templates, see the
+[launch templates reference](/docs/reference/nx-cloud/launch-templates).
+
+### Option 3: Set an environment variable
+
+Set the `NODE_VERSION` env var in your CI workflow.
+The `install-node` step reads it as a fallback
+when no step input is provided:
+
+```yaml {% meta="{8}" %}
+// .github/workflows/ci.yml
+name: CI
+# ...
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: '24'
+    steps:
+      # ...
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+```
+
+{% aside type="caution" title="Env var propagation" %}
+The env var must be available in the CI runner environment
+where `start-ci-run` is called.
+Nx Cloud forwards it to the agents during provisioning.
+{% /aside %}
+
+## Verify the Node version on agents
+
+To confirm agents are using the expected version,
+add a verification step to your CI workflow
+or check the agent logs in the Nx Cloud dashboard.
+The `install-node` step logs the resolved Node version
+during initialization.

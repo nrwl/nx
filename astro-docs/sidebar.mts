@@ -802,6 +802,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/nx-cloud/use-bun',
           },
           {
+            label: 'Configure Node version',
+            link: 'guides/nx-cloud/configure-node-version',
+          },
+          {
             label: 'GitHub app permissions',
             link: 'guides/nx-cloud/source-control-integration/github-app-permissions',
           },
