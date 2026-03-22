@@ -16,7 +16,10 @@
     "copy-artifacts": {
       "command": "node scripts/copy-completion-artifacts.js",
       "inputs": ["{workspaceRoot}/artifacts/**/nx-completion-*"],
-      "outputs": ["{workspaceRoot}/dist/packages/*/nx-completion", "{workspaceRoot}/dist/packages/*/nx-completion.exe"]
+      "outputs": [
+        "{workspaceRoot}/dist/packages/*/nx-completion",
+        "{workspaceRoot}/dist/packages/*/nx-completion.exe"
+      ]
     }
   }
 }
