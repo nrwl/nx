@@ -67,10 +67,6 @@ async function main() {
     process.env.NX_DAEMON = 'false';
     require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else {
-    if (!daemonClient.enabled() && workspace !== null) {
-      setupWorkspaceContext(workspace.dir);
-    }
-
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
     if (!(Symbol as any).observable)
@@ -105,17 +101,23 @@ async function main() {
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
+      if (!daemonClient.enabled() && workspace !== null) {
+        setupWorkspaceContext(workspace.dir);
+      }
       await initAnalytics();
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
     } else if (isLocalInstall) {
+      if (!daemonClient.enabled() && workspace !== null) {
+        setupWorkspaceContext(workspace.dir);
+      }
       await initAnalytics();
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
-      // Don't start analytics or connect to the DB here — the local Nx
-      // will handle it when it runs its own bin/nx.ts
+      // Don't start analytics, connect to the DB, or set up the workspace
+      // context here — the local Nx will handle it when it runs its own bin/nx.ts
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
