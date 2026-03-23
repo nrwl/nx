@@ -1,157 +1,247 @@
 use anyhow::Result;
-
-use rusqlite::{Connection, DatabaseName, Error, OptionalExtension, Params, Row, Statement, ToSql};
-use std::thread;
-use std::time::Duration;
 use tracing::trace;
 
-#[derive(Default)]
-pub struct NxDbConnection {
-    pub conn: Option<Connection>,
+// =============================================================================
+// DbValue / DbRow — parameter and result types
+// =============================================================================
+
+/// A parameter value for queries.
+#[derive(Clone, Debug)]
+pub enum DbValue {
+    Text(String),
+    Integer(i64),
+    Real(f64),
+    Null,
 }
 
-const MAX_RETRIES: u32 = 20;
-const RETRY_DELAY: u64 = 25;
+impl From<String> for DbValue {
+    fn from(s: String) -> Self {
+        DbValue::Text(s)
+    }
+}
 
-/// macro for handling the db when its busy
-/// This is a macro instead of a function because some database operations need to take a &mut Connection, while returning a reference
-/// This causes some quite complex lifetime issues that are quite hard to solve
-///
-/// Using a macro inlines the retry operation where it was called, and the lifetime issues are avoided
-macro_rules! retry_db_operation_when_busy {
-    ($operation:expr) => {{
-        let connection = 'retry: {
-            for i in 1..MAX_RETRIES {
-                match $operation {
-                    r @ Ok(_) => break 'retry r,
-                    Err(Error::SqliteFailure(err, _))
-                        if err.code == rusqlite::ErrorCode::DatabaseBusy =>
-                    {
-                        trace!("Database busy. Retrying {} of {}", i, MAX_RETRIES);
-                        let sleep = Duration::from_millis(RETRY_DELAY * 2_u64.pow(i));
-                        let max_sleep = Duration::from_secs(12);
-                        if (sleep >= max_sleep) {
-                            thread::sleep(max_sleep);
-                        } else {
-                            thread::sleep(sleep);
-                        }
-                    }
-                    err => break 'retry err,
-                };
-            }
-            break 'retry Err(Error::SqliteFailure(
-                rusqlite::ffi::Error {
-                    code: rusqlite::ErrorCode::DatabaseBusy,
-                    extended_code: 0,
-                },
-                Some("Database busy. Retried maximum number of times.".to_string()),
-            ));
-        };
+impl From<&str> for DbValue {
+    fn from(s: &str) -> Self {
+        DbValue::Text(s.to_string())
+    }
+}
 
-        connection
-    }};
+impl From<i64> for DbValue {
+    fn from(v: i64) -> Self {
+        DbValue::Integer(v)
+    }
+}
+
+impl From<f64> for DbValue {
+    fn from(v: f64) -> Self {
+        DbValue::Real(v)
+    }
+}
+
+fn to_turso_params(params: &[DbValue]) -> Vec<turso::Value> {
+    params
+        .iter()
+        .map(|v| match v {
+            DbValue::Text(s) => turso::Value::Text(s.clone()),
+            DbValue::Integer(i) => turso::Value::Integer(*i),
+            DbValue::Real(f) => turso::Value::Real(*f),
+            DbValue::Null => turso::Value::Null,
+        })
+        .collect()
+}
+
+/// A row of query results (eagerly collected, fully owned).
+#[derive(Clone, Debug)]
+pub struct DbRow {
+    values: Vec<DbValue>,
+}
+
+impl DbRow {
+    pub fn get_str(&self, idx: usize) -> Result<String> {
+        match self.values.get(idx) {
+            Some(DbValue::Text(s)) => Ok(s.clone()),
+            Some(other) => anyhow::bail!("Column {} is not text: {:?}", idx, other),
+            None => anyhow::bail!("Column index {} out of range", idx),
+        }
+    }
+
+    pub fn get_i64(&self, idx: usize) -> Result<i64> {
+        match self.values.get(idx) {
+            Some(DbValue::Integer(i)) => Ok(*i),
+            Some(other) => anyhow::bail!("Column {} is not integer: {:?}", idx, other),
+            None => anyhow::bail!("Column index {} out of range", idx),
+        }
+    }
+
+    pub fn get_f64(&self, idx: usize) -> Result<f64> {
+        match self.values.get(idx) {
+            Some(DbValue::Real(f)) => Ok(*f),
+            Some(DbValue::Integer(i)) => Ok(*i as f64),
+            Some(other) => anyhow::bail!("Column {} is not real: {:?}", idx, other),
+            None => anyhow::bail!("Column index {} out of range", idx),
+        }
+    }
+
+    pub fn get_optional_str(&self, idx: usize) -> Result<Option<String>> {
+        match self.values.get(idx) {
+            Some(DbValue::Text(s)) => Ok(Some(s.clone())),
+            Some(DbValue::Null) => Ok(None),
+            Some(other) => anyhow::bail!("Column {} is not text/null: {:?}", idx, other),
+            None => anyhow::bail!("Column index {} out of range", idx),
+        }
+    }
+}
+
+/// Extract a DbValue from a turso row column.
+fn value_from_row(row: &turso::Row, idx: usize) -> DbValue {
+    match row.get_value(idx) {
+        Ok(turso::Value::Integer(i)) => DbValue::Integer(i),
+        Ok(turso::Value::Real(f)) => DbValue::Real(f),
+        Ok(turso::Value::Text(s)) => DbValue::Text(s),
+        Ok(turso::Value::Null) => DbValue::Null,
+        Ok(turso::Value::Blob(_)) => DbValue::Null,
+        Err(_) => DbValue::Null,
+    }
+}
+
+// =============================================================================
+// NxDbConnection — wraps turso::Connection (WAL mode, pure Rust)
+// =============================================================================
+
+pub struct NxDbConnection {
+    rt: Option<tokio::runtime::Runtime>,
+    conn: Option<turso::Connection>,
+    /// Keep the Database alive — Connection may reference it internally.
+    _db: Option<turso::Database>,
+}
+
+impl Default for NxDbConnection {
+    fn default() -> Self {
+        Self {
+            rt: None,
+            conn: None,
+            _db: None,
+        }
+    }
 }
 
 impl NxDbConnection {
-    pub fn new(connection: Connection) -> Self {
+    pub fn new(rt: tokio::runtime::Runtime, db: turso::Database, conn: turso::Connection) -> Self {
         Self {
-            conn: Some(connection),
+            rt: Some(rt),
+            conn: Some(conn),
+            _db: Some(db),
         }
     }
 
-    pub fn execute<P: Params + Clone>(&self, sql: &str, params: P) -> Result<usize> {
-        if let Some(conn) = &self.conn {
-            retry_db_operation_when_busy!(conn.execute(sql, params.clone()))
-                .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
+    /// Get the runtime, or bail.
+    fn rt(&self) -> Result<&tokio::runtime::Runtime> {
+        self.rt
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No database runtime available"))
     }
+
+    /// Get the connection, or bail.
+    fn conn(&self) -> Result<&turso::Connection> {
+        self.conn
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No database connection available"))
+    }
+
+    // =========================================================================
+    // execute
+    // =========================================================================
+
+    pub fn execute(&self, sql: &str, params: &[DbValue]) -> Result<usize> {
+        let rt = self.rt()?;
+        let conn = self.conn()?;
+        let turso_params = to_turso_params(params);
+        let n = rt
+            .block_on(conn.execute(sql, turso_params))
+            .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))?;
+        Ok(n as usize)
+    }
+
+    // =========================================================================
+    // execute_batch
+    // =========================================================================
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
-        if let Some(conn) = &self.conn {
-            retry_db_operation_when_busy!(conn.execute_batch(sql))
-                .map_err(|e| anyhow::anyhow!("DB execute batch error: \"{}\", {:?}", sql, e))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
+        let rt = self.rt()?;
+        let conn = self.conn()?;
+        rt.block_on(conn.execute_batch(sql))
+            .map(|_| ())
+            .map_err(|e| anyhow::anyhow!("DB execute batch error: \"{}\", {:?}", sql, e))
     }
 
-    pub fn prepare(&self, sql: &str) -> Result<Statement> {
-        if let Some(conn) = &self.conn {
-            retry_db_operation_when_busy!(conn.prepare(sql))
-                .map_err(|e| anyhow::anyhow!("DB prepare error: \"{}\", {:?}", sql, e))
-        } else {
-            anyhow::bail!("No database connection available")
+    // =========================================================================
+    // query_rows — returns eagerly-collected Vec<DbRow>
+    // =========================================================================
+
+    pub fn query_rows(&self, sql: &str, params: &[DbValue]) -> Result<Vec<DbRow>> {
+        let rt = self.rt()?;
+        let conn = self.conn()?;
+        let turso_params = to_turso_params(params);
+        let mut rows = rt
+            .block_on(conn.query(sql, turso_params))
+            .map_err(|e| anyhow::anyhow!("DB query_rows error: \"{}\", {:?}", sql, e))?;
+
+        let col_count = rows.column_count() as usize;
+        let mut result = Vec::new();
+        loop {
+            match rt.block_on(rows.next()) {
+                Ok(Some(row)) => {
+                    let mut values = Vec::with_capacity(col_count);
+                    for i in 0..col_count {
+                        values.push(value_from_row(&row, i));
+                    }
+                    result.push(DbRow { values });
+                }
+                Ok(None) => break,
+                Err(e) => return Err(anyhow::anyhow!("Row read error: {:?}", e)),
+            }
         }
+        Ok(result)
     }
 
-    pub fn transaction<T>(
-        &mut self,
-        transaction_operation: impl Fn(&Connection) -> rusqlite::Result<T>,
-    ) -> Result<T> {
-        if let Some(conn) = self.conn.as_mut() {
-            retry_db_operation_when_busy!(conn.transaction().and_then(|tx| {
-                let result = transaction_operation(&tx)?;
-                tx.commit()?;
-                Ok(result)
-            }))
-            .map_err(|e| anyhow::anyhow!("DB transaction error: {:?}", e))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
+    // =========================================================================
+    // query_row — returns at most one DbRow
+    // =========================================================================
+
+    pub fn query_row(&self, sql: &str, params: &[DbValue]) -> Result<Option<DbRow>> {
+        let rows = self.query_rows(sql, params)?;
+        Ok(rows.into_iter().next())
     }
 
-    pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<Option<T>>
-    where
-        P: Params + Clone,
-        F: FnOnce(&Row<'_>) -> rusqlite::Result<T> + Clone,
-    {
-        if let Some(conn) = &self.conn {
-            retry_db_operation_when_busy!(conn.query_row(sql, params.clone(), f.clone()).optional())
-                .map_err(|e| anyhow::anyhow!("DB query error: \"{}\", {:?}", sql, e))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
+    // =========================================================================
+    // begin / commit / rollback — transaction control
+    // =========================================================================
+
+    pub fn begin_transaction(&self) -> Result<()> {
+        self.execute("BEGIN", &[])?;
+        Ok(())
     }
+
+    pub fn commit_transaction(&self) -> Result<()> {
+        self.execute("COMMIT", &[])?;
+        Ok(())
+    }
+
+    pub fn rollback_transaction(&self) -> Result<()> {
+        self.execute("ROLLBACK", &[])?;
+        Ok(())
+    }
+
+    // =========================================================================
+    // close
+    // =========================================================================
 
     pub fn close(self) -> Result<()> {
         trace!("Closing database connection");
-        if let Some(conn) = self.conn {
-            conn.close()
-                .map_err(|(_, err)| anyhow::anyhow!("Unable to close connection: {:?}", err))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
-    }
-
-    pub fn pragma_update<V>(
-        &self,
-        schema_name: Option<DatabaseName<'_>>,
-        pragma_name: &str,
-        pragma_value: V,
-    ) -> Result<()>
-    where
-        V: ToSql + Clone,
-    {
-        if let Some(conn) = &self.conn {
-            retry_db_operation_when_busy!(conn.pragma_update(
-                schema_name,
-                pragma_name,
-                pragma_value.clone()
-            ))
-            .map_err(|e| anyhow::anyhow!("DB pragma update error: {:?}", e))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
-    }
-
-    pub fn busy_handler(&self, callback: Option<fn(i32) -> bool>) -> Result<()> {
-        if let Some(conn) = &self.conn {
-            retry_db_operation_when_busy!(conn.busy_handler(callback))
-                .map_err(|e| anyhow::anyhow!("DB busy handler error: {:?}", e))
-        } else {
-            anyhow::bail!("No database connection available")
-        }
+        // turso connections are closed on drop
+        drop(self.conn);
+        drop(self._db);
+        drop(self.rt);
+        Ok(())
     }
 }

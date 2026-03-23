@@ -31,13 +31,7 @@ pub fn connect_to_nx_db(
 
     trace_span!("process", id = process::id()).in_scope(|| {
         trace!("Creating connection to {:?}", db_path);
-        let lock_file = initialize::create_lock_file(&db_path)?;
-
-        let c = initialize::initialize_db(nx_version, &db_path)
-            .inspect_err(|_| initialize::unlock_file(&lock_file))?;
-
-        initialize::unlock_file(&lock_file);
-
+        let c = initialize::initialize_db(nx_version, &db_path)?;
         Ok(External::new(Arc::new(Mutex::new(c))))
     })
 }
