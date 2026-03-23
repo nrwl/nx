@@ -1,8 +1,8 @@
 import { defaultMaxListeners } from 'events';
 import { writeFileSync } from 'fs';
-import * as pc from 'picocolors';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
+import * as pc from 'picocolors';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -14,29 +14,30 @@ import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
+  TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
-  TaskStatus as NativeTaskStatus,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getDbConnection } from '../utils/db-connection';
-import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
-import { workspaceRoot } from '../utils/workspace-root';
 import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
+import { output } from '../utils/output';
+import { combineOptionsForExecutor } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
 import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
-import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
+import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { RunningTask } from './running-tasks/running-task';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
@@ -53,7 +54,6 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
-import { SharedRunningTask } from './running-tasks/shared-running-task';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -662,6 +662,8 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ): Promise<TaskResult> {
+    this.detectTaskInvocationLoop(task);
+
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
 
@@ -947,6 +949,8 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
+    this.detectTaskInvocationLoop(task);
+
     if (
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
@@ -1236,6 +1240,44 @@ export class TaskOrchestrator {
   }
 
   //endregion Lifecycle
+
+  /**
+   * Checks whether this task has already been invoked by a parent Nx process,
+   * which would indicate an infinite loop of nested Nx invocations.
+   *
+   * The NX_TASK_INVOCATION_CHAIN env var accumulates task keys (project:target)
+   * across nested Nx processes. If the current task is already in the chain,
+   * we're in a loop.
+   */
+  private detectTaskInvocationLoop(task: Task): void {
+    const invocationChain = process.env.NX_TASK_INVOCATION_CHAIN;
+    if (!invocationChain) {
+      return;
+    }
+
+    // All entries in the chain have form `-> {key}`, since root is represented as `$0 ->`
+    const taskKey = `-> ${task.target.project}:${task.target.target}`;
+
+    const chainTasks = invocationChain.split(' -> ').slice(1); // Skip '$0'
+    const currentTaskKey = `${task.target.project}:${task.target.target}`;
+    if (chainTasks.includes(currentTaskKey)) {
+      output.error({
+        title: 'Recursive task invocation detected',
+        bodyLines: [
+          `Nx detected a recursive loop of task invocations:`,
+          ``,
+          `  ${invocationChain}`,
+          ``,
+          `Task "${task.target.project}:${task.target.target}" was already invoked by a parent Nx process in this chain.`,
+          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+          `triggers a chain of tasks that eventually re-invokes itself.`,
+          ``,
+          `To fix this, review the command configuration for the tasks in the chain above.`,
+        ],
+      });
+      process.exit(1);
+    }
+  }
 
   // region utils
 
