@@ -85,14 +85,14 @@ fn cleanup_stale_db_files(cache_dir: &Path, db_name: &str) {
         }
 
         // Only delete if the file hasn't been modified in over 7 days
-        let dominated = entry
+        let is_stale = entry
             .metadata()
             .ok()
             .and_then(|m| m.modified().ok())
             .and_then(|modified| now.duration_since(modified).ok())
             .is_some_and(|age| age > STALE_THRESHOLD);
 
-        if dominated {
+        if is_stale {
             let path = entry.path();
             trace!("Removing stale DB file (>7 days old): {:?}", path);
             remove_file(&path).ok();

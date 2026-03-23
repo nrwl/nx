@@ -10,20 +10,24 @@ import { workspaceRoot } from './workspace-root';
 const dbConnectionMap = new Map<string, ExternalObject<any>>();
 
 /**
- * Returns a shared workspace-data directory that is the same across worktrees.
- * If the current workspace is a git worktree, it resolves the main repo's
- * workspace-data dir so all worktrees share the same DB.
+ * Shared workspace-data directory, resolved once per process.
+ * In a git worktree this points to the main repo's workspace-data dir
+ * so all worktrees share the same DB.
  */
+let _sharedDir: string | undefined;
 function sharedWorkspaceDataDirectory(root: string): string {
+  if (_sharedDir) return _sharedDir;
   try {
     const mainRoot = getMainWorktreeRoot(root);
     if (mainRoot) {
-      return workspaceDataDirectoryForWorkspace(mainRoot);
+      _sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
+      return _sharedDir;
     }
   } catch {
     // Fall back to local workspace data if worktree detection fails
   }
-  return workspaceDataDirectoryForWorkspace(root);
+  _sharedDir = workspaceDataDirectoryForWorkspace(root);
+  return _sharedDir;
 }
 
 export function getDbConnection(
