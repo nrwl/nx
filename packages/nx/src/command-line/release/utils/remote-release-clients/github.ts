@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
 import { orange, output } from '../../../../utils/output';
@@ -34,6 +34,18 @@ export interface GithubRemoteRelease {
   draft?: boolean;
   prerelease?: boolean;
   make_latest?: 'legacy' | boolean;
+}
+
+interface UnghUserLookupResponse {
+  user?: {
+    username?: string;
+  } | null;
+}
+
+interface GithubUserSearchResponse {
+  items?: Array<{
+    login?: string;
+  }>;
 }
 
 export const defaultCreateReleaseProvider: ResolvedCreateRemoteReleaseProvider =
@@ -171,16 +183,60 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
           const { data } = await axios
             .get<
               any,
-              { data?: { user?: { username: string } } }
+              { data?: UnghUserLookupResponse }
             >(`https://ungh.cc/users/find/${email}`)
             .catch(() => ({ data: { user: null } }));
-          if (data?.user) {
+          if (data?.user?.username) {
             meta.username = data.user.username;
+            break;
+          }
+          const usernameFromGhCli = this.resolveUsernameFromGhCli(email);
+          if (usernameFromGhCli) {
+            meta.username = usernameFromGhCli;
             break;
           }
         }
       })
     );
+  }
+
+  private resolveUsernameFromGhCli(email: string): string | null {
+    const hostname =
+      this.getRemoteRepoData<GithubRepoData>()?.hostname ??
+      defaultCreateReleaseProvider.hostname;
+
+    try {
+      const stdout = execFileSync(
+        'gh',
+        [
+          'api',
+          '--hostname',
+          hostname,
+          '--method',
+          'GET',
+          'search/users',
+          '-f',
+          `q=${email} in:email`,
+        ],
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+          windowsHide: true,
+        }
+      ).trim();
+
+      if (!stdout) {
+        return null;
+      }
+
+      const data = JSON.parse(stdout) as GithubUserSearchResponse;
+      return data.items?.[0]?.login ?? null;
+    } catch (error) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(error);
+      }
+      return null;
+    }
   }
 
   /**
