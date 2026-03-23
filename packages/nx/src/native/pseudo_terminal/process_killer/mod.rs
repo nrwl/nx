@@ -185,7 +185,12 @@ pub async fn kill_process_tree_graceful(
     signal: Option<Either<String, i32>>,
     grace_period_ms: Option<u32>,
 ) {
-    let grace_ms = grace_period_ms.unwrap_or(5000);
+    let grace_ms = grace_period_ms.unwrap_or_else(|| {
+        std::env::var("NX_PROCESS_KILL_GRACE_PERIOD")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(5000)
+    });
 
     tokio::task::spawn_blocking(move || {
         let signal_str = normalize_signal(signal.as_ref());
