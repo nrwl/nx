@@ -384,7 +384,29 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                         }
                     }
                 }
-                _ => {}
+                _ => {
+                    // Check if this is an `import X = ...` statement
+                    // `import X = require('module')` is a valid CommonJS import
+                    // `import X = Y.Z` is a namespace alias, NOT a module import
+                    if let Some(maybe_eq) = state.next() {
+                        if let Token::AssignOp(_) = &maybe_eq.token {
+                            // After `=`, check if followed by `require(`
+                            if let Some(maybe_require) = state.next() {
+                                match &maybe_require.token {
+                                    Token::Word(Ident(i)) if i == "require" => {
+                                        // import X = require('module') -- continue to find specifier
+                                    }
+                                    _ => {
+                                        // import X = Y.Z -- namespace alias, skip
+                                        return None;
+                                    }
+                                }
+                            }
+                        }
+                        // If not `=`, token was consumed but the while loop below
+                        // will continue scanning from the current position
+                    }
+                }
             },
             // Matches: import 'a';
             Token::Str { value, .. } => {
@@ -1515,6 +1537,82 @@ import(myTag`react@${version}`);
                 );
             }
         }
+    }
+
+    #[test]
+    fn should_not_treat_import_equals_namespace_alias_as_module_import() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      import { Component } from '@angular/core';
+
+      export namespace Foo {
+        export enum Bar { A = 'A' }
+      }
+
+      import MyBar = Foo.Bar;
+
+      export type LogLevel = 'Debug' | 'Info' | 'Warn' | 'Error';
+
+      export function getLevel(): LogLevel {
+        return 'Debug';
+      }
+
+      switch (value) {
+        case 'Open':
+          break;
+      }
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        // Only '@angular/core' should be detected -- not 'Debug', 'Open', 'Foo', etc.
+        assert_eq!(
+            result.static_import_expressions,
+            vec![String::from("@angular/core")]
+        );
+        assert_eq!(result.dynamic_import_expressions, Vec::<String>::new());
+    }
+
+    #[test]
+    fn should_still_detect_import_equals_require_as_module_import() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      import path = require('path');
+      import { readFile } from 'fs';
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![String::from("path"), String::from("fs")]
+        );
     }
 
     // This function finds imports with the ast which verifies that the imports we find are the same as the ones typescript finds
