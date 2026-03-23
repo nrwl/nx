@@ -15,7 +15,8 @@
   ],
   "main": "nx.linux-x64-musl.node",
   "files": [
-    "nx.linux-x64-musl.node"
+    "nx.linux-x64-musl.node",
+    "nx-completion"
   ],
   "libc": [
     "musl"

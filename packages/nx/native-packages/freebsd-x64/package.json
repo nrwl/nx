@@ -15,7 +15,8 @@
   ],
   "main": "nx.freebsd-x64.node",
   "files": [
-    "nx.freebsd-x64.node"
+    "nx.freebsd-x64.node",
+    "nx-completion"
   ],
   "publishConfig": {
     "access": "public"

@@ -1,0 +1,25 @@
+{
+  "name": "nx-completion",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "command": "cargo build --release -p nx-completion",
+      "inputs": ["{projectRoot}/src/**/*.rs", "{projectRoot}/Cargo.toml"],
+      "outputs": ["{workspaceRoot}/dist/target/release/nx-completion"]
+    },
+    "copy-to-native": {
+      "dependsOn": ["build"],
+      "command": "node -e \"const fs=require('fs');const path=require('path');const src='dist/target/release/nx-completion';if(fs.existsSync(src)){const dest='packages/nx/dist/src/native/nx-completion';fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);fs.chmodSync(dest,0o755);console.log('Copied nx-completion to',dest)}\"",
+      "inputs": ["{workspaceRoot}/dist/target/release/nx-completion"],
+      "outputs": ["{workspaceRoot}/packages/nx/dist/src/native/nx-completion"]
+    },
+    "copy-artifacts": {
+      "command": "node scripts/copy-completion-artifacts.js",
+      "inputs": ["{workspaceRoot}/artifacts/**/nx-completion-*"],
+      "outputs": [
+        "{workspaceRoot}/dist/packages/*/nx-completion",
+        "{workspaceRoot}/dist/packages/*/nx-completion.exe"
+      ]
+    }
+  }
+}

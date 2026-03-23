@@ -15,7 +15,8 @@
   ],
   "main": "nx.linux-arm-gnueabihf.node",
   "files": [
-    "nx.linux-arm-gnueabihf.node"
+    "nx.linux-arm-gnueabihf.node",
+    "nx-completion"
   ],
   "publishConfig": {
     "access": "public"

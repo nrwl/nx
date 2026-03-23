@@ -15,7 +15,8 @@
   ],
   "main": "nx.win32-x64-msvc.node",
   "files": [
-    "nx.win32-x64-msvc.node"
+    "nx.win32-x64-msvc.node",
+    "nx-completion.exe"
   ],
   "publishConfig": {
     "access": "public"

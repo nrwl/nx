@@ -15,7 +15,8 @@
   ],
   "main": "nx.darwin-x64.node",
   "files": [
-    "nx.darwin-x64.node"
+    "nx.darwin-x64.node",
+    "nx-completion"
   ],
   "publishConfig": {
     "access": "public"
