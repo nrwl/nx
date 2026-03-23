@@ -11,7 +11,8 @@ import {
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 
-describe('React Rspack Module Federation Misc - Interoperability', () => {
+// TODO: unskip once Cypress HMR issue is resolved
+describe.skip('React Rspack Module Federation Misc - Interoperability', () => {
   beforeEach(() => {
     process.env.NX_ADD_PLUGINS = 'false';
     newProject({ packages: ['@nx/react'] });
