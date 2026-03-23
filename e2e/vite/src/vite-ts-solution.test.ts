@@ -118,7 +118,7 @@ ${content}`
       `generate @nx/react:app apps/${app} --bundler=vite --e2eTestRunner=none`
     );
     runCLI(
-      `generate @nx/react:lib packages/${lib} --bundler=vite --e2eTestRunner=none`
+      `generate @nx/js:lib packages/${lib} --bundler=vite --e2eTestRunner=none`
     );
 
     // import from the library in the app
