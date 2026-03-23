@@ -1,3 +1,4 @@
+// prettier-ignore
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
