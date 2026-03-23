@@ -197,6 +197,11 @@
       "types": "./bin/nx.d.ts",
       "default": "./dist/bin/nx.js"
     },
+    "./src/native": {
+      "@nx/nx-source": "./src/native/index.ts",
+      "types": "./src/native/index.d.ts",
+      "default": "./dist/src/native/index.js"
+    },
     "./src/plugins/js": {
       "@nx/nx-source": "./src/plugins/js/index.ts",
       "types": "./src/plugins/js/index.d.ts",
