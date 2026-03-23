@@ -874,10 +874,15 @@ function getInputs(
   // the source files of dependencies. This correctly tracks build outputs from
   // both external project references and same-project task dependencies (e.g.
   // build-native producing .d.ts files that may be excluded from file watching
-  // via .nxignore).
+  // via .nxignore. "*.d.ts" are also read from the deps projects sources.
+
   inputs.push({
     dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
     transitive: true,
+  });
+  inputs.push({
+    fileset: '**/*.d.ts',
+    dependencies: true,
   });
 
   const externalRefPatterns = getExternalProjectReferenceTsconfigPatterns(
