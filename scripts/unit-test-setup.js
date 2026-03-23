@@ -23,6 +23,7 @@ module.exports = () => {
    * of the Nx repo, so we mock it to return an empty project graph.
    */
   jest.doMock('@nx/devkit', () => ({
+    __esModule: true,
     ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(async () => {
       return {

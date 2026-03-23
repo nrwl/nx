@@ -25,9 +25,9 @@ The `@nx/cypress` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-## Setting Up @nx/cypress
+## Setting up @nx/cypress
 
-> Info about [Cypress Component Testing can be found here](/docs/technologies/test-tools/cypress/guides/cypress-component-testing)
+> For Cypress Component Testing, see [the component testing guide](/docs/technologies/test-tools/cypress/guides/cypress-component-testing).
 
 ### Installation
 
@@ -37,31 +37,16 @@ Make sure to install the `@nx/cypress` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/cypress` by running the following command:
 
-{% tabs %}
-{% tabitem label="Nx 18+" %}
-
 ```shell
 nx add @nx/cypress
 ```
 
 This will install the correct version of `@nx/cypress`.
 
-{% /tabitem %}
-{% tabitem label="Nx < 18" %}
-
-Install the `@nx/cypress` package with your package manager.
-
-```shell
-npm add -D @nx/cypress
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-### How @nx/cypress Infers Tasks
+### How @nx/cypress infers tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
@@ -71,11 +56,11 @@ The `@nx/cypress` plugin will create a task for any project that has a Cypress c
 - `cypress.config.mjs`
 - `cypress.config.cjs`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/cypress Configuration
+### @nx/cypress configuration
 
 The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 
@@ -138,7 +123,7 @@ export default defineConfig({
 If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/technologies/test-tools/cypress/guides/cypress-setup-node-events) for more details.
 {% /aside %}
 
-### Splitting Component Testing Tasks by File
+### Splitting component testing tasks by file
 
 {% aside type="note" title="Available since Nx 21.6.1" %}
 Splitting component testing tasks by file is available since Nx 21.6.1.
@@ -164,7 +149,7 @@ The `@nx/cypress/plugin` can also automatically split your component testing tas
 }
 ```
 
-## E2E Testing
+## E2E testing
 
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
@@ -194,7 +179,7 @@ The `@nx/cypress:configuration` generator is not a project generator. It won't g
 To set up a separate project, you can generate a separate project with a project generator like `@nx/js:library` first and then run the `@nx/cypress:configuration` generator.
 {% /aside %}
 
-### Testing Applications
+### Testing applications
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
@@ -217,7 +202,7 @@ nx e2e frontend-e2e --spec="**smoke/**,**dashboard.cy**"
 By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
 terminal. Screenshots and videos will be accessible in `dist/cypress/apps/frontend/screenshots` and `dist/cypress/apps/frontend/videos`.
 
-### Watching for Changes (Headed Mode)
+### Watching for changes (Headed mode)
 
 You can also run Cypress in headed mode and watching for changes. This is a great way to enhance the dev workflow. You can build up test files with the application
 running and Cypress will re-run those tests as you enhance and add to the suite.
@@ -240,7 +225,7 @@ nx e2e frontend-e2e --watch
 {% /tabitem %}
 {% /tabs %}
 
-### Specifying a Custom Url to Test
+### Specifying a custom url to test
 
 The `baseUrl` property provides you the ability to test an application hosted on a specific domain.
 
@@ -280,11 +265,11 @@ on [the official website](https://docs.cypress.io/guides/references/configuratio
 
 For adding more dynamic configurations to your Cypress configuration, you can look into using [setupNodeEvents](https://docs.cypress.io/api/plugins/browser-launch-api#Syntax) configuration option.
 
-## Environment Variables
+## Environment variables
 
 If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
+There are a handful of ways to pass environment variables to Cypress, but the most common is via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Make sure to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 

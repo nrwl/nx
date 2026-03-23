@@ -99,7 +99,7 @@ describe('ab-testing', () => {
       ).toBe('0');
     });
 
-    it('should return 2 for standard URLs (locked in CLOUD-4255)', () => {
+    it('should return 2 for standard URLs', () => {
       expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('2');
     });
   });

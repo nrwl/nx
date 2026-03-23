@@ -20,6 +20,7 @@ export declare class AppLifeCycle {
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
+  setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
@@ -167,7 +168,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap<string, HashDetails>
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -246,6 +247,21 @@ export interface EnvironmentInput {
   env: string
 }
 
+/**
+ * Canonical event dimension and metric names for GA4.
+ * TypeScript imports these from the native module instead of redefining the strings.
+ */
+export interface EventDimensions {
+  command: string
+  generatorName: string
+  packageName: string
+  packageVersion: string
+  duration: string
+  taskCount: string
+  projectCount: string
+  cachedTaskCount: string
+}
+
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
@@ -281,9 +297,18 @@ export interface FileSetInput {
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
+/**
+ * Flush all pending telemetry data
+ * This should be called before process exit
+ */
+export declare function flushTelemetry(): void
+
 export declare function getBinaryTarget(): string
 
 export declare function getDefaultMaxCacheSize(cachePath: string): number
+
+/** Returns the canonical event dimension names. */
+export declare function getEventDimensions(): EventDimensions
 
 /**
  * Expands the given outputs into a list of existing files.
@@ -353,6 +378,22 @@ export interface HashInputs {
   /** External dependencies */
   external: Array<string>
 }
+
+/**
+ * Initialize telemetry using a DB connection.
+ * Gets/creates the session ID from the DB, stores the connection
+ * for persisting session refreshes on flush, and returns the session ID
+ * so the caller can set it as an env var for child processes.
+ * Used by CLI and daemon.
+ */
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
+
+/**
+ * Initialize telemetry with a pre-fetched session ID.
+ * No DB connection — used by plugin workers that inherit the
+ * session ID from their parent process via env var.
+ */
+export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string
@@ -532,6 +573,12 @@ export interface TaskTarget {
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/** Track an event using the global telemetry instance */
+export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void
+
+/** Track a page view using the global telemetry instance */
+export declare function trackPageView(pageTitle: string, pageLocation?: string | undefined | null, parameters?: Record<string, string> | undefined | null): void
 
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker

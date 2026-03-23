@@ -54,12 +54,13 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 
   const hashes = await hasher.hashTasks(tasksToHash, taskGraph, process.env);
   const ioService = getTaskIOService();
+  const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   for (let i = 0; i < tasksToHash.length; i++) {
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
 
     // Notify TaskIOService of hash inputs
-    if (hashes[i].inputs) {
+    if (hasInputSubscribers && hashes[i].inputs) {
       ioService.notifyTaskInputs(tasksToHash[i].id, hashes[i].inputs);
     }
   }
@@ -111,8 +112,9 @@ export async function hashTask(
   task.hashDetails = details;
 
   // Notify TaskIOService of hash inputs
-  if (inputs) {
-    getTaskIOService().notifyTaskInputs(task.id, inputs);
+  const ioService = getTaskIOService();
+  if (ioService.hasTaskInputSubscribers() && inputs) {
+    ioService.notifyTaskInputs(task.id, inputs);
   }
 
   if (taskDetails?.recordTaskDetails) {
@@ -139,7 +141,8 @@ export async function hashTasks(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   env: NodeJS.ProcessEnv,
-  taskDetails: TaskDetails | null
+  taskDetails: TaskDetails | null,
+  tasksToHashOverride?: Task[]
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -147,7 +150,9 @@ export async function hashTasks(
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJson = readNxJson();
 
-  const tasks = Object.values(taskGraph.tasks).filter((task) => !task.hash);
+  const tasks = (tasksToHashOverride ?? Object.values(taskGraph.tasks)).filter(
+    (task) => !task.hash
+  );
 
   // Separate tasks with custom hashers from those without
   const tasksWithCustomHashers: Task[] = [];
@@ -164,6 +169,7 @@ export async function hashTasks(
 
   // Hash tasks with custom hashers individually
   const ioService = getTaskIOService();
+  const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
     const customHasher = getCustomHasher(task, projectGraph);
     const { value, details, inputs } = await customHasher(task, {
@@ -179,7 +185,7 @@ export async function hashTasks(
     task.hashDetails = details;
 
     // Notify TaskIOService of hash inputs
-    if (inputs) {
+    if (hasInputSubscribers && inputs) {
       ioService.notifyTaskInputs(task.id, inputs);
     }
   });
@@ -195,7 +201,7 @@ export async function hashTasks(
           tasksWithoutCustomHashers[i].hashDetails = hashes[i].details;
 
           // Notify TaskIOService of hash inputs
-          if (hashes[i].inputs) {
+          if (hasInputSubscribers && hashes[i].inputs) {
             ioService.notifyTaskInputs(
               tasksWithoutCustomHashers[i].id,
               hashes[i].inputs

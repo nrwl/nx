@@ -6,9 +6,9 @@ filter: 'type:References'
 
 Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. Ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents and with a specified parallelism. Lighter tasks like `lint` and `test` can run on smaller agents.
 
-Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Manual Distributed Task Execution (DTE)](/docs/guides/nx-cloud/manual-dte) or with [dynamic Nx agents](/docs/features/ci-features/dynamic-agents). Note that additional configuration is required when using Manual DTE.
+Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Manual Distributed Task Execution (DTE)](/docs/guides/nx-cloud/manual-dte) or with [dynamic Nx Agents](/docs/features/ci-features/dynamic-agents). Note that additional configuration is required when using Manual DTE.
 
-## How to Define an Assignment Rule
+## How to define an assignment rule
 
 Each assignment rule has one of the following properties that it matches against tasks: `projects`, `targets`, and/or `configurations`. You can provide a list of globs to match against the tasks in your workspace. It also has a list of possible [agent types](/docs/reference/nx-cloud/launch-templates) that tasks with the matching properties can run on. Rules are defined in yaml like the following:
 
@@ -78,28 +78,44 @@ You must define your own agent types and attach them to your agents using the `N
 See below for an [example](#using-assignment-rules-with-manual-dte) of how to define your own agent types when using Manual DTE.
 {% /aside %}
 
-### Assignment Rule Property Reference
+### Assignment rule property reference
+
+<!-- vale Nx.Headings = NO -->
 
 #### projects
 
+<!-- vale Nx.Headings = YES -->
+
 A list of string globs that matches against projects in your workspace.
+
+<!-- vale Nx.Headings = NO -->
 
 #### targets
 
+<!-- vale Nx.Headings = YES -->
+
 A list of string globs that matches against targets in your workspace.
+
+<!-- vale Nx.Headings = NO -->
 
 #### configurations
 
+<!-- vale Nx.Headings = YES -->
+
 A list of string globs that matches against configurations in your workspace.
 
+<!-- vale Nx.Headings = NO -->
+
 #### run-on
+
+<!-- vale Nx.Headings = YES -->
 
 Specification of which agent and how to run your tasks:
 
 - **agent**: the type of agent to run on (`linux-medium`, `linux-large`)
 - **parallelism**: the number of parallel executions allowed for agents of a given type
 
-### Glob Reference
+### Glob reference
 
 You can use globs for better control over how to define your assignment rules.
 
@@ -159,7 +175,7 @@ The following rule will match the following tasks:
 - starts with `e2e-ci` and ends with `server-test` (i.e `e2e-ci--playwright-server-test`)
 - starts with `lint` (i.e `lint-js`)
 
-### Configuring Parallelism through Assignment Rules
+### Configuring parallelism through assignment rules
 
 You can specify how many tasks of a certain type can run in parallel on a particular agent. Each agent object within the `run-on` list can have the `parallelism` property. Configuring parallelism through your assignment rules will override the other parallelism configurations in your workspace. For a given command run with DTE, parallelism is determined by in the following order:
 
@@ -178,7 +194,7 @@ Note that there are two special cases for parallelism with assignment rules wher
 nx affected -t lint test built --no-dte --parallel=3
 ```
 
-#### Assignment Rules Parallelism Example
+#### Assignment rules parallelism example
 
 ```shell
 // .github/workflows/ci.yaml
@@ -203,7 +219,7 @@ assignment-rules:
 
 In the above example, the `lint` and `test` targets will run on `linux-medium` agents with a parallelism of `4` as defined within the rules. The `build` target will run on `linux-large` agents, but note that there is no parallelism defined for that target. The parallelism for `build` tasks will then use the value provided by the `--parallel` flag, which is `3`.
 
-#### Setting Default Parallelism for Multiple Tasks
+#### Setting default parallelism for multiple tasks
 
 Putting globs and parallelism together, you can set a default parallelism for all tasks within your executions. Take the following statement:
 
@@ -228,7 +244,7 @@ assignment-rules:
         parallelism: 5
 ```
 
-## Assignment Rule Precedence
+## Assignment rule precedence
 
 Having multiple assignment rules means that often rules may overlap or apply to the same tasks. For a given task, only one rule will ever be applied. To determine which rule take priority, a rule of thumb is that **more specific rules take precedence over more general rules**. You can consult our precedence chart for a full list of rule priorities. A checkmark indicates that a rule has a particular property defined.
 
@@ -244,7 +260,7 @@ If two rules have the same priority based on the below chart, the rule that appe
 |    6     |               |  ✅︎   |         |
 |    7     |               |        |   ✅    |
 
-### Rule Precedence Example
+### Rule precedence example
 
 In this example, the task defined below can match multiple assignment rules. However, since the second rule specifies all three properties (`projects`, `targets`, and `configurations`) rather than just two (`projects` and `targets`), it takes precedence, and we automatically apply the second rule when distributing the task.
 
@@ -280,7 +296,7 @@ assignment-rules:
         parallelism: 5
 ```
 
-## Using Assignment Rules with Manual DTE
+## Using assignment rules with manual DTE
 
 A typical `assignment-rules.yaml` file might look like this:
 
@@ -391,7 +407,7 @@ jobs:
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'run-on' values defined in the assignment rules
 ```
 
-## Using Assignment Rules with Dynamic Nx Agents
+## Using assignment rules with dynamic Nx Agents
 
 A typical `distribution-config.yaml` file might look like this:
 
@@ -438,9 +454,9 @@ jobs:
       - ..
 ```
 
-### More Examples of Assignment Rules with Dynamic Agents
+### More examples of assignment rules with dynamic agents
 
-#### Invalid Assignment Rules Example
+#### Invalid assignment rules example
 
 ```yaml
 // .nx/workflows/distribution-config.yaml
@@ -473,7 +489,7 @@ assignment-rules:
       - agent: linux-extra-large-js
 ```
 
-#### Valid Assignment Rules Example
+#### Valid assignment rules example
 
 ```yaml
 // .nx/workflows/distribution-config.yaml
@@ -504,7 +520,7 @@ assignment-rules:
       - agent: linux-medium-js
 ```
 
-## Deprecated Assignment Rules
+## Deprecated assignment rules
 
 Assignment rules used to be defined with the following schema. However, this schema did not support multi-glob matching, nor parallelism. Rules defined in this format will still work, but we recommend updating them to the new schema.
 

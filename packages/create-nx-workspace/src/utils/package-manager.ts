@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
+import { CnwError } from './error-utils';
 
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
@@ -49,7 +50,10 @@ export function getPackageManagerCommand(
   switch (packageManager) {
     case 'yarn':
       const useBerry = +pmMajor >= 2;
-      const installCommand = 'yarn install --silent';
+      // Don't use --silent so that error output is captured on failure.
+      // Since install is run via exec() (not spawn), output is captured
+      // in memory and never shown to the terminal.
+      const installCommand = 'yarn install';
       return {
         preInstall: `yarn set version ${pmVersion}`,
         install: useBerry
@@ -69,7 +73,7 @@ export function getPackageManagerCommand(
         useExec = true;
       }
       return {
-        install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
+        install: 'pnpm install --no-frozen-lockfile --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
         globalAdd: 'pnpm add -g',
         getRegistryUrl: 'pnpm config get registry',
@@ -77,7 +81,7 @@ export function getPackageManagerCommand(
 
     case 'npm':
       return {
-        install: 'npm install --silent --ignore-scripts',
+        install: 'npm install --ignore-scripts',
         exec: 'npx',
         globalAdd: 'npm i -g',
         getRegistryUrl: 'npm config get registry',
@@ -85,7 +89,7 @@ export function getPackageManagerCommand(
     case 'bun':
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
-        install: 'bun install --silent --ignore-scripts',
+        install: 'bun install --ignore-scripts',
         exec: 'bunx',
         globalAdd: 'bun install -g',
       };
@@ -258,13 +262,20 @@ export function getPackageManagerVersion(
   if (pmVersionCache.has(packageManager)) {
     return pmVersionCache.get(packageManager) as string;
   }
-  const version = execSync(`${packageManager} --version`, {
-    cwd,
-    encoding: 'utf-8',
-    windowsHide: false,
-  }).trim();
-  pmVersionCache.set(packageManager, version);
-  return version;
+  try {
+    const version = execSync(`${packageManager} --version`, {
+      cwd,
+      encoding: 'utf-8',
+      windowsHide: true,
+    }).trim();
+    pmVersionCache.set(packageManager, version);
+    return version;
+  } catch {
+    throw new CnwError(
+      'INVALID_PACKAGE_MANAGER',
+      `Package manager '${packageManager}' is not installed or not found in PATH.`
+    );
+  }
 }
 
 /**

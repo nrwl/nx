@@ -30,6 +30,7 @@ async function runMigrationProcess() {
     const gitRefBefore = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
       encoding: 'utf-8',
+      windowsHide: true,
     }).trim();
 
     const { changes: fileChanges, nextSteps } = await runNxOrAngularMigration(
@@ -45,6 +46,7 @@ async function runMigrationProcess() {
     const gitRefAfter = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
       encoding: 'utf-8',
+      windowsHide: true,
     }).trim();
 
     // Report success

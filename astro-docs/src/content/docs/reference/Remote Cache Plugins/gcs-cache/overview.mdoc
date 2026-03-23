@@ -49,9 +49,9 @@ Includes everything from Nx Cloud, plus:
 
 {% /aside %}
 
-## Set Up @nx/gcs-cache
+## Set up @nx/gcs-cache
 
-### 1. Install the Package
+### 1. Install the package
 
 Run the following command:
 
@@ -70,7 +70,7 @@ NX_KEY=YOUR_ACTIVATION_KEY
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also build your own cache server. [Learn more.](/docs/guides/tasks--caching/self-hosted-caching)
 
-### 2. Authenticate with Google Cloud
+### 2. authenticate with google cloud
 
 There are several ways to [authenticate with Google Cloud Storage](https://github.com/google-github-actions/setup-gcloud#authorization), but the method recommended by Google is to use Workload Identity Federation, like this:
 
@@ -110,7 +110,7 @@ jobs:
 
 Note: Any authentication method that [sets up the Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) will enable the plugin to work.
 
-### 3. Configure the Nx Cache to Use Google Cloud Storage
+### 3. configure the Nx cache to use google cloud storage
 
 Finally, you need to configure your Nx cache in the `nx.json` file. The `bucket` that you specify needs to already exist - Nx doesn't create it for you.
 
@@ -127,7 +127,7 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `bucket`
 | ------------ | ----------------------------- |
 | **bucket**   | The name of the bucket to use |
 
-### Migrating from Custom Tasks Runners
+### Migrating from custom tasks runners
 
 Many people who are interested in Nx caching plugins have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
 

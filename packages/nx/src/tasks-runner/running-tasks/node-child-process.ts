@@ -2,8 +2,9 @@ import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { signalToCode } from '../../utils/exit-codes';
+import { addPrefixTransformer, getColor } from './output-prefix';
 import type { RunningTask } from './running-task';
 
 export class NodeChildProcessWithNonDirectOutput implements RunningTask {
@@ -107,6 +108,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       this.childProcess.send(message);
     }
   }
+
   public kill(signal?: NodeJS.Signals) {
     if (this.childProcess?.pid) {
       treeKill(this.childProcess.pid, signal, () => {
@@ -114,46 +116,6 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       });
     }
   }
-}
-
-function addPrefixTransformer(prefix?: string) {
-  const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      const list = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
-      list
-        .filter(Boolean)
-        .forEach((m) =>
-          this.push(
-            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
-          )
-        );
-      callback();
-    },
-  });
-}
-
-const colors = [
-  pc.green,
-  pc.greenBright,
-  pc.blue,
-  pc.blueBright,
-  pc.cyan,
-  pc.cyanBright,
-  pc.yellow,
-  pc.yellowBright,
-  pc.magenta,
-  pc.magentaBright,
-];
-
-function getColor(projectName: string) {
-  let code = 0;
-  for (let i = 0; i < projectName.length; ++i) {
-    code += projectName.charCodeAt(i);
-  }
-  const colorIndex = code % colors.length;
-
-  return colors[colorIndex];
 }
 
 /**

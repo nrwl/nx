@@ -1,7 +1,7 @@
 {
   "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*", "node_modules"],
+  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*", "node_modules", "dist"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -144,10 +144,10 @@
               "@nx/conformance",
               // Nx Docker plugin conditionally available dynamically at runtime
               "@nx/docker",
-              // Only used in test-utils at the time of writing
-              "@ltd/j-toml",
               // Used in WASI browser implementation (nx.wasi-browser.js)
-              "@napi-rs/wasm-runtime"
+              "@napi-rs/wasm-runtime",
+              // Only used for testing
+              "enhanced-resolve"
             ]
           }
         ]

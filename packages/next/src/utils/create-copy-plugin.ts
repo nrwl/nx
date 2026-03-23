@@ -77,6 +77,7 @@ export function createCopyPlugin(
           ],
           dot: true,
         },
+        noErrorOnMissing: true,
       };
     }),
   });

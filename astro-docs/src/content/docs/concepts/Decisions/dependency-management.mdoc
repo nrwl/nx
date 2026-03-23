@@ -15,7 +15,7 @@ The core decision comes down to:
 
 Let's examine the trade-offs of each approach, using JavaScript/TypeScript as our primary example (though these principles apply to other languages as well):
 
-## Independently Maintained Dependencies
+## Independently maintained dependencies
 
 In this model, each project maintains its own dependency definitions. For JavaScript/TypeScript projects, this means each project has its own `package.json` file specifying runtime dependencies, with development dependencies often still living at the root of the workspace (although they can also be specified at the project level). During builds, each project's bundler includes the necessary dependencies in its final artifact. Dependencies are typically managed using package manager workspaces (npm/yarn/pnpm/bun).
 
@@ -37,7 +37,7 @@ A common pitfall occurs when developers have one version of a dependency in the 
 - Can lead to hard-to-detect runtime conflicts
 - Increases maintenance and strategy overhead with multiple versions to track
 
-## Single Version Policy
+## Single version policy
 
 This strategy centralizes all dependency definitions in the root `package.json` file, ensuring consistent versions across your codebase. While individual projects may still maintain their own `package.json` files for development purposes, the root configuration serves as the single source of truth for versions.
 
@@ -45,8 +45,10 @@ For building and deployment, you'll need to ensure each project only includes it
 
 The main challenge with this approach is coordinating dependency updates across independent teams. When multiple teams work on different, or even the same, applications within the same repo, they need to align on dependency upgrades. While this requires more coordination, it often results in less total work - upgrading a dependency once across all projects is typically more efficient than managing multiple separate upgrades over time.
 
-{% aside type="tip" title="PNPM Catalog Support" %}
-When using PNPM, use [PNPM catalogs](https://pnpm.io/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml` and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+).
+{% aside type="tip" title="Dependency Catalog Support" %}
+
+When using pnpm or Yarn, use [pnpm catalogs](https://pnpm.io/catalogs) or [Yarn catalogs](https://yarnpkg.com/features/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml` or `.yarnrc.yml` respectively and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+ for pnpm and Nx 22.6+ for Yarn).
+
 {% /aside %}
 
 **Pros:**
@@ -61,4 +63,4 @@ When using PNPM, use [PNPM catalogs](https://pnpm.io/catalogs) to maintain singl
 - May slow down teams that need to move at different velocities
 - Needs stronger governance and communication processes
 
-For details on using Nx's dependency graph in your deployment process, see our guide on [preparing applications for deployment via CI](/docs/guides/ci-deployment).
+For details on using Nx dependency graph in your deployment process, see our guide on [preparing applications for deployment via CI](/docs/guides/ci-deployment).

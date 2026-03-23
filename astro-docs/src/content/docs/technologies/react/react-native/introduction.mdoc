@@ -25,9 +25,9 @@ The `@nx/react-native` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-## Setting Up React Native
+## Setting up React native
 
-### Create a New Workspace
+### Create a new workspace
 
 To create a new workspace with React Native, run the following command:
 
@@ -51,31 +51,16 @@ Make sure to install the `@nx/react-native` version that matches the version of 
 
 In any Nx workspace, you can install `@nx/react-native` by running the following command:
 
-{% tabs syncKey="nx-version" %}
-{% tabitem label="Nx 18+" %}
-
 ```shell
 nx add @nx/react-native
 ```
 
 This will install the correct version of `@nx/react-native`.
 
-{% /tabitem %}
-{% tabitem label="Nx < 18" %}
-
-Install the `@nx/react-native` package with your package manager.
-
-```shell
-npm add -D @nx/react-native
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-### How @nx/react-native Infers Tasks
+### How @nx/react-native infers tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/react-native` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
@@ -83,11 +68,11 @@ The `@nx/react-native` plugin will create a task for any project that has an app
 - `app.config.js`
 - `app.json`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/react-native Configuration
+### @nx/react-native configuration
 
 The `@nx/react-native/plugin` is configured in the `plugins` array in `nx.json`.
 
@@ -113,7 +98,7 @@ The `@nx/react-native/plugin` is configured in the `plugins` array in `nx.json`.
 
 Once a React Native configuration file has been identified, the targets are created with the name you specify under `startTargetName`, `podInstallTargetName`, `bundleTargetName`, `runIosTargetName`, `runAndroidTargetname`, `buildIosTargetName` or `buildAndroidTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `start`, `pod-install`, `bundle`, `run-ios`, `run-android`, `build-ios` and `build-android`.
 
-### Generating Applications
+### Generating applications
 
 To create additional React Native apps run:
 
@@ -121,7 +106,7 @@ To create additional React Native apps run:
 nx g @nx/react-native:app apps/<your-app-name>
 ```
 
-### Generating Libraries
+### Generating libraries
 
 To generate a new library run:
 
@@ -129,7 +114,7 @@ To generate a new library run:
 nx g @nx/react-native:lib libs/<your-lib-name>
 ```
 
-### Generating Components
+### Generating components
 
 To generate a new component inside library run:
 
@@ -143,7 +128,7 @@ Replace `<component-directory>` with the directory where you want to place the c
 
 The Nx CLI provides the [`migrate` command](/docs/features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
 
-#### Use upgrade-native Generator
+#### Use upgrade-native generator
 
 To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/docs/technologies/react/react-native/generators#upgrade-native) generator:
 
@@ -153,11 +138,11 @@ nx generate @nx/react-native:upgrade-native apps/<your-app-name>
 
 This is a command that will replace the iOS and Android native code folder entirely.
 
-#### Upgrade Manually
+#### Upgrade manually
 
 You can also upgrade React Native iOS and Android code using the [rn-diff-purge](https://react-native-community.github.io/upgrade-helper/) project.
 
-### Start Metro Server
+### Start metro server
 
 To start the server that communicates with connected devices:
 
@@ -173,7 +158,7 @@ To build your app and start it on iOS simulator or device:
 nx run-ios <your-app-name>
 ```
 
-### Run Android
+### Run android
 
 To build your app and start it on a connected Android emulator or device:
 
@@ -197,7 +182,7 @@ You can specify the build folder by setting the `buildFolder` option:
 nx build-ios <your-app-name> --buildFolder="./build"
 ```
 
-### Build Android
+### Build android
 
 To build an Android app, run:
 
@@ -207,7 +192,7 @@ nx build-android <your app name>
 
 The build artifacts will be located under `<your app folder>/android/app/build`.
 
-## More Documentation
+## More documentation
 
 - [Using Detox](/docs/technologies/test-tools/detox/introduction)
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)

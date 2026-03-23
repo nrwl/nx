@@ -52,7 +52,7 @@
 /generators/generator-options /docs/extending-nx 301
 /generators/creating-files /docs/extending-nx/creating-files 301
 /generators/modifying-files /docs/extending-nx/modifying-files 301
-/structure/applications-and-libraries more-concepts/applications-and-libraries 301
+/structure/applications-and-libraries /docs/concepts/decisions/project-size 301
 /structure/creating-libraries /docs/concepts/decisions/project-size 301
 /structure/library-types /docs/concepts/decisions/project-dependency-rules 301
 /structure/grouping-libraries /docs/concepts/decisions/folder-structure 301
@@ -533,6 +533,7 @@
 /nx-api/powerpack-gcs-cache /docs/reference/remote-cache-plugins/gcs-cache 301
 
 # --- powerpackRedirects ---
+/powerpack /enterprise 301
 /powerpack/* /enterprise 301
 /nx-enterprise/powerpack/custom-caching /docs/guides/tasks--caching/self-hosted-caching 301
 /nx-enterprise/powerpack/free-licenses-and-trials /docs/enterprise 301

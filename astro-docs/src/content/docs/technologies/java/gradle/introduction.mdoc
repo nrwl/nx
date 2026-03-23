@@ -76,7 +76,7 @@ Nx will add the `@nx/gradle` plugin and configure the Gradle companion plugin `d
 The `dev.nx.gradle.project-graph` plugin is added to your `build.gradle` or `build.gradle.kts` so Nx can read your Gradle project graph directly from source.
 {% /aside %}
 
-### Verify the Setup
+### Verify the setup
 
 List the projects Nx inferred from Gradle:
 
@@ -90,7 +90,7 @@ Open the project details view for a specific project.
 nx show project my-app
 ```
 
-## Local Development
+## Local development
 
 Run Gradle tasks through Nx using inferred targets:
 
@@ -103,13 +103,13 @@ Nx maps these targets back to the Gradle tasks (for example `build` or `test`) a
 
 ## Configuration
 
-### How @nx/gradle Infers Tasks
+### How @nx/gradle infers tasks
 
 Nx relies on the `dev.nx.gradle.project-graph` Gradle plugin to report your Gradle projects and tasks. The plugin adds an `nxProjectGraph` task that outputs JSON, which Nx uses to build the project graph. Nx also scans your Gradle build files to locate project roots and inputs so it can infer targets accurately.
 
 The `nx init` workflow adds this plugin to your Gradle build files. If you ever need to add it manually, configure it in `build.gradle` or `build.gradle.kts` and apply it to all projects.
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the project details view in Nx Console or run:
 
@@ -119,7 +119,7 @@ nx show project my-app
 
 Replace `my-app` with your project name.
 
-### @nx/gradle Configuration
+### @nx/gradle configuration
 
 Configure the plugin in the `plugins` array of `nx.json`:
 
@@ -140,7 +140,7 @@ Configure the plugin in the `plugins` array of `nx.json`:
 }
 ```
 
-### How Options Work
+### How options work
 
 Nx passes the plugin options to the Gradle `nxProjectGraph` task as Gradle properties. Any option that ends with `TargetName` overrides the inferred Nx target name for that Gradle task. Use this to avoid name clashes or to introduce CI-specific targets.
 
@@ -154,7 +154,7 @@ Nx passes the plugin options to the Gradle `nxProjectGraph` task as Gradle prope
 | `gradleExecutableDirectory` | string | none    | Directory containing the Gradle wrapper to use.                            |
 | `<taskName>TargetName`      | string | none    | Override for any Gradle task name (for example `assembleTargetName`).      |
 
-### Exclude or Include Specific Projects
+### Exclude or include specific projects
 
 Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 
@@ -174,7 +174,7 @@ Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 
 Individual Gradle projects can also configure Nx-specific settings using the `nx { }` DSL in `build.gradle` or `build.gradle.kts`.
 
-## CI Considerations
+## CI considerations
 
 Only run what changed in CI:
 
@@ -190,7 +190,7 @@ nx connect
 
 See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for provider-specific workflows. If you set `ciTestTargetName`, Nx will create CI variants that use atomized test targets.
 
-### Batch Mode
+### Batch mode
 
 Batch mode runs multiple Gradle tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
 
@@ -200,7 +200,7 @@ NX_BATCH_MODE=true nx run-many -t build test
 
 If your Gradle builds require specific CI flags (for example `--no-daemon` or custom JVM args), add them to `gradle.properties` so Nx runs consistent settings locally and in CI.
 
-## What's Next
+## What's next
 
 {% cardgrid %}
 {% linkcard title="Gradle Tutorial" description="Add Nx to an existing Gradle workspace step-by-step." href="/docs/getting-started/tutorials/gradle-tutorial" /%}

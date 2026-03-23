@@ -401,7 +401,7 @@ impl AppLifeCycle {
         Ok(())
     }
 
-    #[napi]
+    #[napi(async_runtime)]
     pub fn end_command(&self) -> napi::Result<()> {
         self.with_app(|app| app.end_command());
         Ok(())
@@ -661,6 +661,11 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         self.with_app(|app| app.update_task_status(task_id, status));
+    }
+
+    #[napi]
+    pub fn set_task_timing(&mut self, task_id: String, start_time: i64, end_time: i64) {
+        self.with_app(|app| app.set_task_timing(task_id, start_time, end_time));
     }
 
     // This method is excluded from test builds because it uses ThreadsafeFunction

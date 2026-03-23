@@ -26,6 +26,7 @@ import type {
   ShowTargetInputsOptions,
   ShowTargetOutputsOptions,
 } from './command-object';
+import { handleImport } from '../../utils/handle-import';
 
 // ── Entry points ─────────────────────────────────────────────────────
 
@@ -199,7 +200,16 @@ function resolveTargetIdentifier(
     process.exit(1);
   }
 
-  const [project, target, config] = splitTarget(args.target, graph);
+  const defaultProjectName = calculateDefaultProjectName(
+    process.cwd(),
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(graph),
+    nxJson
+  );
+
+  const [project, target, config] = splitTarget(args.target, graph, {
+    currentProject: defaultProjectName,
+  });
 
   if (project && target) {
     return {
@@ -210,12 +220,7 @@ function resolveTargetIdentifier(
   }
 
   const targetName = project; // splitTarget returns the string as the first element
-  const projectName = calculateDefaultProjectName(
-    process.cwd(),
-    workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(graph),
-    nxJson
-  );
+  const projectName = defaultProjectName;
 
   if (!projectName) {
     output.error({
@@ -366,6 +371,7 @@ function resolveTargetInfoData(
       : {}),
     cache: targetConfig.cache ?? false,
     parallelism: targetConfig.parallelism ?? true,
+    continuous: targetConfig.continuous ?? false,
   };
 }
 
@@ -381,8 +387,9 @@ async function resolveInputFiles(
   graph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): Promise<HashInputs> {
-  const { HashPlanInspector } = (await import(
-    '../../hasher/hash-plan-inspector'
+  const { HashPlanInspector } = (await handleImport(
+    '../../hasher/hash-plan-inspector.js',
+    __dirname
   )) as typeof import('../../hasher/hash-plan-inspector');
   const inspector = new HashPlanInspector(graph, workspaceRoot, nxJson);
   await inspector.init();
@@ -657,6 +664,7 @@ function renderTargetInfo(
 
   console.log(`${c.bold('Cache')}: ${data.cache}`);
   console.log(`${c.bold('Parallelism')}: ${data.parallelism}`);
+  console.log(`${c.bold('Continuous')}: ${data.continuous}`);
 }
 
 function renderInputs(

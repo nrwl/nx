@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import * as path from 'path';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -56,7 +56,7 @@ function nodeProcess(
   return new Promise<void>((res, rej) => {
     let cp = exec(
       command,
-      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: false },
+      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: true },
       (error) => {
         if (error) {
           rej(error);

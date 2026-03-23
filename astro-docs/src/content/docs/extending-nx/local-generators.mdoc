@@ -119,7 +119,7 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ## Debugging generators
 
-### With Visual Studio Code
+### With visual studio code
 
 1. Open the Command Palette and choose `Debug: Create JavaScript Debug Terminal`.
    This will open a terminal with debugging enabled.
@@ -128,7 +128,7 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ![vscode-schematics-debug](../../../assets/nx-console/vscode-schematics-debug.png)
 
-## Generator Schema Properties
+## Generator schema properties
 
 Beyond the standard [JSON Schema](https://json-schema.org/) properties like `type`, `description`, `enum`, and `default`, Nx recognizes several custom properties in your `schema.json` that control CLI prompting behavior and how [Nx Console](/docs/getting-started/editor-setup) renders the generator form.
 
@@ -306,6 +306,6 @@ These properties are used by Nx Console's language server to provide autocomplet
 | `"tags"`                  | Autocomplete with project tags                                            |
 | `"projectTarget"`         | Autocomplete with `project:target` format                                 |
 
-## Generator Utilities
+## Generator utilities
 
 The [`@nx/devkit` package](/docs/reference/devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).

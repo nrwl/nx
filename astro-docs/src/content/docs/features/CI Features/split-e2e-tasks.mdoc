@@ -15,12 +15,12 @@ width="100%" /%}
 
 Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test suites can be large, monolithic tasks that take a considerable amount of time to execute. As a result, teams often push them to a nightly or even weekly build rather than running them for each PR. This approach is suboptimal as it increases the risk of merging problematic PRs.
 
-Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx's Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
+Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
 
 - parallelization across multiple machines with [Nx Agents](/docs/features/ci-features/distribute-task-execution)
 - faster [flakiness detection & retries](/docs/features/ci-features/flaky-tasks) by isolating and re-running only the failed tests
 
-## Enable Automated Task Splitting
+## Enable automated task splitting
 
 ### Step 1: Connect to Nx Cloud
 
@@ -32,7 +32,7 @@ npx nx@latest connect
 
 See the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for all the details.
 
-### Step 2: Add the Appropriate Plugin
+### Step 2: add the appropriate plugin
 
 Run this command to set up inferred tasks and enable task splitting for each plugin:
 
@@ -87,7 +87,7 @@ If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/con
 }
 ```
 
-## Update an Existing Project to use Automated Task Splitting
+## Update an existing project to use automated task splitting
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/vitest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
@@ -97,7 +97,7 @@ If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/v
 - [Configure Vitest Task Splitting](/docs/technologies/test-tools/vitest/introduction#splitting-e2e-tests)
 - [Configure Gradle Testing Task Splitting](/docs/technologies/java/gradle/introduction#test-distribution)
 
-## Verify Automated Task Splitting Works
+## Verify automated task splitting works
 
 Run the following command to open the project detail view for your test project:
 
@@ -436,7 +436,7 @@ nx e2e my-project-e2e
 
 The `-ci` variant task truly shines when configured and run on CI.
 
-## Configure Automated Task Splitting on CI
+## Configure automated task splitting on CI
 
 Update your CI pipeline to run the `-ci` variant task (e.g., `e2e-ci`, `test-ci`), which will automatically run all the inferred tasks for the individual test files. Here's an example of a GitHub Actions workflow:
 

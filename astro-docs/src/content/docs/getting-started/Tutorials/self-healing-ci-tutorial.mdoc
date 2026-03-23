@@ -1,0 +1,141 @@
+---
+title: 'Setting Up CI'
+description: Configure CI for your Nx workspace with remote caching and self-healing to keep your pipeline fast and reliable.
+sidebar:
+  label: 'Setting Up CI'
+filter: 'type:Guides'
+---
+
+This tutorial walks you through configuring CI for your Nx workspace. You'll set up a CI pipeline, enable remote caching to speed up runs, and configure self-healing CI to automatically fix failures.
+
+What you'll learn:
+
+- How to connect your workspace to Nx Cloud
+- How to generate a CI workflow for GitHub Actions
+- How remote caching avoids redundant work across CI runs
+- How self-healing CI detects and fixes failures automatically
+
+## Prerequisites
+
+{% aside type="note" title="Prerequisites" %}
+
+- An existing Nx workspace (see our [React](/docs/getting-started/tutorials/react-monorepo-tutorial), [Angular](/docs/getting-started/tutorials/angular-monorepo-tutorial), or [TypeScript](/docs/getting-started/tutorials/typescript-packages-tutorial) tutorials)
+- A [GitHub account](https://github.com) with a repository for your workspace
+- [Node.js](https://nodejs.org) (v20.19 or later)
+
+{% /aside %}
+
+## Step 1: Connect to Nx Cloud
+
+Connect your workspace to Nx Cloud to enable remote caching and CI features:
+
+```shell
+npx nx connect
+```
+
+This creates an Nx Cloud account (if you don't have one) and connects your workspace. Once connected, you can see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
+
+## Step 2: Generate a CI workflow
+
+Generate a CI workflow configuration for GitHub Actions:
+
+```shell
+npx nx g ci-workflow
+```
+
+This creates a `.github/workflows/ci.yml` file that runs your tasks through Nx and includes the `fix-ci` command for self-healing:
+
+```yaml {% meta="{24,25}" %}
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx nx run-many -t lint test build
+
+      - run: npx nx-cloud fix-ci
+        if: always()
+```
+
+The `npx nx-cloud fix-ci` command at the end is responsible for enabling self-healing CI. It analyzes any failing tasks and automatically suggests fixes.
+
+## Step 3: Install Nx Console
+
+You will need the [Nx Console](/docs/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ to receive CI notifications and apply fixes directly from your editor.
+
+{% install_nx_console /%}
+
+For the complete AI setup guide, see our [AI integration documentation](/docs/getting-started/ai-setup).
+
+## Step 4: Push a PR and see self-healing in action
+
+Create a branch, make a change (or introduce an intentional test failure), and push it:
+
+```shell
+git checkout -b my-feature
+git add .
+git commit -m 'my changes'
+git push origin my-feature
+# Don't forget to open a pull request on GitHub
+```
+
+When CI runs and encounters a failure, Nx Console notifies you that the run has completed and that it has a suggested fix. You don't have to waste time **babysitting your PRs** — the fix can be applied directly from your editor.
+
+### Fix CI from your editor
+
+From the Nx Console notification, click the `Show Suggested Fix` button. Review the suggested fix and approve it by clicking `Apply Fix`.
+
+You don't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
+
+### Remote cache for faster time to green
+
+After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
+
+When you view the results in Nx Cloud, you'll notice something interesting. Tasks for projects that weren't affected by your change were read from remote cache and did not have to run again, each taking less than a second to complete.
+
+This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/docs/features/ci-features/remote-cache).
+
+This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
+
+{% aside type="note" title="Remote Cache Outputs" %}
+Outputs from cached tasks, such as the `dist` folder for builds or `coverage` folder for tests, are also read from cache. Even though a task was not run again, its outputs are available. The [Cache Task Results](/docs/features/cache-task-results) page provides more details on caching.
+{% /aside %}
+
+## Next steps
+
+- Learn more about [Self-Healing CI](/docs/features/ci-features/self-healing-ci)
+- Learn about [Remote Cache](/docs/features/ci-features/remote-cache) and how it works
+- [Set up AI integration](/docs/getting-started/ai-setup) for enhanced AI-powered CI workflows
+- Learn more about the [underlying mental model of Nx](/docs/concepts/mental-model)
+
+Also, make sure you
+
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
+- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+- [Read our Nx blog](https://nx.dev/blog)
+- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

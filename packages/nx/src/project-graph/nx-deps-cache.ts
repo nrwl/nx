@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, renameSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -9,6 +9,8 @@ import type {
   ProjectGraph,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { serverLogger } from '../daemon/logger';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   directoryExists,
@@ -16,15 +18,14 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
+import { logger } from '../utils/logger';
 import { nxVersion } from '../utils/versions';
-import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
 import {
   ProjectGraphError,
   ProjectGraphErrorTypes,
   StaleProjectGraphCacheError,
 } from './error-types';
-import { isOnDaemon } from '../daemon/is-on-daemon';
-import { serverLogger } from '../daemon/logger';
+import { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 
 export interface FileMapCache {
   version: string;
@@ -274,9 +275,12 @@ export function writeCache(
     }
   } while (!done && retry < 5);
   if (!done) {
-    throw new Error(
-      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts.`
+    logger.warn(
+      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts. Continuing without cache.`
     );
+    tryRemoveFile(nxProjectGraph);
+    tryRemoveFile(nxFileMap);
+    tryRemoveFile(nxSourceMaps);
   }
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
@@ -479,6 +483,16 @@ type PluginData = {
   version: string;
   options?: unknown;
 };
+
+function tryRemoveFile(path: string): void {
+  try {
+    if (existsSync(path)) {
+      rmSync(path);
+    }
+  } catch {
+    // Best effort
+  }
+}
 
 function getNxJsonPluginsData(
   nxJson: NxJsonConfiguration,

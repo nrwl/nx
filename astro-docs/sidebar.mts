@@ -20,44 +20,44 @@ export interface SidebarTab {
 
 const learnGroups: SidebarItems = [
   {
-    label: 'Getting Started',
+    label: 'Getting started',
     collapsed: false,
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
       { label: 'Installation', link: 'getting-started/installation' },
       {
-        label: 'Start a New Project',
+        label: 'Start a new project',
         link: 'getting-started/start-new-project',
       },
       {
-        label: 'Add to Existing Project',
+        label: 'Add to existing project',
         link: 'getting-started/start-with-existing-project',
       },
-      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
-      { label: 'AI Integrations', link: 'getting-started/ai-setup' },
-      {
-        label: 'Nx Cloud',
-        link: 'getting-started/nx-cloud',
-      },
+      { label: 'AI integrations', link: 'getting-started/ai-setup' },
+      { label: 'Editor setup', link: 'getting-started/editor-setup' },
       {
         label: 'Tutorials',
-        collapsed: true,
+        collapsed: false,
         items: [
           {
-            label: 'Angular Monorepo',
-            link: 'getting-started/tutorials/angular-monorepo-tutorial',
-          },
-          {
-            label: 'Gradle Monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
-          {
-            label: 'React Monorepo',
+            label: 'React monorepo',
             link: 'getting-started/tutorials/react-monorepo-tutorial',
           },
           {
-            label: 'TypeScript Monorepo',
+            label: 'Angular monorepo',
+            link: 'getting-started/tutorials/angular-monorepo-tutorial',
+          },
+          {
+            label: 'TypeScript monorepo',
             link: 'getting-started/tutorials/typescript-packages-tutorial',
+          },
+          {
+            label: 'Gradle monorepo',
+            link: 'getting-started/tutorials/gradle-tutorial',
+          },
+          {
+            label: 'Setting up CI',
+            link: 'getting-started/tutorials/self-healing-ci-tutorial',
           },
         ],
       },
@@ -65,59 +65,59 @@ const learnGroups: SidebarItems = [
   },
 
   {
-    label: 'How Nx Works',
+    label: 'How Nx works',
     collapsed: false,
     items: [
-      { label: 'Mental Model', link: 'concepts/mental-model' },
-      { label: 'How Caching Works', link: 'concepts/how-caching-works' },
+      { label: 'Mental model', link: 'concepts/mental-model' },
+      { label: 'How caching works', link: 'concepts/how-caching-works' },
       {
-        label: 'Task Pipeline Configuration',
+        label: 'Task pipeline configuration',
         link: 'concepts/task-pipeline-configuration',
       },
       {
-        label: 'Types of Configuration',
+        label: 'Types of configuration',
         link: 'concepts/types-of-configuration',
       },
       {
-        label: 'Executors and Configurations',
+        label: 'Executors and configurations',
         link: 'concepts/executors-and-configurations',
       },
-      { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
-      { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
+      { label: 'Nx plugins', link: 'concepts/nx-plugins' },
+      { label: 'Inferred tasks', link: 'concepts/inferred-tasks' },
       {
-        label: 'Building Blocks of Fast CI',
+        label: 'Building blocks of fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
       },
       {
-        label: 'Parallelization and Distribution',
+        label: 'Parallelization and distribution',
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
       {
-        label: 'Synthetic Monorepos',
+        label: 'Synthetic monorepos',
         link: 'concepts/synthetic-monorepos',
       },
     ],
   },
   {
-    label: 'Platform Features',
+    label: 'Platform features',
     collapsed: false,
     items: [
-      { label: 'Run Tasks', link: 'features/run-tasks' },
+      { label: 'Run tasks', link: 'features/run-tasks' },
       {
-        label: 'Cache Task Results',
+        label: 'Cache task results',
         link: 'features/cache-task-results',
       },
-      { label: 'Enhance Your LLM', link: 'features/enhance-ai' },
+      { label: 'Enhance your LLM', link: 'features/enhance-ai' },
       {
-        label: 'Code Organization',
+        label: 'Code organization',
         collapsed: true,
         items: [
-          { label: 'Explore Graph', link: 'features/explore-graph' },
-          { label: 'Generate Code', link: 'features/generate-code' },
-          { label: 'Sync Generators', link: 'concepts/sync-generators' },
+          { label: 'Explore graph', link: 'features/explore-graph' },
+          { label: 'Generate code', link: 'features/generate-code' },
+          { label: 'Sync generators', link: 'concepts/sync-generators' },
           {
-            label: 'Enforce Module Boundaries',
+            label: 'Enforce module boundaries',
             collapsed: true,
             items: [
               {
@@ -125,19 +125,19 @@ const learnGroups: SidebarItems = [
                 link: 'features/enforce-module-boundaries',
               },
               {
-                label: 'Ban Dependencies with Tags',
+                label: 'Ban dependencies with tags',
                 link: 'guides/enforce-module-boundaries/ban-dependencies-with-tags',
               },
               {
-                label: 'Ban External Imports',
+                label: 'Ban external imports',
                 link: 'guides/enforce-module-boundaries/ban-external-imports',
               },
               {
-                label: 'Tag Multiple Dimensions',
+                label: 'Tag multiple dimensions',
                 link: 'guides/enforce-module-boundaries/tag-multiple-dimensions',
               },
               {
-                label: 'Tags Allow List',
+                label: 'Tags allow list',
                 link: 'guides/enforce-module-boundaries/tags-allow-list',
               },
             ],
@@ -148,107 +148,116 @@ const learnGroups: SidebarItems = [
         label: 'Orchestration & CI',
         collapsed: true,
         items: [
+          {
+            label: 'Overview',
+            link: 'features/ci-features',
+          },
           { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Remote Cache (Nx Replay)',
+            label: 'Remote cache (Nx Replay)',
             link: 'features/ci-features/remote-cache',
           },
           {
-            label: 'Self-Healing CI',
+            label: 'Self-healing CI',
             link: 'features/ci-features/self-healing-ci',
           },
-          { label: 'Flaky Tasks', link: 'features/ci-features/flaky-tasks' },
+          { label: 'Flaky tasks', link: 'features/ci-features/flaky-tasks' },
           {
-            label: 'Distribute Task Execution (Nx Agents)',
+            label: 'Distribute task execution (Nx Agents)',
             link: 'features/ci-features/distribute-task-execution',
           },
           {
-            label: 'Split E2E Tasks',
+            label: 'Split E2E tasks',
             link: 'features/ci-features/split-e2e-tasks',
           },
           {
-            label: 'Dynamically Allocate Agents',
+            label: 'Dynamically allocate agents',
             link: 'features/ci-features/dynamic-agents',
           },
           {
-            label: 'CI Resource Usage',
+            label: 'CI resource usage',
             link: 'guides/nx-cloud/ci-resource-usage',
           },
           {
-            label: 'Optimize Your TTG',
+            label: 'Optimize your TTG',
             link: 'guides/nx-cloud/optimize-your-ttg',
           },
           {
-            label: 'Record Commands',
+            label: 'Record commands',
             link: 'guides/nx-cloud/record-commands',
           },
           {
-            label: 'GitHub Integration',
+            label: 'GitHub integration',
             link: 'features/ci-features/github-integration',
           },
           {
-            label: 'CIPE Affected Project Graph',
+            label: 'Sandboxing',
+            link: 'features/ci-features/sandboxing',
+            badge: 'New',
+          },
+          {
+            label: 'CIPE affected project graph',
             link: 'guides/nx-cloud/cipe-affected-project-graph',
           },
           { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
-          { label: 'Google Auth', link: 'guides/nx-cloud/google-auth' },
+          { label: 'Google auth', link: 'guides/nx-cloud/google-auth' },
         ],
       },
       {
-        label: 'Release & Publishing',
+        label: 'Release & publishing',
         collapsed: true,
         items: [
-          { label: 'Nx Release Overview', link: 'features/manage-releases' },
+          { label: 'Nx Release overview', link: 'features/manage-releases' },
           {
             label: 'Publish in CI/CD',
             link: 'guides/nx-release/publish-in-ci-cd',
           },
           {
-            label: 'Automatic Versioning with Conventional Commits',
+            label: 'Automatic versioning with conventional commits',
             link: 'guides/nx-release/automatically-version-with-conventional-commits',
           },
           {
-            label: 'Customize Conventional Commit Types',
+            label: 'Customize conventional commit types',
             link: 'guides/nx-release/customize-conventional-commit-types',
           },
           {
-            label: 'Configure Changelog Format',
+            label: 'Configure changelog format',
             link: 'guides/nx-release/configure-changelog-format',
           },
           {
-            label: 'Configure Custom Registries',
+            label: 'Configure custom registries',
             link: 'guides/nx-release/configure-custom-registries',
           },
           {
-            label: 'Configure Version Prefix',
+            label: 'Configure version prefix',
             link: 'guides/nx-release/configuration-version-prefix',
           },
           {
-            label: 'File-Based Versioning (Version Plans)',
+            label: 'File-based versioning (version plans)',
             link: 'guides/nx-release/file-based-versioning-version-plans',
           },
           {
-            label: 'Release Groups',
+            label: 'Release groups',
             link: 'guides/nx-release/release-groups',
           },
           {
-            label: 'Release Projects Independently',
+            label: 'Release projects independently',
             link: 'guides/nx-release/release-projects-independently',
           },
           {
-            label: 'Build Before Versioning',
+            label: 'Build before versioning',
             link: 'guides/nx-release/build-before-versioning',
           },
           {
-            label: 'Update Dependents',
+            label: 'Update dependents',
             link: 'guides/nx-release/update-dependents',
           },
           {
-            label: 'Updating Version References',
+            label: 'Updating version references',
             link: 'guides/nx-release/updating-version-references',
           },
           {
-            label: 'Update Local Registry Setup',
+            label: 'Update local registry setup',
             link: 'guides/nx-release/update-local-registry-setup',
           },
           {
@@ -262,27 +271,31 @@ const learnGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Nx Console Migration Assistance',
+            label: 'Nx Console migration assistance',
             link: 'guides/nx-console/console-migrate-ui',
           },
           {
-            label: 'Advanced Update Process',
+            label: 'Advanced update process',
             link: 'guides/tips-n-tricks/advanced-update',
           },
           {
-            label: 'Automate Importing Projects',
+            label: 'Automate importing projects',
             link: 'guides/adopting-nx/import-project',
           },
           {
-            label: 'Manual Migrations',
+            label: 'Manual migrations',
             link: 'guides/adopting-nx/manual',
           },
           {
-            label: 'Preserving Git Histories',
+            label: 'Preserving Git histories',
             link: 'guides/adopting-nx/preserving-git-histories',
           },
           {
-            label: 'Migrating From Turborepo',
+            label: 'Nx vs Turborepo',
+            link: 'guides/adopting-nx/nx-vs-turborepo',
+          },
+          {
+            label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
         ],
@@ -293,23 +306,23 @@ const learnGroups: SidebarItems = [
         items: [
           { label: 'Conformance', link: 'enterprise/conformance' },
           {
-            label: 'Configure Conformance Rules in Nx Cloud',
+            label: 'Configure conformance rules in Nx Cloud',
             link: 'enterprise/configure-conformance-rules-in-nx-cloud',
           },
           {
-            label: 'Publish Conformance Rules to Nx Cloud',
+            label: 'Publish conformance rules to Nx Cloud',
             link: 'enterprise/publish-conformance-rules-to-nx-cloud',
           },
           { label: 'Owners', link: 'enterprise/owners' },
           { label: 'Polygraph', link: 'enterprise/polygraph' },
-          { label: 'Custom Workflows', link: 'enterprise/custom-workflows' },
+          { label: 'Custom workflows', link: 'enterprise/custom-workflows' },
           {
-            label: 'Metadata Only Workspace',
+            label: 'Metadata only workspace',
             link: 'enterprise/metadata-only-workspace',
           },
-          { label: 'Activate License', link: 'enterprise/activate-license' },
+          { label: 'Activate license', link: 'enterprise/activate-license' },
           {
-            label: 'Single Tenant',
+            label: 'Single tenant',
             collapsed: true,
             items: [
               {
@@ -333,7 +346,7 @@ const learnGroups: SidebarItems = [
                 link: 'enterprise/single-tenant/auth-bitbucket-data-center',
               },
               {
-                label: 'Custom GitHub App',
+                label: 'Custom GitHub app',
                 link: 'enterprise/single-tenant/custom-github-app',
               },
               {
@@ -347,7 +360,7 @@ const learnGroups: SidebarItems = [
             ],
           },
           {
-            label: 'Conformance Reference',
+            label: 'Conformance reference',
             collapsed: true,
             items: [
               {
@@ -355,11 +368,11 @@ const learnGroups: SidebarItems = [
                 link: 'reference/conformance/overview',
               },
               {
-                label: 'Create Conformance Rule',
+                label: 'Create conformance rule',
                 link: 'reference/conformance/create-conformance-rule',
               },
               {
-                label: 'Test Conformance Rule',
+                label: 'Test conformance rule',
                 link: 'reference/conformance/test-conformance-rule',
               },
               {
@@ -373,7 +386,7 @@ const learnGroups: SidebarItems = [
             ],
           },
           {
-            label: 'Enterprise Release Notes',
+            label: 'Enterprise release notes',
             link: 'reference/nx-cloud/release-notes',
           },
         ],
@@ -384,11 +397,11 @@ const learnGroups: SidebarItems = [
 
 const technologiesGroups: SidebarItems = [
   {
-    label: 'Technologies & Tools',
+    label: 'Technologies & tools',
     collapsed: true,
     items: [
       {
-        label: 'Frameworks & Libraries',
+        label: 'Frameworks & libraries',
         collapsed: false,
         items: [
           {
@@ -444,7 +457,7 @@ const technologiesGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Build Tools',
+        label: 'Build tools',
         collapsed: false,
         items: [
           {
@@ -474,7 +487,7 @@ const technologiesGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Test Tools',
+        label: 'Test tools',
         collapsed: false,
         items: [
           {
@@ -504,7 +517,7 @@ const technologiesGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Plugin Registry',
+        label: 'Plugin registry',
         link: 'plugin-registry',
       },
     ],
@@ -513,7 +526,7 @@ const technologiesGroups: SidebarItems = [
 
 const knowledgeBaseGroups: SidebarItems = [
   {
-    label: 'Knowledge Base',
+    label: 'Knowledge base',
     collapsed: true,
     items: [
       {
@@ -521,35 +534,35 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'CI Execution Failed',
+            label: 'CI execution failed',
             link: 'troubleshooting/ci-execution-failed',
           },
           {
-            label: 'Unknown Local Cache Error',
+            label: 'Unknown local cache error',
             link: 'troubleshooting/unknown-local-cache',
           },
           {
-            label: 'Troubleshoot Convert to Inferred',
+            label: 'Troubleshoot convert to inferred',
             link: 'troubleshooting/troubleshoot-convert-to-inferred',
           },
           {
-            label: 'Profiling Performance',
+            label: 'Profiling performance',
             link: 'troubleshooting/performance-profiling',
           },
           {
-            label: 'Troubleshoot Nx Console Issues',
+            label: 'Troubleshoot Nx Console issues',
             link: 'troubleshooting/console-troubleshooting',
           },
           {
-            label: 'Troubleshoot Cache Misses',
+            label: 'Troubleshoot cache misses',
             link: 'troubleshooting/troubleshoot-cache-misses',
           },
           {
-            label: 'Troubleshoot Nx Installations',
+            label: 'Troubleshoot Nx installations',
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
-            label: 'Resolve Circular Dependencies',
+            label: 'Resolve circular dependencies',
             link: 'troubleshooting/resolve-circular-dependencies',
           },
         ],
@@ -559,11 +572,11 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Include All package.json Files',
+            label: 'Include all package.json files',
             link: 'guides/tips-n-tricks/include-all-packagejson',
           },
           {
-            label: 'Disable Graph Links from Source Analysis',
+            label: 'Disable graph links from source analysis',
             link: 'guides/tips-n-tricks/analyze-source-files',
           },
           {
@@ -571,57 +584,57 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/yarn-pnp',
           },
           {
-            label: 'Identify Dependencies Between Folders',
+            label: 'Identify dependencies between folders',
             link: 'guides/tips-n-tricks/identify-dependencies-between-folders',
           },
           {
-            label: 'Feature-Based Testing',
+            label: 'Feature-based testing',
             link: 'guides/tips-n-tricks/feature-based-testing',
           },
           {
-            label: 'Configuring Browser Support',
+            label: 'Configuring browser support',
             link: 'guides/tips-n-tricks/browser-support',
           },
           {
-            label: 'Define Environment Variables',
+            label: 'Define environment variables',
             link: 'guides/tips-n-tricks/define-environment-variables',
           },
           {
-            label: 'Including Assets in Your Build',
+            label: 'Including assets in your build',
             link: 'guides/tips-n-tricks/include-assets-in-build',
           },
           {
-            label: 'Keep Nx Versions in Sync',
+            label: 'Keep Nx versions in sync',
             link: 'guides/tips-n-tricks/keep-nx-versions-in-sync',
           },
           {
-            label: 'Standalone to Monorepo',
+            label: 'Standalone to monorepo',
             link: 'guides/tips-n-tricks/standalone-to-monorepo',
           },
         ],
       },
       {
-        label: 'Creating Releases',
+        label: 'Creating releases',
         collapsed: true,
         items: [
           {
-            label: 'Release NPM Packages',
+            label: 'Release NPM packages',
             link: 'guides/nx-release/release-npm-packages',
           },
           {
-            label: 'Release Rust Crates',
+            label: 'Release Rust crates',
             link: 'guides/nx-release/publish-rust-crates',
           },
           {
-            label: 'Release Docker Images',
+            label: 'Release Docker images',
             link: 'guides/nx-release/release-docker-images',
           },
           {
-            label: 'Automate GitHub Releases',
+            label: 'Automate GitHub releases',
             link: 'guides/nx-release/automate-github-releases',
           },
           {
-            label: 'Automate GitLab Releases',
+            label: 'Automate GitLab releases',
             link: 'guides/nx-release/automate-gitlab-releases',
           },
         ],
@@ -635,19 +648,19 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/nx-console/console-telemetry',
           },
           {
-            label: 'Run Command',
+            label: 'Run command',
             link: 'guides/nx-console/console-run-command',
           },
           {
-            label: 'Nx Cloud Integration',
+            label: 'Nx Cloud integration',
             link: 'guides/nx-console/console-nx-cloud',
           },
           {
-            label: 'Generate Command',
+            label: 'Generate command',
             link: 'guides/nx-console/console-generate-command',
           },
           {
-            label: 'Project Details View',
+            label: 'Project details view',
             link: 'guides/nx-console/console-project-details',
           },
           {
@@ -661,45 +674,45 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Install Nx in Non-JavaScript Repo',
+            label: 'Install Nx in non-JavaScript repo',
             link: 'guides/installation/install-non-javascript',
           },
           {
-            label: 'Update Global Installation',
+            label: 'Update global installation',
             link: 'guides/installation/update-global-installation',
           },
         ],
       },
       {
-        label: 'Organizational Decisions',
+        label: 'Organizational decisions',
         collapsed: true,
         items: [
           {
-            label: 'Why Monorepos',
+            label: 'Why monorepos',
             link: 'concepts/decisions/why-monorepos',
           },
           {
-            label: 'Monorepo or Polyrepo',
+            label: 'Monorepo or polyrepo',
             link: 'concepts/decisions/overview',
           },
           {
-            label: 'Dependency Management',
+            label: 'Dependency management',
             link: 'concepts/decisions/dependency-management',
           },
           {
-            label: 'Folder Structure',
+            label: 'Folder structure',
             link: 'concepts/decisions/folder-structure',
           },
           {
-            label: 'Project Size',
+            label: 'Project size',
             link: 'concepts/decisions/project-size',
           },
           {
-            label: 'Code Ownership',
+            label: 'Code ownership',
             link: 'concepts/decisions/code-ownership',
           },
           {
-            label: 'Project Dependency Rules',
+            label: 'Project dependency rules',
             link: 'concepts/decisions/project-dependency-rules',
           },
         ],
@@ -709,169 +722,177 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           { label: 'Intro', link: 'extending-nx/intro' },
-          { label: 'Local Generators', link: 'extending-nx/local-generators' },
+          { label: 'Local generators', link: 'extending-nx/local-generators' },
           {
-            label: 'Composing Generators',
+            label: 'Composing generators',
             link: 'extending-nx/composing-generators',
           },
           {
-            label: 'Creating Files',
+            label: 'Creating files',
             link: 'extending-nx/creating-files',
           },
           {
-            label: 'Modifying Files',
+            label: 'Modifying files',
             link: 'extending-nx/modifying-files',
           },
           {
-            label: 'Migration Generators',
+            label: 'Migration generators',
             link: 'extending-nx/migration-generators',
           },
           {
-            label: 'Create Sync Generator',
+            label: 'Create sync generator',
             link: 'extending-nx/create-sync-generator',
           },
-          { label: 'Local Executors', link: 'extending-nx/local-executors' },
+          { label: 'Local executors', link: 'extending-nx/local-executors' },
           {
-            label: 'Compose Executors',
+            label: 'Compose executors',
             link: 'extending-nx/compose-executors',
           },
           {
-            label: 'Task Running Lifecycle',
+            label: 'Task running lifecycle',
             link: 'extending-nx/task-running-lifecycle',
           },
           {
-            label: 'Project Graph Plugins',
+            label: 'Project graph plugins',
             link: 'extending-nx/project-graph-plugins',
           },
           {
-            label: 'CreateNodes Compatibility',
+            label: 'CreateNodes compatibility',
             link: 'extending-nx/createnodes-compatibility',
           },
           {
-            label: 'Organization-Specific Plugin',
+            label: 'Organization-specific plugin',
             link: 'extending-nx/organization-specific-plugin',
           },
           {
-            label: 'Tooling Plugin',
+            label: 'Tooling plugin',
             link: 'extending-nx/tooling-plugin',
           },
           {
-            label: 'Custom Plugin Preset',
+            label: 'Custom plugin preset',
             link: 'extending-nx/create-preset',
           },
           {
-            label: 'Creating an Install Package',
+            label: 'Creating an install package',
             link: 'extending-nx/create-install-package',
           },
           {
-            label: 'Publish Your Plugin',
+            label: 'Publish your plugin',
             link: 'extending-nx/publish-plugin',
           },
         ],
       },
       {
-        label: 'Continuous Integration',
+        label: 'Continuous integration',
         collapsed: true,
         items: [
           { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
-          { label: 'Access Tokens', link: 'guides/nx-cloud/access-tokens' },
+          { label: 'Access tokens', link: 'guides/nx-cloud/access-tokens' },
           {
-            label: 'Personal Access Tokens',
+            label: 'Personal access tokens',
             link: 'guides/nx-cloud/personal-access-tokens',
           },
           { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
           {
-            label: 'Source Control Integration',
+            label: 'Source control integration',
             link: 'guides/nx-cloud/source-control-integration',
           },
           {
-            label: 'Configuring the Cloud Runner',
+            label: 'Set up CI with Bun',
+            link: 'guides/nx-cloud/use-bun',
+          },
+          {
+            label: 'GitHub app permissions',
+            link: 'guides/nx-cloud/source-control-integration/github-app-permissions',
+          },
+          {
+            label: 'Configuring the cloud runner',
             link: 'reference/nx-cloud/config',
           },
           {
-            label: 'Custom Images',
+            label: 'Custom images',
             link: 'reference/nx-cloud/custom-images',
           },
           {
-            label: 'Assignment Rules',
+            label: 'Assignment rules',
             link: 'reference/nx-cloud/assignment-rules',
           },
           {
-            label: 'Custom Steps',
+            label: 'Custom steps',
             link: 'reference/nx-cloud/custom-steps',
           },
           {
-            label: 'Launch Templates',
+            label: 'Launch templates',
             link: 'reference/nx-cloud/launch-templates',
           },
           {
-            label: 'Reduce Waste in CI',
+            label: 'Reduce waste in CI',
             link: 'concepts/ci-concepts/reduce-waste',
           },
           {
-            label: 'Cache Security',
+            label: 'Cache security',
             link: 'concepts/ci-concepts/cache-security',
           },
           {
-            label: 'Heartbeat and Manual Shutdown Handling',
+            label: 'Heartbeat and manual shutdown handling',
             link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
           },
         ],
       },
       {
-        label: 'Tasks & Caching',
+        label: 'Tasks & caching',
         collapsed: true,
         items: [
           {
-            label: 'Configure Inputs',
+            label: 'Configure inputs',
             link: 'guides/tasks--caching/configure-inputs',
           },
           {
-            label: 'Configure Outputs',
+            label: 'Configure outputs',
             link: 'guides/tasks--caching/configure-outputs',
           },
           {
-            label: 'Defining Task Pipeline',
+            label: 'Defining task pipeline',
             link: 'guides/tasks--caching/defining-task-pipeline',
           },
           {
-            label: 'Run Tasks in Parallel',
+            label: 'Run tasks in parallel',
             link: 'guides/tasks--caching/run-tasks-in-parallel',
           },
           {
-            label: 'Pass Args to Commands',
+            label: 'Pass args to commands',
             link: 'guides/tasks--caching/pass-args-to-commands',
           },
           {
-            label: 'Run Commands Executor',
+            label: 'Run commands executor',
             link: 'guides/tasks--caching/run-commands-executor',
           },
           {
-            label: 'Reduce Repetitive Configuration',
+            label: 'Reduce repetitive configuration',
             link: 'guides/tasks--caching/reduce-repetitive-configuration',
           },
           {
-            label: 'Root Level Scripts',
+            label: 'Root level scripts',
             link: 'guides/tasks--caching/root-level-scripts',
           },
           {
-            label: 'Convert to Inferred',
+            label: 'Convert to inferred',
             link: 'guides/tasks--caching/convert-to-inferred',
           },
           {
-            label: 'Change Cache Location',
+            label: 'Change cache location',
             link: 'guides/tasks--caching/change-cache-location',
           },
           {
-            label: 'Self-Hosted Caching',
+            label: 'Self-hosted caching',
             link: 'guides/tasks--caching/self-hosted-caching',
           },
           {
-            label: 'Skipping Cache',
+            label: 'Skipping cache',
             link: 'guides/tasks--caching/skipping-cache',
           },
           {
-            label: 'Workspace Watching',
+            label: 'Workspace watching',
             link: 'guides/tasks--caching/workspace-watching',
           },
           { label: 'Terminal UI', link: 'guides/tasks--caching/terminal-ui' },
@@ -882,15 +903,15 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Nx Agents at Scale',
+            label: 'Nx Agents at scale',
             link: 'reference/benchmarks/nx-agents',
           },
           {
-            label: 'Large Next.js Apps with Caching',
+            label: 'Large Next.js apps with caching',
             link: 'reference/benchmarks/caching',
           },
           {
-            label: 'TSC Batch Mode',
+            label: 'TSC batch mode',
             link: 'reference/benchmarks/tsc-batch-mode',
           },
         ],
@@ -900,16 +921,16 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Maintain TypeScript Monorepos',
+            label: 'Maintain TypeScript monorepos',
             link: 'features/maintain-typescript-monorepos',
           },
           ...getTechnologyKBItems('typescript'),
           {
-            label: 'Buildable and Publishable Libraries',
+            label: 'Buildable and publishable libraries',
             link: 'concepts/buildable-and-publishable-libraries',
           },
           {
-            label: 'TypeScript Project Linking',
+            label: 'TypeScript project linking',
             link: 'concepts/typescript-project-linking',
           },
         ],
@@ -999,20 +1020,21 @@ const referenceGroups: SidebarItems = [
     items: [
       { label: 'nx.json', link: 'reference/nx-json' },
       {
-        label: 'Project Configuration',
+        label: 'Project configuration',
         link: 'reference/project-configuration',
       },
       { label: 'Inputs', link: 'reference/inputs' },
       {
-        label: 'Environment Variables',
+        label: 'Environment variables',
         link: 'reference/environment-variables',
       },
       { label: 'nxignore', link: 'reference/nxignore' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
-      { label: 'Nx Console Settings', link: 'reference/nx-console-settings' },
+      { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      { label: 'Telemetry', link: 'reference/telemetry' },
       {
         label: 'TypeScript',
         collapsed: true,
@@ -1155,11 +1177,11 @@ const referenceGroups: SidebarItems = [
         items: [...getTechnologyAPIItems('vitest', 'test-tools')],
       },
       {
-        label: 'Nx Cloud Credit Pricing',
+        label: 'Nx Cloud credit pricing',
         link: 'reference/nx-cloud/credits-pricing',
       },
       {
-        label: 'Remote Cache Plugins',
+        label: 'Remote cache plugins',
         link: 'reference/remote-cache-plugins',
       },
       {

@@ -1,6 +1,6 @@
-import * as yargs from 'yargs';
-import * as enquirer from 'enquirer';
-import * as chalk from 'chalk';
+import yargs from 'yargs';
+import enquirer from 'enquirer';
+import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
@@ -181,6 +181,32 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
       ),
   };
   return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
+}
+
+export async function determineAnalytics(
+  parsedArgs: yargs.Arguments<{ analytics?: boolean }>
+): Promise<boolean> {
+  if (typeof parsedArgs.analytics === 'boolean') {
+    return parsedArgs.analytics;
+  }
+
+  if (!parsedArgs.interactive || isCI()) {
+    // Default to false in non-interactive/CI
+    return false;
+  }
+
+  const { enableAnalytics } = await enquirer.prompt<{
+    enableAnalytics: 'Yes' | 'No';
+  }>([
+    {
+      name: 'enableAnalytics',
+      message: 'Help improve Nx by sharing your usage data?',
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return enableAnalytics === 'Yes';
 }
 
 export async function determineDefaultBase(

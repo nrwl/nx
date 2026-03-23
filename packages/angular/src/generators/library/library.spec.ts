@@ -1222,9 +1222,9 @@ describe('lib', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
-              ...baseConfig,
               ...nx.configs["flat/angular"],
               ...nx.configs["flat/angular-template"],
+              ...baseConfig,
               {
                   files: [
                       "**/*.ts"
@@ -1274,6 +1274,8 @@ describe('lib', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
               ...baseConfig,
               {
                   files: [
@@ -1290,8 +1292,6 @@ describe('lib', () => {
                       }
                   }
               },
-              ...nx.configs["flat/angular"],
-              ...nx.configs["flat/angular-template"],
               {
                   files: [
                       "**/*.ts"

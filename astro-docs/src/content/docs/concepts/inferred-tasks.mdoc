@@ -15,21 +15,21 @@ src="https://youtu.be/wADNsVItnsM"
 title="Project Crystal"
 /%}
 
-## How Does a Plugin Infer Tasks?
+## How does a plugin infer tasks?
 
 Every plugin has its own custom logic, but in order to infer tasks, they all go through the following steps.
 
-### 1. Detect Tooling Configuration in Workspace
+### 1. detect tooling configuration in workspace
 
 The plugin will search the workspace for configuration files of the tool. For each configuration file found, the plugin will infer tasks. i.e. The `@nx/webpack` plugin searches for `webpack.config.js` files to infer tasks that run webpack.
 
-### 2. Create an Inferred Task
+### 2. create an inferred task
 
 The plugin then configures tasks with a name that you specified in the plugin's configuration in `nx.json`. The settings for the task are determined by the tool configuration.
 
 The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by default and it automatically sets the task caching settings based on the values in the webpack configuration files.
 
-## What Is Inferred
+## What is inferred
 
 Nx plugins infer the following properties by analyzing the tool configuration.
 
@@ -39,15 +39,15 @@ Nx plugins infer the following properties by analyzing the tool configuration.
 - [Outputs](/docs/guides/tasks--caching/configure-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
 - [Task Dependencies](/docs/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
 
-## Nx Uses Plugins to Build the Graph
+## Nx uses plugins to build the graph
 
 A typical workspace will have many plugins inferring tasks. Nx processes all the plugins registered in `nx.json` to create project configuration for individual projects and a project and task graph that shows the connections between them all.
 
-### Plugin Order Matters
+### Plugin order matters
 
 Plugins are processed in the order that they appear in the `plugins` array in `nx.json`. So, if multiple plugins create a task with the same name, the plugin listed last will win. If, for some reason, you have a project with both a `vite.config.js` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task. The `build` task that is executed will be the task that belongs to the plugin listed lower in the `plugins` array.
 
-### Scope Plugins to Specific Projects
+### Scope plugins to specific projects
 
 Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
 
@@ -68,7 +68,7 @@ The `include` and `exclude` properties are file glob patterns that filter which 
 
 This is useful when you want a plugin to only affect certain projects, or when you need to apply different plugin options to different sets of projects by registering the same plugin multiple times with different `include`/`exclude` patterns.
 
-## View Inferred Tasks
+## View inferred tasks
 
 To view the task settings for projects in your workspace, [show the project details](/docs/features/explore-graph) either from the command line or using Nx Console.
 
@@ -316,7 +316,7 @@ nx show project my-project --web
 
 {% /project_details %}
 
-## Overriding Inferred Task Configuration
+## Overriding inferred task configuration
 
 You can override the task configuration inferred by plugins in several ways.
 If you want to overwrite the task configuration for multiple projects, [use the `targetDefaults` object](/docs/reference/nx-json#target-defaults) in the `nx.json` file.
@@ -336,7 +336,7 @@ More details about how to override task configuration is available in these guid
 - [Defining a Task Pipeline](/docs/guides/tasks--caching/defining-task-pipeline)
 - [Pass Arguments to Commands](/docs/guides/tasks--caching/pass-args-to-commands)
 
-## Existing Nx Workspaces
+## Existing Nx workspaces
 
 If you have an existing Nx Workspace and upgrade to the latest Nx version, a migration will automatically set `useInferencePlugins` to `false` in `nx.json`. This property allows you to continue to use Nx without inferred tasks.
 
@@ -347,4 +347,4 @@ When `useInferencePlugins` is `false`:
 
 If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/docs/guides/tasks--caching/convert-to-inferred).
 
-Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/docs/technologies/typescript/guides/enable-tsc-batch-mode)).
+Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. batch mode).

@@ -10,8 +10,8 @@ kotlinx-coroutines = "1.7.3"
 slf4j = "1.7.10"
 gradle-tooling-api = "8.13"
 shadow = "8.1.1"
-ktfmt = "0.52.0"
-nx-project-graph = "0.1.13"
+ktfmt = "0.25.0"
+nx-project-graph = "0.1.15"
 gradle-plugin-publish = "1.2.1"
 jgit = "6.8.0.202311291450-r"
 
@@ -29,6 +29,6 @@ jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
-ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "+" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 nx-project-graph = { id = "dev.nx.gradle.project-graph", version.ref = "nx-project-graph" }
 gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }

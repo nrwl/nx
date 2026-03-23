@@ -134,6 +134,21 @@ impl TaskItem {
             }
         }
     }
+
+    pub fn update_timing(&mut self, start_time: Option<i64>, end_time: Option<i64>) {
+        self.start_time = start_time;
+        self.end_time = end_time;
+        let duration = match (start_time, end_time) {
+            (Some(start), Some(end)) => Some(format_duration_since(start, end)),
+            (Some(_), None) => Some(DURATION_NOT_YET_KNOWN.to_string()),
+            _ => None,
+        };
+        if let Some(d) = duration {
+            if !self.continuous || end_time.is_some() {
+                self.duration = d;
+            }
+        }
+    }
 }
 
 #[napi]
@@ -591,31 +606,28 @@ impl TasksList {
                     }
                 }
                 DisplayItem::BatchGroup(batch_group) => {
-                    // Determine batch group status based on nested tasks
-                    let has_in_progress = batch_group.nested_tasks.iter().any(|task_id| {
+                    let batch_id = batch_group.batch_id.clone();
+
+                    // A batch group only exists if start_batch was called, so it's
+                    // in-progress unless all nested tasks have completed
+                    let all_completed = batch_group.nested_tasks.iter().all(|task_id| {
                         self.task_lookup
                             .get(task_id)
                             .map(|task| {
-                                matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
+                                !matches!(
+                                    task.status,
+                                    TaskStatus::InProgress
+                                        | TaskStatus::Shared
+                                        | TaskStatus::NotStarted
+                                )
                             })
                             .unwrap_or(false)
                     });
-                    let has_pending = batch_group.nested_tasks.iter().any(|task_id| {
-                        self.task_lookup
-                            .get(task_id)
-                            .map(|task| matches!(task.status, TaskStatus::NotStarted))
-                            .unwrap_or(false)
-                    });
 
-                    // Add batch group identifier wrapped in SelectionEntry::BatchGroup
-                    let batch_id = batch_group.batch_id.clone();
-
-                    if has_in_progress {
-                        in_progress.push(SelectionEntry::BatchGroup(batch_id.clone()));
-                    } else if has_pending {
-                        pending.push(SelectionEntry::BatchGroup(batch_id.clone()));
-                    } else {
+                    if all_completed {
                         completed.push(SelectionEntry::BatchGroup(batch_id.clone()));
+                    } else {
+                        in_progress.push(SelectionEntry::BatchGroup(batch_id.clone()));
                     }
 
                     // NOTE: We do NOT add individual nested tasks to status vectors here!
@@ -782,17 +794,24 @@ impl TasksList {
                         }
                     }
                     DisplayItem::BatchGroup(batch) => {
-                        // Check if batch has any in-progress or pending tasks
-                        let has_in_progress = batch.nested_tasks.iter().any(|task_id| {
+                        // A batch with a start_time is in-progress
+                        // A batch group only exists if started, so it's
+                        // in-progress unless all nested tasks have completed
+                        let all_completed = batch.nested_tasks.iter().all(|task_id| {
                             self.task_lookup
                                 .get(task_id)
                                 .map(|t| {
-                                    matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared)
+                                    !matches!(
+                                        t.status,
+                                        TaskStatus::InProgress
+                                            | TaskStatus::Shared
+                                            | TaskStatus::NotStarted
+                                    )
                                 })
                                 .unwrap_or(false)
                         });
 
-                        if has_in_progress {
+                        if !all_completed {
                             parallel_count += 1; // Count the batch group itself
                             // Add nested tasks if expanded
                             if batch.is_expanded {
@@ -1114,15 +1133,14 @@ impl TasksList {
         end_time: Option<i64>,
     ) {
         if let Some(task_item) = self.task_lookup.get_mut(&task_name) {
-            task_item.start_time = start_time;
-            task_item.end_time = end_time;
-
-            // Update the duration string if we have both times
-            if let (Some(start), Some(end)) = (start_time, end_time) {
-                task_item.duration = format_duration_since(start, end);
-            } else if start_time.is_some() && end_time.is_none() && !task_item.continuous {
-                // Task is in progress
-                task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
+            task_item.update_timing(start_time, end_time);
+        }
+        for display_item in &mut self.display_items {
+            if let DisplayItem::Task(task_item) = display_item
+                && task_item.name == task_name
+            {
+                task_item.update_timing(start_time, end_time);
+                break;
             }
         }
     }
@@ -1295,6 +1313,8 @@ impl TasksList {
 
     /// Updates their status to InProgress and marks for deferred sort.
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+        let mut has_standalone_change = false;
+
         for task in &tasks {
             let task_id = &task.id;
             let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
@@ -1331,10 +1351,13 @@ impl TasksList {
             // Add to in-progress list if standalone task
             if !is_in_batch && !self.in_progress_tasks.iter().any(|id| id == task_id) {
                 self.in_progress_tasks.push(task_id.to_string());
+                has_standalone_change = true;
             }
         }
 
-        self.needs_sort = true;
+        if has_standalone_change {
+            self.needs_sort = true;
+        }
     }
 
     /// Performs initial in-progress task selection if not yet done.
@@ -1501,10 +1524,11 @@ impl TasksList {
                     self.in_progress_tasks.push(task_id.to_string());
                 }
             }
-        }
 
-        // Mark for deferred sort (no immediate sort!)
-        self.needs_sort = true;
+            // Only re-sort when a standalone task changed — batch-nested task
+            // status changes don't affect display order.
+            self.needs_sort = true;
+        }
     }
 
     /// Updates the live duration for all InProgress tasks that have a start_time.
@@ -1531,8 +1555,11 @@ impl TasksList {
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
+        let mut has_standalone_change = false;
+
         for task_result in task_results {
             let task_id = &task_result.task.id;
+            let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
 
             if let Some((start, end)) = task_result.task.start_time.zip(task_result.task.end_time) {
                 // Update in task_lookup
@@ -1554,8 +1581,15 @@ impl TasksList {
                     }
                 }
             }
+
+            if !is_in_batch {
+                has_standalone_change = true;
+            }
         }
-        self.needs_sort = true;
+
+        if has_standalone_change {
+            self.needs_sort = true;
+        }
     }
 
     /// Removes a batch group and ungroups its tasks back to individual display.
@@ -2113,12 +2147,6 @@ impl TasksList {
             constraints.push(Constraint::Length(DURATION_COLUMN_WIDTH));
         }
 
-        // Use pre-computed scroll metrics passed from main render method
-        // This completely eliminates lock acquisitions in this method
-        let total_task_count = scroll_metrics.total_task_count;
-        let visible_task_count = scroll_metrics.visible_task_count;
-        let selected_task_index = scroll_metrics.selected_task_index;
-
         // Split the area to reserve space for scrollbar and padding when needed
         let (table_render_area, scrollbar_area) = if needs_scrollbar {
             let horizontal_layout = Layout::default()
@@ -2161,15 +2189,19 @@ impl TasksList {
 
             // Only render if we have a valid visible area
             if safe_scrollbar_area.width > 0 && safe_scrollbar_area.height > 0 {
-                // Update scrollbar state using task-centric metrics for consistent task navigation
-                // This ensures thumb positioning accurately reflects progress through tasks
-
-                let selected_position = selected_task_index.unwrap_or(0);
+                // Drive the scrollbar from scroll offset so the thumb accurately
+                // reflects which portion of the list is currently in view.
+                // Clamp inputs to keep the (content, viewport, position) triple
+                // consistent even during resizes or transitional frames.
+                let content_len = scroll_metrics.total_entries.max(1);
+                let viewport_len = scroll_metrics.viewport_height.clamp(1, content_len);
+                let max_pos = content_len.saturating_sub(viewport_len);
+                let pos = scroll_metrics.scroll_offset.min(max_pos);
 
                 let mut scrollbar_state = ScrollbarState::default()
-                    .content_length(total_task_count) // Total tasks excluding spacers
-                    .viewport_content_length(visible_task_count) // Tasks visible in viewport (no spacers)
-                    .position(selected_position); // Selected task's index among tasks
+                    .content_length(content_len)
+                    .viewport_content_length(viewport_len)
+                    .position(pos);
 
                 // Determine scrollbar style based on focus state
                 let base_style = Style::default().fg(THEME.info);
@@ -2881,6 +2913,9 @@ impl Component for TasksList {
             }
             Action::UpdateTaskStatus(task_name, status) => {
                 self.update_task_status(task_name, status);
+            }
+            Action::SetTaskTiming(task_id, start_time, end_time) => {
+                self.set_task_timing(task_id, Some(start_time), Some(end_time));
             }
             Action::UpdateCloudMessage(message) => {
                 self.cloud_message = Some(message);
@@ -4737,9 +4772,17 @@ mod tests {
         let mut tasks_list = create_large_tasks_list(40); // 40 tasks to force scrollbar
         let mut terminal = create_test_terminal(80, 20);
 
-        // Scroll down several positions to test scrollbar thumb position
-        for _ in 0..10 {
-            tasks_list.update(Action::ScrollDown).ok();
+        // Set up parallel section and populate filtered_display_items
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list.apply_filter();
+
+        // Scroll down via repeated next() calls which move both selection and
+        // scroll offset together, avoiding ensure_selected_visible pulling back
+        {
+            let mut mgr = tasks_list.selection_manager.lock();
+            for _ in 0..25 {
+                mgr.next();
+            }
         }
 
         render_to_test_backend(&mut terminal, &mut tasks_list);

@@ -10,11 +10,11 @@ Custom Workflows enable you to run scheduled tasks and automated checks across a
 
 Custom Workflows are scheduled automation that run independently of your CI/CD pipelines. Unlike traditional workflows that only trigger when code changes, Custom Workflows run on your schedule—whether that's daily, weekly, or at any interval you define. This is especially valuable for repositories that are rarely updated but still need regular monitoring for security vulnerabilities, compliance checks, or organizational standards.
 
-### Real-World Value
+### Real-world value
 
 Some companies have repositories that don't have CI pipelines, or changes are so infrequent that security data would be seriously out of date. For example, running a security audit daily gives you peace of mind in a repository you haven't touched in 6 months—just because you didn't make a code change doesn't mean it's not vulnerable to newly discovered threats.
 
-## Key Use Cases
+## Key use cases
 
 - **Security monitoring**: Run `npm audit` or third-party security tools on regular intervals to detect vulnerabilities
 - **Compliance tracking**: Ensure all repositories meet organizational standards for linting, testing, or documentation
@@ -26,7 +26,7 @@ Some companies have repositories that don't have CI pipelines, or changes are so
 Custom Workflows are available as part of Nx Enterprise and [consume compute credits](https://nx.dev/pricing#resource-classes). [Reach out to learn more about Nx Enterprise](https://nx.dev/enterprise)
 {%/aside %}
 
-## Access Custom Workflows
+## Access custom workflows
 
 Navigate to your organization's Custom Workflows page in Nx Cloud. You'll see an overview of all the current workflows. Polygraph and Conformance based workflows are currently available. In a future release of Nx Cloud, custom workflow creation will be released.
 
@@ -51,7 +51,7 @@ Conformance based workflows allow running the pre-defined conformance rules for 
 2. Click **Apply workflow** and select the workspace you wish to use for the custom workflow.
    ![Apply Workflow](../../../assets/enterprise/custom-workflows/apply-workflow.avif)
 
-## Configure Workflow Settings
+## Configure workflow settings
 
 In the custom workflows overview, select the **Launch Templates** tab, and assign the launch template you wish to use for the given workspace.
 
@@ -61,7 +61,7 @@ You can also upload your own custom launch template by clicking **Configure temp
 
 ![Configure custom launch template](../../../assets/enterprise/custom-workflows/custom-workflow-configure-launch-template.avif)
 
-## Perform First run
+## Perform first run
 
 Back in the custom workflow action page, you can manually trigger a run via clicking **Force**
 ![Polygraph overview](../../../assets/enterprise/custom-workflows/org-polygraph-overview.avif)

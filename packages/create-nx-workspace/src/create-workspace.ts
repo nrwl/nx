@@ -186,16 +186,22 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
+  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
+  if (options.neverConnectToCloud) {
+    setNeverConnectToCloud(directory);
+  }
+
+  // For template flow, save analytics preference directly to nx.json.
+  // For preset flow, this is handled by the workspace generator via createNxJson.
+  if (isTemplate && typeof options.analytics === 'boolean') {
+    setAnalyticsPreference(directory, options.analytics);
+  }
+
   // Generate CI for preset flow (not template)
   // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
   if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
-  }
-
-  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
-  if (options.neverConnectToCloud) {
-    setNeverConnectToCloud(directory);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
@@ -301,6 +307,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     pushedToVcs,
     connectUrl,
   };
+}
+
+function setAnalyticsPreference(directory: string, enabled: boolean): void {
+  const { readFileSync, writeFileSync } = require('fs');
+  const nxJsonPath = join(directory, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  nxJson.analytics = enabled;
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }
 
 export function extractConnectUrl(text: string): string | null {

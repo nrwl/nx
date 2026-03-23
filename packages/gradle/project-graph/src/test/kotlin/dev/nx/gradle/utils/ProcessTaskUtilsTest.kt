@@ -1,6 +1,7 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.Dependency
+import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -67,7 +68,7 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
-  fun `test getDependsOnForTask with direct dependsOn`() {
+  fun `test getDependsOnForTask with direct dependsOn same project returns null`() {
     val project = ProjectBuilder.builder().withName("myApp").build()
     // Create a build file so the task dependencies are properly detected
     val buildFile = java.io.File(project.projectDir, "build.gradle")
@@ -81,8 +82,11 @@ class ProcessTaskUtilsTest {
     val dependencies = mutableSetOf<Dependency>()
     val dependsOn = getDependsOnForTask(null, taskA, dependencies)
 
-    assertNotNull(dependsOn)
-    assertTrue(dependsOn!!.contains("myApp:taskB"))
+    // Same-project dependencies use object format without projects field
+    assertNotNull(dependsOn, "Same-project dependsOn should be present")
+    assertEquals(1, dependsOn!!.size)
+    assertEquals("taskB", dependsOn[0].target)
+    assertNull(dependsOn[0].projects, "Same-project deps should not have projects field")
   }
 
   @Test
@@ -244,7 +248,7 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getDependsOnForTask with pre-computed dependsOnTasks`() {
+    fun `test getDependsOnForTask with pre-computed dependsOnTasks same project returns null`() {
       // Create a build file so the task dependencies are properly detected
       val buildFile = java.io.File(project.projectDir, "build.gradle")
       buildFile.writeText("// test build file")
@@ -267,17 +271,15 @@ class ProcessTaskUtilsTest {
       val dependencies2 = mutableSetOf<Dependency>()
       val resultWithoutPreComputed = getDependsOnForTask(null, taskA, dependencies2)
 
-      // Both results should be identical
-      assertNotNull(resultWithPreComputed)
-      assertNotNull(resultWithoutPreComputed)
-      assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
-      assertEquals(2, resultWithPreComputed.size)
-
-      // Should contain both dependencies
-      assertTrue(resultWithPreComputed.contains("test:taskB"))
-      assertTrue(resultWithPreComputed.contains("test:taskC"))
-      assertTrue(resultWithoutPreComputed.contains("test:taskB"))
-      assertTrue(resultWithoutPreComputed.contains("test:taskC"))
+      // Same-project dependencies use object format without projects field
+      assertNotNull(
+          resultWithPreComputed, "Same-project dependsOn should be present (pre-computed)")
+      assertNotNull(resultWithoutPreComputed, "Same-project dependsOn should be present (computed)")
+      assertEquals(2, resultWithPreComputed!!.size)
+      assertEquals(2, resultWithoutPreComputed!!.size)
+      assertTrue(
+          resultWithPreComputed.all { it.projects == null },
+          "Same-project deps should not have projects field")
     }
 
     @Test
@@ -478,11 +480,12 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["metadata"])
     assertNotNull(result["options"])
 
-    // Verify dependsOn is populated
+    // Same-project dependsOn should be present as object format without projects field
     val dependsOn = result["dependsOn"] as? List<*>
-    assertNotNull(dependsOn)
-    assertEquals(1, dependsOn!!.size)
-    assertEquals("testProject:compile", dependsOn[0])
+    assertNotNull(dependsOn, "Same-project dependsOn should be present")
+    assertTrue(
+        dependsOn!!.any { (it as? DependsOnEntry)?.target == "compile" },
+        "Expected dependsOn to contain 'compile', got $dependsOn")
 
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
@@ -563,6 +566,187 @@ class ProcessTaskUtilsTest {
   }
 
   @Nested
+  inner class GradleFilesInputsTests {
+
+    @Test
+    fun `getGradleFilesInputs returns empty list when no gradle files exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        val result = getGradleFilesInputs(tempDir.path)
+        assertTrue(result.isEmpty(), "Expected empty list when no gradle files exist")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getGradleFilesInputs returns gradle-wrapper files when they exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create gradle wrapper directory and files
+        val gradleWrapperDir = java.io.File(tempDir, "gradle/wrapper")
+        gradleWrapperDir.mkdirs()
+        java.io.File(gradleWrapperDir, "gradle-wrapper.jar").writeBytes(ByteArray(0))
+        java.io.File(gradleWrapperDir, "gradle-wrapper.properties").writeText("distributionUrl=...")
+
+        val result = getGradleFilesInputs(tempDir.path)
+
+        assertEquals(2, result.size, "Expected 2 gradle wrapper files")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
+            "Expected gradle-wrapper.jar in $result")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
+            "Expected gradle-wrapper.properties in $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getGradleFilesInputs returns gradle properties when it exists`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create only gradle.properties
+        java.io.File(tempDir, "gradle.properties").writeText("org.gradle.jvmargs=-Xmx2g")
+
+        val result = getGradleFilesInputs(tempDir.path)
+
+        assertEquals(1, result.size, "Expected 1 gradle file")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle.properties"),
+            "Expected gradle.properties in $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getGradleFilesInputs returns all gradle files when all exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create all gradle files
+        val gradleWrapperDir = java.io.File(tempDir, "gradle/wrapper")
+        gradleWrapperDir.mkdirs()
+        java.io.File(gradleWrapperDir, "gradle-wrapper.jar").writeBytes(ByteArray(0))
+        java.io.File(gradleWrapperDir, "gradle-wrapper.properties").writeText("distributionUrl=...")
+        java.io.File(tempDir, "gradle.properties").writeText("org.gradle.jvmargs=-Xmx2g")
+
+        val result = getGradleFilesInputs(tempDir.path)
+
+        assertEquals(3, result.size, "Expected 3 gradle files")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
+            "Expected gradle-wrapper.jar")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
+            "Expected gradle-wrapper.properties")
+        assertTrue(
+            result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getInputsForTask includes gradle files when they exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Create gradle.properties only
+        java.io.File(tempDir, "gradle.properties").writeText("org.gradle.jvmargs=-Xmx2g")
+
+        // Create a subproject directory to differentiate projectRoot from workspaceRoot
+        val projectDir = java.io.File(tempDir, "app").apply { mkdirs() }
+        val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+        val workspaceRoot = tempDir.path
+        val projectRoot = projectDir.path
+
+        val mainTask = project.tasks.register("mainTask").get()
+        val inputFile = java.io.File("$projectRoot/src/main.kt")
+        mainTask.inputs.files(inputFile)
+
+        val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+        val result =
+            getInputsForTask(
+                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+        assertNotNull(result)
+        assertTrue(
+            result!!.any { it == "{workspaceRoot}/gradle.properties" },
+            "Expected gradle.properties in inputs: $result")
+        assertTrue(
+            result.any { it == "{projectRoot}/src/main.kt" },
+            "Expected src/main.kt in inputs: $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getInputsForTask does not include gradle files when they do not exist`() {
+      val tempDir =
+          java.io.File.createTempFile("workspace", "").apply {
+            delete()
+            mkdirs()
+          }
+
+      try {
+        // Don't create any gradle files
+        // Create a subproject directory to differentiate projectRoot from workspaceRoot
+        val projectDir = java.io.File(tempDir, "app").apply { mkdirs() }
+        val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+        val workspaceRoot = tempDir.path
+        val projectRoot = projectDir.path
+
+        val mainTask = project.tasks.register("mainTask").get()
+        val inputFile = java.io.File("$projectRoot/src/main.kt")
+        mainTask.inputs.files(inputFile)
+
+        val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+        val result =
+            getInputsForTask(
+                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+        assertNotNull(result)
+        // Should have src/main.kt but no gradle files
+        assertTrue(
+            result!!.any { it == "{projectRoot}/src/main.kt" },
+            "Expected src/main.kt in inputs: $result")
+        assertFalse(
+            result.any { it.toString().contains("gradle") },
+            "Did not expect any gradle files in inputs: $result")
+      } finally {
+        tempDir.deleteRecursively()
+      }
+    }
+  }
+
+  @Nested
   inner class SubprojectNamingTests {
 
     @Test
@@ -633,9 +817,82 @@ class ProcessTaskUtilsTest {
         val dependsOn = getDependsOnForTask(null, appTask, dependencies)
 
         assertNotNull(dependsOn)
+        val libEntry = dependsOn!!.find { it.target == "compileJava" }
+        assertNotNull(
+            libEntry, "Expected dependsOn entry with target 'compileJava' but got $dependsOn")
+        assertNotNull(libEntry!!.projects, "Expected 'projects' field for cross-project dependency")
         assertTrue(
-            dependsOn!!.contains(":lib:compileJava"),
-            "Expected ':lib:compileJava' but got $dependsOn")
+            libEntry.projects!!.contains(":lib"), "Expected project ':lib' in ${libEntry.projects}")
+      } finally {
+        rootDir.deleteRecursively()
+      }
+    }
+
+    @Test
+    fun `getDependsOnForTask returns multiple entries for different cross-project targets`() {
+      val rootDir =
+          java.io.File.createTempFile("root", "").apply {
+            delete()
+            mkdirs()
+          }
+      val appDir = java.io.File(rootDir, "app").apply { mkdirs() }
+      val libDir = java.io.File(rootDir, "lib").apply { mkdirs() }
+      val utilDir = java.io.File(rootDir, "util").apply { mkdirs() }
+
+      try {
+        val rootProject = ProjectBuilder.builder().withProjectDir(rootDir).withName("root").build()
+        val appProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(appDir)
+                .withName("app")
+                .build()
+        val libProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(libDir)
+                .withName("lib")
+                .build()
+        val utilProject =
+            ProjectBuilder.builder()
+                .withParent(rootProject)
+                .withProjectDir(utilDir)
+                .withName("util")
+                .build()
+
+        java.io.File(appDir, "build.gradle").writeText("// app")
+        java.io.File(libDir, "build.gradle").writeText("// lib")
+        java.io.File(utilDir, "build.gradle").writeText("// util")
+
+        // Different targets on different projects
+        val libClasses = libProject.tasks.register("classes").get()
+        val libJar = libProject.tasks.register("jar").get()
+        val utilClasses = utilProject.tasks.register("classes").get()
+
+        // app:build depends on lib:classes, lib:jar, and util:classes
+        val appTask =
+            appProject.tasks.register("build").get().apply {
+              dependsOn(libClasses, libJar, utilClasses)
+            }
+
+        val dependencies = mutableSetOf<Dependency>()
+        val dependsOn = getDependsOnForTask(null, appTask, dependencies)
+
+        assertNotNull(dependsOn, "dependsOn should not be null")
+        // Should have 2 entries: "classes" (with lib + util) and "jar" (with lib)
+        assertEquals(2, dependsOn!!.size, "Expected 2 dependsOn entries, got $dependsOn")
+
+        val classesEntry = dependsOn.find { it.target == "classes" }
+        assertNotNull(classesEntry, "Expected 'classes' target in $dependsOn")
+        assertNotNull(classesEntry!!.projects, "Expected projects for classes entry")
+        assertTrue(classesEntry.projects!!.contains(":lib"), "Expected :lib in classes projects")
+        assertTrue(classesEntry.projects!!.contains(":util"), "Expected :util in classes projects")
+
+        val jarEntry = dependsOn.find { it.target == "jar" }
+        assertNotNull(jarEntry, "Expected 'jar' target in $dependsOn")
+        assertNotNull(jarEntry!!.projects, "Expected projects for jar entry")
+        assertTrue(jarEntry.projects!!.contains(":lib"), "Expected :lib in jar projects")
+        assertEquals(1, jarEntry.projects!!.size, "jar should only have 1 project")
       } finally {
         rootDir.deleteRecursively()
       }

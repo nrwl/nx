@@ -1,6 +1,7 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import { major } from 'semver';
+import { handleImport } from '../../utils/handle-import';
 import * as yargs from 'yargs';
 import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import {
@@ -32,7 +33,7 @@ export async function format(
 ): Promise<void> {
   let prettier: typeof import('prettier');
   try {
-    prettier = await import('prettier');
+    prettier = await handleImport('prettier');
   } catch {
     output.error({
       title: 'Prettier is not installed.',
@@ -216,7 +217,7 @@ function write(prettier: typeof import('prettier'), patterns: string[]) {
       )}`,
       {
         stdio: [0, 1, 2],
-        windowsHide: false,
+        windowsHide: true,
       }
     );
 
@@ -227,7 +228,7 @@ function write(prettier: typeof import('prettier'), patterns: string[]) {
         )} --parser json`,
         {
           stdio: [0, 1, 2],
-          windowsHide: false,
+          windowsHide: true,
         }
       );
     }
@@ -244,7 +245,7 @@ async function check(patterns: string[]): Promise<string[]> {
   return new Promise((resolve, reject) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
-      { encoding: 'utf-8', windowsHide: false },
+      { encoding: 'utf-8', windowsHide: true },
       (error, stdout) => {
         if (error) {
           // The command failed because Prettier threw an error.

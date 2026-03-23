@@ -6,11 +6,11 @@ filter: 'type:Guides'
 
 Modifying existing files is an order of magnitude harder than creating new files, so care should be taken when trying to automate this process. When the situation merits it, automating a process can lead to tremendous benefits across the organization. Here are some approaches listed from simplest to most complex.
 
-## Compose Existing Generators
+## Compose existing generators
 
 If you can compose together existing generators to modify the files you need, you should take that approach. See [Composing Generators](/docs/extending-nx/composing-generators) for more information.
 
-## Modify JSON Files
+## Modify JSON files
 
 JSON files are fairly simple to modify, given their predictable structure.
 
@@ -31,7 +31,7 @@ export default async function (tree: Tree, schema: any) {
 }
 ```
 
-## String Replace
+## String replace
 
 For files that are not as predictable as JSON files (like `.ts`, `.md` or `.css` files), modifying the contents can get tricky. One approach is to do a find and replace on the string contents of the file.
 
@@ -57,7 +57,7 @@ export default async function (tree: Tree, schema: any) {
 }
 ```
 
-## AST Manipulation
+## AST manipulation
 
 ASTs (Abstract Syntax Trees) allow you to understand exactly the code you're modifying. Replacing a string value can accidentally modify text found in a comment rather than changing the name of a variable.
 

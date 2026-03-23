@@ -1,7 +1,6 @@
-import { defineConfig } from 'vite';
+import { defineConfig, transformWithEsbuild } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import * as esbuild from 'esbuild';
 import { readFileSync } from 'fs';
 
 const extensions = [
@@ -20,10 +19,13 @@ const extensions = [
 
 const rollupPlugin = (matchers: RegExp[]) => ({
   name: 'js-in-jsx',
-  load(id: string) {
+  async load(id: string) {
     if (matchers.some((matcher) => matcher.test(id)) && id.endsWith('.js')) {
       const file = readFileSync(id, { encoding: 'utf-8' });
-      return esbuild.transformSync(file, { loader: 'jsx', jsx: 'automatic' });
+      return transformWithEsbuild(file, id, {
+        loader: 'jsx',
+        jsx: 'automatic',
+      });
     }
   },
 });
@@ -39,7 +41,8 @@ export default defineConfig({
     alias: {
       'react-native': 'react-native-web',
       'react-native-svg': 'react-native-svg-web',
-      '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
+      '@react-native/assets-registry/registry':
+        'react-native-web/dist/modules/AssetRegistry/index',
     },
   },
   build: {

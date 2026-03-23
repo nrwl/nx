@@ -191,6 +191,64 @@ describe('configure-ai-agents', () => {
     });
   });
 
+  describe('codex agent', () => {
+    it('should create config.toml with MCP config, features, and agents', () => {
+      runCLI(`configure-ai-agents --agents codex --no-interactive`);
+
+      const configToml = readFile('.codex/config.toml');
+      // MCP server configured
+      expect(configToml).toContain('nx-mcp');
+      expect(configToml).toContain('npx');
+      // Multi-agent feature enabled
+      expect(configToml).toContain('multi_agent');
+      // Agent definitions present
+      expect(configToml).toContain('ci-monitor-subagent');
+    });
+
+    it('should copy agent TOML files and skills', () => {
+      // Agent TOML files
+      const agentFiles = listFiles('.codex/agents');
+      expect(agentFiles.length).toBeGreaterThan(0);
+      expect(agentFiles.some((f) => f.includes('ci-monitor-subagent'))).toBe(
+        true
+      );
+
+      // Skills
+      const skillsContents = listFiles('.agents/skills');
+      expect(skillsContents.length).toBeGreaterThan(0);
+    });
+
+    it('should preserve existing user config on re-run', () => {
+      // Add custom user content to config.toml
+      updateFile('.codex/config.toml', (content: string) => {
+        return (
+          content +
+          '\n[mcp_servers.my-custom-server]\ncommand = "my-server"\nargs = []\n'
+        );
+      });
+
+      runCLI(`configure-ai-agents --agents codex --no-interactive`);
+
+      const configToml = readFile('.codex/config.toml');
+      // Nx config still present
+      expect(configToml).toContain('nx-mcp');
+      // User's custom config preserved
+      expect(configToml).toContain('my-custom-server');
+    });
+
+    it('should respect multi_agent = false set by user', () => {
+      // User explicitly disables multi-agent
+      updateFile('.codex/config.toml', (content: string) =>
+        content.replace(/multi_agent\s*=\s*true/, 'multi_agent = false')
+      );
+
+      runCLI(`configure-ai-agents --agents codex --no-interactive`);
+
+      const configToml = readFile('.codex/config.toml');
+      expect(configToml).toMatch(/multi_agent\s*=\s*false/);
+    });
+  });
+
   describe('--no-interactive without --agents (AI agent-like mode)', () => {
     // Without explicit --agents, --no-interactive should behave like AI agent
     // mode: update outdated agents only, report non-configured ones.

@@ -1,3 +1,9 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+
 # Disable gradle and maven plugins on Netlify
 # (Netlify only supports Java 8 but these plugins require Java 17)
 [build.environment]
@@ -42,6 +48,15 @@ to = "/docs/extending-nx/create-preset"
 [[redirects]]
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
 to = "/docs/guides/adopting-nx/adding-to-monorepo"
+
+# Angular multiple workspace migration page removed (DOC-419)
+[[redirects]]
+from = "/docs/technologies/angular/migration/angular-multiple"
+to = "/docs/technologies/angular/migration/angular"
+
+[[redirects]]
+from = "/docs/getting-started/nx-cloud"
+to = "/docs/features/ci-features"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

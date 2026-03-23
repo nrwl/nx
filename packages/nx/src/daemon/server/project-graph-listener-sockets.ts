@@ -1,6 +1,6 @@
 import { Socket } from 'net';
 import { ProjectGraph } from '../../config/project-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { handleResult } from './server';
 import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
 

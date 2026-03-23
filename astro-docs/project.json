@@ -20,7 +20,13 @@
       "dependsOn": [
         "prebuild-banner",
         {
-          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
+          "projects": [
+            "nx",
+            "devkit",
+            "create-nx-workspace",
+            "dotnet",
+            "maven"
+          ],
           "target": "build"
         }
       ],
@@ -33,7 +39,13 @@
       "dependsOn": [
         "prebuild-banner",
         {
-          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
+          "projects": [
+            "nx",
+            "devkit",
+            "create-nx-workspace",
+            "dotnet",
+            "maven"
+          ],
           "target": "build"
         }
       ],
@@ -86,9 +98,18 @@
       "command": "playwright show-report dist/astro-docs/playwright-report"
     },
     "validate-links": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build",
+        {
+          "projects": ["nx-dev"],
+          "target": "sitemap"
+        }
+      ],
       "cache": true,
       "inputs": [
+        "{projectRoot}/validate-links.ts",
+        "{workspaceRoot}/docs/**/*.md",
+        { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
         "{projectRoot}/sidebar.mts",
@@ -100,6 +121,33 @@
       "options": {
         "cwd": "astro-docs"
       }
+    },
+    "vale": {
+      "command": "node scripts/vale-changed.mjs",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/content/docs/**/*.mdoc",
+        "{projectRoot}/src/content/docs/**/*.mdx",
+        "{projectRoot}/src/content/docs/**/*.md",
+        "{projectRoot}/.vale.ini",
+        "{projectRoot}/.vale/styles/**/*"
+      ]
+    },
+    "vale:all": {
+      "command": "node scripts/vale-changed.mjs --all",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "{projectRoot}/src/content/docs/**/*.mdoc",
+        "{projectRoot}/src/content/docs/**/*.mdx",
+        "{projectRoot}/src/content/docs/**/*.md",
+        "{projectRoot}/.vale.ini",
+        "{projectRoot}/.vale/styles/**/*"
+      ]
     },
     "format": {
       "cache": true,

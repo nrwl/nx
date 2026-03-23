@@ -10,7 +10,7 @@ If you want to learn more about the concept of a task pipeline and its importanc
 
 {% youtube src="https://youtu.be/_U4hu6SuBaY?si=rSclPBdRh7P_xZ_f" title="Define a task pipeline" /%}
 
-## Define Dependencies Between Tasks
+## Define dependencies between tasks
 
 You can define dependencies among tasks by using the `dependsOn` property:
 
@@ -26,7 +26,7 @@ You can define dependencies among tasks by using the `dependsOn` property:
 }
 ```
 
-## Per Project vs Global
+## Per project vs global
 
 Task dependencies can be [defined globally](/docs/reference/nx-json#target-defaults) for all projects in `nx.json` file:
 
@@ -89,7 +89,7 @@ Or they can be [defined per-project](/docs/reference/project-configuration#depen
 {% /tabitem %}
 {% /tabs %}
 
-## Continuous Task Dependencies
+## Continuous task dependencies
 
 If a task has a dependency that never exits, then the task will never start. To support this scenario, you can mark the dependency as a [continuous task](/docs/reference/project-configuration#continuous). Labeling a task as continuous tells Nx to not wait for the process to exit, and it will be run alongside its dependents.
 
@@ -106,7 +106,7 @@ If a task has a dependency that never exits, then the task will never start. To 
 
 The `continuous` option is most useful for running development servers. For example, the `e2e` task depends on a continuous `serve` task that starts the server to be tested againts.
 
-## Visualize Task Dependencies
+## Visualize task dependencies
 
 You can also visualize the actual task graph (alongside the projects) using [Nx graph](/docs/features/explore-graph). This can be useful for debugging purposes.
 

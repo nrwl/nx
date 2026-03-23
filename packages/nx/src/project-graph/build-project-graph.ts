@@ -40,10 +40,8 @@ import {
   ProcessDependenciesError,
   WorkspaceValidityError,
 } from './error-types';
-import {
-  ConfigurationSourceMaps,
-  mergeMetadata,
-} from './utils/project-configuration-utils';
+import { mergeMetadata } from './utils/project-configuration/target-merging';
+import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { hashObject } from '../hasher/file-hasher';
 
@@ -382,11 +380,11 @@ async function updateProjectGraphWithPlugins(
       }
 
       performance.mark(`${plugin.name}:createDependencies - end`);
-      performance.measure(
-        `${plugin.name}:createDependencies`,
-        `${plugin.name}:createDependencies - start`,
-        `${plugin.name}:createDependencies - end`
-      );
+      performance.measure(`${plugin.name}:createDependencies`, {
+        start: `${plugin.name}:createDependencies - start`,
+        end: `${plugin.name}:createDependencies - end`,
+        detail: { track: true },
+      });
     })
   );
   performance.mark('createDependencies:end');

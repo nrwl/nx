@@ -1,6 +1,6 @@
 ---
 title: How Caching Works
-description: Learn how Nx's computation hashing enables powerful caching, including what factors determine cache validity and how local and remote caches work together.
+description: Learn how Nx computation hashing enables powerful caching, including what factors determine cache validity and how local and remote caches work together.
 sidebar:
   order: 1
 filter: 'type:Concepts'
@@ -58,7 +58,7 @@ Inputs are factors Nx considers when calculating the computation hash for a task
 
 For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/docs/guides/tasks--caching/configure-inputs)
 
-## What is Cached
+## What is cached
 
 Nx cache works on the process level. Regardless of the tools used to build/test/lint/etc.. your project, the results are cached. This includes:
 
@@ -129,7 +129,7 @@ If neither is defined, Nx defaults to caching `dist` and `build` at the root of 
 Several executors have a property in options called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. You can reuse that property though by defining your outputs like: `outputs: [{options.outputPath}]`.
 {% /aside %}
 
-## Define Cache Inputs
+## Define cache inputs
 
 By default the cache considers all project files (e.g. `{projectRoot}/**/*`). This behavior can be customized by defining in a much more fine-grained way what files should be included or excluded for each target.
 
@@ -181,7 +181,7 @@ Inputs may include
 
 Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/docs/guides/tasks--caching/configure-inputs).
 
-## Args Hash Inputs
+## Args hash inputs
 
 Finally, in addition to Source Code Hash Inputs and Runtime Hash Inputs, Nx needs to consider the arguments: For
 example, `nx build remixapp` and `nx build remixapp -- --flag=true` produce different

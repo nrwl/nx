@@ -1047,6 +1047,29 @@ describe('pnpm LockFile utility', () => {
           ).default
         );
       });
+
+      it('should strip catalogs from pruned lockfile', () => {
+        const typescriptPackageJson = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json'
+          )
+        );
+        const lockFileWithCatalogs = lockFile.replace(
+          'lockfileVersion:',
+          'catalogs:\n  default:\n    typescript: 4.9.5\n\nlockfileVersion:'
+        );
+
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFileWithCatalogs,
+          typescriptPackageJson,
+          '/virtual'
+        );
+
+        expect(result).not.toContain('catalogs');
+      });
     });
   });
 

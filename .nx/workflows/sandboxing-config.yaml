@@ -1,5 +1,0 @@
-exclude-reads:
-  - '**/node_modules/**'
-  - .nx/**/*
-  - .git/**/*
-  - '**/package.json'

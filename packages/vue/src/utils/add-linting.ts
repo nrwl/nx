@@ -135,8 +135,7 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
         tree,
         projectRoot,
         'flat/recommended',
-        'vue',
-        'eslint-plugin-vue'
+        { moduleName: 'vue', moduleImportPath: 'eslint-plugin-vue' }
       );
       // This allows .vue files to be parsed
       addOverrideToLintConfig(

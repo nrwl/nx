@@ -1,11 +1,13 @@
 import { CommandModule, showHelp } from 'yargs';
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
+import { isAiAgent } from '../../native';
 import { handleErrors } from '../../utils/handle-errors';
 import {
   parseCSV,
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export interface NxShowArgs {
   json?: boolean;
@@ -65,6 +67,11 @@ export const yargsShowCommand: CommandModule<
       .option('json', {
         type: 'boolean',
         description: 'Output JSON.',
+      })
+      .middleware((args) => {
+        if (args.json == null && isAiAgent()) {
+          args.json = true;
+        }
       })
       .example(
         '$0 show projects',
@@ -155,7 +162,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showProjectsHandler } = await import('./projects');
+      const { showProjectsHandler } = await handleImport(
+        './projects.js',
+        __dirname
+      );
       await showProjectsHandler(args);
     });
     process.exit(exitCode);
@@ -212,7 +222,10 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showProjectHandler } = await import('./project');
+      const { showProjectHandler } = await handleImport(
+        './project.js',
+        __dirname
+      );
       await showProjectHandler(args);
     });
     process.exit(exitCode);
@@ -264,7 +277,7 @@ const showTargetInfoCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> =
           showTargetInfoHandler,
           showTargetInputsHandler,
           showTargetOutputsHandler,
-        } = await import('./target');
+        } = await handleImport('./target.js', __dirname);
         if (args.subcommand === 'inputs') {
           await showTargetInputsHandler(args);
           return;
@@ -309,7 +322,10 @@ const showTargetInputsCommand: CommandModule<
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetInputsHandler } = await import('./target');
+      const { showTargetInputsHandler } = await handleImport(
+        './target.js',
+        __dirname
+      );
       await showTargetInputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);
@@ -352,7 +368,10 @@ const showTargetOutputsCommand: CommandModule<
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      const { showTargetOutputsHandler } = await import('./target');
+      const { showTargetOutputsHandler } = await handleImport(
+        './target.js',
+        __dirname
+      );
       await showTargetOutputsHandler(args);
     });
     process.exit(process.exitCode || exitCode);
