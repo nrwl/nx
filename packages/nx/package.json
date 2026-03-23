@@ -28,8 +28,8 @@
     "Mobile"
   ],
   "bin": {
-    "nx": "./dist/bin/nx.js",
-    "nx-cloud": "./dist/bin/nx-cloud.js"
+    "nx": "./bin/nx.js",
+    "nx-cloud": "./bin/nx-cloud.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
