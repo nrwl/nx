@@ -10,7 +10,7 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.16"
+version = "0.1.16.BETA.6"
 
 repositories { mavenCentral() }
 
