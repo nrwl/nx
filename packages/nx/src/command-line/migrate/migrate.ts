@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
+import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
 import { joinPathFragments } from '../../utils/path';
 import {
@@ -1545,7 +1546,7 @@ function runInstall(nxWorkspaceRoot?: string) {
   });
   execSync(installCommand, {
     stdio: [0, 1, 2],
-    windowsHide: false,
+    windowsHide: true,
     cwd: nxWorkspaceRoot ?? process.cwd(),
   });
 }
@@ -1618,6 +1619,7 @@ export async function executeMigrations(
 
 class ChangedDepInstaller {
   private initialDeps: string;
+
   constructor(private readonly root: string) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -1895,7 +1897,7 @@ export async function runMigration() {
       }
       execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
-        windowsHide: false,
+        windowsHide: true,
       });
     }
   } else {
@@ -1983,14 +1985,14 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
       execSync(pmc.preInstall, {
         cwd: tmpDir,
         stdio,
-        windowsHide: false,
+        windowsHide: true,
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
         execSync('yarn config set nodeLinker node-modules', {
           cwd: tmpDir,
           stdio,
-          windowsHide: false,
+          windowsHide: true,
         });
       }
     }
@@ -1998,7 +2000,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
     execSync(`${pmc.install} ${pmc.ignoreScriptsFlag ?? ''}`, {
       cwd: tmpDir,
       stdio,
-      windowsHide: false,
+      windowsHide: true,
     });
 
     // Set NODE_PATH so that these modules can be used for module resolution
@@ -2041,7 +2043,10 @@ const getNgCompatLayer = (() => {
   let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await import('../../adapter/ngcli-adapter');
+      _ngCliAdapter = await handleImport(
+        '../../adapter/ngcli-adapter.js',
+        __dirname
+      );
       require('../../adapter/compat');
     }
     return _ngCliAdapter;

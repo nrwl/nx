@@ -29,6 +29,7 @@ import {
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
+import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
@@ -73,7 +74,7 @@ export async function initHandler(
       paths: [packageInstallResults.tempDir],
     });
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.initHandler(options, true);
     cleanup();
     return result;

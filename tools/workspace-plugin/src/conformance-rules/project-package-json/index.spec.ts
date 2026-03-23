@@ -1,10 +1,5 @@
-const mockExistsSync = jest.fn();
-jest.mock('node:fs', () => {
-  return {
-    ...jest.requireActual('node:fs'),
-    existsSync: mockExistsSync,
-  };
-});
+jest.mock('fs');
+import * as fs from 'fs';
 
 import { validateProjectPackageJson } from './index';
 
@@ -19,6 +14,10 @@ const VALID_PACKAGE_JSON_BASE = {
 };
 
 describe('project-package-json', () => {
+  let mockExistsSync: jest.SpyInstance;
+  beforeEach(() => {
+    mockExistsSync = jest.spyOn(fs, 'existsSync');
+  });
   afterEach(() => {
     jest.resetAllMocks();
   });

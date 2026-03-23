@@ -6,7 +6,7 @@ import type { Observable } from 'rxjs';
 import { readNxJson } from '../../config/nx-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
 import { retrieveProjectConfigurations } from '../../project-graph/utils/retrieve-workspace-files';
-import { readProjectConfigurationsFromRootMap } from '../../project-graph/utils/project-configuration-utils';
+import { readProjectConfigurationsFromRootMap } from '../../project-graph/utils/project-configuration/project-nodes-manager';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { getPlugins } from '../../project-graph/plugins/get-plugins';
 

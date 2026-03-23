@@ -89,7 +89,7 @@ jobs:
           pnpm nx-cloud record -- nx sync:check
           pids+=($!)
 
-          pnpm nx-cloud record -- nx-cloud conformance:check
+          pnpm nx build workspace-plugin && pnpm nx-cloud record -- pnpm nx conformance:check
           pids+=($!)
 
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &

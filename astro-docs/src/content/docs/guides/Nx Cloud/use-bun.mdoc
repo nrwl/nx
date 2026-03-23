@@ -1,0 +1,158 @@
+---
+title: Set Up Bun with Mise on CI
+description: Learn how to use bun as your package manager with Nx Cloud and Nx Agents using mise for toolchain management
+sidebar:
+  label: Set Up CI with Bun
+filter: 'type:Guides'
+---
+
+Bun works as a drop-in package manager for Nx workspaces.
+You can use it to install dependencies and run Nx commands via `bunx`.
+To use bun with [Nx Agents](/docs/features/ci-features/distribute-task-execution),
+you need a custom launch template because the default templates only support npm, yarn, and pnpm.
+
+Using [mise](https://mise.jdx.dev/) to manage your toolchain isn't strictly required,
+but Nx Cloud launch templates have built-in support for it.
+Pinning tool versions in a single `mise.toml` gives you a predictable,
+reproducible setup across local development, CI, and Nx Agents.
+
+## Configure your workspace
+
+Create a `mise.toml` at the root of your workspace to pin your toolchain versions:
+
+```toml
+// mise.toml
+[tools]
+node = "24.11.0"
+bun = "1.3.11"
+```
+
+Then install dependencies with bun:
+
+```shell
+bun install
+```
+
+Bun generates a `bun.lock` file.
+Commit it alongside your `mise.toml` and remove any previous lockfile
+(`package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`).
+
+Run Nx commands with `bunx`:
+
+```shell
+bunx nx run-many -t build test lint
+```
+
+## Set up CI
+
+Generate a starting CI workflow with:
+
+```shell
+nx g ci-workflow --ci=github
+```
+
+Then adjust the generated configuration to use bun.
+If you haven't connected your workspace to Nx Cloud yet,
+run `nx connect` and configure your
+[CI access token](/docs/guides/nx-cloud/access-tokens).
+
+Below is an example GitHub Actions workflow using bun with Nx Cloud:
+
+```yaml
+// .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-large" --stop-agents-after="e2e"
+
+      - name: Setup toolchains with mise
+        uses: jdx/mise-action@v3
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v5
+
+      - run: bunx nx-cloud record -- nx format:check
+      - run: bunx nx run-many -t lint test build
+      - run: bunx nx run-many -t e2e
+
+      - name: Self-healing
+        run: bunx nx fix-ci
+        if: always()
+```
+
+The `jdx/mise-action` reads your `mise.toml` and installs both Node and bun
+at the pinned versions.
+No separate `setup-node` or `setup-bun` action is needed.
+
+The `nx-cloud start-ci-run` command runs before dependencies are installed,
+so it uses `npx` instead of `bunx`.
+
+## Configure Nx Agents
+
+{% aside type="note" title="Nx Cloud required" %}
+Nx Agents are part of [Nx Cloud](/docs/getting-started/nx-cloud).
+If you haven't set up Nx Cloud yet, see the [getting started guide](/docs/getting-started/nx-cloud).
+{% /aside %}
+
+The default Nx Cloud launch templates use the
+[`install-node-modules`](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-node-modules)
+workflow step, which doesn't support `bun.lock`.
+Create a **[custom launch template](/docs/reference/nx-cloud/launch-templates)**
+that installs bun via mise and runs `bun install` directly.
+
+Add `.nx/workflows/agents.yaml` to your workspace:
+
+```yaml
+// .nx/workflows/agents.yaml
+common-init-steps: &common-init-steps
+  - name: Checkout
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+  - name: Setup toolchains
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+
+  - name: Install dependencies
+    script: |
+      bun install --frozen-lockfile
+
+launch-templates:
+  linux-large:
+    resource-class: 'docker_linux_amd64/large'
+    image: 'ubuntu22.04-node20.19-v2'
+    init-steps: *common-init-steps
+```
+
+The [`install-mise`](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-mise)
+workflow step reads your `mise.toml` and installs the specified toolchains on the agent.
+All environments (local, CI, and agents) stay in sync through a single config file.
+
+Reference the template name in your CI workflow:
+
+```shell
+npx nx-cloud start-ci-run --distribute-on="5 linux-large" --stop-agents-after="e2e"
+```
+
+You can define multiple templates with different resource classes for different workloads.
+For all available options, see the [launch templates reference](/docs/reference/nx-cloud/launch-templates).

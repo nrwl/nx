@@ -1,5 +1,5 @@
-let runCLI = jest.fn();
-let readConfig = jest.fn(() =>
+let mockRunCLI = jest.fn();
+let mockReadConfig = jest.fn(() =>
   Promise.resolve({
     projectConfig: {
       displayName: 'something',
@@ -8,11 +8,11 @@ let readConfig = jest.fn(() =>
 );
 
 jest.mock('jest', () => ({
-  runCLI,
+  runCLI: (...args) => mockRunCLI(...args),
 }));
 
 jest.mock('jest-config', () => ({
-  readConfig,
+  readConfig: () => mockReadConfig(),
 }));
 
 import { ExecutorContext } from '@nx/devkit';
@@ -26,7 +26,7 @@ describe('Jest Executor', () => {
   };
 
   beforeEach(async () => {
-    runCLI.mockReturnValue(
+    mockRunCLI.mockReturnValue(
       Promise.resolve({
         results: {
           success: true,
@@ -106,7 +106,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
           testPathPatterns: [],
@@ -128,7 +128,7 @@ describe('Jest Executor', () => {
         mockContext
       );
       expect(process.argv).toContain('--group=core');
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
           testPathPatterns: [],
@@ -159,7 +159,7 @@ describe('Jest Executor', () => {
         mockContext
       );
 
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: ['lib.spec.ts'],
           coverage: false,
@@ -191,7 +191,7 @@ describe('Jest Executor', () => {
         mockContext
       );
 
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: ['file1.ts', 'file2.ts'],
           coverage: false,
@@ -240,7 +240,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         {
           _: [],
           coverage: true,
@@ -285,7 +285,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         {
           _: [],
           maxWorkers: '50%',
@@ -295,7 +295,7 @@ describe('Jest Executor', () => {
       );
     });
 
-    it('should send the main to runCLI', async () => {
+    it('should send the main to mockRunCLI', async () => {
       await jestExecutor(
         {
           ...defaultOptions,
@@ -305,7 +305,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
           setupFilesAfterEnv: ['/root/test-setup.ts'],
@@ -341,7 +341,7 @@ describe('Jest Executor', () => {
           mockContext
         );
 
-        expect(runCLI).toHaveBeenCalledWith(
+        expect(mockRunCLI).toHaveBeenCalledWith(
           expect.objectContaining({
             _: [],
             setupFilesAfterEnv: ['/root/test-setup.ts'],
@@ -374,7 +374,7 @@ describe('Jest Executor', () => {
         };
 
         await jestExecutor(options, mockContext);
-        expect(runCLI).toHaveBeenCalledWith(
+        expect(mockRunCLI).toHaveBeenCalledWith(
           expect.objectContaining({
             _: [],
             testPathPatterns: [],
@@ -409,7 +409,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
-      expect(runCLI).toHaveBeenCalledWith(
+      expect(mockRunCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
           testPathPatterns: [],

@@ -26,7 +26,7 @@ import {
   PreTasksExecutionContext,
 } from '../../project-graph/plugins/public-api';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { isCI } from '../../utils/is-ci';
@@ -120,6 +120,7 @@ import {
   Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
+import { handleImport } from '../../utils/handle-import';
 
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -1240,8 +1241,9 @@ export class DaemonClient {
     }
 
     try {
-      const { getProcessMetricsService } = await import(
-        '../../tasks-runner/process-metrics-service'
+      const { getProcessMetricsService } = await handleImport(
+        '../../tasks-runner/process-metrics-service.js',
+        __dirname
       );
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {
@@ -1316,7 +1318,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: false,
+        windowsHide: true,
         shell: false,
         env: {
           ...DAEMON_ENV_OVERRIDABLE_SETTINGS,

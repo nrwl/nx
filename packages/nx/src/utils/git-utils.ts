@@ -4,12 +4,16 @@ import { logger } from './logger';
 
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {
-    exec(command, execOptions, (err, stdout, stderr) => {
-      if (err) {
-        return rej(err);
+    exec(
+      command,
+      { ...execOptions, windowsHide: true },
+      (err, stdout, stderr) => {
+        if (err) {
+          return rej(err);
+        }
+        res(stdout.toString());
       }
-      res(stdout.toString());
-    });
+    );
   });
 }
 
@@ -40,7 +44,7 @@ export class GitRepository {
   getGitRootPath(cwd: string) {
     return execSync('git rev-parse --show-toplevel', {
       cwd,
-      windowsHide: false,
+      windowsHide: true,
     })
       .toString()
       .trim();
@@ -293,7 +297,7 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
-      windowsHide: false,
+      windowsHide: true,
       cwd: directory,
     })
       .toString()
@@ -347,13 +351,14 @@ export function commitChanges(
       encoding: 'utf8',
       stdio: 'pipe',
       cwd: directory,
+      windowsHide: true,
     });
     execSync('git commit --no-verify -F -', {
       encoding: 'utf8',
       stdio: 'pipe',
       input: commitMessage,
       cwd: directory,
-      windowsHide: false,
+      windowsHide: true,
     });
   } catch (err) {
     if (directory) {
@@ -375,7 +380,7 @@ export function getLatestCommitSha(directory?: string): string | null {
     return execSync('git rev-parse HEAD', {
       encoding: 'utf8',
       stdio: 'pipe',
-      windowsHide: false,
+      windowsHide: true,
       cwd: directory,
     }).trim();
   } catch {

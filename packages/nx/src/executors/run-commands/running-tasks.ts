@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -403,7 +403,7 @@ class RunningNodeProcess implements RunningTask {
       maxBuffer: LARGE_BUFFER,
       env,
       cwd,
-      windowsHide: false,
+      windowsHide: true,
     });
 
     // Register process for metrics collection
