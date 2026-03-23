@@ -5,6 +5,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
+import { workspaceRoot } from '@nx/devkit';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -26,6 +27,11 @@ export async function withModuleFederationForSSR(
     config.output.library = {
       type: 'commonjs-module',
     };
+    config.resolve ??= {};
+    config.resolve.modules = [
+      ...(config.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: isDevServer
