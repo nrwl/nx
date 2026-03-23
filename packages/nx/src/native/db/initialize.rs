@@ -151,70 +151,25 @@ pub(super) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
     loop {
         match open_database_connection(db_path) {
             Ok(mut c) => {
-                trace!("Checking if database has metadata table");
-                let has_metadata = c.query_row(
-                    "SELECT value FROM metadata WHERE key='DB_VERSION'",
-                    [],
-                    |row| {
-                        let r: String = row.get(0)?;
-                        Ok(r)
-                    },
-                );
-                let c = match has_metadata {
-                    Ok(Some(_)) => {
-                        trace!("Database is initialized with DB_VERSION {}", DB_VERSION);
-                        c
-                    }
-                    // No metadata table found - database needs initialization
-                    // (either newly created or missing metadata from previous incomplete setup)
-                    Err(s) if s.to_string().contains("metadata") => {
-                        // Check if DB file existed before we opened it. If it did, it may be open
-                        // by another process (e.g., daemon) and it's not safe to configure it.
-                        if db_existed_before_open {
+                let c = if db_existed_before_open {
+                    trace!("Database already exists, reusing");
+                    c
+                } else {
+                    // New DB — configure pragmas/journal mode and create tables
+                    match configure_database(&c, db_path, database_recreated) {
+                        Ok(_) => {
+                            create_all_tables(&mut c)?;
+                            c
+                        }
+                        Err(config_error) if !database_recreated => {
+                            trace!("Failed to configure new database: {:?}", config_error);
                             c.close()?;
-                            return Err(anyhow::anyhow!(
-                                "Database file exists but has no metadata table.\n\
-                                This may indicate database corruption or incomplete initialization from a previous crash.\n\
-                                \n\
-                                To fix this issue:\n\
-                                1. Run: nx reset\n\
-                                2. Try your command again\n\
-                                \n\
-                                {}\n\
-                                \n\
-                                {}",
-                                reporting_instructions(true),
-                                reset_instruction(true)
-                            ));
+                            trace!("Removing new database files and retrying with fallback");
+                            remove_all_database_files(db_path)?;
+                            database_recreated = true;
+                            continue;
                         }
-
-                        // Safe: DB didn't exist before, we just created it, no other process has it open
-                        match configure_database(&c, db_path, database_recreated) {
-                            Ok(_) => {
-                                create_metadata_table(&mut c)?;
-                                create_all_tables(&mut c)?;
-                                c
-                            }
-                            Err(config_error) if !database_recreated => {
-                                trace!("Failed to configure new database: {:?}", config_error);
-                                c.close()?;
-                                trace!("Removing new database files and retrying with fallback");
-                                remove_all_database_files(db_path)?;
-                                database_recreated = true;
-                                continue;
-                            }
-                            Err(config_error) => return Err(config_error),
-                        }
-                    }
-                    reason => {
-                        trace!("Unexpected metadata query result: {:?}", reason);
-                        trace!("Disconnecting from database");
-                        c.close()?;
-                        trace!("Removing database and auxiliary files");
-                        remove_all_database_files(db_path)?;
-
-                        trace!("Initializing a new database");
-                        return initialize_db(db_path);
+                        Err(config_error) => return Err(config_error),
                     }
                 };
 
@@ -233,27 +188,6 @@ pub(super) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
             }
         }
     }
-}
-
-fn create_metadata_table(c: &mut NxDbConnection) -> anyhow::Result<()> {
-    debug!("Creating table for metadata");
-    c.transaction(|conn| {
-        conn.execute(
-            "CREATE TABLE metadata (
-                key TEXT NOT NULL PRIMARY KEY,
-                value TEXT NOT NULL
-            )",
-            [],
-        )?;
-        trace!("Recording DB_VERSION: {}", DB_VERSION);
-        conn.execute(
-            "INSERT INTO metadata (key, value) VALUES ('DB_VERSION', ?)",
-            [DB_VERSION],
-        )?;
-        Ok(())
-    })?;
-
-    Ok(())
 }
 
 fn create_all_tables(c: &mut NxDbConnection) -> anyhow::Result<()> {
@@ -533,14 +467,15 @@ mod tests {
 
         let _ = initialize_db(&db_path)?;
 
+        // Verify tables were created
         let conn = Connection::open(&db_path)?;
-        let version: String = conn.query_row(
-            "SELECT value FROM metadata WHERE key='DB_VERSION'",
+        let has_table: bool = conn.query_row(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_details'",
             [],
-            |row| row.get(0),
+            |_| Ok(true),
         )?;
 
-        assert_eq!(version, DB_VERSION);
+        assert!(has_table);
         Ok(())
     }
 
@@ -556,13 +491,13 @@ mod tests {
         let _ = initialize_db(&db_path)?;
 
         let conn = Connection::open(&db_path)?;
-        let version: String = conn.query_row(
-            "SELECT value FROM metadata WHERE key='DB_VERSION'",
+        let has_table: bool = conn.query_row(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_details'",
             [],
-            |row| row.get(0),
+            |_| Ok(true),
         )?;
 
-        assert_eq!(version, DB_VERSION);
+        assert!(has_table);
         Ok(())
     }
 }
