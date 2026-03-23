@@ -142,7 +142,7 @@ describe('remote generator', () => {
 
       const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
       expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-        'test/src/remote-entry.ts',
+        './test/src/remote-entry.ts',
       ]);
     });
 
@@ -175,7 +175,7 @@ describe('remote generator', () => {
 
       const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
       expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-        'test/src/remote-entry.js',
+        './test/src/remote-entry.js',
       ]);
     });
 

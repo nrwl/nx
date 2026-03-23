@@ -29,7 +29,7 @@ export function addTsconfigEntryPoints(
     ) {
       json.compilerOptions.paths[
         joinPathFragments(options.importPath, 'server')
-      ] = [serverFilePath];
+      ] = [`./${serverFilePath}`];
     }
 
     return json;

@@ -143,7 +143,6 @@ export function updateWorkspaceConfigDefaults(tree: Tree): void {
 export function updateRootTsConfig(tree: Tree): void {
   const tsconfig = readJson(tree, getRootTsConfigPathInTree(tree));
   tsconfig.compilerOptions.paths ??= {};
-  tsconfig.compilerOptions.baseUrl = '.';
   tsconfig.compilerOptions.rootDir = '.';
   tsconfig.exclude = Array.from(
     new Set([...(tsconfig.exclude ?? []), 'node_modules', 'tmp'])

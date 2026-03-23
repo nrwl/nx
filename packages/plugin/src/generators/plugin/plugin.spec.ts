@@ -496,7 +496,6 @@ describe('NxPlugin Plugin Generator', () => {
         .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "baseUrl": ".",
             "emitDeclarationOnly": false,
             "module": "nodenext",
             "moduleResolution": "nodenext",

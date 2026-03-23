@@ -1,6 +1,6 @@
 import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
-import { existsSync } from 'fs';
-import { dirname, join } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { dirname, join, resolve } from 'path';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
 
@@ -93,10 +93,41 @@ export function addTsConfigPath(
       );
     }
 
-    c.paths[importPath] = lookupPaths;
+    c.paths[importPath] = lookupPaths.map(ensureRelativePath);
 
     return json;
   });
+}
+
+function ensureRelativePath(p: string): string {
+  if (p.startsWith('./') || p.startsWith('../') || p.startsWith('/')) {
+    return p;
+  }
+  return `./${p}`;
+}
+
+/**
+ * When `baseUrl` is not set and `paths` are inherited via `extends`,
+ * `tsconfig-paths` resolves from the loaded file's directory instead of the
+ * file where `paths` is defined. This function walks the `extends` chain
+ * to find the tsconfig that defines `paths` and returns its directory.
+ */
+export function resolvePathsBaseUrl(tsconfigPath: string): string {
+  const absolute = resolve(tsconfigPath);
+  const dir = dirname(absolute);
+  try {
+    const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+    if (
+      raw.compilerOptions?.paths &&
+      Object.keys(raw.compilerOptions.paths).length > 0
+    ) {
+      return dir;
+    }
+    if (raw.extends) {
+      return resolvePathsBaseUrl(resolve(dir, raw.extends));
+    }
+  } catch {}
+  return dir;
 }
 
 export function readTsConfigPaths(tsConfig?: string | ts.ParsedCommandLine) {

@@ -212,10 +212,19 @@ function readTsConfigWithRemappedPaths(
     normalizedGeneratedTsConfigDir,
     normalizedTsConfig
   );
-  generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
-    normalizedTsConfig,
-    dependencies
+  const paths = computeCompilerOptionsPaths(normalizedTsConfig, dependencies);
+  // Rebase paths from workspace root to the generated tsconfig's directory
+  const relativeToWorkspace = relative(
+    normalizedGeneratedTsConfigDir,
+    resolve(workspaceRoot)
   );
+  for (const key of Object.keys(paths)) {
+    paths[key] = paths[key].map((p) => {
+      const stripped = p.startsWith('./') ? p.slice(2) : p;
+      return `./${join(relativeToWorkspace, stripped)}`;
+    });
+  }
+  generatedTsConfig.compilerOptions.paths = paths;
 
   if (process.env.NX_VERBOSE_LOGGING_PATH_MAPPINGS === 'true') {
     output.log({
@@ -459,11 +468,6 @@ export function createTmpTsConfig(
   );
   process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
 
-  if (useWorkspaceAsBaseUrl) {
-    parsedTSConfig.compilerOptions ??= {};
-    parsedTSConfig.compilerOptions.baseUrl = workspaceRoot;
-  }
-
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }
@@ -530,6 +534,15 @@ export function updatePaths(
         }
       }
     });
+
+  // Ensure all path values use ./ prefix for TS 6+ compatibility (no baseUrl)
+  for (const key of Object.keys(paths)) {
+    paths[key] = paths[key].map((p) =>
+      p.startsWith('./') || p.startsWith('../') || p.startsWith('/')
+        ? p
+        : `./${p}`
+    );
+  }
 }
 
 /**

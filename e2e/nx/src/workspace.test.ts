@@ -339,7 +339,7 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[
           `@${proj}/shared-${lib1}-data-access`
         ]
-      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./shared/${lib1}/data-access/src/index.ts`]);
 
       projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(`${lib1}-data-access`);
@@ -465,7 +465,7 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[
           `@${proj}/shared-${lib1}-data-access`
         ]
-      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./shared/${lib1}/data-access/src/index.ts`]);
 
       const projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(`${lib1}-data-access`);
@@ -591,7 +591,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
-      ).toEqual([`${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./${lib1}/data-access/src/index.ts`]);
 
       projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(lib1);
@@ -706,7 +706,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[`shared-${lib1}-data-access`]
-      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./shared/${lib1}/data-access/src/index.ts`]);
 
       const projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(`${lib1}-data-access`);

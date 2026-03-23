@@ -45,7 +45,7 @@ describe('federate-module', () => {
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
         tsconfig.compilerOptions.paths['myremote/my-federated-module']
-      ).toEqual(['apps/myremote/src/my-federated-module.ts']);
+      ).toEqual(['./apps/myremote/src/my-federated-module.ts']);
     });
   });
 
@@ -99,7 +99,7 @@ describe('federate-module', () => {
         tsconfig.compilerOptions.paths[
           `${remoteSchema.name}/my-federated-module`
         ]
-      ).toEqual(['apps/myremote/src/my-federated-module.ts']);
+      ).toEqual(['./apps/myremote/src/my-federated-module.ts']);
     });
   });
 });

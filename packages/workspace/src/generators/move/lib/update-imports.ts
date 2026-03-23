@@ -63,7 +63,7 @@ export function updateImports(
       tsConfig.compilerOptions?.paths ?? {}
     ).find((path) =>
       tsConfig.compilerOptions.paths[path].some((x) =>
-        x.startsWith(ensureTrailingSlash(sourceRoot))
+        stripDotSlash(x).startsWith(ensureTrailingSlash(sourceRoot))
       )
     );
     secondaryEntryPointImportPaths = Object.keys(
@@ -71,8 +71,8 @@ export function updateImports(
     ).filter((path) =>
       tsConfig.compilerOptions.paths[path].some(
         (x) =>
-          x.startsWith(ensureTrailingSlash(project.root)) &&
-          !x.startsWith(ensureTrailingSlash(sourceRoot))
+          stripDotSlash(x).startsWith(ensureTrailingSlash(project.root)) &&
+          !stripDotSlash(x).startsWith(ensureTrailingSlash(sourceRoot))
       )
     );
 
@@ -83,7 +83,7 @@ export function updateImports(
     ).find((path) =>
       tsConfig.compilerOptions.paths[path].some(
         (x) =>
-          x.startsWith(ensureTrailingSlash(sourceRoot)) &&
+          stripDotSlash(x).startsWith(ensureTrailingSlash(sourceRoot)) &&
           x.includes('server') &&
           path.endsWith('server')
       )
@@ -225,9 +225,14 @@ function updateTsConfigPaths(
       ].join(' ')
     );
   }
-  const updatedPath = path.map((x) =>
-    joinPathFragments(projectRoot.to, relative(projectRoot.from, x))
-  );
+  const updatedPath = path.map((x) => {
+    const hadDotSlash = x.startsWith('./');
+    const result = joinPathFragments(
+      projectRoot.to,
+      relative(projectRoot.from, stripDotSlash(x))
+    );
+    return hadDotSlash && !result.startsWith('./') ? `./${result}` : result;
+  });
 
   if (schema.updateImportPath && projectRef.to) {
     tsConfig.compilerOptions.paths[projectRef.to] = updatedPath;
@@ -241,6 +246,10 @@ function updateTsConfigPaths(
 
 function ensureTrailingSlash(path: string): string {
   return path.endsWith('/') ? path : `${path}/`;
+}
+
+function stripDotSlash(path: string): string {
+  return path.startsWith('./') ? path.slice(2) : path;
 }
 
 /**

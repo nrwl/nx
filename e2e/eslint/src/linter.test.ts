@@ -247,7 +247,7 @@ describe('Linter', () => {
          * Let's add it so that we can trigger the lint failure
          */
         tsConfig.compilerOptions.paths[`@${projScope}/${myapp2}`] = [
-          `apps/${myapp2}/src/main.ts`,
+          `./apps/${myapp2}/src/main.ts`,
         ];
 
         tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
