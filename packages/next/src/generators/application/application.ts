@@ -19,6 +19,7 @@ import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { addE2e } from './lib/add-e2e';
 import { addJest } from './lib/add-jest';
+import { addVitest } from './lib/add-vitest';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
 import { setDefaults } from './lib/set-defaults';
@@ -38,7 +39,7 @@ import {
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
-import { isNext14, isNext15, isNext16 } from '../../utils/version-utils';
+import { isNext16 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -93,6 +94,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
+
+  const vitestTask = await addVitest(host, options);
+  tasks.push(vitestTask);
 
   if (options.style === 'tailwind') {
     const tailwindTask = await setupTailwindGenerator(host, {

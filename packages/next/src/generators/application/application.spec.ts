@@ -1,11 +1,10 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-  getProjects,
-  readJson,
-  readNxJson,
-  readProjectConfiguration,
-  Tree,
-  updateJson,
+    getProjects,
+    readJson,
+    readProjectConfiguration,
+    Tree,
+    updateJson,
   writeJson,
 } from '@nx/devkit';
 
@@ -1308,6 +1307,47 @@ describe('app', () => {
         module.exports = createJestConfig(config);
         "
       `);
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should generate vitest configuration', async () => {
+      const name = 'myapp';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists(`${name}/vitest.config.mts`)).toBeTruthy();
+      expect(tree.exists(`${name}/jest.config.cts`)).toBeFalsy();
+      expect(tree.exists(`${name}/jest.config.ts`)).toBeFalsy();
+    });
+
+    it('should generate spec file', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists(`${name}/specs/${name}.spec.tsx`)).toBeTruthy();
+    });
+
+    it('should add testing-library dependencies', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(
+        readJson(tree, 'package.json').devDependencies[
+          '@testing-library/react'
+        ]
+      ).toBeDefined();
     });
   });
 });
