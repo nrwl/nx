@@ -826,6 +826,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'reference/nx-cloud/launch-templates',
           },
           {
+            label: 'Launch template examples',
+            link: 'reference/nx-cloud/launch-template-examples',
+          },
+          {
             label: 'Reduce waste in CI',
             link: 'concepts/ci-concepts/reduce-waste',
           },
