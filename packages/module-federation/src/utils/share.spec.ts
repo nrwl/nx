@@ -1,13 +1,25 @@
-import * as fs from 'fs';
+jest.mock('./typescript', () => jest.requireActual('./typescript'));
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn((...args: any[]) =>
+    (jest.requireActual('fs') as any).existsSync(...args)
+  ),
+  readdirSync: jest.fn((...args: any[]) =>
+    (jest.requireActual('fs') as any).readdirSync(...args)
+  ),
+  lstatSync: jest.fn((...args: any[]) =>
+    (jest.requireActual('fs') as any).lstatSync(...args)
+  ),
+}));
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  readJsonFile: jest.fn(),
+}));
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const fs = require('fs');
 import * as tsUtils from './typescript';
-
-jest.mock('nx/src/devkit-exports', () => {
-  return {
-    ...jest.requireActual('nx/src/devkit-exports'),
-    readJsonFile: jest.fn(),
-  };
-});
-import * as nxFileutils from 'nx/src/devkit-exports';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const nxFileutils = require('@nx/devkit');
 import {
   getNpmPackageSharedConfig,
   sharePackages,
@@ -20,9 +32,9 @@ describe('MF Share Utils', () => {
   describe('ShareWorkspaceLibraries', () => {
     it('should error when the tsconfig file does not exist', () => {
       // ARRANGE
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation((p: string) => p?.endsWith('.node'));
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) =>
+        p?.endsWith('.node')
+      );
 
       // ACT
       try {
@@ -39,7 +51,7 @@ describe('MF Share Utils', () => {
 
     it('should create an object with correct setup', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
       });
@@ -64,7 +76,7 @@ describe('MF Share Utils', () => {
 
     it('should order nested projects first', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
         '@myorg/shared/components': ['/libs/shared/components/src/index.ts'],
@@ -88,7 +100,7 @@ describe('MF Share Utils', () => {
 
     it('should handle path mappings with wildcards correctly in non-buildable libraries', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => true);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
         '@myorg/shared/*': ['/libs/shared/src/lib/*'],
@@ -114,7 +126,7 @@ describe('MF Share Utils', () => {
 
     it('should create an object with empty setup when tsconfig does not contain the shared lib', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({});
 
       // ACT
@@ -137,9 +149,9 @@ describe('MF Share Utils', () => {
   describe('SharePackages', () => {
     it('should throw when it cannot find root package.json', () => {
       // ARRANGE
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation((p: string) => p.endsWith('.node'));
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) =>
+        p.endsWith('.node')
+      );
 
       // ACT
       try {
@@ -154,8 +166,8 @@ describe('MF Share Utils', () => {
 
     it('should correctly map the shared packages to objects', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => ({
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation((file) => ({
         name: file.replace(/\\/g, '/').replace(/^.*node_modules[/]/, ''),
         dependencies: {
           '@angular/core': '~13.2.0',
@@ -163,7 +175,7 @@ describe('MF Share Utils', () => {
           rxjs: '~7.4.0',
         },
       }));
-      jest.spyOn(fs, 'readdirSync').mockReturnValue([]);
+      (fs.readdirSync as jest.Mock).mockReturnValue([]);
 
       // ACT
       const packages = sharePackages([
@@ -437,8 +449,8 @@ describe('MF Share Utils', () => {
 
     it('should not collect a folder with a package.json when cannot be required', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation((file) => {
         // the "schematics" folder is not an entry point
         if (file.endsWith('@angular/core/schematics/package.json')) {
           return {};
@@ -452,9 +464,8 @@ describe('MF Share Utils', () => {
           dependencies: { '@angular/core': '~13.2.0' },
         };
       });
-      jest
-        .spyOn(fs, 'readdirSync')
-        .mockImplementation((directoryPath: string) => {
+      (fs.readdirSync as jest.Mock).mockImplementation(
+        (directoryPath: string) => {
           const packages = {
             '@angular/core': ['testing', 'schematics'],
           };
@@ -465,10 +476,11 @@ describe('MF Share Utils', () => {
             }
           }
           return [];
-        });
-      jest
-        .spyOn(fs, 'lstatSync')
-        .mockReturnValue({ isDirectory: () => true } as any);
+        }
+      );
+      (fs.lstatSync as jest.Mock).mockReturnValue({
+        isDirectory: () => true,
+      } as any);
 
       // ACT
       const packages = sharePackages(['@angular/core']);
@@ -520,12 +532,10 @@ describe('MF Share Utils', () => {
 
     it('should collect secondary entry points from exports and fall back to lookinp up for package.json', () => {
       // ARRANGE
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation(
-          (path: string) => !path.endsWith('/secondary/package.json')
-        );
-      jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => {
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (path: string) => !path.endsWith('/secondary/package.json')
+      );
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation((file) => {
         if (file.endsWith('pkg1/package.json')) {
           return {
             name: 'pkg1',
@@ -547,9 +557,8 @@ describe('MF Share Utils', () => {
           dependencies: { pkg1: '1.0.0', '@angular/core': '~13.2.0' },
         };
       });
-      jest
-        .spyOn(fs, 'readdirSync')
-        .mockImplementation((directoryPath: string) => {
+      (fs.readdirSync as jest.Mock).mockImplementation(
+        (directoryPath: string) => {
           const packages = {
             pkg1: ['secondary'],
             '@angular/core': ['testing'],
@@ -561,10 +570,11 @@ describe('MF Share Utils', () => {
             }
           }
           return [];
-        });
-      jest
-        .spyOn(fs, 'lstatSync')
-        .mockReturnValue({ isDirectory: () => true } as any);
+        }
+      );
+      (fs.lstatSync as jest.Mock).mockReturnValue({
+        isDirectory: () => true,
+      } as any);
 
       // ACT
       const packages = sharePackages(['pkg1', '@angular/core']);
@@ -626,13 +636,11 @@ describe('MF Share Utils', () => {
 
     it('should not throw when the main entry point package.json cannot be required', () => {
       // ARRANGE
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation(
-          (file: string) =>
-            !file.endsWith('non-existent-top-level-package/package.json')
-        );
-      jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => {
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (file: string) =>
+          !file.endsWith('non-existent-top-level-package/package.json')
+      );
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation((file) => {
         return {
           name: file
             .replace(/\\/g, '/')
@@ -651,10 +659,9 @@ describe('MF Share Utils', () => {
 
   it('should using shared library version from root package.json if available', () => {
     // ARRANGE
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest
-      .spyOn(nxFileutils, 'readJsonFile')
-      .mockImplementation((file: string) => {
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+      (file: string) => {
         if (file.endsWith('package.json')) {
           return {
             dependencies: {
@@ -662,7 +669,8 @@ describe('MF Share Utils', () => {
             },
           };
         }
-      });
+      }
+    );
 
     jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -687,10 +695,9 @@ describe('MF Share Utils', () => {
 
   it('should use shared library version from library package.json if project package.json does not have it', () => {
     // ARRANGE
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest
-      .spyOn(nxFileutils, 'readJsonFile')
-      .mockImplementation((file: string) => {
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+      (file: string) => {
         if (file.endsWith('libs/shared/package.json')) {
           return {
             version: '1.0.0',
@@ -698,7 +705,8 @@ describe('MF Share Utils', () => {
         } else {
           return {};
         }
-      });
+      }
+    );
 
     jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -724,10 +732,9 @@ describe('MF Share Utils', () => {
   describe('Workspace Protocol Version Normalization', () => {
     it('should normalize workspace:* version to actual version from library package.json', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest
-        .spyOn(nxFileutils, 'readJsonFile')
-        .mockImplementation((file: string) => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+        (file: string) => {
           if (file.endsWith('libs/shared/package.json')) {
             return {
               version: '2.0.0',
@@ -739,7 +746,8 @@ describe('MF Share Utils', () => {
               '@myorg/shared': 'workspace:*',
             },
           };
-        });
+        }
+      );
 
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -763,10 +771,9 @@ describe('MF Share Utils', () => {
 
     it('should normalize workspace:^ version to actual version from library package.json', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest
-        .spyOn(nxFileutils, 'readJsonFile')
-        .mockImplementation((file: string) => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+        (file: string) => {
           if (file.endsWith('libs/shared/package.json')) {
             return {
               version: '3.0.0',
@@ -778,7 +785,8 @@ describe('MF Share Utils', () => {
               '@myorg/shared': 'workspace:^',
             },
           };
-        });
+        }
+      );
 
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -802,10 +810,9 @@ describe('MF Share Utils', () => {
 
     it('should normalize file: protocol version to actual version from library package.json', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest
-        .spyOn(nxFileutils, 'readJsonFile')
-        .mockImplementation((file: string) => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+        (file: string) => {
           if (file.endsWith('libs/shared/package.json')) {
             return {
               version: '4.0.0',
@@ -817,7 +824,8 @@ describe('MF Share Utils', () => {
               '@myorg/shared': 'file:../libs/shared',
             },
           };
-        });
+        }
+      );
 
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -841,10 +849,9 @@ describe('MF Share Utils', () => {
 
     it('should normalize bare * version to actual version from library package.json', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest
-        .spyOn(nxFileutils, 'readJsonFile')
-        .mockImplementation((file: string) => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+        (file: string) => {
           if (file.endsWith('libs/shared/package.json')) {
             return {
               version: '5.0.0',
@@ -856,7 +863,8 @@ describe('MF Share Utils', () => {
               '@myorg/shared': '*',
             },
           };
-        });
+        }
+      );
 
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -880,23 +888,23 @@ describe('MF Share Utils', () => {
 
     it('should set requiredVersion to false when workspace protocol version cannot be resolved', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => {
+      (fs.existsSync as jest.Mock).mockImplementation((file: string) => {
         // Library package.json does not exist
         if (file.endsWith('libs/shared/package.json')) {
           return false;
         }
         return true;
       });
-      jest
-        .spyOn(nxFileutils, 'readJsonFile')
-        .mockImplementation((file: string) => {
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+        (file: string) => {
           // Project package.json with workspace:* version
           return {
             dependencies: {
               '@myorg/shared': 'workspace:*',
             },
           };
-        });
+        }
+      );
 
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -919,10 +927,9 @@ describe('MF Share Utils', () => {
 
     it('should set requiredVersion to false when library package.json has no version field', () => {
       // ARRANGE
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest
-        .spyOn(nxFileutils, 'readJsonFile')
-        .mockImplementation((file: string) => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as jest.Mock).mockImplementation(
+        (file: string) => {
           if (file.endsWith('libs/shared/package.json')) {
             // Library package.json exists but has no version
             return {
@@ -935,7 +942,8 @@ describe('MF Share Utils', () => {
               '@myorg/shared': 'workspace:*',
             },
           };
-        });
+        }
+      );
 
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -1024,7 +1032,7 @@ describe('MF Share Utils', () => {
 });
 
 function createMockedFSForNestedEntryPoints() {
-  jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => {
+  (fs.existsSync as jest.Mock).mockImplementation((file: string) => {
     if (file.endsWith('http/package.json')) {
       return false;
     } else {
@@ -1032,7 +1040,7 @@ function createMockedFSForNestedEntryPoints() {
     }
   });
 
-  jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => ({
+  (nxFileutils.readJsonFile as jest.Mock).mockImplementation((file) => ({
     name: file
       .replace(/\\/g, '/')
       .replace(/^.*node_modules[/]/, '')
@@ -1044,7 +1052,7 @@ function createMockedFSForNestedEntryPoints() {
     },
   }));
 
-  jest.spyOn(fs, 'readdirSync').mockImplementation((directoryPath: string) => {
+  (fs.readdirSync as jest.Mock).mockImplementation((directoryPath: string) => {
     const PACKAGE_SETUP = {
       '@angular/core': [],
       '@angular/common': ['http'],
@@ -1060,7 +1068,7 @@ function createMockedFSForNestedEntryPoints() {
     return [];
   });
 
-  jest
-    .spyOn(fs, 'lstatSync')
-    .mockReturnValue({ isDirectory: () => true } as any);
+  (fs.lstatSync as jest.Mock).mockReturnValue({
+    isDirectory: () => true,
+  } as any);
 }

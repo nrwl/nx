@@ -19,7 +19,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import * as autoprefixer from 'autoprefixer';
+import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';

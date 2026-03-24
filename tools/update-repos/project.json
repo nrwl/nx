@@ -39,9 +39,21 @@
         "command": "node dist/update-repos/src/update-repo.js nx-console"
       }
     },
-    "update-all-repos": {
+    "update-repos": {
       "executor": "nx:run-commands",
       "dependsOn": ["update-ocean-repo", "update-nx-console-repo"],
+      "options": {
+        "command": "echo '🎉 Ocean and NxConsole repositories updated successfully!'"
+      }
+    },
+    "update-all-repos": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "update-nx-repo",
+        "update-ocean-repo",
+        "update-nx-examples-repo",
+        "update-nx-console-repo"
+      ],
       "options": {
         "command": "echo '🎉 All repositories updated successfully!'"
       }

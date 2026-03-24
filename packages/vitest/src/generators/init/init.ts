@@ -71,14 +71,7 @@ export function updateNxJsonSettings(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
-}
-
-export async function initGeneratorInternal(
-  tree: Tree,
-  schema: InitGeneratorSchema
-) {
+export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

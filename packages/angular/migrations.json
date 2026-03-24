@@ -2400,7 +2400,7 @@
         }
       }
     },
-    "22.6.0": {
+    "22.6.0-module-federation": {
       "version": "22.6.0-beta.10",
       "x-prompt": "Bump @module-federation packages to v2.x to resolve koa CVE-2026-27959 (via dts-plugin)",
       "packages": {

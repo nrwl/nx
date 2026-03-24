@@ -89,12 +89,21 @@ export class TasksSchedule {
     };
   }
 
-  public nextTask() {
-    if (this.scheduledTasks.length > 0) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
-    } else {
+  public nextTask(filter?: (task: Task) => boolean) {
+    if (this.scheduledTasks.length === 0) {
       return null;
     }
+    if (!filter) {
+      return this.taskGraph.tasks[this.scheduledTasks.shift()];
+    }
+    const idx = this.scheduledTasks.findIndex((id) =>
+      filter(this.taskGraph.tasks[id])
+    );
+    if (idx === -1) {
+      return null;
+    }
+    const [taskId] = this.scheduledTasks.splice(idx, 1);
+    return this.taskGraph.tasks[taskId];
   }
 
   public nextBatch(): Batch {

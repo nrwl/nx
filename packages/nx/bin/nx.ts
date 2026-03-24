@@ -2,6 +2,7 @@
 
 // TODO: Remove this workaround once picocolors handles FORCE_COLOR=0 correctly
 // See: https://github.com/alexeyraspopov/picocolors/issues/100
+
 if (process.env.FORCE_COLOR === '0') {
   process.env.NO_COLOR = '1';
   delete process.env.FORCE_COLOR;
@@ -21,9 +22,10 @@ import {
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
-import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
-import { join } from 'path';
+import { createRequire } from 'module';
+import { extname, join } from 'path';
+import { existsSync } from 'fs';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
@@ -32,6 +34,9 @@ import { removeDbConnections } from '../src/utils/db-connection';
 import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
 import { flushAnalytics, startAnalytics } from '../src/analytics';
 import '../src/utils/perf-logging';
+
+const isTsExt = extname(__filename).endsWith('.ts');
+const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
   if (
@@ -67,10 +72,6 @@ async function main() {
     process.env.NX_DAEMON = 'false';
     require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else {
-    if (!daemonClient.enabled() && workspace !== null) {
-      setupWorkspaceContext(workspace.dir);
-    }
-
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
     if (!(Symbol as any).observable)
@@ -84,7 +85,8 @@ async function main() {
       localNx = null;
     }
 
-    const isLocalInstall = localNx === resolveNx(null);
+    const isLocalInstall =
+      localNx === resolveNx(null) || localNx === __filename;
     const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
       localNx,
       workspace,
@@ -105,17 +107,23 @@ async function main() {
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
+      if (!daemonClient.enabled() && workspace !== null) {
+        setupWorkspaceContext(workspace.dir);
+      }
       await initAnalytics();
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
     } else if (isLocalInstall) {
+      if (!daemonClient.enabled() && workspace !== null) {
+        setupWorkspaceContext(workspace.dir);
+      }
       await initAnalytics();
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
-      // Don't start analytics or connect to the DB here — the local Nx
-      // will handle it when it runs its own bin/nx.ts
+      // Don't start analytics, connect to the DB, or set up the workspace
+      // context here — the local Nx will handle it when it runs its own bin/nx.ts
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
@@ -168,7 +176,7 @@ function determineNxVersions(
     : null;
   const GLOBAL_NX_VERSION: string | null = isLocalInstall
     ? null
-    : require('../package.json').version;
+    : require(pathToPkgJson).version;
 
   globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
   return { LOCAL_NX_VERSION, GLOBAL_NX_VERSION };
@@ -176,19 +184,23 @@ function determineNxVersions(
 
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   // root relative to location of the nx bin
-  const globalsRoot = join(__dirname, '../../../');
+  const globalsRoot = join(__dirname, '../../../../');
+  const root = workspace ? workspace.dir : globalsRoot;
 
+  // Use createRequire to resolve from outside the nx package,
+  // avoiding self-referencing caused by the exports field
   // prefer Nx installed in .nx/installation
   try {
-    return require.resolve('nx/bin/nx.js', {
-      paths: [getNxInstallationPath(workspace ? workspace.dir : globalsRoot)],
-    });
+    const installPath = getNxInstallationPath(root);
+    if (existsSync(installPath)) {
+      const installRequire = createRequire(join(installPath, 'package.json'));
+      return installRequire.resolve('nx/bin/nx.js');
+    }
   } catch {}
 
   // check for root install
-  return require.resolve('nx/bin/nx.js', {
-    paths: [workspace ? workspace.dir : globalsRoot],
-  });
+  const rootRequire = createRequire(join(root, 'package.json'));
+  return rootRequire.resolve('nx/bin/nx.js');
 }
 
 function isNxCloudCommand(command: string): boolean {
@@ -287,12 +299,20 @@ function checkOutdatedGlobalInstallation(
 
 function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
   try {
-    const { packageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(workspace.dir)
-    );
-    return packageJson.version;
+    const searchPaths = getNxRequirePaths(workspace.dir);
+    for (const searchPath of searchPaths) {
+      if (!existsSync(searchPath)) {
+        continue;
+      }
+
+      try {
+        const externalRequire = createRequire(join(searchPath, 'package.json'));
+        const pkgJsonPath = externalRequire.resolve('nx/package.json');
+        return require(pkgJsonPath).version;
+      } catch {}
+    }
   } catch {}
+  return null;
 }
 
 function _getLatestVersionOfNx(): string {

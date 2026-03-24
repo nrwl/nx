@@ -139,6 +139,7 @@
   let lastSearchQuery = '';
   let currentSearchInput = null;
   let inputHandler = null;
+  let resultClickHandler = null;
 
   function sendSearchEvent(eventType, data) {
     pushGtmEvent(eventType, data);
@@ -150,8 +151,8 @@
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       lastSearchQuery = query;
-      sendSearchEvent('search_query', {
-        query: query,
+      sendSearchEvent('search', {
+        search_term: query,
       });
     }, SEARCH_DEBOUNCE_MS);
   }
@@ -175,12 +176,30 @@
           searchInput.addEventListener('input', inputHandler);
           currentSearchInput = searchInput;
         }
+
+        // Track search result clicks via event delegation
+        if (!resultClickHandler) {
+          resultClickHandler = (e) => {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+            const query = currentSearchInput
+              ? currentSearchInput.value.trim()
+              : '';
+            pushGtmEvent('select_content', {
+              content_type: 'search_result',
+              item_id: link.getAttribute('href'),
+              search_term: query,
+            });
+          };
+          searchDialog.addEventListener('click', resultClickHandler);
+        }
       }
       // If dialog is not found but we have handler, etc. then it must be closed and we should clean up
       else if (currentSearchInput && inputHandler) {
         currentSearchInput.removeEventListener('input', inputHandler);
         currentSearchInput = null;
         inputHandler = null;
+        resultClickHandler = null;
       }
     });
 
