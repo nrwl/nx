@@ -237,7 +237,8 @@ impl NxCache {
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
         self.db.lock().unwrap().execute(
-            "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
+            "INSERT INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)
+             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
             params![hash, code, size],
         )?;
         if self.max_cache_size != 0 {
