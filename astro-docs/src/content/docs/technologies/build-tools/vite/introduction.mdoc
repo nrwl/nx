@@ -21,9 +21,9 @@ You can use Vite with Nx without the plugin and still get [task caching](/docs/f
 
 The `@nx/vite` plugin supports the following package versions.
 
-| Package | Supported Versions             |
-| ------- | ------------------------------ |
-| `vite`  | ^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0 |
+| Package | Supported Versions                         |
+| ------- | ------------------------------------------ |
+| `vite`  | ^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0 \|\| ^8.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -105,7 +105,7 @@ The `@nx/vite` plugin infers tasks by reading Vite config files. Any of the foll
 Build targets are only created when the project is buildable. A project is treated as buildable when any of the following are true:
 
 - `build.lib` is set in `vite.config.*`
-- `build.rollupOptions.input` is set
+- `build.rollupOptions.input` or `build.rolldownOptions.input` is set (Vite 8 uses `rolldownOptions`)
 - `builder.buildApp` is set
 - an `index.html` file exists at the project root
 

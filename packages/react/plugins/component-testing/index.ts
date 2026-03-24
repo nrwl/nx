@@ -88,10 +88,11 @@ export function nxComponentTestingPreset(
         viteConfig: async () => {
           const viteConfigPath = findViteConfig(normalizedProjectRootPath);
 
+          // TODO(jack): Remove this cast when @nx/react switches to
+          // moduleResolution: "nodenext". Vite 8 ships ESM-only type
+          // declarations (.d.mts) not resolvable under moduleResolution: "node".
           const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
-            await (Function('return import("vite")')() as Promise<
-              typeof import('vite')
-            >);
+            await (Function('return import("vite")')() as Promise<any>);
 
           const resolved = await loadConfigFromFile(
             {

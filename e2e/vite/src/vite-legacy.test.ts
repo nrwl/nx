@@ -142,7 +142,7 @@ export default defineConfig({
   environments: {
     ssr: {
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: '${myApp}/src/main.server.tsx'
         }
       }
@@ -345,15 +345,25 @@ export default App;
     it('should build app from libs source', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
       expect(results).toContain('Successfully ran target build for project');
-      // this should be more modules than build from dist
-      expect(results).toContain('38 modules transformed');
-    });
+      // Get the last "N modules transformed" (the app build, not lib builds)
+      const sourceMatches = results.match(/(\d+) modules transformed/g);
+      expect(sourceMatches.length).toBeGreaterThan(0);
+      const sourceModuleCount = parseInt(
+        sourceMatches[sourceMatches.length - 1].match(/(\d+)/)[1]
+      );
 
-    it('should build app from libs dist', () => {
-      const results = runCLI(`build ${app} --buildLibsFromSource=false`);
-      expect(results).toContain('Successfully ran target build for project');
-      // this should be less modules than building from source
-      expect(results).toContain('36 modules transformed');
+      const distResults = runCLI(`build ${app} --buildLibsFromSource=false`);
+      expect(distResults).toContain(
+        'Successfully ran target build for project'
+      );
+      const distMatches = distResults.match(/(\d+) modules transformed/g);
+      expect(distMatches.length).toBeGreaterThan(0);
+      const distModuleCount = parseInt(
+        distMatches[distMatches.length - 1].match(/(\d+)/)[1]
+      );
+
+      // building from source should transform more modules than from dist
+      expect(sourceModuleCount).toBeGreaterThan(distModuleCount);
     });
 
     it('should build app from libs without package.json in lib', () => {
