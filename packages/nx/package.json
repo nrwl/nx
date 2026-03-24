@@ -187,6 +187,8 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
+    "./schemas/*.json": "./schemas/*.json",
+    "./src/**/*.json": "./dist/src/**/*.json",
     "./bin/nx": {
       "@nx/nx-source": "./bin/nx.ts",
       "types": "./bin/nx.d.ts",
