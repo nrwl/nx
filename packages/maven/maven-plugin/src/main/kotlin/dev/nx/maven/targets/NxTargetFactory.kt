@@ -268,8 +268,19 @@ class NxTargetFactory(
     val goalsForPhase = phaseGoals[phase]
     val hasGoals = goalsForPhase?.isNotEmpty() == true
 
+    // If maven.install.skip=true, make install phase a cacheable noop
+    // The target still acts as a sync point in the task graph but avoids
+    // spinning up the batch runner for a goal that would just skip anyway
+    val isSkippedInstall = phase == "install" &&
+      project.properties.getProperty("maven.install.skip")?.toBoolean() == true
+
     // Create target for all phases - either with goals or as noop
-    val target = createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
+    val target = if (isSkippedInstall) {
+      log.info("Creating noop install target for ${project.artifactId} (maven.install.skip=true)")
+      createNoopPhaseTarget(phase)
+    } else {
+      createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
+    }
 
 
     target.dependsOn = target.dependsOn ?: JsonArray()
@@ -315,14 +326,21 @@ class NxTargetFactory(
     val hasGoals = goalsForPhase?.isNotEmpty() == true
     val ciPhaseName = "${applyPrefix(phase)}-ci"
 
+    // If maven.install.skip=true, make install CI phase a cacheable noop
+    val isSkippedInstall = phase == "install" &&
+      project.properties.getProperty("maven.install.skip")?.toBoolean() == true
+
     // Test and later phases get a CI counterpart - but only if they have goals
-    if (!shouldCreateCiPhase(hasGoals, phase)) {
+    if (!isSkippedInstall && !shouldCreateCiPhase(hasGoals, phase)) {
       log.info("Skipping noop CI phase target '$ciPhaseName' (no goals)")
       return
     }
 
     // Create CI targets for phases with goals, or noop for test/structural phases
-    val ciTarget = if (hasGoals && phase != "test") {
+    val ciTarget = if (isSkippedInstall) {
+      log.info("Creating noop install CI target for ${project.artifactId} (maven.install.skip=true)")
+      createNoopPhaseTarget(phase)
+    } else if (hasGoals && phase != "test") {
       createPhaseBatchTarget(project, phase, goalsForPhase!!, externalDependencies)
     } else {
       // Noop for test phase (will be orchestrated by atomized tests) or structural phases
