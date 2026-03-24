@@ -439,6 +439,8 @@ class RunningNodeProcess implements RunningTask {
     commandConfig: RunCommandsCommandOptions,
     streamOutput: boolean
   ) {
+    this.childProcess.stdout.setEncoding('utf8');
+    this.childProcess.stderr.setEncoding('utf8');
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
@@ -448,10 +450,7 @@ class RunningNodeProcess implements RunningTask {
       if (streamOutput) {
         process.stdout.write(output);
       }
-      if (
-        this.readyWhenStatus.length &&
-        isReady(this.readyWhenStatus, data.toString())
-      ) {
+      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, data)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
         }
@@ -466,10 +465,7 @@ class RunningNodeProcess implements RunningTask {
       if (streamOutput) {
         process.stderr.write(output);
       }
-      if (
-        this.readyWhenStatus.length &&
-        isReady(this.readyWhenStatus, err.toString())
-      ) {
+      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
         for (const cb of this.exitCallbacks) {
           cb(1, this.terminalOutputChunks.join(''));
         }
