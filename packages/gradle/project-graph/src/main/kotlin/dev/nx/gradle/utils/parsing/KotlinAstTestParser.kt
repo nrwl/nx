@@ -13,6 +13,22 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
+/**
+ * Single entry point for reflective invocation from a classloader that has
+ * kotlin-compiler-embeddable available. Combines environment creation, parsing, and cleanup.
+ * Only accepts/returns JDK and Gradle API types so no compiler types cross the classloader
+ * boundary.
+ */
+fun parseKotlinFileViaAst(file: File, logger: org.gradle.api.logging.Logger?): Map<String, String>? {
+  if (!isKotlinCompilerAvailable(logger)) return null
+  val (disposable, psiManager) = createKotlinEnvironment() ?: return null
+  return try {
+    parseKotlinFileWithAst(file, psiManager, logger)
+  } finally {
+    disposable.dispose()
+  }
+}
+
 /** Check if Kotlin compiler classes are available using reflection */
 fun isKotlinCompilerAvailable(logger: org.gradle.api.logging.Logger? = null): Boolean {
   return try {
