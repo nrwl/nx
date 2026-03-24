@@ -426,6 +426,11 @@ async function updateRepository(repoName: string): Promise<void> {
         repoDir,
         'Trusting mise configuration'
       );
+      await execWithOutput(
+        'mise install',
+        repoDir,
+        'Installing mise-managed tools'
+      );
     }
 
     // Detect package manager
