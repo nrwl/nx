@@ -1320,6 +1320,15 @@ export class TaskOrchestrator {
         ownsRunningTasksService,
         reason
       );
+    } else if (!this.isContinuousTaskNeeded(task.id)) {
+      // No remaining tasks depend on this — the task was about to be
+      // killed by cleanUpUnneededContinuousTasks anyway.
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        'fulfilled'
+      );
     } else {
       console.error(
         `Task "${task.id}" is continuous but exited with code ${code}`
@@ -1331,6 +1340,14 @@ export class TaskOrchestrator {
         'crashed'
       );
     }
+  }
+
+  private isContinuousTaskNeeded(taskId: string): boolean {
+    return this.tasksSchedule
+      .getIncompleteTasks()
+      .some((t) =>
+        this.taskGraph.continuousDependencies[t.id]?.includes(taskId)
+      );
   }
 
   private async completeContinuousTask(
