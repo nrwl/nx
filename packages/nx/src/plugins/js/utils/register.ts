@@ -476,6 +476,11 @@ function warnNoTsconfigPaths() {
 }
 
 function warnNoTranspiler() {
+  // Node.js 22.6+ can handle TypeScript natively via type stripping,
+  // so the warning about missing transpilers is misleading in that case.
+  if ((process as any).features?.typescript) {
+    return;
+  }
   logger.warn(
     stripIndent(`${NX_PREFIX} Unable to locate swc-node or ts-node. Nx will be unable to run local ts files without transpiling.
   - To fix this, ensure @swc-node/register and @swc/core have been installed`)
