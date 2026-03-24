@@ -1,0 +1,222 @@
+---
+title: Caching Tasks
+description: Learn how Nx caching works, including computation hashing, inputs, outputs, and remote caching, to eliminate redundant task execution and speed up your workflow.
+sidebar:
+  order: 5
+---
+
+{% llm_copy_prompt title="Tutorial 5/8: Enable and configure caching" %}
+Help me set up caching in my Nx workspace.
+Use my existing workspace and projects for hands-on examples.
+
+Run a cacheable task twice to demonstrate cache hits. Then help me configure `cache: true`, `inputs`, and `outputs` for my tasks. Show me how to inspect what's cached with `nx show project <project-name>`.
+
+If I'm hitting unexpected cache misses, help me debug by inspecting inputs and outputs with `nx show project`.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+Why rebuild something that hasn't changed? Nx caching replays previous results instantly, saving minutes or hours of redundant work, both locally and in CI.
+
+The examples below use Vite and Vitest, but the concepts apply to any tool. Substitute your own build and test commands as needed.
+
+If you haven't already, set up your workspace ([Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace)) and try [running some tasks](/docs/getting-started/tutorials/running-tasks) first.
+
+## Enabling caching
+
+Caching is opt-in per task. The recommended approach is to set `cache: true` in `targetDefaults` in `nx.json` for common cacheable tasks:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": { "cache": true },
+    "test": { "cache": true },
+    "lint": { "cache": true },
+  },
+}
+```
+
+You can also enable caching per-project in `package.json` or `project.json`:
+
+{% tabs %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "nx": {
+    "targets": {
+      "build": {
+        "cache": true,
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "cache": true,
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+{% aside type="caution" title="Only cache deterministic tasks" %}
+A task is safe to cache when the same inputs always produce the same outputs. Tasks that depend on network state, timestamps, or random values should not be cached.
+{% /aside %}
+
+## See it in action
+
+With caching enabled, run a build twice:
+
+```shell
+nx build my-app
+```
+
+The first run executes normally. Now run it again without changing anything:
+
+```shell
+nx build my-app
+```
+
+```text
+>  NX   Successfully ran target build for project my-app (40ms)
+
+   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+```
+
+The second run completes in milliseconds. Nx detected that nothing changed, so it replayed the cached terminal output and restored the build artifacts. From your perspective, the command ran the same, just faster.
+
+## How caching works
+
+Before running any cacheable task, Nx computes a **unique hash** from the task's **inputs**:
+
+- Source files of the project and its dependencies
+- Relevant configuration files
+- Versions of external dependencies
+- CLI flags and arguments
+
+If the hash matches a previous run, Nx skips execution and replays the cached result. If not, Nx runs the task and stores the result for next time.
+
+![Diagram showing inputs flowing into a unique hash, which triggers a cache lookup resulting in either a hit (replay stored output) or miss (run task, store result)](../../../../assets/tutorials/cache-hash-flow.svg)
+
+## What gets cached
+
+Nx stores two things for each cached task:
+
+1. **Terminal output**: everything the task printed to stdout/stderr, replayed exactly
+2. **File artifacts**: output files restored to the correct location (e.g., `dist/`, `coverage/`, `test-results/`, `build/` for Gradle, `bin/` for .NET)
+
+Both are restored transparently. Other tools and scripts see the same files and output as if the task had actually run.
+
+{% aside type="note" title="Where is the cache stored?" %}
+Local cache is stored in `.nx/cache` by default. Run `nx reset` to clear all local cached results. If you've connected to Nx Cloud, remote cache entries are managed separately.
+{% /aside %}
+
+## Inputs and outputs
+
+**Inputs** are everything that could affect a task's result. **Outputs** are the files the task produces. Use [`{projectRoot}`](/docs/reference/inputs#source-files) to reference paths relative to the project directory and [`{workspaceRoot}`](/docs/reference/inputs#source-files) for workspace-level files.
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/tsconfig.json"],
+      "outputs": ["{projectRoot}/dist"],
+    },
+  },
+}
+```
+
+### Smart defaults
+
+Nx provides sensible defaults out of the box. For example, test specification files (like `*.spec.ts`) are typically excluded from build inputs because changing a test shouldn't invalidate the build cache. This is configured through [named inputs](/docs/reference/inputs):
+
+```jsonc
+// nx.json
+{
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+    ],
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["production", "^production"],
+      "cache": true,
+    },
+  },
+}
+```
+
+The `^` prefix in inputs (like `"^production"`) means "include the production files of dependency projects as inputs." This is different from `^` in `dependsOn` (like `"^build"`), which means "run this task on dependencies first." The `^` in inputs affects the cache hash directly, while `^` in `dependsOn` affects task ordering.
+
+With this configuration, modifying a spec file won't bust the build cache, because specs aren't production inputs. But `test` tasks still use the `default` input set, which includes spec files.
+
+Inputs aren't limited to files. You can also include environment variables and runtime values in the hash:
+
+```jsonc
+// nx.json
+{
+  "namedInputs": {
+    "production": [
+      "default",
+      { "env": "NODE_ENV" },
+      { "runtime": "node --version" },
+    ],
+  },
+}
+```
+
+For more details, see [configure inputs](/docs/guides/tasks--caching/configure-inputs).
+
+{% aside type="tip" title="Enforce correct inputs and outputs" %}
+Not sure if your `inputs` and `outputs` are configured correctly? Use [sandboxing](/docs/features/ci-features/sandboxing) to detect tasks that read or write files outside their declared configuration.
+{% /aside %}
+
+Now that caching, inputs, and outputs are configured, try it out: change a source file and run `nx build my-app`. Nx detects the change, computes a new hash, and runs the build. Revert the change and run again to see the cached result restored, including the `dist/` output files.
+
+## Remote caching
+
+By default, Nx caches results on your local machine. **Remote caching** shares the cache across your entire team and CI pipeline, so a build that ran in CI doesn't need to run again on your machine.
+
+```shell
+# Connect your workspace to Nx Cloud for remote caching
+nx connect
+```
+
+This command guides you through creating a free Nx Cloud account and stores an access token in your workspace. Once connected, cached results are shared automatically.
+
+When a teammate or CI pipeline has already run a task with the same inputs, you get the cached result instantly, even on a fresh checkout.
+
+For more on how remote caching works, see [remote cache (Nx Replay)](/docs/features/ci-features/remote-cache). To set up CI with Nx Cloud, see [Setting up CI](/docs/getting-started/tutorials/self-healing-ci-tutorial).
+
+## Learn more
+
+- [How caching works](/docs/concepts/how-caching-works): deep dive on computation hashing
+- [Cache task results](/docs/features/cache-task-results): full feature documentation
+- [Configure inputs](/docs/guides/tasks--caching/configure-inputs): fine-tune what affects the hash
+- [Configure outputs](/docs/guides/tasks--caching/configure-outputs): control what files get cached
+
+{% cards cols=2 %}
+{% card title="Previous: Running Tasks" description="Run tasks for one or many projects" url="/docs/getting-started/tutorials/running-tasks" /%}
+{% card title="Next: Understanding Your Workspace" description="Explore projects, graphs, and debug issues" url="/docs/getting-started/tutorials/understanding-your-workspace" /%}
+{% /cards %}
