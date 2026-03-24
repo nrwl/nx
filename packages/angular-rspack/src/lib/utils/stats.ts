@@ -101,6 +101,7 @@ function generateBundleStats(info: {
 
 // Ideally, we should create the logging callback as a factory, but that would need a refactoring.
 const runsCache = new Set<string>();
+const chunkHashCache = new Map<string, Map<string | number, string>>();
 
 function statsToString(
   stats: Stats,
@@ -125,11 +126,20 @@ function statsToString(
   let hasEstimatedTransferSizes = false;
 
   const isFirstRun = !runsCache.has(json.outputPath || '');
+  const prevHashes =
+    chunkHashCache.get(json.outputPath || '') ??
+    new Map<string | number, string>();
+  const nextHashes = new Map<string | number, string>();
 
   for (const chunk of json.chunks) {
-    // During first build we want to display unchanged chunks
-    // but unchanged cached chunks are always marked as not rendered.
-    if (!isFirstRun && !chunk.rendered) {
+    const key = chunk.id ?? chunk.names?.[0] ?? '';
+    const hash = chunk.hash ?? '';
+    nextHashes.set(key, hash);
+
+    // During first build we want to display all chunks.
+    // On rebuilds, skip chunks whose hash hasn't changed.
+    if (!isFirstRun && prevHashes.get(key) === hash) {
+      unchangedChunkNumber++;
       continue;
     }
 
@@ -199,9 +209,8 @@ function statsToString(
       generateBundleStats({ ...chunk, rawSize, estimatedTransferSize })
     );
   }
-  unchangedChunkNumber = json.chunks.length - changedChunksStats.length;
-
   runsCache.add(json.outputPath || '');
+  chunkHashCache.set(json.outputPath || '', nextHashes);
 
   const statsTable = generateBuildStatsTable(
     changedChunksStats,
@@ -421,11 +430,18 @@ export function generateBuildEventStats(
 
   const allChunksCount = chunks.length;
   const isFirstRun = !runsCache.has(rspackStats.outputPath || '');
+  const prevHashes =
+    chunkHashCache.get(rspackStats.outputPath || '') ??
+    new Map<string | number, string>();
 
   const chunkFiles = new Set<string>();
   for (const chunk of chunks) {
-    if (!isFirstRun && chunk.rendered) {
-      changedChunksCount++;
+    if (!isFirstRun) {
+      const key = chunk.id ?? chunk.names?.[0] ?? '';
+      const hash = chunk.hash ?? '';
+      if (prevHashes.get(key) !== hash) {
+        changedChunksCount++;
+      }
     }
 
     if (chunk.initial) {
