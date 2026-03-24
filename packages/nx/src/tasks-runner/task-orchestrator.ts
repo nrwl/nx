@@ -20,7 +20,7 @@ import {
   TaskStatus as NativeTaskStatus,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
-import { getDbConnection } from '../utils/db-connection';
+import { getLocalDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -65,7 +65,7 @@ export class TaskOrchestrator {
   );
 
   private runningTasksService = !IS_WASM
-    ? new RunningTasksService(getDbConnection())
+    ? new RunningTasksService(getLocalDbConnection())
     : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -622,7 +622,6 @@ export class TaskOrchestrator {
         task.startTime = result.startTime;
         task.endTime = result.endTime;
         return {
-          ...result,
           code: result.success ? 0 : 1,
           task,
           status: (result.success ? 'success' : 'failure') as TaskStatus,
