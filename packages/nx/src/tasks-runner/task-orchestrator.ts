@@ -622,7 +622,6 @@ export class TaskOrchestrator {
         task.startTime = result.startTime;
         task.endTime = result.endTime;
         return {
-          ...result,
           code: result.success ? 0 : 1,
           task,
           status: (result.success ? 'success' : 'failure') as TaskStatus,
