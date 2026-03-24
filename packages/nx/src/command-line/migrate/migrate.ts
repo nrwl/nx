@@ -96,6 +96,57 @@ export interface ResolvedMigrationConfiguration extends MigrationsJson {
 
 const execAsync = promisify(exec);
 
+type CommandFailure = {
+  message?: string;
+  stderr?: string | Buffer;
+  stdout?: string | Buffer;
+};
+
+export function formatCommandFailure(
+  command: string,
+  error: CommandFailure
+): string {
+  const normalizeCommandOutput = (
+    output: string | Buffer | null | undefined
+  ): string | undefined => {
+    if (!output) {
+      return undefined;
+    }
+
+    const normalized =
+      typeof output === 'string' ? output.trim() : output.toString().trim();
+    return normalized || undefined;
+  };
+
+  const details =
+    normalizeCommandOutput(error.stderr) ||
+    normalizeCommandOutput(error.stdout) ||
+    normalizeCommandOutput(error.message)
+      ?.replace(`Command failed: ${command}`, '')
+      .trim();
+
+  return [`Command failed: ${command}`, ...(details ? [details] : [])].join(
+    '\n'
+  );
+}
+
+function runOrReturnExitCode(run: () => void): number {
+  try {
+    run();
+    return 0;
+  } catch (e) {
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'status' in e &&
+      typeof e.status === 'number'
+    ) {
+      return e.status;
+    }
+    throw e;
+  }
+}
+
 export function normalizeVersion(version: string) {
   const [semver, ...prereleaseTagParts] = version.split('-');
   // Handle versions like 1.0.0-beta-next.2
@@ -180,6 +231,19 @@ export class Migrator {
     this.excludeAppliedMigrations = opts.excludeAppliedMigrations;
   }
 
+  private async fetchMigrationConfig(
+    packageName: string,
+    packageVersion: string
+  ): Promise<ResolvedMigrationConfiguration> {
+    const migrationConfig = await this.fetch(packageName, packageVersion);
+    if (!migrationConfig.version) {
+      throw new Error(
+        `Fetched migration metadata for ${packageName} is invalid: the target version is missing.`
+      );
+    }
+    return migrationConfig;
+  }
+
   async migrate(targetPackage: string, targetVersion: string) {
     await this.buildPackageJsonUpdates(targetPackage, {
       version: targetVersion,
@@ -205,7 +269,10 @@ export class Migrator {
         if (currentVersion === null) return [];
 
         const { version } = this.packageUpdates[packageName];
-        const { generators } = await this.fetch(packageName, version);
+        const { generators } = await this.fetchMigrationConfig(
+          packageName,
+          version
+        );
 
         if (!generators) return [];
 
@@ -255,6 +322,11 @@ export class Migrator {
             )))
         ) {
           Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+            this.validatePackageUpdateVersion(
+              packageToCheck.package,
+              name,
+              update
+            );
             filteredUpdates[name] = update;
             this.packageUpdates[name] = update;
           });
@@ -294,7 +366,10 @@ export class Migrator {
 
     let migrationConfig: ResolvedMigrationConfiguration;
     try {
-      migrationConfig = await this.fetch(targetPackage, targetVersion);
+      migrationConfig = await this.fetchMigrationConfig(
+        targetPackage,
+        targetVersion
+      );
     } catch (e) {
       if (e?.message?.includes('No matching version')) {
         throw new Error(
@@ -350,11 +425,17 @@ export class Migrator {
     return (
       await Promise.all(
         Object.entries(packageUpdatesToApply).map(
-          ([packageName, packageUpdate]) =>
-            this.populatePackageJsonUpdatesAndGetPackagesToCheck(
+          ([packageName, packageUpdate]) => {
+            this.validatePackageUpdateVersion(
+              targetPackage,
               packageName,
               packageUpdate
-            )
+            );
+            return this.populatePackageJsonUpdatesAndGetPackagesToCheck(
+              packageName,
+              packageUpdate
+            );
+          }
         )
       )
     )
@@ -530,6 +611,18 @@ export class Migrator {
       (!this.collectedVersions[packageName] ||
         this.gt(packageUpdate.version, this.collectedVersions[packageName]))
     );
+  }
+
+  private validatePackageUpdateVersion(
+    sourcePackageName: string,
+    packageName: string,
+    packageUpdate: PackageUpdate
+  ) {
+    if (!packageUpdate.version) {
+      throw new Error(
+        `Fetched migration metadata for ${sourcePackageName} is invalid: the target version for ${packageName} is missing.`
+      );
+    }
   }
 
   private addPackageUpdate(name: string, packageUpdate: PackageUpdate): void {
@@ -1191,8 +1284,16 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } catch (e) {
+    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
+
     throw new Error(
-      `Failed to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+      [
+        `Failed to fetch migrations for ${packageName}@${packageVersion}`,
+        formatCommandFailure(
+          `${pmc.add} ${packageName}@${packageVersion}`,
+          e as CommandFailure
+        ),
+      ].join('\n')
     );
   } finally {
     await cleanup();
@@ -1760,14 +1861,19 @@ async function runMigrations(
   if (!__dirname.startsWith(workspaceRoot)) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
-    runNxSync(`migrate ${args.join(' ')}`, {
-      stdio: ['inherit', 'inherit', 'inherit'],
-      env: {
-        ...process.env,
-        NX_MIGRATE_SKIP_INSTALL: 'true',
-        NX_MIGRATE_USE_LOCAL: 'true',
-      },
-    });
+    const exitCode = runOrReturnExitCode(() =>
+      runNxSync(`migrate ${args.join(' ')}`, {
+        stdio: ['inherit', 'inherit', 'inherit'],
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      })
+    );
+    if (exitCode !== 0) {
+      return exitCode;
+    }
     return;
   }
 
@@ -1878,7 +1984,7 @@ export async function migrate(
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(
+      return runMigrations(
         root,
         opts,
         rawArgs,
@@ -1891,19 +1997,23 @@ export async function migrate(
 }
 
 export async function runMigration() {
-  const runLocalMigrate = () => {
-    runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
-      stdio: ['inherit', 'inherit', 'inherit'],
-    });
-  };
-  if (
-    process.env.NX_USE_LOCAL !== 'true' &&
-    process.env.NX_MIGRATE_USE_LOCAL === undefined
-  ) {
-    const p = await nxCliPath();
-    if (p === null) {
-      runLocalMigrate();
-    } else {
+  return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
+    const runLocalMigrate = () =>
+      runOrReturnExitCode(() =>
+        runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        })
+      );
+
+    if (
+      process.env.NX_USE_LOCAL !== 'true' &&
+      process.env.NX_MIGRATE_USE_LOCAL === undefined
+    ) {
+      const p = await nxCliPath();
+      if (p === null) {
+        return runLocalMigrate();
+      }
+
       // ensure local registry from process is not interfering with the install
       // when we start the process from temp folder the local registry would override the custom registry
       if (
@@ -1914,14 +2024,16 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
-      execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-        windowsHide: true,
-      });
+      return runOrReturnExitCode(() =>
+        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+          windowsHide: true,
+        })
+      );
     }
-  } else {
-    runLocalMigrate();
-  }
+
+    return runLocalMigrate();
+  });
 }
 
 export function readMigrationCollection(packageName: string, root: string) {
