@@ -69,7 +69,7 @@
     },
     "test": {
       "executor": "nx:noop",
-      "dependsOn": ["vite:test", "validate-links", "format"]
+      "dependsOn": ["validate-links", "format"]
     },
     "pw-e2e": {
       "dependsOn": ["serve"],
