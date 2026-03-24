@@ -544,7 +544,7 @@ function buildTscTargets(
     const targetName = options.typecheck.targetName;
     const compiler = options.compiler;
     if (!targets[targetName]) {
-      let command = `${compiler} --build --emitDeclarationOnly${
+      let command = `${compiler} --build ${options.typecheck.configName} --emitDeclarationOnly${
         options.verboseOutput ? ' --verbose' : ''
       }`;
       if (
