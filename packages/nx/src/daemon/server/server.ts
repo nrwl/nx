@@ -638,22 +638,27 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       }
     }
 
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    {
       const cap = 10;
       const summarize = (files: string[]) =>
         files.length === 0
           ? '(none)'
           : files.length <= cap
-            ? files.join(', ')
-            : files.slice(0, cap).join(', ') +
-              ` ... and ${files.length - cap} more`;
+            ? files.map((f) => `  - ${f}`).join('\n')
+            : files
+                .slice(0, cap)
+                .map((f) => `  - ${f}`)
+                .join('\n') + `\n  ... and ${files.length - cap} more`;
       if (
         createdFilesToHash.length ||
         updatedFilesToHash.length ||
         deletedFiles.length
       ) {
         serverLogger.watcherLog(
-          `created=[${summarize(createdFilesToHash)}] updated=[${summarize(updatedFilesToHash)}] deleted=[${summarize(deletedFiles)}]`
+          `File changes detected:\n` +
+            `Created:\n${summarize(createdFilesToHash)}\n` +
+            `Updated:\n${summarize(updatedFilesToHash)}\n` +
+            `Deleted:\n${summarize(deletedFiles)}`
         );
       }
     }
