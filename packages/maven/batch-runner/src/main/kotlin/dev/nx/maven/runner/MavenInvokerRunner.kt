@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /** Task execution state for tracking progress */
@@ -70,13 +72,20 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     // Latch to signal when all tasks are done
     val completionLatch = CountDownLatch(initialGraph.tasks.size)
+    // Flag to signal workers to stop polling when all tasks are done
+    val allTasksDone = AtomicBoolean(false)
 
     try {
       // Submit worker tasks that pull from the queue
       repeat(numWorkers) {
         executor.submit {
-          while (true) {
-            val taskId = taskQueue.poll() ?: break
+          while (!allTasksDone.get()) {
+            // Use poll with timeout instead of poll() to avoid premature worker exit.
+            // poll() returns null immediately when the queue is empty, causing workers
+            // to exit even though other workers are still processing tasks that will
+            // produce new root tasks. This led to a deadlock where completionLatch.await()
+            // would block forever because no workers remained to process queued tasks.
+            val taskId = taskQueue.poll(100, TimeUnit.MILLISECONDS) ?: continue
 
             if (taskStates.containsKey(taskId)) {
               completionLatch.countDown()
@@ -137,6 +146,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       // Wait for all tasks to complete
       completionLatch.await()
+      // Signal workers to stop polling
+      allTasksDone.set(true)
     } finally {
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
