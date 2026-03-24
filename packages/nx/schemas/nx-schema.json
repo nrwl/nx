@@ -548,9 +548,111 @@
       },
       "required": ["rules"],
       "additionalProperties": false
+    },
+    "owners": {
+      "description": "Configuration for Nx Owners (CODEOWNERS generation). Set to true to enable with all defaults.",
+      "oneOf": [
+        {
+          "type": "boolean",
+          "enum": [true],
+          "description": "Enable owners with all default settings."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "description": "The format to use for the generated owners file. Defaults to 'github'.",
+              "enum": ["github", "gitlab", "bitbucket"],
+              "default": "github"
+            },
+            "outputPath": {
+              "type": "string",
+              "description": "The path to write the generated owners file to. Defaults based on format (e.g. '.github/CODEOWNERS')."
+            },
+            "patterns": {
+              "type": "array",
+              "description": "List of ownership patterns to apply.",
+              "items": {
+                "$ref": "#/definitions/ownersPattern"
+              }
+            },
+            "sections": {
+              "type": "array",
+              "description": "List of ownership sections (GitLab only). Sections allow grouping patterns with approval requirements.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The section label."
+                  },
+                  "defaultOwners": {
+                    "type": "array",
+                    "description": "Default owners for all patterns in this section.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "numberOfRequiredApprovals": {
+                    "type": "number",
+                    "description": "Number of required approvals for this section. Mutually exclusive with 'optional'."
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this section is optional. Mutually exclusive with 'numberOfRequiredApprovals'."
+                  },
+                  "patterns": {
+                    "type": "array",
+                    "description": "List of ownership patterns within this section.",
+                    "items": {
+                      "$ref": "#/definitions/ownersPattern"
+                    }
+                  }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "definitions": {
+    "ownersPattern": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A human-readable description of this ownership pattern."
+        },
+        "projects": {
+          "type": "array",
+          "description": "The projects this pattern applies to. Accepts project names, glob patterns, tag references, or any other valid project filter supported by the --projects flag.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "array",
+          "description": "File glob patterns this ownership pattern applies to (for non-project-based ownership).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owners": {
+          "type": "array",
+          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["owners"],
+      "additionalProperties": false
+    },
     "inputs": {
       "type": "array",
       "items": {
