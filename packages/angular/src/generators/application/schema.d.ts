@@ -32,4 +32,5 @@ export interface Schema {
   nxCloudToken?: string;
   addPlugin?: boolean;
   zoneless?: boolean;
+  formatter?: 'none' | 'prettier';
 }

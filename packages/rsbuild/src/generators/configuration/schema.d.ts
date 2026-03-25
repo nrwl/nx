@@ -6,4 +6,5 @@ export interface Schema {
   target?: 'node' | 'web' | 'web-worker';
   skipValidation?: boolean;
   skipFormat?: boolean;
+  formatter?: 'none' | 'prettier';
 }

@@ -25,4 +25,5 @@ export interface Schema {
   skipPackageJson?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  formatter?: 'none' | 'prettier';
 }

@@ -23,6 +23,7 @@ export interface Schema {
   e2eTestRunner?: 'cypress' | 'none';
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  formatter?: 'none' | 'prettier';
 }
 
 export interface NormalizedSchema extends Schema {

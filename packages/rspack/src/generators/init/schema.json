@@ -25,6 +25,12 @@
       "x-priority": "internal",
       "description": "Keep existing dependencies versions",
       "default": false
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
     }
   },
   "required": []

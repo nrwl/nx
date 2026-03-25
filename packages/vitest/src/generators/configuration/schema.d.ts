@@ -15,4 +15,5 @@ export interface VitestGeneratorSchema {
   projectType?: 'application' | 'library';
   viteVersion?: 5 | 6 | 7 | 8;
   zoneless?: boolean;
+  formatter?: 'none' | 'prettier';
 }

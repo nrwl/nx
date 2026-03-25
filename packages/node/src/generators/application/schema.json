@@ -21,6 +21,12 @@
       "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
       "x-priority": "important"
     },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
+    },
     "skipFormat": {
       "description": "Skip formatting files",
       "type": "boolean",

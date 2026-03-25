@@ -7,11 +7,15 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
-export default async function (tree: Tree) {
+export default async function (
+  tree: Tree,
+  options?: { formatter?: 'none' | 'prettier' }
+) {
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(tree, {
     skipFormat: true,
+    formatter: options?.formatter,
   });
   tasks.push(jsInitTask);
 

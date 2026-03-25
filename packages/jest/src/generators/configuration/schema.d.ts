@@ -31,6 +31,7 @@ export interface JestProjectSchema {
    */
   skipSetupFile?: boolean;
   keepExistingVersions?: boolean;
+  formatter?: 'none' | 'prettier';
 }
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {

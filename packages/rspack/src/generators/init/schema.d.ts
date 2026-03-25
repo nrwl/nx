@@ -8,4 +8,5 @@ export interface InitGeneratorSchema {
   rootProject?: boolean;
   style?: 'none' | 'css' | 'scss' | 'less';
   updatePackageScripts?: boolean;
+  formatter?: 'none' | 'prettier';
 }

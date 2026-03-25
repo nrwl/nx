@@ -38,4 +38,5 @@ export interface Schema {
   skipSelector?: boolean;
   addPlugin?: boolean;
   skipTsConfig?: boolean;
+  formatter?: 'none' | 'prettier';
 }

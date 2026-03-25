@@ -48,6 +48,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
     addTsPlugin,
     skipPackageJson: rawOptions.skipPackageJson,
     skipFormat: true,
+    formatter: rawOptions.formatter,
   });
   tasks.push(jsInitTask);
 

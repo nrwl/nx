@@ -9,6 +9,12 @@
       "type": "string",
       "description": "The package manager to setup for",
       "enum": ["yarn", "npm", "pnpm"]
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
     }
   }
 }
