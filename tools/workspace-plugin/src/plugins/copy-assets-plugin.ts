@@ -12,7 +12,10 @@ import { dirname, join, relative } from 'node:path';
 
 interface AssetEntry {
   glob: string;
+  input?: string;
+  output?: string;
   ignore?: string[];
+  includeIgnoredFiles?: boolean;
 }
 
 interface AssetsJson {
@@ -41,20 +44,37 @@ export const createNodesV2: CreateNodesV2 = [
           }
         }
 
-        // Build executor assets, always ignoring outDir for object assets
+        // Build executor assets
         const executorAssets: (
-          | { input: string; glob: string; ignore: string[]; output: string }
+          | {
+              input: string;
+              glob: string;
+              ignore?: string[];
+              output: string;
+              includeIgnoredFiles?: boolean;
+            }
           | string
         )[] = [
-          ...objectAssets.map((asset) => ({
-            input: projectRoot,
-            glob: asset.glob,
-            ignore: [
-              `${relative(projectRoot, assetsJson.outDir)}/**`,
-              ...(asset.ignore ?? []),
-            ],
-            output: '/',
-          })),
+          ...objectAssets.map((asset) => {
+            const input = asset.input ?? projectRoot;
+            const output = asset.output ?? '/';
+            const ignore =
+              input === projectRoot
+                ? [
+                    `${relative(projectRoot, assetsJson.outDir)}/**`,
+                    ...(asset.ignore ?? []),
+                  ]
+                : asset.ignore;
+            return {
+              input,
+              glob: asset.glob,
+              ...(ignore?.length ? { ignore } : {}),
+              output,
+              ...(asset.includeIgnoredFiles
+                ? { includeIgnoredFiles: true }
+                : {}),
+            };
+          }),
           ...stringAssets,
         ];
 
@@ -68,21 +88,40 @@ export const createNodesV2: CreateNodesV2 = [
           outputDir
         );
 
-        // Derive inputs — positive patterns first, then negations
+        // Derive inputs — positive patterns first, then negations,
+        // then dependentTasksOutputFiles for gitignored assets
         const positiveInputs = new Set<string>();
         const negativeInputs = new Set<string>();
+        const dependentOutputGlobs = new Set<string>();
         for (const asset of objectAssets) {
-          positiveInputs.add(`{projectRoot}/${asset.glob}`);
-          if (asset.ignore) {
-            for (const pattern of asset.ignore) {
-              negativeInputs.add(`!{projectRoot}/${pattern}`);
+          const input = asset.input ?? projectRoot;
+          if (asset.includeIgnoredFiles) {
+            // Gitignored files can't be hashed directly — use dependent task outputs
+            dependentOutputGlobs.add(`${input}/${asset.glob}`);
+          } else if (input === projectRoot) {
+            positiveInputs.add(`{projectRoot}/${asset.glob}`);
+            if (asset.ignore) {
+              for (const pattern of asset.ignore) {
+                negativeInputs.add(`!{projectRoot}/${pattern}`);
+              }
             }
+          } else {
+            positiveInputs.add(`{workspaceRoot}/${input}/${asset.glob}`);
           }
         }
         for (const asset of stringAssets) {
           positiveInputs.add(`{workspaceRoot}/${asset}`);
         }
-        const inputs = [...positiveInputs, ...negativeInputs];
+        const inputs: (string | Record<string, unknown>)[] = [
+          ...positiveInputs,
+          ...negativeInputs,
+        ];
+        for (const glob of dependentOutputGlobs) {
+          inputs.push({
+            dependentTasksOutputFiles: glob,
+            transitive: true,
+          });
+        }
 
         // Derive outputs using the same dest logic as CopyAssetsHandler
         const outputs = normalized.map((entry) => {
