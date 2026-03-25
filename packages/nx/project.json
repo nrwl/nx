@@ -152,8 +152,24 @@
     "legacy-post-build": {
       "dependsOn": ["build-base", "copy-local-native"],
       "executor": "@nx/workspace-plugin:legacy-post-build",
-      "inputs": ["production", "^production", "native"],
-      "outputs": ["{projectRoot}/dist"],
+      "inputs": [
+        "{projectRoot}/**/files/**",
+        "{projectRoot}/**/*.json",
+        "{projectRoot}/**/*.{mjs,cjs,js,css,html,svg,wasm}",
+        "!{projectRoot}/**/__fixtures__/**",
+        "!{projectRoot}/**/jest.config.js",
+        "!{projectRoot}/.eslintrc.json",
+        "!{projectRoot}/jest-resolver.js",
+        "{workspaceRoot}/packages/devkit/**/*.ts",
+        "{workspaceRoot}/packages/js/src/utils/assets/**/*.ts",
+        "{workspaceRoot}/tools/workspace-plugin/executors.json",
+        "{workspaceRoot}/tools/workspace-plugin/src/executors/legacy-post-build/**"
+      ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/src/native",
+        "{projectRoot}/**/*.d.ts"
+      ],
       "options": {
         "addPackageJsonFields": false,
         "tsConfig": "./tsconfig.lib.json",
@@ -161,17 +177,20 @@
           {
             "input": "packages/nx",
             "glob": "**/files/**",
+            "ignore": ["dist/**"],
             "output": "/"
           },
           {
             "input": "packages/nx",
             "glob": "**/files/**/.gitkeep",
+            "ignore": ["dist/**"],
             "output": "/"
           },
           {
             "input": "packages/nx",
             "glob": "**/*.json",
             "ignore": [
+              "dist/**",
               "**/tsconfig*.json",
               "**/project.json",
               "**/__fixtures__/**",
@@ -186,7 +205,7 @@
           {
             "input": "packages/nx",
             "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
-            "ignore": ["**/jest.config.js"],
+            "ignore": ["dist/**", "**/jest.config.js"],
             "output": "/"
           }
         ]
