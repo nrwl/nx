@@ -47,6 +47,60 @@ describe('@nx/vite:init', () => {
 
       expect(packageJson).toMatchSnapshot();
     });
+
+    it('should default to vite 8 when no vite is installed', async () => {
+      await initGenerator(tree, { addPlugin: true });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['vite']).toEqual('^8.0.0');
+    });
+
+    it('should preserve vite 7 when already installed', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { vite: '^7.0.0' };
+        return json;
+      });
+      await initGenerator(tree, { addPlugin: true });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
+    });
+
+    it('should not bump vite 7.x to vite 8', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { vite: '^7.8.0' };
+        return json;
+      });
+      await initGenerator(tree, { addPlugin: true });
+      const packageJson = readJson(tree, 'package.json');
+      // Should stay on v7, not get bumped to v8
+      expect(packageJson.devDependencies['vite']).toMatch(/^\^7\./);
+    });
+
+    it('should preserve vite 6 when already installed', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { vite: '^6.0.0' };
+        return json;
+      });
+      await initGenerator(tree, { addPlugin: true });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['vite']).toEqual('^6.0.0');
+    });
+
+    it('should use vite 7 when useViteV7 flag is set', async () => {
+      await initGenerator(tree, { addPlugin: true, useViteV7: true });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
+    });
+
+    it('should not bump vite 7.1.3 to 8 when keepExistingVersions is false', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { vite: '^7.1.3' };
+        return json;
+      });
+      await initGenerator(tree, { addPlugin: true });
+      const packageJson = readJson(tree, 'package.json');
+      // Should stay on v7, not bump to v8
+      expect(packageJson.devDependencies['vite']).toMatch(/^\^7\./);
+    });
   });
 
   describe('vitest targets', () => {

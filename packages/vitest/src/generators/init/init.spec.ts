@@ -73,6 +73,48 @@ describe('@nx/vitest:init', () => {
     expect(packageJson.devDependencies['@nx/vitest']).toBeDefined();
   });
 
+  it('should default to vite 8 when no vite is installed', async () => {
+    await initGenerator(tree, { skipFormat: true });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['vite']).toEqual('^8.0.0');
+  });
+
+  it('should preserve vite 7 when already installed', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { vite: '^7.0.0' };
+      return json;
+    });
+    await initGenerator(tree, { skipFormat: true });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
+  });
+
+  it('should not bump vite 7.x to vite 8', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { vite: '^7.8.0' };
+      return json;
+    });
+    await initGenerator(tree, { skipFormat: true });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['vite']).toMatch(/^\^7\./);
+  });
+
+  it('should preserve vite 6 when already installed', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { vite: '^6.0.0' };
+      return json;
+    });
+    await initGenerator(tree, { skipFormat: true });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['vite']).toEqual('^6.0.0');
+  });
+
+  it('should use explicit viteVersion flag for new installs', async () => {
+    await initGenerator(tree, { skipFormat: true, viteVersion: 7 });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
+  });
+
   it('should not add packages when skipPackageJson is true', async () => {
     await initGenerator(tree, {
       skipFormat: true,

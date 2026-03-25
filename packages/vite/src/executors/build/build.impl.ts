@@ -115,8 +115,11 @@ export async function* viteBuildExecutor(
 
   let iterables: AsyncIterable<{ success: boolean; outfile?: string }>[] = [];
   for (const env of Object.values(builder.environments)) {
-    // This is needed to overwrite the resolve build config with executor options in Vite 6
-    if (env.config?.build) {
+    // Overwrite the resolved build config with executor options (e.g. outDir).
+    // Skip when using the builder API (Vite 8+) as the builder already
+    // resolves environment configs correctly and overwriting would clobber
+    // environment-specific options like rollupOptions/rolldownOptions.
+    if (env.config?.build && !options.useEnvironmentsApi) {
       env.config.build = {
         ...env.config.build,
         ...buildConfig.build,
@@ -274,6 +277,7 @@ export async function getBuildExtraArgs(
     'minify',
     'terserOptions',
     'rollupOptions',
+    'rolldownOptions',
     'commonjsOptions',
     'dynamicImportVarsOptions',
     'write',

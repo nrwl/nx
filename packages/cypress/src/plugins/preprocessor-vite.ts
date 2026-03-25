@@ -24,14 +24,14 @@
  **/
 
 import { dirname, basename, extname } from 'path';
-import type { RollupOutput, RollupWatcher, WatcherOptions } from 'rollup';
-import type { InlineConfig } from 'vite';
+// TODO(jack): Remove this when @nx/cypress switches to moduleResolution:
+// "nodenext". Vite 8 ships ESM-only type declarations (.d.mts) which are not
+// resolvable under moduleResolution: "node".
+type InlineConfig = Record<string, any>;
 
 type CypressPreprocessor = (
   file: Record<string, any>
 ) => string | Promise<string>;
-
-type BuildResult = RollupWatcher | RollupOutput | RollupOutput[];
 
 const cache = new Map<string, string>();
 
@@ -76,14 +76,14 @@ function vitePreprocessor(
 
     cache.set(filePath, outputPath);
 
-    const { build } = await (Function('return import("vite")')() as Promise<
-      typeof import('vite')
-    >);
+    const { build } = await (Function('return import("vite")')() as Promise<{
+      build: (config?: InlineConfig) => Promise<any>;
+    }>);
 
-    const watcher = (await build({
+    const watcher = await build({
       ...defaultConfig,
       ...configOverrides,
-    })) as BuildResult;
+    });
 
     return new Promise((resolve, reject) => {
       if (shouldWatch && isWatcher(watcher)) {
@@ -110,11 +110,11 @@ function vitePreprocessor(
   };
 }
 
-function isWatcher(maybeWatcher: any): maybeWatcher is RollupWatcher {
+function isWatcher(maybeWatcher: any): boolean {
   return maybeWatcher.on !== undefined;
 }
 
-function getWatcherConfig(shouldWatch: boolean): WatcherOptions | null {
+function getWatcherConfig(shouldWatch: boolean): Record<string, any> | null {
   return shouldWatch ? {} : null;
 }
 

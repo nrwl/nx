@@ -1,10 +1,13 @@
 import {
   cleanupProject,
+  getPackageManagerCommand,
   killPort,
   newProject,
   runCLI,
+  runCommand,
   runE2ETests,
   uniq,
+  updateJson,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -53,6 +56,15 @@ describe('Cypress E2E Test runner (legacy)', () => {
         `generate @nx/react:component ${appName}/src/app/btn/btn --no-interactive`,
         { env: { NX_ADD_PLUGINS: 'false' } }
       );
+      // Cypress CT (@cypress/vite-dev-server) does not support Vite 8 yet.
+      // Downgrade the workspace to Vite 7 before configuring Cypress CT.
+      updateJson('package.json', (json) => {
+        json.devDependencies ??= {};
+        json.devDependencies['vite'] = '^7.0.0';
+        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        return json;
+      });
+      runCommand(getPackageManagerCommand().install);
       runCLI(
         `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`,
         { env: { NX_ADD_PLUGINS: 'false' } }
