@@ -1,4 +1,5 @@
 import { VcsPushStatus } from '../git/git';
+import { isCI } from '../ci/is-ci';
 import { CLIOutput } from '../output';
 import {
   getCompletionMessage,
@@ -146,6 +147,19 @@ export function getSkippedNxCloudInfo() {
   const out = new CLIOutput(false);
   out.success(getSkippedCloudMessage());
   return out.getOutput();
+}
+
+export async function openCloudSetupUrl(connectUrl: string): Promise<void> {
+  if (isCI()) {
+    return;
+  }
+
+  try {
+    const open = require('open');
+    await open(connectUrl);
+  } catch {
+    // Fail gracefully — the URL is already displayed in the terminal banner
+  }
 }
 
 export function setNeverConnectToCloud(directory: string): void {
