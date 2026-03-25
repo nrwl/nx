@@ -92,7 +92,7 @@
     "@nx/esbuild": "22.7.0-beta.4",
     "@nx/eslint": "22.7.0-beta.4",
     "@nx/eslint-plugin": "22.7.0-beta.4",
-    "@nx/gradle": "22.7.0-beta.4",
+    "@nx/gradle": "22.7.0-pr.35019.f500fd7",
     "@nx/jest": "22.7.0-beta.4",
     "@nx/js": "22.7.0-beta.4",
     "@nx/key": "3.0.0",
