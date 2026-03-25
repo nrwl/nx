@@ -75,6 +75,11 @@ export class TasksSchedule {
     for (const taskId of taskIds) {
       this.completedTasks.add(taskId);
       this.runningTasks.delete(taskId);
+      delete this.reverseTaskDeps[taskId];
+    }
+    const removedSet = new Set(taskIds);
+    for (const [key, deps] of Object.entries(this.reverseTaskDeps)) {
+      this.reverseTaskDeps[key] = deps.filter((d) => !removedSet.has(d));
     }
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
