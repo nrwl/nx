@@ -85,10 +85,13 @@ export const createNodesV2: CreateNodesV2 = [
         const inputs = [...positiveInputs, ...negativeInputs];
 
         // Derive outputs using the same dest logic as CopyAssetsHandler
-        const outputs = normalized.map(
-          (entry) =>
-            `{workspaceRoot}/${getAssetOutputPath(entry.pattern, entry)}`
-        );
+        const outputs = normalized.map((entry) => {
+          const outputPath = getAssetOutputPath(entry.pattern, entry);
+          if (outputPath.startsWith(projectRoot + '/')) {
+            return `{projectRoot}/${outputPath.slice(projectRoot.length + 1)}`;
+          }
+          return `{workspaceRoot}/${outputPath}`;
+        });
 
         const target: TargetConfiguration = {
           executor: '@nx/workspace-plugin:legacy-post-build',
