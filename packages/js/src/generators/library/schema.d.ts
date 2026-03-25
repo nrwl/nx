@@ -33,6 +33,7 @@ export interface LibraryGeneratorSchema {
   addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;
+  formatter?: 'none' | 'prettier';
 }
 
 export interface NormalizedLibraryGeneratorOptions
