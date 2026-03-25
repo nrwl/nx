@@ -15,7 +15,9 @@
     {
       "glob": "**/*.d.ts"
     },
-    "PLUGIN.md",
+    {
+      "glob": "PLUGIN.md"
+    },
     "LICENSE"
   ]
 }

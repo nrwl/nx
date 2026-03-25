@@ -1,15 +1,7 @@
 {
   "outDir": "dist/packages/detox",
   "assets": [
-    {
-      "glob": "**/files/**"
-    },
-    {
-      "glob": "**/files/**/.babelrc.template"
-    },
-    {
-      "glob": "**/files/**/.detoxrc.json.template"
-    },
+    { "glob": "**/files/**" },
     {
       "glob": "**/*.json",
       "ignore": ["**/tsconfig*.json"]
