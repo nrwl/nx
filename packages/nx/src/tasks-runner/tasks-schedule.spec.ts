@@ -1115,6 +1115,139 @@ describe('TasksSchedule', () => {
     });
   });
 
+  describe('batch scheduling with prematurely completed tasks', () => {
+    let taskSchedule: TasksSchedule;
+    let taskGraph: TaskGraph;
+    let lib1Build: Task;
+    let app1Build: Task;
+    let originalBatchMode: string | undefined;
+
+    beforeEach(async () => {
+      originalBatchMode = process.env['NX_BATCH_MODE'];
+      process.env['NX_BATCH_MODE'] = 'true';
+
+      lib1Build = createMockTask('lib1:build');
+      app1Build = createMockTask('app1:build');
+      const app2Build = createMockTask('app2:build');
+
+      taskGraph = {
+        tasks: {
+          'lib1:build': lib1Build,
+          'app1:build': app1Build,
+          'app2:build': app2Build,
+        },
+        dependencies: {
+          'lib1:build': [],
+          'app1:build': ['lib1:build'],
+          'app2:build': ['lib1:build'],
+        },
+        continuousDependencies: {
+          'lib1:build': [],
+          'app1:build': [],
+          'app2:build': [],
+        },
+        roots: ['lib1:build'],
+      };
+
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+        schema: {
+          version: 2,
+          properties: {},
+        },
+        implementationFactory: jest.fn(),
+        batchImplementationFactory: jest.fn(),
+        isNgCompat: true,
+        isNxExecutor: true,
+      });
+
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1',
+              targets: {
+                build: {
+                  executor: 'awesome-executors:build',
+                },
+              },
+            },
+          },
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1',
+              targets: {
+                build: {
+                  executor: 'awesome-executors:build',
+                },
+              },
+            },
+          },
+          app2: {
+            name: 'app2',
+            type: 'app',
+            data: {
+              root: 'app2',
+              targets: {
+                build: {
+                  executor: 'awesome-executors:build',
+                },
+              },
+            },
+          },
+        } as any,
+        dependencies: {
+          lib1: [],
+          app1: [
+            {
+              source: 'app1',
+              target: 'lib1',
+              type: DependencyType.static,
+            },
+          ],
+          app2: [
+            {
+              source: 'app2',
+              target: 'lib1',
+              type: DependencyType.static,
+            },
+          ],
+        },
+        externalNodes: {},
+        version: '5',
+      };
+
+      taskHistory.getEstimatedTaskTimings.mockReturnValue({});
+      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
+        lifeCycle,
+      });
+      await taskSchedule.init();
+    });
+
+    afterEach(() => {
+      process.env['NX_BATCH_MODE'] = originalBatchMode;
+    });
+
+    it('should not crash when a dependent task was prematurely completed before batch scheduling', async () => {
+      // Simulate a premature task failure: app1:build is completed
+      // before it or its dependency lib1:build are scheduled.
+      // This removes app1 from notScheduledTaskGraph.
+      taskSchedule.complete(['app1:build']);
+
+      await taskSchedule.scheduleNextTasks();
+
+      const batch = taskSchedule.nextBatch();
+      expect(batch).not.toBeNull();
+      expect(batch.taskGraph.tasks).not.toHaveProperty('app1:build');
+      expect(batch.taskGraph.tasks).toHaveProperty('lib1:build');
+      expect(batch.taskGraph.tasks).toHaveProperty('app2:build');
+    });
+  });
+
   describe('nextTask with filter', () => {
     let taskSchedule: TasksSchedule;
     let discreteTask: Task;
