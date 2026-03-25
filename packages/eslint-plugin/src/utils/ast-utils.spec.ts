@@ -24,14 +24,6 @@ describe('ast-utils', () => {
 
   describe('getRelativeImportPath', () => {
     it('should return undefined for unresolvable glob paths instead of throwing ENOENT', () => {
-      // When a tsconfig path alias contains a wildcard (e.g., "libs/mylib/src/*"),
-      // the enforce-module-boundaries fixer may pass the unresolved glob path
-      // to getRelativeImportPath. Previously this would crash with:
-      //   Error: ENOENT: no such file or directory, open '.../libs/mylib/src/*'
-      // because lstatSync returns null for the glob, no extension probe matches,
-      // and the code falls through to readFileSync with the invalid path.
-      //
-      // Related issues: #30491, #32190, #16716, #21889
       expect(() =>
         getRelativeImportPath('SomeMember', '/root/libs/mylib/src/*')
       ).not.toThrow();
