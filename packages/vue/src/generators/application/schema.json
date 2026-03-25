@@ -74,6 +74,12 @@
       "x-prompt": "Would you like to add Vue Router to this application?",
       "default": false
     },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
