@@ -17,4 +17,5 @@ export interface Schema {
   strict?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  formatter?: 'none' | 'prettier';
 }

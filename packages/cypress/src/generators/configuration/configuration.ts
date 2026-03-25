@@ -62,6 +62,7 @@ export interface CypressE2EConfigSchema {
   ciWebServerCommand?: string;
   ciBaseUrl?: string;
   addPlugin?: boolean;
+  formatter?: 'none' | 'prettier';
 }
 
 type NormalizedSchema = Awaited<ReturnType<typeof normalizeOptions>>;

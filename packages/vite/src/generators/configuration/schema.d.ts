@@ -14,4 +14,5 @@ export interface ViteConfigurationGeneratorSchema {
   projectType?: 'application' | 'library';
   previewPort?: number;
   useViteV7?: boolean;
+  formatter?: 'none' | 'prettier';
 }
