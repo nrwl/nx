@@ -180,7 +180,7 @@
   "exports": {
     ".": {
       "@nx/nx-source": "./bin/nx.ts",
-      "types": "./bin/nx.d.ts",
+      "types": "./dist/bin/nx.d.ts",
       "default": "./dist/bin/nx.js"
     },
     "./package.json": "./package.json",
@@ -191,77 +191,77 @@
     "./src/**/*.json": "./dist/src/**/*.json",
     "./bin/nx": {
       "@nx/nx-source": "./bin/nx.ts",
-      "types": "./bin/nx.d.ts",
+      "types": "./dist/bin/nx.d.ts",
       "default": "./dist/bin/nx.js"
     },
     "./bin/nx.js": {
       "@nx/nx-source": "./bin/nx.ts",
-      "types": "./bin/nx.d.ts",
+      "types": "./dist/bin/nx.d.ts",
       "default": "./dist/bin/nx.js"
     },
     "./src/native": {
       "@nx/nx-source": "./src/native/index.ts",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/plugins/js": {
       "@nx/nx-source": "./src/plugins/js/index.ts",
-      "types": "./src/plugins/js/index.d.ts",
+      "types": "./dist/src/plugins/js/index.d.ts",
       "default": "./dist/src/plugins/js/index.js"
     },
     "./src/plugins/package-json": {
       "@nx/nx-source": "./src/plugins/package-json/index.ts",
-      "types": "./src/plugins/package-json/index.d.ts",
+      "types": "./dist/src/plugins/package-json/index.d.ts",
       "default": "./dist/src/plugins/package-json/index.js"
     },
     "./src/plugins/**/*": {
       "@nx/nx-source": "./src/plugins/**/*.ts",
-      "types": "./src/plugins/**/*.d.ts",
+      "types": "./dist/src/plugins/**/*.d.ts",
       "default": "./dist/src/plugins/**/*.js"
     },
     "./src/utils/plugins": {
       "@nx/nx-source": "./src/utils/plugins/index.ts",
-      "types": "./src/utils/plugins/index.d.ts",
+      "types": "./dist/src/utils/plugins/index.d.ts",
       "default": "./dist/src/utils/plugins/index.js"
     },
     "./src/utils/plugins/*": {
       "@nx/nx-source": "./src/utils/plugins/*.ts",
-      "types": "./src/utils/plugins/*.d.ts",
+      "types": "./dist/src/utils/plugins/*.d.ts",
       "default": "./dist/src/utils/plugins/*.js"
     },
     "./src/utils/catalog": {
       "@nx/nx-source": "./src/utils/catalog/index.ts",
-      "types": "./src/utils/catalog/index.d.ts",
+      "types": "./dist/src/utils/catalog/index.d.ts",
       "default": "./dist/src/utils/catalog/index.js"
     },
     "./src/utils/catalog/*": {
       "@nx/nx-source": "./src/utils/catalog/*.ts",
-      "types": "./src/utils/catalog/*.d.ts",
+      "types": "./dist/src/utils/catalog/*.d.ts",
       "default": "./dist/src/utils/catalog/*.js"
     },
     "./src/**/*.js": {
       "@nx/nx-source": "./src/**/*.ts",
-      "types": "./src/**/*.d.ts",
+      "types": "./dist/src/**/*.d.ts",
       "default": "./dist/src/**/*.js"
     },
     "./src/**/*": {
       "@nx/nx-source": "./src/**/*.ts",
-      "types": "./src/**/*.d.ts",
+      "types": "./dist/src/**/*.d.ts",
       "default": "./dist/src/**/*.js"
     },
     "./src/*.js": {
       "@nx/nx-source": "./src/*.ts",
-      "types": "./src/*.d.ts",
+      "types": "./dist/src/*.d.ts",
       "default": "./dist/src/*.js"
     },
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",
-      "types": "./src/*.d.ts",
+      "types": "./dist/src/*.d.ts",
       "default": "./dist/src/*.js"
     },
     "./release": {
       "@nx/nx-source": "./release/index.ts",
-      "types": "./release/index.d.ts",
+      "types": "./dist/release/index.d.ts",
       "default": "./dist/release/index.js"
     },
     "./presets/*": {
@@ -270,7 +270,7 @@
     },
     "./tasks-runners/default": {
       "@nx/nx-source": "./tasks-runners/default.ts",
-      "types": "./tasks-runners/default.d.ts",
+      "types": "./dist/tasks-runners/default.d.ts",
       "default": "./dist/tasks-runners/default.js"
     }
   }
