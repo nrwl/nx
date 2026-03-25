@@ -48,6 +48,12 @@
       "description": "Add tags to the project (used for linting)",
       "alias": "t"
     },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files",
