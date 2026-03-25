@@ -1,20 +1,24 @@
-import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
+import {
+  AggregateCreateNodesError,
+  logger,
+  output,
+  workspaceRoot,
+} from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { GradlePluginOptions } from './gradle-plugin-options';
 
 const DEFAULT_GRAPH_TIMEOUT_SECONDS = 30;
 
-class GradleGraphTimeoutError extends Error {
+class NxGradleProjectGraphGenerationError extends Error {
   constructor(public readonly seconds: number) {
-    super(`Timed out after ${seconds}s`);
+    super(
+      `Project graph generation timed out after ${seconds} ${seconds === 1 ? 'second' : 'seconds'}`
+    );
   }
 }
 
-export function getGraphTimeoutMs(): number | undefined {
-  if (process.env.NX_PLUGIN_NO_TIMEOUTS === 'true') {
-    return undefined;
-  }
-  const envTimeout = process.env.NX_GRADLE_GRAPH_TIMEOUT;
+export function getGraphTimeoutMs(): number {
+  const envTimeout = process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT;
   if (envTimeout) {
     const parsed = Number(envTimeout);
     if (!Number.isNaN(parsed) && parsed > 0) {
@@ -58,31 +62,27 @@ export async function getNxProjectGraphLines(
       { signal: controller.signal }
     );
 
-    if (timeoutMs !== undefined) {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timer = setTimeout(() => {
-          controller.abort();
-          reject(new GradleGraphTimeoutError(timeoutMs / 1000));
-        }, timeoutMs);
-      });
-      gradlePromise.catch(() => {});
-      nxProjectGraphBuffer = await Promise.race([
-        gradlePromise,
-        timeoutPromise,
-      ]);
-    } else {
-      nxProjectGraphBuffer = await gradlePromise;
-    }
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(new NxGradleProjectGraphGenerationError(timeoutMs / 1000));
+      }, timeoutMs);
+    });
+    gradlePromise.catch((e) => {
+      logger.verbose(`Gradle process terminated after abort signal: ${e}`);
+    });
+    nxProjectGraphBuffer = await Promise.race([gradlePromise, timeoutPromise]);
   } catch (e: any) {
-    if (e instanceof GradleGraphTimeoutError) {
+    if (e instanceof NxGradleProjectGraphGenerationError) {
       throw new AggregateCreateNodesError(
         [
           [
             gradlewFile,
             new Error(
-              `Gradle project graph generation timed out after ${e.seconds} seconds.\n` +
-                `To increase the timeout, set the environment variable NX_GRADLE_GRAPH_TIMEOUT to a higher value (in seconds).\n` +
-                `To disable the Gradle plugin entirely, set NX_GRADLE_DISABLE=true.`
+              `Gradle project graph generation timed out after ${e.seconds} ${e.seconds === 1 ? 'second' : 'seconds'}. \n` +
+                `  - Run "gradlew --stop" to stop the Gradle daemon and "gradlew clean" to clear the build cache\n` +
+                `  - Set the environment variable NX_GRADLE_PROJECT_GRAPH_TIMEOUT to a higher value (in seconds) to increase the timeout\n` +
+                `  - Set NX_GRADLE_DISABLE=true to disable the Gradle plugin entirely`
             ),
           ],
         ],
