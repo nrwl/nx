@@ -17,7 +17,7 @@ interface AssetsJson {
 }
 
 export const createNodesV2: CreateNodesV2 = [
-  '**/assets.json',
+  'packages/*/assets.json',
   async (configFiles, _options, context) => {
     return await createNodesFromFiles(
       (configFilePath, _options, context) => {
@@ -79,5 +79,3 @@ export const createNodesV2: CreateNodesV2 = [
     );
   },
 ];
-
-export const createNodes = createNodesV2;
