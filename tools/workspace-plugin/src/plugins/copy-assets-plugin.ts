@@ -4,7 +4,11 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import { basename, dirname, join } from 'node:path';
+import {
+  getAssetOutputPath,
+  normalizeAssets,
+} from '@nx/js/src/utils/assets/copy-assets-handler';
+import { dirname, join } from 'node:path';
 
 interface AssetEntry {
   glob: string;
@@ -37,7 +41,31 @@ export const createNodesV2: CreateNodesV2 = [
           }
         }
 
-        // Derive inputs from object asset globs — positive patterns first, then negations
+        // Build executor assets, always ignoring outDir for object assets
+        const executorAssets: (
+          | { input: string; glob: string; ignore: string[]; output: string }
+          | string
+        )[] = [
+          ...objectAssets.map((asset) => ({
+            input: projectRoot,
+            glob: asset.glob,
+            ignore: [`${assetsJson.outDir}/**`, ...(asset.ignore ?? [])],
+            output: '/',
+          })),
+          ...stringAssets,
+        ];
+
+        // Normalize assets using CopyAssetsHandler's logic to derive outputs
+        const projectDir = join(context.workspaceRoot, projectRoot);
+        const outputDir = join(projectDir, assetsJson.outDir);
+        const normalized = normalizeAssets(
+          executorAssets,
+          context.workspaceRoot,
+          projectDir,
+          outputDir
+        );
+
+        // Derive inputs — positive patterns first, then negations
         const positiveInputs = new Set<string>();
         const negativeInputs = new Set<string>();
         for (const asset of objectAssets) {
@@ -48,32 +76,16 @@ export const createNodesV2: CreateNodesV2 = [
             }
           }
         }
-        // String assets are workspace-relative paths
         for (const asset of stringAssets) {
           positiveInputs.add(`{workspaceRoot}/${asset}`);
         }
         const inputs = [...positiveInputs, ...negativeInputs];
 
-        // Build executor assets, always ignoring outDir for object assets
-        const executorAssets: (AssetEntry | string)[] = [
-          ...objectAssets.map((asset) => ({
-            input: projectRoot,
-            glob: asset.glob,
-            ignore: [`${assetsJson.outDir}/**`, ...(asset.ignore ?? [])],
-            output: '/',
-          })),
-          ...stringAssets,
-        ];
-
-        // Derive outputs from asset globs
-        const outputs = [
-          ...objectAssets.map(
-            (asset) => `{projectRoot}/${assetsJson.outDir}/${asset.glob}`
-          ),
-          ...stringAssets.map(
-            (asset) => `{projectRoot}/${assetsJson.outDir}/${basename(asset)}`
-          ),
-        ];
+        // Derive outputs using the same dest logic as CopyAssetsHandler
+        const outputs = normalized.map(
+          (entry) =>
+            `{workspaceRoot}/${getAssetOutputPath(entry.pattern, entry)}`
+        );
 
         const target: TargetConfiguration = {
           executor: '@nx/workspace-plugin:legacy-post-build',
