@@ -4,7 +4,7 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 interface AssetEntry {
   glob: string;
@@ -13,7 +13,7 @@ interface AssetEntry {
 
 interface AssetsJson {
   outDir: string;
-  assets: AssetEntry[];
+  assets: (AssetEntry | string)[];
 }
 
 export const createNodesV2: CreateNodesV2 = [
@@ -26,10 +26,21 @@ export const createNodesV2: CreateNodesV2 = [
           join(context.workspaceRoot, configFilePath)
         );
 
-        // Derive inputs from asset globs — positive patterns first, then negations
+        // Separate string assets (passed through as-is) from object assets
+        const objectAssets: AssetEntry[] = [];
+        const stringAssets: string[] = [];
+        for (const asset of assetsJson.assets) {
+          if (typeof asset === 'string') {
+            stringAssets.push(asset);
+          } else {
+            objectAssets.push(asset);
+          }
+        }
+
+        // Derive inputs from object asset globs — positive patterns first, then negations
         const positiveInputs = new Set<string>();
         const negativeInputs = new Set<string>();
-        for (const asset of assetsJson.assets) {
+        for (const asset of objectAssets) {
           positiveInputs.add(`{projectRoot}/${asset.glob}`);
           if (asset.ignore) {
             for (const pattern of asset.ignore) {
@@ -37,20 +48,32 @@ export const createNodesV2: CreateNodesV2 = [
             }
           }
         }
+        // String assets are workspace-relative paths
+        for (const asset of stringAssets) {
+          positiveInputs.add(`{workspaceRoot}/${asset}`);
+        }
         const inputs = [...positiveInputs, ...negativeInputs];
 
-        // Build executor assets with input/output fields, always ignoring outDir
-        const executorAssets = assetsJson.assets.map((asset) => ({
-          input: projectRoot,
-          glob: asset.glob,
-          ignore: [`${assetsJson.outDir}/**`, ...(asset.ignore ?? [])],
-          output: '/',
-        }));
+        // Build executor assets, always ignoring outDir for object assets
+        const executorAssets: (AssetEntry | string)[] = [
+          ...objectAssets.map((asset) => ({
+            input: projectRoot,
+            glob: asset.glob,
+            ignore: [`${assetsJson.outDir}/**`, ...(asset.ignore ?? [])],
+            output: '/',
+          })),
+          ...stringAssets,
+        ];
 
-        // Derive outputs from asset globs — assets are copied into outDir
-        const outputs = assetsJson.assets.map(
-          (asset) => `{projectRoot}/${assetsJson.outDir}/${asset.glob}`
-        );
+        // Derive outputs from asset globs
+        const outputs = [
+          ...objectAssets.map(
+            (asset) => `{projectRoot}/${assetsJson.outDir}/${asset.glob}`
+          ),
+          ...stringAssets.map(
+            (asset) => `{projectRoot}/${assetsJson.outDir}/${basename(asset)}`
+          ),
+        ];
 
         const target: TargetConfiguration = {
           executor: '@nx/workspace-plugin:legacy-post-build',
