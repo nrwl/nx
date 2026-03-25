@@ -201,7 +201,7 @@
     },
     "./src/native": {
       "@nx/nx-source": "./src/native/index.ts",
-      "types": "./dist/src/native/index.d.ts",
+      "types": "./src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/plugins/js": {
