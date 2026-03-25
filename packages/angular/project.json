@@ -69,7 +69,8 @@
         "build-base"
       ],
       "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
-      "command": "node ./scripts/copy-readme.js angular"
+      "command": "node ./scripts/copy-readme.js angular",
+      "inputs": ["copyReadme"]
     }
   },
   "implicitDependencies": ["vite"]

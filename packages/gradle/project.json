@@ -14,6 +14,7 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
+      "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
     },
     "build-base": {

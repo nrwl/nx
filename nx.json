@@ -18,6 +18,13 @@
       "{workspaceRoot}/.nx/workflows/agents.yaml",
       "{workspaceRoot}/.github/workflows/ci.yml"
     ],
+    "copyReadme": [
+      "{projectRoot}/README.md",
+      "{projectRoot}/readme-template.md",
+      "{workspaceRoot}/scripts/copy-readme.js",
+      "{workspaceRoot}/scripts/readme-fragments/**/*",
+      "{workspaceRoot}/.prettierignore"
+    ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",

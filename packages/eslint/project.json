@@ -6,7 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint"
+      "command": "node ./scripts/copy-readme.js eslint",
+      "inputs": ["copyReadme"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

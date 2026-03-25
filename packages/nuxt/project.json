@@ -6,7 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/nuxt/README.md"],
-      "command": "node ./scripts/copy-readme.js nuxt"
+      "command": "node ./scripts/copy-readme.js nuxt",
+      "inputs": ["copyReadme"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

@@ -14,11 +14,7 @@
     "build": {
       "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/readme-template.md packages/dotnet/README.md",
       "outputs": ["{projectRoot}/README.md"],
-      "inputs": [
-        "{projectRoot}/readme-template.md",
-        "{workspaceRoot}/scripts/copy-readme.js",
-        "{workspaceRoot}/scripts/readme-fragments"
-      ],
+      "inputs": ["copyReadme"],
       "cache": true
     },
     "build-analyzer": {

@@ -24,6 +24,7 @@
         ],
         "parallel": false
       },
+      "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {

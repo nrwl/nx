@@ -7,6 +7,7 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
       "command": "node ./scripts/copy-readme.js devkit",
+      "inputs": ["copyReadme"],
       "dependsOn": [
         "^build",
         "nx:legacy-post-build",

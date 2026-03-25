@@ -7,6 +7,7 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
       "command": "node ./scripts/copy-readme.js detox",
+      "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {

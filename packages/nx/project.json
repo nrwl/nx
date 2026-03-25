@@ -96,8 +96,7 @@
         "{workspaceRoot}/scripts/copy-local-native.js",
         "{workspaceRoot}/scripts/copy-graph-client.js",
         "{workspaceRoot}/scripts/chmod.js",
-        "{workspaceRoot}/scripts/copy-readme.js",
-        "{projectRoot}/readme-template.md"
+        "copyReadme"
       ],
       "executor": "nx:run-commands",
       "outputs": [

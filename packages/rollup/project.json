@@ -6,7 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/rollup/README.md"],
-      "command": "node ./scripts/copy-readme.js rollup"
+      "command": "node ./scripts/copy-readme.js rollup",
+      "inputs": ["copyReadme"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

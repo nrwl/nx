@@ -6,7 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/storybook/README.md"],
-      "command": "node ./scripts/copy-readme.js storybook"
+      "command": "node ./scripts/copy-readme.js storybook",
+      "inputs": ["copyReadme"]
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",

@@ -23,7 +23,8 @@
           }
         ],
         "parallel": false
-      }
+      },
+      "inputs": ["copyReadme"]
     },
 
     "legacy-post-build": {
