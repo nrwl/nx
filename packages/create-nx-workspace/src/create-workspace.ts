@@ -7,6 +7,7 @@ import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import {
+  GitHubPushError,
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
@@ -205,6 +206,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
+  let pushFailReason: string | undefined;
 
   if (!skipGit) {
     const aiMode = isAiAgent();
@@ -231,14 +233,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         });
       }
     } catch (e) {
-      if (e instanceof Error) {
+      if (e instanceof GitHubPushError) {
+        // GitHub push issues are never fatal — CNW always succeeds.
+        // All reasons are logged in telemetry via pushFailReason.
+        pushedToVcs = VcsPushStatus.FailedToPushToVcs;
+        pushFailReason = e.reason;
+
+        // Only show the push hint when the user actually attempted a push
+        // and it failed. Pre-push issues (gh not installed, auth failed,
+        // timed out during auth) are silent — no point telling the user
+        // about a push they never asked for.
+        if (e.reason === 'push-failed' || e.reason === 'push-timeout') {
+          const githubNewUrl = `https://github.com/new?name=${encodeURIComponent(name)}`;
+          output.log({
+            title: `Push your repo to GitHub: ${githubNewUrl}`,
+          });
+        }
+      } else if (e instanceof Error) {
         if (!aiMode) {
           output.error({
             title: 'Could not initialize git repository',
             bodyLines: mapErrorToBodyLines(e),
           });
         }
-        // In AI mode, error will be handled by the caller
       } else {
         console.error(e);
       }
@@ -305,6 +322,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     nxCloudInfo,
     directory,
     pushedToVcs,
+    pushFailReason,
     connectUrl,
   };
 }
