@@ -333,4 +333,22 @@ describe('Remix Library Generator', () => {
       expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
     });
   });
+
+  describe('--formatter', () => {
+    it('should not generate prettier config when formatter is none', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      await libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+        formatter: 'none',
+      });
+
+      expect(tree.exists('.prettierrc')).toBeFalsy();
+      expect(tree.exists('.prettierignore')).toBeFalsy();
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['prettier']).toBeUndefined();
+    });
+  });
 });
