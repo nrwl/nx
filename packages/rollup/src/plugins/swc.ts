@@ -7,6 +7,7 @@ export function swc(): Plugin {
     transform(code, filename) {
       return transform(code, {
         filename,
+        inputSourceMap: false,
         jsc: {
           transform: {
             react: { runtime: 'automatic' },
