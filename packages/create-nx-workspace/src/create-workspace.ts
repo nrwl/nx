@@ -16,6 +16,7 @@ import {
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   getSkippedNxCloudInfo,
+  openCloudSetupUrl,
   readNxCloudToken,
   setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
@@ -287,6 +288,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       options.completionMessageKey,
       name
     );
+
+    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
+    if (!options.skipCloudConnect) {
+      await openCloudSetupUrl(connectUrl);
+    }
   } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
     // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
