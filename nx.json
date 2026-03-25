@@ -159,6 +159,7 @@
     }
   },
   "plugins": [
+    "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
