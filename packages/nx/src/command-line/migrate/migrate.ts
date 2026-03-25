@@ -3,6 +3,7 @@ import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
+import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
 import {
   clean,
@@ -898,20 +899,46 @@ function createInstalledPackageVersionsResolver(
   root: string
 ): MigratorOptions['getInstalledPackageVersion'] {
   const cache: Record<string, string> = {};
+  const nxRequires = getNxRequirePaths(root).map((path) =>
+    createRequire(join(path, 'package.json'))
+  );
 
   function getInstalledPackageVersion(
     packageName: string,
     overrides?: Record<string, string>
   ): string | null {
-    try {
-      if (overrides?.[packageName]) {
-        return overrides[packageName];
+    if (overrides?.[packageName]) {
+      return overrides[packageName];
+    }
+
+    if (packageName === 'nx') {
+      const nxVersion =
+        cache[packageName] ??
+        (() => {
+          for (const req of nxRequires) {
+            try {
+              const packageJsonPath = req.resolve('nx/package.json');
+              if (packageJsonPath.startsWith(workspaceRoot)) {
+                return readJsonFile<PackageJson>(packageJsonPath).version;
+              }
+            } catch {}
+          }
+
+          return getInstalledPackageVersion('@nrwl/workspace', overrides);
+        })();
+
+      if (nxVersion) {
+        cache[packageName] = nxVersion;
       }
 
+      return nxVersion;
+    }
+
+    try {
       if (!cache[packageName]) {
         const { packageJson, path } = readModulePackageJson(
           packageName,
-          getNxRequirePaths()
+          getNxRequirePaths(root)
         );
         // old workspaces would have the temp installation of nx in the cache,
         // so the resolved package is not the one we need
@@ -923,14 +950,6 @@ function createInstalledPackageVersionsResolver(
 
       return cache[packageName];
     } catch {
-      // Support migrating old workspaces without nx package
-      if (packageName === 'nx') {
-        cache[packageName] = getInstalledPackageVersion(
-          '@nrwl/workspace',
-          overrides
-        );
-        return cache[packageName];
-      }
       return null;
     }
   }
