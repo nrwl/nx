@@ -8,41 +8,6 @@
       "outputs": ["{workspaceRoot}/dist/packages/react-native/README.md"],
       "command": "node ./scripts/copy-readme.js react-native",
       "inputs": ["copyReadme"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          "packages/react-native/*.md",
-          {
-            "input": "packages/react-native",
-            "glob": "**/files/**/.babelrc.template",
-            "output": "/"
-          },
-          {
-            "input": "packages/react-native/src",
-            "glob": "**/!(*.ts)",
-            "output": "/src"
-          },
-          {
-            "input": "packages/react-native",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/react-native",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
     }
   }
 }

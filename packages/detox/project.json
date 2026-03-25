@@ -8,46 +8,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
       "command": "node ./scripts/copy-readme.js detox",
       "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-base", "legacy-post-build"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/detox",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/detox",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/detox",
-            "glob": "**/files/**/.babelrc.template",
-            "output": "/"
-          },
-          {
-            "input": "packages/detox",
-            "glob": "**/files/**/.detoxrc.json.template",
-            "output": "/"
-          },
-          {
-            "input": "./packages/detox",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "dependsOn": ["^build", "build-base"]
     }
   }
 }

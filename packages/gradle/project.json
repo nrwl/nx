@@ -15,7 +15,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
       "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
+      "dependsOn": ["^build", "build-native", "build-base"]
     },
     "build-base": {
       "dependsOn": [
@@ -23,51 +23,6 @@
         "build-native",
         ":gradle-batch-runner:gradle:assemble"
       ]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/gradle",
-            "glob": "**/@(files|files-angular)/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle/batch-runner",
-            "glob": "**/*.jar",
-            "output": "/batch-runner"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
     }
   },
   "tags": [],

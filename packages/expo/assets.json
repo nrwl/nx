@@ -1,0 +1,26 @@
+{
+  "outDir": "dist/packages/expo",
+  "assets": [
+    "packages/expo/*.md",
+    {
+      "glob": "**/!(*.ts)"
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "**/files/**/.babelrc.js.template"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": ["**/tsconfig*.json", "**/project.json"]
+    },
+    "LICENSE"
+  ]
+}

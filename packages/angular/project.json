@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build-ng": {
-      "dependsOn": ["build-base", "typecheck", "legacy-post-build"],
+      "dependsOn": ["build-base", "typecheck", "copy-assets"],
       "executor": "@nx/angular:package",
       "options": {
         "project": "packages/angular/ng-package.json",
@@ -14,60 +14,8 @@
       "outputs": ["{workspaceRoot}/dist/packages/angular"]
     },
 
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "addPackageJsonFields": false,
-        "assets": [
-          {
-            "input": "packages/angular",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/angular",
-            "glob": "**/creator-files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/angular",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/angular",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/angular",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/angular",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
-    },
     "build": {
-      "dependsOn": [
-        "^build",
-        "build-ng",
-        "legacy-post-build",
-        "typecheck",
-        "build-base"
-      ],
+      "dependsOn": ["^build", "build-ng", "typecheck", "build-base"],
       "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
       "command": "node ./scripts/copy-readme.js angular",
       "inputs": ["copyReadme"]

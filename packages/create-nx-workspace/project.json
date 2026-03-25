@@ -25,47 +25,7 @@
         "parallel": false
       },
       "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-base", "legacy-post-build"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/create-nx-workspace",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/create-nx-workspace",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/create-nx-workspace",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/create-nx-workspace",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/create-nx-workspace",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "dependsOn": ["^build", "build-base"]
     }
   },
   "implicitDependencies": [

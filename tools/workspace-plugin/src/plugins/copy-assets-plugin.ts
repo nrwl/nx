@@ -8,7 +8,7 @@ import {
   getAssetOutputPath,
   normalizeAssets,
 } from '@nx/js/src/utils/assets/copy-assets-handler';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 interface AssetEntry {
   glob: string;
@@ -49,7 +49,10 @@ export const createNodesV2: CreateNodesV2 = [
           ...objectAssets.map((asset) => ({
             input: projectRoot,
             glob: asset.glob,
-            ignore: [`${assetsJson.outDir}/**`, ...(asset.ignore ?? [])],
+            ignore: [
+              `${relative(projectRoot, assetsJson.outDir)}/**`,
+              ...(asset.ignore ?? []),
+            ],
             output: '/',
           })),
           ...stringAssets,
@@ -57,7 +60,7 @@ export const createNodesV2: CreateNodesV2 = [
 
         // Normalize assets using CopyAssetsHandler's logic to derive outputs
         const projectDir = join(context.workspaceRoot, projectRoot);
-        const outputDir = join(projectDir, assetsJson.outDir);
+        const outputDir = join(context.workspaceRoot, assetsJson.outDir);
         const normalized = normalizeAssets(
           executorAssets,
           context.workspaceRoot,
@@ -93,7 +96,7 @@ export const createNodesV2: CreateNodesV2 = [
           inputs,
           outputs,
           options: {
-            outputPath: assetsJson.outDir,
+            outputPath: relative(projectRoot, assetsJson.outDir),
             assets: executorAssets,
           },
         };

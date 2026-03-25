@@ -15,56 +15,6 @@
         "packageRoot": "dist/packages/storybook"
       },
       "dependsOn": ["^nx-release-publish"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/storybook",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/project-files/.storybook/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/project-files-ts/.storybook/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "project.json",
-              ".eslintrc.json",
-              "**/test-configs/**"
-            ],
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
     }
   }
 }

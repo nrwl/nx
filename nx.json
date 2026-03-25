@@ -78,6 +78,7 @@
         "^build",
         "typecheck",
         "legacy-post-build",
+        "copy-assets",
         "build-base",
         "build-native"
       ],

@@ -8,46 +8,6 @@
       "command": "node ./scripts/copy-readme.js docker",
       "inputs": ["copyReadme"],
       "outputs": ["{workspaceRoot}/build/packages/docker/README.md"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/docker",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/docker",
-            "glob": "**files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/docker",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/docker",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/docker",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
     }
   }
 }

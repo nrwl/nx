@@ -1,0 +1,17 @@
+{
+  "outDir": "dist/packages/rspack",
+  "assets": [
+    "packages/rspack/*.md",
+    {
+      "glob": "src/**/!(*.ts)"
+    },
+    {
+      "glob": "src/**/*.d.ts"
+    },
+    {
+      "glob": "**.json",
+      "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
+    },
+    "LICENSE"
+  ]
+}

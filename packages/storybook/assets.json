@@ -1,0 +1,31 @@
+{
+  "outDir": "dist/packages/storybook",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/project-files/.storybook/**"
+    },
+    {
+      "glob": "**/project-files-ts/.storybook/**"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": [
+        "**/tsconfig*.json",
+        "project.json",
+        ".eslintrc.json",
+        "**/test-configs/**"
+      ]
+    },
+    {
+      "glob": "**/*.js",
+      "ignore": ["**/jest.config.js"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    "LICENSE"
+  ]
+}

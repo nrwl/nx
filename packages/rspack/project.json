@@ -8,32 +8,6 @@
       "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
       "command": "node ./scripts/copy-readme.js rspack",
       "inputs": ["copyReadme"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          "packages/rspack/*.md",
-          {
-            "input": "./packages/rspack/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/rspack/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/rspack",
-            "glob": "**.json",
-            "output": ".",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
-          },
-          "LICENSE"
-        ]
-      }
     }
   },
   "tags": []

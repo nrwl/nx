@@ -1,0 +1,23 @@
+{
+  "outDir": "dist/packages/react",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    {
+      "glob": "**/*.js",
+      "ignore": ["**/jest.config.js"]
+    },
+    "LICENSE"
+  ]
+}

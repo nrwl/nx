@@ -1,0 +1,17 @@
+{
+  "outDir": "dist/packages/react-native",
+  "assets": [
+    "packages/react-native/*.md",
+    {
+      "glob": "src/**/!(*.ts)"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": ["**/tsconfig*.json"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    "LICENSE"
+  ]
+}

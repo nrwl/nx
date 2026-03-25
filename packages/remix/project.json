@@ -8,32 +8,6 @@
       "outputs": ["{workspaceRoot}/dist/packages/remix/README.md"],
       "command": "node ./scripts/copy-readme.js remix",
       "inputs": ["copyReadme"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          "packages/remix/*.md",
-          {
-            "input": "./packages/remix/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/remix/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/remix",
-            "glob": "**.json",
-            "output": ".",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
-          },
-          "LICENSE"
-        ]
-      }
     }
   },
   "tags": []

@@ -1,5 +1,5 @@
 {
-  "outDir": "dist",
+  "outDir": "packages/nx/dist",
   "assets": [
     { "glob": "**/files/**" },
     { "glob": "**/files/**/.gitkeep" },
