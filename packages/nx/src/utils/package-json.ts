@@ -85,6 +85,15 @@ export interface PackageJson {
   resolutions?: Record<string, string>;
   pnpm?: {
     overrides?: PackageOverride;
+    onlyBuiltDependencies?: string[];
+    neverBuiltDependencies?: string[];
+    allowBuilds?: Record<string, boolean>;
+    supportedArchitectures?: {
+      os?: string[];
+      cpu?: string[];
+      libc?: string[];
+    };
+    ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
   bin?: Record<string, string> | string;
