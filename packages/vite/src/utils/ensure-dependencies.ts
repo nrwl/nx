@@ -5,6 +5,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import {
   ajvVersion,
   analogVitestAngular,
@@ -13,6 +14,7 @@ import {
   jsdomVersion,
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
+  vitePluginReactV4Version,
   vitePluginReactVersion,
 } from './versions';
 
@@ -50,7 +52,14 @@ export function ensureDependencies(
     if (schema.compiler === 'swc') {
       devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
     } else {
-      devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
+      // @vitejs/plugin-react v6 requires Vite 8+, use v4 for older versions
+      const pkgJson = JSON.parse(host.read('package.json', 'utf-8'));
+      const viteRange = pkgJson?.devDependencies?.['vite'];
+      const viteMajor = viteRange ? major(coerce(viteRange)) : null;
+      devDependencies['@vitejs/plugin-react'] =
+        viteMajor !== null && viteMajor < 8
+          ? vitePluginReactV4Version
+          : vitePluginReactVersion;
     }
   }
 

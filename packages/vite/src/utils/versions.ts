@@ -1,6 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 // Also update @nx/remix/utils/versions when changing vite version
-export const viteVersion = '^7.0.0';
+export const viteVersion = '^8.0.0';
+export const viteV7Version = '^7.0.0';
 export const viteV6Version = '^6.0.0';
 export const viteV5Version = '^5.0.0';
 // TODO(v23): Remove vitest from here since once we drop vitest support in favor of @nx/vitest.
@@ -9,7 +10,8 @@ export const vitestV3Version = '^3.0.0';
 export const vitestV2Version = '^2.1.8';
 export const vitestVersion = vitestV4Version;
 export const vitestV1Version = '^1.3.1';
-export const vitePluginReactVersion = '^4.2.0';
+export const vitePluginReactVersion = '^6.0.0';
+export const vitePluginReactV4Version = '^4.2.0';
 export const vitePluginReactSwcVersion = '^3.5.0';
 export const jsdomVersion = '~22.1.0';
 export const vitePluginDtsVersion = '~4.5.0';
