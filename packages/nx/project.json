@@ -156,8 +156,7 @@
       "inputs": ["production", "^production", "native"],
       "outputs": ["{projectRoot}/dist"],
       "options": {
-        "main": "./bin/nx.js",
-        "types": "./bin/nx.d.ts",
+        "addPackageJsonFields": false,
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
