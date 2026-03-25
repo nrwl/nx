@@ -97,7 +97,7 @@ export const createNodesV2: CreateNodesV2 = [
           const input = asset.input ?? projectRoot;
           if (asset.includeIgnoredFiles) {
             // Gitignored files can't be hashed directly — use dependent task outputs
-            dependentOutputGlobs.add(`${input}/${asset.glob}`);
+            dependentOutputGlobs.add(asset.glob);
           } else if (input === projectRoot) {
             positiveInputs.add(`{projectRoot}/${asset.glob}`);
             if (asset.ignore) {

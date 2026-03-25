@@ -77,7 +77,6 @@
       "dependsOn": [
         "^build",
         "typecheck",
-        "legacy-post-build",
         "copy-assets",
         "build-base",
         "build-native"
@@ -151,13 +150,7 @@
     },
     "build-ng": { "cache": true },
     "sitemap": { "cache": true },
-    "copy-docs": { "cache": true },
-    "legacy-post-build": {
-      "dependsOn": ["^build-base", "build-base", "nx:build-base"],
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
-    }
+    "copy-docs": { "cache": true }
   },
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
