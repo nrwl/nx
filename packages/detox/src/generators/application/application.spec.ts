@@ -780,5 +780,4 @@ describe('detox application generator', () => {
       expect(readJson(tree, 'apps/my-app-e2e/package.json').nx).toBeUndefined();
     });
   });
-
 });
