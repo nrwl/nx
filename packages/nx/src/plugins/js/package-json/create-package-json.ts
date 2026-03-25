@@ -256,14 +256,19 @@ export function createPackageJson(
     }
 
     // object fields — merge with project-level overrides
-    for (const field of ['allowBuilds', 'supportedArchitectures'] as const) {
-      if (rootPnpm[field]) {
-        packageJson.pnpm ??= {};
-        packageJson.pnpm[field] = {
-          ...rootPnpm[field],
-          ...packageJson.pnpm[field],
-        };
-      }
+    if (rootPnpm.allowBuilds) {
+      packageJson.pnpm ??= {};
+      packageJson.pnpm.allowBuilds = {
+        ...rootPnpm.allowBuilds,
+        ...packageJson.pnpm.allowBuilds,
+      };
+    }
+    if (rootPnpm.supportedArchitectures) {
+      packageJson.pnpm ??= {};
+      packageJson.pnpm.supportedArchitectures = {
+        ...rootPnpm.supportedArchitectures,
+        ...packageJson.pnpm.supportedArchitectures,
+      };
     }
   }
 
