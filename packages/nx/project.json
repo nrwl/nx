@@ -101,7 +101,7 @@
       ],
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs}",
+        "{workspaceRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs,d.ts}",
         "{workspaceRoot}/packages/nx/dist/src/core/graph",
         "{workspaceRoot}/packages/nx/dist/bin/nx.js",
         "{workspaceRoot}/packages/nx/README.md"
