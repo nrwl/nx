@@ -424,6 +424,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
+      pushFailReason: workspaceInfo.pushFailReason ?? '',
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
       connectUrl: workspaceInfo.connectUrl ?? '',
