@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { createRequire } from 'module';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
@@ -168,7 +169,7 @@ export class ProvenanceError extends Error {
 }
 
 export function getNxPackageGroup(): string[] {
-  const packageJsonPath = join(__dirname, '../../package.json');
+  const packageJsonPath = createRequire(__filename).resolve('nx/package.json');
   const packageJson = readJsonFile(packageJsonPath);
 
   if (!packageJson['nx-migrations']?.packageGroup) {
