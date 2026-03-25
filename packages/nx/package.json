@@ -188,7 +188,7 @@
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./schemas/*.json": "./schemas/*.json",
-    "./src/**/*.json": "./dist/src/**/*.json",
+    "./src/*.json": "./dist/src/*.json",
     "./bin/nx": {
       "@nx/nx-source": "./bin/nx.ts",
       "types": "./dist/bin/nx.d.ts",
@@ -214,10 +214,10 @@
       "types": "./dist/src/plugins/package-json/index.d.ts",
       "default": "./dist/src/plugins/package-json/index.js"
     },
-    "./src/plugins/**/*": {
-      "@nx/nx-source": "./src/plugins/**/*.ts",
-      "types": "./dist/src/plugins/**/*.d.ts",
-      "default": "./dist/src/plugins/**/*.js"
+    "./src/plugins/*": {
+      "@nx/nx-source": "./src/plugins/*.ts",
+      "types": "./dist/src/plugins/*.d.ts",
+      "default": "./dist/src/plugins/*.js"
     },
     "./src/utils/plugins": {
       "@nx/nx-source": "./src/utils/plugins/index.ts",
@@ -238,16 +238,6 @@
       "@nx/nx-source": "./src/utils/catalog/*.ts",
       "types": "./dist/src/utils/catalog/*.d.ts",
       "default": "./dist/src/utils/catalog/*.js"
-    },
-    "./src/**/*.js": {
-      "@nx/nx-source": "./src/**/*.ts",
-      "types": "./dist/src/**/*.d.ts",
-      "default": "./dist/src/**/*.js"
-    },
-    "./src/**/*": {
-      "@nx/nx-source": "./src/**/*.ts",
-      "types": "./dist/src/**/*.d.ts",
-      "default": "./dist/src/**/*.js"
     },
     "./src/*.js": {
       "@nx/nx-source": "./src/*.ts",
