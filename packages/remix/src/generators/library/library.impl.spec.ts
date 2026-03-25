@@ -333,5 +333,4 @@ describe('Remix Library Generator', () => {
       expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
     });
   });
-
 });

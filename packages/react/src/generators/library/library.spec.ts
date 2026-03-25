@@ -1428,5 +1428,4 @@ module.exports = withNx(
       expect(eslintConfig).toContain('**/out-tsc');
     });
   });
-
 });

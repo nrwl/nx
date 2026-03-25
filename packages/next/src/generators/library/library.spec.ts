@@ -504,5 +504,4 @@ describe('next library', () => {
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
     });
   });
-
 });
