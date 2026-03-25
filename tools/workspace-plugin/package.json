@@ -7,8 +7,8 @@
   "dependencies": {
     "@nx/conformance": "4.0.0",
     "@nx/devkit": "workspace:*",
-    "@nx/plugin": "workspace:*",
     "@nx/js": "workspace:*",
+    "@nx/plugin": "workspace:*",
     "@xmldom/xmldom": "^0.8.10",
     "glob": "7.1.4",
     "js-yaml": "^4.1.0",

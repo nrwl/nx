@@ -12,9 +12,17 @@ import * as path from 'node:path';
 import ignore from 'ignore';
 import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
+import {
+  normalizeAssets,
+  getAssetOutputPath,
+  NormalizedAssetEntry as AssetEntry,
+} from './normalize-assets';
 import { logger, workspaceRoot } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 import { dim } from 'picocolors';
+
+export type { AssetEntry };
+export { normalizeAssets, getAssetOutputPath };
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -30,15 +38,6 @@ interface CopyAssetHandlerOptions {
   outputDir: string;
   assets: (string | AssetGlob)[];
   callback?: (events: FileEvent[]) => void;
-  includeIgnoredFiles?: boolean;
-}
-
-export interface AssetEntry {
-  isGlob: boolean;
-  pattern: string;
-  ignore: string[] | null;
-  input: string;
-  output: string;
   includeIgnoredFiles?: boolean;
 }
 
@@ -60,60 +59,6 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
     logger.verbose(`\n${dim(relativeDest)}`);
   });
 };
-
-/**
- * Normalize raw asset definitions (strings or objects) into resolved
- * AssetEntry objects with computed input, output, and pattern fields.
- */
-export function normalizeAssets(
-  assets: (string | AssetGlob)[],
-  rootDir: string,
-  projectDir: string,
-  outputDir: string
-): AssetEntry[] {
-  const resolvedOutputDir = path.isAbsolute(outputDir)
-    ? outputDir
-    : path.resolve(rootDir, outputDir);
-
-  return assets.map((f) => {
-    if (typeof f === 'string') {
-      return {
-        isGlob: false,
-        pattern: f,
-        input: path.relative(rootDir, projectDir),
-        output: path.relative(rootDir, resolvedOutputDir),
-        ignore: null,
-        includeIgnoredFiles: undefined,
-      };
-    }
-    return {
-      isGlob: true,
-      pattern: pathPosix.join(f.input, f.glob),
-      input: f.input,
-      output: pathPosix.join(
-        path.relative(rootDir, resolvedOutputDir),
-        f.output
-      ),
-      ignore: f.ignore
-        ? f.ignore.map((ig) => pathPosix.join(f.input, ig))
-        : null,
-      includeIgnoredFiles: f.includeIgnoredFiles,
-    };
-  });
-}
-
-/**
- * Compute the output path for a file given its asset entry,
- * matching the dest logic used during file copying.
- */
-export function getAssetOutputPath(
-  src: string,
-  assetEntry: AssetEntry
-): string {
-  const relPath = path.relative(assetEntry.input, src);
-  const dest = relPath.startsWith('..') ? src : relPath;
-  return pathPosix.join(assetEntry.output, dest);
-}
 
 export class CopyAssetsHandler {
   private readonly projectDir: string;

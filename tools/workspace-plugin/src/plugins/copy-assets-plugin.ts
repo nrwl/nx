@@ -4,11 +4,8 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import {
-  getAssetOutputPath,
-  normalizeAssets,
-} from '@nx/js/src/utils/assets/copy-assets-handler';
 import { dirname, join, relative } from 'node:path';
+import { getAssetOutputPath, normalizeAssets } from './normalize-assets';
 
 interface AssetEntry {
   glob: string;
@@ -78,7 +75,7 @@ export const createNodesV2: CreateNodesV2 = [
           ...stringAssets,
         ];
 
-        // Normalize assets using CopyAssetsHandler's logic to derive outputs
+        // Normalize assets to derive outputs
         const projectDir = join(context.workspaceRoot, projectRoot);
         const outputDir = join(context.workspaceRoot, assetsJson.outDir);
         const normalized = normalizeAssets(
@@ -96,7 +93,6 @@ export const createNodesV2: CreateNodesV2 = [
         for (const asset of objectAssets) {
           const input = asset.input ?? projectRoot;
           if (asset.includeIgnoredFiles) {
-            // Gitignored files can't be hashed directly — use dependent task outputs
             dependentOutputGlobs.add(asset.glob);
           } else if (input === projectRoot) {
             positiveInputs.add(`{projectRoot}/${asset.glob}`);
@@ -123,7 +119,7 @@ export const createNodesV2: CreateNodesV2 = [
           });
         }
 
-        // Derive outputs using the same dest logic as CopyAssetsHandler
+        // Derive outputs
         const outputs = normalized.map((entry) => {
           const outputPath = getAssetOutputPath(entry.pattern, entry);
           if (outputPath.startsWith(projectRoot + '/')) {
