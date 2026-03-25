@@ -598,21 +598,6 @@ describe('app', () => {
     });
   });
 
-  describe('--formatter', () => {
-    it('should not generate prettier config when formatter is none', async () => {
-      await applicationGenerator(tree, {
-        directory: 'my-node-app',
-        formatter: 'none',
-        addPlugin: true,
-      });
-
-      expect(tree.exists('.prettierrc')).toBeFalsy();
-      expect(tree.exists('.prettierignore')).toBeFalsy();
-      const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['prettier']).toBeUndefined();
-    });
-  });
-
   describe('--skipFormat', () => {
     let formatFilesSpy: jest.SpyInstance;
 

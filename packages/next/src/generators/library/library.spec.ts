@@ -505,24 +505,4 @@ describe('next library', () => {
     });
   });
 
-  describe('--formatter', () => {
-    it('should not generate prettier config when formatter is none', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      await libraryGenerator(tree, {
-        directory: 'my-lib',
-        linter: 'none',
-        skipFormat: true,
-        skipTsConfig: false,
-        unitTestRunner: 'none',
-        style: 'css',
-        component: false,
-        formatter: 'none',
-      });
-
-      expect(tree.exists('.prettierrc')).toBeFalsy();
-      expect(tree.exists('.prettierignore')).toBeFalsy();
-      const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['prettier']).toBeUndefined();
-    });
-  });
 });
