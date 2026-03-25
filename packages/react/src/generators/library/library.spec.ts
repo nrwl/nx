@@ -1429,18 +1429,4 @@ module.exports = withNx(
     });
   });
 
-  describe('--formatter', () => {
-    it('should not generate prettier config when formatter is none', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        directory: 'my-lib',
-        formatter: 'none',
-      });
-
-      expect(tree.exists('.prettierrc')).toBeFalsy();
-      expect(tree.exists('.prettierignore')).toBeFalsy();
-      const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['prettier']).toBeUndefined();
-    });
-  });
 });

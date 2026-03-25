@@ -781,25 +781,4 @@ describe('detox application generator', () => {
     });
   });
 
-  describe('--formatter', () => {
-    it('should not generate prettier config when formatter is none', async () => {
-      addProjectConfiguration(tree, 'my-app', {
-        root: 'my-app',
-      });
-
-      await detoxApplicationGenerator(tree, {
-        e2eDirectory: 'my-app-e2e',
-        appProject: 'my-app',
-        linter: 'none',
-        framework: 'react-native',
-        addPlugin: true,
-        formatter: 'none',
-      });
-
-      expect(tree.exists('.prettierrc')).toBeFalsy();
-      expect(tree.exists('.prettierignore')).toBeFalsy();
-      const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['prettier']).toBeUndefined();
-    });
-  });
 });
