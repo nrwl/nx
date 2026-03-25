@@ -79,10 +79,10 @@ export async function getNxProjectGraphLines(
           [
             gradlewFile,
             new Error(
-              `Gradle project graph generation timed out after ${e.seconds} ${e.seconds === 1 ? 'second' : 'seconds'}. \n` +
-                `  - Run "gradlew --stop" to stop the Gradle daemon and "gradlew clean" to clear the build cache\n` +
-                `  - Set the environment variable NX_GRADLE_PROJECT_GRAPH_TIMEOUT to a higher value (in seconds) to increase the timeout\n` +
-                `  - Set NX_GRADLE_DISABLE=true to disable the Gradle plugin entirely`
+              `Gradle project graph generation timed out after ${e.seconds} ${e.seconds === 1 ? 'second' : 'seconds'}.\n` +
+                `  1. Run "gradlew --stop" to stop the Gradle daemon, then run "gradlew clean" to clear the build cache.\n` +
+                `  2. If the issue persists, set the environment variable NX_GRADLE_PROJECT_GRAPH_TIMEOUT to a higher value (in seconds) to increase the timeout.\n` +
+                `  3. If the issue still persists, set NX_GRADLE_DISABLE=true to disable the Gradle plugin entirely.`
             ),
           ],
         ],
