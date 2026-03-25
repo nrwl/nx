@@ -1,2 +1,4 @@
 exclude-reads:
   - packages/nx/src/native/*.node
+exclude-writes:
+  - '**/.swc/**'
