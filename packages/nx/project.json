@@ -56,15 +56,6 @@
     "copy-native-package-directories": {
       "command": "node scripts/copy.js packages/nx/dist/native-packages/* dist/packages"
     },
-    "copy-local-native": {
-      "dependsOn": ["build-native"],
-      "inputs": [
-        { "dependentTasksOutputFiles": "**/*.{node,wasm,js,mjs,cjs}" },
-        "{workspaceRoot}/scripts/copy-local-native.js"
-      ],
-      "outputs": ["{projectRoot}/dist/src/native/**/*.{node,wasm,js,mjs,cjs}"],
-      "command": "node ./scripts/copy-local-native.js nx"
-    },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
       "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
@@ -75,9 +66,6 @@
     "long-task": {
       "command": "node -e \"let i = 0; let interval = setInterval(() => { console.log('Long task running ' + i++ + '---------------------------------------------------------------'); }, 200); setTimeout(() => { clearInterval(interval); console.log('Long task finished'); }, 62_000);\"",
       "dependsOn": ["echo"]
-    },
-    "build-base": {
-      "dependsOn": ["copy-local-native"]
     },
     "build": {
       "dependsOn": [
@@ -93,7 +81,6 @@
           "dependentTasksOutputFiles": "**/*.node",
           "transitive": true
         },
-        "{workspaceRoot}/scripts/copy-local-native.js",
         "{workspaceRoot}/scripts/copy-graph-client.js",
         "{workspaceRoot}/scripts/chmod.js",
         "copyReadme"

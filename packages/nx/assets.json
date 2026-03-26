@@ -17,7 +17,7 @@
       ]
     },
     {
-      "glob": "**/*.{mjs,cjs,js,css,html,svg}",
+      "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm,node}",
       "ignore": ["**/jest.config.js"]
     }
   ]
