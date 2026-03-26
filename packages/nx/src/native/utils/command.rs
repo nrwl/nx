@@ -11,7 +11,7 @@ const CREATE_NO_WINDOW: u32 = 0x08000000;
 /// Use this instead of `Command::new()` directly to avoid spawning visible
 /// console windows from background/daemon processes.
 pub fn create_command(program: &str) -> Command {
-    let mut cmd = Command::new(program);
+    let cmd = Command::new(program);
     #[cfg(target_os = "windows")]
     cmd.creation_flags(CREATE_NO_WINDOW);
     cmd

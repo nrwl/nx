@@ -2359,7 +2359,7 @@ impl TasksList {
         column_visibility: &ColumnVisibility,
         selected_style: Style,
         normal_style: Style,
-    ) -> Row {
+    ) -> Row<'_> {
         let status_cell = {
             let mut spans = Self::render_status_prefix(is_selected, is_in_parallel_section);
 
@@ -2420,7 +2420,7 @@ impl TasksList {
         column_visibility: &ColumnVisibility,
         selected_style: Style,
         normal_style: Style,
-    ) -> Row {
+    ) -> Row<'_> {
         let status_cell =
             self.render_task_status_cell(task, is_selected, show_vertical_line, trailing_spaces);
         let name = self.render_name_cell(task_name.clone(), &task_name, indent_name);
