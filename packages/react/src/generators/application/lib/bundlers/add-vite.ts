@@ -45,7 +45,8 @@ export async function setupViteConfiguration(
     port: options.port,
     // React Router does not yet support Vite 8, so force Vite 7.
     ...(options.useReactRouter ? { useViteV7: true } : {}),
-  });
+    formatter: options.formatter,
+  } as any);
   tasks.push(viteTask);
   createOrEditViteConfig(
     tree,
@@ -85,7 +86,8 @@ export async function setupVitestConfiguration(
     inSourceTests: options.inSourceTests,
     skipFormat: true,
     addPlugin: options.addPlugin,
-  });
+    formatter: options.formatter,
+  } as any);
   tasks.push(vitestTask);
   createOrEditViteConfig(
     tree,

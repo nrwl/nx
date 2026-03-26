@@ -19,7 +19,8 @@ export async function initRsbuild(
     skipPackageJson: options.skipPackageJson,
     addPlugin: true,
     skipFormat: true,
-  });
+    formatter: options.formatter,
+  } as any);
   tasks.push(initTask);
 }
 
@@ -50,7 +51,8 @@ export async function setupRsbuildConfiguration(
     tsConfig: './tsconfig.app.json',
     target: 'web',
     devServerPort: options.devServerPort ?? 4200,
-  });
+    formatter: options.formatter,
+  } as any);
   tasks.push(rsbuildTask);
 
   const pathToConfigFile = joinPathFragments(

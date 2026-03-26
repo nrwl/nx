@@ -372,7 +372,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       addPlugin: options.addPlugin,
-    });
+      formatter: options.formatter,
+    } as any);
     tasks.push(viteTask);
     createOrEditViteConfig(
       host,
@@ -402,6 +403,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
       addPlugin: options.addPlugin,
       compiler: options.compiler,
+      formatter: options.formatter,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

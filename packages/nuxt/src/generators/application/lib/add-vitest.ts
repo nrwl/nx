@@ -29,6 +29,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       testEnvironment: 'jsdom',
       skipViteConfig: true,
       addPlugin: true,
+      formatter: options.formatter,
     },
     hasPlugin
   );
