@@ -419,21 +419,18 @@ jobs:
           NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
+          NX_GRADLE_DISABLE: 'true'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE
           shell: bash
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
+            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
             sudo npm install --location=global --ignore-scripts pnpm@10.28.2
-            # Set up Java 17
-            export JAVA_HOME=/usr/local/openjdk17
-            export PATH="$JAVA_HOME/bin:$PATH"
-            java --version
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -489,9 +486,7 @@ jobs:
             pnpm store prune || true
             rm -rf ~/.npm || true
             rm -rf ~/.pnpm-store || true
-            # Remove Rust build artifacts if any
-            rm -rf ~/.cargo/registry || true
-            rm -rf ~/.cargo/git || true
+            # Clean Rust extras but keep registry/git (needed for cargo to resolve deps)
             rm -rf ~/.rustup/toolchains/*/share || true
             # Remove other development tool caches
             rm -rf ~/.cache/* || true
