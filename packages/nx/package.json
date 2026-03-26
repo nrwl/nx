@@ -177,6 +177,49 @@
       "x86_64-unknown-freebsd"
     ]
   },
+  "typesVersions": {
+    "*": {
+      "bin/nx": [
+        "dist/bin/nx.d.ts"
+      ],
+      "bin/nx.js": [
+        "dist/bin/nx.d.ts"
+      ],
+      "src/native": [
+        "src/native/index.d.ts"
+      ],
+      "src/plugins/js": [
+        "dist/src/plugins/js/index.d.ts"
+      ],
+      "src/plugins/package-json": [
+        "dist/src/plugins/package-json/index.d.ts"
+      ],
+      "src/plugins/*": [
+        "dist/src/plugins/*.d.ts"
+      ],
+      "src/utils/plugins": [
+        "dist/src/utils/plugins/index.d.ts"
+      ],
+      "src/utils/plugins/*": [
+        "dist/src/utils/plugins/*.d.ts"
+      ],
+      "src/utils/catalog": [
+        "dist/src/utils/catalog/index.d.ts"
+      ],
+      "src/utils/catalog/*": [
+        "dist/src/utils/catalog/*.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "release": [
+        "dist/release/index.d.ts"
+      ],
+      "tasks-runners/default": [
+        "dist/tasks-runners/default.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "@nx/nx-source": "./bin/nx.ts",
