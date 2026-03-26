@@ -12,8 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /** Task execution state for tracking progress */
@@ -72,82 +70,77 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     // Latch to signal when all tasks are done
     val completionLatch = CountDownLatch(initialGraph.tasks.size)
-    // Flag to signal workers to stop polling when all tasks are done
-    val allTasksDone = AtomicBoolean(false)
 
     try {
       // Submit worker tasks that pull from the queue
       repeat(numWorkers) {
         executor.submit {
-          while (!allTasksDone.get()) {
-            // Use poll with timeout instead of poll() to avoid premature worker exit.
-            // poll() returns null immediately when the queue is empty, causing workers
-            // to exit even though other workers are still processing tasks that will
-            // produce new root tasks. This led to a deadlock where completionLatch.await()
-            // would block forever because no workers remained to process queued tasks.
-            val taskId = taskQueue.poll(100, TimeUnit.MILLISECONDS) ?: continue
+            while (completionLatch.count > 0L) {
+              // take() blocks until a task is available. If all tasks complete while
+              // a worker is blocked here, shutdownNow() will interrupt it.
+              val taskId = try {
+                taskQueue.take()
+              } catch (_: InterruptedException) { break }
 
-            if (taskStates.containsKey(taskId)) {
-              completionLatch.countDown()
-              continue
-            }
+              if (taskStates.containsKey(taskId)) {
+                completionLatch.countDown()
+                continue
+              }
 
-            val result = executeSingleTask(taskId, results)
+              val result = executeSingleTask(taskId, results)
 
-            // Record build state for all batch projects BEFORE emitting result.
-            // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
-            // must be written first to ensure the cached outputs include fresh build state.
-            recordBuildStatesForBatchProjects(taskId)
+              // Record build state for all batch projects BEFORE emitting result.
+              // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
+              // must be written first to ensure the cached outputs include fresh build state.
+              recordBuildStatesForBatchProjects(taskId)
 
-            // Emit result to stderr for streaming to Nx
-            emitResult(taskId, result)
+              // Emit result to stderr for streaming to Nx
+              emitResult(taskId, result)
 
-            // Record task state
-            val success = results[taskId]?.success == true
-            taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
+              // Record task state
+              val success = results[taskId]?.success == true
+              taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
 
-            // Update graph and find newly available tasks
-            synchronized(graphRef) {
-              val currentGraph = graphRef.get()
-              val newGraph = removeTasksFromTaskGraph(
-                currentGraph,
-                if (success) listOf(taskId) else emptyList(),
-                if (!success) listOf(taskId) else emptyList()
-              )
-              graphRef.set(newGraph)
+              // Update graph and find newly available tasks
+              synchronized(graphRef) {
+                val currentGraph = graphRef.get()
+                val newGraph = removeTasksFromTaskGraph(
+                  currentGraph,
+                  if (success) listOf(taskId) else emptyList(),
+                  if (!success) listOf(taskId) else emptyList()
+                )
+                graphRef.set(newGraph)
 
-              // Add newly available root tasks to queue
-              val previousRoots = currentGraph.roots.toSet()
-              val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
-              newRoots.forEach { newTaskId ->
-                if (!taskStates.containsKey(newTaskId)) {
-                  taskQueue.offer(newTaskId)
-                  log.debug("Added newly available task to queue: $newTaskId")
+                // Add newly available root tasks to queue
+                val previousRoots = currentGraph.roots.toSet()
+                val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
+                newRoots.forEach { newTaskId ->
+                  if (!taskStates.containsKey(newTaskId)) {
+                    taskQueue.offer(newTaskId)
+                    log.debug("Added newly available task to queue: $newTaskId")
+                  }
+                }
+
+                // Mark skipped tasks (those removed due to failed dependencies)
+                // Skipped tasks are omitted from results, not marked as failed
+                val oldTasks = currentGraph.tasks.keys
+                val newTasks = newGraph.tasks.keys
+                val skippedTasks = oldTasks - newTasks - taskStates.keys
+                skippedTasks.forEach { skippedTaskId ->
+                  log.debug("Task $skippedTaskId was skipped due to a failed dependency")
+                  taskStates[skippedTaskId] = TaskState.SKIPPED
+                  // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
+                  completionLatch.countDown()
                 }
               }
 
-              // Mark skipped tasks (those removed due to failed dependencies)
-              // Skipped tasks are omitted from results, not marked as failed
-              val oldTasks = currentGraph.tasks.keys
-              val newTasks = newGraph.tasks.keys
-              val skippedTasks = oldTasks - newTasks - taskStates.keys
-              skippedTasks.forEach { skippedTaskId ->
-                log.debug("Task $skippedTaskId was skipped due to a failed dependency")
-                taskStates[skippedTaskId] = TaskState.SKIPPED
-                // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
-                completionLatch.countDown()
-              }
+              completionLatch.countDown()
             }
-
-            completionLatch.countDown()
-          }
         }
       }
 
       // Wait for all tasks to complete
       completionLatch.await()
-      // Signal workers to stop polling
-      allTasksDone.set(true)
     } finally {
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
