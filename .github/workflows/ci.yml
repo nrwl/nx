@@ -75,9 +75,20 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
+      - name: Install Maven plugin locally
+        run: ./mvnw install -DskipTests
+
       - name: Nx Report
         run:
           pnpm nx report
+
+      - name: Debug Maven noop targets
+        run: |
+          npx nx show project "dev.nx.maven:nx-maven-shared" --json
+          npx nx show project "dev.nx.maven:batch-runner-adapters" --json
+          npx nx show project "dev.nx.maven:maven-batch-runner" --json
+          npx nx show project "dev.nx.maven:maven3-adapter" --json
+          npx nx show project "dev.nx.maven:maven4-adapter" --json
 
       - name: Run Checks/Lint/Test/Build
         env:
