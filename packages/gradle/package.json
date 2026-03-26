@@ -40,7 +40,8 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "toml-eslint-parser": "^0.10.0"
+    "toml-eslint-parser": "^0.10.0",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"
