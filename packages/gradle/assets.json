@@ -19,7 +19,7 @@
       "glob": "**/*.d.ts"
     },
     {
-      "glob": "batch-runner/**/*.jar"
+      "glob": "**/*.jar"
     },
     "LICENSE"
   ]
