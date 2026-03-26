@@ -59,7 +59,7 @@
     "copy-local-native": {
       "dependsOn": ["build-native"],
       "inputs": [
-        "{projectRoot}/src/native/**/*.{node,wasm,js,mjs,cjs}",
+        { "dependentTasksOutputFiles": "**/*.{node,wasm,js,mjs,cjs}" },
         "{workspaceRoot}/scripts/copy-local-native.js"
       ],
       "outputs": ["{projectRoot}/dist/src/native/**/*.{node,wasm,js,mjs,cjs}"],

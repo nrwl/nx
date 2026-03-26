@@ -9,7 +9,7 @@
       "glob": "src/**/*.d.ts"
     },
     {
-      "glob": "**.json",
+      "glob": "**/*.json",
       "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
     },
     "LICENSE"
