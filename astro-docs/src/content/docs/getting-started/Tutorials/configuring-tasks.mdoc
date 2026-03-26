@@ -1,0 +1,228 @@
+---
+title: Configuring Tasks
+description: Learn how to define and configure tasks in your Nx workspace using package.json scripts, project.json targets, task dependencies, and targetDefaults.
+sidebar:
+  order: 3
+---
+
+{% llm_copy_prompt title="Tutorial 3/8: Configure tasks for your projects" %}
+Help me configure tasks (build, test, lint, serve) for my Nx workspace projects.
+Use my existing workspace and projects for hands-on examples.
+
+Show me what tasks already exist by running `nx show project <project-name>` for one of my projects. Then help me add or configure tasks using package.json scripts or project.json targets, set up task dependencies with `dependsOn`, and verify with `nx show project <project-name>`.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+Every project needs tasks: `build`, `test`, `lint`, `serve`. Nx needs to know about your tasks so it can run them, cache the results, and orchestrate them in the correct order across your workspace. If you don't have a workspace yet, see [Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace).
+
+The examples below use Vite and Vitest, but the concepts apply to any tool. Substitute your own build and test commands as needed.
+
+## What is a task?
+
+A task is a named action that Nx can run for a project, like `build`, `test`, or `lint`. Each task belongs to a specific project and is referred to as `<project>:<task>`:
+
+```shell
+nx run my-app:build
+```
+
+You'll learn more about running tasks in the [Running Tasks](/docs/getting-started/tutorials/running-tasks) tutorial.
+
+## Defining tasks in package.json
+
+The simplest way to define tasks is with `package.json` scripts. Nx picks these up automatically:
+
+```jsonc
+// apps/my-app/package.json
+{
+  "name": "my-app",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+  },
+}
+```
+
+If your workspace already has `package.json` scripts, Nx can run them immediately, no additional configuration needed.
+
+## Defining tasks in project.json
+
+If you prefer to keep task definitions out of `package.json` (e.g., you don't want scripts published to npm) or for non-JavaScript projects, define tasks in a `project.json` file using the `targets` property:
+
+```jsonc
+// apps/my-app/project.json
+{
+  "name": "my-app",
+  "targets": {
+    "build": {
+      "command": "vite build",
+    },
+    "test": {
+      "command": "vitest run",
+    },
+  },
+}
+```
+
+The `command` property runs a shell command, similar to a `package.json` script. You can also use [executors](/docs/concepts/executors-and-configurations) for more advanced task runners provided by Nx plugins, but `command` works for most cases.
+
+{% aside type="note" title="package.json vs project.json" %}
+Both work. Define your scripts in `package.json` as usual. For Nx-specific configuration like `dependsOn`, `inputs`, or `outputs`, you have three options:
+
+- Set defaults for all projects in `targetDefaults` in `nx.json` (covered below)
+- Add an `nx` property in `package.json` (supports the same fields as `project.json`, but can bloat the file)
+- Use a separate `project.json` file
+
+See the [project configuration reference](/docs/reference/project-configuration) for details.
+{% /aside %}
+
+## Task dependencies
+
+In a monorepo, tasks often need to run in a specific order. For example, before building an app, you need to build the libraries it depends on.
+
+The `dependsOn` property defines this ordering:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+The `^` prefix means "the same task on projects this project depends on." So `nx build my-app` will first build all of `my-app`'s dependencies, then build `my-app` itself.
+
+You can also define dependencies without `^` for tasks within the same project:
+
+{% tabs %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "scripts": {
+    "build": "vite build",
+    "generate-api-types": "openapi-generator generate -i api.yaml -o src/api",
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": ["generate-api-types"],
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "command": "vite build",
+      "dependsOn": ["generate-api-types"],
+    },
+    "generate-api-types": {
+      "command": "openapi-generator generate -i api.yaml -o src/api",
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Here, `build` always runs `generate-api-types` first within the same project.
+
+## Continuous tasks
+
+Some tasks, like development servers, never exit. If another task depends on a long-running process, it would wait forever. Mark these tasks as `continuous` so Nx starts them alongside their dependents instead of waiting for them to finish:
+
+{% tabs %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "scripts": {
+    "dev": "vite dev",
+    "e2e": "playwright test",
+  },
+  "nx": {
+    "targets": {
+      "dev": {
+        "continuous": true,
+      },
+      "e2e": {
+        "dependsOn": ["dev"],
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// apps/my-app/project.json
+{
+  "targets": {
+    "serve": {
+      "command": "vite dev",
+      "continuous": true,
+    },
+    "e2e": {
+      "command": "playwright test",
+      "dependsOn": ["serve"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Running `nx e2e my-app` starts the dev server and then runs the E2E tests against it.
+
+{% aside type="note" %}
+Substitute your own tools as needed. Any long-running process (like `next dev`, `webpack serve`, or a custom script) can be marked as `continuous`.
+{% /aside %}
+
+## Reducing repetition with target defaults
+
+When many projects share the same task configuration, defining it in every `project.json` is tedious. The `targetDefaults` property in `nx.json` lets you set defaults for all projects at once:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+Individual projects can still override these defaults when needed. The cascade order is: project-level config > target defaults > defaults.
+
+For more on reducing configuration, see [Reducing Configuration Boilerplate](/docs/getting-started/tutorials/reducing-configuration-boilerplate).
+
+## Learn more
+
+- [Project configuration reference](/docs/reference/project-configuration): all available target properties
+- [Task pipeline configuration](/docs/concepts/task-pipeline-configuration): deep dive on `dependsOn`
+- [Defining a task pipeline](/docs/guides/tasks--caching/defining-task-pipeline): step-by-step guide
+
+{% cards cols=2 %}
+{% card title="Previous: Managing Dependencies" description="Track dependencies between projects" url="/docs/getting-started/tutorials/managing-dependencies" /%}
+{% card title="Next: Running Tasks" description="Run tasks for one or many projects" url="/docs/getting-started/tutorials/running-tasks" /%}
+{% /cards %}
