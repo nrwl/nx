@@ -49,21 +49,23 @@ const isInvokedByTsx: boolean = (() => {
 })();
 
 /**
- * When process.features.typescript is truthy and the user has opted in via
- * NX_PREFER_NODE_STRIP_TYPES=true, we can skip registering swc-node or ts-node
- * transpilers since Node.js will handle TypeScript natively.
+ * When Node.js has native TypeScript support (22.6+), we can skip registering
+ * swc-node or ts-node transpilers since Node.js will handle TypeScript natively.
  *
- * This can significantly improve performance when loading TypeScript config files, but there are some things
- * that won't work. See: https://nodejs.org/api/typescript.html#full-typescript-support
+ * Opt in via NX_PREFER_NODE_STRIP_TYPES=true. This is not yet the default because
+ * Node's type stripping doesn't support some TS features like enums and decorators.
+ * See: https://nodejs.org/api/typescript.html#full-typescript-support
  *
- * TODO(v23): We should turn this on by default, but look at if need to fallback to SWC/ts-node if it fails.
+ * TODO(v23): Enable by default with fallback to SWC/ts-node on failure.
  */
+const nodeHasNativeTypescript: boolean = !!(process as any).features
+  ?.typescript;
+
 const preferNodeStripTypes: boolean = (() => {
   if (process.env.NX_PREFER_NODE_STRIP_TYPES !== 'true') {
     return false;
   }
-  // process.features.typescript is 'strip' | 'transform' | false in Node 22.6+
-  return !!(process as any).features?.typescript;
+  return nodeHasNativeTypescript;
 })();
 
 /**
@@ -100,16 +102,19 @@ export function registerTsProject(
 
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
 
-  // See explanation alongside preferNodeStripTypes declaration
-  // When using Node.js native type stripping, skip transpiler registration
-  // but still register tsconfig-paths for path mapping support
+  const tsConfigPathsConfig = loadTsConfigPathsConfig(tsConfigPath);
+
+  // Register ESM resolve hook for tsconfig path aliases (works alongside any transpiler)
+  registerTsConfigPathsEsmLoader(tsConfigPathsConfig);
+
+  // When Node.js has native TypeScript support, skip transpiler registration
   if (preferNodeStripTypes) {
-    return registerTsConfigPaths(tsConfigPath);
+    return registerTsConfigPaths(tsConfigPath, tsConfigPathsConfig);
   }
   const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
-    registerTsConfigPaths(tsConfigPath),
+    registerTsConfigPaths(tsConfigPath, tsConfigPathsConfig),
     registerTranspiler(compilerOptions, tsConfigRaw),
   ];
 
@@ -370,31 +375,51 @@ export function registerTranspiler(
   return transpiler();
 }
 
+interface TsConfigPathsConfig {
+  absoluteBaseUrl: string;
+  paths: Record<string, string[]>;
+}
+
 /**
- * @param tsConfigPath Adds the paths from a tsconfig file into node resolutions
- * @returns cleanup function
+ * Loads and parses tsconfig path mappings from a tsconfig file.
  */
-export function registerTsConfigPaths(tsConfigPath): () => void {
+function loadTsConfigPathsConfig(
+  tsConfigPath: string
+): TsConfigPathsConfig | null {
   try {
-    /**
-     * Load the ts config from the source project
-     */
     const tsconfigPaths = loadTsConfigPaths();
+    if (!tsconfigPaths) return null;
+
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
-    /**
-     * Register the custom workspace path mappings with node so that workspace libraries
-     * can be imported and used within project
-     */
     if (tsConfigResult.resultType === 'success') {
-      return tsconfigPaths.register({
-        baseUrl: tsConfigResult.absoluteBaseUrl,
+      return {
+        absoluteBaseUrl: tsConfigResult.absoluteBaseUrl,
         paths: tsConfigResult.paths,
-      });
+      };
     }
   } catch (err) {
     if (err instanceof Error) {
       throw new Error(`Unable to load ${tsConfigPath}: ` + err.message);
     }
+  }
+  return null;
+}
+
+/**
+ * @param tsConfigPath Adds the paths from a tsconfig file into node resolutions
+ * @returns cleanup function
+ */
+export function registerTsConfigPaths(
+  tsConfigPath: string,
+  config?: TsConfigPathsConfig | null
+): () => void {
+  const tsConfigPathsConfig = config ?? loadTsConfigPathsConfig(tsConfigPath);
+  if (tsConfigPathsConfig) {
+    const tsconfigPaths = loadTsConfigPaths();
+    return tsconfigPaths.register({
+      baseUrl: tsConfigPathsConfig.absoluteBaseUrl,
+      paths: tsConfigPathsConfig.paths,
+    });
   }
   throw new Error(`Unable to load ${tsConfigPath}`);
 }
@@ -453,6 +478,39 @@ function readCompilerOptionsWithTypescript(tsConfigPath) {
   };
 }
 
+let isTsConfigPathsEsmLoaderRegistered = false;
+
+/**
+ * Registers an ESM resolve hook that handles tsconfig path aliases.
+ * Needed because `tsconfig-paths` only patches CJS require() — ESM
+ * `import` specifiers bypass that patch entirely.
+ */
+function registerTsConfigPathsEsmLoader(
+  config: TsConfigPathsConfig | null
+): void {
+  if (isTsConfigPathsEsmLoaderRegistered || !config) {
+    return;
+  }
+
+  try {
+    const module = require('node:module');
+    if (!module.register) return;
+
+    const url = require('node:url');
+    const loaderPath = join(__dirname, 'tsconfig-paths-esm-loader.mjs');
+    module.register(url.pathToFileURL(loaderPath), {
+      data: {
+        baseUrl: config.absoluteBaseUrl,
+        paths: config.paths,
+      },
+    });
+
+    isTsConfigPathsEsmLoaderRegistered = true;
+  } catch {
+    // Non-critical — CJS path resolution still works
+  }
+}
+
 function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {
   try {
     return require('tsconfig-paths');
@@ -478,7 +536,7 @@ function warnNoTsconfigPaths() {
 function warnNoTranspiler() {
   // Node.js 22.6+ can handle TypeScript natively via type stripping,
   // so the warning about missing transpilers is misleading in that case.
-  if ((process as any).features?.typescript) {
+  if (nodeHasNativeTypescript) {
     return;
   }
   logger.warn(
