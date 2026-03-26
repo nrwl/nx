@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
+import type { ViteConfigurationGeneratorSchema } from '@nx/vite/src/generators/configuration/schema';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
@@ -142,7 +143,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       testEnvironment: 'jsdom',
       addPlugin: options.addPlugin,
       formatter: options.formatter,
-    } as any);
+    } as ViteConfigurationGeneratorSchema);
     tasks.push(viteTask);
     createOrEditViteConfig(
       host,
@@ -218,7 +219,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       addPlugin: options.addPlugin,
       compiler: options.compiler,
       formatter: options.formatter,
-    } as any);
+    });
     tasks.push(vitestTask);
     createOrEditViteConfig(
       host,

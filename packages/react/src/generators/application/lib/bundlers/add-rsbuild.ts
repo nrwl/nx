@@ -7,6 +7,8 @@ import {
 import { nxVersion } from '../../../../utils/versions';
 import { maybeJs } from '../../../../utils/maybe-js';
 import { NormalizedSchema, Schema } from '../../schema';
+import type { InitGeneratorSchema as RsbuildInitGeneratorSchema } from '@nx/rsbuild/src/generators/init/schema';
+import type { Schema as RsbuildConfigurationSchema } from '@nx/rsbuild/src/generators/configuration/schema';
 
 export async function initRsbuild(
   tree: Tree,
@@ -20,7 +22,7 @@ export async function initRsbuild(
     addPlugin: true,
     skipFormat: true,
     formatter: options.formatter,
-  } as any);
+  } as RsbuildInitGeneratorSchema);
   tasks.push(initTask);
 }
 
@@ -52,7 +54,7 @@ export async function setupRsbuildConfiguration(
     target: 'web',
     devServerPort: options.devServerPort ?? 4200,
     formatter: options.formatter,
-  } as any);
+  } as RsbuildConfigurationSchema);
   tasks.push(rsbuildTask);
 
   const pathToConfigFile = joinPathFragments(
