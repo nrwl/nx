@@ -4,7 +4,13 @@
     { "glob": "**/files/**" },
     {
       "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+      "ignore": [
+        "tsconfig*.json",
+        "project.json",
+        ".eslintrc.json",
+        "batch-runner/**",
+        "project-graph/**"
+      ]
     },
     { "glob": "**/*.js", "ignore": ["**/jest.config.js"] },
     { "glob": "**/*.d.ts" },
