@@ -620,7 +620,11 @@ function getOutputs(
   isBuildable: boolean;
   hasServeConfig: boolean;
 } {
-  const { build, test, server } = viteBuildConfig;
+  // TODO(jack): Remove this cast when @nx/vite switches to moduleResolution:
+  // "nodenext". Vite 8's rolldown types are ESM-only (.d.mts) and not
+  // resolvable under moduleResolution: "node", which breaks rolldownOptions
+  // and vitest's test augmentation on ResolvedConfig.
+  const { build, test, server } = viteBuildConfig as any;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
@@ -632,7 +636,8 @@ function getOutputs(
   const isBuildable = Boolean(
     build?.lib ||
       viteBuildConfig?.builder?.buildApp ||
-      build?.rollupOptions?.input ||
+      build?.rollupOptions?.input || // Vite <8
+      build?.rolldownOptions?.input || // Vite >=8
       existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 

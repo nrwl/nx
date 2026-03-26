@@ -1,9 +1,11 @@
 import {
   cleanupProject,
+  getPackageManagerCommand,
   killProcessAndPorts,
   newProject,
   readJson,
   runCLI,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
@@ -283,6 +285,64 @@ describe('@nx/vite/plugin', () => {
       // Ensure build works with local path aliases
       expect(() => runCLI(`build ${myLocalApp}`)).not.toThrow();
     });
+  });
+
+  describe('with Vite 8 and React (default)', () => {
+    const vite8App = uniq('vite8app');
+
+    beforeAll(() => {
+      proj = newProject({
+        packages: ['@nx/react'],
+      });
+      runCLI(
+        `generate @nx/react:app ${vite8App} --directory=apps/${vite8App} --bundler=vite --unitTestRunner=vitest`
+      );
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build React application with Vite 8', () => {
+      expect(() => runCLI(`build ${vite8App}`)).not.toThrow();
+    }, 200_000);
+
+    it('should test React application with Vite 8', () => {
+      expect(() => runCLI(`test ${vite8App} --watch=false`)).not.toThrow();
+    }, 200_000);
+  });
+
+  describe('with Vite 7 (backward compatibility)', () => {
+    const vite7App = uniq('vite7app');
+
+    beforeAll(() => {
+      proj = newProject({
+        packages: ['@nx/react'],
+      });
+      runCLI(
+        `generate @nx/react:app ${vite7App} --directory=apps/${vite7App} --bundler=vite --unitTestRunner=vitest`
+      );
+
+      // Downgrade to Vite 7 and @vitejs/plugin-react v4 (v6 only supports Vite 8)
+      updateJson('package.json', (json) => {
+        json.devDependencies['vite'] = '^7.0.0';
+        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        return json;
+      });
+      runCommand(getPackageManagerCommand().install);
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build React application with Vite 7', () => {
+      expect(() => runCLI(`build ${vite7App}`)).not.toThrow();
+    }, 200_000);
+
+    it('should test React application with Vite 7', () => {
+      expect(() => runCLI(`test ${vite7App} --watch=false`)).not.toThrow();
+    }, 200_000);
   });
 
   // TODO(Colum): Move this to a vitest specific e2e project when one is created
