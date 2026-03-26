@@ -1,6 +1,7 @@
 import {
   createNodesFromFiles,
   CreateNodesV2,
+  InputDefinition,
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
@@ -108,7 +109,7 @@ export const createNodesV2: CreateNodesV2 = [
         for (const asset of stringAssets) {
           positiveInputs.add(`{workspaceRoot}/${asset}`);
         }
-        const inputs: (string | Record<string, unknown>)[] = [
+        const inputs: (string | InputDefinition)[] = [
           ...positiveInputs,
           ...negativeInputs,
         ];
