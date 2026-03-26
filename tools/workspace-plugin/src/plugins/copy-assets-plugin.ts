@@ -131,7 +131,7 @@ export const createNodesV2: CreateNodesV2 = [
         });
 
         const target: TargetConfiguration = {
-          executor: '@nx/workspace-plugin:legacy-post-build',
+          executor: '@nx/workspace-plugin:copy-assets',
           dependsOn: ['build-base'],
           cache: true,
           inputs,
