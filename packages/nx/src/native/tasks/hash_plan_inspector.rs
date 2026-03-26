@@ -1,4 +1,3 @@
-use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hashers::{
     hash_project_files_with_inputs, hash_workspace_files_with_inputs, resolve_task_output_files,
 };
@@ -14,7 +13,6 @@ use std::sync::Arc;
 #[napi]
 pub struct HashPlanInspector {
     all_workspace_files: Arc<Vec<FileData>>,
-    project_graph: Arc<ProjectGraph>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
     workspace_root: String,
 }
@@ -26,16 +24,12 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
             Arc<Vec<FileData>>,
         >,
-        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
-            Arc<ProjectGraph>,
-        >,
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")]
         project_file_map: &External<Arc<HashMap<String, Vec<FileData>>>>,
         workspace_root: String,
     ) -> Self {
         Self {
             all_workspace_files: Arc::clone(all_workspace_files),
-            project_graph: Arc::clone(project_graph),
             project_file_map: Arc::clone(project_file_map),
             workspace_root,
         }
