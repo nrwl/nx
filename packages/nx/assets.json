@@ -17,8 +17,12 @@
       ]
     },
     {
-      "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm,node}",
+      "glob": "**/*.{mjs,cjs,js,css,html,svg}",
       "ignore": ["**/jest.config.js", "**/__fixtures__/**"]
+    },
+    {
+      "glob": "**/*.{node,wasm}",
+      "includeIgnoredFiles": true
     }
   ]
 }

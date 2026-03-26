@@ -38,6 +38,7 @@
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
+        "{projectRoot}/src/native/*.wasm",
         "{projectRoot}/src/native/!(index|browser).js",
         "{projectRoot}/src/native/index.d.ts"
       ],
@@ -66,6 +67,9 @@
     "long-task": {
       "command": "node -e \"let i = 0; let interval = setInterval(() => { console.log('Long task running ' + i++ + '---------------------------------------------------------------'); }, 200); setTimeout(() => { clearInterval(interval); console.log('Long task finished'); }, 62_000);\"",
       "dependsOn": ["echo"]
+    },
+    "copy-assets": {
+      "dependsOn": ["build-base", "build-native"]
     },
     "build": {
       "dependsOn": [
