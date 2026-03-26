@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { MatrixItem } from './process-matrix';
-import { collectFailureDetails } from './analyze-failures';
+import { collectFailureDetails, JobLink } from './analyze-failures';
 
 interface MatrixResult extends MatrixItem {
   status: 'success' | 'failure' | 'cancelled';
@@ -53,42 +53,31 @@ function processResults(combined: MatrixResult[]): ProcessedResults {
   const otherFailingCount = uniqueFailedOtherProjects.size;
 
   result += `\n🌟 *Golden Projects*`;
-  result += `\n✅ Passing: ${goldenPassingCount}`;
-  result += `\n❌ Failing: ${goldenFailingCount}`;
+  result += `\n✅ Passing: ${goldenPassingCount} | ❌ Failing: ${goldenFailingCount}`;
 
   if (failedGoldenProjects.length > 0) {
-    result += `\n\n🚨 *Failed Golden Projects*\n\`\`\``;
-    result += `\n| Failed project                 |`;
-    result += `\n|--------------------------------|`;
-    let lastProject: string | undefined;
+    result += `\n\n🚨 *Failed Golden Projects*`;
+    // Project names listed here — combo links added later by main() with job data
+    const seenProjects = new Set<string>();
     failedGoldenProjects.forEach(matrix => {
-      const project = matrix.project !== lastProject ? matrix.project : '';
-      if (project) {
-        result += `\n| ${project.padEnd(30)} |`;
-        lastProject = matrix.project;
+      if (!seenProjects.has(matrix.project)) {
+        seenProjects.add(matrix.project);
+        result += `\n\n*${matrix.project}*`;
+        // Placeholder — main() will replace with linked combos
+        result += `\n  {{COMBOS:${matrix.project}}}`;
       }
     });
-    result += `\n\`\`\``;
   }
 
-  result += `\n\n🔧 *Other Projects*`;
-  result += `\n✅ Passing: ${otherPassingCount}`;
-  result += `\n❌ Failing: ${otherFailingCount}`;
-
-  // Failed Other Projects Table (if any)
-  if (failedRegularProjects.length > 0) {
-    result += `\n\n⚠️ *Failed Other Projects*\n\`\`\``;
-    result += `\n| Failed project                 |`;
-    result += `\n|--------------------------------|`;
-    let lastProject: string | undefined;
-    failedRegularProjects.forEach(matrix => {
-      const project = matrix.project !== lastProject ? matrix.project : '';
-      if (project) {
-        result += `\n| ${project.padEnd(30)} |`;
-        lastProject = matrix.project;
-      }
+  if (otherFailingCount > 0) {
+    const otherProjectCounts = new Map<string, number>();
+    failedRegularProjects.forEach(m => {
+      otherProjectCounts.set(m.project, (otherProjectCounts.get(m.project) || 0) + 1);
     });
-    result += `\n\`\`\``;
+    const otherSummary = [...otherProjectCounts.entries()]
+      .map(([p, c]) => `${p} (${c})`)
+      .join(', ');
+    result += `\n\n⚠️ *Failed Other Projects:* ${otherSummary}`;
   }
 
   if (failedProjects.length === 0) {
@@ -199,9 +188,29 @@ async function main() {
             .map((c) => c.project)
         ),
       ];
-      const details = await collectFailureDetails(combined, failedProjects);
-      if (details) {
-        results.slack_message += '\n\n' + details;
+      const { report, goldenJobLinks } = await collectFailureDetails(combined, failedProjects);
+
+      // Replace combo placeholders in the summary with linked combos
+      for (const [project, links] of goldenJobLinks) {
+        const placeholder = `{{COMBOS:${project}}}`;
+        const linkedCombos =
+          links.length > 0
+            ? links.map((l) => `  · <${l.url}|${l.combo}>`).join('\n')
+            : '  (no job data)';
+        results.slack_message = results.slack_message.replace(
+          placeholder,
+          linkedCombos
+        );
+      }
+
+      // Remove any unreplaced placeholders (if collectFailureDetails didn't have data for a project)
+      results.slack_message = results.slack_message.replace(
+        /  \{\{COMBOS:[^}]+\}\}/g,
+        '  (no job data)'
+      );
+
+      if (report) {
+        results.slack_message += '\n\n' + report;
       }
     } catch (e) {
       console.error('Failed to collect failure details (brief report will still be posted):', e);
