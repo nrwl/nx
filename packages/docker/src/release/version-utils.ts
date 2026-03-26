@@ -24,13 +24,17 @@ export async function handleDockerVersion(
   finalConfigForProject: FinalConfigForProject,
   dockerVersionScheme?: string,
   dockerVersion?: string,
-  versionActionsVersion?: string
+  versionActionsVersion?: unknown
 ) {
   // If the full docker image reference is provided, use it directly
   const nxDockerImageRefEnvOverride =
     process.env.NX_DOCKER_IMAGE_REF?.trim() || undefined;
   // If an explicit dockerVersion is provided, use it directly
   let newVersion: string | undefined;
+  const resolvedVersionActionsVersion =
+    typeof versionActionsVersion === 'string'
+      ? versionActionsVersion
+      : undefined;
 
   if (!nxDockerImageRefEnvOverride) {
     if (dockerVersion) {
@@ -52,7 +56,7 @@ export async function handleDockerVersion(
         projectGraphNode.name,
         versionScheme,
         availableVersionSchemes,
-        versionActionsVersion
+        resolvedVersionActionsVersion
       );
     }
   }

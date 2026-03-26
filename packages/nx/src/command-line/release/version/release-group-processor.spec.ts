@@ -2,6 +2,7 @@
 const mocks = {
   deriveSpecifierFromConventionalCommits: jest.fn(),
   deriveSpecifierFromVersionPlan: jest.fn(),
+  handleDockerVersion: jest.fn(),
   resolveVersionActionsForProject: jest.fn(),
   resolveCurrentVersion: jest.fn(),
 };
@@ -10,6 +11,7 @@ const mocks = {
 const mockDeriveSpecifierFromConventionalCommits =
   mocks.deriveSpecifierFromConventionalCommits;
 const mockDeriveSpecifierFromVersionPlan = mocks.deriveSpecifierFromVersionPlan;
+const mockHandleDockerVersion = mocks.handleDockerVersion;
 const mockResolveVersionActionsForProject =
   mocks.resolveVersionActionsForProject;
 const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
@@ -17,6 +19,10 @@ const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
 jest.mock('./derive-specifier-from-conventional-commits', () => ({
   deriveSpecifierFromConventionalCommits: (...args: any[]) =>
     mocks.deriveSpecifierFromConventionalCommits(...args),
+}));
+
+jest.mock('@nx/docker/release/version-utils', () => ({
+  handleDockerVersion: (...args: any[]) => mocks.handleDockerVersion(...args),
 }));
 
 jest.mock('./version-actions', () => {
@@ -50,6 +56,7 @@ jest.mock('./resolve-current-version', () => ({
 import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../../generators/tree';
 import { readJson, updateJson } from '../../../generators/utils/json';
+import { ProjectsVersionPlan } from '../config/version-plans';
 import {
   createNxReleaseConfigAndPopulateWorkspace,
   createTestReleaseGroupProcessor,
@@ -1882,6 +1889,115 @@ describe('ReleaseGroupProcessor', () => {
           },
         }
       `);
+    });
+  });
+
+  describe('docker version handoff', () => {
+    it('should pass a string version to docker processing when multiple version plans exist', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - docker-app@0.0.1 [js] ({ "targets": { "docker:build": { "metadata": { "technologies": ["docker"] } } }, "release": { "docker": { "repositoryName": "test/docker-app" } } })
+        `,
+          {
+            versionPlans: true,
+            docker: {
+              versionSchemes: {
+                production: '{versionActionsVersion}',
+              },
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      mockHandleDockerVersion.mockResolvedValue({
+        newVersion: '0.1.0',
+        logs: [],
+      });
+
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+      const releaseGroup = processor['releaseGraph'].releaseGroups[0];
+      releaseGroup.resolvedVersionPlans = [
+        {
+          absolutePath: '/tmp/plan-patch.md',
+          relativePath: '.nx/version-plans/plan-patch.md',
+          fileName: 'plan-patch.md',
+          createdOnMs: 1,
+          message: 'Patch docker release',
+          projectVersionBumps: {
+            'docker-app': 'patch',
+          },
+          commit: null,
+        },
+        {
+          absolutePath: '/tmp/plan-minor.md',
+          relativePath: '.nx/version-plans/plan-minor.md',
+          fileName: 'plan-minor.md',
+          createdOnMs: 2,
+          message: 'Minor docker release',
+          projectVersionBumps: {
+            'docker-app': 'minor',
+          },
+          commit: null,
+        },
+      ] as ProjectsVersionPlan[];
+
+      await processor.processGroups();
+      await processor.processDockerProjects('production');
+
+      expect(mockHandleDockerVersion).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ name: 'docker-app' }),
+        expect.any(Object),
+        'production',
+        undefined,
+        '0.1.0'
+      );
+    });
+
+    it('should throw a clear error when docker processing receives a non-string project version', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - docker-app@0.0.1 [js] ({ "targets": { "docker:build": { "metadata": { "technologies": ["docker"] } } }, "release": { "docker": { "repositoryName": "test/docker-app" } } })
+        `,
+          {
+            docker: {
+              versionSchemes: {
+                production: '{versionActionsVersion}',
+              },
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+      const originalVersionData = processor['versionData'].get('docker-app');
+      processor['versionData'].set('docker-app', {
+        ...originalVersionData,
+        newVersion: { invalid: true },
+      });
+
+      await expect(
+        processor.processDockerProjects('production')
+      ).rejects.toThrow(
+        'Expected project "docker-app" to produce a string version before Docker versioning'
+      );
+      expect(mockHandleDockerVersion).not.toHaveBeenCalled();
     });
   });
 });

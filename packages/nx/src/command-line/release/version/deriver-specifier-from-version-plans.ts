@@ -1,4 +1,4 @@
-import { gt, inc, ReleaseType } from 'semver';
+import { compare, inc, ReleaseType } from 'semver';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans';
@@ -34,12 +34,17 @@ export async function deriveSpecifierFromVersionPlan(
           };
         }
         if (plan.projectVersionBumps[projectName]) {
-          const prevNewVersion = inc(currentVersion, acc.spec);
-          const nextNewVersion = inc(
+          const prevNewVersion = resolveDerivedVersion(
+            inc(currentVersion, acc.spec),
+            currentVersion,
+            acc.spec
+          );
+          const nextNewVersion = resolveDerivedVersion(
+            inc(currentVersion, plan.projectVersionBumps[projectName]),
             currentVersion,
             plan.projectVersionBumps[projectName]
           );
-          return gt(nextNewVersion, prevNewVersion)
+          return compare(nextNewVersion, prevNewVersion) > 0
             ? {
                 spec: plan.projectVersionBumps[projectName],
                 path: plan.relativePath,
@@ -67,9 +72,17 @@ export async function deriveSpecifierFromVersionPlan(
           };
         }
 
-        const prevNewVersion = inc(currentVersion, acc.spec);
-        const nextNewVersion = inc(currentVersion, plan.groupVersionBump);
-        return gt(nextNewVersion, prevNewVersion)
+        const prevNewVersion = resolveDerivedVersion(
+          inc(currentVersion, acc.spec),
+          currentVersion,
+          acc.spec
+        );
+        const nextNewVersion = resolveDerivedVersion(
+          inc(currentVersion, plan.groupVersionBump),
+          currentVersion,
+          plan.groupVersionBump
+        );
+        return compare(nextNewVersion, prevNewVersion) > 0
           ? {
               spec: plan.groupVersionBump,
               path: plan.relativePath,
@@ -90,4 +103,18 @@ export async function deriveSpecifierFromVersionPlan(
     bumpType: bumpType ?? 'none',
     versionPlanPath,
   };
+}
+
+function resolveDerivedVersion(
+  value: string | { version: string } | null | undefined,
+  currentVersion: string,
+  bumpType: ReleaseType
+): string {
+  if (!value) {
+    throw new Error(
+      `Unable to derive a version from current version "${currentVersion}" and version plan bump "${bumpType}".`
+    );
+  }
+
+  return typeof value === 'string' ? value : value.version;
 }

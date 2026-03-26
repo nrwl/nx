@@ -40,6 +40,23 @@ export const BUMP_TYPE_REASON_TEXT = {
     ', because this project uses docker and has been configured to skip VersionActions, ',
 } as const;
 
+function resolveVersionActionsVersionForDocker(
+  projectName: string,
+  newVersion: unknown
+): string | undefined {
+  if (newVersion == null) {
+    return undefined;
+  }
+
+  if (typeof newVersion === 'string') {
+    return newVersion;
+  }
+
+  throw new Error(
+    `Expected project "${projectName}" to produce a string version before Docker versioning, but received ${typeof newVersion}. This suggests a bug in Nx release version data handling.`
+  );
+}
+
 interface ReleaseGroupProcessorOptions {
   dryRun: boolean;
   verbose: boolean;
@@ -298,13 +315,17 @@ export class ReleaseGroupProcessor {
     for (const [project, finalConfigForProject] of dockerProjects.entries()) {
       const projectNode = this.projectGraph.nodes[project];
       const projectVersionData = this.versionData.get(project);
+      const versionActionsVersion = resolveVersionActionsVersionForDocker(
+        project,
+        projectVersionData?.newVersion
+      );
       const { newVersion, logs } = await handleDockerVersion(
         workspaceRoot,
         projectNode,
         finalConfigForProject,
         dockerVersionScheme,
         dockerVersion,
-        projectVersionData.newVersion
+        versionActionsVersion
       );
 
       logs.forEach((log) =>
