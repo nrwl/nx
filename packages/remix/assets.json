@@ -1,17 +1,12 @@
 {
   "outDir": "dist/packages/remix",
   "assets": [
-    "packages/remix/*.md",
-    {
-      "glob": "src/**/!(*.ts)"
-    },
-    {
-      "glob": "src/**/*.d.ts"
-    },
+    { "glob": "**/files/**" },
     {
       "glob": "**/*.json",
       "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
     },
+    { "glob": "**/*.d.ts" },
     "LICENSE"
   ]
 }

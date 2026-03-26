@@ -3,15 +3,10 @@
   "assets": [
     "packages/rspack/*.md",
     {
-      "glob": "src/**/!(*.ts)"
-    },
-    {
-      "glob": "src/**/*.d.ts"
-    },
-    {
-      "glob": "**.json",
+      "glob": "**/*.json",
       "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
     },
+    { "glob": "**/*.d.ts" },
     "LICENSE"
   ]
 }
