@@ -20,7 +20,6 @@
     "CLI"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -48,5 +47,6 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
-  }
+  },
+  "types": "./index.d.ts"
 }

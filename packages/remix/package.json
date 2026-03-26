@@ -22,7 +22,6 @@
   },
   "homepage": "https://nx.dev",
   "main": "./index.js",
-  "typings": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
@@ -62,5 +61,6 @@
     "./generators": "./generators.js",
     "./plugin": "./plugin.js",
     "./plugins/component-testing": "./plugins/component-testing/index.js"
-  }
+  },
+  "types": "./index.d.ts"
 }

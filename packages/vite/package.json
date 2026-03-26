@@ -16,7 +16,6 @@
     "Front-end"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -68,5 +67,6 @@
     "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
     "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
     "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
-  }
+  },
+  "types": "./index.d.ts"
 }

@@ -16,7 +16,6 @@
     "Front-end"
   ],
   "main": "./index",
-  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -45,5 +44,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {}
+  "peerDependencies": {},
+  "types": "./index.d.ts"
 }

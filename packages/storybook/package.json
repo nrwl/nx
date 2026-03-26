@@ -19,7 +19,6 @@
     "Testing"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
   "author": "Isaac Mann",
   "license": "MIT",
   "bugs": {
@@ -50,5 +49,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "types": "./index.d.ts"
 }

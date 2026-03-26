@@ -18,7 +18,6 @@
     "Front-end"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -216,5 +215,6 @@
       "types": "./mf/*.d.ts"
     },
     "./typings/*.d.ts": "./typings/*.d.ts"
-  }
+  },
+  "types": "./index.d.ts"
 }
