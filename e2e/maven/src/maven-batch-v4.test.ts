@@ -98,4 +98,12 @@ class AppApplicationTests {
     expect(error).toBeDefined();
     expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
   });
+
+  it('should clean multiple projects with run-many in batch mode', () => {
+    // Regression test for https://github.com/nrwl/nx/issues/34757
+    // clean targets are fast and run in parallel, which previously caused
+    // workers to exit prematurely when the task queue was momentarily empty.
+    const output = runBatchCLI('run-many -t clean', { verbose: true });
+    expect(output).toContain('BUILD SUCCESS');
+  });
 });
