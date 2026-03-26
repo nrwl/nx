@@ -139,7 +139,7 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
       addPlugin: options.addPlugin,
       formatter: schema.formatter,
-    } as any);
+    });
     tasks.push(viteTask);
     createOrEditViteConfig(
       tree,
@@ -185,7 +185,7 @@ export async function libraryGeneratorInternal(
       compiler: options.compiler === 'swc' ? 'swc' : 'babel',
       addPlugin: options.addPlugin,
       formatter: schema.formatter,
-    } as any);
+    });
     tasks.push(vitestTask);
   }
 
