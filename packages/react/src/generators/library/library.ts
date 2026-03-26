@@ -141,7 +141,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
       testEnvironment: 'jsdom',
       addPlugin: options.addPlugin,
-    });
+      formatter: options.formatter,
+    } as any);
     tasks.push(viteTask);
     createOrEditViteConfig(
       host,
@@ -216,7 +217,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       testEnvironment: 'jsdom',
       addPlugin: options.addPlugin,
       compiler: options.compiler,
-    });
+      formatter: options.formatter,
+    } as any);
     tasks.push(vitestTask);
     createOrEditViteConfig(
       host,

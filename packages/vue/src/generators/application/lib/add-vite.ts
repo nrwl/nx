@@ -24,6 +24,7 @@ export async function addVite(
     skipFormat: true,
     testEnvironment: 'jsdom',
     addPlugin: options.addPlugin,
+    formatter: options.formatter,
   });
 
   createOrEditViteConfig(
@@ -66,6 +67,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
     addPlugin: options.addPlugin,
     runtimeTsconfigFileName: 'tsconfig.app.json',
     skipViteConfig: true,
+    formatter: options.formatter,
   });
   tasks.push(vitestTask);
 

@@ -43,7 +43,8 @@ export async function setupViteConfiguration(
     addPlugin: options.addPlugin,
     projectType: 'application',
     port: options.port,
-  });
+    formatter: options.formatter,
+  } as any);
   tasks.push(viteTask);
   createOrEditViteConfig(
     tree,
@@ -83,7 +84,8 @@ export async function setupVitestConfiguration(
     inSourceTests: options.inSourceTests,
     skipFormat: true,
     addPlugin: options.addPlugin,
-  });
+    formatter: options.formatter,
+  } as any);
   tasks.push(vitestTask);
   createOrEditViteConfig(
     tree,
