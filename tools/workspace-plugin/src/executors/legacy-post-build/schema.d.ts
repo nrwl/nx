@@ -1,17 +1,13 @@
-export interface LegacyPostBuildExecutorSchema {
-  assets?: Array<
+export interface CopyAssetsExecutorSchema {
+  assets: Array<
     | string
     | {
         input: string;
         glob: string;
         output: string;
         ignore?: string[];
+        includeIgnoredFiles?: boolean;
       }
   >;
-  outputPath?: string;
-  tsConfig?: string;
-  packageRoot?: string;
-  addPackageJsonFields?: boolean;
-  main?: string;
-  types?: string;
+  outputPath: string;
 }
