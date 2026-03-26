@@ -7,6 +7,8 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
+import type { InitGeneratorSchema as RsbuildInitGeneratorSchema } from '@nx/rsbuild/src/generators/init/schema';
+import type { Schema as RsbuildConfigurationSchema } from '@nx/rsbuild/src/generators/configuration/schema';
 
 export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -18,7 +20,8 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
     skipPackageJson: options.skipPackageJson,
     addPlugin: true,
     skipFormat: true,
-  });
+    formatter: options.formatter,
+  } as RsbuildInitGeneratorSchema);
   tasks.push(initTask);
 
   const rsbuildTask = await configurationGenerator(tree, {
@@ -27,7 +30,8 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
     tsConfig: './tsconfig.app.json',
     target: 'web',
     devServerPort: options.devServerPort ?? 4200,
-  });
+    formatter: options.formatter,
+  } as RsbuildConfigurationSchema);
   tasks.push(rsbuildTask);
 
   const { addBuildPlugin, addHtmlTemplatePath, versions } = await import(
