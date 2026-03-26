@@ -1,0 +1,232 @@
+---
+title: Managing Dependencies
+description: Learn how Nx tracks dependencies between projects, how package manager workspaces handle internal packages, and strategies for managing external dependency versions.
+sidebar:
+  order: 2
+---
+
+{% llm_copy_prompt title="Tutorial 2/8: Understand project dependencies" %}
+Help me understand how my Nx workspace tracks dependencies between projects.
+Use my existing workspace and projects for hands-on examples.
+
+Run `nx graph` in my workspace and help me interpret the results. Show me which projects depend on each other and explain how Nx detects these relationships.
+
+If dependencies are missing or unexpected, help me debug by checking import paths, tsconfig paths, and package.json entries.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+As your workspace grows, projects start depending on each other and on external packages. Nx automatically tracks these relationships so it can build projects in the right order, cache intelligently, and tell you what's affected by a change.
+
+{% aside type="note" title="Prerequisites" %}
+This tutorial assumes you have an Nx workspace with at least two projects. If you're starting fresh, complete [Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace) first.
+{% /aside %}
+
+## Workspace libraries
+
+Workspace libraries are projects whose source lives in your workspace and are linked together by your package manager (see [Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace) for how this works). In your project's `package.json`, workspace libraries use `workspace:*` (or `*` for npm) while external packages use version ranges:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "*",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+When one project imports from another, Nx detects the relationship automatically. No configuration required.
+
+```typescript
+// apps/my-app/src/app.tsx
+import { Button } from '@my-workspace/shared-ui';
+```
+
+Nx analyzes your JS/TS source code and `package.json` dependencies to understand how projects relate to each other. Nx uses these relationships to [run tasks](/docs/getting-started/tutorials/running-tasks) in the correct order.
+
+{% aside type="note" title="Non-JavaScript languages" %}
+For non-JS languages, Nx does not detect dependencies from source code imports. Declare relationships manually with `implicitDependencies` in `project.json`:
+
+```jsonc
+// apps/my-python-app/project.json
+{
+  "implicitDependencies": ["shared-lib"],
+}
+```
+
+You can also use [community plugins](/docs/plugin-registry) that provide dependency detection for your language.
+{% /aside %}
+
+### Buildable vs non-buildable libraries
+
+Workspace libraries come in two flavors, and the difference is in what their `package.json` `exports` field points to.
+
+**Non-buildable libraries** export their source code directly. Consumers compile the source as part of their own build. This is the simpler setup and works well for most workspace libraries.
+
+```jsonc
+// packages/shared-ui/package.json
+{
+  "name": "@my-workspace/shared-ui",
+  "exports": {
+    ".": "./src/index.ts",
+  },
+}
+```
+
+**Buildable libraries** export compiled artifacts. They have their own build step that produces output (e.g., to `dist/`), and consumers import the built result. This is useful for libraries that need to be published or that benefit from independent compilation. Use a conditional export so that tooling can still resolve to the source:
+
+```jsonc
+// packages/data-access/package.json
+{
+  "name": "@my-workspace/data-access",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/index.js",
+    },
+  },
+}
+```
+
+The `development` condition points to source, while `default` points to the built output. Configure `customConditions` in your root `tsconfig.json` so your IDE and TypeScript language server resolve the `development` entry, giving you go-to-definition and type checking against the actual source:
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "customConditions": ["development"],
+  },
+}
+```
+
+At build time, the bundler resolves the `default` entry and uses the compiled artifacts.
+
+Start with non-buildable libraries. They're simpler and avoid needing to rebuild libraries during development. Switch to buildable when you need to publish a library or want faster incremental builds in large workspaces.
+
+## Single version policy
+
+In a monorepo, some packages, especially frameworks like React, Angular, or Vue, must be the same version everywhere. Having two versions of React in the same app causes runtime errors.
+
+A **single version policy** means defining dependency versions once at the root and having all projects use that version. This prevents version conflicts and simplifies upgrades.
+
+**Catalogs** make this easier by letting you name a version once and reference it everywhere:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="pnpm" %}
+
+```yaml
+# pnpm-workspace.yaml
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
+```
+
+```jsonc
+// package.json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+Define catalogs in `.yarnrc.yml`:
+
+```yaml
+# .yarnrc.yml
+catalogs:
+  default:
+    react: ^19.0.0
+    react-dom: ^19.0.0
+```
+
+```jsonc
+// package.json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="npm" %}
+
+npm does not have catalog support. Enforce a single version policy by defining all dependencies in the root `package.json` and using tools like `syncpack` or the `@nx/dependency-checks` ESLint rule to catch version mismatches.
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+Bun does not currently support catalogs. Define shared dependency versions in the root `package.json` and reference them using `workspace:*` for internal packages.
+
+{% /tabitem %}
+{% /tabs %}
+
+For a deeper comparison of dependency strategies, see [Dependency Management Strategies](/docs/concepts/decisions/dependency-management).
+
+## What Nx does (and doesn't do)
+
+Nx **tracks** dependencies. It builds the project graph, determines build order, and knows what's affected by a change. But Nx **does not install or resolve** dependencies. That's your package manager's job (npm, pnpm, yarn, or bun).
+
+Think of it this way:
+
+- **Package manager**: installs packages, resolves versions, manages `node_modules`
+- **Nx**: understands the relationships, orchestrates tasks in the right order, caches results
+
+{% cards cols=2 %}
+{% card title="Previous: Crafting Your Workspace" description="Set up and structure your Nx workspace" url="/docs/getting-started/tutorials/crafting-your-workspace" /%}
+{% card title="Next: Configuring Tasks" description="Define tasks and their dependencies" url="/docs/getting-started/tutorials/configuring-tasks" /%}
+{% /cards %}

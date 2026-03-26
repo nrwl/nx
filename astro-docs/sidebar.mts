@@ -37,27 +37,44 @@ const learnGroups: SidebarItems = [
       { label: 'Editor setup', link: 'getting-started/editor-setup' },
       {
         label: 'Tutorials',
-        collapsed: false,
+        badge: 'New',
+        collapsed: true,
         items: [
           {
-            label: 'React monorepo',
-            link: 'getting-started/tutorials/react-monorepo-tutorial',
+            label: 'Crafting your workspace',
+            link: 'getting-started/tutorials/crafting-your-workspace',
           },
           {
-            label: 'Angular monorepo',
-            link: 'getting-started/tutorials/angular-monorepo-tutorial',
+            label: 'Managing dependencies',
+            link: 'getting-started/tutorials/managing-dependencies',
           },
           {
-            label: 'TypeScript monorepo',
-            link: 'getting-started/tutorials/typescript-packages-tutorial',
+            label: 'Configuring tasks',
+            link: 'getting-started/tutorials/configuring-tasks',
           },
           {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
+            label: 'Running tasks',
+            link: 'getting-started/tutorials/running-tasks',
+          },
+          {
+            label: 'Caching tasks',
+            link: 'getting-started/tutorials/caching',
+          },
+          {
+            label: 'Understanding your workspace',
+            link: 'getting-started/tutorials/understanding-your-workspace',
+          },
+          {
+            label: 'Reduce boilerplate',
+            link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
           {
             label: 'Setting up CI',
             link: 'getting-started/tutorials/self-healing-ci-tutorial',
+          },
+          {
+            label: 'Gradle monorepo',
+            link: 'getting-started/tutorials/gradle-tutorial',
           },
         ],
       },

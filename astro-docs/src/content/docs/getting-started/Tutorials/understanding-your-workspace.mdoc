@@ -1,0 +1,236 @@
+---
+title: Understanding Your Workspace
+description: Learn how to explore your Nx workspace, including listing projects, visualizing the project graph, inspecting task details, and debugging dependencies.
+sidebar:
+  order: 6
+---
+
+{% llm_copy_prompt title="Tutorial 6/8: Explore and debug your workspace" %}
+Help me explore and debug my Nx workspace.
+Use my existing workspace and projects for hands-on examples.
+
+Run `nx show projects` to list all projects, `nx graph` to visualize dependencies, and `nx show project <project-name>` to inspect task details. Help me understand why specific dependencies exist and debug any caching or configuration issues.
+
+For machine-readable output (useful for scripting or AI agents), use `nx show project <name> --json`.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+As your workspace grows to dozens or hundreds of projects, you need tools to explore it, debug unexpected behavior, and verify your configuration. Nx provides several commands and visualizations for this.
+
+{% aside type="note" title="Prerequisites" %}
+This tutorial assumes you have an Nx workspace with projects and configured tasks. If you're starting fresh, complete [Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace) first.
+{% /aside %}
+
+## The project graph
+
+The best starting point for understanding your workspace is `nx graph`. It opens an interactive visualization with tabs for projects, tasks, and project details:
+
+```shell
+nx graph
+```
+
+{% graph title="Project graph" height="400px" %}
+
+```json
+{
+  "projects": [
+    { "type": "app", "name": "my-app", "data": {} },
+    { "type": "app", "name": "admin", "data": {} },
+    { "type": "app", "name": "api", "data": {} },
+    { "type": "lib", "name": "shared-ui", "data": {} },
+    { "type": "lib", "name": "data-access", "data": {} },
+    { "type": "lib", "name": "auth", "data": {} },
+    { "type": "lib", "name": "utils", "data": {} },
+    { "type": "lib", "name": "models", "data": {} }
+  ],
+  "groupByFolder": false,
+  "workspaceLayout": { "appsDir": "apps", "libsDir": "packages" },
+  "dependencies": {
+    "my-app": [
+      { "target": "shared-ui", "source": "my-app", "type": "direct" },
+      { "target": "data-access", "source": "my-app", "type": "direct" },
+      { "target": "auth", "source": "my-app", "type": "direct" }
+    ],
+    "admin": [
+      { "target": "shared-ui", "source": "admin", "type": "direct" },
+      { "target": "data-access", "source": "admin", "type": "direct" },
+      { "target": "auth", "source": "admin", "type": "direct" }
+    ],
+    "api": [
+      { "target": "data-access", "source": "api", "type": "direct" },
+      { "target": "auth", "source": "api", "type": "direct" },
+      { "target": "models", "source": "api", "type": "direct" }
+    ],
+    "shared-ui": [
+      { "target": "utils", "source": "shared-ui", "type": "direct" }
+    ],
+    "data-access": [
+      { "target": "models", "source": "data-access", "type": "direct" },
+      { "target": "utils", "source": "data-access", "type": "direct" }
+    ],
+    "auth": [{ "target": "utils", "source": "auth", "type": "direct" }],
+    "utils": [],
+    "models": []
+  },
+  "affectedProjectIds": []
+}
+```
+
+{% /graph %}
+
+The project graph shows every project and the dependencies between them. You can:
+
+- **Search** for specific projects
+- **Filter** to show only affected projects or specific groups
+- **Click edges** between projects to see which files create the dependency (import statements, `package.json` references)
+
+### Why does this dependency exist?
+
+When you see an unexpected dependency in the graph, click the edge between the two projects. The sidebar shows which files contributed to the dependency:
+
+![Project graph showing @my-workspace/my-app depending on @my-workspace/utils, with the edge selected and the sidebar listing the specific files that create the dependency](../../../../assets/tutorials/project-graph-edge.png)
+
+For scripting, write the graph to a JSON file:
+
+```shell
+nx graph --file=/tmp/graph.json
+```
+
+## The task graph
+
+Switch to the **Tasks** tab in the graph to visualize the task execution plan. Select a task (like `build`) to see which tasks run and in what order:
+
+![Task graph showing @my-workspace/my-app:build depending on @my-workspace/utils:build, with the arrow indicating utils must build first](../../../../assets/tutorials/task-graph-view.png)
+
+You can also open this directly from the CLI:
+
+```shell
+nx build my-app --graph
+```
+
+This is useful for verifying that your `dependsOn` configuration is correct. Write the task graph to a file for analysis:
+
+```shell
+nx build my-app --graph=/tmp/task-graph.json
+```
+
+## Inspecting project details
+
+Click any project in the graph to see its details, or use the CLI:
+
+```shell
+nx show project my-app
+```
+
+{% project_details title="Project details" %}
+
+```json
+{
+  "project": {
+    "name": "my-app",
+    "type": "app",
+    "data": {
+      "root": "apps/my-app",
+      "targets": {
+        "build": {
+          "options": { "cwd": "apps/my-app", "command": "vite build" },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": ["production", "^production"],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": { "technologies": ["vite"] }
+        },
+        "test": {
+          "options": { "cwd": "apps/my-app", "command": "vitest run" },
+          "cache": true,
+          "inputs": ["default", "^production"],
+          "outputs": ["{projectRoot}/coverage"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": { "technologies": ["vite"] }
+        }
+      },
+      "name": "my-app",
+      "sourceRoot": "apps/my-app/src",
+      "projectType": "application",
+      "tags": [],
+      "metadata": { "technologies": ["react"] }
+    }
+  },
+  "sourceMap": {
+    "root": ["apps/my-app/project.json", "nx/core/project-json"],
+    "targets.build": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+    "targets.test": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"]
+  }
+}
+```
+
+{% /project_details %}
+
+This shows every task, where its configuration comes from, its `inputs`, `outputs`, and `dependsOn`. To drill into a specific task:
+
+```shell
+nx show target my-app:build
+```
+
+Add `--json` to either command for machine-readable output.
+
+## Listing projects from the CLI
+
+```shell
+nx show projects
+```
+
+Filter by criteria:
+
+```shell
+# Only projects that have a build target
+nx show projects --with-target build
+
+# Only projects matching a pattern
+nx show projects --projects 'packages/*'
+```
+
+## Debugging cache behavior
+
+If a task isn't caching as expected, inspect its inputs and outputs:
+
+```shell
+nx show project my-app
+```
+
+Check the task's `inputs`. These are the files and values that contribute to the cache hash. If an input changes between runs, the cache is invalidated. Common causes of unexpected cache misses:
+
+- An untracked config file is included in inputs
+- An environment variable changed
+- A dependency was updated
+
+{% aside type="tip" title="Enforce correct inputs and outputs" %}
+Use [sandboxing](/docs/features/ci-features/sandboxing) to detect tasks that read files not listed in their `inputs` or write files not listed in their `outputs`. This catches configuration mistakes that lead to stale caches or missing artifacts.
+{% /aside %}
+
+## Nx Console
+
+[Nx Console](/docs/getting-started/editor-setup) brings all of these capabilities into your editor. In VS Code or WebStorm, you can:
+
+- Browse projects and their targets in a tree view
+- View the project graph inline
+- Run tasks with a visual interface
+- Inspect project details without leaving the editor
+
+{% install_nx_console /%}
+
+## Learn more
+
+- [Explore the graph](/docs/features/explore-graph): full graph exploration guide
+- [Mental model](/docs/concepts/mental-model): how Nx thinks about projects and tasks
+
+{% cards cols=2 %}
+{% card title="Previous: Caching Tasks" description="Speed up tasks by replaying previous results" url="/docs/getting-started/tutorials/caching" /%}
+{% card title="Next: Reducing Configuration Boilerplate" description="Automate task configuration with plugins" url="/docs/getting-started/tutorials/reducing-configuration-boilerplate" /%}
+{% /cards %}
