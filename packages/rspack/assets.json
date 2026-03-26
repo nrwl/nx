@@ -4,7 +4,7 @@
     "packages/rspack/*.md",
     {
       "glob": "**/*.json",
-      "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
+      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
     },
     { "glob": "**/*.d.ts" },
     { "glob": "src/**/*.md" },

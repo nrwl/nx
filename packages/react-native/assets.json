@@ -5,7 +5,7 @@
     { "glob": "**/files/**" },
     {
       "glob": "**/*.json",
-      "ignore": ["**/tsconfig*.json"]
+      "ignore": ["tsconfig*.json"]
     },
     { "glob": "**/*.d.ts" },
     "LICENSE"

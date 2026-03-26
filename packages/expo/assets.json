@@ -4,7 +4,7 @@
     { "glob": "**/files/**" },
     {
       "glob": "**/*.json",
-      "ignore": ["**/tsconfig*.json", "**/project.json"]
+      "ignore": ["tsconfig*.json", "**/project.json"]
     },
     { "glob": "**/*.d.ts" },
     { "glob": "**/*.md" },

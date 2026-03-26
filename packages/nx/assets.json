@@ -6,7 +6,7 @@
     {
       "glob": "**/*.json",
       "ignore": [
-        "**/tsconfig*.json",
+        "tsconfig*.json",
         "**/project.json",
         "**/__fixtures__/**",
         ".eslintrc.json",

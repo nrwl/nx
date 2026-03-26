@@ -13,7 +13,7 @@
     {
       "glob": "**/*.json",
       "ignore": [
-        "**/tsconfig*.json",
+        "tsconfig*.json",
         "project.json",
         ".eslintrc.json",
         "**/test-configs/**"
