@@ -78,7 +78,7 @@ describe('formatter option', () => {
       `generate @nx/js:lib libs/${lib} --bundler=tsc --unitTestRunner=none --formatter=none --no-interactive --skipFormat`
     );
     runCLI(
-      `generate @nx/jest:configuration ${lib} --formatter=none --no-interactive --skipFormat`
+      `generate @nx/jest:configuration --project=${lib} --formatter=none --no-interactive --skipFormat`
     );
     expectNoPrettierSetup();
   });
