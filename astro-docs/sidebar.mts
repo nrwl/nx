@@ -65,7 +65,7 @@ const learnGroups: SidebarItems = [
             link: 'getting-started/tutorials/understanding-your-workspace',
           },
           {
-            label: 'Reduce boilerplate',
+            label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
           {
