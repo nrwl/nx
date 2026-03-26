@@ -2,7 +2,7 @@ import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { GradlePluginOptions } from './gradle-plugin-options';
 
-const DEFAULT_GRAPH_TIMEOUT_SECONDS = 30;
+const DEFAULT_GRAPH_TIMEOUT_SECONDS = 60;
 
 export function getGraphTimeoutMs(): number {
   const envTimeout = process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT;
