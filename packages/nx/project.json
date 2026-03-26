@@ -77,16 +77,7 @@
       "dependsOn": ["echo"]
     },
     "build-base": {
-      "dependsOn": ["copy-local-native"],
-      "outputs": [
-        "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}",
-        "{projectRoot}/src/**/*.d.ts",
-        "{projectRoot}/bin/*.d.ts",
-        "{projectRoot}/release/**/*.d.ts",
-        "{projectRoot}/plugins/**/*.d.ts",
-        "{projectRoot}/presets/**/*.d.ts",
-        "{projectRoot}/tasks-runner/**/*.d.ts"
-      ]
+      "dependsOn": ["copy-local-native"]
     },
     "build": {
       "dependsOn": [
@@ -110,7 +101,7 @@
       ],
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs}",
+        "{workspaceRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs,d.ts}",
         "{workspaceRoot}/packages/nx/dist/src/core/graph",
         "{workspaceRoot}/packages/nx/dist/bin/nx.js",
         "{workspaceRoot}/packages/nx/README.md"
@@ -163,14 +154,9 @@
       "dependsOn": ["build-base", "copy-local-native"],
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "inputs": ["production", "^production", "native"],
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/src/native",
-        "{projectRoot}/**/*.d.ts"
-      ],
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "main": "./bin/nx.js",
-        "types": "./bin/nx.d.ts",
+        "addPackageJsonFields": false,
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
