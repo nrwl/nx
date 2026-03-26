@@ -111,8 +111,7 @@ export const createNodesV2: CreateNodesV2 = [
         const inputs: TargetConfiguration['inputs'] = [
           ...positiveInputs,
           ...negativeInputs,
-          '{workspaceRoot}/tools/workspace-plugin/src/executors/copy-assets/**',
-          '{workspaceRoot}/tools/workspace-plugin/executors.json',
+          '{workspaceRoot}/tools/workspace-plugin/**/*',
         ];
         for (const glob of dependentOutputGlobs) {
           inputs.push({
