@@ -9,7 +9,7 @@ export async function deriveSpecifierFromVersionPlan(
   projectLogger: ProjectLogger,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
-  currentVersion: string
+  currentVersion: string | null
 ): Promise<{
   bumpType: SemverBumpType;
   versionPlanPath: string;
@@ -34,6 +34,9 @@ export async function deriveSpecifierFromVersionPlan(
           };
         }
         if (plan.projectVersionBumps[projectName]) {
+          if (!currentVersion) {
+            return acc;
+          }
           const prevNewVersion = resolveDerivedVersion(
             inc(currentVersion, acc.spec),
             currentVersion,
@@ -72,6 +75,9 @@ export async function deriveSpecifierFromVersionPlan(
           };
         }
 
+        if (!currentVersion) {
+          return acc;
+        }
         const prevNewVersion = resolveDerivedVersion(
           inc(currentVersion, acc.spec),
           currentVersion,
@@ -107,7 +113,7 @@ export async function deriveSpecifierFromVersionPlan(
 
 function resolveDerivedVersion(
   value: string | { version: string } | null | undefined,
-  currentVersion: string,
+  currentVersion: string | null,
   bumpType: ReleaseType
 ): string {
   if (!value) {
