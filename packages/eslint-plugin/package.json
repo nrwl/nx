@@ -17,6 +17,7 @@
     "Testing"
   ],
   "main": "./src/index.js",
+  "type": "commonjs",
   "types": "./src/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",

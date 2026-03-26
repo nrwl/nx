@@ -19,6 +19,7 @@
     "Backend"
   ],
   "main": "src/index.js",
+  "type": "commonjs",
   "types": "src/index.d.ts",
   "license": "MIT",
   "bugs": {

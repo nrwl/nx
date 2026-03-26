@@ -16,6 +16,7 @@
     "Front-end"
   ],
   "main": "./index",
+  "type": "commonjs",
   "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",

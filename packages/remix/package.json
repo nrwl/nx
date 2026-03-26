@@ -22,6 +22,7 @@
   },
   "homepage": "https://nx.dev",
   "main": "./index.js",
+  "type": "commonjs",
   "types": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
