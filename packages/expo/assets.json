@@ -1,26 +1,16 @@
 {
   "outDir": "dist/packages/expo",
   "assets": [
-    "packages/expo/*.md",
     {
-      "glob": "**/!(*.ts)"
+      "glob": "**/!(*.ts)",
+      "ignore": [
+        "**/tsconfig*.json",
+        "**/project.json",
+        "**/jest.config.*",
+        "**/.eslintrc.json"
+      ]
     },
-    {
-      "glob": "**/*.d.ts"
-    },
-    {
-      "glob": "**/files/**"
-    },
-    {
-      "glob": "**/files/**/.gitkeep"
-    },
-    {
-      "glob": "**/files/**/.babelrc.js.template"
-    },
-    {
-      "glob": "**/*.json",
-      "ignore": ["**/tsconfig*.json", "**/project.json"]
-    },
+    { "glob": "**/*.d.ts" },
     "LICENSE"
   ]
 }
