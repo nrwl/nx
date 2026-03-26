@@ -126,6 +126,7 @@ async function addUnitTestRunner(
         strict: options.strict,
         runtimeTsconfigFileName: 'tsconfig.lib.json',
         zoneless,
+        formatter: options.formatter,
       });
       break;
     case UnitTestRunner.VitestAngular:
@@ -144,6 +145,7 @@ async function addUnitTestRunner(
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
         zoneless,
+        formatter: options.formatter,
       });
       break;
   }

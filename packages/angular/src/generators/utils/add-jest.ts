@@ -6,6 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
+import type { JestProjectSchema } from '@nx/jest/src/generators/configuration/schema';
 import { getInstalledAngularVersionInfo, versions } from './version-utils';
 
 export type AddJestOptions = {
@@ -16,6 +17,7 @@ export type AddJestOptions = {
   runtimeTsconfigFileName: 'tsconfig.app.json' | 'tsconfig.lib.json';
   zoneless: boolean;
   addPlugin?: boolean;
+  formatter?: 'none' | 'prettier';
 };
 
 export async function addJest(
@@ -59,7 +61,8 @@ export async function addJest(
     skipFormat: true,
     addPlugin: options.addPlugin ?? false,
     addExplicitTargets: !options.addPlugin,
-  });
+    formatter: options.formatter,
+  } as JestProjectSchema);
 
   const setupFile = joinPathFragments(
     options.projectRoot,

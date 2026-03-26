@@ -15,6 +15,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
         addPlugin: options.addPlugin,
         runtimeTsconfigFileName: 'tsconfig.app.json',
         zoneless: options.zoneless,
+        formatter: options.formatter,
       });
       break;
     case UnitTestRunner.VitestAngular:
@@ -33,6 +34,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
         strict: options.strict,
         addPlugin: options.addPlugin,
         zoneless: options.zoneless,
+        formatter: options.formatter,
       });
       break;
   }
