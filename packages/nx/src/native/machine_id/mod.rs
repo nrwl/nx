@@ -1,3 +1,4 @@
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub fn get_machine_id() -> String {
     #[cfg(not(target_arch = "wasm32"))]
     return machine_uid::get().unwrap_or(String::from("machine"));
