@@ -7,6 +7,7 @@
       "ignore": ["**/tsconfig*.json", "**/project.json"]
     },
     { "glob": "**/*.d.ts" },
+    { "glob": "**/*.md" },
     "LICENSE"
   ]
 }
