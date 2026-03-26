@@ -15,7 +15,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
       "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-native", "build-base"]
+      "dependsOn": ["^build", "build-native", "build-base", "copy-assets"]
     },
     "build-base": {
       "dependsOn": [

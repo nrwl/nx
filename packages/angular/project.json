@@ -15,7 +15,13 @@
     },
 
     "build": {
-      "dependsOn": ["^build", "build-ng", "typecheck", "build-base"],
+      "dependsOn": [
+        "^build",
+        "build-ng",
+        "typecheck",
+        "build-base",
+        "copy-assets"
+      ],
       "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
       "command": "node ./scripts/copy-readme.js angular",
       "inputs": ["copyReadme"]

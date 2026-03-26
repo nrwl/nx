@@ -7,8 +7,7 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/cypress/README.md"],
       "command": "node ./scripts/copy-readme.js cypress",
-      "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-base"]
+      "inputs": ["copyReadme"]
     }
   }
 }

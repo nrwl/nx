@@ -24,8 +24,7 @@
         ],
         "parallel": false
       },
-      "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-base"]
+      "inputs": ["copyReadme"]
     }
   },
   "implicitDependencies": [
