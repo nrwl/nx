@@ -17,6 +17,7 @@
     "Testing"
   ],
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -53,6 +54,5 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
-  },
-  "types": "./src/index.d.ts"
+  }
 }

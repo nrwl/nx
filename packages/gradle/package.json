@@ -16,6 +16,7 @@
     "Backend"
   ],
   "main": "./index.js",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -48,6 +49,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "executors": "./executors.json",
-  "types": "./index.d.ts"
+  "executors": "./executors.json"
 }

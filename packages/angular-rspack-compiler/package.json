@@ -28,6 +28,7 @@
   },
   "type": "commonjs",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
   "exports": {
     ".": {
@@ -101,6 +102,5 @@
         ]
       }
     }
-  },
-  "types": "./dist/index.d.ts"
+  }
 }
