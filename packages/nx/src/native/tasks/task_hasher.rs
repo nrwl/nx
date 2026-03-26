@@ -23,7 +23,6 @@ use crate::native::{
     types::FileData,
     workspace::types::ProjectFiles,
 };
-use anyhow::anyhow;
 use dashmap::DashMap;
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;

@@ -77,7 +77,7 @@ impl NxDbConnection {
         }
     }
 
-    pub fn prepare(&self, sql: &str) -> Result<Statement> {
+    pub fn prepare(&self, sql: &str) -> Result<Statement<'_>> {
         if let Some(conn) = &self.conn {
             retry_db_operation_when_busy!(conn.prepare(sql))
                 .map_err(|e| anyhow::anyhow!("DB prepare error: \"{}\", {:?}", sql, e))
