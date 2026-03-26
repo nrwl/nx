@@ -1,6 +1,7 @@
 import { type Tree, ensurePackage, joinPathFragments } from '@nx/devkit';
 import { nxVersion } from '../../../../utils/versions';
 import { NormalizedSchema, Schema } from '../../schema';
+import type { ViteConfigurationGeneratorSchema } from '@nx/vite/src/generators/configuration/schema';
 
 export async function setupViteConfiguration(
   tree: Tree,
@@ -46,7 +47,7 @@ export async function setupViteConfiguration(
     // React Router does not yet support Vite 8, so force Vite 7.
     ...(options.useReactRouter ? { useViteV7: true } : {}),
     formatter: options.formatter,
-  } as any);
+  } as ViteConfigurationGeneratorSchema);
   tasks.push(viteTask);
   createOrEditViteConfig(
     tree,
@@ -87,7 +88,7 @@ export async function setupVitestConfiguration(
     skipFormat: true,
     addPlugin: options.addPlugin,
     formatter: options.formatter,
-  } as any);
+  });
   tasks.push(vitestTask);
   createOrEditViteConfig(
     tree,
