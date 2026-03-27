@@ -31,5 +31,12 @@ module.exports = () => {
         dependencies: {},
       };
     }),
+    /**
+     * `ensurePackage` calls `require(pkg)` which resolves from node_modules
+     * (the installed version) instead of the local source code. Using
+     * `jest.requireActual` routes through Jest's module resolver which
+     * respects tsconfig paths, so it picks up the source code instead.
+     */
+    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
   }));
 };

@@ -30,17 +30,6 @@ jest.mock('@nx/cypress/src/utils/versions', () => ({
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 jest.mock('enquirer');
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
-  return {
-    ...original,
-    ensurePackage: (pkg: string) => jest.requireActual(pkg),
-    createProjectGraphAsync: jest.fn().mockResolvedValue({
-      nodes: {},
-      dependencies: {},
-    }),
-  };
-});
 
 describe('app', () => {
   let appTree: Tree;
