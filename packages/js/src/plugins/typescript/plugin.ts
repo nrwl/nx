@@ -881,7 +881,7 @@ function getInputs(
     transitive: true,
   });
   inputs.push({
-    fileset: '**/*.d.ts',
+    fileset: '{projectRoot}/**/*.d.ts',
     dependencies: true,
   });
 
