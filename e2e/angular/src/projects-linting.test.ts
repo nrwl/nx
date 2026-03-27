@@ -26,18 +26,16 @@ describe('Angular Projects - Linting', () => {
     // disable the prefer-standalone rule for app1 and lib1 which are not standalone
     for (const project of [app1, lib1]) {
       let eslintConfig = readFile(`${project}/eslint.config.mjs`);
+      // Handle both single and double quote styles in the generated config
       eslintConfig = eslintConfig.replace(
-        `'@angular-eslint/directive-selector': [`,
-        `'@angular-eslint/prefer-standalone': 'off',
-      '@angular-eslint/directive-selector': [`
+        /(['"])@angular-eslint\/directive-selector\1:\s*\[/,
+        `"@angular-eslint/prefer-standalone": "off",\n      "@angular-eslint/directive-selector": [`
       );
       updateFile(`${project}/eslint.config.mjs`, eslintConfig);
     }
 
     // check apps and lib pass linting for initial generated code
-    runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`, {
-      redirectStderr: true,
-    });
+    runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`);
 
     // External HTML template file
     const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;
