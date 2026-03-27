@@ -78,6 +78,7 @@ assignment-rules:
   # These projects should not need to be isolated.
   - projects:
       - nx-dev
+      - astro-docs
     targets:
       - build*
     run-on:

@@ -22,9 +22,13 @@
           "input": "production",
           "projects": ["tag:maven:dev.nx.maven"]
         },
-        "{workspaceRoot}/scripts/local-registry",
         "native"
       ],
+      "dependsOn": ["local-registry", "nx-release"],
+      "command": "echo 'Registry storage populated via nx-release dependency'",
+      "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
+    },
+    "nx-release": {
       "dependsOn": [
         "local-registry",
         {
@@ -32,17 +36,16 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "node ./scripts/local-registry/run-populate-storage.mjs",
-      "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
+      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
     },
-    "nx-release": {
+    "nx-release-npm": {
       "dependsOn": [
         {
           "target": "build",
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
+      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts --local false"
     },
     "start-docker-registry": {
       "continuous": true,

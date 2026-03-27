@@ -591,7 +591,7 @@ jobs:
           echo "Version set to: $VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
           echo ""
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          pnpm nx nx-release-npm @nx/nx-source -- $VERSION $DRY_RUN
 
       - name: (Stable Release Only) Trigger Docs Release
         # Publish docs only on a full release
