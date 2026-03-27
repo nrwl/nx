@@ -297,6 +297,11 @@
       "types": "./dist/release/index.d.ts",
       "default": "./dist/release/index.js"
     },
+    "./release/changelog-renderer": {
+      "@nx/nx-source": "./release/changelog-renderer/index.ts",
+      "types": "./dist/release/changelog-renderer/index.d.ts",
+      "default": "./dist/release/changelog-renderer/index.js"
+    },
     "./presets/*": {
       "@nx/nx-source": "./presets/*",
       "default": "./dist/presets/*"
