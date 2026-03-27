@@ -1,4 +1,10 @@
 exclude-reads:
   - packages/nx/src/native/*.node
+  - '**/*.tsbuildinfo'
 exclude-writes:
   - '**/.swc/**'
+
+task-exclusions:
+  - target: lint
+    exclude-reads:
+      - '**/dist/**/*.json'
