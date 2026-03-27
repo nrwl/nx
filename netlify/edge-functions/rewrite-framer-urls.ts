@@ -1,6 +1,7 @@
 import type { Context } from 'https://edge.netlify.com';
 
 const framerUrl = Netlify.env.get('NEXT_PUBLIC_FRAMER_URL');
+const blogUrl = Netlify.env.get('BLOG_URL');
 const GA_MEASUREMENT_ID =
   Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
 const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
@@ -67,15 +68,16 @@ async function sendToGA4(
 
 /**
  * Paths that should be served by the Next.js app instead of Framer.
- * Everything else is proxied to Framer.
+ * Everything else is proxied to Framer (or the blog site if configured).
  */
 const nextjsPaths = new Set([
-  '/blog',
+  // When BLOG_URL is set, blog/changelog are proxied to the
+  // standalone blog site instead of falling through to Next.js.
+  ...(blogUrl ? [] : ['/blog', '/changelog']),
   '/courses',
   '/pricing',
   '/podcast',
   '/ai-chat',
-  '/changelog',
   '/resources-library',
   '/whitepaper-fast-ci',
   '/500',
@@ -98,7 +100,55 @@ export default async function handler(
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  if (!framerUrl || nextjsPaths.has(pathname)) return context.next();
+  if (nextjsPaths.has(pathname)) return context.next();
+
+  // Blog/changelog routing: proxy to standalone blog site, or fall through to Next.js.
+  const isBlogPath =
+    pathname === '/blog' ||
+    pathname.startsWith('/blog/') ||
+    pathname === '/changelog' ||
+    pathname.startsWith('/changelog/');
+
+  if (isBlogPath && !blogUrl) return context.next();
+
+  if (isBlogPath && blogUrl) {
+    const blogDestination = new URL(pathname, blogUrl);
+    url.searchParams.forEach((value, key) => {
+      blogDestination.searchParams.set(key, value);
+    });
+
+    const response = await fetch(blogDestination.toString(), {
+      headers: {
+        'User-Agent': request.headers.get('User-Agent') || '',
+        Accept: request.headers.get('Accept') || 'text/html',
+        'Accept-Language': request.headers.get('Accept-Language') || '',
+      },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    let body: ReadableStream<Uint8Array> | string | null = response.body;
+
+    // Rewrite blog site URLs to nx.dev in HTML responses (canonical, og:url, etc.)
+    if (contentType.includes('text/html')) {
+      const html = await response.text();
+      body = html.replaceAll(blogUrl, 'https://nx.dev');
+    }
+
+    context.waitUntil(sendToGA4(request, context, pathname));
+
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('x-nx-edge-function', 'blog-proxy');
+    newHeaders.set('X-Frame-Options', 'DENY');
+    newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
+
+    return new Response(body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    });
+  }
+
+  if (!framerUrl) return context.next();
 
   const framerDestination = new URL(pathname, framerUrl);
   url.searchParams.forEach((value, key) => {
@@ -145,9 +195,7 @@ export const config = {
     '/docs',
     '/docs/*',
     '/api/*',
-    '/blog/*',
     '/courses/*',
-    '/changelog',
     '/_next/*',
     '/.netlify/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire
