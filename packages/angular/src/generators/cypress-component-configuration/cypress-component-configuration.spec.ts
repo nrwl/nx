@@ -34,6 +34,19 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
 
+// TODO(jack): Remove this when Cypress adds Vite 8 support.
+// See: https://github.com/cypress-io/cypress/issues/33078
+function useVite7ForCypressCT(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    for (const section of ['dependencies', 'devDependencies'] as const) {
+      if (json[section]?.vite) {
+        json[section].vite = '^7.0.0';
+      }
+    }
+    return json;
+  });
+}
+
 describe('Cypress Component Testing Configuration', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -102,6 +115,7 @@ describe('Cypress Component Testing Configuration', () => {
         },
       };
 
+      useVite7ForCypressCT(tree);
       await cypressComponentConfiguration(tree, {
         project: 'fancy-lib',
         buildTarget: 'fancy-app:build',
@@ -170,6 +184,7 @@ describe('Cypress Component Testing Configuration', () => {
         },
       };
 
+      useVite7ForCypressCT(tree);
       await cypressComponentConfiguration(tree, {
         project: 'fancy-lib',
         buildTarget: 'fancy-app:build:development',
@@ -244,6 +259,7 @@ describe('Cypress Component Testing Configuration', () => {
         },
       };
 
+      useVite7ForCypressCT(tree);
       await expect(async () => {
         await cypressComponentConfiguration(tree, {
           project: 'fancy-lib',
@@ -280,6 +296,7 @@ describe('Cypress Component Testing Configuration', () => {
         dependencies: {},
       };
 
+      useVite7ForCypressCT(tree);
       await cypressComponentConfiguration(tree, {
         project: 'fancy-app',
         generateTests: false,
@@ -349,6 +366,7 @@ describe('Cypress Component Testing Configuration', () => {
         },
       };
 
+      useVite7ForCypressCT(tree);
       await cypressComponentConfiguration(tree, {
         project: 'fancy-lib',
         generateTests: false,
@@ -414,6 +432,7 @@ describe('Cypress Component Testing Configuration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'my-lib',
       buildTarget: 'something:build',
@@ -468,6 +487,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'fancy-app',
       generateTests: false,
@@ -532,6 +552,7 @@ describe('Cypress Component Testing Configuration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'my-lib',
       buildTarget: 'something:build',
@@ -593,6 +614,7 @@ describe('Cypress Component Testing Configuration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'my-lib-standalone',
       buildTarget: 'something:build',
@@ -655,6 +677,7 @@ describe('Cypress Component Testing Configuration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'with-inputs-cmp',
       buildTarget: 'something:build',
@@ -718,6 +741,7 @@ describe('Cypress Component Testing Configuration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'with-inputs-standalone-cmp',
       buildTarget: 'something:build',
@@ -780,6 +804,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       generateTests: true,
       project: 'secondary',
@@ -844,6 +869,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'cool-lib',
       buildTarget: 'abc:build',
@@ -892,6 +918,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'zoneless-app',
       generateTests: false,
@@ -955,6 +982,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
       project: 'zoneless-lib',
       buildTarget: 'zoneless-lib:build',
@@ -1021,6 +1049,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await expect(
       cypressComponentConfiguration(tree, {
         project: 'zoneless-app',
@@ -1054,6 +1083,7 @@ describe('Cypress Component Testing Configuration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await expect(
       cypressComponentConfiguration(tree, {
         project: 'zoneless-lib',
