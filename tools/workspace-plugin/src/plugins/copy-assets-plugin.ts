@@ -59,6 +59,7 @@ export const createNodesV2: CreateNodesV2 = [
               input === projectRoot
                 ? [
                     `${relative(projectRoot, assetsJson.outDir)}/**`,
+                    'assets.json',
                     ...(asset.ignore ?? []),
                   ]
                 : asset.ignore;

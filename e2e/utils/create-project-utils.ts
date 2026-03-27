@@ -748,6 +748,10 @@ export function cleanupProject({
   skipReset,
   ...opts
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
+  if (process.env.NX_E2E_SKIP_CLEANUP) {
+    resetWorkspaceContext();
+    return;
+  }
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
     try {
