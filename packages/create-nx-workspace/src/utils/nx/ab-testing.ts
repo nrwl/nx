@@ -8,7 +8,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
