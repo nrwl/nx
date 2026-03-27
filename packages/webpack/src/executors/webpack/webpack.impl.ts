@@ -145,6 +145,11 @@ export async function* webpackExecutor(
       mergeScan(
         (acc, config) => {
           if (!acc.hasErrors()) {
+            // Propagate watch mode from executor options to webpack config.
+            // Without this, NxAppWebpackPlugin-based configs run in single-run
+            // mode even when the executor is invoked with watch: true, causing
+            // @nx/js:node to restart the process after every build.
+            config.watch = options.watch ?? config.watch;
             return runWebpack(config).pipe(
               tap((stats) => {
                 console.info(stats.toString(config.stats));
