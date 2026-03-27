@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
+use rayon::prelude::*;
 use tracing::{debug, trace};
 
 #[napi]
@@ -102,62 +104,77 @@ fn remove_existing_symlink(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64> {
-    trace!("Creating directory: {:?}", dst.as_ref());
-    fs::create_dir_all(&dst)?;
-    trace!("Successfully created directory: {:?}", dst.as_ref());
+enum EntryKind {
+    File { src: PathBuf, dst: PathBuf },
+    Symlink { src: PathBuf, dst: PathBuf },
+}
 
-    trace!("Reading source directory: {:?}", src.as_ref());
-    let mut total_size = 0;
-    let mut files_copied = 0;
-    let mut dirs_copied = 0;
-    let mut symlinks_copied = 0;
+/// Walk the entire directory tree and collect all entries up front.
+/// Directories are created sequentially (cheap), files/symlinks are collected for parallel copy.
+fn collect_entries(src: &Path, dst: &Path, entries: &mut Vec<EntryKind>) -> io::Result<()> {
+    fs::create_dir_all(dst)?;
 
-    for entry in fs::read_dir(&src)? {
+    for entry in fs::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
-        let entry_name = entry.file_name();
-        let dest_path = dst.as_ref().join(&entry_name);
+        let dest_path = dst.join(entry.file_name());
 
-        let size: u64 = if ty.is_dir() {
-            trace!("Copying subdirectory: {:?}", entry.path());
-            let subdir_size = copy_dir_all(entry.path(), dest_path)?;
-            dirs_copied += 1;
-            trace!(
-                "Successfully copied subdirectory: {:?} ({} bytes)",
-                entry_name, subdir_size
-            );
-            subdir_size
+        if ty.is_dir() {
+            collect_entries(&entry.path(), &dest_path, entries)?;
         } else if ty.is_symlink() {
-            trace!("Copying symlink: {:?}", entry.path());
-            remove_existing_symlink(&dest_path)?;
-            symlink(fs::read_link(entry.path())?, dest_path)?;
-            symlinks_copied += 1;
-            trace!("Successfully copied symlink: {:?}", entry_name);
-            0
+            entries.push(EntryKind::Symlink {
+                src: entry.path(),
+                dst: dest_path,
+            });
         } else {
-            trace!("Copying file: {:?}", entry.path());
-            let file_size = fs::copy(entry.path(), dest_path)?;
-            files_copied += 1;
-            trace!(
-                "Successfully copied file: {:?} ({} bytes)",
-                entry_name, file_size
-            );
-            file_size
-        };
-        total_size += size;
+            entries.push(EntryKind::File {
+                src: entry.path(),
+                dst: dest_path,
+            });
+        }
     }
+    Ok(())
+}
 
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64> {
+    trace!(
+        "Collecting entries: {:?} -> {:?}",
+        src.as_ref(),
+        dst.as_ref()
+    );
+
+    let mut entries = Vec::new();
+    collect_entries(src.as_ref(), dst.as_ref(), &mut entries)?;
+
+    trace!("Copying {} entries in parallel", entries.len());
+
+    let total_size = AtomicU64::new(0);
+
+    entries.par_iter().try_for_each(|entry| -> io::Result<()> {
+        match entry {
+            EntryKind::File { src, dst } => {
+                let size = fs::copy(src, dst)?;
+                total_size.fetch_add(size, Ordering::Relaxed);
+                trace!("Copied file: {:?} ({} bytes)", src, size);
+            }
+            EntryKind::Symlink { src, dst } => {
+                remove_existing_symlink(dst)?;
+                symlink(fs::read_link(src)?, dst)?;
+                trace!("Copied symlink: {:?}", src);
+            }
+        }
+        Ok(())
+    })?;
+
+    let total = total_size.load(Ordering::Relaxed);
     debug!(
-        "Directory copy completed: {:?} -> {:?} ({} files, {} dirs, {} symlinks, {} bytes total)",
+        "Directory copy completed: {:?} -> {:?} ({} entries, {} bytes total)",
         src.as_ref(),
         dst.as_ref(),
-        files_copied,
-        dirs_copied,
-        symlinks_copied,
-        total_size
+        entries.len(),
+        total
     );
-    Ok(total_size)
+    Ok(total)
 }
 
 #[cfg(test)]
