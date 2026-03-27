@@ -511,7 +511,7 @@ class ProcessTaskUtilsTest {
 
       val result = findProviderBasedDependencies(consumerProvider.get())
 
-      assertTrue(result.any { it.contains("producer") }, "Found: $result")
+      assertTrue(result.any { it.target == "producer" }, "Found: $result")
     }
 
     @Test
@@ -526,7 +526,7 @@ class ProcessTaskUtilsTest {
 
       val result = findProviderBasedDependencies(consumerProvider.get())
 
-      assertTrue(result.any { it.contains("producer") }, "Found: $result")
+      assertTrue(result.any { it.target == "producer" }, "Found: $result")
     }
 
     @Test
@@ -540,7 +540,7 @@ class ProcessTaskUtilsTest {
 
       val result = findProviderBasedDependencies(jarProvider.get())
 
-      assertTrue(result.any { it.contains("compile") }, "Found: $result")
+      assertTrue(result.any { it.target == "compile" }, "Found: $result")
     }
 
     @Test
@@ -559,9 +559,9 @@ class ProcessTaskUtilsTest {
       val result = findProviderBasedDependencies(consumerProvider.get())
 
       assertEquals(3, result.size)
-      assertTrue(result.any { it.contains("task1") }, "Found: $result")
-      assertTrue(result.any { it.contains("task2") }, "Found: $result")
-      assertTrue(result.any { it.contains("task3") }, "Found: $result")
+      assertTrue(result.any { it.target == "task1" }, "Found: $result")
+      assertTrue(result.any { it.target == "task2" }, "Found: $result")
+      assertTrue(result.any { it.target == "task3" }, "Found: $result")
     }
   }
 

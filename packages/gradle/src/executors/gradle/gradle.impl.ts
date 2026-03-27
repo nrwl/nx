@@ -62,12 +62,11 @@ export default async function gradleExecutor(
   });
 
   if (options.excludeDependsOn) {
-    const includeDependsOnTasks = new Set(options.includeDependsOnTasks ?? []);
     getExcludeTasks(
       new Set([`${context.projectName}:${context.targetName}`]),
       context.projectGraph.nodes,
       new Set(),
-      includeDependsOnTasks
+      options.includeDependsOnTasks ?? []
     ).forEach((task) => {
       if (task) {
         args.push('--exclude-task', task);

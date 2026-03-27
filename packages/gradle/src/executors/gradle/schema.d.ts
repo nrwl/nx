@@ -3,6 +3,9 @@ export interface GradleExecutorSchema {
   testClassName?: string;
   args?: string[] | string;
   excludeDependsOn: boolean;
-  includeDependsOnTasks?: string[];
+  includeDependsOnTasks?: Array<{
+    target: string;
+    projects: string | string[];
+  }>;
   __unparsed__?: string[];
 }

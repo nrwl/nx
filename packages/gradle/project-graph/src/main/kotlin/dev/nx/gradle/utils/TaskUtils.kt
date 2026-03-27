@@ -80,9 +80,17 @@ fun processTask(
 
   target["options"] = buildMap {
     put("taskName", "${projectBuildPath}:${task.name}")
-    val providerDependencies = findProviderBasedDependencies(task)
+    val providerDependencies =
+        findProviderBasedDependencies(task, targetNameOverrides, targetNamePrefix)
     if (providerDependencies.isNotEmpty()) {
-      put("includeDependsOnTasks", providerDependencies.toList())
+      put(
+          "includeDependsOnTasks",
+          providerDependencies.map { entry ->
+            buildMap {
+              put("target", entry.target)
+              put("projects", entry.projects)
+            }
+          })
     }
     if (continuous) {
       put("continuous", true)
@@ -491,9 +499,13 @@ fun isCacheable(task: Task): Boolean {
  * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
  * with known producer tasks.
  */
-fun findProviderBasedDependencies(task: Task): Set<String> {
+fun findProviderBasedDependencies(
+    task: Task,
+    targetNameOverrides: Map<String, String> = emptyMap(),
+    targetNamePrefix: String = ""
+): Set<DependsOnEntry> {
   val logger = task.logger
-  val producerTasks = mutableSetOf<String>()
+  val producerEntries = mutableSetOf<DependsOnEntry>()
 
   try {
     val taskInternal = task as? TaskInternal ?: return emptySet()
@@ -508,8 +520,13 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
             try {
               val producer = dep.producer
               if (producer.isKnown) {
-                producer.visitProducerTasks(
-                    Action { producerTask -> producerTasks.add(producerTask.path) })
+                producer.visitProducerTasks(Action { producerTask ->
+                  val targetName =
+                      resolveTargetName(producerTask, targetNameOverrides, targetNamePrefix)
+                  val projectName = getNxProjectName(producerTask.project)
+                  producerEntries.add(
+                      DependsOnEntry(target = targetName, projects = listOf(projectName)))
+                })
               }
             } catch (e: Exception) {
               logger.debug("Could not get producer from provider: ${e.message}")
@@ -517,7 +534,11 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
           }
           is TaskProvider<*> -> {
             try {
-              producerTasks.add(dep.name)
+              val targetName =
+                  resolveTargetName(dep.get(), targetNameOverrides, targetNamePrefix)
+              val projectName = getNxProjectName(task.project)
+              producerEntries.add(
+                  DependsOnEntry(target = targetName, projects = listOf(projectName)))
             } catch (e: Exception) {
               logger.debug("Could not get name from TaskProvider: ${e.message}")
             }
@@ -526,12 +547,12 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
       }
     }
 
-    if (producerTasks.isNotEmpty()) {
-      logger.info("Task ${task.path} has provider-based dependencies: $producerTasks")
+    if (producerEntries.isNotEmpty()) {
+      logger.info("Task ${task.path} has provider-based dependencies: $producerEntries")
     }
   } catch (e: Exception) {
     logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
   }
 
-  return producerTasks
+  return producerEntries
 }

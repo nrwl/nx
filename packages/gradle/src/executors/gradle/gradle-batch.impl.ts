@@ -21,6 +21,7 @@ import {
   getAllDependsOn,
   getExcludeTasks,
   getGradleTaskNameWithNxTaskId,
+  parseNxTaskId,
 } from './get-exclude-task';
 import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
@@ -115,7 +116,10 @@ export function getGradlewTasksToRun(
   const testTaskIdsWithExclude: Set<string> = new Set([]);
   const taskIdsWithoutExclude: Set<string> = new Set([]);
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
-  const includeDependsOnTasks: Set<string> = new Set();
+  const includeDependsOnTasks: Array<{
+    target: string;
+    projects: string | string[];
+  }> = [];
 
   for (const taskId of taskIds) {
     const task = taskGraph.tasks[taskId];
@@ -123,11 +127,8 @@ export function getGradlewTasksToRun(
 
     gradlewTasksToRun[taskId] = input;
 
-    // Collect tasks that should be included (not excluded) - typically provider-based dependencies
     if (input.includeDependsOnTasks) {
-      for (const task of input.includeDependsOnTasks) {
-        includeDependsOnTasks.add(task);
-      }
+      includeDependsOnTasks.push(...input.includeDependsOnTasks);
     }
 
     if (input.excludeDependsOn) {
@@ -143,8 +144,8 @@ export function getGradlewTasksToRun(
 
   const allDependsOn = new Set<string>(taskIds);
   for (const taskId of taskIdsWithoutExclude) {
-    const [projectName, targetName] = taskId.split(':');
-    const dependencies = getAllDependsOn(nodes, projectName, targetName);
+    const { project, target } = parseNxTaskId(taskId);
+    const dependencies = getAllDependsOn(nodes, project, target);
     dependencies.forEach((dep) => allDependsOn.add(dep));
   }
 
@@ -157,13 +158,14 @@ export function getGradlewTasksToRun(
 
   const allTestsDependsOn = new Set<string>();
   for (const taskId of testTaskIdsWithExclude) {
-    const [projectName, targetName] = taskId.split(':');
-    const taskDependsOn = getAllDependsOn(nodes, projectName, targetName);
+    const { project, target } = parseNxTaskId(taskId);
+    const taskDependsOn = getAllDependsOn(nodes, project, target);
     taskDependsOn.forEach((dep) => allTestsDependsOn.add(dep));
   }
   const excludeTestTasks = new Set<string>();
-  for (let taskId of allTestsDependsOn) {
-    const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
+  for (const taskId of allTestsDependsOn) {
+    const parsed = parseNxTaskId(taskId);
+    const gradleTaskName = getGradleTaskNameWithNxTaskId(parsed, nodes);
     if (gradleTaskName) {
       excludeTestTasks.add(gradleTaskName);
     }
