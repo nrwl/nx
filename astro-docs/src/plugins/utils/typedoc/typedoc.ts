@@ -32,7 +32,7 @@ export const directoryToCategoryMap: Record<string, string> = {
 export function setupTypeDoc(logger: LoaderContext['logger']) {
   const tempDir = join(tmpdir(), `nx-devkit-docs`);
   const projectRoot = process.cwd();
-  const buildDir = join(workspaceRoot, 'dist', 'packages', 'devkit');
+  const buildDir = join(tempDir, 'build');
   const outDir = join(tempDir, 'docs', 'generated', 'devkit');
 
   mkdirSync(buildDir, { recursive: true });
@@ -78,14 +78,11 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     join(projectRoot, 'node_modules', '@types'),
   ];
 
-  // This ensures that nx and @nx/<plugin> modules resolve to `dist` rather than what's installed in node_modules.
-  // TODO(jack,caleb): If we move outDir from `dist/packages/nx` to `packages/nx/dist` like standard TS solution setup,
-  //                   then this isn't needed anymore since we should have devDependencies that resolve to local
-  //                   `node_modules` not the root one.
+  // Ensure nx and @nx/<plugin> modules resolve to local dist or source.
   tsconfigObj.compilerOptions.baseUrl = workspaceRoot;
   tsconfigObj.compilerOptions.paths = {
-    'nx/*': ['dist/packages/nx/*', 'packages/nx/src/*'],
-    '@nx/*': ['dist/packages/*', 'packages/*/src/*'],
+    'nx/*': ['packages/nx/dist/*', 'packages/nx/src/*'],
+    '@nx/*': ['packages/*/dist/*', 'packages/*/src/*'],
   };
 
   tsconfigObj.exclude = [
