@@ -380,6 +380,73 @@ describe('task planner', () => {
     );
   });
 
+  it('should apply multiple dependency inputs to the same dependency', async () => {
+    const projectFileMap = {
+      parent: [{ file: 'libs/parent/e2e.spec.ts', hash: 'parent.hash' }],
+      child: [
+        { file: 'libs/child/src/index.ts', hash: 'child.hash' },
+        { file: 'libs/child/src/index.spec.ts', hash: 'child.spec.hash' },
+        { file: 'libs/child/tsconfig.lib.json', hash: 'child.tsconfig.hash' },
+      ],
+    };
+
+    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          e2e: {
+            inputs: ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {},
+      },
+    });
+    builder.addStaticDependency(
+      'parent',
+      'child',
+      'libs/parent/e2e.spec.ts'
+    );
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+    const nxJson = {
+      namedInputs: {
+        prod: ['!{projectRoot}/**/*.spec.ts'],
+      },
+    } as any;
+
+    const planner = new HashPlanner(
+      nxJson,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+    const plans = planner.getPlans(['parent:e2e'], taskGraph);
+
+    expect(plans['parent:e2e']).toEqual(
+      expect.arrayContaining([
+        'child:libs/child/tsconfig*.json',
+        'child:!libs/child/**/*.spec.ts',
+      ])
+    );
+  });
+
   it('should hash executors', async () => {
     let projectFileMap = {
       parent: [],

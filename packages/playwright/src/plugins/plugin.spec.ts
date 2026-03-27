@@ -71,6 +71,7 @@ describe('@nx/playwright/plugin', () => {
                     "command": "playwright test",
                     "inputs": [
                       "default",
+                      "^{projectRoot}/tsconfig*.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -106,6 +107,7 @@ describe('@nx/playwright/plugin', () => {
                     "executor": "nx:noop",
                     "inputs": [
                       "default",
+                      "^{projectRoot}/tsconfig*.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -138,6 +140,7 @@ describe('@nx/playwright/plugin', () => {
                     "executor": "@nx/playwright:merge-reports",
                     "inputs": [
                       "default",
+                      "^{projectRoot}/tsconfig*.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -164,30 +167,6 @@ describe('@nx/playwright/plugin', () => {
         ],
       ]
     `);
-  });
-
-  it('should not include dependency tsconfig inputs when production named inputs exist', async () => {
-    await mockPlaywrightConfig(tempFs, {});
-    const results = await createNodesFunction(
-      ['playwright.config.js'],
-      {
-        targetName: 'e2e',
-      },
-      context
-    );
-
-    const expectedInputs = [
-      'default',
-      '^production',
-      {
-        externalDependencies: ['@playwright/test'],
-      },
-    ];
-    const targets = results[0][1].projects['.'].targets;
-
-    expect(targets['e2e'].inputs).toEqual(expectedInputs);
-    expect(targets['e2e-ci'].inputs).toEqual(expectedInputs);
-    expect(targets['e2e-ci--merge-reports'].inputs).toEqual(expectedInputs);
   });
 
   it('should create nodes with reporters configured', async () => {
@@ -233,6 +212,7 @@ describe('@nx/playwright/plugin', () => {
                     "command": "playwright test",
                     "inputs": [
                       "default",
+                      "^{projectRoot}/tsconfig*.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -270,6 +250,7 @@ describe('@nx/playwright/plugin', () => {
                     "executor": "nx:noop",
                     "inputs": [
                       "default",
+                      "^{projectRoot}/tsconfig*.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -304,6 +285,7 @@ describe('@nx/playwright/plugin', () => {
                     "executor": "@nx/playwright:merge-reports",
                     "inputs": [
                       "default",
+                      "^{projectRoot}/tsconfig*.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -395,6 +377,7 @@ describe('@nx/playwright/plugin', () => {
         "executor": "nx:noop",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -431,6 +414,7 @@ describe('@nx/playwright/plugin', () => {
         "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -474,6 +458,7 @@ describe('@nx/playwright/plugin', () => {
         "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -573,6 +558,7 @@ describe('@nx/playwright/plugin', () => {
         "executor": "nx:noop",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -610,6 +596,7 @@ describe('@nx/playwright/plugin', () => {
         "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -655,6 +642,7 @@ describe('@nx/playwright/plugin', () => {
         "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -700,6 +688,7 @@ describe('@nx/playwright/plugin', () => {
         "executor": "@nx/playwright:merge-reports",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -762,6 +751,7 @@ describe('@nx/playwright/plugin', () => {
         ],
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -811,6 +801,7 @@ describe('@nx/playwright/plugin', () => {
         "executor": "nx:noop",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -862,6 +853,7 @@ describe('@nx/playwright/plugin', () => {
         ],
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -906,6 +898,7 @@ describe('@nx/playwright/plugin', () => {
         ],
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -984,6 +977,7 @@ describe('@nx/playwright/plugin', () => {
         ],
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -1033,6 +1027,7 @@ describe('@nx/playwright/plugin', () => {
         "executor": "nx:noop",
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -1091,6 +1086,7 @@ describe('@nx/playwright/plugin', () => {
         ],
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [
@@ -1142,6 +1138,7 @@ describe('@nx/playwright/plugin', () => {
         ],
         "inputs": [
           "default",
+          "^{projectRoot}/tsconfig*.json",
           "^production",
           {
             "externalDependencies": [

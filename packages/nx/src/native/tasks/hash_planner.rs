@@ -321,7 +321,8 @@ impl HashPlanner {
                 if visited.contains(dep.as_str()) {
                     continue;
                 }
-                visited.insert(dep.as_str());
+                let mut next_visited = Box::new((**visited).clone());
+                next_visited.insert(dep.as_str());
 
                 if self.project_graph.nodes.contains_key(dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
@@ -338,7 +339,7 @@ impl HashPlanner {
                         &dep_inputs,
                         task_graph,
                         external_deps_mapped,
-                        visited,
+                        &mut next_visited,
                     )?);
                 } else {
                     // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
