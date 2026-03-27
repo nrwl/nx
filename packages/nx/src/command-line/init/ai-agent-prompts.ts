@@ -5,19 +5,23 @@ import { detectAiAgent } from '../../ai/detect-ai-agent';
 import * as pc from 'picocolors';
 
 export async function determineAiAgents(
-  aiAgents?: Agent[],
+  aiAgents?: (Agent | 'none')[],
   interactive?: boolean
 ): Promise<Agent[]> {
+  if (aiAgents && aiAgents.includes('none' as any)) {
+    return [];
+  }
+
   if (interactive === false || isCI()) {
     if (aiAgents) {
-      return aiAgents;
+      return aiAgents as Agent[];
     }
     const detected = detectAiAgent();
     return detected ? [detected] : [];
   }
 
   if (aiAgents) {
-    return aiAgents;
+    return aiAgents as Agent[];
   }
   return await aiAgentsPrompt();
 }

@@ -282,9 +282,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             default: true,
           })
           .option('aiAgents', {
-            describe: chalk.dim`List of AI agents to configure.`,
+            describe: chalk.dim`List of AI agents to configure. Use "none" to skip.`,
             type: 'array',
-            choices: [...supportedAgents],
+            choices: [...supportedAgents, 'none'],
           })
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
