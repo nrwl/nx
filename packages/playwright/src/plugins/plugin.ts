@@ -171,7 +171,7 @@ async function buildPlaywrightTargets(
     cache: true,
     inputs: [
       ...('production' in namedInputs
-        ? ['default', '^{projectRoot}/tsconfig*.json', '^production']
+        ? ['default', '^production']
         : ['default', '^default']),
       { externalDependencies: ['@playwright/test'] },
     ],
@@ -197,7 +197,7 @@ async function buildPlaywrightTargets(
       cache: true,
       inputs: [
         ...('production' in namedInputs
-          ? ['default', '^{projectRoot}/tsconfig*.json', '^production']
+          ? ['default', '^production']
           : ['default', '^default']),
         { externalDependencies: ['@playwright/test'] },
       ],
