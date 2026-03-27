@@ -103,7 +103,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -159,7 +159,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -218,7 +218,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -279,7 +279,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -338,7 +338,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -400,7 +400,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -460,7 +460,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -521,7 +521,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -584,7 +584,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -644,7 +644,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -708,7 +708,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -750,7 +750,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -851,7 +851,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -913,7 +913,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -977,7 +977,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -1059,7 +1059,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -1128,7 +1128,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1196,7 +1196,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1269,7 +1269,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1346,7 +1346,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1423,7 +1423,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1505,7 +1505,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1582,7 +1582,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1662,7 +1662,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1755,7 +1755,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1863,7 +1863,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -1916,7 +1916,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2122,7 +2122,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2199,7 +2199,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2242,7 +2242,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2285,7 +2285,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2328,7 +2328,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2375,7 +2375,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2406,7 +2406,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2482,7 +2482,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2548,7 +2548,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2621,7 +2621,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2664,7 +2664,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2726,7 +2726,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2837,7 +2837,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -2891,7 +2891,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2958,7 +2958,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3025,7 +3025,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3103,7 +3103,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3170,7 +3170,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3233,7 +3233,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3436,7 +3436,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3515,7 +3515,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3592,7 +3592,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3684,7 +3684,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3762,7 +3762,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3843,7 +3843,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3910,7 +3910,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -3979,7 +3979,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -4070,7 +4070,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4143,7 +4143,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4219,7 +4219,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4299,7 +4299,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4376,7 +4376,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4461,7 +4461,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4543,7 +4543,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4626,7 +4626,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4724,7 +4724,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -4809,7 +4809,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -4941,7 +4941,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5014,7 +5014,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -5052,7 +5052,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -5090,7 +5090,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -5128,7 +5128,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -5170,7 +5170,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
             {
               "dependencies": true,
-              "fileset": "**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -5209,7 +5209,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5280,7 +5280,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5353,7 +5353,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5419,7 +5419,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5510,7 +5510,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5586,7 +5586,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5658,7 +5658,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5741,7 +5741,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5813,7 +5813,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5882,7 +5882,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       },
                       {
                         "dependencies": true,
-                        "fileset": "**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -5958,7 +5958,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6031,7 +6031,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6135,7 +6135,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6208,7 +6208,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6281,7 +6281,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6385,7 +6385,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6458,7 +6458,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6531,7 +6531,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6631,7 +6631,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6730,7 +6730,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -6833,7 +6833,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     {
                       "dependencies": true,
-                      "fileset": "**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
