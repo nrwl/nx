@@ -5,6 +5,7 @@ import {
   ModuleFederationConfig,
   normalizeProjectName,
   NxModuleFederationConfigOverride,
+  shouldSkipModuleFederationSetup,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 
@@ -19,7 +20,7 @@ export async function withModuleFederation(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
 ) {
-  if (global.NX_GRAPH_CREATION) {
+  if (shouldSkipModuleFederationSetup()) {
     return function makeConfig(config: Configuration): Configuration {
       return config;
     };
