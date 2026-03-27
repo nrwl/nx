@@ -257,12 +257,18 @@
       "plugin": "@nx/vitest",
       "options": { "testTargetName": "vite:test" },
       "include": ["astro-docs/**"]
+    },
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn:"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3,
+  "bust": 6,
   "defaultBase": "master",
   "sync": { "applyChanges": true },
   "conformance": {

@@ -96,6 +96,7 @@
     "@nx/jest": "22.7.0-beta.4",
     "@nx/js": "22.7.0-beta.4",
     "@nx/key": "3.0.0",
+    "@nx/maven": "22.7.0-beta.4",
     "@nx/next": "22.7.0-beta.4",
     "@nx/playwright": "22.7.0-beta.4",
     "@nx/powerpack-license": "3.0.0",

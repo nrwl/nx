@@ -48,9 +48,6 @@ jobs:
         with:
           main-branch-name: 'master'
 
-      - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
-
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -75,11 +72,27 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
+      - name: Install Maven plugin locally
+        run: ./mvnw install -DskipTests
+
       - name: Nx Report
         run:
           pnpm nx report
 
+      - name: Debug Maven noop targets
+        run: |
+          npx nx show project "dev.nx.maven:nx-maven-shared" --json
+          npx nx show project "dev.nx.maven:batch-runner-adapters" --json
+          npx nx show project "dev.nx.maven:maven-batch-runner" --json
+          npx nx show project "dev.nx.maven:maven3-adapter" --json
+          npx nx show project "dev.nx.maven:maven4-adapter" --json
+
+      - name: Start CI Run
+        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+
       - name: Run Checks/Lint/Test/Build
+        env:
+          NX_VERBOSE_LOGGING: 'true'
         run: |
           pids=()
 
