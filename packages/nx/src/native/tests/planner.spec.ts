@@ -412,11 +412,7 @@ describe('task planner', () => {
         targets: {},
       },
     });
-    builder.addStaticDependency(
-      'parent',
-      'child',
-      'libs/parent/e2e.spec.ts'
-    );
+    builder.addStaticDependency('parent', 'child', 'libs/parent/e2e.spec.ts');
 
     const projectGraph = builder.getUpdatedProjectGraph();
     const taskGraph = createTaskGraph(
