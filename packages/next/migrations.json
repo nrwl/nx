@@ -14,6 +14,15 @@
       },
       "description": "Create AI Instructions to help migrate users workspaces to Next.js 16.",
       "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-next-16"
+    },
+    "update-23-0-0-create-ai-instructions-for-tailwind-v4": {
+      "cli": "nx",
+      "version": "23.0.0-beta.0",
+      "requires": {
+        "tailwindcss": ">=3.0.0"
+      },
+      "description": "Create AI Instructions to help remove @nx/next/tailwind usage and migrate to Tailwind CSS v4 @source directives.",
+      "factory": "./src/migrations/update-23-0-0/create-ai-instructions-for-tailwind-v4"
     }
   },
   "packageJsonUpdates": {

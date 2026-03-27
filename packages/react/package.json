@@ -83,11 +83,7 @@
       "require": "./babel.js",
       "types": "./babel.d.ts"
     },
-    "./tailwind": {
-      "import": "./tailwind.js",
-      "require": "./tailwind.js",
-      "types": "./tailwind.d.ts"
-    },
+    "./tailwind": "./tailwind.js",
     "./module-federation": {
       "import": "./module-federation.js",
       "require": "./module-federation.js",

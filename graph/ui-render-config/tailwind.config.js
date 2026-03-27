@@ -1,12 +1,22 @@
 const path = require('path');
 
 // nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
+const {
+  createGlobPatternsForDependencies,
+} = require('@nx/js/src/utils/generate-globs');
+
+function safeCreateGlobPatternsForDependencies(dir, pattern) {
+  try {
+    return createGlobPatternsForDependencies(dir, pattern);
+  } catch {
+    return [];
+  }
+}
 
 module.exports = {
   content: [
     path.join(__dirname, 'src/**/*.{js,ts,jsx,tsx,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
+    ...safeCreateGlobPatternsForDependencies(__dirname),
   ],
   darkMode: 'class', // or 'media' or 'class'
   theme: {

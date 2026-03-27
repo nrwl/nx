@@ -10,7 +10,6 @@ import { ExecutorContext } from '@nx/devkit';
 const mockDetectPortFn = jest.requireMock('detect-port') as jest.Mock;
 import * as executorUtils from 'nx/src/command-line/run/executor-utils';
 import * as path from 'path';
-import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
@@ -20,7 +19,6 @@ jest.mock('../../utils/versions', () => ({
   ...jest.requireActual('../../utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('../../utils/ct-helpers');
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
@@ -65,9 +63,6 @@ describe('Cypress builder', () => {
     isNxExecutor: true,
   });
   let runExecutor: any;
-  let mockGetTailwindPath: jest.Mock<ReturnType<typeof getTempTailwindPath>> =
-    getTempTailwindPath as any;
-
   beforeEach(async () => {
     mockedInstalledCypressMajorVersion.mockReturnValue(15);
     runExecutor = (devkit as any).runExecutor = jest.fn().mockReturnValue([
@@ -423,9 +418,6 @@ describe('Cypress builder', () => {
   });
 
   describe('Component Testing', () => {
-    beforeEach(() => {
-      mockGetTailwindPath.mockReturnValue(undefined);
-    });
     it('should forward testingType', async () => {
       const { success } = await cypressExecutor(
         {

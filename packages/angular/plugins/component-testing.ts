@@ -5,7 +5,6 @@ import {
 import {
   createExecutorContext,
   getProjectConfigByPath,
-  getTempTailwindPath,
   isCtProjectUsingBuildProject,
 } from '@nx/cypress/src/utils/ct-helpers';
 import {
@@ -21,7 +20,7 @@ import {
   stripIndents,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, lstatSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { gte } from 'semver';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/schema';
@@ -247,7 +246,7 @@ function normalizeBuildTargetOptions(
 
   // if the ct project isn't being used in the build project
   // then we don't want to have the assets/scripts/styles be included to
-  // prevent inclusion of unintended stuff like tailwind
+  // prevent inclusion of unintended styles
   if (
     buildContext.projectName === ctContext.projectName ||
     isCtProjectUsingBuildProject(
@@ -283,8 +282,7 @@ function normalizeBuildTargetOptions(
       }
     }
   } else {
-    const stylePath = getTempStylesForTailwind(ctContext);
-    buildOptions.styles = stylePath ? [stylePath] : [];
+    buildOptions.styles = [];
     buildOptions.assets = [];
     buildOptions.scripts = [];
     buildOptions.stylePreprocessorOptions = { includePaths: [] };
@@ -341,53 +339,6 @@ function withSchemaDefaults(
   return options;
 }
 
-/**
- * @returns a path from the workspace root to a temp file containing the base tailwind setup
- * if tailwind is being used in the project root or workspace root
- * this file should get cleaned up via the cypress executor
- */
-function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
-  const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
-    ctExecutorContext.projectName
-  ]?.data as ProjectConfiguration;
-  // angular only supports `tailwind.config.{js,cjs}`
-  const ctProjectTailwindConfig = join(
-    ctExecutorContext.root,
-    ctProjectConfig.root,
-    'tailwind.config'
-  );
-  const exts = ['js', 'cjs'];
-  const isTailWindInCtProject = exts.some((ext) =>
-    existsSync(`${ctProjectTailwindConfig}.${ext}`)
-  );
-  const rootTailwindPath = join(ctExecutorContext.root, 'tailwind.config');
-  const isTailWindInRoot = exts.some((ext) =>
-    existsSync(`${rootTailwindPath}.${ext}`)
-  );
-
-  if (isTailWindInRoot || isTailWindInCtProject) {
-    const pathToStyle = getTempTailwindPath(ctExecutorContext);
-    try {
-      mkdirSync(dirname(pathToStyle), { recursive: true });
-      writeFileSync(
-        pathToStyle,
-        `
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-`,
-        { encoding: 'utf-8' }
-      );
-
-      return pathToStyle;
-    } catch (makeTmpFileError) {
-      logger.warn(stripIndents`Issue creating a temp file for tailwind styles. Defaulting to no tailwind setup.
-      Temp file path? ${pathToStyle}`);
-      logger.error(makeTmpFileError);
-    }
-  }
-}
-
 function isOffsetNeeded(
   ctExecutorContext: ExecutorContext,
   ctProjectConfig: ProjectConfiguration
@@ -397,24 +348,6 @@ function isOffsetNeeded(
 
     // if using cypress <v12.9.0 then we require the offset
     if (!supportsWorkspaceRoot) {
-      return true;
-    }
-
-    if (
-      ctProjectConfig.projectType === 'library' &&
-      // angular will only see this config if the library root is the build project config root
-      // otherwise it will be set to the buildTarget root which is the app root where this config doesn't exist
-      // causing tailwind styles from the libs project root to not work
-      ['js', 'cjs'].some((ext) =>
-        existsSync(
-          join(
-            ctExecutorContext.root,
-            ctProjectConfig.root,
-            `tailwind.config.${ext}`
-          )
-        )
-      )
-    ) {
       return true;
     }
 

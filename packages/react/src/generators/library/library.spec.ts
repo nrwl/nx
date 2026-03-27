@@ -420,22 +420,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--style tailwind', () => {
-    it('should not generate any styles file when style is tailwind', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, style: 'none' });
-
-      expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
-
-      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
-      expect(content).toMatchSnapshot();
-    });
-  });
-
   describe('--no-component', () => {
     it('should not generate components or styles', async () => {
       await libraryGenerator(tree, { ...defaultSchema, component: false });
@@ -992,19 +976,21 @@ module.exports = withNx(
         import react from '@vitejs/plugin-react';
         import dts from 'vite-plugin-dts';
         import * as path from 'path';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/libs/mylib',
-          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') })],
+          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
           build: {
-            outDir: './dist',
+            outDir: '../../dist/libs/mylib',
             emptyOutDir: true,
             reportCompressedSize: true,
             commonjsOptions: {
@@ -1013,7 +999,7 @@ module.exports = withNx(
             lib: {
               // Could also be a dictionary or array of multiple entry points.
               entry: 'src/index.ts',
-              name: '@proj/mylib',
+              name: 'mylib',
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
@@ -1025,14 +1011,14 @@ module.exports = withNx(
             },
           },
           test: {
-            name: '@proj/mylib',
+            name: 'mylib',
             watch: false,
             globals: true,
             environment: 'jsdom',
             include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
-              reportsDirectory: './test-output/vitest/coverage',
+              reportsDirectory: '../../coverage/libs/mylib',
               provider: 'v8' as const,
             }
           },
@@ -1040,28 +1026,31 @@ module.exports = withNx(
         "
       `);
 
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./libs/mylib",
-          },
-        ]
-      `);
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(
+        `[]`
+      );
       // Make sure keys are in idiomatic order
       expect(Object.keys(readJson(tree, 'libs/mylib/package.json')))
         .toMatchInlineSnapshot(`
         [
           "name",
           "version",
-          "type",
-          "main",
-          "module",
-          "types",
-          "exports",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'libs/mylib/tsconfig.json')).toMatchInlineSnapshot(`
         {
+          "compilerOptions": {
+            "allowJs": false,
+            "allowSyntheticDefaultImports": true,
+            "esModuleInterop": false,
+            "jsx": "react-jsx",
+            "strict": true,
+            "types": [
+              "vite/client",
+              "vitest",
+            ],
+          },
           "extends": "../../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -1079,12 +1068,7 @@ module.exports = withNx(
         .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "jsx": "react-jsx",
-            "module": "esnext",
-            "moduleResolution": "bundler",
-            "outDir": "dist",
-            "rootDir": "src",
-            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "outDir": "../../dist/out-tsc",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1093,8 +1077,6 @@ module.exports = withNx(
             ],
           },
           "exclude": [
-            "out-tsc",
-            "dist",
             "**/*.spec.ts",
             "**/*.test.ts",
             "**/*.spec.tsx",
@@ -1115,11 +1097,8 @@ module.exports = withNx(
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
-            "eslint.config.js",
-            "eslint.config.cjs",
-            "eslint.config.mjs",
           ],
-          "extends": "../../tsconfig.base.json",
+          "extends": "./tsconfig.json",
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",
@@ -1132,10 +1111,7 @@ module.exports = withNx(
         .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "jsx": "react-jsx",
-            "module": "esnext",
-            "moduleResolution": "bundler",
-            "outDir": "./out-tsc/vitest",
+            "outDir": "../../dist/out-tsc",
             "types": [
               "vitest/globals",
               "vitest/importMeta",
@@ -1144,7 +1120,7 @@ module.exports = withNx(
               "vitest",
             ],
           },
-          "extends": "../../tsconfig.base.json",
+          "extends": "./tsconfig.json",
           "include": [
             "vite.config.ts",
             "vite.config.mts",
@@ -1159,11 +1135,6 @@ module.exports = withNx(
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "./tsconfig.lib.json",
-            },
           ],
         }
       `);
@@ -1199,6 +1170,9 @@ module.exports = withNx(
           },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
+          "nx": {
+            "name": "mylib",
+          },
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
@@ -1212,6 +1186,9 @@ module.exports = withNx(
           },
           "main": "./src/index.js",
           "name": "@proj/myjslib",
+          "nx": {
+            "name": "myjslib",
+          },
           "types": "./src/index.js",
           "version": "0.0.1",
         }
@@ -1236,7 +1213,7 @@ module.exports = withNx(
         module.exports = withNx(
           {
             main: './src/index.ts',
-            outputPath: './dist',
+            outputPath: '../../dist/libs/mylib',
             tsConfig: './tsconfig.lib.json',
             compiler: 'babel',
             external: ["react","react-dom","react/jsx-runtime"],
@@ -1272,24 +1249,30 @@ module.exports = withNx(
 
       expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
         {
-          "exports": {
-            ".": {
-              "@proj/source": "./src/index.ts",
-              "default": "./dist/index.esm.js",
-              "import": "./dist/index.esm.js",
-              "types": "./dist/index.esm.d.ts",
-            },
-            "./package.json": "./package.json",
-          },
           "files": [
             "dist",
             "!**/*.tsbuildinfo",
           ],
-          "main": "./dist/index.esm.js",
-          "module": "./dist/index.esm.js",
           "name": "@acme/mylib",
-          "type": "module",
-          "types": "./dist/index.esm.d.ts",
+          "nx": {
+            "name": "mylib",
+            "release": {
+              "version": {
+                "currentVersionResolver": "git-tag",
+                "fallbackCurrentVersionResolver": "disk",
+                "manifestRootsToUpdate": [
+                  "dist/{projectRoot}",
+                ],
+              },
+            },
+            "targets": {
+              "nx-release-publish": {
+                "options": {
+                  "packageRoot": "dist/{projectRoot}",
+                },
+              },
+            },
+          },
           "version": "0.0.1",
         }
       `);

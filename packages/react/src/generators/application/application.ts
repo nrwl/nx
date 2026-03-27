@@ -17,7 +17,6 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import reactInitGenerator from '../init/init';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
@@ -152,13 +151,6 @@ export async function applicationGeneratorInternal(
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
     await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
-  }
-
-  if (options.style === 'tailwind') {
-    const twTask = await setupTailwindGenerator(tree, {
-      project: options.projectName,
-    });
-    tasks.push(twTask);
   }
 
   const lintTask = await addLinting(tree, options);

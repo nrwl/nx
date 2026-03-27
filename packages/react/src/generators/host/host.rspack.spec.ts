@@ -460,24 +460,18 @@ describe('hostGenerator', () => {
         bundler: 'rspack',
       });
 
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./myapp",
-          },
-          {
-            "path": "./remote1",
-          },
-          {
-            "path": "./remote2",
-          },
-          {
-            "path": "./remote3",
-          },
-        ]
-      `);
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(
+        `[]`
+      );
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
+          "compilerOptions": {
+            "allowJs": false,
+            "allowSyntheticDefaultImports": true,
+            "esModuleInterop": false,
+            "jsx": "react-jsx",
+            "strict": true,
+          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -485,30 +479,13 @@ describe('hostGenerator', () => {
             {
               "path": "./tsconfig.app.json",
             },
-            {
-              "path": "../remote1",
-            },
-            {
-              "path": "../remote2",
-            },
-            {
-              "path": "../remote3",
-            },
           ],
         }
       `);
       expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "jsx": "react-jsx",
-            "lib": [
-              "dom",
-            ],
-            "module": "esnext",
-            "moduleResolution": "bundler",
-            "outDir": "dist",
-            "rootDir": "src",
-            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+            "outDir": "../dist/out-tsc",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -516,8 +493,6 @@ describe('hostGenerator', () => {
             ],
           },
           "exclude": [
-            "out-tsc",
-            "dist",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.tsx",
@@ -527,23 +502,12 @@ describe('hostGenerator', () => {
             "src/**/*.spec.jsx",
             "src/**/*.test.jsx",
           ],
-          "extends": "../tsconfig.base.json",
+          "extends": "./tsconfig.json",
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",
             "src/**/*.ts",
             "src/**/*.tsx",
-          ],
-          "references": [
-            {
-              "path": "../remote1/tsconfig.app.json",
-            },
-            {
-              "path": "../remote2/tsconfig.app.json",
-            },
-            {
-              "path": "../remote3/tsconfig.app.json",
-            },
           ],
         }
       `);

@@ -646,26 +646,27 @@ export default defineConfig({
         `);
       expect(tree.read('libs/my-lib/src/tsconfig.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-          "{
-            "extends": "../../../tsconfig.base.json",
-            "compilerOptions": {
-              "outDir": "out-tsc/cypress",
-              "allowJs": true,
-              "types": ["cypress", "node"],
-              "sourceMap": false
-            },
-            "include": [
-              "**/*.ts",
-              "**/*.js",
-              "../cypress.config.ts",
-              "../**/*.cy.ts",
-              "../**/*.cy.js",
-              "../**/*.d.ts"
-            ],
-            "exclude": ["out-tsc", "test-output"]
-          }
-          "
-        `);
+        "{
+          "extends": "../tsconfig.json",
+          "compilerOptions": {
+            "moduleResolution": "node10",
+            "allowJs": true,
+            "outDir": "../../dist/out-tsc",
+            "module": "commonjs",
+            "types": ["cypress", "node"],
+            "sourceMap": false
+          },
+          "include": [
+            "**/*.ts",
+            "**/*.js",
+            "../cypress.config.ts",
+            "../**/*.cy.ts",
+            "../**/*.cy.js",
+            "../**/*.d.ts"
+          ]
+        }
+        "
+      `);
     });
   });
 });

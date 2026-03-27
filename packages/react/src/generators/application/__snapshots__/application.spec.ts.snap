@@ -400,21 +400,6 @@ export default App;
 "
 `;
 
-exports[`app --style tailwind should not generate any styles files 1`] = `
-"import NxWelcome from './nx-welcome';
-
-export function App() {
-  return (
-    <div>
-      <NxWelcome title="my-app" />
-    </div>
-  );
-}
-
-export default App;
-"
-`;
-
 exports[`app not nested should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

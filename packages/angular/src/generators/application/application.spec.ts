@@ -14,13 +14,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import {
-  angularDevkitVersion,
-  angularVersion,
-  autoprefixerVersion,
-  postcssVersion,
-  tailwindVersion,
-} from '../../utils/versions';
+import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
@@ -1027,61 +1021,6 @@ describe('app', () => {
       // strict mode by default in future applications
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(nxJson.generators['@nx/angular:application'].strict).toBe(false);
-    });
-  });
-
-  describe('--add-tailwind', () => {
-    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind" is not specified', async () => {
-      // ACT
-      await generateApp(appTree, 'app1');
-
-      // ASSERT
-      expect(appTree.exists('app1/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind=false"', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', { addTailwind: false });
-
-      // ASSERT
-      expect(appTree.exists('app1/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should add a tailwind.config.js and relevant packages when "--add-tailwind=true"', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', { addTailwind: true });
-
-      // ASSERT
-      expect(appTree.read('app1/tailwind.config.js', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
-        const { join } = require('path');
-
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
-      expect(devDependencies['postcss']).toBe(postcssVersion);
-      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
     });
   });
 

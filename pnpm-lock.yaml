@@ -316,9 +316,6 @@ importers:
       '@react-three/fiber':
         specifier: ^8.16.8
         version: 8.18.0(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1)
-      '@tailwindcss/aspect-ratio':
-        specifier: ^0.4.2
-        version: 0.4.2(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2)))
       '@tailwindcss/forms':
         specifier: ^0.5.7
         version: 0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2)))
@@ -1916,6 +1913,9 @@ importers:
       '@nx/graph-ui-common':
         specifier: 'workspace:'
         version: link:../ui-common
+      tailwind-merge:
+        specifier: ^2.4.0
+        version: 2.6.0
     devDependencies:
       jest:
         specifier: catalog:jest
@@ -1947,6 +1947,9 @@ importers:
       '@nx/graph-ui-common':
         specifier: 'workspace:'
         version: link:../ui-common
+      tailwind-merge:
+        specifier: ^2.4.0
+        version: 2.6.0
     devDependencies:
       jest:
         specifier: catalog:jest
@@ -1954,7 +1957,11 @@ importers:
 
   graph/ui-common: {}
 
-  graph/ui-icons: {}
+  graph/ui-icons:
+    dependencies:
+      tailwind-merge:
+        specifier: ^2.4.0
+        version: 2.6.0
 
   graph/ui-project-details:
     dependencies:
@@ -1973,6 +1980,9 @@ importers:
       '@nx/nx-dev-ui-fence':
         specifier: 'workspace:'
         version: link:../../nx-dev/ui-fence
+      tailwind-merge:
+        specifier: ^2.4.0
+        version: 2.6.0
     devDependencies:
       '@nx/devkit':
         specifier: workspace:*
@@ -33094,8 +33104,8 @@ snapshots:
       hast-util-to-html: 9.0.5
       hast-util-to-text: 4.0.2
       hastscript: 9.0.1
-      postcss: 8.4.38
-      postcss-nested: 6.2.0(postcss@8.4.38)
+      postcss: 8.5.3
+      postcss-nested: 6.2.0(postcss@8.5.3)
       unist-util-visit: 5.0.0
       unist-util-visit-parents: 6.0.1
 
@@ -39495,10 +39505,6 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@tailwindcss/aspect-ratio@0.4.2(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2)))':
-    dependencies:
-      tailwindcss: 3.4.4(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2))
-
   '@tailwindcss/aspect-ratio@0.4.2(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.2.0)(typescript@5.9.2)))':
     dependencies:
       tailwindcss: 3.4.4(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.2.0)(typescript@5.9.2))
@@ -41944,8 +41950,8 @@ snapshots:
 
   autoprefixer@10.4.13(postcss@8.4.38):
     dependencies:
-      browserslist: 4.28.0
-      caniuse-lite: 1.0.30001731
+      browserslist: 4.28.1
+      caniuse-lite: 1.0.30001774
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
@@ -52914,11 +52920,6 @@ snapshots:
       postcss-modules-scope: 3.2.1(postcss@8.5.3)
       postcss-modules-values: 4.0.0(postcss@8.5.3)
       string-hash: 1.1.3
-
-  postcss-nested@6.2.0(postcss@8.4.38):
-    dependencies:
-      postcss: 8.4.38
-      postcss-selector-parser: 6.1.2
 
   postcss-nested@6.2.0(postcss@8.5.3):
     dependencies:

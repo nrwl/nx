@@ -66,24 +66,6 @@ export default MyLib;
 "
 `;
 
-exports[`lib --style tailwind should not generate any styles file when style is tailwind 1`] = `
-"
-
-export function MyLib() {
-  return (
-    <div>
-      <h1>Welcome to MyLib!</h1>
-    </div>
-  );
-}
-
-export default MyLib;
-
-
-
-"
-`;
-
 exports[`lib should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

@@ -1,10 +1,8 @@
 import {
-  checkFilesDoNotExist,
   getPackageManagerCommand,
   runCLI,
   runCommand,
   runE2ETests,
-  updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import {
@@ -52,29 +50,6 @@ describe('Angular Cypress Component Tests - Buildable Lib', () => {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
-    }
-    // add tailwind
-    runCLI(`generate @nx/angular:setup-tailwind --project=${buildableLibName}`);
-    updateFile(
-      `${buildableLibName}/src/lib/input/input.component.cy.ts`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-    updateFile(
-      `${buildableLibName}/src/lib/input-standalone/input-standalone.cy.ts`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-      checkFilesDoNotExist(`tmp${buildableLibName}/ct-styles.css`);
     }
   }, 300_000);
 });

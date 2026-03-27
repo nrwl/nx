@@ -10,7 +10,6 @@ export const typesReactVersion = '^18.2.0';
 export const typesReactDomVersion = '^18.2.0';
 export const eslintVersion = '^8.56.0';
 export const typescriptVersion = '~5.9.2';
-export const tailwindVersion = '^3.3.0';
 export const postcssVersion = '^8.4.38';
 export const autoprefixerVersion = '^10.4.19';
 export const testingLibraryReactVersion = '^14.1.2';

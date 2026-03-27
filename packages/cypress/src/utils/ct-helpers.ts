@@ -6,7 +6,7 @@ import {
   TargetConfiguration,
   workspaceRoot,
 } from '@nx/devkit';
-import { extname, join, relative } from 'path';
+import { extname, relative } from 'path';
 import { lstatSync } from 'fs';
 import {
   createProjectRootMappings,
@@ -16,27 +16,6 @@ import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/
 import { readNxJson } from 'nx/src/config/configuration';
 
 export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
-/**
- * return a path to a temp css file
- * temp file is scoped to the project root
- * i.e. <context.root>/tmp/<project-root>/ct-styles.css
- */
-export function getTempTailwindPath(context: ExecutorContext) {
-  if (!context.projectName) {
-    throw new Error('No project name found in context');
-  }
-  const project = context?.projectGraph.nodes[context.projectName];
-
-  if (!project) {
-    throw new Error(
-      `No project found in project graph for ${context.projectName}`
-    );
-  }
-
-  if (project?.data?.root) {
-    return join(context.root, 'tmp', project.data.root, 'ct-styles.css');
-  }
-}
 
 /**
  * Checks if the childProjectName is a descendent of the parentProjectName

@@ -66,16 +66,3 @@ exports[`component --style styled-jsx should use styled-jsx as the styled API li
 export default Hello;
 "
 `;
-
-exports[`component --style tailwind should not generate any style in component 1`] = `
-"export function Hello() {
-  return (
-    <div>
-      <h1>Welcome to Hello!</h1>
-    </div>
-  );
-}
-
-export default Hello;
-"
-`;

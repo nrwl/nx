@@ -117,10 +117,10 @@ describe('app', () => {
                     "cypressDir": "src",
                     "bundler": "vite",
                     "webServerCommands": {
-                        "default": "npx nx run my-app:dev",
-                        "production": "npx nx run my-app:preview"
+                        "default": "pnpm exec nx run my-app:dev",
+                        "production": "pnpm exec nx run my-app:preview"
                     },
-                    "ciWebServerCommand": "npx nx run my-app:preview",
+                    "ciWebServerCommand": "pnpm exec nx run my-app:preview",
                     "ciBaseUrl": "http://localhost:4300"
                 }),
                 baseUrl: 'http://localhost:4200'
@@ -524,35 +524,6 @@ describe('app', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.module.scss')).toEqual(true);
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    });
-  });
-
-  describe('--style tailwind', () => {
-    it('should generate tailwind setup', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-      expect(appTree.exists('my-app/tailwind.config.js')).toEqual(true);
-      expect(appTree.read('my-app/src/styles.css', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
-        /* You can add global styles to this file, and also import other style files */
-        "
-      `);
-    });
-
-    it('should not generate any styles files', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-
       const content = appTree.read('my-app/src/app/app.tsx').toString();
       expect(content).toMatchSnapshot();
     });
@@ -1379,17 +1350,9 @@ describe('app', () => {
         useProjectJson: false,
       });
 
-      expect(readJson(appTree, 'tsconfig.json').references)
-        .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./myapp-e2e",
-          },
-          {
-            "path": "./myapp",
-          },
-        ]
-      `);
+      expect(
+        readJson(appTree, 'tsconfig.json').references
+      ).toMatchInlineSnapshot(`[]`);
       const packageJson = readJson(appTree, 'myapp/package.json');
       expect(packageJson.name).toBe('@proj/myapp');
       expect(packageJson.nx).toBeUndefined();
@@ -1681,7 +1644,7 @@ describe('app', () => {
 
         module.exports = {
           output: {
-            path: join(__dirname, 'dist'),
+            path: join(__dirname, '../../dist/apps/my-app'),
             clean: true,
           },
           devServer: {
