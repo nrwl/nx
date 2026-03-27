@@ -10,7 +10,6 @@ export interface Schema {
   port?: number;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
-  addTailwind?: boolean;
   prefix?: string;
   style?: Styles;
   skipTests?: boolean;

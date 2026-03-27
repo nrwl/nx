@@ -318,26 +318,6 @@ describe('component', () => {
     });
   });
 
-  describe('--style tailwind', () => {
-    it('should not generate any style in component', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello/hello`,
-        style: 'tailwind',
-      });
-
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.styled-components')
-      ).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
-      expect(content).not.toContain("styles['container']");
-      expect(content).not.toContain('import styles');
-      expect(content).toMatchSnapshot();
-    });
-  });
-
   describe('--routing', () => {
     it('should add routes to the component', async () => {
       await componentGenerator(appTree, {

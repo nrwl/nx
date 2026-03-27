@@ -299,48 +299,6 @@ describe('React Applications', () => {
           expect(e2eResults).toContain('All specs passed!');
         }
       }, 250_000);
-
-      it('should support tailwind', async () => {
-        const appName = uniq('app');
-        runCLI(
-          `generate @nx/react:app apps/${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
-        );
-
-        // update app to use styled-jsx
-        updateFile(
-          `apps/${appName}/src/app/app.tsx`,
-          `
-       import NxWelcome from './nx-welcome';
-
-        export function App() {
-          return (
-            <div className="w-20 h-20">
-              <NxWelcome title="${appName}" />
-            </div>
-          );
-        }
-
-        export default App;
-
-       `
-        );
-
-        runCLI(`build ${appName}`);
-        const outputAssetFiles = listFiles(`dist/apps/${appName}/assets`);
-        const styleFile = outputAssetFiles.find((filename) =>
-          filename.endsWith('.css')
-        );
-        if (!styleFile) {
-          throw new Error('Could not find bundled css file');
-        }
-        const styleFileContents = readFile(
-          `dist/apps/${appName}/assets/${styleFile}`
-        );
-        const isStyleFileUsingTWClasses =
-          styleFileContents.includes('w-20') &&
-          styleFileContents.includes('h-20');
-        expect(isStyleFileUsingTWClasses).toBeTruthy();
-      }, 250_000);
     });
 
     describe('--format', () => {

@@ -420,22 +420,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--style tailwind', () => {
-    it('should not generate any styles file when style is tailwind', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, style: 'none' });
-
-      expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
-
-      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
-      expect(content).toMatchSnapshot();
-    });
-  });
-
   describe('--no-component', () => {
     it('should not generate components or styles', async () => {
       await libraryGenerator(tree, { ...defaultSchema, component: false });

@@ -50,7 +50,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   const fileName = 'app';
 
-  const styledModule = /^(css|scss|less|tailwind|none)$/.test(options.style)
+  const styledModule = /^(css|scss|less|none)$/.test(options.style)
     ? null
     : options.style;
 

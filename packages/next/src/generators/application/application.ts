@@ -8,7 +8,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
@@ -93,14 +92,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
-
-  if (options.style === 'tailwind') {
-    const tailwindTask = await setupTailwindGenerator(host, {
-      project: options.projectName,
-    });
-
-    tasks.push(tailwindTask);
-  }
 
   // LESS is not currrently supported with Turbopack
   // Turbopack is default in Next 16, set to webpack

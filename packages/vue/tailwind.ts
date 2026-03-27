@@ -1,14 +1,23 @@
 import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nx/js/src/utils/generate-globs';
 
+let hasWarned = false;
+
 /**
- * Generates a set of glob patterns based off the source root of the app and its dependencies
- * @param dirPath workspace relative directory path that will be used to infer the parent project and dependencies
- * @param fileGlobPattern pass a custom glob pattern to be used
+ * @deprecated `@nx/vue/tailwind` will be removed in Nx 24. Migrate to Tailwind CSS v4 which no longer needs glob patterns.
+ * See: https://nx.dev/docs/technologies/vue/guides/using-tailwind-css-in-vue
  */
 export function createGlobPatternsForDependencies(
   dirPath: string,
   fileGlobPattern: string = '/**/!(*.stories|*.spec).{vue,tsx,ts,jsx,js}'
 ) {
+  if (!hasWarned) {
+    hasWarned = true;
+    console.warn(
+      `\nWARNING: "@nx/vue/tailwind" is deprecated and will be removed in Nx 24.\n` +
+        `Migrate to Tailwind CSS v4 which no longer needs glob patterns for content detection.\n` +
+        `See: https://nx.dev/docs/technologies/vue/guides/using-tailwind-css-in-vue\n`
+    );
+  }
   try {
     return jsGenerateGlobs(dirPath, fileGlobPattern);
   } catch (e) {

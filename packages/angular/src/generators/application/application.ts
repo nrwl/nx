@@ -15,7 +15,6 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
@@ -72,14 +71,6 @@ export async function applicationGenerator(
   createProject(tree, options);
 
   await createFiles(tree, options, rootOffset);
-
-  if (options.addTailwind) {
-    await setupTailwindGenerator(tree, {
-      project: options.name,
-      skipFormat: true,
-      skipPackageJson: options.skipPackageJson,
-    });
-  }
 
   await addLinting(tree, options);
   await addUnitTestRunner(tree, options);

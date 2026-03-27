@@ -529,35 +529,6 @@ describe('app', () => {
     });
   });
 
-  describe('--style tailwind', () => {
-    it('should generate tailwind setup', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-      expect(appTree.exists('my-app/tailwind.config.js')).toEqual(true);
-      expect(appTree.read('my-app/src/styles.css', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
-        /* You can add global styles to this file, and also import other style files */
-        "
-      `);
-    });
-
-    it('should not generate any styles files', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    });
-  });
-
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
