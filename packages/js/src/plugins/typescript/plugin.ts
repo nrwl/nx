@@ -987,9 +987,17 @@ function getOutputs(
           );
         }
       } else {
+        // List specific tsc output extensions instead of claiming the
+        // entire outDir, so other tasks that write into the same
+        // directory (e.g. copy-assets for .node/.wasm files) don't
+        // have their outputs captured by the tsc build cache.
+        const jsonExt = tsConfig.options.resolveJsonModule ? ',json' : '';
         outputs.add(
           pathToInputOrOutput(
-            tsConfig.options.outDir,
+            joinPathFragments(
+              tsConfig.options.outDir,
+              `**/*.{js,cjs,mjs,jsx${jsonExt},d.ts,d.cts,d.mts}{,.map}`
+            ),
             workspaceRoot,
             config.project
           )
