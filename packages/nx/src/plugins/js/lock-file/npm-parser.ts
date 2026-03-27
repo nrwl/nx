@@ -394,6 +394,206 @@ function addV1NodeDependencies(
   }
 }
 
+function mapOverriddenPackagesV3(
+  rootLockFile: NpmLockFile,
+  packageJson: NormalizedPackageJson
+): Record<string, NpmDependencyV3> {
+  if (!packageJson.overrides) {
+    return {};
+  }
+
+  const packageIndex = buildPackageMapV3(rootLockFile);
+  const overriddenPackages = extractOverrideSpecs(packageJson.overrides);
+
+  return collectOverriddenSnapshotsV3(overriddenPackages, packageIndex);
+}
+
+type PackageMapV3 = Map<string, { path: string; snapshot: NpmDependencyV3 }[]>;
+
+function buildPackageMapV3(lockFile: NpmLockFile): PackageMapV3 {
+  const packageMapV3: PackageMapV3 = new Map();
+
+  if (!lockFile.packages) {
+    return packageMapV3;
+  }
+
+  Object.entries(lockFile.packages).forEach(([path, snapshot]) => {
+    if (path === '') {
+      return;
+    }
+
+    const packageName = extractPackageNameFromPath(path);
+
+    if (!packageMapV3.has(packageName)) {
+      packageMapV3.set(packageName, []);
+    }
+
+    packageMapV3.get(packageName).push({ path, snapshot });
+  });
+
+  return packageMapV3;
+}
+
+function extractPackageNameFromPath(path: string) {
+  const segments = path.split('node_modules/');
+  return segments[segments.length - 1];
+}
+
+type OverrideValue = string | Record<string, unknown>;
+type OverrideObject = Record<string, OverrideValue>;
+
+function extractOverrideSpecs(overrides: OverrideObject) {
+  const overrideSpecs = new Map<string, string>();
+
+  function handleSelfOverride(value: OverrideValue, parentPath: string[]) {
+    if (typeof value === 'string' && parentPath.length > 0) {
+      const parentPackage = parentPath[parentPath.length - 1];
+      overrideSpecs.set(parentPackage, value);
+      return;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      traverse(value as OverrideObject, parentPath);
+    }
+  }
+
+  function handleNamedOverride(
+    overrideKey: string,
+    value: OverrideValue,
+    parentPath: string[]
+  ) {
+    const packageName = parsePackageNameFromKey(overrideKey);
+
+    if (typeof value === 'string') {
+      overrideSpecs.set(packageName, value);
+      return;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      traverse(value as OverrideObject, [...parentPath, packageName]);
+    }
+  }
+
+  function traverse(overrideObject: OverrideObject, parentPath: string[] = []) {
+    Object.entries(overrideObject).forEach(([overrideKey, value]) => {
+      if (overrideKey === '.') {
+        handleSelfOverride(value, parentPath);
+      } else {
+        handleNamedOverride(overrideKey, value, parentPath);
+      }
+    });
+  }
+
+  traverse(overrides);
+  return overrideSpecs;
+}
+
+function parsePackageNameFromKey(key: string) {
+  const atIndex = key.indexOf('@', 1);
+  return atIndex > 0 ? key.slice(0, atIndex) : key;
+}
+
+function collectOverriddenSnapshotsV3(
+  overriddenPackages: Map<string, string>,
+  packageIndex: PackageMapV3
+) {
+  const overriddenSnapshots: Record<string, NpmDependencyV3> = {};
+
+  overriddenPackages.forEach((versionSpec, packageName) => {
+    const snapshots = packageIndex.get(packageName);
+
+    if (!snapshots) {
+      return;
+    }
+
+    const seenPackages = new Set<string>();
+
+    snapshots.forEach(({ path, snapshot }) => {
+      if (
+        snapshotMatchesVersionV3(snapshot, versionSpec) &&
+        !overriddenSnapshots[path]
+      ) {
+        overriddenSnapshots[path] = snapshot;
+
+        if (snapshot.dependencies) {
+          addTransitiveDependenciesV3(
+            snapshot.dependencies,
+            overriddenSnapshots,
+            seenPackages,
+            packageIndex
+          );
+        }
+      }
+    });
+  });
+
+  return overriddenSnapshots;
+}
+
+function snapshotMatchesVersionV3(
+  snapshot: NpmDependencyV3,
+  versionSpec: string
+) {
+  if (snapshot.version === versionSpec) {
+    return true;
+  }
+
+  try {
+    return satisfies(snapshot.version, versionSpec);
+  } catch {
+    return false;
+  }
+}
+
+function addTransitiveDependenciesV3(
+  dependencies: Record<string, string>,
+  output: Record<string, NpmDependencyV3>,
+  seenPackages: Set<string>,
+  packageIndex: PackageMapV3
+) {
+  Object.entries(dependencies).forEach(([packageName, versionRange]) => {
+    if (seenPackages.has(packageName)) {
+      return;
+    }
+    seenPackages.add(packageName);
+
+    const matchingSnapshot = findMatchingSnapshotV3(
+      packageName,
+      versionRange,
+      packageIndex
+    );
+
+    if (matchingSnapshot) {
+      output[matchingSnapshot.path] = matchingSnapshot.snapshot;
+
+      if (matchingSnapshot.snapshot.dependencies) {
+        addTransitiveDependenciesV3(
+          matchingSnapshot.snapshot.dependencies,
+          output,
+          seenPackages,
+          packageIndex
+        );
+      }
+    }
+  });
+}
+
+function findMatchingSnapshotV3(
+  packageName: string,
+  versionRange: string,
+  packageIndex: PackageMapV3
+) {
+  const candidates = packageIndex.get(packageName);
+
+  if (!candidates) {
+    return;
+  }
+
+  return candidates.find((candidate) =>
+    snapshotMatchesVersionV3(candidate.snapshot, versionRange)
+  );
+}
+
 export function stringifyNpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
@@ -420,7 +620,17 @@ export function stringifyNpmLockfile(
   }
   if (lockfileVersion > 1) {
     const packages = mapV3Snapshots(mappedPackages, packageJson);
-    output.packages = { ...packages, ...workspaceModules };
+
+    const overriddenPackages = mapOverriddenPackagesV3(
+      rootLockFile,
+      packageJson
+    );
+
+    output.packages = {
+      ...packages,
+      ...overriddenPackages,
+      ...workspaceModules,
+    };
   }
   if (lockfileVersion < 3) {
     const dependencies = mapV1Snapshots(mappedPackages);
