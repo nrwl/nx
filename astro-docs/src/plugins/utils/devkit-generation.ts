@@ -26,6 +26,7 @@ export async function loadDevkitPackage(
     workspaceRoot,
     'packages',
     'devkit',
+    'dist',
     'index.d.ts'
   );
   if (existsSync(devkitEntryPoint)) {
@@ -48,6 +49,7 @@ export async function loadDevkitPackage(
     workspaceRoot,
     'packages',
     'devkit',
+    'dist',
     'ngcli-adapter.d.ts'
   );
   if (existsSync(ngcliEntryPoint)) {
