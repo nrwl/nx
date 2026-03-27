@@ -117,6 +117,7 @@ export async function populateProjectGraph(
     await hashWithWorkspaceContext(workspaceRoot, [gradleConfigAndTestGlob]),
     hashObject(normalizedOptions),
     process.env.CI,
+    process.env.NX_GRADLE_DISABLE,
   ]);
   const cached = readProjectGraphReportCache(
     projectGraphReportCachePath,
