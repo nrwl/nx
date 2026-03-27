@@ -6,12 +6,22 @@ const path = require('node:path');
 // nx-ignore-next-line
 const { workspaceRoot } = require('@nx/devkit');
 // nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
+const {
+  createGlobPatternsForDependencies,
+} = require('@nx/js/src/utils/generate-globs');
+
+function safeCreateGlobPatternsForDependencies(dir, pattern) {
+  try {
+    return createGlobPatternsForDependencies(dir, pattern);
+  } catch {
+    return [];
+  }
+}
 
 module.exports = {
   content: [
     path.join(__dirname, 'src/**/*.{js,ts,jsx,tsx,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
+    ...safeCreateGlobPatternsForDependencies(__dirname),
     // Resolve the classes used in @nx/graph components
     // TODO: make a decision on whether this is really the best approach, or if precompiling and deduplicating the classes would be better
     path.join(

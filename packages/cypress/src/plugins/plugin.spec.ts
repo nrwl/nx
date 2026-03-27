@@ -117,7 +117,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -145,7 +145,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Opens Cypress",
                       "help": {
-                        "command": "npx cypress open --help",
+                        "command": "pnpm exec cypress open --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -219,7 +219,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Component Tests",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -247,7 +247,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Opens Cypress",
                       "help": {
-                        "command": "npx cypress open --help",
+                        "command": "pnpm exec cypress open --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -337,7 +337,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -384,7 +384,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -418,7 +418,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -447,7 +447,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Opens Cypress",
                       "help": {
-                        "command": "npx cypress open --help",
+                        "command": "pnpm exec cypress open --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -543,7 +543,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -589,7 +589,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -630,7 +630,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -658,7 +658,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Opens Cypress",
                       "help": {
-                        "command": "npx cypress open --help",
+                        "command": "pnpm exec cypress open --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -749,7 +749,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -796,7 +796,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -830,7 +830,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -859,7 +859,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Opens Cypress",
                       "help": {
-                        "command": "npx cypress open --help",
+                        "command": "pnpm exec cypress open --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -945,7 +945,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Component Tests",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -997,7 +997,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Component Tests in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -1030,7 +1030,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Component Tests for src/test-2.cy.ts in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -1069,7 +1069,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Runs Cypress Component Tests for src/test.cy.ts in CI",
                       "help": {
-                        "command": "npx cypress run --help",
+                        "command": "pnpm exec cypress run --help",
                         "example": {
                           "args": [
                             "--dev",
@@ -1098,7 +1098,7 @@ describe('@nx/cypress/plugin', () => {
                     "metadata": {
                       "description": "Opens Cypress",
                       "help": {
-                        "command": "npx cypress open --help",
+                        "command": "pnpm exec cypress open --help",
                         "example": {
                           "args": [
                             "--dev",

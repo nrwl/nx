@@ -11,7 +11,6 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   skipPostInstall?: boolean;
-  addTailwind?: boolean;
   prefix?: string;
   style?: Styles;
   skipTests?: boolean;

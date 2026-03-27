@@ -172,7 +172,7 @@ export async function createApplicationFiles(
     host.delete(`${options.appProjectRoot}/.babelrc`);
   }
 
-  if (options.styledModule || options.style === 'tailwind') {
+  if (options.styledModule) {
     if (options.appDir) {
       host.delete(`${generatedAppFilePath}/app/page.module.${options.style}`);
     } else {

@@ -121,10 +121,6 @@ async function addFiles(
     `import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n${updatedCyConfig}`
   );
 
-  const isUsingTailwind = ['js', 'cjs'].some((ext) =>
-    tree.exists(joinPathFragments(projectConfig.root, `tailwind.config.${ext}`))
-  );
-
   tree.write(
     joinPathFragments(
       projectConfig.root,
@@ -133,13 +129,6 @@ async function addFiles(
       'styles.ct.css'
     ),
     `/* This is where you can load global styles to apply to all components. */
-${
-  isUsingTailwind
-    ? `@tailwind base;
-@tailwind components;
-@tailwind utilities;`
-    : ''
-}
 `
   );
 

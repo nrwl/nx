@@ -1,7 +1,6 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { existsSync, readdirSync, unlinkSync } from 'fs';
 import { basename, dirname } from 'path';
-import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { startDevServer } from '../../utils/start-dev-server';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
@@ -41,7 +40,6 @@ export interface CypressExecutorOptions extends Json {
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
-  ctTailwindPath?: string;
   portLockFilePath?: string;
 }
 
@@ -81,12 +79,6 @@ function normalizeOptions(
 ): NormalizedCypressExecutorOptions {
   options.env = options.env || {};
   options.testingType ??= 'e2e';
-  if (options.testingType === 'component') {
-    const project = context?.projectGraph?.nodes?.[context.projectName];
-    if (project?.data?.root) {
-      options.ctTailwindPath = getTempTailwindPath(context);
-    }
-  }
   return options;
 }
 
@@ -166,7 +158,6 @@ async function runCypress(
     ? Cypress.open(options)
     : Cypress.run(options));
 
-  cleanupTmpFile(opts.ctTailwindPath);
   cleanupTmpFile(opts.portLockFilePath);
 
   if (process.env.NX_VERBOSE_LOGGING === 'true' && opts.portLockFilePath) {

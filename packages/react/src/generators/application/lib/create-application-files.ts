@@ -54,7 +54,7 @@ export function getDefaultTemplateVariables(
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     appTests,
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
-    style: options.style === 'tailwind' ? 'css' : options.style,
+    style: options.style,
     hasStyleFile,
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
     port: options.port ?? 4200,
@@ -91,11 +91,7 @@ export function createNxRspackPluginOptions(
     styles:
       options.styledModule || !options.hasStyles
         ? []
-        : [
-            `./src/styles.${
-              options.style !== 'tailwind' ? options.style : 'css'
-            }`,
-          ],
+        : [`./src/styles.${options.style}`],
   };
 }
 
@@ -108,8 +104,6 @@ export async function createApplicationFiles(
     styleSolutionSpecificAppFiles = '../files/style-styled-module';
   } else if (options.style === 'styled-jsx') {
     styleSolutionSpecificAppFiles = '../files/style-styled-jsx';
-  } else if (options.style === 'tailwind') {
-    styleSolutionSpecificAppFiles = '../files/style-tailwind';
   } else if (options.style === 'none') {
     styleSolutionSpecificAppFiles = '../files/style-none';
   } else if (options.globalCss) {
@@ -317,11 +311,7 @@ function createNxWebpackPluginOptions(
     styles:
       options.styledModule || !options.hasStyles
         ? []
-        : [
-            `./src/styles.${
-              options.style !== 'tailwind' ? options.style : 'css'
-            }`,
-          ],
+        : [`./src/styles.${options.style}`],
   };
 }
 

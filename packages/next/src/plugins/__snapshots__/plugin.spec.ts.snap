@@ -72,7 +72,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "command": "pnpm exec nx watch --projects my-app --includeDependentProjects -- pnpm exec nx build-deps my-app",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -158,7 +158,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects next --includeDependentProjects -- npx nx build-deps next",
+              "command": "pnpm exec nx watch --projects next --includeDependentProjects -- pnpm exec nx build-deps next",
               "continuous": true,
               "dependsOn": [
                 "build-deps",

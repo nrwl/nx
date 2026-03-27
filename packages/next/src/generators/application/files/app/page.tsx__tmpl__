@@ -5,7 +5,7 @@
   <%_ if (styledModule && styledModule !== 'styled-jsx') { var wrapper = 'StyledPage'; _%>
 import styled from '<%= styledModule %>';
 <%_ } else { var wrapper = 'div'; _%>
-<%- (style !== 'styled-jsx' && style !== 'tailwind') ? `import styles from './page.module.${style}';` : '' %>
+<%- style !== 'styled-jsx' ? `import styles from './page.module.${style}';` : '' %>
   <%_ } _%>
 
   <%_ if (styledModule && styledModule !== 'styled-jsx') { _%>
@@ -19,7 +19,7 @@ export default function Index() {
    * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
    */
   return (
-    <<%= wrapper %><% if (!styledModule && style !== 'tailwind') {%> className={styles.page}<% } %>>
+    <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
       <%- styledModule === 'styled-jsx' && style !== 'none' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
       <%- appContent %>
     </<%= wrapper %>>

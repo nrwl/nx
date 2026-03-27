@@ -222,37 +222,6 @@ describe(Input.name, () => {
         'All specs passed!'
       );
     }
-
-    // add tailwind
-    runCLI(`generate @nx/react:setup-tailwind --project=${buildableLibName}`);
-    updateFile(
-      `libs/${buildableLibName}/src/styles.css`,
-      `
-@tailwind components;
-@tailwind base;
-@tailwind utilities;
-`
-    );
-    updateFile(
-      `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-    updateFile(
-      `libs/${buildableLibName}/src/lib/input/input.tsx`,
-      (content) => {
-        return `import '../../styles.css';
-${content}`;
-      }
-    );
-
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-        'All specs passed!'
-      );
-    }
   }, 300_000);
 
   it('should work with async webpack config', async () => {

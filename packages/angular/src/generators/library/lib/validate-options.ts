@@ -14,12 +14,6 @@ export function validateOptions(tree: Tree, options: Schema): void {
     );
   }
 
-  if (options.addTailwind && !options.buildable && !options.publishable) {
-    throw new Error(
-      `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
-    );
-  }
-
   if (options.unitTestRunner === UnitTestRunner.VitestAngular) {
     const { major: angularMajorVersion, version: angularVersion } =
       getInstalledAngularVersionInfo(tree);
