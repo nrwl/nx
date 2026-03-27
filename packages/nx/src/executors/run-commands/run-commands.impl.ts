@@ -55,6 +55,7 @@ const propKeys = [
   'parallel',
   'no-parallel',
   'readyWhen',
+  'readyWhenStatus',
   'cwd',
   'args',
   'envFile',
@@ -238,6 +239,13 @@ function normalizeOptions(
   return options as NormalizedRunCommandsOptions;
 }
 
+function isArrayOfStrings(arg: unknown): arg is Array<string> {
+  if (Array.isArray(arg)) {
+    return arg.every((item) => typeof item === 'string');
+  }
+  return false;
+}
+
 export function interpolateArgsIntoCommand(
   command: string,
   opts: Pick<
@@ -304,7 +312,8 @@ function unknownOptionsToArgsArray(
   return Object.keys(opts.unknownOptions ?? {})
     .filter(
       (k) =>
-        typeof opts.unknownOptions[k] !== 'object' &&
+        (typeof opts.unknownOptions[k] !== 'object' ||
+          isArrayOfStrings(opts.unknownOptions[k])) &&
         opts.parsedArgs[k] === opts.unknownOptions[k]
     )
     .map((k) => `--${k}=${opts.unknownOptions[k]}`)
