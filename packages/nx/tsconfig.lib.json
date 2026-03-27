@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": null,
     "outDir": "dist",
     "rootDir": ".",
     "declarationDir": "dist",
@@ -11,7 +12,8 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "strict": false
   },
   "exclude": [
     "node_modules",
