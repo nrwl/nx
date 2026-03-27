@@ -317,15 +317,15 @@ if (isAiAgent()) {
   commandsObject
     .example(chalk.green('AI AGENTS (RECOMMENDED):'), '')
     .example(
-      '  npx create-nx-workspace@latest myorg --template=nrwl/empty-template --nxCloud=yes --interactive=false',
+      '  npx create-nx-workspace@latest myorg --template=empty --nxCloud=yes --interactive=false',
       ''
     )
     .example('', '')
     .example(chalk.green('AVAILABLE TEMPLATES:'), '')
-    .example('  --template=nrwl/empty-template       Empty monorepo', '')
-    .example('  --template=nrwl/react-template       React fullstack', '')
-    .example('  --template=nrwl/angular-template     Angular fullstack', '')
-    .example('  --template=nrwl/typescript-template  NPM packages', '')
+    .example('  --template=empty                     Empty monorepo', '')
+    .example('  --template=react                     React fullstack', '')
+    .example('  --template=angular                   Angular fullstack', '')
+    .example('  --template=typescript                NPM packages', '')
     .epilogue(
       `${chalk.cyan('AI Agent Mode:')}
   Set CLAUDECODE=1 or OPENCODE=1 for JSON output and non-interactive mode.
