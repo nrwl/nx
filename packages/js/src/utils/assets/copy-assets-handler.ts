@@ -12,9 +12,17 @@ import * as path from 'node:path';
 import ignore from 'ignore';
 import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
+import {
+  normalizeAssets,
+  getAssetOutputPath,
+  NormalizedAssetEntry as AssetEntry,
+} from './normalize-assets';
 import { logger, workspaceRoot } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 import { dim } from 'picocolors';
+
+export type { AssetEntry };
+export { normalizeAssets, getAssetOutputPath };
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -30,15 +38,6 @@ interface CopyAssetHandlerOptions {
   outputDir: string;
   assets: (string | AssetGlob)[];
   callback?: (events: FileEvent[]) => void;
-  includeIgnoredFiles?: boolean;
-}
-
-interface AssetEntry {
-  isGlob: boolean;
-  pattern: string;
-  ignore: string[] | null;
-  input: string;
-  output: string;
   includeIgnoredFiles?: boolean;
 }
 
@@ -89,44 +88,12 @@ export class CopyAssetsHandler {
       this.ignore.add(readFileSync(nxignore).toString());
     }
 
-    this.assetGlobs = opts.assets.map((f) => {
-      let isGlob = false;
-      let pattern: string;
-      // Input and output directories are normalized to be relative to root
-      let input: string;
-      let output: string;
-      let ignore: string[] | null = null;
-      let includeIgnoredFiles: boolean | undefined = undefined;
-
-      const resolvedOutputDir = path.isAbsolute(opts.outputDir)
-        ? opts.outputDir
-        : path.resolve(opts.rootDir, opts.outputDir);
-
-      if (typeof f === 'string') {
-        pattern = f;
-        input = path.relative(opts.rootDir, opts.projectDir);
-        output = path.relative(opts.rootDir, resolvedOutputDir);
-      } else {
-        isGlob = true;
-        pattern = pathPosix.join(f.input, f.glob);
-        input = f.input;
-        output = pathPosix.join(
-          path.relative(opts.rootDir, resolvedOutputDir),
-          f.output
-        );
-        if (f.ignore)
-          ignore = f.ignore.map((ig) => pathPosix.join(f.input, ig));
-        includeIgnoredFiles = f.includeIgnoredFiles;
-      }
-      return {
-        isGlob,
-        input,
-        pattern,
-        ignore,
-        output,
-        includeIgnoredFiles,
-      };
-    });
+    this.assetGlobs = normalizeAssets(
+      opts.assets,
+      opts.rootDir,
+      opts.projectDir,
+      opts.outputDir
+    );
   }
 
   async processAllAssetsOnce(): Promise<void> {
@@ -246,12 +213,10 @@ export class CopyAssetsHandler {
         ((assetGlob.includeIgnoredFiles ?? this.includeIgnoredFiles) ||
           !this.ignore.ignores(src))
       ) {
-        const relPath = path.relative(assetGlob.input, src);
-        const dest = relPath.startsWith('..') ? src : relPath;
         acc.push({
           type: 'create',
           src: path.join(this.rootDir, src),
-          dest: path.join(this.rootDir, assetGlob.output, dest),
+          dest: path.join(this.rootDir, getAssetOutputPath(src, assetGlob)),
         });
       }
       return acc;

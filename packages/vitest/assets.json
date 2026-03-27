@@ -1,0 +1,23 @@
+{
+  "outDir": "dist/packages/vitest",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+    },
+    {
+      "glob": "**/*.js",
+      "ignore": ["**/jest.config.js"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    {
+      "glob": "PLUGIN.md"
+    },
+    "LICENSE"
+  ]
+}

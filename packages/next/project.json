@@ -6,52 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/next/README.md"],
-      "command": "node ./scripts/copy-readme.js next"
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/next",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/next",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/next",
-            "glob": "**/files/**/.babelrc__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/next",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/next",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/next",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "command": "node ./scripts/copy-readme.js next",
+      "inputs": ["copyReadme"]
     }
   }
 }

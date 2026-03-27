@@ -1,0 +1,13 @@
+{
+  "outDir": "dist/packages/expo",
+  "assets": [
+    { "glob": "**/files/**" },
+    {
+      "glob": "**/*.json",
+      "ignore": ["tsconfig*.json", "**/project.json"]
+    },
+    { "glob": "**/*.d.ts" },
+    { "glob": "**/*.md" },
+    "LICENSE"
+  ]
+}

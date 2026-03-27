@@ -1,0 +1,17 @@
+{
+  "outDir": "dist/packages/docker",
+  "assets": [
+    {
+      "glob": "**/*.json",
+      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+    },
+    {
+      "glob": "**/*.js",
+      "ignore": ["**/jest.config.js"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    "LICENSE"
+  ]
+}

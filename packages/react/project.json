@@ -6,57 +6,8 @@
   "targets": {
     "build": {
       "command": "node ./scripts/copy-readme.js react",
+      "inputs": ["copyReadme"],
       "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/react",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/files/**/.babelrc__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/files/**/.browserslistrc__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
     }
   }
 }

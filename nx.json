@@ -18,6 +18,13 @@
       "{workspaceRoot}/.nx/workflows/agents.yaml",
       "{workspaceRoot}/.github/workflows/ci.yml"
     ],
+    "copyReadme": [
+      "{projectRoot}/README.md",
+      "{projectRoot}/readme-template.md",
+      "{workspaceRoot}/scripts/copy-readme.js",
+      "{workspaceRoot}/scripts/readme-fragments/**/*",
+      "{workspaceRoot}/.prettierignore"
+    ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
@@ -27,6 +34,8 @@
     ],
     "e2eInputs": [
       "default",
+      "{workspaceRoot}/scripts/patched-jest-resolver.js",
+      "{workspaceRoot}/jest.preset.js",
       "{workspaceRoot}/e2e/jest.preset.e2e.js",
       "{workspaceRoot}/.verdaccio/config.yml",
       "{workspaceRoot}/scripts/local-registry/**/*",
@@ -68,7 +77,7 @@
       "dependsOn": [
         "^build",
         "typecheck",
-        "legacy-post-build",
+        "copy-assets",
         "build-base",
         "build-native"
       ],
@@ -141,15 +150,10 @@
     },
     "build-ng": { "cache": true },
     "sitemap": { "cache": true },
-    "copy-docs": { "cache": true },
-    "legacy-post-build": {
-      "dependsOn": ["^build-base", "build-base", "nx:build-base"],
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
-    }
+    "copy-docs": { "cache": true }
   },
   "plugins": [
+    "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",

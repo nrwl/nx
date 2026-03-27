@@ -10,7 +10,12 @@
       "outputs": ["{projectRoot}/target/*.jar"]
     },
     "_package": {
-      "command": "node scripts/run-native-target.js package maven-batch-runner"
+      "command": "node scripts/run-native-target.js package maven-batch-runner",
+      "outputs": [
+        "{projectRoot}/target/*.jar",
+        "{workspaceRoot}/packages/maven/batch-runner-adapters/maven3/target/*.jar",
+        "{workspaceRoot}/packages/maven/batch-runner-adapters/maven4/target/*.jar"
+      ]
     }
   },
   "tags": ["maven:dev.nx.maven"],
