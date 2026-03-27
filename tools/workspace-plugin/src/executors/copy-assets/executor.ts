@@ -55,7 +55,9 @@ export async function copyAssetsExecutor(
   try {
     await assetHandler.processAllAssetsOnce();
   } catch (error) {
-    logger.error(`Error processing assets: ${error.message || error}`);
+    logger.error(
+      `Error processing assets: ${error instanceof Error ? error.message : error}`
+    );
     return { success: false };
   }
 
