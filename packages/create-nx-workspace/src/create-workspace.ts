@@ -72,6 +72,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
+    // Resolve shorthand template names to full GitHub org/repo format
+    options.template = resolveTemplateShorthand(options.template);
+
     if (!options.template.startsWith('nrwl/'))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
@@ -345,6 +348,17 @@ export function extractConnectUrl(text: string): string | null {
   const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
   const match = text.match(urlPattern);
   return match ? match[0] : null;
+}
+
+const templateShorthands: Record<string, string> = {
+  angular: 'nrwl/angular-template',
+  react: 'nrwl/react-template',
+  typescript: 'nrwl/typescript-template',
+  empty: 'nrwl/empty-template',
+};
+
+export function resolveTemplateShorthand(template: string): string {
+  return templateShorthands[template] ?? template;
 }
 
 function getWorkspaceGlobsFromPreset(preset: string): string[] {
