@@ -96,7 +96,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
   }
 
   // AI agent mode: apply defaults for non-interactive operation
-  const aiMode = isAiAgent();
+  const aiMode = isAiAgent(process.env);
   if (aiMode) {
     options.interactive = false; // Force non-interactive
 

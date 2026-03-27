@@ -66,7 +66,7 @@ impl TelemetryService {
             .map_err(|e| Error::from_reason(format!("Failed to create HTTP client: {}", e)))?;
 
         // Detect AI agent from environment variables
-        let is_ai_agent = crate::native::utils::ai::is_ai_agent();
+        let is_ai_agent = crate::native::utils::ai::is_ai_agent(std::env::vars().collect());
 
         let mut common_request_parameters = HashMap::new();
         common_request_parameters

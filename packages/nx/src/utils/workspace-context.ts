@@ -8,8 +8,11 @@ import { handleImport } from './handle-import';
 let workspaceContext: WorkspaceContext | undefined;
 
 export function setupWorkspaceContext(workspaceRoot: string) {
-  const { WorkspaceContext } =
+  const { WorkspaceContext, IS_WASM } =
     require('../native') as typeof import('../native');
+  if (IS_WASM) {
+    return;
+  }
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,

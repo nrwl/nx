@@ -76,7 +76,7 @@ export function shouldUseTui(
     // Interactive TUI doesn't make sense on CI
     isCI() ||
     // Interactive TUI doesn't make sense in an AI agent context
-    isAiAgent() ||
+    isAiAgent(process.env) ||
     // WASM needs further testing
     IS_WASM
   ) {

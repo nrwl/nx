@@ -69,7 +69,7 @@ export const yargsShowCommand: CommandModule<
         description: 'Output JSON.',
       })
       .middleware((args) => {
-        if (args.json == null && isAiAgent()) {
+        if (args.json == null && isAiAgent(process.env)) {
           args.json = true;
         }
       })

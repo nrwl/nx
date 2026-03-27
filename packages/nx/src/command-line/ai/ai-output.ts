@@ -51,7 +51,7 @@ export interface PluginWarning {
  * Each message is a single line of JSON.
  */
 export function writeAiOutput(message: Record<string, any>): void {
-  if (isAiAgent()) {
+  if (isAiAgent(process.env)) {
     process.stdout.write(JSON.stringify(message) + '\n');
 
     // For success results, output plain text instructions that the agent can show the user

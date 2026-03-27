@@ -80,7 +80,7 @@ export interface ImportOptions {
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
-  const aiMode = isAiAgent();
+  const aiMode = isAiAgent(process.env);
   if (aiMode) {
     options.interactive = false;
     logProgress('starting', 'Importing repository...');

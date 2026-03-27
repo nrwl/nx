@@ -241,7 +241,7 @@ export interface DepsOutputsInput {
  * Returns None if no agent is detected.
  * Filtering against supported agents should be done on the TypeScript side.
  */
-export declare function detectAiAgent(): string | null
+export declare function detectAiAgent(envVars: Record<string, string>): string | null
 
 export interface EnvironmentInput {
   env: string
@@ -414,7 +414,7 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 export const IS_WASM: boolean
 
 /** Detects if the current process is being run by an AI agent */
-export declare function isAiAgent(): boolean
+export declare function isAiAgent(envVars: Record<string, string>): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
