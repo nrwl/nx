@@ -377,6 +377,8 @@ jobs:
           docker run --rm \
             --user 0:0 \
             -e PNPM_VERSION \
+            -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
+            -e NX_VERBOSE_LOGGING \
             -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
             -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
             -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
