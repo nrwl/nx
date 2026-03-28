@@ -41,6 +41,25 @@ class NxTargetFactory(
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
+  /**
+   * Maps lifecycle phases to the Maven property that skips them.
+   * When a property is set to "true", the corresponding phase becomes a cacheable noop.
+   */
+  private val phaseSkipProperties = mapOf(
+    "process-resources" to "maven.resources.skip",
+    "compile" to "maven.main.skip",
+    "test" to "maven.test.skip",
+    "install" to "maven.install.skip",
+    "deploy" to "maven.deploy.skip"
+  )
+
+  /**
+   * Check if a phase should be skipped based on Maven properties.
+   */
+  private fun isPhaseSkipped(phase: String, project: MavenProject): Boolean {
+    val skipProperty = phaseSkipProperties[phase] ?: return false
+    return project.properties.getProperty(skipProperty)?.toBoolean() == true
+  }
 
   fun createNxTargets(
     project: MavenProject,
@@ -268,8 +287,19 @@ class NxTargetFactory(
     val goalsForPhase = phaseGoals[phase]
     val hasGoals = goalsForPhase?.isNotEmpty() == true
 
+    // If the phase has a skip property set to true, make it a cacheable noop.
+    // The target still acts as a sync point in the task graph but avoids
+    // spinning up the batch runner for a goal that would just skip anyway.
+    val isSkipped = isPhaseSkipped(phase, project)
+
     // Create target for all phases - either with goals or as noop
-    val target = createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
+    val target = if (isSkipped) {
+      val skipProp = phaseSkipProperties[phase]
+      log.info("Creating noop $phase target for ${project.artifactId} ($skipProp=true)")
+      createNoopPhaseTarget(phase)
+    } else {
+      createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
+    }
 
 
     target.dependsOn = target.dependsOn ?: JsonArray()
@@ -315,14 +345,21 @@ class NxTargetFactory(
     val hasGoals = goalsForPhase?.isNotEmpty() == true
     val ciPhaseName = "${applyPrefix(phase)}-ci"
 
+    // If the phase has a skip property set to true, make it a cacheable noop
+    val isSkipped = isPhaseSkipped(phase, project)
+
     // Test and later phases get a CI counterpart - but only if they have goals
-    if (!shouldCreateCiPhase(hasGoals, phase)) {
+    if (!isSkipped && !shouldCreateCiPhase(hasGoals, phase)) {
       log.info("Skipping noop CI phase target '$ciPhaseName' (no goals)")
       return
     }
 
     // Create CI targets for phases with goals, or noop for test/structural phases
-    val ciTarget = if (hasGoals && phase != "test") {
+    val ciTarget = if (isSkipped) {
+      val skipProp = phaseSkipProperties[phase]
+      log.info("Creating noop $phase CI target for ${project.artifactId} ($skipProp=true)")
+      createNoopPhaseTarget(phase)
+    } else if (hasGoals && phase != "test") {
       createPhaseBatchTarget(project, phase, goalsForPhase!!, externalDependencies)
     } else {
       // Noop for test phase (will be orchestrated by atomized tests) or structural phases
