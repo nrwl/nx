@@ -148,7 +148,6 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
 exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {},
     "rootDir": ".",
   },
@@ -162,7 +161,6 @@ exports[`workspace move to nx layout should update tsconfig.base.json if present
 exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {},
     "rootDir": ".",
   },

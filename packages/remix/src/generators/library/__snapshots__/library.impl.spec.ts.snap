@@ -42,10 +42,10 @@ exports[`Remix Library Generator should generate a library correctly 1`] = `
 exports[`Remix Library Generator should generate a library correctly 2`] = `
 {
   "@proj/test": [
-    "test/src/index.ts",
+    "./test/src/index.ts",
   ],
   "@proj/test/server": [
-    "test/src/server.ts",
+    "./test/src/server.ts",
   ],
 }
 `;

@@ -173,7 +173,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -202,7 +202,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -239,11 +239,13 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['match-lib-deep/*'] = [`libs/${lib1}/src/*`];
-        json.compilerOptions.paths['match-lib-top-level'] = [
-          `libs/${lib2}/src/bar.enum.ts`,
+        json.compilerOptions.paths['match-lib-deep/*'] = [
+          `./libs/${lib1}/src/*`,
         ];
-        json.compilerOptions.paths['match-lib/*'] = [`libs/${lib3}/src/*`];
+        json.compilerOptions.paths['match-lib-top-level'] = [
+          `./libs/${lib2}/src/bar.enum.ts`,
+        ];
+        json.compilerOptions.paths['match-lib/*'] = [`./libs/${lib3}/src/*`];
         return json;
       });
 
@@ -259,9 +261,8 @@ describe('@nx/vite/plugin', () => {
       // Add a local path alias in the project's tsconfig.app.json
       updateJson(`apps/${myLocalApp}/tsconfig.app.json`, (json) => {
         json.compilerOptions = json.compilerOptions || {};
-        json.compilerOptions.baseUrl = '.';
         json.compilerOptions.paths = {
-          '~/*': ['src/*'],
+          '~/*': ['./src/*'],
         };
         return json;
       });

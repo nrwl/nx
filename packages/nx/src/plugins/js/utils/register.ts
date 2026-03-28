@@ -1,4 +1,5 @@
-import { join, sep } from 'path';
+import { dirname, join, resolve, sep } from 'path';
+import { readFileSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
@@ -387,7 +388,7 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
      */
     if (tsConfigResult.resultType === 'success') {
       return tsconfigPaths.register({
-        baseUrl: tsConfigResult.absoluteBaseUrl,
+        baseUrl: resolvePathsBaseUrl(tsConfigPath),
         paths: tsConfigResult.paths,
       });
     }
@@ -551,3 +552,21 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
 type RemoveIndex<T> = {
   [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K];
 };
+
+function resolvePathsBaseUrl(tsconfigPath: string): string {
+  const absolute = resolve(tsconfigPath);
+  const dir = dirname(absolute);
+  try {
+    const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+    if (
+      raw.compilerOptions?.paths &&
+      Object.keys(raw.compilerOptions.paths).length > 0
+    ) {
+      return dir;
+    }
+    if (raw.extends) {
+      return resolvePathsBaseUrl(resolve(dir, raw.extends));
+    }
+  } catch {}
+  return dir;
+}

@@ -261,18 +261,24 @@ export function withNx(
                 `Consider removing this option to use the official @rollup/plugin-typescript.`
             );
 
+            const { paths: _legacyPaths, ...legacyCompilerOptions } =
+              compilerOptions;
             return require('rollup-plugin-typescript2')({
               check: !options.skipTypeCheck,
               tsconfig: tsConfigPath,
               tsconfigOverride: {
-                compilerOptions,
+                compilerOptions: legacyCompilerOptions,
               },
             });
           })()
         : (() => {
             // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
-            const { outDir, declarationDir, ...tsCompilerOptions } =
-              compilerOptions;
+            const {
+              outDir,
+              declarationDir,
+              paths: _paths,
+              ...tsCompilerOptions
+            } = compilerOptions;
             const rollupOutputDir = Array.isArray(finalConfig.output)
               ? finalConfig.output[0].dir
               : finalConfig.output.dir;

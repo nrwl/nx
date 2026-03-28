@@ -75,8 +75,7 @@ export class NxTsconfigPathsRspackPlugin {
         options.tsConfig,
         options.root,
         target.data.root,
-        dependencies,
-        true // There is an issue with Rspack that requires the baseUrl to be set in the generated tsconfig
+        dependencies
       );
       this.tmpTsConfigPath = options.tsConfig;
 

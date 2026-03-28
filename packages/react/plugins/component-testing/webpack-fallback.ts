@@ -1,6 +1,7 @@
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 import { getCSSModuleLocalIdent } from '@nx/webpack';
+import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
 
 export function buildBaseWebpackConfig({
   tsConfigPath = 'tsconfig.cy.json',
@@ -17,6 +18,7 @@ export function buildBaseWebpackConfig({
       plugins: [
         new TsconfigPathsPlugin({
           configFile: tsConfigPath,
+          baseUrl: resolvePathsBaseUrl(tsConfigPath),
           extensions,
         }) as never,
       ],
