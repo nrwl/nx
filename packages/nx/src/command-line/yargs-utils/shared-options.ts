@@ -116,7 +116,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       default: false,
     })
     .middleware((args) => {
-      if (!args.nxBail && process.env.NX_BAIL === 'true') {
+      if (args.nxBail === undefined && process.env.NX_BAIL === 'true') {
         args.nxBail = true;
       }
     })
