@@ -4,7 +4,10 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../../utils/models';
 import { getModuleFederationConfig } from '../../../with-module-federation/rspack/utils';
-import { normalizeProjectName } from '../../../utils';
+import {
+  normalizeProjectName,
+  shouldSkipModuleFederationSetup,
+} from '../../../utils';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -16,7 +19,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
   ) {}
 
   apply(compiler: Compiler) {
-    if (global.NX_GRAPH_CREATION) {
+    if (shouldSkipModuleFederationSetup()) {
       return;
     }
 

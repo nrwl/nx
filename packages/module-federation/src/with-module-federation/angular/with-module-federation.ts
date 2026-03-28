@@ -1,5 +1,6 @@
 import {
   normalizeProjectName,
+  shouldSkipModuleFederationSetup,
   type ModuleFederationConfig,
   type NxModuleFederationConfigOverride,
 } from '../../utils';
@@ -10,7 +11,7 @@ export async function withModuleFederation(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
 ) {
-  if (global.NX_GRAPH_CREATION) {
+  if (shouldSkipModuleFederationSetup()) {
     return (config) => config;
   }
   // This is required to ensure that the webpack version used by the Angular CLI is used
