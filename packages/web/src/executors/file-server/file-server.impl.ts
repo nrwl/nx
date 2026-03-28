@@ -242,6 +242,7 @@ export default async function* fileServerExecutor(
   const serve = fork(pathToHttpServer, [outputPath, ...args], {
     stdio: 'pipe',
     cwd: context.root,
+    windowsHide: true,
     env: {
       FORCE_COLOR: 'true',
       ...process.env,
