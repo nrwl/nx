@@ -222,6 +222,79 @@ describe('native task hasher', () => {
     `);
   });
 
+  it('should apply multiple dependency inputs to the same dependency', async () => {
+    await tempFs.createFiles({
+      'libs/child/tsconfig.lib.json': JSON.stringify({
+        extends: '../../tsconfig.base.json',
+      }),
+    });
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'e2e',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^{projectRoot}/tsconfig*.json', '^production'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {},
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/src/index.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+
+    const localNxJson: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        production: ['!{projectRoot}/**/*.spec.ts'],
+      },
+    };
+
+    const [hash] = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      localNxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {});
+
+    expect(hash.inputs.files).toEqual(
+      expect.arrayContaining([
+        'libs/child/src/index.ts',
+        'libs/child/tsconfig.lib.json',
+      ])
+    );
+    expect(hash.inputs.files).not.toContain('libs/child/fileb.spec.ts');
+  });
+
   it('should hash tasks where the project has dependencies', async () => {
     const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
       'libs/parent': 'parent',
