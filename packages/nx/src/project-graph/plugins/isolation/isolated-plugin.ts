@@ -196,7 +196,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     if (!this._connectPromise) {
       logger.verbose(`[plugin-client] restarting worker for "${this.name}"`);
-      this._connectPromise = this.spawnAndConnect();
+      this._connectPromise = this.spawnAndConnect().catch((err) => {
+        // Clear the cached promise so subsequent calls can retry
+        // instead of re-awaiting a permanently-rejected promise.
+        this._connectPromise = null;
+        throw err;
+      });
     }
 
     await this._connectPromise;
@@ -564,22 +569,44 @@ async function startPluginWorker(name: string) {
   let attempts = 0;
   return new Promise<{ worker: ChildProcess; socket: Socket }>(
     (resolve, reject) => {
-      const id = setInterval(async () => {
+      let stopped = false;
+
+      // If the worker exits before we connect, stop polling immediately
+      // rather than burning through 10,000 attempts against a dead socket.
+      // This is critical because under Promise.allSettled, dead polling
+      // loops stay alive and create event loop pressure that delays
+      // connection attempts for healthy workers.
+      worker.once('exit', (code) => {
+        if (!stopped) {
+          stopped = true;
+          reject(
+            new Error(
+              `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+            )
+          );
+        }
+      });
+
+      const poll = async () => {
+        if (stopped) return;
         const socket = await isServerAvailable(ipcPath);
+        if (stopped) return;
         if (socket) {
+          stopped = true;
           socket.unref();
-          clearInterval(id);
           logger.verbose(
             `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
           );
           resolve({ worker, socket });
         } else if (attempts > 10000) {
-          clearInterval(id);
+          stopped = true;
           reject(new Error(`Failed to start plugin worker for plugin ${name}`));
         } else {
           attempts++;
+          setTimeout(poll, 10);
         }
-      }, 10);
+      };
+      setTimeout(poll, 10);
     }
   ).finally(() => {
     performance.mark(`start-plugin-worker-end:${name}`);
