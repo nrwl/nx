@@ -24,7 +24,6 @@ env:
   NODE_VERSION: 22.16.0
   PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
-  NX_VERBOSE_LOGGING: true
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -316,6 +315,10 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         if: ${{ !matrix.settings.docker }}
@@ -552,6 +555,10 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -586,7 +593,6 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
-          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch
