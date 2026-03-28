@@ -878,6 +878,64 @@ describe('createPackageJson', () => {
       });
     });
 
+    it('should copy pnpm install configuration from root', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                pnpm: {
+                  onlyBuiltDependencies: ['sharp', 'bcrypt'],
+                  neverBuiltDependencies: ['fsevents'],
+                  allowBuilds: { esbuild: true, rollup: false },
+                  supportedArchitectures: {
+                    os: ['linux'],
+                    cpu: ['x64'],
+                  },
+                  ignoredOptionalDependencies: ['fsevents'],
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        pnpm: {
+          onlyBuiltDependencies: ['sharp', 'bcrypt'],
+          neverBuiltDependencies: ['fsevents'],
+          allowBuilds: { esbuild: true, rollup: false },
+          supportedArchitectures: {
+            os: ['linux'],
+            cpu: ['x64'],
+          },
+          ignoredOptionalDependencies: ['fsevents'],
+        },
+      });
+    });
+
     it('should add overrides (npm)', () => {
       spies.push(
         jest
