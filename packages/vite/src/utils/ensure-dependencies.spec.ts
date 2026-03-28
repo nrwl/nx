@@ -26,6 +26,30 @@ describe('@nx/vite:init', () => {
     expect(packageJson).toMatchSnapshot();
   });
 
+  it('should add swc plugin for react', () => {
+    ensureDependencies(tree, {
+      uiFramework: 'react',
+      compiler: 'swc',
+    });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['@vitejs/plugin-react-swc']).toEqual(
+      '^4.3.0'
+    );
+    expect(packageJson.devDependencies['@vitejs/plugin-react']).toBeUndefined();
+  });
+
+  it('should add swc plugin for react even with older vite', () => {
+    addDependenciesToPackageJson(tree, {}, { vite: '^7.0.0' });
+    ensureDependencies(tree, {
+      uiFramework: 'react',
+      compiler: 'swc',
+    });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['@vitejs/plugin-react-swc']).toEqual(
+      '^4.3.0'
+    );
+  });
+
   it('should support --testEnvironment=jsdom', () => {
     ensureDependencies(tree, {
       testEnvironment: 'jsdom',
