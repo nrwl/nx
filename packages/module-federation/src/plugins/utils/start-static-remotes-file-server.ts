@@ -52,6 +52,7 @@ export function startStaticRemotesFileServer(
     {
       stdio: 'pipe',
       cwd: root,
+      windowsHide: true,
       env: {
         FORCE_COLOR: 'true',
         ...process.env,
