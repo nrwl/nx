@@ -649,8 +649,6 @@ async function startServer(
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
     const sanitizePath = basename(parsedUrl.pathname);
     if (sanitizePath === 'project-graph.json') {
       const requestFull = parsedUrl.searchParams.get('full') === 'true';
