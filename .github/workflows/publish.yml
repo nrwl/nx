@@ -24,6 +24,7 @@ env:
   NODE_VERSION: 22.16.0
   PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
+  NX_VERBOSE_LOGGING: true
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
