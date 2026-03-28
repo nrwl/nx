@@ -39,6 +39,10 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Fetch Master
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
@@ -132,6 +136,10 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
 
       - name: Fetch Master
         run: git fetch origin master:master
