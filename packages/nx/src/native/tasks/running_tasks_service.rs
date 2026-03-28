@@ -15,6 +15,13 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
     cwd TEXT NOT NULL
 );";
 
+#[napi(object)]
+pub struct RunningTaskContext {
+    pub task_id: String,
+    pub pid: u32,
+    pub cwd: String,
+}
+
 #[napi]
 struct RunningTasksService {
     db: Arc<Mutex<NxDbConnection>>,
@@ -36,12 +43,15 @@ impl RunningTasksService {
     }
 
     #[napi]
-    pub fn get_running_tasks(&mut self, ids: Vec<String>) -> anyhow::Result<Vec<String>> {
-        let mut results = Vec::<String>::with_capacity(ids.len());
+    pub fn get_running_tasks(
+        &mut self,
+        ids: Vec<String>,
+    ) -> anyhow::Result<Vec<RunningTaskContext>> {
+        let mut results = Vec::<RunningTaskContext>::with_capacity(ids.len());
         for id in ids.into_iter() {
-            if self.is_task_running(&id)? {
+            if let Some(context) = self.get_running_task_context(&id)? {
                 debug!("Task {} is running", &id);
-                results.push(id);
+                results.push(context);
             } else {
                 debug!("Task {} is not running", id);
             }
@@ -49,7 +59,10 @@ impl RunningTasksService {
         Ok(results)
     }
 
-    fn is_task_running(&self, task_id: &String) -> anyhow::Result<bool> {
+    fn get_running_task_context(
+        &self,
+        task_id: &String,
+    ) -> anyhow::Result<Option<RunningTaskContext>> {
         if let Some((pid, db_process_command, db_process_cwd)) = self.db.lock().unwrap().query_row(
             "SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?",
             [task_id],
@@ -79,17 +92,27 @@ impl RunningTasksService {
                         .collect::<Vec<_>>()
                         .join(" ");
 
-                    if let Some(cwd_path) = process_info.cwd() {
+                    let is_running = if let Some(cwd_path) = process_info.cwd() {
                         let cwd_str = cwd_path.to_normalized_string();
-                        Ok(cmd_str == db_process_command && cwd_str == db_process_cwd)
+                        cmd_str == db_process_command && cwd_str == db_process_cwd
                     } else {
-                        Ok(cmd_str == db_process_command)
+                        cmd_str == db_process_command
+                    };
+
+                    if is_running {
+                        Ok(Some(RunningTaskContext {
+                            task_id: task_id.clone(),
+                            pid,
+                            cwd: db_process_cwd,
+                        }))
+                    } else {
+                        Ok(None)
                     }
                 }
-                None => Ok(false),
+                None => Ok(None),
             }
         } else {
-            Ok(false)
+            Ok(None)
         }
     }
 
