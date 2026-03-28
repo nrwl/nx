@@ -754,6 +754,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   defaultBase?: string;
 
   /**
+   * Set this to true to fail project graph creation when the workspace contains circular project dependencies.
+   */
+  strictProjectGraphCycles?: boolean;
+
+  /**
    * Where new apps + libs should be placed
    */
   workspaceLayout?: {
