@@ -85,7 +85,7 @@ describe('getExcludeTasks', () => {
     const targets = new Set<string>(['app3:deploy']);
     const runningTaskIds = new Set<string>(['app3:deploy']);
     const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set(['testApp1']));
+    expect(excludes).toEqual(new Set(['testApp1', 'lintApp1', 'buildApp2']));
   });
 
   it('should not exclude tasks that are in includeDependsOnTasks', () => {

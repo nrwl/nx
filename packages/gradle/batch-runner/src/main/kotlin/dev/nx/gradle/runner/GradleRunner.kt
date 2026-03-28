@@ -43,6 +43,10 @@ fun runTasksInParallel(
           "--parallel",
           "-Dorg.gradle.workers.max=$workersMax")
 
+  if (System.getenv("NX_GRADLE_NO_BUILD_CACHE") == "true") {
+    args.add("--no-build-cache")
+  }
+
   if (additionalArgs.isNotBlank()) {
     val splitResult = additionalArgs.split(" ")
     val filteredResult = splitResult.filter { it.isNotBlank() }

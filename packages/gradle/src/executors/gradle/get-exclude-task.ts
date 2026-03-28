@@ -56,11 +56,10 @@ export function getExcludeTasks(
 
   for (const taskId of taskIds) {
     const [project, target] = taskId.split(':');
-    const taskDeps = nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
+    const allDeps = getAllDependsOn(nodes, project, target);
 
-    for (const dep of taskDeps) {
-      const depTaskId = resolveDepToTaskId(dep, project);
-      if (depTaskId && !runningTaskIds.has(depTaskId)) {
+    for (const depTaskId of allDeps) {
+      if (!runningTaskIds.has(depTaskId)) {
         const gradleTaskName = getGradleTaskNameWithNxTaskId(depTaskId, nodes);
         if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
           excludes.add(gradleTaskName);
