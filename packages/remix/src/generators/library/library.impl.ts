@@ -41,6 +41,7 @@ export async function remixLibraryGeneratorInternal(
     js: schema.js,
     addTsPlugin,
     skipFormat: true,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
 

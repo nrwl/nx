@@ -38,6 +38,7 @@ export interface NormalizedSchema {
     ngCliSchematicLibRoot: string;
     standaloneComponentName: string;
     moduleTypeSeparator: '-' | '.';
+    formatter?: 'none' | 'prettier';
   };
   componentOptions: {
     name: string;

@@ -38,6 +38,12 @@
       "description": "The prefix to apply to generated selectors.",
       "alias": "p"
     },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",

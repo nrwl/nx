@@ -17,4 +17,5 @@ export interface StorybookConfigureSchema {
    * @internal
    */
   addExplicitTargets?: boolean;
+  formatter?: 'none' | 'prettier';
 }

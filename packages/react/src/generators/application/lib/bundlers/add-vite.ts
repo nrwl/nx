@@ -1,6 +1,7 @@
 import { type Tree, ensurePackage, joinPathFragments } from '@nx/devkit';
 import { nxVersion } from '../../../../utils/versions';
 import { NormalizedSchema, Schema } from '../../schema';
+import type { ViteConfigurationGeneratorSchema } from '@nx/vite/src/generators/configuration/schema';
 
 export async function setupViteConfiguration(
   tree: Tree,
@@ -43,7 +44,8 @@ export async function setupViteConfiguration(
     addPlugin: options.addPlugin,
     projectType: 'application',
     port: options.port,
-  });
+    formatter: options.formatter,
+  } as ViteConfigurationGeneratorSchema);
   tasks.push(viteTask);
   createOrEditViteConfig(
     tree,
@@ -83,6 +85,7 @@ export async function setupVitestConfiguration(
     inSourceTests: options.inSourceTests,
     skipFormat: true,
     addPlugin: options.addPlugin,
+    formatter: options.formatter,
   });
   tasks.push(vitestTask);
   createOrEditViteConfig(

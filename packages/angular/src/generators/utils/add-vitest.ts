@@ -37,6 +37,7 @@ export type AddVitestAnalogOptions = {
   strict: boolean;
   zoneless: boolean;
   addPlugin?: boolean;
+  formatter?: 'none' | 'prettier';
 };
 
 export async function addVitestAngular(
@@ -130,6 +131,7 @@ export async function addVitestAnalog(
     skipFormat: options.skipFormat,
     skipPackageJson: options.skipPackageJson,
     zoneless: options.zoneless,
+    formatter: options.formatter,
   });
 }
 

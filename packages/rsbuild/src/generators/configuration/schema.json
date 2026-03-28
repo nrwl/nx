@@ -42,6 +42,12 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "x-priority": "internal"
     }
   }
 }

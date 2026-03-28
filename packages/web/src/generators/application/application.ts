@@ -49,6 +49,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import type { ViteConfigurationGeneratorSchema } from '@nx/vite/src/generators/configuration/schema';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -307,6 +308,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: false,
     skipFormat: true,
     platform: 'web',
+    formatter: options.formatter,
   });
   tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
@@ -371,7 +373,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       addPlugin: options.addPlugin,
-    });
+      formatter: options.formatter,
+    } as ViteConfigurationGeneratorSchema);
     tasks.push(viteTask);
     createOrEditViteConfig(
       host,
@@ -401,6 +404,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
       addPlugin: options.addPlugin,
       compiler: options.compiler,
+      formatter: options.formatter,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

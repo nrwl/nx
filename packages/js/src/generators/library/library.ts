@@ -98,8 +98,6 @@ export async function libraryGeneratorInternal(
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
       addTsPlugin,
-      // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
-      formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
   const options = await normalizeOptions(tree, schema);
@@ -140,6 +138,7 @@ export async function libraryGeneratorInternal(
       skipFormat: true,
       testEnvironment: options.testEnvironment,
       addPlugin: options.addPlugin,
+      formatter: schema.formatter,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -185,6 +184,7 @@ export async function libraryGeneratorInternal(
       runtimeTsconfigFileName: 'tsconfig.lib.json',
       compiler: options.compiler === 'swc' ? 'swc' : 'babel',
       addPlugin: options.addPlugin,
+      formatter: schema.formatter,
     });
     tasks.push(vitestTask);
   }

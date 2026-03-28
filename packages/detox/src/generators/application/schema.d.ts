@@ -13,4 +13,5 @@ export interface Schema {
   framework: 'react-native' | 'expo';
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  formatter?: 'none' | 'prettier';
 }
