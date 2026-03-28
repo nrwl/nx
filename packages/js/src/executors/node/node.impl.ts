@@ -22,9 +22,9 @@ import { killTree } from './lib/kill-tree';
 import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
 import { fileExists } from 'nx/src/utils/fileutils';
-import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
+import { getOutputFileName } from './lib/output-file';
 
 interface ActiveTask {
   id: string;
@@ -468,18 +468,12 @@ function getFileToRun(
   let outputFileName = buildOptions.outputFileName;
 
   if (!outputFileName) {
-    const fileName = `${path.parse(buildOptions.main).name}.js`;
-    if (
-      buildTargetExecutor === '@nx/js:tsc' ||
-      buildTargetExecutor === '@nx/js:swc'
-    ) {
-      outputFileName = path.join(
-        getRelativeDirectoryToProjectRoot(buildOptions.main, project.data.root),
-        fileName
-      );
-    } else {
-      outputFileName = fileName;
-    }
+    outputFileName = getOutputFileName({
+      buildTargetExecutor,
+      main: buildOptions.main,
+      outputPath: buildOptions.outputPath,
+      projectRoot: project.data.root,
+    });
   }
 
   return join(context.root, buildOptions.outputPath, outputFileName);
