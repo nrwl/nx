@@ -1,4 +1,5 @@
 import { PerformanceObserver } from 'perf_hooks';
+import { logger } from './logger';
 
 import { customDimensions, reportEvent } from '../analytics';
 import type { EventParameters } from '../analytics';
@@ -32,7 +33,7 @@ if (!initialized) {
         if (isOnDaemon()) {
           serverLogger.log(message);
         } else {
-          console.log(message);
+          logger.warn(message);
         }
       }
 

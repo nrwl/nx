@@ -1,6 +1,12 @@
 import * as stream from 'node:stream';
 import * as yargs from 'yargs';
 
+jest.mock('../../native', () => ({
+  ...jest.requireActual('../../native'),
+  isAiAgent: jest.fn(() => false),
+  IS_WASM: false,
+}));
+
 import {
   readParallelFromArgsAndEnv,
   withAffectedOptions,

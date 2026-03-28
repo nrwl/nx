@@ -193,9 +193,12 @@ describe('Nx Running Tests', () => {
         expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
       }
 
-      expect(runCLI(`echo:fail ${mylib}`, { silenceError: true })).toContain(
-        `Cannot find configuration for task ${mylib}:echo:fail`
-      );
+      expect(
+        runCLI(`echo:fail ${mylib}`, {
+          silenceError: true,
+          redirectStderr: true,
+        })
+      ).toContain(`Cannot find configuration for task ${mylib}:echo:fail`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);
     }, 1000000);
@@ -347,6 +350,7 @@ describe('Nx Running Tests', () => {
 
       let withoutBail = runCLI(`run-many --target=error --parallel=1`, {
         silenceError: true,
+        redirectStderr: true,
       })
         .split('\n')
         .map((r) => r.trim())
@@ -358,6 +362,7 @@ describe('Nx Running Tests', () => {
 
       let withBail = runCLI(`run-many --target=error --parallel=1 --nx-bail`, {
         silenceError: true,
+        redirectStderr: true,
       })
         .split('\n')
         .map((r) => r.trim())
@@ -476,7 +481,10 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app apps/${myapp}`);
 
       // Project has no "run" target, so it should fail
-      const result = runCLI(`run ${myapp}`, { silenceError: true });
+      const result = runCLI(`run ${myapp}`, {
+        silenceError: true,
+        redirectStderr: true,
+      });
       expect(result).toContain('Both project and target have to be specified');
     });
 
