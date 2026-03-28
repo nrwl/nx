@@ -53,10 +53,24 @@ export async function setupCompilation(
   options: SetupCompilationOptions
 ) {
   const { readConfiguration } = await loadCompilerCli();
+  const tsConfigPath = config.source?.tsconfigPath ?? options.tsConfig;
+
+  // Read the user's raw tsconfig to discover which compilerOptions they've
+  // explicitly set so we don't override them with our defaults.
+  const userTsConfig = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+  const userCompilerOptions = userTsConfig.config?.compilerOptions ?? {};
+
+  // Only apply defaults for keys the user hasn't explicitly configured.
+  const defaults = Object.fromEntries(
+    Object.entries(DEFAULT_NG_COMPILER_OPTIONS).filter(
+      ([key]) => !(key in userCompilerOptions)
+    )
+  );
+
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
-    config.source?.tsconfigPath ?? options.tsConfig,
+    tsConfigPath,
     {
-      ...DEFAULT_NG_COMPILER_OPTIONS,
+      ...defaults,
       ...(options.useTsProjectReferences
         ? {
             sourceMap: false,
