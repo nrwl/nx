@@ -1,4 +1,8 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   detectPackageManager,
   ExecutorContext,
   joinPathFragments,
@@ -20,10 +24,6 @@ import {
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
 import { relative, resolve } from 'path';
-import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
   loadViteDynamicImport,

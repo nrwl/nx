@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -10,9 +15,6 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';

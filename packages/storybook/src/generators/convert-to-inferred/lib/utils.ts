@@ -1,7 +1,6 @@
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { readJson, joinPathFragments, type Tree } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { AggregatedLog, toProjectRelativePath } from '@nx/devkit/internal';
 import { dirname } from 'path/posix';
 import { coerce, major } from 'semver';
 

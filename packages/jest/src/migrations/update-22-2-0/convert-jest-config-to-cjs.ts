@@ -1,3 +1,4 @@
+import { findPluginForConfigFile } from '@nx/devkit/internal';
 import {
   formatFiles,
   globAsync,
@@ -7,7 +8,6 @@ import {
   readJson,
   Tree,
 } from '@nx/devkit';
-import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { dirname } from 'path';
 
 /**

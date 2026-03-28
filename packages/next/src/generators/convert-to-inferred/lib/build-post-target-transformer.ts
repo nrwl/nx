@@ -1,9 +1,9 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
+  AggregatedLog,
   processTargetOutputs,
   toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+} from '@nx/devkit/internal';
 import { NextBuildBuilderOptions } from '../../../utils/types';
 import { updateNextConfig } from './update-next-config';
 

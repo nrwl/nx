@@ -1,5 +1,4 @@
-import { capitalize } from '@nx/devkit/src/utils/string-utils';
-import { joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -199,9 +198,7 @@ describe('@nx/next (legacy)', () => {
               import dynamic from 'next/dynamic';
     
               const TestComponent = dynamic(
-                  () => import('@${proj}/${nextLib}').then(d => d.${capitalize(
-                    nextLib
-                  )})
+                  () => import('@${proj}/${nextLib}').then(d => d.${nextLib.charAt(0).toUpperCase() + nextLib.slice(1)})
                 );
               ${content.replace(
                 `</h2>`,

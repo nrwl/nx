@@ -1,8 +1,8 @@
 import { Tree } from '@nx/devkit';
+import { AggregatedLog } from '@nx/devkit/internal';
 import { findNextConfigPath } from './utils';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 export function updateNextConfig(
   tree: Tree,

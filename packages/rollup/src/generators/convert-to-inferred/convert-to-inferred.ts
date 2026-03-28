@@ -1,16 +1,18 @@
 import {
+  forEachExecutorOptions,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   getProjects,
   readNxJson,
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import type { RollupExecutorOptions } from '../../executors/rollup/schema';
 import type { RollupPluginOptions } from '../../plugins/plugin';
 import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options';
 import { addPluginRegistrations } from './lib/add-plugin-registrations';
-import { NoTargetsToMigrateError } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
   project?: string;

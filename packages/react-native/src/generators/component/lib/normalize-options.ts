@@ -2,7 +2,7 @@ import { getProjects, logger, names, Tree } from '@nx/devkit';
 import {
   determineArtifactNameAndDirectoryOptions,
   type FileExtensionType,
-} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+} from '@nx/devkit/internal';
 import { Schema } from '../schema';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 

@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -7,7 +8,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';

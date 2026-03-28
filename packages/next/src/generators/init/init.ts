@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   removeDependenciesFromPackageJson,
@@ -7,7 +8,6 @@ import {
   readNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import {
   getReactDependenciesVersionsToInstall,
   isReact18,

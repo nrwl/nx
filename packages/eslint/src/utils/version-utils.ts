@@ -1,5 +1,5 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
+import { checkAndCleanWithSemver } from '@nx/devkit/internal';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 import { lt } from 'semver';
 import {

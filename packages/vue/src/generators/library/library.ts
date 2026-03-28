@@ -1,3 +1,4 @@
+import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -12,8 +13,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addReleaseConfigForNonTsSolution,

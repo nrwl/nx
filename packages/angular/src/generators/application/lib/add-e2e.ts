@@ -1,4 +1,5 @@
 import { Tree } from '@nx/devkit';
+import { E2EWebServerDetails } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -8,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
-import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins

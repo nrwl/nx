@@ -1,4 +1,9 @@
 import {
+  getNamedInputs,
+  calculateHashForCreateNodes,
+  loadConfigFile,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -12,12 +17,9 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { query } from '@phenomnomnominal/tsquery';

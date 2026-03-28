@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
@@ -6,7 +7,6 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import type { JestExecutorOptions } from '../../executors/jest/schema';
 
 // migration for https://github.com/jestjs/jest/commit/41133b526d2c17bc9758f90d6026b25301cf0552

@@ -1,4 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { E2EWebServerDetails } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -11,7 +12,6 @@ import { webStaticServeGenerator } from '@nx/web';
 import { nxVersion } from '../../../utils/versions';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(

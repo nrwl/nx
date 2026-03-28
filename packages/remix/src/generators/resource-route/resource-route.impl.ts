@@ -1,5 +1,5 @@
 import { formatFiles, Tree } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import actionGenerator from '../action/action.impl';
 import loaderGenerator from '../loader/loader.impl';

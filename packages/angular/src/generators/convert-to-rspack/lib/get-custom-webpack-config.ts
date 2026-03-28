@@ -1,5 +1,5 @@
 import { logger, Tree } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { loadConfigFile } from '@nx/devkit/internal';
 import { join, relative } from 'path';
 import { ast, query } from '@phenomnomnominal/tsquery';
 

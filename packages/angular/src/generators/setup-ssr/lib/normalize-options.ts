@@ -1,9 +1,9 @@
+import { promptWhenInteractive } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   readProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions, Schema } from '../schema';

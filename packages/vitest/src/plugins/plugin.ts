@@ -1,4 +1,8 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -11,8 +15,6 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';

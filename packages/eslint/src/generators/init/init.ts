@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -9,7 +10,6 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import {
   determineEslintConfigFormat,

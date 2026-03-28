@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   logger,
@@ -10,7 +11,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';

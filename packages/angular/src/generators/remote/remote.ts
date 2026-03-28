@@ -1,4 +1,8 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   formatFiles,
   getProjects,
@@ -8,10 +12,6 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';

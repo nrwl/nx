@@ -1,4 +1,10 @@
 import {
+  calculateHashesForCreateNodes,
+  clearRequireCache,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
@@ -11,12 +17,6 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import {
-  clearRequireCache,
-  loadConfigFile,
-} from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import {

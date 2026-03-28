@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -5,7 +6,6 @@ import {
   visitNotIgnoredFiles,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export default async function removeDeprecatedOptions(tree: Tree) {
   const projects = new Set<string>();

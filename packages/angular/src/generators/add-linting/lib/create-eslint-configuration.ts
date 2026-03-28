@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, offsetFromRoot, writeJson } from '@nx/devkit';
+import { camelize, dasherize } from '@nx/devkit/internal';
 import type { Linter } from 'eslint';
 import type { AddLintingGeneratorSchema } from '../schema';
-import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
 
 type EslintExtensionSchema = {
   prefix: string;

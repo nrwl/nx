@@ -1,4 +1,11 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+  promptWhenInteractive,
+  addBuildTargetDefaults,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
@@ -20,13 +27,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';

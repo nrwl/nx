@@ -1,3 +1,4 @@
+import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import {
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -9,7 +10,6 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import type { ESLint as ESLintType } from 'eslint';
 import { existsSync } from 'node:fs';

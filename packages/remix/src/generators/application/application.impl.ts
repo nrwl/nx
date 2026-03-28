@@ -1,3 +1,4 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -13,7 +14,6 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
 import {

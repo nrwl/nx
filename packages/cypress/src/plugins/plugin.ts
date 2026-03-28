@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesV2,
@@ -10,9 +15,6 @@ import {
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';

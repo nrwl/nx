@@ -1,3 +1,8 @@
+import {
+  loadConfigFile,
+  getNamedInputs,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/internal';
 import type { NuxtOptions } from '@nuxt/schema';
 import {
   CreateDependencies,
@@ -11,9 +16,6 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';

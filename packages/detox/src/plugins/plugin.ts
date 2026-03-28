@@ -1,4 +1,8 @@
 import {
+  getNamedInputs,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/internal';
+import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
@@ -12,9 +16,7 @@ import {
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';

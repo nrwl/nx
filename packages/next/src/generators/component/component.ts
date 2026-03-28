@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -5,7 +6,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import type { SupportedStyles } from '@nx/react';
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import { addStyleDependencies } from '../../utils/styles';

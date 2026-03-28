@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -5,7 +6,6 @@ import {
   visitNotIgnoredFiles,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { nxVersion } from '../../utils/versions';
 

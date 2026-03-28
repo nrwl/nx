@@ -1,4 +1,4 @@
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 
 export function processStartOptions(
   _projectName: string,

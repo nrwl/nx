@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   installPackagesTask,
@@ -10,7 +11,6 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 import {
   assertMinimumCypressVersion,

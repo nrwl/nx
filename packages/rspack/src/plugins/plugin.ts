@@ -1,3 +1,4 @@
+import { getNamedInputs } from '@nx/devkit/internal';
 import {
   CreateDependencies,
   CreateNodesContextV2,
@@ -9,7 +10,6 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, readdirSync } from 'fs';

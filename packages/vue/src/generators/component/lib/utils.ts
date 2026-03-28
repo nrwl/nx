@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   applyChangesToString,
   getProjects,
@@ -8,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { parse, relative, dirname } from 'path';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 import { NormalizedSchema, ComponentGeneratorSchema } from '../schema';
 import { addImport } from '../../../utils/ast-utils';

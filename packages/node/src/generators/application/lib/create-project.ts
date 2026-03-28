@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -5,7 +6,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';
