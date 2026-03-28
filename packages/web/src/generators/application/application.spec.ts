@@ -22,12 +22,6 @@ jest.mock('@nx/cypress/src/utils/versions', () => ({
   ...jest.requireActual('@nx/cypress/src/utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('@nx/devkit', () => {
-  return {
-    ...jest.requireActual('@nx/devkit'),
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
-  };
-});
 
 describe('app', () => {
   let tree: Tree;
