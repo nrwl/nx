@@ -396,7 +396,6 @@ export default ESLintUtils.RuleCreator(
           sourceFilePath,
           imp
         );
-
       if (!targetProject) {
         // non-project imports cannot use relative or absolute paths
         if (isRelativePath(imp) || imp.startsWith('/')) {

@@ -321,9 +321,13 @@ export class TargetProjectLocator {
 
   findImportInWorkspaceProjects(importPath: string): string | null {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
-
-    if (this.packagesMetadata.entryPointsToProjectMap[importPath]) {
-      return this.packagesMetadata.entryPointsToProjectMap[importPath].name;
+    const slashIndex = importPath.indexOf('/');
+    const impPath =
+      importPath[0] !== '@' && slashIndex > 0
+        ? importPath.slice(0, slashIndex)
+        : importPath;
+    if (this.packagesMetadata.entryPointsToProjectMap[impPath]) {
+      return this.packagesMetadata.entryPointsToProjectMap[impPath].name;
     }
 
     const project = matchImportToWildcardEntryPointsToProjectMap(
