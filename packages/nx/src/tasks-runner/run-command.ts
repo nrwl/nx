@@ -52,6 +52,7 @@ import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-ma
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
+import { DaemonReportingLifeCycle } from './life-cycles/daemon-reporting-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
@@ -1075,6 +1076,9 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);
+  if (daemonClient.enabled()) {
+    lifeCycles.push(new DaemonReportingLifeCycle(daemonClient));
+  }
   return lifeCycles;
 }
 
