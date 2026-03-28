@@ -44,7 +44,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
+        uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
           main-branch-name: 'master'
 
@@ -146,7 +146,7 @@ jobs:
           corepack prepare --activate
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
+        uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
           main-branch-name: 'master'
 
