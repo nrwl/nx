@@ -48,7 +48,7 @@ export declare class FileLock {
 }
 
 export declare class HashPlanInspector {
-  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
   /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
@@ -168,7 +168,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap<string, HashDetails>
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -227,7 +227,7 @@ export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): P
 
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
-export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
 export declare function copy(src: string, dest: string): number
 
@@ -256,8 +256,10 @@ export interface EventDimensions {
   generatorName: string
   packageName: string
   packageVersion: string
-  createProjectGraph: string
   duration: string
+  taskCount: string
+  projectCount: string
+  cachedTaskCount: string
 }
 
 export declare const enum EventType {
@@ -313,6 +315,12 @@ export declare function getEventDimensions(): EventDimensions
  * This is used when hashing outputs
  */
 export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+
+/**
+ * If `workspace_root` is inside a git worktree, returns the main repo root.
+ * Returns `None` when already in the main repo (or not in a git repo at all).
+ */
+export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
@@ -378,11 +386,20 @@ export interface HashInputs {
 }
 
 /**
- * Initialize the global telemetry service.
- * Reads or creates a session ID from the database so that multiple CLI
- * invocations within 30 minutes share the same GA4 session.
+ * Initialize telemetry using a DB connection.
+ * Gets/creates the session ID from the DB, stores the connection
+ * for persisting session refreshes on flush, and returns the session ID
+ * so the caller can set it as an env var for child processes.
+ * Used by CLI and daemon.
  */
-export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
+
+/**
+ * Initialize telemetry with a pre-fetched session ID.
+ * No DB connection — used by plugin workers that inherit the
+ * session ID from their parent process via env var.
+ */
+export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string

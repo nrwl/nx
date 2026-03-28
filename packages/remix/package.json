@@ -22,7 +22,8 @@
   },
   "homepage": "https://nx.dev",
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {

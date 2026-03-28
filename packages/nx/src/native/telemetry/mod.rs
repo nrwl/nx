@@ -26,11 +26,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::native::db::connection::NxDbConnection;
+use constants::SESSION_TIMEOUT_SECS;
 use constants::event_dimension;
-use service::TelemetryService;
-
-/// Session timeout in seconds (30 minutes)
-const SESSION_TIMEOUT_SECS: i64 = 30 * 60;
+use service::{TelemetryOptions, TelemetryService, persist_session_to_db};
 
 // Global telemetry instance for Rust code to use directly
 static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
@@ -39,61 +37,12 @@ static GLOBAL_TELEMETRY: OnceCell<Arc<TelemetryService>> = OnceCell::new();
 // Public NAPI API
 // =============================================================================
 
-/// Initialize the global telemetry service.
-/// Reads or creates a session ID from the database so that multiple CLI
-/// invocations within 30 minutes share the same GA4 session.
-#[napi]
-pub fn initialize_telemetry(
-    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] connection: &External<
-        Arc<Mutex<NxDbConnection>>,
-    >,
-    workspace_id: String,
-    user_id: String,
-    nx_version: String,
-    package_manager_name: String,
-    package_manager_version: Option<String>,
-    node_version: String,
-    os_arch: String,
-    os_platform: String,
-    os_release: String,
-    is_ci: bool,
-    is_nx_cloud: bool,
-) -> Result<()> {
-    tracing::trace!(
-        "Initializing telemetry service for workspace: {}",
-        workspace_id
-    );
-
-    let session_id = get_or_create_session_id(connection)?;
-
-    let service = TelemetryService::new(
-        workspace_id,
-        user_id,
-        session_id,
-        nx_version,
-        package_manager_name,
-        package_manager_version,
-        node_version,
-        os_arch,
-        os_platform,
-        os_release,
-        is_ci,
-        is_nx_cloud,
-    )?;
-
-    GLOBAL_TELEMETRY
-        .set(Arc::new(service))
-        .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
-
-    tracing::debug!("Telemetry service initialized successfully");
-    Ok(())
-}
-
 /// Track an event using the global telemetry instance
 #[napi]
 pub fn track_event(event_name: String, parameters: Option<HashMap<String, String>>) -> Result<()> {
     tracing::trace!("Tracking event: {}", event_name);
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.persist_session_refreshes();
         telemetry.track_event_impl(event_name, parameters)?;
     } else {
         tracing::trace!("Telemetry not initialized, skipping event");
@@ -114,10 +63,110 @@ pub fn track_page_view(
         page_location
     );
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.persist_session_refreshes();
         telemetry.track_page_view_impl(page_title, page_location, parameters)?;
     } else {
         tracing::trace!("Telemetry not initialized, skipping page view");
     }
+    Ok(())
+}
+
+/// Initialize telemetry using a DB connection.
+/// Gets/creates the session ID from the DB, stores the connection
+/// for persisting session refreshes on flush, and returns the session ID
+/// so the caller can set it as an env var for child processes.
+/// Used by CLI and daemon.
+#[napi]
+pub fn initialize_telemetry(
+    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] connection: &External<
+        Arc<Mutex<NxDbConnection>>,
+    >,
+    workspace_id: String,
+    user_id: String,
+    nx_version: String,
+    package_manager_name: String,
+    package_manager_version: Option<String>,
+    node_version: String,
+    os_arch: String,
+    os_platform: String,
+    os_release: String,
+    is_ci: bool,
+    is_nx_cloud: bool,
+) -> Result<String> {
+    tracing::trace!(
+        "Initializing telemetry service for workspace: {}",
+        workspace_id
+    );
+
+    let session_id = get_or_create_session_id(connection)?;
+
+    init_service(TelemetryOptions {
+        session_id: session_id.clone(),
+        db_connection: Some((**connection).clone()),
+        workspace_id,
+        user_id,
+        nx_version,
+        package_manager_name,
+        package_manager_version,
+        node_version,
+        os_arch,
+        os_platform,
+        os_release,
+        is_ci,
+        is_nx_cloud,
+    })?;
+
+    Ok(session_id)
+}
+
+/// Initialize telemetry with a pre-fetched session ID.
+/// No DB connection — used by plugin workers that inherit the
+/// session ID from their parent process via env var.
+#[napi]
+pub fn initialize_telemetry_with_session_id(
+    session_id: String,
+    workspace_id: String,
+    user_id: String,
+    nx_version: String,
+    package_manager_name: String,
+    package_manager_version: Option<String>,
+    node_version: String,
+    os_arch: String,
+    os_platform: String,
+    os_release: String,
+    is_ci: bool,
+    is_nx_cloud: bool,
+) -> Result<()> {
+    tracing::trace!(
+        "Initializing telemetry service (session from env) for workspace: {}",
+        workspace_id
+    );
+
+    init_service(TelemetryOptions {
+        session_id,
+        workspace_id,
+        user_id,
+        nx_version,
+        package_manager_name,
+        package_manager_version,
+        node_version,
+        os_arch,
+        os_platform,
+        os_release,
+        is_ci,
+        is_nx_cloud,
+        db_connection: None,
+    })
+}
+
+fn init_service(opts: TelemetryOptions) -> Result<()> {
+    let service = TelemetryService::new(opts)?;
+
+    GLOBAL_TELEMETRY
+        .set(Arc::new(service))
+        .map_err(|_| Error::from_reason("Telemetry already initialized"))?;
+
+    tracing::debug!("Telemetry service initialized successfully");
     Ok(())
 }
 
@@ -126,6 +175,7 @@ pub fn track_page_view(
 #[napi]
 pub fn flush_telemetry() -> Result<()> {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
+        telemetry.persist_session_refreshes();
         telemetry.flush()?;
     }
     Ok(())
@@ -139,8 +189,10 @@ pub struct EventDimensions {
     pub generator_name: String,
     pub package_name: String,
     pub package_version: String,
-    pub create_project_graph: String,
     pub duration: String,
+    pub task_count: String,
+    pub project_count: String,
+    pub cached_task_count: String,
 }
 
 /// Returns the canonical event dimension names.
@@ -151,8 +203,10 @@ pub fn get_event_dimensions() -> EventDimensions {
         generator_name: event_dimension::GENERATOR_NAME.to_string(),
         package_name: event_dimension::PACKAGE_NAME.to_string(),
         package_version: event_dimension::PACKAGE_VERSION.to_string(),
-        create_project_graph: event_dimension::CREATE_PROJECT_GRAPH.to_string(),
         duration: event_dimension::DURATION.to_string(),
+        task_count: event_dimension::TASK_COUNT.to_string(),
+        project_count: event_dimension::PROJECT_COUNT.to_string(),
+        cached_task_count: event_dimension::CACHED_TASK_COUNT.to_string(),
     }
 }
 
@@ -174,7 +228,7 @@ pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<Strin
 /// Reuses an existing session if the last activity was within 30 minutes,
 /// otherwise creates a new session.
 fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -> Result<String> {
-    let conn = connection
+    let mut conn = connection
         .lock()
         .map_err(|e| Error::from_reason(format!("Failed to lock database connection: {}", e)))?;
 
@@ -185,7 +239,7 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
                 "SELECT m1.value FROM metadata m1, metadata m2 \
                  WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY' \
                  AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
-                SESSION_TIMEOUT_SECS
+                SESSION_TIMEOUT_SECS as i64
             ),
             [],
             |row| row.get::<_, String>(0),
@@ -197,21 +251,12 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
         id
     } else {
         let id = uuid::Uuid::new_v4().to_string();
-        conn.execute(
-            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
-            [&id],
-        )
-        .map_err(|e| Error::from_reason(format!("Failed to save session ID: {}", e)))?;
         tracing::trace!("Created new analytics session: {}", id);
         id
     };
 
-    // Always update last activity timestamp
-    conn.execute(
-        "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
-        [],
-    )
-    .map_err(|e| Error::from_reason(format!("Failed to update session activity: {}", e)))?;
+    // Persist session ID and update activity timestamp
+    persist_session_to_db(&mut conn, &session_id);
 
     Ok(session_id)
 }

@@ -1,0 +1,289 @@
+---
+title: Crafting Your Workspace
+description: Learn how to structure a monorepo workspace with Nx, including project organization, package manager workspaces, and TypeScript configuration.
+sidebar:
+  order: 1
+---
+
+{% llm_copy_prompt title="Tutorial 1/8: Set up an Nx workspace" %}
+Help me learn Nx step by step using this tutorial series.
+
+If my current directory already has nx.json, skip setup and teach me using my existing workspace.
+If I'm starting fresh, help me run create-nx-workspace and walk through the options.
+If I have an existing project without Nx, help me run nx init and verify it's set up correctly.
+
+After setup, verify with `cat nx.json` and walk me through what's in my workspace.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+The Nx CLI is a task orchestrator, caching layer, and intelligence layer for monorepos. It works on top of your existing tools and repo structure. It doesn't replace your package manager, build tools, or test frameworks. It makes them faster and smarter.
+
+Nx works with any repo structure and plays well with tools you already use: pnpm workspaces, yarn workspaces, uv for Python, Gradle for Java, and more. The conventions shown below are recommendations, not requirements. Bring your own structure and Nx adapts to it.
+
+{% aside type="tip" title="Tutorial series" %}
+These tutorials work best when followed in order, but you can jump to any topic you need. Each page is self-contained with links to prerequisites.
+{% /aside %}
+
+{% llm_only %}
+IMPORTANT: Always use the CLI to create workspaces (`npx create-nx-workspace`). Do NOT use the cloud.nx.app browser flow, it requires interactive OAuth and is not suitable for AI agents. When helping users choose a preset, ask about their tech stack first.
+{% /llm_only %}
+
+## What is an Nx workspace?
+
+An Nx workspace is any directory that has an `nx.json` file at its root. This file tells Nx that the directory is a workspace and contains configuration for how Nx behaves: caching, task defaults, and plugins.
+
+A workspace can contain a single project or hundreds. Nx works with JavaScript/TypeScript, Java (Gradle), .NET, Go, and more.
+
+## Workspace structure
+
+Nx works with whatever folder structure you have. A common convention for JavaScript/TypeScript workspaces is separating **applications** from **packages** (shared libraries):
+
+{% filetree %}
+
+- my-workspace/
+  - apps/
+    - my-app/
+      - src/
+      - package.json
+      - tsconfig.json
+  - packages/
+    - shared-ui/
+      - src/
+      - package.json
+      - tsconfig.json
+  - nx.json
+  - package.json
+  - tsconfig.base.json
+  - tsconfig.json
+
+{% /filetree %}
+
+- **apps/**: Deployable applications (frontends, backends, CLIs)
+- **packages/**: Shared libraries consumed by apps or other packages
+- **nx.json**: Nx configuration (caching, task defaults, plugins)
+- **tsconfig.base.json**: Shared `compilerOptions` inherited by all projects
+- **tsconfig.json**: Root TypeScript configuration that references project-level `tsconfig.json` files
+
+You may also see `libs/` used in place of `packages/` in some Nx workspaces. Both work. The `packages/` convention aligns with common pnpm, yarn, and npm workspace conventions.
+
+This layout is a suggestion, not a requirement. You can organize projects however you like, including flat structures, nested directories, or patterns specific to your ecosystem. For non-JS workspaces, follow the monorepo conventions in your language (e.g., Gradle multi-project builds, uv workspaces). Nx identifies projects by their `package.json` or `project.json` files, not by folder names.
+
+Nx re-discovers projects automatically every time you run an `nx` command. No restart or registration step is needed when you add or remove a project.
+
+## Creating a workspace
+
+The fastest way to start is with `create-nx-workspace`:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```shell
+npx create-nx-workspace@latest my-workspace
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```shell
+pnpm dlx create-nx-workspace@latest my-workspace
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```shell
+yarn dlx create-nx-workspace@latest my-workspace
+```
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+```shell
+bunx create-nx-workspace@latest my-workspace
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+The CLI walks you through choosing a starter template (React, Angular, Node, or a blank workspace) and configuring your stack.
+
+If you have an existing project, you can [add Nx to it](/docs/getting-started/start-with-existing-project) by running `nx init`. This adds an `nx.json` file to your workspace and optionally detects your tooling to configure plugins. Everything applies whether you created a new workspace or added Nx to an existing one.
+
+## Adding a project
+
+Create a new project by adding a directory with a `package.json`:
+
+```shell
+mkdir -p packages/my-lib
+```
+
+```jsonc
+// packages/my-lib/package.json
+{
+  "name": "@my-workspace/my-lib",
+}
+```
+
+Then add it as a dependency in the consuming project's `package.json`:
+
+```jsonc
+// apps/my-app/package.json
+{
+  "name": "@my-workspace/my-app",
+  "dependencies": {
+    "@my-workspace/my-lib": "workspace:*",
+  },
+}
+```
+
+The `@my-workspace` scope used in these tutorials is a placeholder. Your workspace will use whatever scope you chose during setup (e.g., `@org`, `@my-company`).
+
+After adding a new project, run your package manager's install command (e.g., `npm install`, `pnpm install`) to link it into the workspace.
+
+If you're using [Nx plugins](/docs/concepts/nx-plugins), you can also use generators to scaffold projects with boilerplate:
+
+```shell
+nx g @nx/js:lib packages/my-lib
+```
+
+For a full list of available generators, see [code generation](/docs/features/generate-code).
+
+## Package manager workspaces
+
+Nx builds on top of your package manager's workspace feature. Each project with a `package.json` is a workspace package that can depend on other packages in the workspace.
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```jsonc
+// package.json
+{
+  "workspaces": ["apps/*", "packages/*"],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```jsonc
+// package.json
+{
+  "workspaces": ["apps/*", "packages/*"],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+```jsonc
+// package.json
+{
+  "workspaces": ["apps/*", "packages/*"],
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+This tells your package manager where to find projects. Nx reads this same configuration to discover projects in your workspace.
+
+{% aside type="note" title="Non-JavaScript workspaces" %}
+If you're not using a JS package manager (e.g., Python with uv, Java with Gradle), Nx can still discover projects via `project.json` files. Check your ecosystem's monorepo tooling for equivalent workspace support.
+{% /aside %}
+
+## How projects link to each other
+
+Package manager workspaces handle linking between projects. When you run `install`, your package manager symlinks local packages into `node_modules` so they can be imported like any npm package:
+
+```typescript
+import { Button } from '@my-workspace/shared-ui';
+```
+
+This works because `@my-workspace/shared-ui` resolves to the local `packages/shared-ui` directory via the symlink, not from the npm registry. Each project needs a `package.json` with a `name` field that matches what other projects import.
+
+Nx uses these same package relationships to automatically detect dependencies between projects, so no additional configuration is needed.
+
+For more details on how linking works, see your package manager's workspace documentation ([npm](https://docs.npmjs.com/cli/using-npm/workspaces), [pnpm](https://pnpm.io/workspaces), [yarn](https://yarnpkg.com/features/workspaces), [bun](https://bun.sh/docs/install/workspaces)).
+
+## TypeScript configuration
+
+For TypeScript workspaces, the recommended setup uses three levels of `tsconfig.json` files. This is the [solution-style project references](https://www.typescriptlang.org/docs/handbook/project-references.html) pattern recommended by the TypeScript team:
+
+**`tsconfig.base.json`** at the root shares `compilerOptions` across all projects:
+
+```jsonc
+// tsconfig.base.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+  },
+}
+```
+
+**`tsconfig.json`** at the root lists all projects as references, so `tsc --build` knows about the full workspace:
+
+```jsonc
+// tsconfig.json
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/my-app" },
+    { "path": "./packages/shared-ui" },
+  ],
+}
+```
+
+**`tsconfig.json`** in each project extends the base and declares its own references to other projects it depends on:
+
+```jsonc
+// apps/my-app/tsconfig.json
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+  },
+  "references": [{ "path": "../../packages/shared-ui" }],
+  "include": ["src/**/*"],
+}
+```
+
+This setup gives editors and language servers accurate type information per-project, enables incremental builds (only recompile what changed), and creates clear boundaries between projects. For more details, see [maintain TypeScript monorepos](/docs/features/maintain-typescript-monorepos).
+
+{% aside type="note" title="Workspaces using tsconfig path aliases" %}
+Some workspaces use TypeScript `paths` in `tsconfig.base.json` to link projects. This works but is not recommended for new workspaces. Path aliases were not designed for project linking, and solution-style project references work better with editors and build tools. See the [migration guide](/docs/technologies/typescript/guides/switch-to-workspaces-project-references) to switch.
+{% /aside %}
+
+## Non-JavaScript workspaces
+
+Nx is not limited to JavaScript. It works with any language or build tool:
+
+- **Gradle**: Nx detects Gradle projects and provides caching, affected analysis, and task orchestration. See the [Gradle tutorial](/docs/getting-started/tutorials/gradle-tutorial).
+- **Any tool**: If it runs from the command line, Nx can cache and orchestrate it.
+
+Nx adapts to your project layout rather than imposing one. Use the folder structure and dependency management conventions established by your language's ecosystem. Nx adds task orchestration, caching, and CI optimization on top of whatever you already have.
+
+{% cards cols=2 %}
+{% card title="Next: Managing Dependencies" description="Track dependencies between projects" url="/docs/getting-started/tutorials/managing-dependencies" /%}
+{% /cards %}

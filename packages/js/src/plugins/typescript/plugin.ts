@@ -114,7 +114,7 @@ interface ConfigContext {
 let ts: typeof import('typescript');
 const pmc = getPackageManagerCommand();
 
-const TSCONFIG_CACHE_VERSION = 1;
+const TSCONFIG_CACHE_VERSION = 2;
 const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
@@ -544,7 +544,7 @@ function buildTscTargets(
     const targetName = options.typecheck.targetName;
     const compiler = options.compiler;
     if (!targets[targetName]) {
-      let command = `${compiler} --build --emitDeclarationOnly${
+      let command = `${compiler} --build ${options.typecheck.configName} --emitDeclarationOnly${
         options.verboseOutput ? ' --verbose' : ''
       }`;
       if (
@@ -590,7 +590,7 @@ function buildTscTargets(
       targets[targetName] = {
         dependsOn,
         command,
-        options: { cwd: config.project.root },
+        options: { cwd: config.project.normalized },
         cache: true,
         inputs: getInputs(
           namedInputs,
@@ -647,7 +647,7 @@ function buildTscTargets(
       command: `${compiler} --build ${options.build.configName}${
         options.verboseOutput ? ' --verbose' : ''
       }`,
-      options: { cwd: config.project.root },
+      options: { cwd: config.project.normalized },
       cache: true,
       inputs: getInputs(
         namedInputs,
@@ -874,30 +874,25 @@ function getInputs(
   // the source files of dependencies. This correctly tracks build outputs from
   // both external project references and same-project task dependencies (e.g.
   // build-native producing .d.ts files that may be excluded from file watching
-  // via .nxignore).
+  // via .nxignore. "*.d.ts" are also read from the deps projects sources.
+
   inputs.push({
     dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
     transitive: true,
   });
+  inputs.push({
+    fileset: '{projectRoot}/**/*.d.ts',
+    dependencies: true,
+  });
 
-  const externalRefConfigFiles = getExternalProjectReferenceConfigFiles(
+  const externalRefPatterns = getExternalProjectReferenceTsconfigPatterns(
     tsConfig,
     internalProjectReferences,
     workspaceRoot,
     config.project,
-    cache,
-    configFiles
+    cache
   );
-  if (externalRefConfigFiles.length > 0) {
-    // tsc --build also reads the tsconfig files from external project
-    // references (and their extended configs) when processing project
-    // references, so we need to add them as inputs
-    inputs.push(
-      ...externalRefConfigFiles.map((p) =>
-        pathToInputOrOutput(p, workspaceRoot, config.project)
-      )
-    );
-  }
+  inputs.push(...externalRefPatterns);
 
   // inputs.push({ externalDependencies });
 
@@ -992,9 +987,17 @@ function getOutputs(
           );
         }
       } else {
+        // List specific tsc output extensions instead of claiming the
+        // entire outDir, so other tasks that write into the same
+        // directory (e.g. copy-assets for .node/.wasm files) don't
+        // have their outputs captured by the tsc build cache.
+        const jsonExt = tsConfig.options.resolveJsonModule ? ',json' : '';
         outputs.add(
           pathToInputOrOutput(
-            tsConfig.options.outDir,
+            joinPathFragments(
+              tsConfig.options.outDir,
+              `**/*.{js,cjs,mjs,jsx${jsonExt},d.ts,d.cts,d.mts}{,.map}`
+            ),
             workspaceRoot,
             config.project
           )
@@ -1228,17 +1231,17 @@ function resolveShallowExternalProjectReferences(
 }
 
 /**
- * Collects config file paths from external project references, including their
- * extended config files. It checks the root tsconfig and all internal project
- * references for their direct external references.
+ * Collects unique tsconfig paths (relative to their project root) from the
+ * project reference chain and returns them as `^{projectRoot}/...` input
+ * patterns. We only need to discover the full set of distinct relative paths
+ * from the reference chain.
  */
-function getExternalProjectReferenceConfigFiles(
+function getExternalProjectReferenceTsconfigPatterns(
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   project: ProjectContext,
-  cache: InvocationCache,
-  existingConfigFiles: Set<string>
+  cache: InvocationCache
 ): string[] {
   const externalRefs: Record<string, ParsedTsconfigData> = {};
 
@@ -1262,27 +1265,75 @@ function getExternalProjectReferenceConfigFiles(
     );
   }
 
-  const result: string[] = [];
-  const seen = new Set<string>();
-  for (const [refConfigPath, refTsConfig] of Object.entries(externalRefs)) {
-    if (!existingConfigFiles.has(refConfigPath) && !seen.has(refConfigPath)) {
-      result.push(refConfigPath);
-      seen.add(refConfigPath);
-    }
-    const extendedFiles = getExtendedConfigFiles(
-      refTsConfig,
-      workspaceRoot,
-      cache
+  // Collect unique tsconfig paths (relative to project root) from the
+  // reference chain, seeded with the external refs.
+  const uniqueRelPaths = new Set<string>();
+  const visited = new Set<string>();
+  const worklist: { configPath: string; ownerProject: ProjectContext }[] = [];
+
+  for (const refConfigPath of Object.keys(externalRefs)) {
+    const refContext = getConfigContext(refConfigPath, workspaceRoot, cache);
+    uniqueRelPaths.add(
+      posixRelative(refContext.project.absolute, refConfigPath)
     );
-    for (const extFile of extendedFiles.files) {
-      if (!existingConfigFiles.has(extFile) && !seen.has(extFile)) {
-        result.push(extFile);
-        seen.add(extFile);
+    worklist.push({
+      configPath: refConfigPath,
+      ownerProject: refContext.project,
+    });
+  }
+
+  for (let i = 0; i < worklist.length; i++) {
+    const { configPath, ownerProject } = worklist[i];
+
+    if (visited.has(configPath)) {
+      continue;
+    }
+    visited.add(configPath);
+
+    const wsRelPath = posixRelative(workspaceRoot, configPath);
+    const tsConfigData = tsConfigCacheData[wsRelPath]?.data;
+    if (!tsConfigData?.projectReferences?.length) {
+      continue;
+    }
+
+    for (const ref of tsConfigData.projectReferences) {
+      let refPath = ref.path;
+      if (!refPath.endsWith('.json')) {
+        refPath = join(refPath, 'tsconfig.json');
+      }
+
+      // Skip references not found in the tsconfig cache
+      const refWsRelPath = posixRelative(workspaceRoot, refPath);
+      if (!tsConfigCacheData[refWsRelPath]) {
+        continue;
+      }
+
+      const refContext = getConfigContext(refPath, workspaceRoot, cache);
+
+      // Collect paths for references within the same project
+      if (
+        !isExternalProjectReference(
+          refContext,
+          ownerProject,
+          workspaceRoot,
+          cache
+        )
+      ) {
+        uniqueRelPaths.add(posixRelative(ownerProject.absolute, refPath));
+      }
+
+      if (!visited.has(refPath)) {
+        worklist.push({
+          configPath: refPath,
+          ownerProject: refContext.project,
+        });
       }
     }
   }
 
-  return result;
+  return Array.from(uniqueRelPaths).map(
+    (relPath) => `^{projectRoot}/${relPath}`
+  );
 }
 
 function isExternalProjectReference(
@@ -1608,12 +1659,28 @@ function toAbsolutePaths(
   for (const [key, { data, extendedFilesHash, hash }] of Object.entries(
     cache
   )) {
+    const raw: Record<string, unknown> = {
+      nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+    };
+    if (data.raw?.include) {
+      raw.include = data.raw.include;
+    }
+    if (data.raw?.exclude) {
+      raw.exclude = data.raw.exclude;
+    }
+    if (data.raw?.files) {
+      raw.files = data.raw.files;
+    }
     updatedCache[key] = {
       data: {
-        options: { noEmit: data.options.noEmit },
-        raw: {
-          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        options: {
+          noEmit: data.options.noEmit,
+          allowJs: data.options.allowJs,
+          resolveJsonModule: data.options.resolveJsonModule,
+          emitDeclarationOnly: data.options.emitDeclarationOnly,
+          declarationMap: data.options.declarationMap,
         },
+        raw,
         extendedConfigFiles: data.extendedConfigFiles,
       },
       extendedFilesHash,
@@ -1666,12 +1733,28 @@ function toRelativePaths(
   for (const [key, { data, extendedFilesHash, hash }] of Object.entries(
     cache
   )) {
+    const raw: Record<string, unknown> = {
+      nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+    };
+    if (data.raw?.include) {
+      raw.include = data.raw.include;
+    }
+    if (data.raw?.exclude) {
+      raw.exclude = data.raw.exclude;
+    }
+    if (data.raw?.files) {
+      raw.files = data.raw.files;
+    }
     updatedCache[key] = {
       data: {
-        options: { noEmit: data.options.noEmit },
-        raw: {
-          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        options: {
+          noEmit: data.options.noEmit,
+          allowJs: data.options.allowJs,
+          resolveJsonModule: data.options.resolveJsonModule,
+          emitDeclarationOnly: data.options.emitDeclarationOnly,
+          declarationMap: data.options.declarationMap,
         },
+        raw,
         extendedConfigFiles: data.extendedConfigFiles,
       },
       extendedFilesHash,

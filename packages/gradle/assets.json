@@ -1,0 +1,25 @@
+{
+  "outDir": "dist/packages/gradle",
+  "assets": [
+    { "glob": "**/files/**" },
+    {
+      "glob": "**/*.json",
+      "ignore": [
+        "tsconfig*.json",
+        "project.json",
+        ".eslintrc.json",
+        "batch-runner/**",
+        "project-graph/**"
+      ]
+    },
+    { "glob": "**/*.js", "ignore": ["**/jest.config.js"] },
+    { "glob": "**/*.d.ts" },
+    {
+      "glob": "**/*.jar",
+      "input": "packages/gradle/batch-runner",
+      "output": "/batch-runner",
+      "includeIgnoredFiles": true
+    },
+    "LICENSE"
+  ]
+}

@@ -1,3 +1,9 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 

@@ -4,6 +4,10 @@
 # Netlify processes these top-to-bottom, first match wins.
 # Specific rules MUST come before wildcard rules.
 
+# --- favicon ---
+/favicon.ico /favicon/favicon.ico 301
+/favicon.svg /favicon/favicon.svg 301
+
 # --- docs ---
 /docs /docs/getting-started/intro 301
 
@@ -52,7 +56,7 @@
 /generators/generator-options /docs/extending-nx 301
 /generators/creating-files /docs/extending-nx/creating-files 301
 /generators/modifying-files /docs/extending-nx/modifying-files 301
-/structure/applications-and-libraries more-concepts/applications-and-libraries 301
+/structure/applications-and-libraries /docs/concepts/decisions/project-size 301
 /structure/creating-libraries /docs/concepts/decisions/project-size 301
 /structure/library-types /docs/concepts/decisions/project-dependency-rules 301
 /structure/grouping-libraries /docs/concepts/decisions/folder-structure 301

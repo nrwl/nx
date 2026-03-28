@@ -6,6 +6,7 @@ import {
   createNodeList,
   generateAst,
   generateFlatOverride,
+  generateFlatPredefinedConfig,
   generatePluginExtendsElement,
   generateSpreadElement,
   stringifyNodeList,
@@ -154,6 +155,61 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.overrides) {
     config.overrides.forEach((override) => {
+      if (override.extends) {
+        const extendsArr = Array.isArray(override.extends)
+          ? override.extends
+          : [override.extends];
+        const mapped = extendsArr.map((e) => ({
+          original: e,
+          flatConfig: mapNxPluginToFlatConfig(e),
+        }));
+        const nxExtends = mapped.filter((m) => m.flatConfig);
+        const nonNxExtends = mapped
+          .filter((m) => !m.flatConfig)
+          .map((m) => m.original);
+
+        if (nxExtends.length > 0) {
+          const nxVar = (importsMap.get('@nx/eslint-plugin') as string) ?? 'nx';
+          importsMap.set('@nx/eslint-plugin', nxVar);
+          nxExtends.forEach((ext) => {
+            exportElements.push(
+              generateFlatPredefinedConfig(ext.flatConfig, nxVar, true)
+            );
+          });
+
+          // Build remaining override without Nx extends
+          const remainingOverride = { ...override };
+          if (nonNxExtends.length > 0) {
+            remainingOverride.extends = nonNxExtends;
+          } else {
+            delete remainingOverride.extends;
+          }
+
+          // Emit remaining override if it has content beyond files and empty rules
+          const {
+            files: _files,
+            rules: remainingRules,
+            ...remainingRest
+          } = remainingOverride;
+          const hasNonEmptyRules =
+            remainingRules && Object.keys(remainingRules).length > 0;
+          if (Object.keys(remainingRest).length > 0 || hasNonEmptyRules) {
+            if (
+              remainingOverride.env ||
+              remainingOverride.extends ||
+              remainingOverride.plugins ||
+              remainingOverride.parser
+            ) {
+              isFlatCompatNeeded = true;
+            }
+            exportElements.push(
+              generateFlatOverride(remainingOverride, format)
+            );
+          }
+          return;
+        }
+      }
+
       if (
         override.env ||
         override.extends ||
@@ -246,7 +302,17 @@ function addExtends(
       imp.startsWith('eslint:')
     );
     pluginExtends.forEach((imp) => {
-      if (!imp.startsWith('eslint:')) {
+      if (imp.startsWith('eslint:')) {
+        return;
+      }
+      const nxFlatConfig = mapNxPluginToFlatConfig(imp);
+      if (nxFlatConfig) {
+        const nxVar = (importsMap.get('@nx/eslint-plugin') as string) ?? 'nx';
+        importsMap.set('@nx/eslint-plugin', nxVar);
+        configBlocks.push(
+          generateFlatPredefinedConfig(nxFlatConfig, nxVar, true)
+        );
+      } else {
         eslintrcConfigs.push(imp);
       }
     });
@@ -283,10 +349,24 @@ function addPlugins(
   configBlocks: ts.Expression[],
   config: ESLint.ConfigData
 ) {
+  // Replace @nx plugin with flat/base predefined config to match fresh generation.
+  // flat/base registers the @nx plugin and ignores .nx directory.
+  // This runs before overrides are processed, so we set the import name here
+  // for Nx extends that may appear in overrides later.
+  if (config.plugins.includes('@nx')) {
+    importsMap.set('@nx/eslint-plugin', 'nx');
+    configBlocks.push(generateFlatPredefinedConfig('flat/base', 'nx', true));
+  }
+
+  const remainingPlugins = config.plugins.filter((name) => name !== '@nx');
+  if (remainingPlugins.length === 0) {
+    return;
+  }
+
   const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
-  config.plugins.forEach((name) => {
+  remainingPlugins.forEach((name) => {
     const imp = getPluginImport(name);
-    const varName = names(imp).propertyName;
+    const varName = (importsMap.get(imp) as string) ?? names(imp).propertyName;
     mappedPlugins.push({ name, varName, imp });
   });
   mappedPlugins.forEach(({ varName, imp }) => {
@@ -318,4 +398,21 @@ function addPlugins(
     false
   );
   configBlocks.push(pluginsAst);
+}
+
+const nxPluginToFlatConfigMap: Record<string, string> = {
+  'plugin:@nx/typescript': 'flat/typescript',
+  'plugin:@nx/javascript': 'flat/javascript',
+  'plugin:@nx/react': 'flat/react',
+  'plugin:@nx/react-base': 'flat/react-base',
+  'plugin:@nx/react-typescript': 'flat/react-typescript',
+  'plugin:@nx/react-jsx': 'flat/react-jsx',
+  'plugin:@nx/angular': 'flat/angular',
+  'plugin:@nx/angular-template': 'flat/angular-template',
+  'plugin:@nrwl/nx/typescript': 'flat/typescript',
+  'plugin:@nrwl/nx/javascript': 'flat/javascript',
+};
+
+function mapNxPluginToFlatConfig(pluginExtend: string): string | undefined {
+  return nxPluginToFlatConfigMap[pluginExtend];
 }

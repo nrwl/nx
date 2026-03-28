@@ -1,0 +1,38 @@
+{
+  "outDir": "dist/packages/workspace",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "**/files-integrated-repo/**"
+    },
+    {
+      "glob": "**/files-integrated-repo/**/.gitkeep"
+    },
+    {
+      "glob": "**/files-package-based-repo/**"
+    },
+    {
+      "glob": "**/files-readme/**"
+    },
+    {
+      "glob": "**/files-root-app/**"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+    },
+    {
+      "glob": "**/*.{js,css,html,svg}",
+      "ignore": ["**/jest.config.js"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    "LICENSE"
+  ]
+}

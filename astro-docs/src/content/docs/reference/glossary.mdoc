@@ -1,6 +1,6 @@
 ---
 title: Nx Glossary
-description: A comprehensive reference of Nx-specific terminology to help you understand the concepts and features of the Nx ecosystem.
+description: A reference of Nx-specific terms used throughout the documentation.
 sidebar:
   order: 7
   label: Glossary
@@ -23,6 +23,13 @@ The Atomizer is an Nx Cloud feature that automatically splits tasks so that they
 Atomizer automatically splits tasks on [Nx Agents](#nx-agents), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
 
 > See: [Automatically Split E2E Tasks](/docs/features/ci-features/split-e2e-tasks)
+
+### Batch mode
+
+A way to run multiple [tasks](#task) in a single process instead of spawning a separate process for each one.
+Batch mode reduces per-process startup overhead and lets tools like `tsc` and Gradle share state across tasks.
+Enable it by setting `NX_BATCH_MODE=true` or passing `--batch`.
+Not all plugin executors support batch mode, check the specific plugin [technology page](/docs/technologies-tools) to see if it's supported.
 
 ### Buildable library
 

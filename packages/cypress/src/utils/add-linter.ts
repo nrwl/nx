@@ -98,10 +98,12 @@ export async function addLinterToCyProject(
         tree,
         projectConfig.root,
         'recommended',
-        'cypress',
-        'eslint-plugin-cypress/flat',
-        false,
-        false
+        {
+          moduleName: 'cypress',
+          moduleImportPath: 'eslint-plugin-cypress/flat',
+          spread: false,
+          insertAtTheEnd: false,
+        }
       );
       addOverrideToLintConfig(tree, projectConfig.root, {
         files: ['*.ts', '*.js'],

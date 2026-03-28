@@ -7,48 +7,8 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
       "command": "node ./scripts/copy-readme.js devkit",
-      "dependsOn": ["^build", "build-base", "legacy-post-build"]
-    },
-
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/devkit",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/devkit",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/devkit",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/devkit",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/devkit",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "inputs": ["copyReadme"],
+      "dependsOn": ["^build", "nx:copy-assets", "build-base"]
     }
   }
 }

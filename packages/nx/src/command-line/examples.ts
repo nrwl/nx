@@ -3,6 +3,19 @@ export interface Example {
   description: string;
 }
 
+export interface CliDocsCommandMetadata {
+  supportedVersionRange?: string;
+}
+
+/**
+ * Docs-only metadata keyed by the full command name as rendered in the CLI docs.
+ */
+export const cliDocsCommandMetadata: Record<string, CliDocsCommandMetadata> = {
+  'show target': {
+    supportedVersionRange: 'Nx 22.6+',
+  },
+};
+
 export const examples: Record<string, Example[]> = {
   affected: [
     {
@@ -413,6 +426,36 @@ export const examples: Record<string, Example[]> = {
       command: 'show project my-app --web',
       description:
         'Opens a web browser to explore the configuration of "my-app"',
+    },
+
+    {
+      command: 'show target my-app:build',
+      description:
+        'Prints the specified + inferred configuration for `my-app:build`',
+    },
+
+    {
+      command: 'show target my-app:build inputs',
+      description: 'Prints the resolved inputs for `my-app:build`',
+    },
+
+    {
+      command:
+        'show target my-app:build inputs --check packages/my-app/index.html',
+      description:
+        'Checks if `packages/my-app/index.html` is an input for `my-app:build`',
+    },
+
+    {
+      command: 'show target my-app:build outputs',
+      description: 'Prints the outputs detected on disk for `my-app:build`',
+    },
+
+    {
+      command:
+        'show target my-app:build outputs --check packages/my-app/dist/index.html',
+      description:
+        'Checks if `packages/my-app/dist/index.html` is an output for `my-app:build`',
     },
   ],
   watch: [

@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { PerformanceObserver } from 'perf_hooks';
+import '../../utils/perf-logging';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
@@ -172,7 +172,6 @@ import {
 } from './handle-configure-ai-agents';
 import { deserialize, serialize } from 'v8';
 
-let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
 
@@ -194,14 +193,6 @@ const server = createServer(async (socket) => {
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
-
-  if (!performanceObserver) {
-    performanceObserver = new PerformanceObserver((list) => {
-      const entry = list.getEntries()[0];
-      serverLogger.log(`Time taken for '${entry.name}'`, `${entry.duration}ms`);
-    });
-    performanceObserver.observe({ entryTypes: ['measure'] });
-  }
 
   socket.on(
     'data',
@@ -645,6 +636,29 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
           // this can happen when the update file was deleted right after
         }
       }
+    }
+
+    const cap = 10;
+    const summarize = (files: string[]) =>
+      files.length === 0
+        ? '(none)'
+        : files.length <= cap
+          ? files.map((f) => `  - ${f}`).join('\n')
+          : files
+              .slice(0, cap)
+              .map((f) => `  - ${f}`)
+              .join('\n') + `\n  ... and ${files.length - cap} more`;
+    if (
+      createdFilesToHash.length ||
+      updatedFilesToHash.length ||
+      deletedFiles.length
+    ) {
+      serverLogger.watcherLog(
+        `File changes detected:\n` +
+          `Created:\n${summarize(createdFilesToHash)}\n` +
+          `Updated:\n${summarize(updatedFilesToHash)}\n` +
+          `Deleted:\n${summarize(deletedFiles)}`
+      );
     }
 
     addUpdatedAndDeletedFiles(

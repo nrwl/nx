@@ -90,7 +90,8 @@ The following is an expanded example showing all options. Your `nx.json` will li
         "projects": ["*"]
       }
     ]
-  }
+  },
+  "analytics": true
 }
 ```
 
@@ -1052,3 +1053,16 @@ You can also use objects with `matcher` and `explanation` properties to document
 - **enforced** (default): Rule violations will cause the conformance check to fail (exit code 1)
 - **evaluated**: Rule violations are reported but don't cause failures (exit code 0)
 - **disabled**: Rule is not evaluated at all
+
+## Analytics
+
+The `analytics` property controls whether Nx collects usage telemetry. When not set, Nx prompts you on first run in an interactive terminal.
+
+```json
+// nx.json
+{
+  "analytics": true
+}
+```
+
+For more information, see [telemetry](/docs/reference/telemetry).

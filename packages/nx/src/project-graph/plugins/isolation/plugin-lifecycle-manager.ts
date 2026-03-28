@@ -175,6 +175,52 @@ export class PluginLifecycleManager {
   }
 
   /**
+   * Aborts a single session within a phase by decrementing its count,
+   * but only if the caller's session is still open.
+   *
+   * Called when graph construction is abandoned mid-flight (e.g., a newer
+   * recomputation supersedes the current one). Without this, hooks that
+   * were entered but whose phase never completed would leave the session
+   * count elevated, preventing the worker from ever shutting down.
+   *
+   * @param phase The phase to abort
+   * @param lastCompletedHook The last hook the caller executed before aborting.
+   *   Used to determine whether the caller's session is still open: if there
+   *   are registered hooks after this one, the session is open and needs
+   *   cleanup. If this IS the last registered hook, exitHook already closed
+   *   the session — decrementing again would steal another caller's count.
+   * @returns true if the worker should shut down, false otherwise
+   */
+  notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): boolean {
+    const phaseHooks = this.registeredPhases[phase];
+    if (!phaseHooks) {
+      return false;
+    }
+
+    const hookIndex = phaseHooks.indexOf(lastCompletedHook);
+
+    // Hook not registered → this caller never entered the phase → no session to abort.
+    // Hook is the last registered hook → exitHook already closed the session.
+    if (hookIndex === -1 || hookIndex === phaseHooks.length - 1) {
+      return false;
+    }
+
+    const count = this.phaseSessionCount[phase] ?? 0;
+    if (count === 0) {
+      return false;
+    }
+
+    const newCount = count - 1;
+    this.phaseSessionCount[phase] = newCount;
+
+    if (newCount > 0) {
+      return false;
+    }
+
+    return this.isLastRegisteredPhase(phase);
+  }
+
+  /**
    * Returns the current session count for a phase. Useful for testing.
    */
   getPhaseRefCount(phase: Phase): number {

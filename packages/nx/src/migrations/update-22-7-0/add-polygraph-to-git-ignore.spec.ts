@@ -9,60 +9,60 @@ describe('add-polygraph-to-git-ignore migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should not create .gitignore if it does not exist', () => {
+  it('should not create .gitignore if it does not exist', async () => {
     tree.delete('.gitignore');
 
-    addPolygraphToGitIgnore(tree);
+    await addPolygraphToGitIgnore(tree);
 
     expect(tree.exists('.gitignore')).toBe(false);
   });
 
-  it('should add .nx/polygraph to existing .gitignore', () => {
+  it('should add .nx/polygraph to existing .gitignore', async () => {
     tree.write('.gitignore', 'node_modules\ndist\n');
 
-    addPolygraphToGitIgnore(tree);
+    await addPolygraphToGitIgnore(tree);
 
     const gitignore = tree.read('.gitignore')?.toString();
     expect(gitignore).toContain('node_modules');
     expect(gitignore).toContain('.nx/polygraph');
   });
 
-  it('should not duplicate if .nx/polygraph is already present', () => {
+  it('should not duplicate if .nx/polygraph is already present', async () => {
     tree.write('.gitignore', 'node_modules\n.nx/polygraph\n');
 
-    addPolygraphToGitIgnore(tree);
+    await addPolygraphToGitIgnore(tree);
 
     const gitignore = tree.read('.gitignore')?.toString();
     const matches = gitignore.match(/\.nx\/polygraph/g);
     expect(matches).toHaveLength(1);
   });
 
-  it('should not add if a broader pattern already covers it', () => {
+  it('should not add if a broader pattern already covers it', async () => {
     tree.write('.gitignore', '.nx/\n');
 
-    addPolygraphToGitIgnore(tree);
+    await addPolygraphToGitIgnore(tree);
 
     const gitignore = tree.read('.gitignore')?.toString();
     expect(gitignore).not.toContain('.nx/polygraph');
   });
 
-  it('should skip for lerna workspaces without nx.json', () => {
+  it('should skip for lerna workspaces without nx.json', async () => {
     tree.write('.gitignore', 'node_modules\n');
     tree.write('lerna.json', '{}');
     tree.delete('nx.json');
 
-    addPolygraphToGitIgnore(tree);
+    await addPolygraphToGitIgnore(tree);
 
     const gitignore = tree.read('.gitignore')?.toString();
     expect(gitignore).not.toContain('.nx/polygraph');
   });
 
-  it('should not skip for lerna workspaces that also have nx.json', () => {
+  it('should not skip for lerna workspaces that also have nx.json', async () => {
     tree.write('.gitignore', 'node_modules\n');
     tree.write('lerna.json', '{}');
     // nx.json already exists from createTreeWithEmptyWorkspace
 
-    addPolygraphToGitIgnore(tree);
+    await addPolygraphToGitIgnore(tree);
 
     const gitignore = tree.read('.gitignore')?.toString();
     expect(gitignore).toContain('.nx/polygraph');

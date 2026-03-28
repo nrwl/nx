@@ -58,13 +58,14 @@ The following environment variables are ones that you can set to change the beha
 
 ## Plugin environment variables
 
-The following environment variables can be used to disable specific Nx plugins. This is useful in CI environments where the required tooling (e.g., Java) is not available.
+The following environment variables can be used to configure specific Nx plugins. This is useful in CI environments where the required tooling (e.g., Java) is not available or where plugin behavior needs to be customized.
 
-| Property            | Type    | Description                                                                                                    |
-| ------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
-| `NX_DOTNET_DISABLE` | boolean | If set to `true`, disables the `@nx/dotnet` plugin. Useful in environments where .NET SDK is not available.    |
-| `NX_GRADLE_DISABLE` | boolean | If set to `true`, disables the `@nx/gradle` plugin. Useful in environments where Java/Gradle is not available. |
-| `NX_MAVEN_DISABLE`  | boolean | If set to `true`, disables the `@nx/maven` plugin. Useful in environments where Java/Maven is not available.   |
+| Property                          | Type    | Description                                                                                                                                               |
+| --------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_DOTNET_DISABLE`               | boolean | If set to `true`, disables the `@nx/dotnet` plugin. Useful in environments where .NET SDK is not available.                                               |
+| `NX_GRADLE_DISABLE`               | boolean | If set to `true`, disables the `@nx/gradle` plugin. Useful in environments where Java/Gradle is not available.                                            |
+| `NX_GRADLE_PROJECT_GRAPH_TIMEOUT` | number  | Timeout in seconds for Gradle project graph generation. Defaults to `60`. Increase this value for large Gradle workspaces that need more time to resolve. |
+| `NX_MAVEN_DISABLE`                | boolean | If set to `true`, disables the `@nx/maven` plugin. Useful in environments where Java/Maven is not available.                                              |
 
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 

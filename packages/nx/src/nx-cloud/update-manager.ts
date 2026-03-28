@@ -11,6 +11,7 @@ import {
 } from 'fs';
 import { createGunzip } from 'zlib';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { createApiAxiosInstance } from './utilities/axios';
 import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
@@ -156,6 +157,18 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 }
 
 export function getBundleInstallDefaultLocation() {
+  // When not in an Nx workspace (no nx.json), avoid creating a .nx folder
+  // in the current directory. Instead, use a temp directory unique to the
+  // NX_CLOUD_API URL so different cloud instances don't conflict.
+  if (!existsSync(join(workspaceRoot, 'nx.json'))) {
+    const apiUrl = process.env.NX_CLOUD_API || 'https://cloud.nx.app';
+    const apiHash = createHash('sha256')
+      .update(apiUrl)
+      .digest('hex')
+      .slice(0, 16);
+    return join(tmpdir(), 'nx-cloud-client', apiHash);
+  }
+
   const legacyPath = join(
     workspaceRoot,
     'node_modules',

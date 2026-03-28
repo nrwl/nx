@@ -4,6 +4,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
@@ -55,6 +56,10 @@ describe('native task hasher', () => {
   };
 
   beforeEach(async () => {
+    // Register a subscriber so that hasTaskInputSubscribers() returns true,
+    // enabling input collection in the hasher during tests.
+    getTaskIOService().subscribeToTaskInputs(() => {});
+
     tempFs = new TempFs('NativeTaskHasher');
     await tempFs.createFiles({
       'libs/parent/src/index.ts': 'parent-content',

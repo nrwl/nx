@@ -7,52 +7,7 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/cypress/README.md"],
       "command": "node ./scripts/copy-readme.js cypress",
-      "dependsOn": ["^build", "build-base", "legacy-post-build"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/cypress",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "PLUGIN.md",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "inputs": ["copyReadme"]
     }
   }
 }

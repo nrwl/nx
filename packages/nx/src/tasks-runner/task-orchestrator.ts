@@ -8,7 +8,8 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask } from '../hasher/hash-task';
+import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import { walkTaskGraph } from './task-graph-utils';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
@@ -19,7 +20,7 @@ import {
   TaskStatus as NativeTaskStatus,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
-import { getDbConnection } from '../utils/db-connection';
+import { getLocalDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -64,7 +65,7 @@ export class TaskOrchestrator {
   );
 
   private runningTasksService = !IS_WASM
-    ? new RunningTasksService(getDbConnection())
+    ? new RunningTasksService(getLocalDbConnection())
     : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -89,6 +90,7 @@ export class TaskOrchestrator {
   private waitingForTasks: Function[] = [];
 
   private groups = [];
+  private continuousTasksStarted = 0;
 
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
@@ -109,7 +111,8 @@ export class TaskOrchestrator {
     { runningTask: RunningTask; stopping: boolean }
   >();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
-  private cleanupDone = false;
+  private continuousTaskExitHandled = new Map<string, Promise<void>>();
+  private cleanupPromise: Promise<void> | null = null;
 
   // endregion internal state
 
@@ -151,17 +154,23 @@ export class TaskOrchestrator {
 
     performance.mark('task-execution:start');
 
-    const threadCount = getThreadCount(this.options, this.taskGraph);
+    const { discrete, continuous, total } = getThreadPoolSize(
+      this.options,
+      this.taskGraph
+    );
 
     const threads = [];
 
-    process.stdout.setMaxListeners(threadCount + defaultMaxListeners);
-    process.stderr.setMaxListeners(threadCount + defaultMaxListeners);
-    process.setMaxListeners(threadCount + defaultMaxListeners);
+    process.stdout.setMaxListeners(total + defaultMaxListeners);
+    process.stderr.setMaxListeners(total + defaultMaxListeners);
+    process.setMaxListeners(total + defaultMaxListeners);
 
     // initial seeding of the queue
-    for (let i = 0; i < threadCount; ++i) {
-      threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
+    for (let i = 0; i < discrete; ++i) {
+      threads.push(this.executeDiscreteTaskLoop());
+    }
+    for (let i = 0; i < continuous; ++i) {
+      threads.push(this.executeContinuousTaskLoop(continuous));
     }
 
     await Promise.race([
@@ -201,60 +210,75 @@ export class TaskOrchestrator {
     return this.tasksSchedule.nextBatch();
   }
 
-  private async executeNextBatchOfTasksUsingTaskSchedule() {
-    // completed all the tasks
-    if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
-      return null;
-    }
-
+  private async executeDiscreteTaskLoop() {
     const doNotSkipCache =
       this.options.skipNxCache === false ||
       this.options.skipNxCache === undefined;
 
-    this.processAllScheduledTasks();
-    const batch = this.nextBatch();
-    if (batch) {
-      const groupId = this.closeGroup();
+    while (true) {
+      // completed all the tasks
+      if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
+        return null;
+      }
 
-      await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
+      this.processAllScheduledTasks();
 
-      this.openGroup(groupId);
+      const batch = this.nextBatch();
+      if (batch) {
+        const groupId = this.closeGroup();
+        await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
+        this.openGroup(groupId);
+        continue;
+      }
 
-      return this.executeNextBatchOfTasksUsingTaskSchedule();
+      const task = this.tasksSchedule.nextTask((t) => !t.continuous);
+      if (task) {
+        const groupId = this.closeGroup();
+        await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+        this.openGroup(groupId);
+        continue;
+      }
+
+      // block until some other task completes, then try again
+      await new Promise((res) => this.waitingForTasks.push(res));
     }
+  }
 
-    const task = this.tasksSchedule.nextTask();
-    if (task) {
-      const groupId = this.closeGroup();
+  private async executeContinuousTaskLoop(continuousTaskCount: number) {
+    while (true) {
+      // completed all the tasks
+      if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
+        return null;
+      }
 
-      if (task.continuous) {
+      this.processAllScheduledTasks();
+
+      const task = this.tasksSchedule.nextTask((t) => t.continuous);
+      if (task) {
+        // Use a separate groupId space (parallel..parallel+N) so continuous tasks
+        // don't consume discrete group slots
+        const groupId = this.options.parallel + this.continuousTasksStarted++;
         const runningTask = await this.startContinuousTask(task, groupId);
 
         if (this.initializingTaskIds.has(task.id)) {
-          await new Promise<void>((res) => {
-            runningTask.onExit((code) => {
-              if (!this.tuiEnabled) {
-                if (code > 128) {
-                  process.exit(code);
-                }
-              }
-              res();
-            });
-          });
+          await this.continuousTaskExitHandled.get(task.id);
         }
-      } else {
-        await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+
+        // all continuous tasks have been started, thread can exit
+        if (this.continuousTasksStarted >= continuousTaskCount) {
+          return null;
+        }
+        continue;
       }
 
-      this.openGroup(groupId);
+      // all continuous tasks have been started, thread can exit
+      if (this.continuousTasksStarted >= continuousTaskCount) {
+        return null;
+      }
 
-      return this.executeNextBatchOfTasksUsingTaskSchedule();
+      // block until some other task completes, then try again
+      await new Promise((res) => this.waitingForTasks.push(res));
     }
-
-    // block until some other task completes, then try again
-    return new Promise((res) => this.waitingForTasks.push(res)).then(() =>
-      this.executeNextBatchOfTasksUsingTaskSchedule()
-    );
   }
 
   private processTasks(taskIds: string[]) {
@@ -355,7 +379,8 @@ export class TaskOrchestrator {
    */
   private async applyBatchCachedResults(
     batch: Batch,
-    doNotSkipCache: boolean
+    doNotSkipCache: boolean,
+    groupId: number
   ): Promise<{
     cachedResults: TaskResult[];
     needsRehashAfterExecution: Set<string>;
@@ -372,10 +397,8 @@ export class TaskOrchestrator {
 
     const nonCachedTaskIds = new Set<string>();
 
-    let remaining = batch.taskGraph;
-
-    while (remaining.roots.length > 0) {
-      const rootTasks = remaining.roots.map((id) => remaining.tasks[id]);
+    await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
+      const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
 
       await this.hashBatchTasks(rootTasks);
 
@@ -400,31 +423,34 @@ export class TaskOrchestrator {
         const cachedIds = new Set(cacheResults.map((r) => r.task.id));
         cachedResults.push(...cacheResults);
 
+        if (cacheResults.length > 0) {
+          const cachedTasks = cacheResults.map((r) => r.task);
+          await Promise.all(
+            cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+          );
+          await this.preRunSteps(cachedTasks, { groupId });
+          await this.postRunSteps(cacheResults, doNotSkipCache, { groupId });
+        }
+
         for (const task of eligible) {
           if (!cachedIds.has(task.id)) {
             nonCachedTaskIds.add(task.id);
           }
         }
       }
-
-      remaining = removeTasksFromTaskGraph(remaining, remaining.roots);
-    }
+    });
 
     return { cachedResults, needsRehashAfterExecution };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
-    await Promise.all(
-      tasks.map((task) =>
-        hashTask(
-          this.hasher,
-          this.projectGraph,
-          this.taskGraphForHashing,
-          task,
-          this.batchEnv,
-          this.taskDetails
-        )
-      )
+    await hashTasks(
+      this.hasher,
+      this.projectGraph,
+      this.taskGraphForHashing,
+      this.batchEnv,
+      this.taskDetails,
+      tasks
     );
   }
 
@@ -445,17 +471,17 @@ export class TaskOrchestrator {
     });
 
     const { cachedResults, needsRehashAfterExecution } =
-      await this.applyBatchCachedResults(batch, doNotSkipCache);
+      await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
-    // All tasks are now hashed — notify lifecycle (scheduleTask + startTasks)
-    await Promise.all(
-      tasks.map((task) => this.options.lifeCycle.scheduleTask(task))
-    );
-    await this.preRunSteps(tasks, { groupId });
-
-    // Complete cached results immediately — no need to wait for execution
-    if (cachedResults.length > 0) {
-      await this.postRunSteps(cachedResults, doNotSkipCache, { groupId });
+    // Schedule and start non-cached tasks (cached tasks were already
+    // started and completed inside applyBatchCachedResults)
+    const cachedTaskIds = new Set(cachedResults.map((r) => r.task.id));
+    const nonCachedTasks = tasks.filter((t) => !cachedTaskIds.has(t.id));
+    if (nonCachedTasks.length > 0) {
+      await Promise.all(
+        nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+      );
+      await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
     // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
@@ -596,7 +622,6 @@ export class TaskOrchestrator {
         task.startTime = result.startTime;
         task.endTime = result.endTime;
         return {
-          ...result,
           code: result.success ? 0 : 1,
           task,
           status: (result.success ? 'success' : 'failure') as TaskStatus,
@@ -941,7 +966,15 @@ export class TaskOrchestrator {
         groupId,
         ownsRunningTasksService: false,
       });
-      this.registerContinuousTaskExitHandler(runningTask, task, groupId, false);
+      this.continuousTaskExitHandled.set(
+        task.id,
+        new Promise<void>((resolve) => {
+          runningTask.onExit(async (code) => {
+            await this.handleContinuousTaskExit(code, task, groupId, false);
+            resolve();
+          });
+        })
+      );
 
       // task is already running by another process, we schedule the next tasks
       // and release the threads
@@ -988,13 +1021,21 @@ export class TaskOrchestrator {
       temporaryOutputPath,
       pipeOutput
     );
-    this.runningTasksService.addRunningTask(task.id);
+    this.runningTasksService?.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, {
       runningTask: childProcess,
       groupId,
       ownsRunningTasksService: true,
     });
-    this.registerContinuousTaskExitHandler(childProcess, task, groupId, true);
+    this.continuousTaskExitHandled.set(
+      task.id,
+      new Promise<void>((resolve) => {
+        childProcess.onExit(async (code) => {
+          await this.handleContinuousTaskExit(code, task, groupId, true);
+          resolve();
+        });
+      })
+    );
     await this.scheduleNextTasksAndReleaseThreads();
 
     return childProcess;
@@ -1227,7 +1268,7 @@ export class TaskOrchestrator {
     );
   }
 
-  private closeGroup() {
+  private closeGroup(): number {
     for (let i = 0; i < this.options.parallel; i++) {
       if (!this.groups[i]) {
         this.groups[i] = true;
@@ -1256,42 +1297,40 @@ export class TaskOrchestrator {
 
   // endregion utils
 
-  private registerContinuousTaskExitHandler(
-    runningTask: RunningTask,
+  private async handleContinuousTaskExit(
+    code: number,
     task: Task,
     groupId: number,
     ownsRunningTasksService: boolean
   ) {
-    runningTask.onExit(async (code) => {
-      // If cleanup already completed this task, nothing left to do
-      if (this.completedTasks[task.id] !== undefined) {
-        return;
-      }
+    // If cleanup already completed this task, nothing left to do
+    if (this.completedTasks[task.id] !== undefined) {
+      return;
+    }
 
-      const stoppingReason = this.runningContinuousTasks.get(
-        task.id
-      )?.stoppingReason;
-      if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
-        const reason =
-          stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
-        await this.completeContinuousTask(
-          task,
-          groupId,
-          ownsRunningTasksService,
-          reason
-        );
-      } else {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        await this.completeContinuousTask(
-          task,
-          groupId,
-          ownsRunningTasksService,
-          'crashed'
-        );
-      }
-    });
+    const stoppingReason = this.runningContinuousTasks.get(
+      task.id
+    )?.stoppingReason;
+    if (stoppingReason || EXPECTED_TERMINATION_SIGNALS.has(code)) {
+      const reason =
+        stoppingReason === 'fulfilled' ? 'fulfilled' : 'interrupted';
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        reason
+      );
+    } else {
+      console.error(
+        `Task "${task.id}" is continuous but exited with code ${code}`
+      );
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        'crashed'
+      );
+    }
   }
 
   private async completeContinuousTask(
@@ -1304,7 +1343,7 @@ export class TaskOrchestrator {
 
     this.runningContinuousTasks.delete(task.id);
     if (ownsRunningTasksService) {
-      this.runningTasksService.removeRunningTask(task.id);
+      this.runningTasksService?.removeRunningTask(task.id);
     }
 
     task.endTime = Date.now();
@@ -1327,11 +1366,14 @@ export class TaskOrchestrator {
   }
 
   private async cleanup() {
-    if (this.cleanupDone) {
-      return;
+    if (this.cleanupPromise) {
+      return this.cleanupPromise;
     }
-    this.cleanupDone = true;
+    this.cleanupPromise = this.performCleanup();
+    return this.cleanupPromise;
+  }
 
+  private async performCleanup() {
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
     for (const entry of this.runningContinuousTasks.values()) {
@@ -1393,6 +1435,27 @@ export class TaskOrchestrator {
   private setupSignalHandlers() {
     process.once('SIGINT', () => {
       this.stopRequested = true;
+      if (!this.tuiEnabled) {
+        // Synchronously remove DB entries before async cleanup to prevent
+        // new nx processes from seeing stale "Waiting for ..." messages.
+        // This replicates the cleanup that process.exit() + Rust Drop
+        // previously provided.
+        for (const [taskId, { ownsRunningTasksService }] of this
+          .runningContinuousTasks) {
+          if (ownsRunningTasksService) {
+            this.runningTasksService?.removeRunningTask(taskId);
+          }
+        }
+        // Silence output — pnpm (and similar wrappers) may exit before nx
+        // finishes cleanup, returning the shell prompt. Any output after
+        // that point would appear after the prompt.
+        const noop = (_chunk, _encoding, callback) => {
+          if (callback) callback();
+          return true;
+        };
+        process.stdout.write = noop as any;
+        process.stderr.write = noop as any;
+      }
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1402,6 +1465,7 @@ export class TaskOrchestrator {
       });
     });
     process.once('SIGTERM', () => {
+      this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1409,6 +1473,7 @@ export class TaskOrchestrator {
       });
     });
     process.once('SIGHUP', () => {
+      this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
@@ -1444,10 +1509,10 @@ export class TaskOrchestrator {
   }
 }
 
-export function getThreadCount(
+export function getThreadPoolSize(
   options: NxArgs & DefaultTasksRunnerOptions,
   taskGraph: TaskGraph
-) {
+): { discrete: number; continuous: number; total: number } {
   if (
     (options as any)['parallel'] === 'false' ||
     (options as any)['parallel'] === false
@@ -1462,9 +1527,13 @@ export function getThreadCount(
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
   }
 
-  const maxParallel =
-    options['parallel'] +
-    Object.values(taskGraph.tasks).filter((t) => t.continuous).length;
-  const totalTasks = Object.keys(taskGraph.tasks).length;
-  return Math.min(maxParallel, totalTasks);
+  const continuousCount = Object.values(taskGraph.tasks).filter(
+    (t) => t.continuous
+  ).length;
+
+  const discrete = options['parallel'];
+  const continuous = continuousCount;
+  const total = discrete + continuous;
+
+  return { discrete, continuous, total };
 }

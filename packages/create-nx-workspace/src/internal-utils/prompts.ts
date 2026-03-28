@@ -1,6 +1,6 @@
-import * as yargs from 'yargs';
-import * as enquirer from 'enquirer';
-import * as chalk from 'chalk';
+import yargs from 'yargs';
+import enquirer from 'enquirer';
+import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
@@ -107,7 +107,48 @@ export async function determineTemplate(
   }>
 ): Promise<string | 'custom'> {
   if (parsedArgs.template) return parsedArgs.template;
-  return 'custom';
+  if (parsedArgs.preset) return 'custom';
+  if (!parsedArgs.interactive || isCI()) return 'nrwl/empty-template';
+  // Docs generation needs preset flow to document all presets
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
+  // Template flow requires git for cloning - fall back to custom preset if git is not available
+  if (!isGitAvailable()) return 'custom';
+  const { template } = await enquirer.prompt<{ template: string }>([
+    {
+      name: 'template',
+      message: 'Which starter do you want to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'nrwl/empty-template',
+          message: 'Minimal           (empty monorepo without projects)',
+        },
+        {
+          name: 'nrwl/react-template',
+          message:
+            'React             (fullstack monorepo with React and Express)',
+        },
+        {
+          name: 'nrwl/angular-template',
+          message:
+            'Angular           (fullstack monorepo with Angular and Express)',
+        },
+        {
+          name: 'nrwl/typescript-template',
+          message:
+            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+        },
+        {
+          name: 'custom',
+          message:
+            'Custom            (advanced setup with additional frameworks)',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+
+  return template;
 }
 
 export async function determineAiAgents(
@@ -140,6 +181,32 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
       ),
   };
   return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
+}
+
+export async function determineAnalytics(
+  parsedArgs: yargs.Arguments<{ analytics?: boolean }>
+): Promise<boolean> {
+  if (typeof parsedArgs.analytics === 'boolean') {
+    return parsedArgs.analytics;
+  }
+
+  if (!parsedArgs.interactive || isCI()) {
+    // Default to false in non-interactive/CI
+    return false;
+  }
+
+  const { enableAnalytics } = await enquirer.prompt<{
+    enableAnalytics: 'Yes' | 'No';
+  }>([
+    {
+      name: 'enableAnalytics',
+      message: 'Help improve Nx by sharing your usage data?',
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return enableAnalytics === 'Yes';
 }
 
 export async function determineDefaultBase(

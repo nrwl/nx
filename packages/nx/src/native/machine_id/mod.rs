@@ -1,3 +1,4 @@
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub fn get_machine_id() -> String {
     #[cfg(not(target_arch = "wasm32"))]
     return machine_uid::get().unwrap_or(String::from("machine"));
@@ -5,14 +6,14 @@ pub fn get_machine_id() -> String {
     #[cfg(target_arch = "wasm32")]
     {
         use crate::native::hasher::hash;
-        use crate::native::tasks::hashers::create_command_builder;
+        use crate::native::utils::command::create_shell_command;
         use std::fs::read_to_string;
 
         hash(
             read_to_string("/var/lib/dbus/machine-id")
                 .or_else(|_| read_to_string("/etc/machine-id"))
                 .or_else(|_| {
-                    let mut command_builder = create_command_builder();
+                    let mut command_builder = create_shell_command();
 
                     command_builder.arg("hostname");
 

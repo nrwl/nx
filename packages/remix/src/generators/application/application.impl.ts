@@ -203,7 +203,7 @@ export async function remixApplicationGeneratorInternal(
         testEnvironment: 'jsdom',
         skipViteConfig: true,
         addPlugin: true,
-        viteVersion: 5,
+        viteVersion: 6,
       });
       createOrEditViteConfig(
         tree,

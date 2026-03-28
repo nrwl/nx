@@ -5,6 +5,7 @@ import {
   addImportToFlatConfig,
   generateAst,
   generateFlatOverride,
+  generateFlatPredefinedConfig,
   generatePluginExtendsElementWithCompatFixup,
   hasOverride,
   removeCompatExtends,
@@ -270,6 +271,85 @@ describe('ast-utils', () => {
             { ignores: ["my-lib/.cache/**/*"] }
         ];
         "
+      `);
+    });
+
+    it('should insert before baseConfig when checkBaseConfig is true (ESM)', () => {
+      const content = `import baseConfig from "../../eslint.config.mjs";
+    export default [
+        ...baseConfig,
+        {
+            files: ["**/*.ts"],
+            rules: {}
+        },
+    ];`;
+      const result = addBlockToFlatConfigExport(
+        content,
+        generateFlatPredefinedConfig('flat/react', 'nx', true),
+        { checkBaseConfig: true }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "import baseConfig from "../../eslint.config.mjs";
+
+        export default [
+            ...nx.configs["flat/react"],
+            ...baseConfig,
+            {
+                files: ["**/*.ts"],
+                rules: {}
+            }
+        ];
+        "
+      `);
+    });
+
+    it('should append when checkBaseConfig is true but no baseConfig exists (ESM)', () => {
+      const content = `import nx from "@nx/eslint-plugin";
+    export default [
+        ...nx.configs["flat/base"],
+        ...nx.configs["flat/typescript"],
+    ];`;
+      const result = addBlockToFlatConfigExport(
+        content,
+        generateFlatPredefinedConfig('flat/react', 'nx', true),
+        { checkBaseConfig: true }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "import nx from "@nx/eslint-plugin";
+
+        export default [
+            ...nx.configs["flat/base"],
+            ...nx.configs["flat/typescript"],
+            ...nx.configs["flat/react"]
+        ];
+        "
+      `);
+    });
+
+    it('should insert before baseConfig when checkBaseConfig is true (CJS)', () => {
+      const content = `const baseConfig = require("../../eslint.config.cjs");
+module.exports = [
+    ...baseConfig,
+    {
+        files: ["**/*.ts"],
+        rules: {}
+    },
+];`;
+      const result = addBlockToFlatConfigExport(
+        content,
+        generateFlatPredefinedConfig('flat/react', 'nx', true),
+        { checkBaseConfig: true }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "const baseConfig = require("../../eslint.config.cjs");
+        module.exports = [
+            ...nx.configs["flat/react"],
+            ...baseConfig,
+            {
+                files: ["**/*.ts"],
+                rules: {}
+            },
+        ];"
       `);
     });
   });

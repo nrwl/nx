@@ -5,7 +5,10 @@ import { lstatSync } from 'fs';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { dirname, join, relative } from 'path';
-import type { InlineConfig } from 'vite';
+// TODO(jack): Remove this when @nx/cypress switches to moduleResolution:
+// "nodenext". Vite 8 ships ESM-only type declarations (.d.mts) which are not
+// resolvable under moduleResolution: "node".
+type InlineConfig = Record<string, any>;
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 const treeKill = require('tree-kill');
@@ -77,14 +80,14 @@ function startWebServer(webServerCommand: string) {
     // Windows is fine so we leave it attached to this process
     detached: process.platform !== 'win32',
     stdio: 'inherit',
-    windowsHide: false,
+    windowsHide: true,
   });
 
   return async () => {
     if (process.platform === 'win32') {
       try {
         execSync('taskkill /pid ' + serverProcess.pid + ' /T /F', {
-          windowsHide: false,
+          windowsHide: true,
         });
       } catch (e) {
         if (process.env.NX_VERBOSE_LOGGING === 'true') {

@@ -45,7 +45,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -62,7 +62,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -79,7 +79,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -96,7 +96,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -112,7 +112,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+            "Push your repo (https://github.com/new), then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
         }
@@ -132,7 +132,7 @@ describe('Nx Cloud Messages', () => {
           "bodyLines": [
             "Go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
-          "title": "Your remote cache is almost complete.",
+          "title": "Your remote cache setup is almost complete.",
         }
       `);
     });
@@ -148,7 +148,7 @@ describe('Nx Cloud Messages', () => {
           "bodyLines": [
             "Return to Nx Cloud and finish the setup.",
           ],
-          "title": "Your remote cache is almost complete.",
+          "title": "Your remote cache setup is almost complete.",
         }
       `);
     });
@@ -163,9 +163,9 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
-          "title": "Your remote cache is almost complete.",
+          "title": "Your remote cache setup is almost complete.",
         }
       `);
     });
@@ -180,9 +180,9 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "Push your repo (https://github.com/new?name=myworkspace), then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
-          "title": "Your remote cache is almost complete.",
+          "title": "Your remote cache setup is almost complete.",
         }
       `);
     });
@@ -197,9 +197,9 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
-          "title": "Your remote cache is almost complete.",
+          "title": "Your remote cache setup is almost complete.",
         }
       `);
     });
@@ -214,9 +214,9 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup.",
+            "Push your repo (https://github.com/new?name=myworkspace), then return to Nx Cloud and finish the setup.",
           ],
-          "title": "Your remote cache is almost complete.",
+          "title": "Your remote cache setup is almost complete.",
         }
       `);
     });
@@ -274,8 +274,9 @@ describe('Nx Cloud Messages', () => {
           pushed,
           'myworkspace'
         );
-        // NXC-4020: Restored to v22.1.3 wording
-        expect(message.title).toBe('Your remote cache is almost complete.');
+        expect(message.title).toBe(
+          'Your remote cache setup is almost complete.'
+        );
       });
     });
   });

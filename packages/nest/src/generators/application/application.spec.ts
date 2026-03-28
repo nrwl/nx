@@ -1,11 +1,11 @@
 import {
+  getProjects,
   readJson,
   readProjectConfiguration,
   updateJson,
   writeJson,
   type Tree,
 } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 
@@ -24,7 +24,7 @@ describe('application generator', () => {
       addPlugin: true,
     });
 
-    const projectConfigurations = devkit.getProjects(tree);
+    const projectConfigurations = getProjects(tree);
     const project = projectConfigurations.get(appDirectory);
 
     expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeTruthy();
@@ -154,7 +154,7 @@ describe('application generator', () => {
       addPlugin: true,
     });
 
-    const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
     expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
@@ -172,7 +172,7 @@ describe('application generator', () => {
       strict: true,
       addPlugin: true,
     });
-    const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
 
     expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
     expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
@@ -184,27 +184,36 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await applicationGenerator(tree, {
         directory: appDirectory,
         skipFormat: true,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -216,7 +225,7 @@ describe('application generator', () => {
         addPlugin: true,
       });
 
-      const projectConfigurations = devkit.getProjects(tree);
+      const projectConfigurations = getProjects(tree);
 
       expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeUndefined();
     });

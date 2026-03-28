@@ -75,6 +75,11 @@ export class TasksSchedule {
     for (const taskId of taskIds) {
       this.completedTasks.add(taskId);
       this.runningTasks.delete(taskId);
+      delete this.reverseTaskDeps[taskId];
+    }
+    const removedSet = new Set(taskIds);
+    for (const [key, deps] of Object.entries(this.reverseTaskDeps)) {
+      this.reverseTaskDeps[key] = deps.filter((d) => !removedSet.has(d));
     }
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
@@ -89,12 +94,21 @@ export class TasksSchedule {
     };
   }
 
-  public nextTask() {
-    if (this.scheduledTasks.length > 0) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
-    } else {
+  public nextTask(filter?: (task: Task) => boolean) {
+    if (this.scheduledTasks.length === 0) {
       return null;
     }
+    if (!filter) {
+      return this.taskGraph.tasks[this.scheduledTasks.shift()];
+    }
+    const idx = this.scheduledTasks.findIndex((id) =>
+      filter(this.taskGraph.tasks[id])
+    );
+    if (idx === -1) {
+      return null;
+    }
+    const [taskId] = this.scheduledTasks.splice(idx, 1);
+    return this.taskGraph.tasks[taskId];
   }
 
   public nextBatch(): Batch {

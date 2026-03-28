@@ -1,8 +1,10 @@
 export {
+  customDimensions,
+  EventParameters,
   startAnalytics,
   reportNxAddCommand,
   reportNxGenerateCommand,
   reportCommandRunEvent,
-  reportProjectGraphCreationEvent,
+  reportEvent,
   flushAnalytics,
 } from './analytics';

@@ -1,0 +1,155 @@
+---
+title: 'Setting Up CI'
+description: Configure CI for your Nx workspace with remote caching, affected commands, distributed task execution, and self-healing to keep your pipeline fast and reliable.
+sidebar:
+  label: 'Setting Up CI'
+filter: 'type:Guides'
+---
+
+{% llm_copy_prompt title="Tutorial 8/8: Set up CI with Nx Cloud" %}
+Help me set up CI for my Nx workspace.
+
+Connect to Nx Cloud with `nx connect`, generate a CI workflow with `nx g @nx/workspace:ci-workflow`, and walk me through remote caching, affected commands, and self-healing CI.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+Connect your workspace to Nx Cloud, generate a CI workflow, and enable remote caching, affected commands, distributed task execution, and self-healing to keep your pipeline fast and reliable.
+
+{% aside type="note" title="Prerequisites" %}
+
+- An existing Nx workspace (see [Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace) or the [Gradle tutorial](/docs/getting-started/tutorials/gradle-tutorial))
+- A [GitHub account](https://github.com) with a repository for your workspace
+- [Node.js](https://nodejs.org) (v20.19 or later)
+
+{% /aside %}
+
+## Connect to Nx Cloud
+
+Connect your workspace to Nx Cloud to enable remote caching and CI features:
+
+{% aside type="note" title="Prerequisites for nx connect" %}
+Your workspace must be pushed to a Git provider (GitHub, GitLab, Bitbucket, or Azure DevOps) before running `nx connect`. After connecting, Nx Cloud opens a PR that adds `nxCloudId` to `nx.json`. Merge this PR before proceeding so CI runs appear on the Nx Cloud dashboard.
+{% /aside %}
+
+```shell
+nx connect
+```
+
+This creates an Nx Cloud account (if you don't have one) and connects your workspace. Once connected, you can see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
+
+The access token is stored in `nx.json` and should be committed to your repository. It only grants cache read/write access, not admin access to your Nx Cloud organization.
+
+## Generate a CI workflow
+
+Generate a CI workflow configuration for GitHub Actions:
+
+```shell
+nx add @nx/workspace
+nx g @nx/workspace:ci-workflow --ci=github
+```
+
+The `@nx/workspace` package provides the CI workflow generator. Once installed, the generator creates a `.github/workflows/ci.yml` file. It also supports CircleCI, GitLab CI, Azure Pipelines, and Bitbucket Pipelines. Pass a different `--ci` value or run `nx g @nx/workspace:ci-workflow --help` to see all options.
+
+{% aside type="note" title="Generated output may differ" %}
+The generated workflow may differ from the example below depending on your workspace setup and Nx version. The key elements (affected command, remote caching, fix-ci) will be present.
+{% /aside %}
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx nx affected -t lint test build
+
+      - run: npx nx fix-ci
+        if: always()
+```
+
+This workflow includes several Nx CI features out of the box. The sections below explain each one.
+
+## Remote caching
+
+When Nx Cloud is connected, task results are cached remotely. If a task has already run with the same inputs (on any machine or CI run), the result is replayed instantly instead of running again.
+
+This means:
+
+- The second CI run on a PR is faster because unchanged tasks hit the cache
+- Developers pulling the latest `main` get cached results from CI
+- Build artifacts like `dist/` and test coverage are restored from cache, not recomputed
+
+For more details, see [remote cache (Nx Replay)](/docs/features/ci-features/remote-cache).
+
+## Running only affected tasks
+
+The generated workflow uses `nx affected` instead of `nx run-many`. This compares the PR's changes against the base branch and only runs tasks for projects that could be impacted:
+
+```shell
+nx affected -t lint test build
+```
+
+Nx determines the base and head commits using `NX_BASE` and `NX_HEAD` environment variables. The generated CI workflow configures these automatically through the `fetch-depth: 0` checkout, which gives Nx access to the full git history for comparison.
+
+On a PR, Nx compares the PR branch against `main` (or whatever `defaultBase` is set to in `nx.json`). On a push to `main`, it compares against the previous commit.
+
+For more details, see [affected](/docs/features/ci-features/affected).
+
+## Distributing tasks across machines
+
+For larger workspaces, you can distribute task execution across multiple machines using Nx Agents. Instead of running all tasks on a single CI runner, Nx Cloud coordinates the work across a fleet of agents:
+
+```yaml
+# Add to your CI workflow
+- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+```
+
+Nx Agents automatically split tasks across the available agents, respecting task dependencies and maximizing parallelism. No configuration changes to your tasks are needed.
+
+For more details, see [distribute task execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution).
+
+## Self-healing CI
+
+The `npx nx fix-ci` command at the end of the workflow enables self-healing CI. When a task fails, Nx Cloud analyzes the failure and suggests a fix that you can apply directly from your editor (via [Nx Console](/docs/getting-started/editor-setup)).
+
+This is useful for catching flaky tests, configuration drift, and other issues that can be auto-remediated without manual debugging.
+
+For more details, see [self-healing CI](/docs/features/ci-features/self-healing-ci).
+
+## Next steps
+
+- [Remote cache (Nx Replay)](/docs/features/ci-features/remote-cache): how remote caching works
+- [Affected](/docs/features/ci-features/affected): how Nx determines what changed
+- [Distribute task execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution): run tasks across multiple machines
+- [Self-healing CI](/docs/features/ci-features/self-healing-ci): automatic failure detection and fixes
+- [AI integration](/docs/getting-started/ai-setup): enhance CI with AI-powered workflows
+
+{% cards cols=2 %}
+{% card title="Previous: Reducing Configuration Boilerplate" description="Automate task configuration with plugins" url="/docs/getting-started/tutorials/reducing-configuration-boilerplate" /%}
+{% /cards %}

@@ -9,6 +9,19 @@ import * as packageJsonUtils from '../../utils/package-json';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
 
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    existsSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.existsSync(...args)),
+    readFileSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
+  };
+});
+
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
   let readModulePackageJsonSpy: jest.SpyInstance;
@@ -731,6 +744,49 @@ describe('setup-ai-agents generator', () => {
 
         const gitignore = tree.read('.gitignore')?.toString();
         expect(gitignore).not.toContain('.claude/worktrees');
+      });
+
+      it('should add .claude/settings.local.json to .gitignore', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\ndist\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('.claude/settings.local.json');
+      });
+
+      it('should not duplicate if .claude/settings.local.json is already present', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\n.claude/settings.local.json\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        const matches = gitignore.match(/\.claude\/settings\.local\.json/g);
+        expect(matches).toHaveLength(1);
+      });
+
+      it('should not add .claude/settings.local.json if a broader pattern already covers it', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', '.claude/\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).not.toContain('.claude/settings.local.json');
       });
     });
 

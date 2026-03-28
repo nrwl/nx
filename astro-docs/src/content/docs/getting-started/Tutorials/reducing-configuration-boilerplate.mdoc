@@ -1,0 +1,373 @@
+---
+title: Reducing Configuration Boilerplate
+description: Learn how Nx plugins automatically infer tasks from your tooling configuration, eliminating the need to manually define targets, caching, inputs, and outputs.
+sidebar:
+  order: 7
+---
+
+{% llm_copy_prompt title="Tutorial 7/8: Reduce configuration with plugins" %}
+Help me reduce configuration boilerplate in my Nx workspace.
+Use my existing workspace and projects for hands-on examples.
+
+First, consolidate shared task config into `targetDefaults` in `nx.json`. Then show me how to use Nx plugins to automatically infer tasks from my tooling (Vite, Jest, ESLint, etc.) so I don't need to configure each project manually.
+
+Run `nx show project <project-name>` to see where each task's configuration comes from.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+Manually configuring tasks, caching, inputs, and outputs for every project works, but it doesn't scale to dozens or hundreds of projects. Nx provides two mechanisms to reduce this boilerplate: `targetDefaults` for shared configuration and **plugins** for automatic task inference.
+
+The examples below use Vite and Vitest, but the concepts apply to any tool. Substitute your own build and test commands as needed.
+
+{% aside type="note" title="Prerequisites" %}
+This tutorial assumes you have an Nx workspace with configured tasks. If you're starting fresh, complete [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks) first.
+{% /aside %}
+
+## The scaling problem
+
+Consider a workspace with 20 libraries, each with verbose task configuration:
+
+{% tabs %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// packages/my-lib/package.json
+{
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "cache": true,
+        "dependsOn": ["^build"],
+        "inputs": [
+          "{projectRoot}/src/**/*",
+          "{projectRoot}/vite.config.ts",
+          "{projectRoot}/tsconfig.json",
+        ],
+        "outputs": ["{projectRoot}/dist"],
+      },
+      "test": {
+        "cache": true,
+        "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/vitest.config.ts"],
+        "outputs": ["{projectRoot}/coverage"],
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// packages/my-lib/project.json
+{
+  "targets": {
+    "build": {
+      "command": "vite build",
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/vite.config.ts",
+        "{projectRoot}/tsconfig.json",
+      ],
+      "outputs": ["{projectRoot}/dist"],
+    },
+    "test": {
+      "command": "vitest run",
+      "cache": true,
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/vitest.config.ts"],
+      "outputs": ["{projectRoot}/coverage"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+That's a lot of repetition across 20 projects. And every time you change the Vite output directory, you'd need to update all of them.
+
+## Step 1: Target defaults
+
+Move shared configuration to `nx.json` so projects inherit defaults:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+    },
+    "test": {
+      "cache": true,
+    },
+  },
+}
+```
+
+Now each project only needs to specify what's unique:
+
+{% tabs %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// packages/my-lib/package.json
+{
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/vite.config.ts"],
+        "outputs": ["{projectRoot}/dist"],
+      },
+      "test": {
+        "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/vitest.config.ts"],
+        "outputs": ["{projectRoot}/coverage"],
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// packages/my-lib/project.json
+{
+  "targets": {
+    "build": {
+      "command": "vite build",
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/vite.config.ts"],
+      "outputs": ["{projectRoot}/dist"],
+    },
+    "test": {
+      "command": "vitest run",
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/vitest.config.ts"],
+      "outputs": ["{projectRoot}/coverage"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Better, but you still repeat `inputs` and `outputs` across projects with the same tooling.
+
+## Step 2: Nx plugins (inferred tasks)
+
+Nx plugins can read your existing tooling configuration files, like `vite.config.ts`, `jest.config.ts`, or `eslint.config.mjs`, and automatically create tasks with the correct caching settings. No `project.json` needed.
+
+### Adding a plugin
+
+Try adding a plugin to your workspace:
+
+```shell
+nx add @nx/vite
+```
+
+This installs `@nx/vite` and registers it in `nx.json`. Some plugins may also need `nx sync` to update workspace configuration files (e.g., TypeScript project references). See [maintain TypeScript monorepos](/docs/features/maintain-typescript-monorepos) for details.
+
+After installing, check what tasks were inferred for one of your projects:
+
+```shell
+nx show project my-app
+```
+
+You should see tasks like `build`, `test`, and `serve` that were automatically created from your `vite.config.ts` file.
+
+{% aside type="note" title="Prefixed target names" %}
+Some plugins use prefixed names (e.g., `next:build`, `next:dev`) to avoid conflicting with existing `package.json` scripts. You can rename these to `build`, `dev`, etc. in the plugin options in `nx.json`, then remove the redundant scripts from `package.json`.
+{% /aside %}
+
+The plugin reads your Vite configuration and sets up correct caching, inputs, and outputs without any manual configuration.
+
+The plugin is registered in `nx.json`:
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+      },
+    },
+  ],
+}
+```
+
+Now, any project with a `vite.config.ts` automatically gets `build`, `test`, and `serve` tasks, with correct `inputs`, `outputs`, and caching, without any `project.json` configuration.
+
+### Seeing what's inferred
+
+Use `nx show project` to see all tasks for a project, including where they come from:
+
+```shell
+nx show project my-lib
+```
+
+{% project_details title="Project details for my-lib" %}
+
+```json
+{
+  "project": {
+    "name": "my-lib",
+    "type": "lib",
+    "data": {
+      "root": "packages/my-lib",
+      "targets": {
+        "build": {
+          "options": { "cwd": "packages/my-lib", "command": "vite build" },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": ["production", "^production"],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": { "technologies": ["vite"] }
+        },
+        "test": {
+          "options": { "cwd": "packages/my-lib", "command": "vitest run" },
+          "cache": true,
+          "inputs": ["default", "^production"],
+          "outputs": ["{projectRoot}/coverage"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": { "technologies": ["vite"] }
+        },
+        "lint": {
+          "cache": true,
+          "options": { "cwd": "packages/my-lib", "command": "eslint ." },
+          "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": { "technologies": ["eslint"] }
+        }
+      },
+      "name": "my-lib",
+      "sourceRoot": "packages/my-lib/src",
+      "projectType": "library",
+      "tags": [],
+      "implicitDependencies": [],
+      "metadata": { "technologies": ["react"] }
+    }
+  },
+  "sourceMap": {
+    "root": ["packages/my-lib/project.json", "nx/core/project-json"],
+    "targets": ["packages/my-lib/project.json", "nx/core/project-json"],
+    "targets.build": ["packages/my-lib/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.command": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.cache": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.inputs": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.outputs": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test": ["packages/my-lib/vite.config.ts", "@nx/vite/plugin"],
+    "targets.test.command": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.options": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.cache": ["packages/my-lib/vite.config.ts", "@nx/vite/plugin"],
+    "targets.test.inputs": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.outputs": [
+      "packages/my-lib/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.lint": ["packages/my-lib/eslint.config.mjs", "@nx/eslint/plugin"],
+    "targets.lint.command": [
+      "packages/my-lib/eslint.config.mjs",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options": [
+      "packages/my-lib/eslint.config.mjs",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.cache": [
+      "packages/my-lib/eslint.config.mjs",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.inputs": [
+      "packages/my-lib/eslint.config.mjs",
+      "@nx/eslint/plugin"
+    ]
+  }
+}
+```
+
+{% /project_details %}
+
+The project details view shows each task's source (plugin, `targetDefaults`, or `project.json`) and its computed settings.
+
+## How the configuration cascade works
+
+Task configuration can come from three sources, applied in this order:
+
+1. **Plugin-inferred**: automatic from tooling config (lowest priority)
+2. **targetDefaults**: shared defaults in `nx.json`
+3. **Project-level**: explicit `project.json` or `package.json` config (highest priority)
+
+Each layer can override the previous one. This means you can use plugins for sensible defaults and only add project-level config when a project needs something different.
+
+## This is optional
+
+Plugins are optional. The explicit task configuration from [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks) works perfectly well. Use plugins when:
+
+- You have many projects with the same tooling (Vite, Jest, ESLint, etc.)
+- You want caching configured automatically with correct `inputs`/`outputs`
+- You prefer minimal configuration files
+
+Stick with explicit configuration when:
+
+- You have unique build setups that plugins don't cover
+- You want full control over every task detail
+- Your team prefers explicit over implicit
+
+## Learn more
+
+- [Inferred tasks](/docs/concepts/inferred-tasks): how plugins detect and configure tasks
+- [Nx plugins](/docs/concepts/nx-plugins): the full plugin system
+- [Reduce repetitive configuration](/docs/guides/tasks--caching/reduce-repetitive-configuration): step-by-step guide
+- [Extending Nx](/docs/extending-nx/intro): create your own plugins
+
+{% cards cols=2 %}
+{% card title="Previous: Understanding Your Workspace" description="Explore projects, graphs, and debug issues" url="/docs/getting-started/tutorials/understanding-your-workspace" /%}
+{% card title="Next: Setting Up CI" description="Configure CI with remote caching and self-healing" url="/docs/getting-started/tutorials/self-healing-ci-tutorial" /%}
+{% /cards %}

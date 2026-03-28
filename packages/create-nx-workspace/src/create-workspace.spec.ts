@@ -1,4 +1,7 @@
-import { extractConnectUrl } from './create-workspace';
+import {
+  extractConnectUrl,
+  resolveTemplateShorthand,
+} from './create-workspace';
 
 describe('extractConnectUrl', () => {
   test('should extract the correct URL from the given string', () => {
@@ -55,5 +58,37 @@ describe('extractConnectUrl', () => {
     const expectedUrl =
       'https://example.com/connect/abcd1234?query=param#fragment';
     expect(extractConnectUrl(inputString)).toBe(expectedUrl);
+  });
+});
+
+describe('resolveTemplateShorthand', () => {
+  test('should resolve angular shorthand', () => {
+    expect(resolveTemplateShorthand('angular')).toBe('nrwl/angular-template');
+  });
+
+  test('should resolve react shorthand', () => {
+    expect(resolveTemplateShorthand('react')).toBe('nrwl/react-template');
+  });
+
+  test('should resolve typescript shorthand', () => {
+    expect(resolveTemplateShorthand('typescript')).toBe(
+      'nrwl/typescript-template'
+    );
+  });
+
+  test('should resolve empty shorthand', () => {
+    expect(resolveTemplateShorthand('empty')).toBe('nrwl/empty-template');
+  });
+
+  test('should pass through full template names unchanged', () => {
+    expect(resolveTemplateShorthand('nrwl/angular-template')).toBe(
+      'nrwl/angular-template'
+    );
+  });
+
+  test('should pass through unknown values unchanged', () => {
+    expect(resolveTemplateShorthand('nrwl/custom-template')).toBe(
+      'nrwl/custom-template'
+    );
   });
 });

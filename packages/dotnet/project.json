@@ -14,11 +14,7 @@
     "build": {
       "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/readme-template.md packages/dotnet/README.md",
       "outputs": ["{projectRoot}/README.md"],
-      "inputs": [
-        "{projectRoot}/readme-template.md",
-        "{workspaceRoot}/scripts/copy-readme.js",
-        "{workspaceRoot}/scripts/readme-fragments"
-      ],
+      "inputs": ["copyReadme"],
       "cache": true
     },
     "build-analyzer": {
@@ -54,34 +50,8 @@
         }
       }
     },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "dependsOn": ["build-base", "build-analyzer"],
-      "outputs": ["{projectRoot}/dist"],
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "outputPath": "dist",
-        "assets": [
-          "{projectRoot}/*.md",
-          {
-            "input": "{projectRoot}/src",
-            "glob": "**/*.{d.ts,json}",
-            "output": "/",
-            "ignore": [
-              ".eslintrc.json",
-              "generators.json",
-              "executors.json",
-              "migrations.json"
-            ]
-          },
-          {
-            "input": "dist/msbuild-analyzer",
-            "glob": "*",
-            "output": "/lib/",
-            "includeIgnoredFiles": true
-          }
-        ]
-      }
+    "copy-assets": {
+      "dependsOn": ["build-base", "build-analyzer"]
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",

@@ -4,10 +4,12 @@ import { nxVersion } from '../utils/versions';
 import { IS_WASM } from '../native';
 import type {
   initializeTelemetry as InitializeTelemetryType,
+  initializeTelemetryWithSessionId as InitializeTelemetryWithSessionIdType,
   flushTelemetry as FlushTelemetryType,
   trackEvent as TrackEventType,
   trackPageView as TrackPageViewType,
   getEventDimensions as GetEventDimensionsType,
+  EventDimensions,
 } from '../native';
 import {
   getPackageManagerVersion,
@@ -22,6 +24,7 @@ import { getDbConnection } from '../utils/db-connection';
 
 // Conditionally import telemetry functions only on non-WASM platforms
 let initializeTelemetry: typeof InitializeTelemetryType;
+let initializeTelemetryWithSessionId: typeof InitializeTelemetryWithSessionIdType;
 let flushTelemetry: typeof FlushTelemetryType;
 let trackEventNative: typeof TrackEventType;
 let trackPageViewNative: typeof TrackPageViewType;
@@ -31,13 +34,21 @@ let getEventDimensions: typeof GetEventDimensionsType;
 if (!IS_WASM) {
   const nativeModule = require('../native');
   initializeTelemetry = nativeModule.initializeTelemetry;
+  initializeTelemetryWithSessionId =
+    nativeModule.initializeTelemetryWithSessionId;
   flushTelemetry = nativeModule.flushTelemetry;
   trackEventNative = nativeModule.trackEvent;
   trackPageViewNative = nativeModule.trackPageView;
   getEventDimensions = nativeModule.getEventDimensions;
 }
 
-const customDimensions = IS_WASM ? null : (getEventDimensions?.() ?? null);
+export const customDimensions = IS_WASM
+  ? null
+  : (getEventDimensions?.() ?? null);
+
+export type EventParameters = Partial<
+  Record<EventDimensions[keyof EventDimensions], string | number | boolean>
+>;
 
 let _telemetryInitialized = false;
 
@@ -66,23 +77,33 @@ export async function startAnalytics() {
     ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
     : 'unknown';
 
-  try {
-    const dbConnection = getDbConnection();
+  const commonArgs = [
+    workspaceId,
+    userId,
+    nxVersion,
+    packageManagerInfo.name,
+    packageManagerInfo.version,
+    nodeVersionString,
+    os.arch(),
+    os.platform(),
+    os.release(),
+    !!isCI(),
+    isNxCloud,
+  ] as const;
 
-    initializeTelemetry(
-      dbConnection,
-      workspaceId,
-      userId,
-      nxVersion,
-      packageManagerInfo.name,
-      packageManagerInfo.version,
-      nodeVersionString,
-      os.arch(),
-      os.platform(),
-      os.release(),
-      !!isCI(),
-      isNxCloud
-    );
+  try {
+    const sessionId = process.env.NX_ANALYTICS_SESSION_ID;
+
+    if (sessionId) {
+      // Plugin worker path — reuse session ID from parent, no DB needed
+      initializeTelemetryWithSessionId(sessionId, ...commonArgs);
+    } else {
+      // CLI/daemon path — get session from DB, set env var for children
+      const dbConnection = getDbConnection();
+      const newSessionId = initializeTelemetry(dbConnection, ...commonArgs);
+      process.env.NX_ANALYTICS_SESSION_ID = newSessionId;
+    }
+
     _telemetryInitialized = true;
 
     // Flush analytics automatically on process exit so every code path
@@ -127,10 +148,8 @@ export function reportCommandRunEvent(
   trackPageView(command, pageLocation, parameters);
 }
 
-export function reportProjectGraphCreationEvent(duration: number) {
-  trackEvent(customDimensions.createProjectGraph, {
-    [customDimensions.duration]: duration,
-  });
+export function reportEvent(name: string, eventParameters?: EventParameters) {
+  trackEvent(name, eventParameters);
 }
 
 const SKIP_ARGS_KEYS = new Set([

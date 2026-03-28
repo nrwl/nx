@@ -13,7 +13,7 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
-import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
+import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
@@ -109,6 +109,13 @@ export interface PackageJson {
   packageManager?: string;
   description?: string;
   keywords?: string[];
+}
+
+export interface NxPackageJson extends PackageJson {
+  'nx-migrations'?: {
+    migrations?: string;
+    packageGroup?: (string | { package: string; version: string })[];
+  };
 }
 
 export function normalizePackageGroup(

@@ -4,6 +4,7 @@ import type {
 } from '../project-graph/error-types';
 import { logger } from './logger';
 import { output } from './output';
+import { handleImport } from './handle-import';
 
 export async function handleErrors(
   isVerbose: boolean,
@@ -66,7 +67,9 @@ export async function handleErrors(
         bodyLines,
       });
     }
-    const { daemonClient } = await import('../daemon/client/client');
+    const { daemonClient } = await handleImport(
+      require.resolve('../daemon/client/client')
+    );
     if (daemonClient.enabled()) {
       daemonClient.reset();
     }
