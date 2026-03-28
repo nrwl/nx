@@ -4249,8 +4249,8 @@ importers:
         specifier: ~14.1.0
         version: 14.1.0(postcss@8.5.3)
       postcss-loader:
-        specifier: ^6.1.1
-        version: 6.2.1(postcss@8.5.3)(webpack@5.101.3)
+        specifier: ^8.2.1
+        version: 8.2.1(@rspack/core@1.6.8(@swc/helpers@0.5.18))(postcss@8.5.3)(typescript@5.9.2)(webpack@5.101.3(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4))
       rxjs:
         specifier: ^7.8.0
         version: 7.8.2
@@ -22408,6 +22408,19 @@ packages:
       webpack:
         optional: true
 
+  postcss-loader@8.2.1:
+    resolution: {integrity: sha512-k98jtRzthjj3f76MYTs9JTpRqV1RaaMhEU0Lpw9OTmQZQdppg4B30VZ74BojuBHt3F4KyubHJoXCMUeM8Bqeow==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
+      postcss: ^7.0.0 || ^8.0.1
+      webpack: ^5.0.0
+    peerDependenciesMeta:
+      '@rspack/core':
+        optional: true
+      webpack:
+        optional: true
+
   postcss-logical@5.0.4:
     resolution: {integrity: sha512-RHXxplCeLh9VjinvMrZONq7im4wjWGlRJAqmAVLXyZaXwfDWP73/oq4NdIp+OZwhQUMj0zjqDfM5Fj7qby+B4g==}
     engines: {node: ^12 || ^14 || >=16}
@@ -27434,8 +27447,8 @@ packages:
     resolution: {integrity: sha512-N47AqBDCMQmh6mBLmI6oqxryHRzi33aPFPsJhYy3VTUGCdLHYjGh4FZzpUjRlphaADBBkDmnkM/++KNIOHi5Rw==}
     hasBin: true
 
-  yaml@1.10.2:
-    resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
+  yaml@1.10.3:
+    resolution: {integrity: sha512-vIYeF1u3CjlhAFekPPAk2h/Kv4T3mAkMox5OymRiJQB0spDP10LHvt+K7G9Ny6NuuMAb25/6n1qyUjAcGNf/AA==}
     engines: {node: '>= 6'}
 
   yaml@2.2.2:
@@ -43852,7 +43865,7 @@ snapshots:
       import-fresh: 3.3.1
       parse-json: 5.2.0
       path-type: 4.0.0
-      yaml: 1.10.2
+      yaml: 1.10.3
 
   cosmiconfig@8.3.6(typescript@5.7.2):
     dependencies:
@@ -44326,7 +44339,7 @@ snapshots:
       cssnano-preset-default: 5.2.14(postcss@8.4.38)
       lilconfig: 2.1.0
       postcss: 8.4.38
-      yaml: 1.10.2
+      yaml: 1.10.3
 
   cssnano@6.1.2(postcss@8.5.3):
     dependencies:
@@ -52956,7 +52969,7 @@ snapshots:
   postcss-load-config@3.1.4(postcss@8.4.38)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2)):
     dependencies:
       lilconfig: 2.1.0
-      yaml: 1.10.2
+      yaml: 1.10.3
     optionalDependencies:
       postcss: 8.4.38
       ts-node: 10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@20.19.19)(typescript@5.9.2)
@@ -53040,6 +53053,18 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 1.6.8(@swc/helpers@0.5.18)
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.27.3)(webpack-cli@5.1.4)
+    transitivePeerDependencies:
+      - typescript
+
+  postcss-loader@8.2.1(@rspack/core@1.6.8(@swc/helpers@0.5.18))(postcss@8.5.3)(typescript@5.9.2)(webpack@5.101.3(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)):
+    dependencies:
+      cosmiconfig: 9.0.0(typescript@5.9.2)
+      jiti: 2.6.1
+      postcss: 8.5.3
+      semver: 7.7.4
+    optionalDependencies:
+      '@rspack/core': 1.6.8(@swc/helpers@0.5.18)
+      webpack: 5.101.3(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4)
     transitivePeerDependencies:
       - typescript
 
@@ -59630,7 +59655,7 @@ snapshots:
     optionalDependencies:
       prettier: 2.8.7
 
-  yaml@1.10.2: {}
+  yaml@1.10.3: {}
 
   yaml@2.2.2: {}
 
