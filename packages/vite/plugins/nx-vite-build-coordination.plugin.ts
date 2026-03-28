@@ -17,14 +17,18 @@ export function nxViteBuildCoordinationPlugin(
   let unregisterFileWatcher: UnregisterCallback | undefined;
 
   async function buildChangedProjects() {
-    await new Promise<void>((res) => {
+    await new Promise<void>((res, rej) => {
       activeBuildProcess = exec(options.buildCommand, {
         windowsHide: true,
       });
       activeBuildProcess.stdout.pipe(process.stdout);
       activeBuildProcess.stderr.pipe(process.stderr);
-      activeBuildProcess.on('exit', () => {
-        res();
+      activeBuildProcess.on('exit', (code) => {
+        if (code !== 0) {
+          rej(new Error(`Build failed with exit code ${code}`));
+        } else {
+          res();
+        }
       });
       activeBuildProcess.on('error', () => {
         res();
@@ -37,7 +41,7 @@ export function nxViteBuildCoordinationPlugin(
     const runner = new BatchFunctionRunner(() => buildChangedProjects());
     return daemonClient.registerFileWatcher(
       { watchProjects: 'all' },
-      (err, { changedProjects, changedFiles }) => {
+      (err, data) => {
         if (err === 'reconnecting') {
           // Silent - daemon restarts automatically on lockfile changes
           return;
@@ -60,7 +64,10 @@ export function nxViteBuildCoordinationPlugin(
           activeBuildProcess = undefined;
         }
 
-        runner.enqueue(changedProjects, changedFiles);
+        if (data) {
+          const { changedProjects, changedFiles } = data;
+          runner.enqueue(changedProjects, changedFiles);
+        }
       }
     );
   }
