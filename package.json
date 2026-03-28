@@ -220,7 +220,6 @@
     "github-slugger": "^2.0.0",
     "globals": "^15.9.0",
     "gpt3-tokenizer": "^1.1.5",
-    "handlebars": "4.7.7",
     "html-webpack-plugin": "5.5.0",
     "http-proxy-middleware": "3.0.5",
     "http-server": "14.1.0",
@@ -327,7 +326,7 @@
     "unified": "^11.0.4",
     "unist-builder": "^4.0.0",
     "use-sync-external-store": "^1.2.0",
-    "verdaccio": "6.0.5",
+    "verdaccio": "6.3.2",
     "vite": "8.0.0",
     "vitest": "4.0.9",
     "webpack": "5.101.3",
@@ -408,6 +407,12 @@
     "tinyglobby": "catalog:",
     "tslib": "catalog:typescript",
     "webpack-cli": "^5.1.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "handlebars": "4.7.9",
+      "underscore": "^1.13.8"
+    }
   },
   "nx": {
     "includedScripts": [
