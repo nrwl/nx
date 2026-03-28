@@ -1320,6 +1320,15 @@ export class TaskOrchestrator {
         ownsRunningTasksService,
         reason
       );
+    } else if (!this.isContinuousTaskNeeded(task.id)) {
+      // No remaining tasks depend on this — the task was about to be
+      // killed by cleanUpUnneededContinuousTasks anyway.
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        'fulfilled'
+      );
     } else {
       console.error(
         `Task "${task.id}" is continuous but exited with code ${code}`
@@ -1331,6 +1340,14 @@ export class TaskOrchestrator {
         'crashed'
       );
     }
+  }
+
+  private isContinuousTaskNeeded(taskId: string): boolean {
+    return this.tasksSchedule
+      .getIncompleteTasks()
+      .some((t) =>
+        this.taskGraph.continuousDependencies[t.id]?.includes(taskId)
+      );
   }
 
   private async completeContinuousTask(
@@ -1407,9 +1424,11 @@ export class TaskOrchestrator {
       );
     }
 
-    // Kill all processes
-    this.forkedProcessTaskRunner.cleanup();
+    // Kill all processes — await forked runner cleanup for graceful shutdown
+    const forkedCleanup = this.forkedProcessTaskRunner.cleanup();
+    const continuousTaskIds = new Set(continuousSnapshot.map(([id]) => id));
     await Promise.all([
+      forkedCleanup,
       ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
           await runningTask.kill();
@@ -1417,13 +1436,16 @@ export class TaskOrchestrator {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         }
       }),
-      ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
-        try {
-          await t.kill();
-        } catch (e) {
-          console.error(`Unable to terminate ${taskId}\nError:`, e);
-        }
-      }),
+      // Skip tasks already killed via continuousSnapshot to avoid duplicate signals
+      ...Array.from(this.runningRunCommandsTasks)
+        .filter(([taskId]) => !continuousTaskIds.has(taskId))
+        .map(async ([taskId, t]) => {
+          try {
+            await t.kill();
+          } catch (e) {
+            console.error(`Unable to terminate ${taskId}\nError:`, e);
+          }
+        }),
     ]);
 
     // Discrete exit promises resolve promptly (process kill → getResults →
@@ -1433,19 +1455,25 @@ export class TaskOrchestrator {
   }
 
   private setupSignalHandlers() {
-    process.once('SIGINT', () => {
+    // Use process.on (not once) so the handler stays registered and absorbs
+    // re-raised signals from signal-exit. Without this, signal-exit's handler
+    // sees no remaining listeners after our once-handler auto-removes, and
+    // re-raises the signal — killing the process before async cleanup completes.
+    // The cleanup() idempotency guard (cleanupPromise) prevents double execution.
+    const handleSignal = (signal: NodeJS.Signals) => {
+      if (this.stopRequested) return;
       this.stopRequested = true;
       if (!this.tuiEnabled) {
         // Synchronously remove DB entries before async cleanup to prevent
         // new nx processes from seeing stale "Waiting for ..." messages.
-        // This replicates the cleanup that process.exit() + Rust Drop
-        // previously provided.
         for (const [taskId, { ownsRunningTasksService }] of this
           .runningContinuousTasks) {
           if (ownsRunningTasksService) {
             this.runningTasksService?.removeRunningTask(taskId);
           }
         }
+      }
+      if (signal === 'SIGINT' && !this.tuiEnabled) {
         // Silence output — pnpm (and similar wrappers) may exit before nx
         // finishes cleanup, returning the shell prompt. Any output after
         // that point would appear after the prompt.
@@ -1460,26 +1488,13 @@ export class TaskOrchestrator {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
         } else {
-          process.exit(signalToCode('SIGINT'));
+          process.exit(signalToCode(signal));
         }
       });
-    });
-    process.once('SIGTERM', () => {
-      this.stopRequested = true;
-      this.cleanup().finally(() => {
-        if (this.resolveStopPromise) {
-          this.resolveStopPromise();
-        }
-      });
-    });
-    process.once('SIGHUP', () => {
-      this.stopRequested = true;
-      this.cleanup().finally(() => {
-        if (this.resolveStopPromise) {
-          this.resolveStopPromise();
-        }
-      });
-    });
+    };
+    process.on('SIGINT', () => handleSignal('SIGINT'));
+    process.on('SIGTERM', () => handleSignal('SIGTERM'));
+    process.on('SIGHUP', () => handleSignal('SIGHUP'));
   }
 
   private cleanUpUnneededContinuousTasks() {

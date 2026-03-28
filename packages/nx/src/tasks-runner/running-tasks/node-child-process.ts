@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import treeKill from 'tree-kill';
+import { killProcessTree, killProcessTreeGraceful } from '../../native';
 import { signalToCode } from '../../utils/exit-codes';
 import { addPrefixTransformer, getColor } from './output-prefix';
 import type { RunningTask } from './running-task';
@@ -109,12 +109,11 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     }
   }
 
-  public kill(signal?: NodeJS.Signals) {
+  public kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.childProcess?.pid) {
-      treeKill(this.childProcess.pid, signal, () => {
-        // Ignore errors - process may have already exited
-      });
+      return killProcessTreeGraceful(this.childProcess.pid, signal);
     }
+    return Promise.resolve();
   }
 }
 
@@ -194,11 +193,10 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
     return this.terminalOutput;
   }
 
-  kill(signal?: NodeJS.Signals): void {
+  kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.childProcess?.pid) {
-      treeKill(this.childProcess.pid, signal, () => {
-        // Ignore errors - process may have already exited
-      });
+      return killProcessTreeGraceful(this.childProcess.pid, signal);
     }
+    return Promise.resolve();
   }
 }
