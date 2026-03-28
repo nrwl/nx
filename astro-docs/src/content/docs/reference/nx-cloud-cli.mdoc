@@ -109,6 +109,243 @@ If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower
 npx nx-cloud convert-to-nx-cloud-id
 ```
 
+### `nx-cloud onboard`
+
+Connect a workspace to Nx Cloud. This command supports an interactive onboarding wizard for humans and JSON-based subcommands for automation and AI agents.
+
+Authentication is required before using this command. Either run `nx login` first or configure a personal access token with `nx-cloud configure`.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard [subcommand] [options]
+```
+
+- Without flags, this starts the interactive onboarding wizard.
+- With `--no-interactive`, it runs an automation-friendly flow.
+- With `--no-interactive` and explicit workspace creation flags such as `--repo`, `--template`, or `--detect-repo`, it routes to `workspace create`.
+- With `--no-interactive` and no explicit creation flags, it routes to `connect-workspace` and defaults to JSON output.
+
+#### Options
+
+| Option             | Type    | Description                                                          | Default |
+| ------------------ | ------- | -------------------------------------------------------------------- | ------- |
+| `--json`           | boolean | Output JSON for scripting                                            | `false` |
+| `--token`          | string  | Use a specific Nx Cloud access token for this invocation             |         |
+| `--no-interactive` | boolean | Disable interactive prompts                                          | `false` |
+| `--workspace-name` | string  | Alias for `--name`                                                   |         |
+| `--name`           | string  | Workspace or organization name, depending on the selected flow       |         |
+| `--org`            | string  | Organization ID to use                                               |         |
+| `--detect-repo`    | boolean | Auto-detect the current Git repository                               | `false` |
+| `--write-config`   | boolean | Write the returned `nxCloudId` to `nx.json` after workspace creation | `false` |
+
+#### Examples
+
+```shell
+npx nx-cloud onboard
+npx nx-cloud onboard --no-interactive --json
+npx nx-cloud onboard --no-interactive --org=org_123 --detect-repo --write-config
+```
+
+#### Subcommands
+
+##### `nx-cloud onboard status`
+
+Show onboarding status for the authenticated user, including organizations and GitHub connection state.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard status
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard connect-workspace`
+
+One-shot command intended for agents and automated flows. It:
+
+1. Detects the current repository from git remotes.
+2. Selects or creates an organization.
+3. Checks GitHub connection status.
+4. Creates an Nx Cloud workspace from the repository.
+5. Writes `nxCloudId` to `nx.json` when possible.
+
+If GitHub authentication is required, JSON mode returns an `actionRequired` payload instead of failing the command.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard connect-workspace
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+| `--org`  | string  | Organization ID to use    |         |
+| `--name` | string  | Workspace name override   |         |
+
+```shell
+npx nx-cloud onboard connect-workspace --json
+npx nx-cloud onboard connect-workspace --org=org_123 --name=my-workspace
+```
+
+##### `nx-cloud onboard connect github`
+
+Start GitHub device-flow authentication.
+
+- In interactive mode, this prints instructions, attempts to open the browser, and polls until authorization completes.
+- In JSON mode, this returns the device-flow payload and leaves polling to the caller.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard connect github
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard connect github poll`
+
+Poll for completion of a GitHub device-flow authentication started with `connect github`.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard connect github poll --device-code <code>
+```
+
+| Option          | Type    | Description                       | Default |
+| --------------- | ------- | --------------------------------- | ------- |
+| `--device-code` | string  | Device code returned by `connect` |         |
+| `--json`        | boolean | Output JSON for scripting         | `false` |
+
+##### `nx-cloud onboard orgs list`
+
+List organizations available to the authenticated user.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard orgs list
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard orgs create`
+
+Create a new organization.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard orgs create <name>
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard repos list`
+
+List repositories available to an organization.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard repos list --org <org-id>
+```
+
+| Option       | Type    | Description                        | Default |
+| ------------ | ------- | ---------------------------------- | ------- |
+| `--org`      | string  | Organization ID                    |         |
+| `--search`   | string  | Filter repositories by search term |         |
+| `--page`     | number  | Page number to fetch               |         |
+| `--per-page` | number  | Number of repositories per page    |         |
+| `--json`     | boolean | Output JSON for scripting          | `false` |
+
+##### `nx-cloud onboard templates list`
+
+List available Nx Cloud workspace templates.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard templates list
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard vcs status`
+
+Show GitHub App connection status for an organization.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard vcs status --org <org-id>
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--org`  | string  | Organization ID           |         |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard workspace create`
+
+Create a workspace either from an existing repository or from a template.
+
+Use exactly one of:
+
+- `--repo` with `--repo-full-name`
+- `--template`
+- `--detect-repo`
+
+When `--write-config` is provided, the command attempts to add the returned `nxCloudId` to `nx.json`.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard workspace create --org <org-id> [options]
+```
+
+| Option                  | Type    | Description                                                          | Default |
+| ----------------------- | ------- | -------------------------------------------------------------------- | ------- |
+| `--org`                 | string  | Organization ID                                                      |         |
+| `--name`                | string  | Workspace name                                                       |         |
+| `--workspace-name`      | string  | Alias for `--name`                                                   |         |
+| `--repo`                | string  | Repository ID for an existing repository                             |         |
+| `--repo-full-name`      | string  | Repository full name in `owner/repo` format                          |         |
+| `--default-branch`      | string  | Default branch for an existing repository                            | `main`  |
+| `--template`            | string  | Template ID for template-based workspace creation                    |         |
+| `--github-organization` | string  | GitHub organization for template-based workspace creation            |         |
+| `--repo-name`           | string  | Repository name override for template-based workspace creation       |         |
+| `--private`             | boolean | Mark the created workspace repository as private                     | `true`  |
+| `--installation-id`     | string  | GitHub App installation ID override for existing repositories        |         |
+| `--detect-repo`         | boolean | Auto-detect the current repository and populate repository arguments | `false` |
+| `--write-config`        | boolean | Write the returned `nxCloudId` to `nx.json`                          | `false` |
+| `--json`                | boolean | Output JSON for scripting                                            | `false` |
+
+```shell
+npx nx-cloud onboard workspace create --org=org_123 --repo=repo_456 --repo-full-name=acme/web --name=web
+npx nx-cloud onboard workspace create --org=org_123 --detect-repo --write-config
+npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name=demo
+```
+
+#### Automation notes
+
+- `--json` is supported across all onboarding subcommands intended for scripting.
+- `connect-workspace` is the best entry point for AI agents because it can detect the repository, create an organization when needed, and return actionable JSON when GitHub authorization is required.
+- `connect github --json` starts device flow, and `connect github poll --device-code ... --json` can be used to poll for completion.
+
 ### `nx-cloud start-ci-run`
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
