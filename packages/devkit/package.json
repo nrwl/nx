@@ -52,29 +52,29 @@
   "exports": {
     ".": {
       "@nx/nx-source": "./index.ts",
-      "types": "./index.d.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./internal": {
       "@nx/nx-source": "./internal.ts",
-      "types": "./internal.d.ts",
+      "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
     },
     "./internal-testing-utils": {
       "@nx/nx-source": "./internal-testing-utils.ts",
-      "types": "./internal-testing-utils.d.ts",
+      "types": "./dist/internal-testing-utils.d.ts",
       "default": "./dist/internal-testing-utils.js"
     },
     "./ngcli-adapter": {
       "@nx/nx-source": "./ngcli-adapter.ts",
-      "types": "./ngcli-adapter.d.ts",
+      "types": "./dist/ngcli-adapter.d.ts",
       "default": "./dist/ngcli-adapter.js"
     },
     "./testing": {
       "@nx/nx-source": "./testing.ts",
-      "types": "./testing.d.ts",
+      "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
     }
   }
