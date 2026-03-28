@@ -178,6 +178,103 @@ describe('@nx/vite/plugin', () => {
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
 
+    it('should resolve second tsconfig path value with custom build and test targets', () => {
+      const myApp = uniq('myapp');
+      const myBuildableLib = uniq('mybuildablelib');
+      runCLI(
+        `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library ${myBuildableLib} --directory=libs/${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
+      );
+
+      updateJson(`apps/${myApp}/project.json`, (json) => {
+        json.targets['test-ci'] = { ...json.targets.test };
+        return json;
+      });
+      updateJson(`libs/${myBuildableLib}/project.json`, (json) => {
+        json.targets['build-ci'] = { ...json.targets.build };
+        return json;
+      });
+
+      updateFile(
+        `apps/${myApp}/vite.config.mts`,
+        `/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/${myApp}',
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+  plugins: [
+    react(),
+    nxViteTsPaths({
+      buildLibsFromSource: false,
+      buildTarget: 'build-ci',
+      testTarget: 'test-ci',
+    }),
+  ],
+  build: {
+    outDir: '../../dist/apps/${myApp}',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/${myApp}',
+      provider: 'v8',
+    },
+  },
+});
+`
+      );
+
+      const exportedLibraryComponent = names(myBuildableLib).className;
+      updateFile(
+        `apps/${myApp}/src/app/app.spec.tsx`,
+        `
+        import { render } from '@testing-library/react';
+        import { App } from './app';
+        import { ${exportedLibraryComponent} } from 'multi-path-lib';
+
+        describe('App', () => {
+          it('should render successfully', () => {
+            const { baseElement } = render(<App />);
+            expect(baseElement).toBeTruthy();
+            expect(${exportedLibraryComponent}).toBeDefined();
+          });
+        });
+        `
+      );
+
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['multi-path-lib'] = [
+          `libs/does-not-exist/src/index.ts`,
+          `libs/${myBuildableLib}/src/index.ts`,
+        ];
+        return json;
+      });
+
+      expect(() => runCLI(`run ${myApp}:test-ci --watch=false`)).not.toThrow();
+    });
+
     it('should support importing files with "." in the name in tsconfig path', () => {
       const mylib = uniq('mylib');
       runCLI(
