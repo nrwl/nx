@@ -136,4 +136,25 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
 
     expect(newVersion).toBe('9.9.9');
   });
+
+  it('ignores non-string versionActionsVersion values', async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: undefined,
+        versionSchemes: { prod: '{versionActionsVersion}' },
+      },
+    };
+
+    const { newVersion } = await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      'prod',
+      undefined,
+      { invalid: true }
+    );
+
+    expect(newVersion).toBeNull();
+  });
 });
