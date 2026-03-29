@@ -6,34 +6,32 @@
     "nx": "workspace:*"
   },
   "scripts": {
-    "bench": "npm run bench:version && npm run bench:show-projects && npm run bench:graph && npm run bench:lint-warm && npm run bench:build-warm",
-    "bench:version": "hyperfine --warmup 3 --min-runs 10 --export-json results-version.json 'nx --version'",
-    "bench:show-projects": "hyperfine --warmup 2 --min-runs 5 --export-json results-show-projects.json 'nx show projects --tui=false'",
-    "bench:graph": "hyperfine --warmup 2 --min-runs 5 --export-json results-graph.json 'nx graph --file=output.json --tui=false'",
+    "bench": "tsx run-benchmarks.ts",
+    "bench:version": "hyperfine --warmup 1 --min-runs 10 --export-json results-version.json 'nx --version'",
+    "bench:show-projects": "hyperfine --warmup 1 --min-runs 5 --export-json results-show-projects.json 'nx show projects --tui=false'",
     "bench:lint-warm": "hyperfine --warmup 1 --min-runs 5 --export-json results-lint-warm.json 'nx run-many -t lint --tui=false'",
-    "bench:build-warm": "hyperfine --warmup 1 --min-runs 5 --export-json results-build-warm.json 'nx run-many -t build --tui=false'"
+    "disabled:bench:build-warm": "hyperfine --warmup 1 --min-runs 5 --export-json results-build-warm.json 'nx run-many -t build --tui=false'"
   },
   "nx": {
     "targets": {
       "bench": {
-        "dependsOn": [
-          "^build"
-        ]
+        "dependsOn": ["bench:*"]
+      },
+      "bench:version": {
+        "dependsOn": ["^build"],
+        "parallelism": false
       },
       "bench:show-projects": {
-        "dependsOn": [
-          "^build"
-        ]
+        "dependsOn": ["^build"],
+        "parallelism": false
       },
-      "bench:graph": {
-        "dependsOn": [
-          "^build"
-        ]
+      "bench:lint-warm": {
+        "dependsOn": ["^build"],
+        "parallelism": false
       },
-      "bench:build-warm": {
-        "dependsOn": [
-          "^build"
-        ]
+      "disabled:bench:build-warm": {
+        "dependsOn": ["^build"],
+        "parallelism": false
       }
     }
   }

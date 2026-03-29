@@ -1428,6 +1428,12 @@ importers:
         specifier: 4.1.11
         version: 4.1.11
 
+  benchmarks:
+    dependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../packages/nx
+
   e2e/angular:
     dependencies:
       '@nx/devkit':
