@@ -1,0 +1,7 @@
+{
+  "name": "group-09",
+  "targets": {
+    "build": {},
+    "lint": {}
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "../node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "command": "mkdir -p {projectRoot}/dist && cp lorem.md {projectRoot}/dist/output.md",
+      "dependsOn": ["^build"],
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/lorem.md",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
+    },
+    "lint": {
+      "command": "echo lint {projectName}",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/**/*"
+      ]
+    }
+  },
+  "analytics": false,
+  "parallel": 5
+}

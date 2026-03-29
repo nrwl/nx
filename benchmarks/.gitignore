@@ -1,0 +1,5 @@
+.nx
+node_modules
+results-*.json
+output.json
+**/dist

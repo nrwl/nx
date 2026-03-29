@@ -1,0 +1,8 @@
+{
+  "name": "group-04-sub-03-leaf-06",
+  "implicitDependencies": ["group-04-sub-03"],
+  "targets": {
+    "build": {},
+    "lint": {}
+  }
+}
