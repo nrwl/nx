@@ -56,6 +56,8 @@ import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object';
 import { yargsShowCommand } from './show/command-object';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { yargsWatchCommand } from './watch/command-object';
+import { yargsCompletionCommand } from './completion/command-object';
+import { completionHandler } from './completion/completion-handler';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -120,10 +122,16 @@ export const commandsObject = yargs
   .command(yargsApplyLocallyCommand)
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
+  .command(yargsCompletionCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
+  .completion('--get-yargs-completions', false, completionHandler)
   .scriptName('nx')
   .middleware((args) => {
+    // Skip analytics during shell completion
+    if (process.argv.includes('--get-yargs-completions')) {
+      return;
+    }
     const context = (commandsObject as any).getInternalMethods().getContext();
     const command =
       (context.commands ?? []).join(' ') ||

@@ -37,11 +37,22 @@ const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
+  // Shell tab-completion fast path. Yargs' built-in completion is broken by
+  // our `parserConfiguration({'strip-dashed': true})` — the --get-yargs-
+  // completions flag isn't recognized, so yargs falls through to normal
+  // command matching and fires handlers instead of emitting completions.
+  // Handle completion here before any yargs / workspace init runs.
+  if (process.argv.includes('--get-yargs-completions')) {
+    require('../src/command-line/completion/fast-complete').runFastCompletion();
+    return;
+  }
+
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help' &&
-    process.argv[2] !== 'reset'
+    process.argv[2] !== 'reset' &&
+    process.argv[2] !== 'completion'
   ) {
     const { assertSupportedPlatform } = await import(
       '../src/native/assert-supported-platform.js'
