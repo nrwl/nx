@@ -3,6 +3,31 @@ import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
 
+/**
+ * Meta payload types for recordStat telemetry (matches CNW format).
+ */
+export interface RecordStatMetaStart {
+  type: 'start';
+  [key: string]: string | boolean;
+}
+
+export interface RecordStatMetaComplete {
+  type: 'complete';
+  [key: string]: string | boolean;
+}
+
+export interface RecordStatMetaError {
+  type: 'error';
+  errorCode: string;
+  errorMessage: string;
+  [key: string]: string | boolean;
+}
+
+export type RecordStatMeta =
+  | RecordStatMetaStart
+  | RecordStatMetaComplete
+  | RecordStatMetaError;
+
 export type MessageOptionKey = 'yes' | 'skip';
 
 const messageOptions = {
@@ -73,7 +98,7 @@ export async function recordStat(opts: {
   command: string;
   nxVersion: string;
   useCloud: boolean;
-  meta?: string;
+  meta?: RecordStatMeta;
 }) {
   try {
     if (!shouldRecordStats()) {
@@ -89,7 +114,9 @@ export async function recordStat(opts: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: `${opts.nxVersion}${opts.meta ? ',' + opts.meta : ''}`,
+        meta: opts.meta
+          ? JSON.stringify({ ...opts.meta, nxVersion: opts.nxVersion })
+          : opts.nxVersion,
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

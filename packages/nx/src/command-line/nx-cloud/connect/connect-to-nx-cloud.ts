@@ -18,6 +18,9 @@ import {
   messages,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
+import { isCI } from '../../../utils/is-ci';
+import { isAiAgent } from '../../../native';
+import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import * as pc from 'picocolors';
@@ -172,7 +175,15 @@ export async function connectExistingRepoToNxCloudPrompt(
     command,
     nxVersion,
     useCloud: res,
-    meta: messages.codeOfSelectedPromptMessage(key),
+    meta: {
+      type: 'complete',
+      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: isAiAgent(),
+      isCI: isCI(),
+    },
   });
   return res;
 }
@@ -187,7 +198,16 @@ export async function connectToNxCloudWithPrompt(command: string) {
     command,
     nxVersion,
     useCloud,
-    meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
+    meta: {
+      type: 'complete',
+      setupCloudPrompt:
+        messages.codeOfSelectedPromptMessage('setupNxCloud') || '',
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: isAiAgent(),
+      isCI: isCI(),
+    },
   });
 }
 
