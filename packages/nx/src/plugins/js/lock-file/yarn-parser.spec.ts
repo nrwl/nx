@@ -19,7 +19,8 @@ jest.mock('node:fs', () => {
   };
 });
 
-const { readFileSync: realReadFileSync } = jest.requireActual<typeof import('fs')>('fs');
+const { readFileSync: realReadFileSync } =
+  jest.requireActual<typeof import('fs')>('fs');
 function loadJsonFixture(path: string) {
   return JSON.parse(realReadFileSync(path, 'utf-8'));
 }
@@ -235,7 +236,10 @@ describe('yarn LockFile utility', () => {
 
     it('should prune lock file', async () => {
       const appPackageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package.json.fixture'
+        )
       );
 
       // this is our pruned lock file structure
@@ -255,7 +259,10 @@ describe('yarn LockFile utility', () => {
 
     it('should match pruned lock file', () => {
       const appPackageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package.json.fixture'
+        )
       );
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
       const result = stringifyYarnLockfile(
@@ -1493,7 +1500,10 @@ nx-cloud@latest:
         joinPathFragments(__dirname, '__fixtures__/optional/yarn.lock')
       ).default;
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/optional/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/package.json.fixture'
+        )
       );
 
       const hash = uniq('mock-hash');
@@ -1717,7 +1727,10 @@ nx-cloud@latest:
         )
       );
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/pruning/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/package.json.fixture'
+        )
       );
 
       const hash = uniq('mock-hash');
@@ -1791,7 +1804,10 @@ nx-cloud@latest:
         )
       );
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/pruning/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/package.json.fixture'
+        )
       );
 
       const hash = uniq('mock-hash');
@@ -1869,7 +1885,10 @@ nx-cloud@latest:
         joinPathFragments(__dirname, '__fixtures__/workspaces/yarn.lock')
       ).default;
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/workspaces/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/package.json.fixture'
+        )
       );
       const hash = uniq('mock-hash');
       const { nodes: externalNodes } = getYarnLockfileNodes(
@@ -1886,7 +1905,10 @@ nx-cloud@latest:
         joinPathFragments(__dirname, '__fixtures__/workspaces/yarn.lock.berry')
       ).default;
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/workspaces/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/package.json.fixture'
+        )
       );
       const hash = uniq('mock-hash');
       const { nodes: externalNodes } = getYarnLockfileNodes(
@@ -2219,7 +2241,10 @@ __metadata:
         joinPathFragments(__dirname, '__fixtures__/mixed-keys/yarn.lock')
       ).default;
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const hash = uniq('mock-hash');
@@ -2469,7 +2494,10 @@ __metadata:
         joinPathFragments(__dirname, '__fixtures__/mixed-keys/yarn-berry.lock')
       ).default;
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const hash = uniq('mock-hash');

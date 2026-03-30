@@ -24,7 +24,8 @@ jest.mock('node:fs', () => {
   };
 });
 
-const { readFileSync: realReadFileSync } = jest.requireActual<typeof import('fs')>('fs');
+const { readFileSync: realReadFileSync } =
+  jest.requireActual<typeof import('fs')>('fs');
 function loadJsonFixture(path: string) {
   return JSON.parse(realReadFileSync(path, 'utf-8'));
 }
@@ -196,7 +197,10 @@ describe('pnpm LockFile utility', () => {
 
       it('should prune lock file', async () => {
         const appPackageJson = loadJsonFixture(
-          joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json.fixture')
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/nextjs/app/package.json.fixture'
+          )
         );
 
         // this is our pruned lock file structure
@@ -273,7 +277,10 @@ describe('pnpm LockFile utility', () => {
 
       it('should prune lock file', async () => {
         const appPackageJson = loadJsonFixture(
-          joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json.fixture')
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/nextjs/app/package.json.fixture'
+          )
         );
         // this is original generated lock file
         const appLockFile = require(
@@ -694,7 +701,10 @@ describe('pnpm LockFile utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/optional/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/package.json.fixture'
+        )
       );
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       expect(Object.keys(prunedGraph.externalNodes).length).toEqual(8);
@@ -1140,7 +1150,10 @@ describe('pnpm LockFile utility', () => {
       lockFileHash = '__fixtures__/mixed-keys/pnpm-lock.yaml';
 
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
@@ -1398,7 +1411,10 @@ describe('pnpm LockFile utility', () => {
       lockFileHash = '__fixtures__/mixed-keys/pnpm-lock-v9.yaml';
 
       const packageJson = loadJsonFixture(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json.fixture')
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
