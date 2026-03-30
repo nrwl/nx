@@ -2,6 +2,7 @@
   "name": "group-09",
   "targets": {
     "build": {},
-    "lint": {}
+    "lint": {},
+    "cat": {}
   }
 }

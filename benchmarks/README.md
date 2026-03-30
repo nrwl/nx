@@ -34,12 +34,13 @@ Then commit `benchmarks/baseline.json`.
 
 ## Benchmarks
 
-| Benchmark       | What it measures                                           |
-| --------------- | ---------------------------------------------------------- |
-| `version`       | CLI startup time (`nx --version`)                          |
-| `show-projects` | Project graph query speed                                  |
-| `lint-warm`     | 1110 cached lint tasks (flat, no deps)                     |
-| `build-warm`    | 1110 cached build tasks (topological, 3 levels) — disabled |
+| Benchmark       | Command                    | Outputs | Dependencies | What it measures                          |
+| --------------- | -------------------------- | ------- | ------------ | ----------------------------------------- |
+| `version`       | `nx --version`             | —       | —            | CLI startup / module loading              |
+| `show-projects` | `nx show projects`         | —       | —            | Project graph query via daemon             |
+| `cat-warm`      | `cat lorem.md` × 1110      | No      | Flat         | Task scheduling + hashing (no output I/O) |
+| `lint-warm`     | `cp lorem.md` × 1110       | Yes     | Flat         | Cached tasks with output tracking          |
+| `build-warm`    | `cp lorem.md` × 1110       | Yes     | Topological  | Cached tasks with deps (disabled)          |
 
 ## Regression Detection
 

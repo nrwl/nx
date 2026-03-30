@@ -1,6 +1,9 @@
 /**
- * Reads hyperfine JSON results and compares against a committed baseline.
- * Run with --update-baseline to save current results as the new baseline.
+ * Reads hyperfine JSON results and compares against:
+ * - goals.json (committed) — target times the team agrees on
+ * - baseline.json (gitignored) — local per-machine baseline for personal comparison
+ *
+ * Run with --update-baseline to save current results as the new local baseline.
  */
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -17,23 +20,13 @@ interface Baseline {
   [name: string]: { mean: number };
 }
 
-const benchmarkNames = ['version', 'show-projects', 'lint-warm', 'build-warm'];
+interface Goals {
+  [name: string]: { max: number };
+}
 
 const rootDir = __dirname;
 const baselinePath = join(rootDir, 'baseline.json');
-
-function loadResult(name: string): HyperfineResult | null {
-  const file = join(rootDir, `results-${name}.json`);
-  if (!existsSync(file)) return null;
-  const raw = JSON.parse(readFileSync(file, 'utf-8'));
-  return raw.results[0];
-}
-
-function formatMs(seconds: number): string {
-  const ms = seconds * 1000;
-  if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`;
-  return `${ms.toFixed(0)}ms`;
-}
+const goalsPath = join(rootDir, 'goals.json');
 
 const colors = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -44,6 +37,23 @@ const colors = {
   dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
 };
 
+function loadResult(name: string): HyperfineResult | null {
+  const file = join(rootDir, `results-${name}.json`);
+  if (!existsSync(file)) return null;
+  try {
+    const raw = JSON.parse(readFileSync(file, 'utf-8'));
+    return raw.results[0];
+  } catch {
+    return null;
+  }
+}
+
+function formatMs(seconds: number): string {
+  const ms = seconds * 1000;
+  if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`;
+  return `${ms.toFixed(0)}ms`;
+}
+
 function formatDelta(current: number, baseline: number): string {
   const pct = ((current - baseline) / baseline) * 100;
   const sign = pct >= 0 ? '+' : '';
@@ -53,13 +63,26 @@ function formatDelta(current: number, baseline: number): string {
 function main() {
   const updateBaseline = process.argv.includes('--update-baseline');
 
-  // Load baseline
+  // Load goals (committed)
+  let goals: Goals = {};
+  if (existsSync(goalsPath)) {
+    goals = JSON.parse(readFileSync(goalsPath, 'utf-8'));
+  }
+
+  // Load baseline (local, gitignored)
   let baseline: Baseline = {};
   if (existsSync(baselinePath)) {
     baseline = JSON.parse(readFileSync(baselinePath, 'utf-8'));
   }
 
-  // Collect results
+  const benchmarkNames = [
+    'version',
+    'show-projects',
+    'cat-warm',
+    'lint-warm',
+    'build-warm',
+  ];
+
   const results: Record<string, HyperfineResult> = {};
   for (const name of benchmarkNames) {
     const result = loadResult(name);
@@ -75,48 +98,51 @@ function main() {
 
   // Display results
   console.log('');
-  const nameWidth = 20;
-  const colWidth = 12;
+  const col = { name: 16, time: 10 };
+
   const header = [
-    colors.bold('Benchmark'.padEnd(nameWidth)),
-    colors.dim('Baseline'.padStart(colWidth)),
-    colors.bold('Current'.padStart(colWidth)),
-    colors.bold('Delta'.padStart(colWidth)),
-    '',
+    colors.bold('Benchmark'.padEnd(col.name)),
+    colors.dim('Goal'.padStart(col.time)),
+    colors.dim('Baseline'.padStart(col.time)),
+    colors.bold('Current'),
   ].join('  ');
   console.log(header);
-  console.log(colors.dim('─'.repeat(nameWidth + colWidth * 3 + 16)));
+  console.log(colors.dim('─'.repeat(col.name + col.time * 2 + 40)));
 
   for (const name of benchmarkNames) {
     const result = results[name];
     if (!result) continue;
 
+    const goal = goals[name];
     const base = baseline[name];
-    const current = formatMs(result.mean);
 
-    let baseStr = '—';
-    let deltaStr = '';
+    // Build colored deltas: (goalDelta | baselineDelta)
+    const deltas: string[] = [];
+
+    if (goal) {
+      const raw = formatDelta(result.mean, goal.max);
+      deltas.push(
+        result.mean <= goal.max ? colors.green(raw) : colors.red(raw)
+      );
+    }
 
     if (base) {
-      baseStr = formatMs(base.mean);
-      const delta = (result.mean - base.mean) / base.mean;
-      deltaStr = formatDelta(result.mean, base.mean);
-
-      let colorDelta: (s: string) => string = colors.dim;
-      if (delta < -0.1) {
-        colorDelta = colors.green;
-      } else if (delta > 0.1) {
-        colorDelta = colors.red;
-      }
-      deltaStr = colorDelta(deltaStr.padStart(colWidth));
+      const raw = formatDelta(result.mean, base.mean);
+      const ratio = (result.mean - base.mean) / base.mean;
+      const colorFn =
+        ratio < -0.1 ? colors.green : ratio > 0.1 ? colors.red : colors.dim;
+      deltas.push(colorFn(raw));
     }
+
+    const deltaSuffix =
+      deltas.length > 0 ? ` (${deltas.join(colors.dim(' | '))})` : '';
 
     console.log(
       [
-        colors.cyan(name.padEnd(nameWidth)),
-        colors.dim(baseStr.padStart(colWidth)),
-        current.padStart(colWidth),
-        deltaStr ? deltaStr : ' '.repeat(colWidth),
+        colors.cyan(name.padEnd(col.name)),
+        colors.dim((goal ? formatMs(goal.max) : '—').padStart(col.time)),
+        colors.dim((base ? formatMs(base.mean) : '—').padStart(col.time)),
+        `${formatMs(result.mean)}${deltaSuffix}`,
       ].join('  ')
     );
   }

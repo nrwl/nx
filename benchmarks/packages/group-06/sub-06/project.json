@@ -1,8 +1,11 @@
 {
   "name": "group-06-sub-06",
-  "implicitDependencies": ["group-06"],
+  "implicitDependencies": [
+    "group-06"
+  ],
   "targets": {
     "build": {},
-    "lint": {}
+    "lint": {},
+    "cat": {}
   }
 }
