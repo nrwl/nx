@@ -327,18 +327,37 @@ export function formatAggregateCreateNodesError(
   ];
   const errorStackLines = [];
 
-  const innerErrors = error.errors;
-  for (const [file, e] of innerErrors) {
-    if (file) {
-      errorBodyLines.push(`  - ${file}: ${e.message}`);
-      errorStackLines.push(` - ${file}: ${e.stack}`);
-    } else {
-      errorBodyLines.push(`  - ${e.message}`);
-      errorStackLines.push(` - ${e.stack}`);
+  // Group errors by file so repeated file paths aren't printed multiple times
+  const groupedErrors = new Map<string | null, Error[]>();
+  for (const [file, e] of error.errors) {
+    const key = file ?? null;
+    if (!groupedErrors.has(key)) {
+      groupedErrors.set(key, []);
     }
-    if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
-      const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
-      errorStackLines.push(innerStackTrace);
+    groupedErrors.get(key).push(e);
+  }
+
+  for (const [file, errors] of groupedErrors) {
+    if (file) {
+      errorBodyLines.push(`  - ${file}:`);
+      errorStackLines.push(` - ${file}:`);
+    }
+    for (const e of errors) {
+      const messageIndent = file ? '      ' : '  - ';
+      const stackIndent = file ? '     ' : ' - ';
+      errorBodyLines.push(
+        ...e.message.split('\n').map((line) => `${messageIndent}${line}`)
+      );
+      errorStackLines.push(
+        ...e.stack.split('\n').map((line) => `${stackIndent}${line}`)
+      );
+      if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
+        const innerStackTrace = e.stack
+          .split('\n')
+          .map((line) => `${stackIndent}  ${line}`)
+          .join('\n');
+        errorStackLines.push(innerStackTrace);
+      }
     }
   }
 
