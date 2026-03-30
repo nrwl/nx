@@ -15,22 +15,32 @@
   "nx": {
     "targets": {
       "bench": {
-        "dependsOn": ["bench:*"]
+        "dependsOn": [
+          "bench:*"
+        ]
       },
       "bench:version": {
-        "dependsOn": ["^build"],
+        "dependsOn": [
+          "^build"
+        ],
         "parallelism": false
       },
       "bench:show-projects": {
-        "dependsOn": ["^build"],
+        "dependsOn": [
+          "^build"
+        ],
         "parallelism": false
       },
       "bench:lint-warm": {
-        "dependsOn": ["^build"],
+        "dependsOn": [
+          "^build"
+        ],
         "parallelism": false
       },
       "disabled:bench:build-warm": {
-        "dependsOn": ["^build"],
+        "dependsOn": [
+          "^build"
+        ],
         "parallelism": false
       }
     }

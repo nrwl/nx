@@ -19,12 +19,7 @@ interface Baseline {
 
 const REGRESSION_THRESHOLD = 0.2; // 20%
 
-const benchmarkNames = [
-  'version',
-  'show-projects',
-  'lint-warm',
-  'build-warm',
-];
+const benchmarkNames = ['version', 'show-projects', 'lint-warm', 'build-warm'];
 
 const rootDir = __dirname;
 const baselinePath = join(rootDir, 'baseline.json');
@@ -65,7 +60,9 @@ function main() {
   }
 
   if (Object.keys(results).length === 0) {
-    console.error('No benchmark results found. Run individual benchmarks first.');
+    console.error(
+      'No benchmark results found. Run individual benchmarks first.'
+    );
     process.exit(1);
   }
 

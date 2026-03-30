@@ -34,12 +34,12 @@ Then commit `benchmarks/baseline.json`.
 
 ## Benchmarks
 
-| Benchmark | What it measures |
-|---|---|
-| `version` | CLI startup time (`nx --version`) |
-| `show-projects` | Project graph query speed |
-| `lint-warm` | 1110 cached lint tasks (flat, no deps) |
-| `build-warm` | 1110 cached build tasks (topological, 3 levels) — disabled |
+| Benchmark       | What it measures                                           |
+| --------------- | ---------------------------------------------------------- |
+| `version`       | CLI startup time (`nx --version`)                          |
+| `show-projects` | Project graph query speed                                  |
+| `lint-warm`     | 1110 cached lint tasks (flat, no deps)                     |
+| `build-warm`    | 1110 cached build tasks (topological, 3 levels) — disabled |
 
 ## Regression Detection
 

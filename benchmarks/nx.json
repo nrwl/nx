@@ -10,16 +10,12 @@
         "{workspaceRoot}/lorem.md",
         { "dependentTasksOutputFiles": "**/*" }
       ],
-      "outputs": [
-        "{projectRoot}/dist"
-      ]
+      "outputs": ["{projectRoot}/dist"]
     },
     "lint": {
       "command": "echo lint {projectName}",
       "cache": true,
-      "inputs": [
-        "{projectRoot}/**/*"
-      ]
+      "inputs": ["{projectRoot}/**/*"]
     }
   },
   "analytics": false,
