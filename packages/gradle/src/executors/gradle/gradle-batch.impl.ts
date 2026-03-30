@@ -121,7 +121,7 @@ export function getGradlewTasksToRun(
   for (const taskId of taskIds) {
     const task = taskGraph.tasks[taskId];
     const input = inputs[task.id];
-    const pt: ProjectTarget = {
+    const taskTarget: ProjectTarget = {
       project: task.target.project,
       target: task.target.target,
     };
@@ -136,12 +136,12 @@ export function getGradlewTasksToRun(
 
     if (input.excludeDependsOn) {
       if (input.testClassName) {
-        testTasksWithExclude.add(pt);
+        testTasksWithExclude.add(taskTarget);
       } else {
-        tasksWithExclude.add(pt);
+        tasksWithExclude.add(taskTarget);
       }
     } else {
-      tasksWithoutExclude.add(pt);
+      tasksWithoutExclude.add(taskTarget);
     }
   }
 
@@ -151,8 +151,8 @@ export function getGradlewTasksToRun(
       target: taskGraph.tasks[id].target.target,
     }))
   );
-  for (const pt of tasksWithoutExclude) {
-    const dependencies = getAllDependsOn(nodes, pt.project, pt.target);
+  for (const task of tasksWithoutExclude) {
+    const dependencies = getAllDependsOn(nodes, task.project, task.target);
     dependencies.forEach((dep) => allRunning.add(dep));
   }
 
@@ -164,13 +164,13 @@ export function getGradlewTasksToRun(
   );
 
   const allTestsDependsOn = new Set<ProjectTarget>();
-  for (const pt of testTasksWithExclude) {
-    const taskDependsOn = getAllDependsOn(nodes, pt.project, pt.target);
+  for (const task of testTasksWithExclude) {
+    const taskDependsOn = getAllDependsOn(nodes, task.project, task.target);
     taskDependsOn.forEach((dep) => allTestsDependsOn.add(dep));
   }
   const excludeTestTasks = new Set<string>();
-  for (const pt of allTestsDependsOn) {
-    const gradleTaskName = getGradleTaskName(pt, nodes);
+  for (const task of allTestsDependsOn) {
+    const gradleTaskName = getGradleTaskName(task, nodes);
     if (gradleTaskName) {
       excludeTestTasks.add(gradleTaskName);
     }
