@@ -7,10 +7,10 @@
   },
   "scripts": {
     "bench": "tsx run-benchmarks.ts",
-    "bench:version": "hyperfine --show-output --warmup 1 --min-runs 10 --export-json results-version.json 'nx --version'",
-    "bench:show-projects": "hyperfine --show-output --warmup 1 --min-runs 5 --export-json results-show-projects.json 'nx show projects --tui=false'",
-    "bench:lint-warm": "hyperfine --show-output --warmup 1 --min-runs 5 --export-json results-lint-warm.json 'nx run-many -t lint --tui=false'",
-    "disabled:bench:build-warm": "hyperfine --show-output --warmup 1 --min-runs 5 --export-json results-build-warm.json 'nx run-many -t build --tui=false'"
+    "bench:version": "NX_NO_CLOUD=true hyperfine --show-output --warmup 1 --min-runs 10 --export-json results-version.json 'nx --version'",
+    "bench:show-projects": "NX_NO_CLOUD=true hyperfine --show-output --warmup 1 --min-runs 5 --export-json results-show-projects.json 'nx show projects --tui=false'",
+    "bench:lint-warm": "NX_NO_CLOUD=true hyperfine --show-output --warmup 1 --min-runs 5 --export-json results-lint-warm.json 'nx run-many -t lint --tui=false'",
+    "disabled:bench:build-warm": "NX_NO_CLOUD=true hyperfine --show-output --warmup 1 --min-runs 5 --export-json results-build-warm.json 'nx run-many -t build --tui=false'"
   },
   "nx": {
     "targets": {
