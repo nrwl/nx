@@ -1440,7 +1440,18 @@ async function determineAngularOptions(
     }
   }
 
+  const validAngularBundlers = ['esbuild', 'rspack', 'webpack'] as const;
   if (parsedArgs.bundler) {
+    if (
+      !validAngularBundlers.includes(
+        parsedArgs.bundler as (typeof validAngularBundlers)[number]
+      )
+    ) {
+      throw new CnwError(
+        'INVALID_BUNDLER',
+        `Invalid bundler "${parsedArgs.bundler}" for Angular. Valid options are: ${validAngularBundlers.join(', ')}`
+      );
+    }
     bundler = parsedArgs.bundler;
   } else {
     const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([
