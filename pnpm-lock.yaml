@@ -114,8 +114,8 @@ catalogs:
       specifier: ^1.1.0
       version: 1.1.1
     picomatch:
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.4
+      version: 4.0.4
     semver:
       specifier: ^7.6.3
       version: 7.7.4
@@ -390,7 +390,7 @@ importers:
         version: 4.0.1
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       preact:
         specifier: 10.25.4
         version: 10.25.4
@@ -2528,7 +2528,7 @@ importers:
         version: 1.1.1
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       rxjs:
         specifier: catalog:angular-supported-versions
         version: 7.8.2
@@ -3191,7 +3191,7 @@ importers:
         version: 1.1.1
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -3846,7 +3846,7 @@ importers:
         version: 1.1.1
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       postcss:
         specifier: ^8.4.38
         version: 8.5.3
@@ -4057,7 +4057,7 @@ importers:
         version: 2.3.6
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -4128,7 +4128,7 @@ importers:
         version: link:../web
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -4299,7 +4299,7 @@ importers:
         version: 2.3.6
       picomatch:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -46058,6 +46058,10 @@ snapshots:
   fd-slicer@1.1.0:
     dependencies:
       pend: 1.2.0
+
+  fdir@6.5.0(picomatch@4.0.4):
+    optionalDependencies:
+      picomatch: 4.0.4
 
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
