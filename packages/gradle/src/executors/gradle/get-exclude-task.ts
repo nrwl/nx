@@ -58,9 +58,7 @@ export function getExcludeTasks(
   includeDependsOnTasks: Set<string> = new Set()
 ): Set<string> {
   const excludes = new Set<string>();
-  const runningKeys = new Set(
-    Array.from(runningTasks).map(projectTargetKey)
-  );
+  const runningKeys = new Set(Array.from(runningTasks).map(projectTargetKey));
 
   for (const task of tasks) {
     const taskDeps =
@@ -87,7 +85,6 @@ export function getGradleTaskName(
   return nodes[pt.project]?.data?.targets?.[pt.target]?.options?.taskName;
 }
 
-
 export function getAllDependsOn(
   nodes: Record<string, ProjectGraphProjectNode>,
   projectName: string,
@@ -95,7 +92,10 @@ export function getAllDependsOn(
 ): Set<ProjectTarget> {
   const allDependsOn = new Set<string>();
   const result = new Set<ProjectTarget>();
-  const startKey = projectTargetKey({ project: projectName, target: targetName });
+  const startKey = projectTargetKey({
+    project: projectName,
+    target: targetName,
+  });
   const stack: ProjectTarget[] = [{ project: projectName, target: targetName }];
 
   while (stack.length > 0) {
