@@ -47,7 +47,8 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
+import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
@@ -832,18 +833,72 @@ export function validateWorkspaceName(name: string): void {
   }
 }
 
+/**
+ * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
+ * workspace name and a `workingDir` override so that downstream functions
+ * create the workspace at the intended location.
+ *
+ * @visibleForTesting
+ *
+ * Returns `{ name, workingDir }` for special inputs, or `null` if the
+ * input is a regular name that needs no special handling.
+ */
+export function resolveSpecialFolderName(
+  folderName: string
+): { name: string; workingDir: string } | null {
+  // Handle "." and "./" — user wants to init in the current directory
+  if (folderName === '.' || folderName === './') {
+    const cwd = resolve(process.cwd());
+    if (readdirSync(cwd).length > 0) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
+      );
+    }
+    return { name: basename(cwd), workingDir: dirname(cwd) };
+  }
+
+  // Handle absolute paths like /tmp/acme
+  if (isAbsolute(folderName)) {
+    const parentDir = dirname(folderName);
+    const name = basename(folderName);
+
+    if (!existsSync(parentDir)) {
+      throw new CnwError(
+        'INVALID_PATH',
+        `The parent directory "${parentDir}" does not exist.`
+      );
+    }
+
+    return { name, workingDir: parentDir };
+  }
+
+  return null;
+}
+
 async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const folderName: string = parsedArgs._[0]
+  const rawFolderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
 
-  if (folderName) {
+  if (rawFolderName) {
+    // Resolve ".", "./", and absolute paths before validation
+    const resolved = resolveSpecialFolderName(rawFolderName);
+    const folderName = resolved?.name ?? rawFolderName;
+    if (resolved?.workingDir) {
+      parsedArgs.workingDir = resolved.workingDir;
+    }
+
     validateWorkspaceName(folderName);
 
     // If directory exists, either re-prompt (interactive) or error (non-interactive)
-    if (existsSync(folderName)) {
+    // Check relative to workingDir when set (e.g. absolute path resolved to a different parent)
+    const targetDir = resolved?.workingDir
+      ? join(resolved.workingDir, folderName)
+      : folderName;
+    if (existsSync(targetDir)) {
       if (parsedArgs.interactive && !isCI()) {
         output.warn({
           title: `Directory ${folderName} already exists.`,
