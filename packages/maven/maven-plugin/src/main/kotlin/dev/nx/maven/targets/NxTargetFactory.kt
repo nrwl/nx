@@ -296,7 +296,7 @@ class NxTargetFactory(
     val target = if (isSkipped) {
       val skipProp = phaseSkipProperties[phase]
       log.info("Creating noop $phase target for ${project.artifactId} ($skipProp=true)")
-      createNoopPhaseTarget(phase)
+      createSkippedPhaseTarget(project, phase)
     } else {
       createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
     }
@@ -358,7 +358,7 @@ class NxTargetFactory(
     val ciTarget = if (isSkipped) {
       val skipProp = phaseSkipProperties[phase]
       log.info("Creating noop $phase CI target for ${project.artifactId} ($skipProp=true)")
-      createNoopPhaseTarget(phase)
+      createSkippedPhaseTarget(project, phase)
     } else if (hasGoals && phase != "test") {
       createPhaseBatchTarget(project, phase, goalsForPhase!!, externalDependencies)
     } else {
@@ -529,6 +529,18 @@ class NxTargetFactory(
   ): NxTarget {
     log.info("Creating noop target for phase '$phase' (no goals)")
     return NxTarget("nx:noop", null, cache = true, continuous = false)
+  }
+
+  private fun createSkippedPhaseTarget(
+    project: MavenProject,
+    phase: String
+  ): NxTarget {
+    log.info("Creating skipped phase target for '$phase' (no goals)")
+    val options = JsonObject()
+    options.addProperty("phase", phase)
+    options.add("goals", JsonArray())
+    options.addProperty("project", "${project.groupId}:${project.artifactId}")
+    return NxTarget("@nx/maven:maven", options, cache = true, continuous = false)
   }
 
   private fun createSimpleGoalTarget(
