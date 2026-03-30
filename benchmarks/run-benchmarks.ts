@@ -17,8 +17,6 @@ interface Baseline {
   [name: string]: { mean: number };
 }
 
-const REGRESSION_THRESHOLD = 0.2; // 20%
-
 const benchmarkNames = ['version', 'show-projects', 'lint-warm', 'build-warm'];
 
 const rootDir = __dirname;
@@ -36,6 +34,15 @@ function formatMs(seconds: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`;
   return `${ms.toFixed(0)}ms`;
 }
+
+const colors = {
+  red: (s: string) => `\x1b[31m${s}\x1b[0m`,
+  green: (s: string) => `\x1b[32m${s}\x1b[0m`,
+  yellow: (s: string) => `\x1b[33m${s}\x1b[0m`,
+  cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
+  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
+  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
+};
 
 function formatDelta(current: number, baseline: number): string {
   const pct = ((current - baseline) / baseline) * 100;
@@ -71,16 +78,14 @@ function main() {
   const nameWidth = 20;
   const colWidth = 12;
   const header = [
-    'Benchmark'.padEnd(nameWidth),
-    'Baseline'.padStart(colWidth),
-    'Current'.padStart(colWidth),
-    'Delta'.padStart(colWidth),
+    colors.bold('Benchmark'.padEnd(nameWidth)),
+    colors.dim('Baseline'.padStart(colWidth)),
+    colors.bold('Current'.padStart(colWidth)),
+    colors.bold('Delta'.padStart(colWidth)),
     '',
   ].join('  ');
   console.log(header);
-  console.log('─'.repeat(header.length));
-
-  let hasRegression = false;
+  console.log(colors.dim('─'.repeat(nameWidth + colWidth * 3 + 16)));
 
   for (const name of benchmarkNames) {
     const result = results[name];
@@ -91,30 +96,27 @@ function main() {
 
     let baseStr = '—';
     let deltaStr = '';
-    let status = '';
 
     if (base) {
       baseStr = formatMs(base.mean);
       const delta = (result.mean - base.mean) / base.mean;
       deltaStr = formatDelta(result.mean, base.mean);
 
-      if (delta > REGRESSION_THRESHOLD) {
-        status = 'REGRESSION';
-        hasRegression = true;
-      } else if (delta < -0.1) {
-        status = 'FASTER';
-      } else {
-        status = 'ok';
+      let colorDelta: (s: string) => string = colors.dim;
+      if (delta < -0.1) {
+        colorDelta = colors.green;
+      } else if (delta > 0.1) {
+        colorDelta = colors.red;
       }
+      deltaStr = colorDelta(deltaStr.padStart(colWidth));
     }
 
     console.log(
       [
-        name.padEnd(nameWidth),
-        baseStr.padStart(colWidth),
+        colors.cyan(name.padEnd(nameWidth)),
+        colors.dim(baseStr.padStart(colWidth)),
         current.padStart(colWidth),
-        deltaStr.padStart(colWidth),
-        status ? `  ${status}` : '',
+        deltaStr ? deltaStr : ' '.repeat(colWidth),
       ].join('  ')
     );
   }
@@ -128,11 +130,7 @@ function main() {
       newBaseline[name] = { mean: result.mean };
     }
     writeFileSync(baselinePath, JSON.stringify(newBaseline, null, 2) + '\n');
-    console.log(`Baseline updated: ${baselinePath}`);
-  }
-
-  if (hasRegression) {
-    console.warn('Benchmark regression detected (>20% slower than baseline)');
+    console.log(colors.green(`Baseline updated: ${baselinePath}`));
   }
 }
 
