@@ -140,6 +140,7 @@ import {
 import {
   addUpdatedAndDeletedFiles,
   registerProjectGraphRecomputationListener,
+  triggerGraphRecomputation,
 } from './project-graph-incremental-recomputation';
 import {
   hasRegisteredProjectGraphListenerSockets,
@@ -179,6 +180,13 @@ export type HandlerResult = {
   error?: any;
   response?: string | object | boolean;
 };
+
+const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
+  'NX_TASK_TARGET_CONFIGURATION',
+  'NX_TASK_TARGET_PROJECT',
+  'NX_TASK_TARGET_TARGET',
+  'NX_CI_EXECUTION_ID',
+]);
 
 let numberOfOpenConnections = 0;
 export const openSockets: Set<Socket> = new Set();
@@ -253,8 +261,20 @@ async function handleMessage(socket: Socket, data: string) {
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   if (isDaemonMessage(payload) && payload.env) {
+    let shouldRecomputeGraph = false;
     for (const key in payload.env) {
-      process.env[key] = payload.env[key];
+      if (
+        process.env[key] !== payload.env[key] &&
+        !DAEMON_ENV_VARS_EXCLUSIONS.has(key)
+      ) {
+        serverLogger.log(`Refreshing env var ${key} from client connection.`);
+        process.env[key] = payload.env[key];
+        shouldRecomputeGraph = true;
+      }
+    }
+    if (shouldRecomputeGraph) {
+      serverLogger.log('Graph recompute necessary due to env variable refresh');
+      triggerGraphRecomputation();
     }
   }
 

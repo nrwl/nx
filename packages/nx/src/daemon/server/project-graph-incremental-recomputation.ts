@@ -310,6 +310,14 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
+export async function triggerGraphRecomputation() {
+  // clear existing promise from cache
+  cachedSerializedProjectGraphPromise = null;
+  // get new promise for cache
+  cachedSerializedProjectGraphPromise =
+    getCachedSerializedProjectGraphPromise();
+}
+
 async function processFilesAndCreateAndSerializeProjectGraph(
   plugins: LoadedNxPlugin[]
 ): Promise<SerializedProjectGraph> {
