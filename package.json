@@ -412,7 +412,9 @@
   "pnpm": {
     "overrides": {
       "handlebars": "4.7.9",
-      "underscore": "^1.13.8"
+      "underscore": "^1.13.8",
+      "express>path-to-regexp": "0.1.13",
+      "router>path-to-regexp": "8.4.0"
     }
   },
   "nx": {

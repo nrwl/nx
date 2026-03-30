@@ -184,14 +184,6 @@
     </dependency>
 
 
-    <!-- Plexus Utils for XML parsing -->
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-utils</artifactId>
-      <version>3.5.1</version>
-    </dependency>
-
-
   </dependencies>
 
   <build>
