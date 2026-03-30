@@ -234,6 +234,155 @@ export default config;
     checkFilesExist(`libs/test/dist/bundle.es.js`);
   });
 
+  it('should build a library that imports from a non-buildable workspace lib', async () => {
+    const mainLib = uniq('main');
+    const utilLib = uniq('util');
+
+    // Create main library with rollup bundler (uses @rollup/plugin-typescript by default)
+    runCLI(
+      `generate @nx/js:lib ${mainLib} --directory=libs/${mainLib} --bundler=rollup --no-interactive`
+    );
+
+    // Change TypeScript plugin build target to avoid conflict with Rollup
+    updateJson('nx.json', (nxJson) => {
+      nxJson.plugins.forEach((plugin) => {
+        if (
+          plugin.plugin === '@nx/js/typescript' &&
+          plugin.include?.includes(`libs/${mainLib}/*`)
+        ) {
+          if (plugin.options?.build?.targetName === 'build') {
+            plugin.options.build.targetName = 'tsc:build';
+          }
+        }
+      });
+      return nxJson;
+    });
+
+    // Create a non-buildable workspace library (source only, no build target).
+    // Its tsconfig path points to source which is outside the main lib's rootDir.
+    updateFile(
+      `libs/${utilLib}/src/index.ts`,
+      `export function greet(name: string): string { return 'Hello ' + name; }\n`
+    );
+
+    // Register the util lib's path in tsconfig.base.json
+    updateJson('tsconfig.base.json', (json) => {
+      json.compilerOptions.paths[`@proj/${utilLib}`] = [
+        `libs/${utilLib}/src/index.ts`,
+      ];
+      return json;
+    });
+
+    // Main lib imports from the workspace lib
+    updateFile(
+      `libs/${mainLib}/src/index.ts`,
+      `
+        import { greet } from '@proj/${utilLib}';
+        export const message = greet('World');
+      `
+    );
+
+    // Update rollup config: mark workspace lib as external so rollup doesn't
+    // try to bundle it (mirrors the common setup where workspace libs are
+    // consumed as separate packages).
+    updateFile(
+      `libs/${mainLib}/rollup.config.cjs`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports = withNx({
+        outputPath: '../../dist/libs/${mainLib}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'tsc',
+        format: ['cjs', 'esm'],
+        external: ['@proj/${utilLib}'],
+      });
+    `
+    );
+
+    // Build should succeed — before this fix, it would fail with TS6059
+    // ("File is not under rootDir") because the workspace lib's source file
+    // is outside the main project's rootDir.
+    rmDist();
+    const output = runCLI(`build ${mainLib}`);
+    expect(output).toContain('Successfully ran target build');
+
+    checkFilesExist(`dist/libs/${mainLib}/index.cjs.js`);
+    checkFilesExist(`dist/libs/${mainLib}/index.esm.js`);
+    checkFilesExist(`dist/libs/${mainLib}/index.d.ts`);
+  }, 500000);
+
+  it('should build a library with SWC that imports from a non-buildable workspace lib', async () => {
+    const mainLib = uniq('main');
+    const utilLib = uniq('util');
+
+    // Create main library with rollup + SWC
+    runCLI(
+      `generate @nx/js:lib ${mainLib} --directory=libs/${mainLib} --bundler=rollup --no-interactive`
+    );
+
+    // Change TypeScript plugin build target to avoid conflict with Rollup
+    updateJson('nx.json', (nxJson) => {
+      nxJson.plugins.forEach((plugin) => {
+        if (
+          plugin.plugin === '@nx/js/typescript' &&
+          plugin.include?.includes(`libs/${mainLib}/*`)
+        ) {
+          if (plugin.options?.build?.targetName === 'build') {
+            plugin.options.build.targetName = 'tsc:build';
+          }
+        }
+      });
+      return nxJson;
+    });
+
+    // Create a non-buildable workspace library
+    updateFile(
+      `libs/${utilLib}/src/index.ts`,
+      `export function add(a: number, b: number): number { return a + b; }\n`
+    );
+
+    updateJson('tsconfig.base.json', (json) => {
+      json.compilerOptions.paths[`@proj/${utilLib}`] = [
+        `libs/${utilLib}/src/index.ts`,
+      ];
+      return json;
+    });
+
+    // Main lib imports from the workspace lib
+    updateFile(
+      `libs/${mainLib}/src/index.ts`,
+      `
+        import { add } from '@proj/${utilLib}';
+        export const result = add(1, 2);
+      `
+    );
+
+    updateFile(
+      `libs/${mainLib}/rollup.config.cjs`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports = withNx({
+        outputPath: '../../dist/libs/${mainLib}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'swc',
+        format: ['cjs', 'esm'],
+        external: ['@proj/${utilLib}'],
+      });
+    `
+    );
+
+    // Build with SWC should also succeed
+    rmDist();
+    const output = runCLI(`build ${mainLib}`);
+    expect(output).toContain('Successfully ran target build');
+
+    checkFilesExist(`dist/libs/${mainLib}/index.cjs.js`);
+    checkFilesExist(`dist/libs/${mainLib}/index.esm.js`);
+    checkFilesExist(`dist/libs/${mainLib}/index.d.ts`);
+  }, 500000);
+
   describe('useLegacyTypescriptPlugin', () => {
     it('should use @rollup/plugin-typescript when useLegacyTypescriptPlugin is false', async () => {
       const myPkg = uniq('my-pkg');
