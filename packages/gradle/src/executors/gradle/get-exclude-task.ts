@@ -1,24 +1,19 @@
-import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-
-export interface ProjectTarget {
-  project: string;
-  target: string;
-}
-
-function projectTargetKey(pt: ProjectTarget): string {
-  return `${pt.project}:${pt.target}`;
-}
+import {
+  ProjectGraphProjectNode,
+  Target,
+  targetToTargetString,
+} from '@nx/devkit';
 
 /**
- * Resolves a dependsOn entry to a ProjectTarget.
+ * Resolves a dependsOn entry to a Target.
  * Handles both string format ("target") and object format
  * ({ target: "name", projects?: ["proj1"] }).
  * For same-project object deps (no projects field), uses the owning project name.
  */
-function resolveDepToProjectTarget(
+function resolveDepToTarget(
   dep: string | { target?: string; projects?: string | string[] },
   owningProject: string
-): ProjectTarget | null {
+): Target | null {
   if (typeof dep === 'string') {
     return { project: owningProject, target: dep };
   }
@@ -45,28 +40,30 @@ function resolveDepToProjectTarget(
  * For example, if a project defines `dependsOn: ['lint']` for the `test` target,
  * and only `test` is running, this will return: ['lint']
  *
- * @param tasks - Set of ProjectTarget to process
+ * @param tasks - Set of Target to process
  * @param nodes - Project graph nodes
- * @param runningTasks - Set of ProjectTarget that are currently running (won't be excluded)
+ * @param runningTasks - Set of Target that are currently running (won't be excluded)
  * @param includeDependsOnTasks - Set of Gradle task names that should be included (not excluded)
  *   (typically provider-based dependencies that Gradle must resolve)
  */
 export function getExcludeTasks(
-  tasks: Set<ProjectTarget>,
+  tasks: Set<Target>,
   nodes: Record<string, ProjectGraphProjectNode>,
-  runningTasks: Set<ProjectTarget> = new Set(),
+  runningTasks: Set<Target> = new Set(),
   includeDependsOnTasks: Set<string> = new Set()
 ): Set<string> {
   const excludes = new Set<string>();
-  const runningKeys = new Set(Array.from(runningTasks).map(projectTargetKey));
+  const runningKeys = new Set(
+    Array.from(runningTasks).map(targetToTargetString)
+  );
 
   for (const task of tasks) {
     const taskDeps =
       nodes[task.project]?.data?.targets?.[task.target]?.dependsOn ?? [];
 
     for (const dep of taskDeps) {
-      const depPt = resolveDepToProjectTarget(dep, task.project);
-      if (depPt && !runningKeys.has(projectTargetKey(depPt))) {
+      const depPt = resolveDepToTarget(dep, task.project);
+      if (depPt && !runningKeys.has(targetToTargetString(depPt))) {
         const gradleTaskName = getGradleTaskName(depPt, nodes);
         if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
           excludes.add(gradleTaskName);
@@ -79,7 +76,7 @@ export function getExcludeTasks(
 }
 
 export function getGradleTaskName(
-  pt: ProjectTarget,
+  pt: Target,
   nodes: Record<string, ProjectGraphProjectNode>
 ): string | null {
   return nodes[pt.project]?.data?.targets?.[pt.target]?.options?.taskName;
@@ -89,18 +86,18 @@ export function getAllDependsOn(
   nodes: Record<string, ProjectGraphProjectNode>,
   projectName: string,
   targetName: string
-): Set<ProjectTarget> {
+): Set<Target> {
   const allDependsOn = new Set<string>();
-  const result = new Set<ProjectTarget>();
-  const startKey = projectTargetKey({
+  const result = new Set<Target>();
+  const startKey = targetToTargetString({
     project: projectName,
     target: targetName,
   });
-  const stack: ProjectTarget[] = [{ project: projectName, target: targetName }];
+  const stack: Target[] = [{ project: projectName, target: targetName }];
 
   while (stack.length > 0) {
     const current = stack.pop();
-    const key = projectTargetKey(current);
+    const key = targetToTargetString(current);
     if (!allDependsOn.has(key)) {
       allDependsOn.add(key);
       if (key !== startKey) {
@@ -112,8 +109,8 @@ export function getAllDependsOn(
         [];
 
       for (const dep of directDependencies) {
-        const depPt = resolveDepToProjectTarget(dep, current.project);
-        if (depPt && !allDependsOn.has(projectTargetKey(depPt))) {
+        const depPt = resolveDepToTarget(dep, current.project);
+        if (depPt && !allDependsOn.has(targetToTargetString(depPt))) {
           stack.push(depPt);
         }
       }
