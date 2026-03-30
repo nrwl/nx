@@ -1,6 +1,5 @@
 exclude-reads:
   - packages/nx/src/native/*.node
-  - '**/*.tsbuildinfo'
 exclude-writes:
   - '**/.swc/**'
 
