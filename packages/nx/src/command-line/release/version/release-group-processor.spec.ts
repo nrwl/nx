@@ -1432,6 +1432,73 @@ describe('ReleaseGroupProcessor', () => {
       `);
     });
 
+    it('should use prepatch instead of patch when preid is set and a dependent project is bumped across release groups', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "fixed" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+            - projectC@1.0.0 [js]
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'always',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { preid: 'alpha' }
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectB in group2 has changes; deriveSpecifierFromConventionalCommits converts
+          // 'minor' -> 'preminor' itself when preid is set, so mock the already-converted value
+          if (projectName === 'projectB') return 'preminor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectB in group2 is bumped based on its own specifier (preminor + preid)
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "2.1.0-alpha.0",
+        }
+      `);
+
+      // projectA in group1 is bumped via DEPENDENCY_WAS_BUMPED: should be prepatch, not patch
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.1.0-alpha.0",
+          },
+          "name": "projectA",
+          "version": "1.0.1-alpha.0",
+        }
+      `);
+
+      // projectC in group1 is bumped via OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY: should be prepatch, not patch
+      expect(readJson(tree, 'projectC/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectC",
+          "version": "1.0.1-alpha.0",
+        }
+      `);
+    });
+
     it('should bump projects across different release groups when updateDependents is explicitly set to "always"', async () => {
       const { nxReleaseConfig, projectGraph, filters } =
         await createNxReleaseConfigAndPopulateWorkspace(
