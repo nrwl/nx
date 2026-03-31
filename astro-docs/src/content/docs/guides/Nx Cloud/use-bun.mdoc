@@ -83,7 +83,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-large" --stop-agents-after="e2e"
+      - run: npx nx start-ci-run --distribute-on="5 linux-large" --stop-agents-after="e2e"
 
       - name: Setup toolchains with mise
         uses: jdx/mise-action@v3
@@ -93,7 +93,7 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
-      - run: bunx nx-cloud record -- nx format:check
+      - run: bunx nx record -- nx format:check
       - run: bunx nx run-many -t lint test build
       - run: bunx nx run-many -t e2e
 
@@ -106,7 +106,7 @@ The `jdx/mise-action` reads your `mise.toml` and installs both Node and bun
 at the pinned versions.
 No separate `setup-node` or `setup-bun` action is needed.
 
-The `nx-cloud start-ci-run` command runs before dependencies are installed,
+The `nx start-ci-run` command runs before dependencies are installed,
 so it uses `npx` instead of `bunx`.
 
 ## Configure Nx Agents
@@ -151,7 +151,7 @@ All environments (local, CI, and agents) stay in sync through a single config fi
 Reference the template name in your CI workflow:
 
 ```shell
-npx nx-cloud start-ci-run --distribute-on="5 linux-large" --stop-agents-after="e2e"
+npx nx start-ci-run --distribute-on="5 linux-large" --stop-agents-after="e2e"
 ```
 
 You can define multiple templates with different resource classes for different workloads.

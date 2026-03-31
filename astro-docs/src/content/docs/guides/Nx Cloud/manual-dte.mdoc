@@ -63,10 +63,10 @@ jobs:
         uses: nrwl/nx-set-shas@v4
 
       - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
-        run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+        run: npx nx start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
 
       - name: Check the formatting
-        run: npx nx-cloud record -- nx format:check
+        run: npx nx record -- nx format:check
 
       - name: Lint, test, build, and run e2e
         run: npx nx affected -t lint,test,build,e2e-ci --configuration=ci
@@ -102,7 +102,7 @@ jobs:
         run: npm ci
 
       - name: Start Nx Agent ${{ matrix.agent }}
-        run: npx nx-cloud start-agent
+        run: npx nx start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
 
@@ -137,9 +137,9 @@ jobs:
       - nx/set-shas
 
       # Tell Nx Cloud to use DTE and stop agents when the e2e-ci tasks are done
-      - run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+      - run: npx nx start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
       # Send logs to Nx Cloud for any CLI command
-      - run: npx nx-cloud record -- nx format:check
+      - run: npx nx record -- nx format:check
       # Lint, test, build and run e2e on agent jobs for everything affected by a change
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
       # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -156,7 +156,7 @@ jobs:
       - run: npm ci
       # Wait for instructions from Nx Cloud
       - run:
-          command: npx nx-cloud start-agent
+          command: npx nx start-agent
           no_output_timeout: 60m
           environment:
             NX_AGENT_NAME: << parameters.ordinal >>
@@ -220,7 +220,7 @@ jobs:
         persistCredentials: true
 
       - script: npm ci
-      - script: npx nx-cloud start-agent
+      - script: npx nx start-agent
         env:
           NX_AGENT_NAME: $(System.JobPositionInPhase)
 
@@ -252,8 +252,8 @@ jobs:
 
       - script: git branch --track main origin/main
       - script: npm ci
-      - script: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
-      - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: npx nx start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
+      - script: npx nx record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
 
       # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -289,7 +289,7 @@ definitions:
           - export NX_AGENT_NAME=$BITBUCKET_STEP_UUID
 
           - npm ci
-          - npx nx-cloud start-agent
+          - npx nx start-agent
         after-script:
           # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
           - export NX_AGENT_NAME=$BITBUCKET_STEP_UUID
@@ -305,8 +305,8 @@ pipelines:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
                 - npm ci
-                - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
-                - npx nx-cloud record -- nx format:check
+                - npx nx start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
+                - npx nx record -- nx format:check
                 - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
               after-script:
                 # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -344,7 +344,7 @@ image: node:18
   script:
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - export NX_AGENT_NAME=$CI_JOB_ID
-    - yarn nx-cloud start-agent
+    - yarn nx start-agent
   # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
   after_script:
     - export NX_AGENT_NAME=$CI_JOB_ID
@@ -377,8 +377,8 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
-    - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+    - yarn nx record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
   # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
   after_script:
@@ -425,8 +425,8 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx-cloud start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
-                        sh "npx nx-cloud record -- nx format:check"
+                        sh "npx nx start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
+                        sh "npx nx record -- nx format:check"
                         sh "npx nx affected --base=HEAD~1 -t lint,test,build,e2e-ci --configuration=ci --parallel=2"
                     }
                     post {
@@ -443,8 +443,8 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx-cloud start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
-                        sh "npx nx-cloud record -- nx format:check"
+                        sh "npx nx start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
+                        sh "npx nx record -- nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint,test,build,e2e-ci --parallel=2 --configuration=ci"
                     }
                     post {
@@ -463,7 +463,7 @@ pipeline {
                    }
                    steps {
                     sh "npm ci"
-                    sh "npx nx-cloud start-agent"
+                    sh "npx nx start-agent"
                    }
                    post {
                         // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -479,7 +479,7 @@ pipeline {
                    }
                    steps {
                     sh "npm ci"
-                    sh "npx nx-cloud start-agent"
+                    sh "npx nx start-agent"
                    }
                    post {
                         // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -495,7 +495,7 @@ pipeline {
                    }
                    steps {
                     sh "npm ci"
-                    sh "npx nx-cloud start-agent"
+                    sh "npx nx start-agent"
                    }
                    post {
                         // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci

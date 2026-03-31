@@ -127,7 +127,7 @@ For larger workspaces, you can distribute task execution across multiple machine
 
 ```yaml
 # Add to your CI workflow
-- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+- run: npx nx start-ci-run --distribute-on="3 linux-medium-js"
 ```
 
 Nx Agents automatically split tasks across the available agents, respecting task dependencies and maximizing parallelism. No configuration changes to your tasks are needed.

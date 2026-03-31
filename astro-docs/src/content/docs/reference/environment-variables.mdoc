@@ -103,8 +103,8 @@ Similar to the Nx CLI, Nx Cloud also uses the `NX_VERBOSE_LOGGING` environment v
 
 ### Deprecated Nx Cloud environment variables
 
-| Property                                                | Type    | Description                                                                                                                                  |
-| ------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NX_RUN_GROUP`                                          | string  | Older versions of `nx-cloud` used this instead of `NX_CI_EXECUTION_ID` and `NX_CI_EXECUTION_ENV`. Served the same purpose.                   |
-| `NX_CLOUD_DISTRIBUTED_EXECUTION_STOP_AGENTS_ON_FAILURE` | boolean | When set to `true`, tells Nx Cloud to stop agents if a command fails. Use `npx nx-cloud start-ci-run --stop-agents-on-failure=true` instead. |
-| `NX_CLOUD_DISTRIBUTED_EXECUTION`                        | boolean | When set to `false`, disables distributed task execution. Use `--no-dte` or `--no-agents` flags instead.                                     |
+| Property                                                | Type    | Description                                                                                                                            |
+| ------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_RUN_GROUP`                                          | string  | Older versions of `nx-cloud` used this instead of `NX_CI_EXECUTION_ID` and `NX_CI_EXECUTION_ENV`. Served the same purpose.             |
+| `NX_CLOUD_DISTRIBUTED_EXECUTION_STOP_AGENTS_ON_FAILURE` | boolean | When set to `true`, tells Nx Cloud to stop agents if a command fails. Use `npx nx start-ci-run --stop-agents-on-failure=true` instead. |
+| `NX_CLOUD_DISTRIBUTED_EXECUTION`                        | boolean | When set to `false`, disables distributed task execution. Use `--no-dte` or `--no-agents` flags instead.                               |
