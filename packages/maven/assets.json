@@ -1,18 +1,9 @@
 {
   "outDir": "packages/maven/dist",
   "assets": [
-    {
-      "glob": "**/files/**",
-      "input": "packages/maven/src"
-    },
-    {
-      "glob": "**/*.json",
-      "input": "packages/maven/src",
-      "ignore": ["maven-plugin/**/*"]
-    },
-    {
-      "glob": "@(generators|executors).json"
-    },
+    { "glob": "**/files/**", "input": "packages/maven/src" },
+    { "glob": "**/schema.json", "input": "packages/maven/src" },
+    { "glob": "@(generators|executors).json" },
     {
       "glob": "**/*.jar",
       "input": "packages/maven/batch-runner/target",

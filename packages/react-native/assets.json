@@ -1,13 +1,15 @@
 {
   "outDir": "dist/packages/react-native",
   "assets": [
-    "packages/react-native/*.md",
-    { "glob": "**/files/**" },
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json"]
+      "glob": "**/files/**"
     },
-    { "glob": "**/*.d.ts" },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    { "glob": "src/**/schema.d.ts" },
+    { "glob": "typings/**/*.d.ts" },
+    "packages/react-native/*.md",
     "LICENSE"
   ]
 }

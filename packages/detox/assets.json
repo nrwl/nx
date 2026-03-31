@@ -1,10 +1,11 @@
 {
   "outDir": "dist/packages/detox",
   "assets": [
-    { "glob": "**/files/**" },
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json"]
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]

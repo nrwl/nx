@@ -8,15 +8,10 @@
       "glob": "**/files/**/.gitkeep"
     },
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+      "glob": "src/**/schema.d.ts"
     },
     {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
+      "glob": "src/plugins/postcss/types/concat-with-sourcemaps.d.ts"
     },
     "LICENSE"
   ]

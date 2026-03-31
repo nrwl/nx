@@ -7,17 +7,8 @@
     {
       "glob": "**/files/**/.gitkeep"
     },
-    {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
-    },
+    { "glob": "src/**/schema.d.ts" },
+    { "glob": "typings/**/*.d.ts" },
     "LICENSE"
   ]
 }

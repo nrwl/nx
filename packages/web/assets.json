@@ -8,18 +8,7 @@
       "glob": "**/files/**/.gitkeep"
     },
     {
-      "glob": "**/files/**/.babelrc__tmpl__"
-    },
-    {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]

@@ -5,26 +5,10 @@
       "glob": "**/files/**"
     },
     {
-      "glob": "**/project-files/.storybook/**"
+      "glob": "**/files/**/.gitkeep"
     },
     {
-      "glob": "**/project-files-ts/.storybook/**"
-    },
-    {
-      "glob": "**/*.json",
-      "ignore": [
-        "tsconfig*.json",
-        "project.json",
-        ".eslintrc.json",
-        "**/test-configs/**"
-      ]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]

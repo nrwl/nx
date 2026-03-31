@@ -2,15 +2,13 @@
   "outDir": "dist/packages/docker",
   "assets": [
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+      "glob": "**/files/**"
     },
     {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
+      "glob": "**/files/**/.gitkeep"
     },
     {
-      "glob": "**/*.d.ts"
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]
