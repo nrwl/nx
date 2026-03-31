@@ -100,23 +100,23 @@ launch-templates:
 These templates can be used by passing the number of agents desired, and the template name via `--distribute-on` when starting your CI run.
 
 ```shell
-nx-cloud start-ci-run --distribute-on="4 my-linux-medium-js"
+nx start-ci-run --distribute-on="4 my-linux-medium-js"
 ```
 
 ```shell
-nx-cloud start-ci-run --distribute-on="4 my-linux-large-js"
+nx start-ci-run --distribute-on="4 my-linux-large-js"
 ```
 
 ```shell
-nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
+nx start-ci-run --distribute-on="4 my-linux-large-rust"
 ```
 
 ## Pass environment variables
 
-If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
+If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx start-ci-run` command. You can pass a specific list of environment variables like this:
 
 ```shell
-nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
+nx start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
 ## Pass values between steps
@@ -172,7 +172,7 @@ Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 
 ```shell
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
-nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
+nx start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```
 
 ## Custom node version
@@ -367,7 +367,7 @@ Defining tools inline overrides any `mise.toml` in your repo. This can cause dif
 
 ## AWS CLI
 
-First, define the environment variables on your main agent, where you call [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun). Pass the same environment variables to your agents via the [`--with-env-vars` flag](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only).
+First, define the environment variables on your main agent, where you call [`nx start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun). Pass the same environment variables to your agents via the [`--with-env-vars` flag](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only).
 
 Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` environment variables are required.
 
@@ -446,7 +446,7 @@ distribute-on:
 Then you can pass the path to the file to the `--distribute-on` parameter.
 
 ```shell
-nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
+nx start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
 ```
 
 ## Debugging
