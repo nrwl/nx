@@ -14,11 +14,13 @@ export default meta;
 type Story = StoryObj<Standalone>;
 
 export const Primary: Story = {
-  args: {},
+  args: {
+  },
 };
 
 export const Heading: Story = {
-  args: {},
+  args: {
+  },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/standalone/gi)).toBeTruthy();
   },
@@ -40,11 +42,13 @@ export default meta;
 type Story = StoryObj<SecondaryStandalone>;
 
 export const Primary: Story = {
-  args: {},
+  args: {
+  },
 };
 
 export const Heading: Story = {
-  args: {},
+  args: {
+  },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/secondary-standalone/gi)).toBeTruthy();
   },

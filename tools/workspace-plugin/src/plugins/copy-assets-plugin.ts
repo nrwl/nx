@@ -124,6 +124,7 @@ export const createNodes: CreateNodes = [
         for (const asset of stringAssets) {
           positiveInputs.add(`{workspaceRoot}/${asset}`);
         }
+        positiveInputs.add('{projectRoot}/**');
         const inputs: TargetConfiguration['inputs'] = [
           ...positiveInputs,
           ...negativeInputs,
