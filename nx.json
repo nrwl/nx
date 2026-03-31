@@ -389,6 +389,9 @@
       },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
       }
     ]
   },
