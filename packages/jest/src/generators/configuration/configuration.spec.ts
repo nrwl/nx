@@ -483,7 +483,7 @@ describe('jestProject', () => {
       expect(tree.read('.vscode/extensions.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
-          "recommendations": ["esbenp.prettier-vscode", "firsttris.vscode-jest-runner"]
+          "recommendations": ["firsttris.vscode-jest-runner"]
         }
         "
       `);
@@ -517,9 +517,7 @@ describe('jestProject', () => {
 
       expect(tree.read('.vscode/extensions.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "{
-          "recommendations": ["esbenp.prettier-vscode"]
-        }
+        "{}
         "
       `);
     });

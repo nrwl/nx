@@ -702,7 +702,9 @@ describe('app', () => {
     expect(
       packageJson.devDependencies['@typescript-eslint/eslint-plugin']
     ).toBeDefined();
-    expect(packageJson.devDependencies['eslint-config-prettier']).toBeDefined();
+    expect(
+      packageJson.devDependencies['eslint-config-prettier']
+    ).toBeUndefined();
 
     const eslintJson = readJson(appTree, '/my-app/.eslintrc.json');
     expect(eslintJson).toMatchInlineSnapshot(`
