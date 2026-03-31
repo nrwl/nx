@@ -125,7 +125,8 @@ function normalizeTargets(
   /**
    * Project configurations keyed by project name
    */
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  skipTargetDefaults?: boolean
 ) {
   const targetErrorMessage: string[] = [];
 
@@ -138,31 +139,33 @@ function normalizeTargets(
       [project.root, targetName].join(':')
     );
 
-    const projectSourceMaps = sourceMaps[project.root];
+    if (!skipTargetDefaults) {
+      const projectSourceMaps = sourceMaps[project.root];
 
-    const targetConfig = project.targets[targetName];
-    const targetDefaults = deepClone(
-      readTargetDefaultsForTarget(
-        targetName,
-        nxJsonConfiguration.targetDefaults,
-        targetConfig.executor
-      )
-    );
-
-    // We only apply defaults if they exist
-    if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
-      project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
-        targetName,
-        project,
-        normalizeTarget(
-          targetDefaults,
-          project,
-          workspaceRoot,
-          projects,
-          ['nx.json[targetDefaults]', targetName].join(':')
-        ),
-        projectSourceMaps
+      const targetConfig = project.targets[targetName];
+      const targetDefaults = deepClone(
+        readTargetDefaultsForTarget(
+          targetName,
+          nxJsonConfiguration.targetDefaults,
+          targetConfig.executor
+        )
       );
+
+      // We only apply defaults if they exist
+      if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
+        project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
+          targetName,
+          project,
+          normalizeTarget(
+            targetDefaults,
+            project,
+            workspaceRoot,
+            projects,
+            ['nx.json[targetDefaults]', targetName].join(':')
+          ),
+          projectSourceMaps
+        );
+      }
     }
 
     const target = project.targets[targetName];
@@ -200,7 +203,8 @@ export function validateAndNormalizeProjectRootMap(
   workspaceRoot: string,
   projectRootMap: Record<string, ProjectConfiguration>,
   nxJsonConfiguration: NxJsonConfiguration,
-  sourceMaps: ConfigurationSourceMaps = {}
+  sourceMaps: ConfigurationSourceMaps = {},
+  skipTargetDefaults?: boolean
 ) {
   // Name -> Project, used to validate that all projects have unique names
   const projects: Record<string, ProjectConfiguration> = {};
@@ -253,7 +257,8 @@ export function validateAndNormalizeProjectRootMap(
         sourceMaps,
         nxJsonConfiguration,
         workspaceRoot,
-        projects
+        projects,
+        skipTargetDefaults
       );
     } catch (e) {
       if (e instanceof WorkspaceValidityError) {

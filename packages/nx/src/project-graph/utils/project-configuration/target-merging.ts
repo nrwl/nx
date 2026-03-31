@@ -14,6 +14,10 @@ import {
 } from './source-maps';
 
 import type { SourceInformation } from './source-maps';
+import {
+  getMergeValueResult,
+  uniqueKeysInObjects,
+} from '../project-configuration-utils/utils';
 
 import { minimatch } from 'minimatch';
 
@@ -139,17 +143,24 @@ function mergeOptions(
   sourceInformation?: SourceInformation,
   targetIdentifier?: string
 ): Record<string, any> | undefined {
-  const mergedOptions = {
-    ...(baseOptions ?? {}),
-    ...(newOptions ?? {}),
-  };
+  const mergedOptionKeys = uniqueKeysInObjects(
+    baseOptions ?? {},
+    newOptions ?? {}
+  );
+  const mergedOptions = {};
 
-  // record new options & option properties in source map
-  if (projectConfigSourceMap) {
-    for (const newOption in newOptions) {
-      projectConfigSourceMap[`${targetIdentifier}.options.${newOption}`] =
-        sourceInformation;
-    }
+  for (const optionKey of mergedOptionKeys) {
+    mergedOptions[optionKey] = getMergeValueResult(
+      baseOptions ? baseOptions[optionKey] : undefined,
+      newOptions ? newOptions[optionKey] : undefined,
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.options.${optionKey}`,
+            sourceInformation,
+          }
+        : undefined
+    );
   }
 
   return mergedOptions;
@@ -164,15 +175,16 @@ function mergeConfigurations<T extends Object>(
 ): Record<string, T> | undefined {
   const mergedConfigurations = {};
 
-  const configurations = new Set([
-    ...Object.keys(baseConfigurations ?? {}),
-    ...Object.keys(newConfigurations ?? {}),
-  ]);
+  const configurations = uniqueKeysInObjects(
+    baseConfigurations ?? {},
+    newConfigurations ?? {}
+  );
   for (const configuration of configurations) {
-    mergedConfigurations[configuration] = {
-      ...(baseConfigurations?.[configuration] ?? {}),
-      ...(newConfigurations?.[configuration] ?? {}),
-    };
+    // Intentionally doesn't pass source map, as that is handled below
+    mergedConfigurations[configuration] = mergeOptions(
+      newConfigurations?.[configuration],
+      baseConfigurations?.[configuration]
+    );
   }
 
   // record new configurations & configuration properties in source map
@@ -233,20 +245,39 @@ export function mergeTargetConfigurations(
   }
 
   // merge top level properties if they're compatible
-  const result = {
-    ...(isCompatible ? baseTargetProperties : {}),
-    ...target,
-  };
+  const result: Partial<TargetConfiguration> = {};
+  const mergeBase = isCompatible ? baseTargetProperties : {};
 
-  // record top level properties in source map
+  const keys = isCompatible
+    ? uniqueKeysInObjects(baseTargetProperties, target)
+    : Object.keys(target);
+
+  for (const key of keys) {
+    // options and configurations have their own merge logic below
+    if (key === 'options' || key === 'configurations') {
+      continue;
+    }
+
+    if (key in target) {
+      result[key] = getMergeValueResult(
+        mergeBase[key],
+        target[key],
+        projectConfigSourceMap
+          ? {
+              sourceMap: projectConfigSourceMap,
+              key: `${targetIdentifier}.${key}`,
+              sourceInformation,
+            }
+          : undefined
+      );
+    } else {
+      result[key] = mergeBase[key];
+    }
+  }
+
+  // Update source map once after loop
   if (projectConfigSourceMap) {
     projectConfigSourceMap[targetIdentifier] = sourceInformation;
-
-    // record root level target properties to source map
-    for (const targetProperty in target) {
-      const targetPropertyId = `${targetIdentifier}.${targetProperty}`;
-      projectConfigSourceMap[targetPropertyId] = sourceInformation;
-    }
   }
 
   // merge options if there are any
@@ -259,6 +290,9 @@ export function mergeTargetConfigurations(
       sourceInformation,
       targetIdentifier
     );
+    if (projectConfigSourceMap && target.options) {
+      projectConfigSourceMap[`${targetIdentifier}.options`] = sourceInformation;
+    }
   }
 
   // merge configurations if there are any
@@ -271,6 +305,10 @@ export function mergeTargetConfigurations(
       sourceInformation,
       targetIdentifier
     );
+    if (projectConfigSourceMap && target.configurations) {
+      projectConfigSourceMap[`${targetIdentifier}.configurations`] =
+        sourceInformation;
+    }
   }
 
   if (target.metadata) {
@@ -328,21 +366,75 @@ export function isCompatibleTarget(
   return true;
 }
 
-function targetDefaultShouldBeApplied(
+/**
+ * Checks whether the source map entry for a given key comes from an Nx core
+ * plugin (one whose name starts with 'nx/'). Returns true when the property
+ * was defined by a core plugin, meaning the target definition takes precedence
+ * over target defaults.
+ *
+ * Returns false when there is no source info or the source is a non-core plugin,
+ * meaning target defaults should override.
+ */
+function definedSourceInfoComesFromCorePlugins(
   key: string,
   sourceMap: Record<string, SourceInformation>
 ) {
   const sourceInfo = sourceMap[key];
   if (!sourceInfo) {
-    return true;
+    return false;
   }
-  // The defined value of the target is from a plugin that
-  // isn't part of Nx's core plugins, so target defaults are
-  // applied on top of it.
   const [, plugin] = sourceInfo;
-  return !plugin?.startsWith('nx/');
+  return plugin?.startsWith('nx/');
 }
 
+function mergeOptionsBasedOnSource(
+  optionsFromTargetDefinition: Record<string, any>,
+  optionsFromTargetDefaults: Record<string, any>,
+  sourceMapKeyBase: string,
+  sourceMap: Record<string, SourceInformation>
+) {
+  const result = {
+    ...optionsFromTargetDefinition,
+  };
+  for (const optionKey in optionsFromTargetDefaults) {
+    const sourceMapKey = `${sourceMapKeyBase}.${optionKey}`;
+    if (!definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)) {
+      // Property was defined by a non-core plugin, so target defaults take precedence
+      result[optionKey] = getMergeValueResult(
+        optionsFromTargetDefinition[optionKey], // base
+        optionsFromTargetDefaults[optionKey], // overrides
+        {
+          sourceMap,
+          key: sourceMapKey,
+          sourceInformation: ['nx.json', 'nx/target-defaults'],
+        }
+      );
+    } else {
+      // target definition (from core plugin) takes precedence over target defaults
+      // Don't pass source map context - keep the original source from core plugin
+      result[optionKey] = getMergeValueResult(
+        optionsFromTargetDefaults[optionKey], // base
+        optionsFromTargetDefinition[optionKey] // overrides
+      );
+    }
+  }
+  return result;
+}
+
+/**
+ * Merges a given target default with a target definition inside a project configuration.
+ *
+ * NOTE: Target defaults are applied differently based on where the target definition came from.
+ * If the target definition was defined by a plugin outside of Nx core plugins, the target default
+ * is always applied on top of it. If the target definition was defined by Nx core plugins, the definition
+ * takes precedence and target defaults are only applied for properties that are not defined in the target definition.
+ *
+ * @param targetName The name of the target
+ * @param project  The project configuration
+ * @param targetDefault The target default to merge with the target definition
+ * @param sourceMap Source map info to track where properties came from
+ * @returns The merged target configuration
+ */
 export function mergeTargetDefaultWithTargetDefinition(
   targetName: string,
   project: ProjectConfiguration,
@@ -360,16 +452,12 @@ export function mergeTargetDefaultWithTargetDefinition(
           project,
           targetName
         );
-        for (const optionKey in normalizedDefaults) {
-          const sourceMapKey = targetOptionSourceMapKey(targetName, optionKey);
-          if (
-            targetDefinition.options[optionKey] === undefined ||
-            targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-          ) {
-            result.options[optionKey] = targetDefault.options[optionKey];
-            sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-          }
-        }
+        result.options = mergeOptionsBasedOnSource(
+          targetDefinition.options ?? {},
+          normalizedDefaults,
+          `targets.${targetName}.options`,
+          sourceMap
+        );
         break;
       }
       case 'configurations': {
@@ -381,34 +469,26 @@ export function mergeTargetDefaultWithTargetDefinition(
           ];
         }
         for (const configuration in targetDefault.configurations) {
+          // easy case, target defaults is adding a new configuration, nothing to merge.
           if (!result.configurations[configuration]) {
             result.configurations[configuration] = {};
             sourceMap[
               targetConfigurationsSourceMapKey(targetName, configuration)
             ] = ['nx.json', 'nx/target-defaults'];
           }
-          const normalizedConfigurationDefaults = resolveNxTokensInOptions(
+          // must merge...
+          // Configurations are very similar to options above in how we merge them, just a layer deeper.
+          const configurationTargetDefaults = resolveNxTokensInOptions(
             targetDefault.configurations[configuration],
             project,
             targetName
           );
-          for (const configurationKey in normalizedConfigurationDefaults) {
-            const sourceMapKey = targetConfigurationsSourceMapKey(
-              targetName,
-              configuration,
-              configurationKey
-            );
-            if (
-              targetDefinition.configurations?.[configuration]?.[
-                configurationKey
-              ] === undefined ||
-              targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-            ) {
-              result.configurations[configuration][configurationKey] =
-                targetDefault.configurations[configuration][configurationKey];
-              sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-            }
-          }
+          result.configurations[configuration] = mergeOptionsBasedOnSource(
+            targetDefinition.configurations?.[configuration] ?? {},
+            configurationTargetDefaults,
+            `targets.${targetName}.configurations.${configuration}`,
+            sourceMap
+          );
         }
         break;
       }
@@ -416,10 +496,17 @@ export function mergeTargetDefaultWithTargetDefinition(
         const sourceMapKey = `targets.${targetName}.${key}`;
         if (
           targetDefinition[key] === undefined ||
-          targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
+          !definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)
         ) {
-          result[key] = targetDefault[key];
-          sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
+          result[key] = getMergeValueResult(
+            targetDefinition[key],
+            targetDefault[key],
+            {
+              sourceMap,
+              key: sourceMapKey,
+              sourceInformation: ['nx.json', 'nx/target-defaults'],
+            }
+          );
         }
         break;
       }

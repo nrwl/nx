@@ -1,9 +1,13 @@
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '../../config/workspace-json-project-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createRootMap,
+  mergeProjectConfigurationIntoRootMap,
   ProjectNodesManager,
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
@@ -33,10 +37,47 @@ import type {
   SourceInformation,
 } from './project-configuration/source-maps';
 
+import { createTargetDefaultsResults } from './project-configuration-utils/target-defaults';
+import { getMergeValueResult } from './project-configuration-utils/utils';
+
 export {
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
 } from './project-configuration/target-merging';
+
+/**
+ * Tracks the state of a project configuration as it's being built up from multiple sources.
+ * Spread tokens are partially evaluated in the snapshot (good enough for target defaults lookups).
+ * At the end, we re-resolve properties with spread tokens using the sources.
+ */
+type ProjectConfigurationState = {
+  /** Current merged view (spread tokens partially evaluated against available base) */
+  snapshot: ProjectConfiguration;
+  /** Ordered list of all configurations that contributed to this project */
+  sources: Array<[SourceInformation, Partial<ProjectConfiguration>]>;
+  /** Source map for this specific project (updated during merging, refined during final resolution) */
+  sourceMap: Record<string, SourceInformation>;
+  /** Quick check: does this project have any spread tokens that need final resolution? */
+  hasSpreadTokens: boolean;
+};
+
+const NX_SPREAD_TOKEN = '...';
+
+/**
+ * Recursively checks if a value contains the spread token ('...')
+ */
+function containsSpreadToken(value: any): boolean {
+  if (value === NX_SPREAD_TOKEN) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.some((item) => containsSpreadToken(item));
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.values(value).some((v) => containsSpreadToken(v));
+  }
+  return false;
+}
 
 export type ConfigurationResult = {
   /**
@@ -67,16 +108,30 @@ export type ConfigurationResult = {
 /**
  * Transforms a list of project paths into a map of project configurations.
  *
+ * Uses a two-phase approach to ensure spread tokens in default plugin
+ * configurations (project.json, package.json) can reference target defaults:
+ *
+ * Phase 1: Process specified plugins (from nx.json) and default plugins
+ *          separately, merging results within each set.
+ * Phase 2: Apply target defaults between the two sets, then merge default
+ *          plugin results on top so that '...' expands with target defaults.
+ *
  * @param root The workspace root
  * @param nxJson The NxJson configuration
- * @param workspaceFiles A list of non-ignored workspace files
- * @param plugins The plugins that should be used to infer project configuration
+ * @param projectFiles Plugin config files, separated by plugin set
+ * @param plugins The plugins separated into specified and default sets
  */
 export async function createProjectConfigurationsWithPlugins(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
-  projectFiles: string[][], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[]
+  projectFiles: {
+    specifiedPluginFiles: string[][];
+    defaultPluginFiles: string[][];
+  },
+  plugins: {
+    specifiedPlugins: LoadedNxPlugin[];
+    defaultPlugins: LoadedNxPlugin[];
+  }
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
 
@@ -108,11 +163,24 @@ export async function createProjectConfigurationsWithPlugins(
     }
   }
 
-  const createNodesPlugins = plugins.filter(
+  const specifiedCreateNodesPlugins = plugins.specifiedPlugins.filter(
     (plugin) => plugin.createNodes?.[0]
   );
+  const defaultCreateNodesPlugins = plugins.defaultPlugins.filter(
+    (plugin) => plugin.createNodes?.[0]
+  );
+  const allCreateNodesPlugins = [
+    ...specifiedCreateNodesPlugins,
+    ...defaultCreateNodesPlugins,
+  ];
+  const allProjectFiles = [
+    ...projectFiles.specifiedPluginFiles,
+    ...projectFiles.defaultPluginFiles,
+  ];
+  const specifiedCount = specifiedCreateNodesPlugins.length;
+
   spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
+    `Creating project graph nodes with ${allCreateNodesPlugins.length} plugins`
   );
 
   const results: Promise<
@@ -141,11 +209,11 @@ export async function createProjectConfigurationsWithPlugins(
       exclude,
       name: pluginName,
     },
-  ] of createNodesPlugins.entries()) {
+  ] of allCreateNodesPlugins.entries()) {
     const [pattern, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
-      projectFiles[index],
+      allProjectFiles[index],
       pattern,
       include,
       exclude
@@ -184,8 +252,18 @@ export async function createProjectConfigurationsWithPlugins(
   return Promise.all(results).then((results) => {
     spinner?.cleanup();
 
+    // Split results into specified and default plugin sets
+    const specifiedResults = results.slice(0, specifiedCount);
+    const defaultResults = results.slice(specifiedCount);
+
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =
-      mergeCreateNodesResults(results, nxJson, root, errors);
+      mergeCreateNodesResultsTwoPhase(
+        specifiedResults,
+        defaultResults,
+        nxJson,
+        root,
+        errors
+      );
 
     performance.mark('build-project-configs:end');
     performance.measure(
@@ -194,13 +272,18 @@ export async function createProjectConfigurationsWithPlugins(
       'build-project-configs:end'
     );
 
+    const allProjectFilesFlat = [
+      ...projectFiles.specifiedPluginFiles.flat(),
+      ...projectFiles.defaultPluginFiles.flat(),
+    ];
+
     if (errors.length === 0) {
       return {
         projects: projectRootMap,
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles.flat(),
+        matchingProjectFiles: allProjectFilesFlat,
       };
     } else {
       throw new ProjectConfigurationsError(errors, {
@@ -208,12 +291,400 @@ export async function createProjectConfigurationsWithPlugins(
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles.flat(),
+        matchingProjectFiles: allProjectFilesFlat,
       });
     }
   });
 }
 
+type CreateNodesResultEntry = readonly [
+  plugin: string,
+  file: string,
+  result: CreateNodesResult,
+  pluginIndex?: number,
+];
+
+type MergeError =
+  | AggregateCreateNodesError
+  | MergeNodesError
+  | ProjectsWithNoNameError
+  | MultipleProjectsWithSameNameError
+  | WorkspaceValidityError;
+
+/**
+ * Merges a project configuration into a ProjectConfigurationState, tracking sources
+ * and updating the snapshot for quick lookups (like target defaults).
+ */
+function mergeProjectConfigurationIntoState(
+  states: Map<string, ProjectConfigurationState>,
+  project: ProjectConfiguration,
+  sourceInformation: SourceInformation,
+  snapshotRootMap: Record<string, ProjectConfiguration>
+): void {
+  const root = project.root === '' ? '.' : project.root;
+
+  if (!states.has(root)) {
+    states.set(root, {
+      snapshot: { root },
+      sources: [],
+      sourceMap: {},
+      hasSpreadTokens: false,
+    });
+    // Initialize empty snapshot in the snapshotRootMap too
+    snapshotRootMap[root] = { root };
+  }
+
+  const state = states.get(root)!;
+
+  // Append this configuration to sources
+  state.sources.push([sourceInformation, project]);
+
+  // Check if this config has spread tokens
+  if (!state.hasSpreadTokens && containsSpreadToken(project)) {
+    state.hasSpreadTokens = true;
+  }
+
+  // Create a temporary source map object that mergeProjectConfigurationIntoRootMap will populate
+  const tempSourceMap: Record<string, SourceInformation> = {};
+
+  // Update snapshot using existing merge logic
+  // The snapshot gives us a quick view for target defaults, even if spreads aren't perfect yet
+  mergeProjectConfigurationIntoRootMap(
+    snapshotRootMap,
+    project,
+    { [root]: tempSourceMap },
+    sourceInformation,
+    true // skipTargetNormalization
+  );
+
+  // Merge the temp source map into the state's source map
+  Object.assign(state.sourceMap, tempSourceMap);
+
+  // Sync state snapshot with the merged result
+  state.snapshot = snapshotRootMap[root];
+}
+
+/**
+ * Processes plugin results into ProjectConfigurationStates, tracking sources
+ * and building snapshots for quick lookups.
+ */
+function mergePluginResultsIntoStates(
+  results: CreateNodesResultEntry[][],
+  states: Map<string, ProjectConfigurationState>,
+  snapshotRootMap: Record<string, ProjectConfiguration>,
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  errors: MergeError[]
+) {
+  for (const result of results.flat()) {
+    const [pluginName, file, nodes, pluginIndex] = result;
+
+    const { projects: projectNodes, externalNodes: pluginExternalNodes } =
+      nodes;
+
+    const sourceInfo: SourceInformation = [file, pluginName];
+
+    for (const node in projectNodes) {
+      // Handles `{projects: {'libs/foo': undefined}}`.
+      if (!projectNodes[node]) {
+        continue;
+      }
+      const project = {
+        root: node,
+        ...projectNodes[node],
+      };
+      try {
+        mergeProjectConfigurationIntoState(
+          states,
+          project,
+          sourceInfo,
+          snapshotRootMap
+        );
+      } catch (error) {
+        errors.push(
+          new MergeNodesError({
+            file,
+            pluginName,
+            error,
+            pluginIndex,
+          })
+        );
+      }
+    }
+    Object.assign(externalNodes, pluginExternalNodes);
+  }
+}
+
+/**
+ * Resolves spread tokens in project configurations by walking backwards through sources.
+ * Only processes properties that actually contain '...' in the final snapshot.
+ */
+function resolveSpreadTokensInStates(
+  states: Map<string, ProjectConfigurationState>,
+  configurationSourceMaps: ConfigurationSourceMaps
+): Record<string, ProjectConfiguration> {
+  const projectRootMap: Record<string, ProjectConfiguration> = {};
+
+  for (const [root, state] of states) {
+    if (!state.hasSpreadTokens) {
+      // Fast path: no spreads to resolve, use snapshot as-is
+      projectRootMap[root] = state.snapshot;
+      configurationSourceMaps[root] = state.sourceMap;
+      continue;
+    }
+
+    // Slow path: resolve spread tokens by walking backwards through sources
+    // Start with the snapshot (which has spreads partially evaluated)
+    const resolved = { ...state.snapshot };
+    const sourceMap = { ...state.sourceMap };
+
+    // For each target that might have spread tokens
+    if (resolved.targets) {
+      for (const targetName in resolved.targets) {
+        const target = resolved.targets[targetName];
+
+        // Resolve spread tokens in target properties
+        resolved.targets[targetName] = resolveSpreadTokensInTarget(
+          targetName,
+          target,
+          state.sources,
+          sourceMap
+        );
+      }
+    }
+
+    projectRootMap[root] = resolved;
+    configurationSourceMaps[root] = sourceMap;
+  }
+
+  return projectRootMap;
+}
+
+/**
+ * Resolves spread tokens in a target configuration by walking backwards through sources.
+ */
+function resolveSpreadTokensInTarget(
+  targetName: string,
+  target: TargetConfiguration,
+  sources: Array<[SourceInformation, Partial<ProjectConfiguration>]>,
+  sourceMap: Record<string, SourceInformation>
+): TargetConfiguration {
+  const resolved = { ...target };
+
+  // Check each property for spread tokens
+  for (const key in target) {
+    if (containsSpreadToken(target[key])) {
+      // Walk backwards through sources to resolve this property
+      const resolvedValue = resolvePropertyWithSpread(
+        `targets.${targetName}.${key}`,
+        target[key],
+        sources,
+        sourceMap
+      );
+      resolved[key] = resolvedValue;
+    }
+  }
+
+  return resolved;
+}
+
+/**
+ * Resolves a single property that contains spread tokens by walking backwards through sources.
+ * Uses a stack-based approach to handle nested spreads.
+ */
+function resolvePropertyWithSpread(
+  propertyPath: string,
+  currentValue: any,
+  sources: Array<[SourceInformation, Partial<ProjectConfiguration>]>,
+  sourceMap: Record<string, SourceInformation>
+): any {
+  // Start from the most recent value and walk backwards
+  let value = currentValue;
+
+  // Walk backwards through sources
+  for (let i = sources.length - 1; i >= 0; i--) {
+    const [sourceInfo, partialConfig] = sources[i];
+
+    // Extract the value at this property path from this source
+    const sourceValue = getValueAtPath(partialConfig, propertyPath);
+
+    if (sourceValue !== undefined) {
+      // Merge this source value with what we have
+      value = getMergeValueResult(
+        getPreviousValue(propertyPath, sources, i - 1),
+        sourceValue,
+        { sourceMap, key: propertyPath, sourceInformation: sourceInfo }
+      );
+
+      // If the result no longer has spread tokens, we're done
+      if (!containsSpreadToken(value)) {
+        break;
+      }
+    }
+  }
+
+  return value;
+}
+
+/**
+ * Gets the value at a property path from a partial configuration.
+ * e.g., "targets.build.inputs" => partialConfig.targets?.build?.inputs
+ */
+function getValueAtPath(obj: any, path: string): any {
+  const parts = path.split('.');
+  let current = obj;
+
+  for (const part of parts) {
+    if (current == null) return undefined;
+    current = current[part];
+  }
+
+  return current;
+}
+
+/**
+ * Gets the accumulated value for a property by merging all sources up to maxIndex.
+ */
+function getPreviousValue(
+  propertyPath: string,
+  sources: Array<[SourceInformation, Partial<ProjectConfiguration>]>,
+  maxIndex: number
+): any {
+  let value = undefined;
+
+  for (let i = 0; i <= maxIndex; i++) {
+    const [, partialConfig] = sources[i];
+    const sourceValue = getValueAtPath(partialConfig, propertyPath);
+
+    if (sourceValue !== undefined) {
+      if (value === undefined) {
+        value = sourceValue;
+      } else {
+        // Merge without spread evaluation (just simple merge)
+        value = sourceValue;
+      }
+    }
+  }
+
+  return value;
+}
+
+/**
+ * Two-phase merge for project configurations.
+ *
+ * Phase 1: Merge specified plugin results into a root map.
+ * Phase 1.5: Apply target defaults to the root map. For targets that will
+ *            be introduced by default plugins, add target defaults as a base.
+ * Phase 2: Merge default plugin results on top. Spread tokens in default
+ *          plugin targets now expand against (specified + target defaults).
+ * Phase 3: Validate and normalize (without re-applying target defaults).
+ */
+function mergeCreateNodesResultsTwoPhase(
+  specifiedResults: CreateNodesResultEntry[][],
+  defaultResults: CreateNodesResultEntry[][],
+  nxJsonConfiguration: NxJsonConfiguration,
+  workspaceRoot: string,
+  errors: MergeError[]
+) {
+  performance.mark('createNodes:merge - start');
+
+  const states = new Map<string, ProjectConfigurationState>();
+  const snapshotRootMap: Record<string, ProjectConfiguration> = {};
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const configurationSourceMaps: ConfigurationSourceMaps = {};
+
+  // Phase 1: Process specified plugin results into states
+  mergePluginResultsIntoStates(
+    specifiedResults,
+    states,
+    snapshotRootMap,
+    externalNodes,
+    errors
+  );
+
+  // Phase 2: Build a separate snapshot for default plugins (for target defaults comparison)
+  const defaultPluginStates = new Map<string, ProjectConfigurationState>();
+  const defaultPluginSnapshotMap: Record<string, ProjectConfiguration> = {};
+  mergePluginResultsIntoStates(
+    defaultResults,
+    defaultPluginStates,
+    defaultPluginSnapshotMap,
+    externalNodes,
+    errors
+  );
+
+  // Phase 3: Create target defaults by comparing the two snapshots
+  const targetDefaultsResults = createTargetDefaultsResults(
+    snapshotRootMap,
+    defaultPluginSnapshotMap,
+    nxJsonConfiguration
+  );
+
+  // Phase 4: Merge target defaults (middle layer) into main states
+  if (targetDefaultsResults.length > 0) {
+    mergePluginResultsIntoStates(
+      [targetDefaultsResults],
+      states,
+      snapshotRootMap,
+      externalNodes,
+      errors
+    );
+  }
+
+  // Phase 5: Merge default plugin results into main states
+  mergePluginResultsIntoStates(
+    defaultResults,
+    states,
+    snapshotRootMap,
+    externalNodes,
+    errors
+  );
+
+  // Phase 6: Resolve spread tokens for projects that have them
+  const projectRootMap = resolveSpreadTokensInStates(
+    states,
+    configurationSourceMaps
+  );
+
+  // Phase 7: Validate and normalize (skip target defaults since they were applied in phase 4)
+  try {
+    validateAndNormalizeProjectRootMap(
+      workspaceRoot,
+      projectRootMap,
+      nxJsonConfiguration,
+      configurationSourceMaps,
+      true // skipTargetDefaults - already applied in two-phase merge
+    );
+  } catch (error) {
+    let _errors = error instanceof AggregateError ? error.errors : [error];
+    for (const e of _errors) {
+      if (
+        isProjectsWithNoNameError(e) ||
+        isMultipleProjectsWithSameNameError(e) ||
+        isWorkspaceValidityError(e)
+      ) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  const rootMap = createRootMap(projectRootMap);
+
+  performance.mark('createNodes:merge - end');
+  performance.measure(
+    'createNodes:merge',
+    'createNodes:merge - start',
+    'createNodes:merge - end'
+  );
+
+  return { projectRootMap, externalNodes, rootMap, configurationSourceMaps };
+}
+
+/**
+ * Merges create nodes results using ProjectNodesManager.
+ * Used by code paths that don't need spread token support.
+ */
 export function mergeCreateNodesResults(
   results: (readonly [
     plugin: string,

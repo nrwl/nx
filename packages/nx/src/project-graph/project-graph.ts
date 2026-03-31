@@ -37,7 +37,7 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
-import { getPlugins } from './plugins/get-plugins';
+import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
@@ -116,10 +116,13 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const plugins = await getPlugins();
+  const separatedPlugins = await getPluginsSeparated();
+  const plugins = separatedPlugins.specifiedPlugins.concat(
+    separatedPlugins.defaultPlugins
+  );
   try {
     configurationResult = await retrieveProjectConfigurations(
-      plugins,
+      separatedPlugins,
       workspaceRoot,
       nxJson
     );
