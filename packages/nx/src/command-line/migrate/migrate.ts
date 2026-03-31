@@ -1783,7 +1783,8 @@ export async function runNxOrAngularMigration(
       root,
       collectionPath,
       collection,
-      migration.name
+      migration.name,
+      migration.version
     ));
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
@@ -1946,12 +1947,14 @@ async function runNxMigration(
   root: string,
   collectionPath: string,
   collection: MigrationsJson,
-  name: string
+  name: string,
+  migrationVersion?: string
 ) {
   const { path: implPath, fnSymbol } = getImplementationPath(
     collection,
     collectionPath,
-    name
+    name,
+    migrationVersion
   );
   const fn = require(implPath)[fnSymbol];
   const host = new FsTree(
@@ -2053,12 +2056,15 @@ export function readMigrationCollection(packageName: string, root: string) {
 export function getImplementationPath(
   collection: MigrationsJson,
   collectionPath: string,
-  name: string
+  name: string,
+  migrationVersion?: string
 ): { path: string; fnSymbol: string } {
   const g = collection.generators?.[name] || collection.schematics?.[name];
   if (!g) {
-    throw new Error(
-      `Unable to determine implementation path for "${collectionPath}:${name}"`
+    throw new MigrationImplementationMissingError(
+      `Unable to determine implementation path for "${collectionPath}:${name}"`,
+      collectionPath,
+      migrationVersion
     );
   }
   const implRelativePathAndMaybeSymbol = g.implementation || g.factory;
@@ -2072,13 +2078,93 @@ export function getImplementationPath(
       paths: [dirname(collectionPath)],
     });
   } catch (e) {
-    // workaround for a bug in node 12
-    implPath = require.resolve(
-      `${dirname(collectionPath)}/${implRelativePath}`
-    );
+    try {
+      // workaround for a bug in node 12
+      implPath = require.resolve(
+        `${dirname(collectionPath)}/${implRelativePath}`
+      );
+    } catch {
+      throw new MigrationImplementationMissingError(
+        `Could not resolve implementation for migration "${name}" from "${collectionPath}"`,
+        collectionPath,
+        migrationVersion ?? g.version
+      );
+    }
   }
 
   return { path: implPath, fnSymbol };
+}
+
+class MigrationImplementationMissingError extends Error {
+  constructor(
+    baseMessage: string,
+    collectionPath: string,
+    migrationVersion: string | undefined
+  ) {
+    super(
+      buildMigrationMissingMessage(
+        baseMessage,
+        collectionPath,
+        migrationVersion
+      )
+    );
+    this.name = 'MigrationImplementationMissingError';
+  }
+}
+
+function buildMigrationMissingMessage(
+  baseMessage: string,
+  collectionPath: string,
+  migrationVersion: string | undefined
+): string {
+  if (!migrationVersion) {
+    return baseMessage;
+  }
+
+  try {
+    const packageJsonPath = join(dirname(collectionPath), 'package.json');
+    if (!existsSync(packageJsonPath)) {
+      return baseMessage;
+    }
+    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+    const installedVersion = packageJson.version;
+
+    if (
+      installedVersion &&
+      lt(normalizeVersion(installedVersion), normalizeVersion(migrationVersion))
+    ) {
+      const packageManager = detectPackageManager();
+      const pmc = getPackageManagerCommand(packageManager);
+      const overrideFieldName = getOverrideFieldName(packageManager);
+
+      return (
+        `${baseMessage}\n\n` +
+        `The installed version of "${packageJson.name}" is ${installedVersion}, ` +
+        `but this migration requires version ${migrationVersion}. ` +
+        `This likely means the package version is being held back by an ${overrideFieldName} ` +
+        `in your package.json. ` +
+        `Remove the ${overrideFieldName} and run "${pmc.install}" to install the correct version.`
+      );
+    }
+  } catch {
+    // Fall through to return the base message if we can't read package info
+  }
+
+  return baseMessage;
+}
+
+function getOverrideFieldName(
+  packageManager: ReturnType<typeof detectPackageManager>
+): string {
+  switch (packageManager) {
+    case 'pnpm':
+      return '"pnpm.overrides"';
+    case 'yarn':
+      return '"resolutions"';
+    case 'npm':
+    case 'bun':
+      return '"overrides"';
+  }
 }
 
 export async function nxCliPath(nxWorkspaceRoot?: string) {
