@@ -19,7 +19,7 @@ filter: 'type:References'
   - Define eligible task patterns and auto-apply rules
 - Feat: Enable Self-Healing CI directly from the Nx Cloud UI with a single-click setup wizard
   - Automatically detects your CI provider (GitHub Actions, GitLab CI, or Azure DevOps)
-  - Adds the `nx-cloud fix-ci` step to your CI configuration
+  - Adds the `nx fix-ci` step to your CI configuration
   - Creates a pull request with the changes for you to review and merge
 - Feat: Add support for triggering a CI rerun when Self-Healing CI determines that failures are caused by environment issues
 - Feat: Allow users to configure branch patterns to ignore for AI fix generation
@@ -271,7 +271,7 @@ nxApi:
 ### 2025.06.2
 
 - Fix: Terminal outputs not loading in the browser in restricted environments
-  - Requires an update to the latest current nx-cloud Helm chart version 0.16.3
+  - Requires an update to the latest current nx Helm chart version 0.16.3
 
 ### 2025.06.1
 
@@ -575,7 +575,7 @@ We now have full support for BitBucket Data Center (self-hosted):
 
 ##### Breaking changes
 
-If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx-cloud start-ci-run` commands.
+If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx start-ci-run` commands.
 
 ### 2405.02.15
 

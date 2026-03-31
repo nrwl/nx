@@ -11,6 +11,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
+import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
 
@@ -486,52 +487,80 @@ fun isCacheable(task: Task): Boolean {
   return !nonCacheableTasks.contains(task.name)
 }
 
-/**
- * Finds provider-based task dependencies by inspecting lifecycle dependencies without triggering
- * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
- * with known producer tasks.
- */
 fun findProviderBasedDependencies(task: Task): Set<String> {
-  val logger = task.logger
-  val producerTasks = mutableSetOf<String>()
+  val taskInternal = task as? TaskInternal ?: return emptySet()
 
-  try {
-    val taskInternal = task as? TaskInternal ?: return emptySet()
-    val lifecycleDeps = taskInternal.lifecycleDependencies
-
-    if (lifecycleDeps is DefaultTaskDependency) {
-      val rawDeps: Set<Any> = lifecycleDeps.mutableValues
-
-      rawDeps.forEach { dep ->
-        when (dep) {
-          is ProviderInternal<*> -> {
-            try {
-              val producer = dep.producer
-              if (producer.isKnown) {
-                producer.visitProducerTasks(
-                    Action { producerTask -> producerTasks.add(producerTask.path) })
-              }
-            } catch (e: Exception) {
-              logger.debug("Could not get producer from provider: ${e.message}")
-            }
-          }
-          is TaskProvider<*> -> {
-            try {
-              producerTasks.add(dep.name)
-            } catch (e: Exception) {
-              logger.debug("Could not get name from TaskProvider: ${e.message}")
-            }
-          }
-        }
+  val result =
+      try {
+        collectLifecycleDependencies(taskInternal) + collectInputPropertyDependencies(taskInternal)
+      } catch (e: Exception) {
+        task.logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
+        emptySet()
       }
-    }
 
-    if (producerTasks.isNotEmpty()) {
-      logger.info("Task ${task.path} has provider-based dependencies: $producerTasks")
-    }
-  } catch (e: Exception) {
-    logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
+  if (result.isNotEmpty()) {
+    task.logger.info("Task ${task.path} has provider-based dependencies: $result")
   }
 
-  return producerTasks
+  return result
+}
+
+private fun collectLifecycleDependencies(task: TaskInternal): Set<String> {
+  val lifecycleDeps = task.lifecycleDependencies as? DefaultTaskDependency ?: return emptySet()
+  val result = mutableSetOf<String>()
+
+  for (dep in lifecycleDeps.mutableValues) {
+    try {
+      when (dep) {
+        is ProviderInternal<*> -> {
+          val producer = dep.producer
+          if (producer.isKnown) {
+            producer.visitProducerTasks(Action { result.add(it.path) })
+          }
+        }
+        is TaskProvider<*> -> result.add(dep.name)
+      }
+    } catch (e: Exception) {
+      task.logger.debug("Could not resolve lifecycle dependency: ${e.message}")
+    }
+  }
+
+  return result
+}
+
+private fun collectInputPropertyDependencies(task: TaskInternal): Set<String> {
+  val projectInternal =
+      task.project as? org.gradle.api.internal.project.ProjectInternal ?: return emptySet()
+  val propertyWalker =
+      projectInternal.services.get(org.gradle.internal.properties.bean.PropertyWalker::class.java)
+  val result = mutableSetOf<String>()
+
+  try {
+    org.gradle.api.internal.tasks.TaskPropertyUtils.visitProperties(
+        propertyWalker,
+        task,
+        object : org.gradle.internal.properties.PropertyVisitor {
+          override fun visitInputProperty(
+              name: String,
+              value: org.gradle.internal.properties.PropertyValue,
+              optional: Boolean
+          ) {
+            try {
+              val deps = value.taskDependencies
+              if (deps !is TransformBackedProvider<*, *>) return
+
+              val wrapper = DefaultTaskDependency()
+              wrapper.add(deps)
+              for (dep in wrapper.getDependencies(task)) {
+                result.add(dep.path)
+              }
+            } catch (_: Exception) {}
+          }
+        })
+  } catch (e: Exception) {
+    task.logger.debug(
+        "Could not analyze @Input provider dependencies for ${task.path}: ${e.message}")
+  }
+
+  return result
 }

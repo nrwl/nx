@@ -27,6 +27,7 @@ dependencies {
   }
   testImplementation(libs.kotlin.test)
   testImplementation(libs.junit.jupiter)
+  testImplementation(kotlin("gradle-plugin"))
 }
 
 java {

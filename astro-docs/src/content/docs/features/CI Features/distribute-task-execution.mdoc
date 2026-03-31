@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -73,7 +73,7 @@ jobs:
 
 This command tells Nx Cloud to:
 
-- Start a CI run (`npx nx-cloud start-ci-run`)
+- Start a CI run (`npx nx start-ci-run`)
 - Collect all Nx commands that are being issued (e.g., `pnpm exec nx affected -t lint test build`) and
 - Distribute them across 3 agents (`3 linux-medium-js`) where `linux-medium-js` is a predefined agent [launch template](/docs/reference/nx-cloud/launch-templates).
 
@@ -93,7 +93,7 @@ _**Nx Agents use a task-centric approach**_ to distribution. Current CI systems 
 
 _**Nx Agents are cost and resource-efficient**_ as the tasks are automatically distributed - **optimizing for speed while also ensuring resource utilization is high** and idle time is low. You can also [dynamically adjust the number of agents](/docs/features/ci-features/dynamic-agents) based on the size of the PR, and we're working on [some more AI-powered features](/docs/features/ci-features/self-healing-ci) to optimize this even further. In addition, [remote caching](/docs/features/ci-features/remote-cache) guarantees tasks are not run twice, and artifacts are shared efficiently among agents.
 
-_**Nx Agents are non-invasive**_ in that you don't need to completely overhaul your existing CI configuration or your Nx workspace to use them. You can start using Nx Agents with your existing CI provider by adding the `nx-cloud start-ci-run...` command mentioned previously. In addition, all artifacts and logs are played back to the main job so you can keep processing them as if they were run on the main job. Hence, your existing post-processing steps should still keep working as before.
+_**Nx Agents are non-invasive**_ in that you don't need to completely overhaul your existing CI configuration or your Nx workspace to use them. You can start using Nx Agents with your existing CI provider by adding the `nx start-ci-run...` command mentioned previously. In addition, all artifacts and logs are played back to the main job so you can keep processing them as if they were run on the main job. Hence, your existing post-processing steps should still keep working as before.
 
 For a more thorough explanation of how Nx Agents optimize your CI pipeline, read this [guide to parallelization and distribution in CI](/docs/concepts/ci-concepts/parallelization-distribution).
 
