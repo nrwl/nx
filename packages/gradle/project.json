@@ -17,6 +17,9 @@
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
     },
+    "copy-assets": {
+      "dependsOn": [":gradle-batch-runner:gradle:assemble"]
+    },
     "build-base": {
       "dependsOn": [
         "^build-base",
