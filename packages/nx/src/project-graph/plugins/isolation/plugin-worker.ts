@@ -36,22 +36,17 @@ let plugin: LoadedNxPlugin;
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
 
+const CONNECT_TIMEOUT_MS = 30_000;
+
 let connectErrorTimeout = setErrorTimeout(
-  30_000,
-  `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within 5 seconds. ` +
+  CONNECT_TIMEOUT_MS,
+  `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within ${CONNECT_TIMEOUT_MS / 1000} seconds. ` +
     'Plugin workers expect to receive a socket connection from the parent process shortly after being started. ' +
     'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
 );
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
-
-  // Stop accepting new connections immediately. There should only
-  // ever be one host → worker connection since the worker is spawned
-  // per host process. Closing the server here prevents phantom
-  // connections (e.g., from overlapping connection attempts) from
-  // creating duplicate load timeouts that would kill the worker.
-  server.close();
 
   logger.verbose(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) connected`

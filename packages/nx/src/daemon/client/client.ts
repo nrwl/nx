@@ -28,6 +28,7 @@ import {
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
@@ -1174,35 +1175,34 @@ export class DaemonClient {
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
   }): Promise<boolean> {
-    let attempts = 0;
-
     clientLogger.log(
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    while (attempts < WAIT_FOR_SERVER_CONFIG.maxAttempts) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, WAIT_FOR_SERVER_CONFIG.delayMs)
-      );
-      attempts++;
-
-      try {
-        if (await this.isServerAvailable()) {
-          clientLogger.log(
-            `[Client] Server available after ${attempts} attempts`
-          );
-          return true;
-        }
-      } catch (err) {
-        if (err instanceof VersionMismatchError) {
-          if (!options.ignoreVersionMismatch) {
-            throw err;
+    const socket = await waitForSocketConnection(
+      () => {
+        try {
+          return this.getSocketPath();
+        } catch (err) {
+          if (err instanceof VersionMismatchError) {
+            if (!options.ignoreVersionMismatch) {
+              throw err;
+            }
           }
-          // Keep waiting - old cache file may exist
-        } else {
-          throw err;
+          // Socket path not available yet — keep polling
+          return null;
         }
+      },
+      {
+        maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
+        delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
       }
+    );
+
+    if (socket) {
+      socket.destroy();
+      clientLogger.log(`[Client] Server available`);
+      return true;
     }
 
     clientLogger.log(
