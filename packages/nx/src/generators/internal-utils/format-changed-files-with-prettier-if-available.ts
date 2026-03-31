@@ -1,17 +1,18 @@
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { isUsingPrettier } from '../../utils/is-using-prettier';
+import { detectFormatter } from '../../utils/formatter';
+import { formatContentWithOxfmt } from '../../utils/oxfmt';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 
 /**
- * Formats all the created or updated files using Prettier
+ * Formats all the created or updated files using the configured formatter
  * @param tree - the file system tree
  *
  * @remarks
- * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip Prettier
- * formatting. This is useful for repositories that use alternative formatters
- * like Biome, dprint, or have custom formatting requirements.
+ * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip
+ * formatting. This is useful for repositories that have custom formatting
+ * requirements.
  */
 export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree,
@@ -52,19 +53,31 @@ export async function formatFilesWithPrettierIfAvailable(
     return results;
   }
 
+  const formatterType = detectFormatter(root);
+  if (!formatterType) {
+    return results;
+  }
+
+  if (formatterType === 'prettier') {
+    return formatFilesWithPrettier(files, root, options);
+  } else {
+    return formatFilesWithOxfmt(files, root, options);
+  }
+}
+
+async function formatFilesWithPrettier(
+  files: { path: string; content: string | Buffer }[],
+  root: string,
+  options?: { silent?: boolean }
+): Promise<Map<string, string>> {
+  const results = new Map<string, string>();
+
   let prettier: typeof Prettier;
   try {
     const prettierPath = require.resolve('prettier', {
       paths: [...getNxRequirePaths(root), __dirname],
     });
     prettier = require(prettierPath);
-    /**
-     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
-     * before proceeding to format with it.
-     */
-    if (!isUsingPrettier(root)) {
-      return results;
-    }
   } catch {}
 
   if (!prettier) {
@@ -75,30 +88,56 @@ export async function formatFilesWithPrettierIfAvailable(
     Array.from(files).map(async (file) => {
       try {
         const systemPath = path.join(root, file.path);
-        let options: any = {
+        let resolvedOptions: any = {
           filepath: systemPath,
         };
 
-        const resolvedOptions = await prettier.resolveConfig(systemPath, {
+        const config = await prettier.resolveConfig(systemPath, {
           editorconfig: true,
         });
-        if (!resolvedOptions) {
+        if (!config) {
           return;
         }
-        options = {
-          ...options,
+        resolvedOptions = {
           ...resolvedOptions,
+          ...config,
         };
 
-        const support = await prettier.getFileInfo(systemPath, options);
+        const support = await prettier.getFileInfo(systemPath, resolvedOptions);
         if (support.ignored || !support.inferredParser) {
           return;
         }
 
         results.set(
           file.path,
-          await prettier.format(file.content.toString('utf-8'), options)
+          await prettier.format(file.content.toString('utf-8'), resolvedOptions)
         );
+      } catch (e) {
+        if (!options?.silent) {
+          console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
+        }
+      }
+    })
+  );
+
+  return results;
+}
+
+async function formatFilesWithOxfmt(
+  files: { path: string; content: string | Buffer }[],
+  root: string,
+  options?: { silent?: boolean }
+): Promise<Map<string, string>> {
+  const results = new Map<string, string>();
+
+  await Promise.all(
+    Array.from(files).map(async (file) => {
+      try {
+        const formatted = await formatContentWithOxfmt(
+          path.join(root, file.path),
+          file.content.toString('utf-8')
+        );
+        results.set(file.path, formatted);
       } catch (e) {
         if (!options?.silent) {
           console.warn(`Could not format ${file.path}. Error: "${e.message}"`);

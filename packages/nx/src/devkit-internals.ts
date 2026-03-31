@@ -49,6 +49,9 @@ export {
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
 export { isUsingPrettierInTree } from './utils/is-using-prettier';
+export { detectFormatter, detectFormatterInTree } from './utils/formatter';
+export type { FormatterType } from './utils/formatter';
+export { formatContentWithOxfmt } from './utils/oxfmt';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';

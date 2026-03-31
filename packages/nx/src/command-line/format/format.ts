@@ -1,4 +1,4 @@
-import { exec, execSync } from 'node:child_process';
+import { exec, execFile, execFileSync, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import { major } from 'semver';
 import * as yargs from 'yargs';
@@ -25,22 +25,21 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { detectFormatter, type FormatterType } from '../../utils/formatter';
+import { getOxfmtBinPath } from '../../utils/oxfmt';
 
 export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
-  let prettier: typeof import('prettier');
-  try {
-    prettier = await handleImport('prettier');
-  } catch {
-    output.error({
-      title: 'Prettier is not installed.',
-      bodyLines: [
-        `Please install "prettier" and try again, or don't run the "nx format:${command}" command.`,
-      ],
+  const formatterType = detectFormatter(workspaceRoot);
+
+  if (!formatterType) {
+    output.warn({
+      title: 'No formatter configured.',
+      bodyLines: ['Install oxfmt or prettier to enable formatting.'],
     });
-    process.exit(1);
+    return;
   }
 
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
@@ -49,8 +48,9 @@ export async function format(
     { printWarnings: false },
     readNxJson()
   );
+
   const patterns = (
-    await getPatterns(prettier, { ...args, ...nxArgs } as any)
+    await getPatterns(formatterType, { ...args, ...nxArgs } as any)
   ).map((p) => {
     // On non-Windows, escape $ to prevent shell variable interpolation
     // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
@@ -70,22 +70,20 @@ export async function format(
         sortTsConfig();
       }
       addRootConfigFiles(chunkList, nxArgs);
-      chunkList.forEach((chunk) => write(prettier, chunk));
+      chunkList.forEach((chunk) => write(formatterType, chunk));
       break;
     case 'check': {
       const filesWithDifferentFormatting = [];
       for (const chunk of chunkList) {
-        const files = await check(chunk);
+        const files = await check(formatterType, chunk);
         filesWithDifferentFormatting.push(...files);
       }
       if (filesWithDifferentFormatting.length > 0) {
         if (nxArgs.verbose) {
           output.error({
-            title:
-              'The following files are not formatted correctly based on your Prettier configuration',
+            title: 'The following files are not formatted correctly',
             bodyLines: [
               '- Run "nx format:write" and commit the resulting diff to fix these files.',
-              '- Please note, Prettier does not support a native way to diff the output of its check logic (https://github.com/prettier/prettier/issues/6885).',
               '',
               ...filesWithDifferentFormatting,
             ],
@@ -101,7 +99,7 @@ export async function format(
 }
 
 async function getPatterns(
-  prettier: typeof import('prettier'),
+  formatterType: FormatterType,
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
   const allFilesPattern = ['.'];
@@ -118,21 +116,21 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    const supportedExtensions = new Set(
-      (await prettier.getSupportInfo()).languages
-        .flatMap((language) => language.extensions)
-        .filter((extension) => !!extension)
-        // Prettier supports ".swcrc" as a file instead of an extension
-        // So we add ".swcrc" as a supported extension manually
-        // which allows it to be considered for calculating "patterns"
-        .concat('.swcrc')
-    );
+    let patterns = p.files.map((f) => path.relative(workspaceRoot, f));
 
-    const patterns = p.files
-      .map((f) => path.relative(workspaceRoot, f))
-      .filter((f) => fileExists(f) && supportedExtensions.has(path.extname(f)));
+    if (formatterType === 'prettier') {
+      const prettier = await handleImport('prettier');
+      const supportedExtensions = new Set(
+        (await prettier.getSupportInfo()).languages
+          .flatMap((language) => language.extensions)
+          .filter((extension) => !!extension)
+          .concat('.swcrc')
+      );
+      patterns = patterns.filter(
+        (f) => fileExists(f) && supportedExtensions.has(path.extname(f))
+      );
+    }
 
-    // exclude patterns in .nxignore or .gitignore
     const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
 
     if (args.libsAndApps) {
@@ -174,9 +172,6 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
       chunk.push(file);
     }
   };
-  // if (workspaceJsonPath) {
-  //   addToChunkIfNeeded(workspaceJsonPath);
-  // }
   ['nx.json', getRootTsConfigFileName()]
     .filter(Boolean)
     .forEach(addToChunkIfNeeded);
@@ -193,66 +188,114 @@ function getPatternsFromProjects(
   return getProjectRoots(projects, projectGraph);
 }
 
-function write(prettier: typeof import('prettier'), patterns: string[]) {
-  if (patterns.length > 0) {
-    const [swcrcPatterns, regularPatterns] = patterns.reduce(
-      (result, pattern) => {
-        result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
-        return result;
-      },
-      [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
-    );
-    const prettierPath = getPrettierPath();
-    const listDifferentArg = shouldUseListDifferent(prettier.version)
-      ? '--list-different '
-      : '';
+function write(formatterType: FormatterType, patterns: string[]) {
+  if (patterns.length === 0) {
+    return;
+  }
 
+  if (formatterType === 'oxfmt') {
+    writeWithOxfmt(patterns);
+  } else {
+    writeWithPrettier(patterns);
+  }
+}
+
+function writeWithOxfmt(patterns: string[]) {
+  const oxfmtPath = getOxfmtBinPath();
+  const unquoted = patterns.map(stripQuotes);
+  execFileSync('node', [oxfmtPath, '--write', ...unquoted], {
+    stdio: [0, 1, 2],
+    windowsHide: true,
+  });
+}
+
+function writeWithPrettier(patterns: string[]) {
+  const [swcrcPatterns, regularPatterns] = patterns.reduce(
+    (result, pattern) => {
+      result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
+      return result;
+    },
+    [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
+  );
+  const prettierPath = getPrettierPath();
+  const listDifferentArg = shouldUseListDifferent() ? '--list-different ' : '';
+
+  execSync(
+    `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns.join(
+      ' '
+    )}`,
+    {
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    }
+  );
+
+  if (swcrcPatterns.length > 0) {
     execSync(
-      `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns.join(
+      `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns.join(
         ' '
-      )}`,
+      )} --parser json`,
       {
         stdio: [0, 1, 2],
         windowsHide: true,
       }
     );
-
-    if (swcrcPatterns.length > 0) {
-      execSync(
-        `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns.join(
-          ' '
-        )} --parser json`,
-        {
-          stdio: [0, 1, 2],
-          windowsHide: true,
-        }
-      );
-    }
   }
 }
 
-async function check(patterns: string[]): Promise<string[]> {
+async function check(
+  formatterType: FormatterType,
+  patterns: string[]
+): Promise<string[]> {
   if (patterns.length === 0) {
     return [];
   }
 
-  const prettierPath = getPrettierPath();
+  if (formatterType === 'oxfmt') {
+    return checkWithOxfmt(patterns);
+  } else {
+    return checkWithPrettier(patterns);
+  }
+}
 
+function checkWithOxfmt(patterns: string[]): Promise<string[]> {
+  const oxfmtPath = getOxfmtBinPath();
+  const unquoted = patterns.map(stripQuotes);
+  return new Promise((resolve, reject) => {
+    execFile(
+      'node',
+      [oxfmtPath, '--list-different', ...unquoted],
+      { encoding: 'utf-8' as const, windowsHide: true },
+      (error, stdout) => {
+        if (error) {
+          if (stdout.length === 0) {
+            reject(error);
+          }
+          resolve(stdout.trim().split('\n'));
+        } else {
+          if (stdout.trim().length > 0) {
+            resolve(stdout.trim().split('\n'));
+          }
+          resolve([]);
+        }
+      }
+    );
+  });
+}
+
+function checkWithPrettier(patterns: string[]): Promise<string[]> {
+  const prettierPath = getPrettierPath();
   return new Promise((resolve, reject) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
       { encoding: 'utf-8', windowsHide: true },
       (error, stdout) => {
         if (error) {
-          // The command failed because Prettier threw an error.
           if (stdout.length === 0) {
             reject(error);
           }
-
-          // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.
           resolve(stdout.trim().split('\n'));
         } else {
-          // The command succeeded so there are no files with different formatting
           resolve([]);
         }
       }
@@ -297,15 +340,32 @@ let useListDifferent: boolean | undefined;
  * Determines if --list-different should be used with --write.
  * Prettier 4+ and 3.6.x with experimental CLI don't support combining these flags.
  */
-function shouldUseListDifferent(prettierVersion: string): boolean {
+function shouldUseListDifferent(): boolean {
   if (useListDifferent !== undefined) {
     return useListDifferent;
   }
 
-  const prettierMajor = major(prettierVersion);
-  const isExperimentalCli = process.env.PRETTIER_EXPERIMENTAL_CLI === '1';
+  try {
+    const { packageJson } = readModulePackageJson('prettier');
+    const prettierMajor = major(packageJson.version);
+    const isExperimentalCli = process.env.PRETTIER_EXPERIMENTAL_CLI === '1';
 
-  useListDifferent = prettierMajor < 4 && !isExperimentalCli;
+    useListDifferent = prettierMajor < 4 && !isExperimentalCli;
+  } catch {
+    useListDifferent = false;
+  }
 
   return useListDifferent;
+}
+
+/**
+ * Strip surrounding double quotes from a pattern string.
+ * Patterns are quoted for shell-based exec calls (prettier),
+ * but execFile-based calls (oxfmt) need raw paths.
+ */
+function stripQuotes(pattern: string): string {
+  if (pattern.startsWith('"') && pattern.endsWith('"')) {
+    return pattern.slice(1, -1);
+  }
+  return pattern;
 }

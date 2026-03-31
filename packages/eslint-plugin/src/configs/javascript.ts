@@ -1,8 +1,3 @@
-import { packageExists } from '../utils/config-utils';
-
-const isPrettierAvailable =
-  packageExists('prettier') && packageExists('eslint-config-prettier');
-
 /**
  * This configuration is intended to be applied to ALL .js and .jsx files
  * within an Nx workspace.
@@ -34,7 +29,6 @@ export default {
     'eslint:recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
-    ...(isPrettierAvailable ? ['prettier'] : []),
   ],
   rules: {
     '@typescript-eslint/explicit-member-accessibility': 'off',

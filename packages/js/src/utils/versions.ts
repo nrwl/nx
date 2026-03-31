@@ -3,6 +3,7 @@ import { join } from 'path';
 export const nxVersion = require(join('@nx/js', 'package.json')).version;
 
 export const esbuildVersion = '^0.27.0';
+export const oxfmtVersion = '^0.43.0';
 export const prettierVersion = '~3.6.2';
 export const swcCliVersion = '~0.8.1';
 export const swcCoreVersion = '~1.15.5';
