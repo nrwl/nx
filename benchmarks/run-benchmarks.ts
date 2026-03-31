@@ -3,7 +3,7 @@
  * - goals.json (committed) — target times the team agrees on
  * - baseline.json (gitignored) — local per-machine baseline for personal comparison
  *
- * Run with --update-baseline to save current results as the new local baseline.
+ * Run with --set-baseline to save current results as the new local baseline.
  */
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -61,12 +61,30 @@ function formatDelta(current: number, baseline: number): string {
 }
 
 function main() {
-  const updateBaseline = process.argv.includes('--update-baseline');
+  const updateBaseline = process.argv.includes('--set-baseline');
 
   // Load goals (committed)
   let goals: Goals = {};
   if (existsSync(goalsPath)) {
     goals = JSON.parse(readFileSync(goalsPath, 'utf-8'));
+  }
+
+  // If setting baseline, write it first so the report shows it
+  if (updateBaseline) {
+    const benchmarkNames = [
+      'version',
+      'show-projects',
+      'cat-warm',
+      'lint-warm',
+      'build-warm',
+    ];
+    const newBaseline: Baseline = {};
+    for (const name of benchmarkNames) {
+      const result = loadResult(name);
+      if (result) newBaseline[name] = { mean: result.mean };
+    }
+    writeFileSync(baselinePath, JSON.stringify(newBaseline, null, 2) + '\n');
+    console.log(colors.green(`Baseline saved: ${baselinePath}\n`));
   }
 
   // Load baseline (local, gitignored)
@@ -150,14 +168,15 @@ function main() {
   console.log('');
 
   // Update baseline if requested
-  if (updateBaseline) {
-    const newBaseline: Baseline = { ...baseline };
-    for (const [name, result] of Object.entries(results)) {
-      newBaseline[name] = { mean: result.mean };
-    }
-    writeFileSync(baselinePath, JSON.stringify(newBaseline, null, 2) + '\n');
-    console.log(colors.green(`Baseline updated: ${baselinePath}`));
+  if (!updateBaseline && !existsSync(baselinePath) && !process.env.CI) {
+    console.log(
+      colors.dim(
+        'No local baseline found. Run with --set-baseline to save one:\n  pnpm bench -- --set-baseline'
+      )
+    );
+    console.log('');
   }
+
 }
 
 main();

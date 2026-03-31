@@ -22,15 +22,19 @@ pnpm nx bench:show-projects benchmarks
 pnpm nx bench:lint-warm benchmarks
 ```
 
-## Updating the Baseline
+## Baseline
 
-After making performance improvements, update the golden numbers:
+The baseline is a local-only file (`baseline.json`, gitignored) that captures your machine's numbers. When you run `pnpm bench`, the report compares your current run against both the baseline and the committed `goals.json` targets, showing colored deltas.
+
+### Generating / Updating the Baseline
+
+Run all benchmarks and save the results as your local baseline:
 
 ```bash
-pnpm bench:update-baseline
+pnpm bench -- --set-baseline
 ```
 
-Then commit `benchmarks/baseline.json`.
+Re-run the same command after making performance improvements to overwrite with fresh numbers.
 
 ## Benchmarks
 
