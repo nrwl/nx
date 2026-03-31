@@ -14,14 +14,22 @@ describe('js init generator', () => {
   });
 
   it('should install prettier package', async () => {
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['prettier']).toBeDefined();
   });
 
+  it('should add oxfmt to devDependencies', async () => {
+    await init(tree, { formatter: 'oxfmt' });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['oxfmt']).toBeDefined();
+    expect(packageJson.devDependencies['prettier']).toBeUndefined();
+  });
+
   it('should create .prettierrc and .prettierignore files', async () => {
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     const prettierrc = readJson(tree, '.prettierrc');
     expect(prettierrc).toEqual({ singleQuote: true });
@@ -36,7 +44,7 @@ describe('js init generator', () => {
     writeJson(tree, '.prettierrc', { singleQuote: false });
     tree.write('.prettierignore', `# custom ignore file`);
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     const prettierrc = readJson(tree, '.prettierrc');
     expect(prettierrc).toEqual({ singleQuote: false });
@@ -50,7 +58,7 @@ describe('js init generator', () => {
     tree.delete('.prettierignore');
     tree.write('.prettierrc.js', `module.exports = { singleQuote: true };`);
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     expect(tree.exists('.prettierrc')).toBeFalsy();
     expect(tree.exists('.prettierignore')).toBeTruthy();
@@ -63,7 +71,7 @@ describe('js init generator', () => {
     // No existing recommendations
     writeJson(tree, '.vscode/extensions.json', {});
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     let json = readJson(tree, '.vscode/extensions.json');
     expect(json).toEqual({
@@ -73,7 +81,7 @@ describe('js init generator', () => {
     // Existing recommendations
     writeJson(tree, '.vscode/extensions.json', { recommendations: ['foo'] });
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     json = readJson(tree, '.vscode/extensions.json');
     expect(json).toEqual({
@@ -82,13 +90,13 @@ describe('js init generator', () => {
   });
 
   it('should skip adding prettier extension if .vscode/extensions.json file does not exist', async () => {
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     expect(tree.exists('.vscode/extensions.json')).toBeFalsy();
   });
 
   it('should install typescript package when it is not already installed', async () => {
-    await init(tree, {});
+    await init(tree, { formatter: 'none' });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['typescript']).toBeDefined();
@@ -100,7 +108,7 @@ describe('js init generator', () => {
       return json;
     });
 
-    await init(tree, {});
+    await init(tree, { formatter: 'none' });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['typescript']).toBe(typescriptVersion);
@@ -112,7 +120,7 @@ describe('js init generator', () => {
       return json;
     });
 
-    await init(tree, {});
+    await init(tree, { formatter: 'none' });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['typescript']).toBe('~5.4.0');
@@ -124,6 +132,7 @@ describe('js init generator', () => {
   it('should support skipping base tsconfig file', async () => {
     await init(tree, {
       addTsConfigBase: false,
+      formatter: 'none',
     });
 
     expect(tree.exists('tsconfig.base.json')).toBeFalsy();
@@ -160,6 +169,7 @@ describe('js init generator', () => {
 
       await init(tree, {
         addTsConfigBase: false,
+        formatter: 'none',
       });
 
       const packageJson = readJson(tree, 'package.json');

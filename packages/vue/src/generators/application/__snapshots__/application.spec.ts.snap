@@ -47,7 +47,6 @@ exports[`application generator should set up project correctly for cypress 3`] =
     "plugin:vue/vue3-essential",
     "eslint:recommended",
     "@vue/eslint-config-typescript",
-    "@vue/eslint-config-prettier/skip-formatting",
     "../.eslintrc.json"
   ],
   "ignorePatterns": [
@@ -138,7 +137,6 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
-  ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
   "nx.json",
@@ -214,7 +212,6 @@ exports[`application generator should set up project correctly with given option
     "plugin:vue/vue3-essential",
     "eslint:recommended",
     "@vue/eslint-config-typescript",
-    "@vue/eslint-config-prettier/skip-formatting",
     "../.eslintrc.json"
   ],
   "ignorePatterns": [
@@ -325,7 +322,6 @@ exports[`application generator should set up project correctly with given option
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
-  ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
   "nx.json",

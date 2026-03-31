@@ -70,7 +70,6 @@ describe('convert-to-flat-config generator', () => {
             "@typescript-eslint/eslint-plugin": "^8.40.0",
             "@typescript-eslint/parser": "^8.40.0",
             "eslint": "^9.8.0",
-            "eslint-config-prettier": "^10.0.0",
             "typescript-eslint": "^8.40.0"
           }
         }
@@ -670,7 +669,6 @@ describe('convert-to-flat-config generator', () => {
             "@typescript-eslint/eslint-plugin": "^8.40.0",
             "@typescript-eslint/parser": "^8.40.0",
             "eslint": "^9.8.0",
-            "eslint-config-prettier": "^10.0.0",
             "typescript-eslint": "^8.40.0"
           }
         }

@@ -7,16 +7,16 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 
 /**
- * Formats all the created or updated files using Prettier
+ * Formats all the created or updated files using the configured formatter
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
  * @remarks
- * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip Prettier
+ * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip
  * formatting. This is useful for repositories that use alternative formatters
- * like Biome, dprint, or have custom formatting requirements.
+ * or have custom formatting requirements.
  *
- * Note: `NX_SKIP_FORMAT` only skips Prettier formatting. TSConfig path sorting
+ * Note: `NX_SKIP_FORMAT` only skips formatting. TSConfig path sorting
  * (controlled by `sortRootTsconfigPaths` option or `NX_FORMAT_SORT_TSCONFIG_PATHS`)
  * will still occur.
  */
@@ -33,29 +33,51 @@ export async function formatFiles(
     sortTsConfig(tree);
   }
 
-  // Skip Prettier formatting if NX_SKIP_FORMAT is set
+  // Skip formatting if NX_SKIP_FORMAT is set
   // This is checked after tsconfig sorting since sorting is a separate concern
   if (process.env.NX_SKIP_FORMAT === 'true') {
     return;
   }
 
-  let prettier: typeof Prettier;
+  let formatterType: 'prettier' | 'oxfmt' | null = null;
   try {
-    prettier = await import('prettier');
-    /**
-     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
-     * before proceeding to format with it.
-     */
-    if (!isUsingPrettierInTree(tree)) {
-      return;
+    const { detectFormatterInTree } = require('nx/src/devkit-internals');
+    if (detectFormatterInTree) {
+      formatterType = detectFormatterInTree(tree);
     }
-  } catch {}
+  } catch {
+    // Fallback for older nx versions: check prettier directly
+    try {
+      await import('prettier');
+      if (isUsingPrettierInTree(tree)) {
+        formatterType = 'prettier';
+      }
+    } catch {}
+  }
 
-  if (!prettier) return;
+  if (!formatterType) return;
 
   const files = new Set(
     tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
+
+  if (formatterType === 'prettier') {
+    await formatWithPrettier(tree, files);
+  } else if (formatterType === 'oxfmt') {
+    await formatWithOxfmt(tree, files);
+  }
+}
+
+async function formatWithPrettier(
+  tree: Tree,
+  files: Set<{ path: string; content: Buffer }>
+) {
+  let prettier: typeof Prettier;
+  try {
+    prettier = await import('prettier');
+  } catch {
+    return;
+  }
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
 
@@ -94,6 +116,34 @@ export async function formatFiles(
   );
 }
 
+async function formatWithOxfmt(
+  tree: Tree,
+  files: Set<{ path: string; content: Buffer }>
+) {
+  let formatContentWithOxfmt: typeof import('nx/src/devkit-internals').formatContentWithOxfmt;
+  try {
+    formatContentWithOxfmt =
+      require('nx/src/devkit-internals').formatContentWithOxfmt;
+    if (!formatContentWithOxfmt) return;
+  } catch {
+    return;
+  }
+
+  await Promise.all(
+    Array.from(files).map(async (file) => {
+      try {
+        const formatted = await formatContentWithOxfmt(
+          path.join(tree.root, file.path),
+          file.content.toString('utf-8')
+        );
+        tree.write(file.path, formatted);
+      } catch (e) {
+        console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
+      }
+    })
+  );
+}
+
 function sortTsConfig(tree: Tree) {
   try {
     const tsConfigPath = getRootTsConfigPath(tree);
@@ -102,7 +152,6 @@ function sortTsConfig(tree: Tree) {
     }
     const tsconfig = readJson(tree, tsConfigPath);
     if (!tsconfig.compilerOptions?.paths) {
-      // no paths to sort
       return;
     }
     writeJson(tree, tsConfigPath, {

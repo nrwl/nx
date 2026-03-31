@@ -8,7 +8,6 @@ import { useFlatConfig } from '../../utils/flat-config';
 import {
   eslint9__eslintVersion,
   eslint9__typescriptESLintVersion,
-  eslintConfigPrettierVersion,
   nxVersion,
   typescriptESLintVersion,
 } from '../../utils/versions';
@@ -66,7 +65,6 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
           '@nx/eslint-plugin': nxVersion,
           '@typescript-eslint/parser': typescriptESLintVersion,
           '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
         }
       )
     : () => {};
@@ -89,7 +87,6 @@ function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
           '@eslint/js': eslint9__eslintVersion,
           '@nx/eslint-plugin': nxVersion,
           eslint: eslint9__eslintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
           'typescript-eslint': eslint9__typescriptESLintVersion,
         }
       )
