@@ -1446,6 +1446,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     try {
       if (
+        opts.interactive !== false &&
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&

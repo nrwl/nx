@@ -71,7 +71,6 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         'Enable prompts to confirm whether to collect optional package updates and migrations.',
       type: 'boolean',
-      default: false,
     })
     .option('excludeAppliedMigrations', {
       describe:
