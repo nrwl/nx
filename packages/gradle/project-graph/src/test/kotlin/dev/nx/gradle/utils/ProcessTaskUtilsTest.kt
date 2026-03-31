@@ -3,7 +3,10 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -562,6 +565,29 @@ class ProcessTaskUtilsTest {
       assertTrue(result.any { it.contains("task1") }, "Found: $result")
       assertTrue(result.any { it.contains("task2") }, "Found: $result")
       assertTrue(result.any { it.contains("task3") }, "Found: $result")
+    }
+
+    @Test
+    fun `identifies @Input provider-based dependencies via PropertyVisitor`() {
+      val producerProvider =
+          project.tasks.register("producer") { task ->
+            task.outputs.dir(
+                java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
+          }
+
+      abstract class TaskWithInputProvider : DefaultTask() {
+        @get:Input abstract val inputProp: Property<String>
+      }
+
+      val consumerProvider =
+          project.tasks.register("consumer", TaskWithInputProvider::class.java)
+      consumerProvider.configure { task ->
+        task.inputProp.set(producerProvider.map { it.name })
+      }
+
+      val result = findProviderBasedDependencies(consumerProvider.get())
+
+      assertTrue(result.any { it.contains("producer") }, "Found: $result")
     }
   }
 
