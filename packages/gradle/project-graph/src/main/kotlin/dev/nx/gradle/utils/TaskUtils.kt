@@ -11,6 +11,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
+import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
 
@@ -545,15 +546,15 @@ private fun collectInputPropertyDependencies(task: TaskInternal): Set<String> {
               optional: Boolean
           ) {
             try {
+              val deps = value.taskDependencies
+              if (deps !is TransformBackedProvider<*, *>) return
+
               val wrapper = DefaultTaskDependency()
-              wrapper.add(value.taskDependencies)
+              wrapper.add(deps)
               for (dep in wrapper.getDependencies(task)) {
                 result.add(dep.path)
               }
-            } catch (e: Exception) {
-              task.logger.debug(
-                  "Could not resolve @Input property '$name' for ${task.path}: ${e.message}")
-            }
+            } catch (_: Exception) {}
           }
         })
   } catch (e: Exception) {
