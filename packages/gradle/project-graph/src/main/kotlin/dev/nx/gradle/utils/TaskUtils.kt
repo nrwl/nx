@@ -550,7 +550,10 @@ private fun collectInputPropertyDependencies(task: TaskInternal): Set<String> {
               for (dep in wrapper.getDependencies(task)) {
                 result.add(dep.path)
               }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+              task.logger.debug(
+                  "Could not resolve @Input property '$name' for ${task.path}: ${e.message}")
+            }
           }
         })
   } catch (e: Exception) {
