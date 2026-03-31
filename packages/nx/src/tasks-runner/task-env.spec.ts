@@ -21,10 +21,18 @@ describe('NX_TASK_INVOCATION_CHAIN', () => {
     process.env = originalEnv;
   });
 
-  function makeTask(project: string, target: string): Task {
+  function makeTask(
+    project: string,
+    target: string,
+    configuration?: string
+  ): Task {
+    let id = `${project}:${target}`;
+    if (configuration) {
+      id += `:${configuration}`;
+    }
     return {
-      id: `${project}:${target}`,
-      target: { project, target },
+      id,
+      target: { project, target, configuration },
       overrides: {},
       outputs: [],
       projectRoot: `libs/${project}`,
@@ -61,6 +69,22 @@ describe('NX_TASK_INVOCATION_CHAIN', () => {
     );
     expect(env.NX_TASK_INVOCATION_CHAIN).toMatchInlineSnapshot(
       `"$0 -> workspace:dev -> workspace:watch"`
+    );
+  });
+
+  it('should include configuration in the chain when present', () => {
+    const task = makeTask('workspace', 'build', 'production');
+    const env = getEnvVariablesForTask(
+      task,
+      {},
+      'true',
+      false,
+      false,
+      null,
+      null
+    );
+    expect(env.NX_TASK_INVOCATION_CHAIN).toMatchInlineSnapshot(
+      `"$0 -> workspace:build:production"`
     );
   });
 

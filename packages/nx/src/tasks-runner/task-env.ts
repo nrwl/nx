@@ -133,9 +133,8 @@ function getNxEnvVariablesForTask(
   // Track the chain of task invocations across nested Nx processes for loop detection.
   // Each nested Nx process inherits this env var, allowing us to detect when a task
   // re-invokes itself (directly or indirectly) before it causes an infinite loop.
-  const taskKey = `${task.target.project}:${task.target.target}`;
   const existingChain = process.env.NX_TASK_INVOCATION_CHAIN;
-  const updatedChain = `${existingChain ?? '$0'} -> ${taskKey}`;
+  const updatedChain = `${existingChain ?? '$0'} -> ${task.id}`;
 
   return {
     ...getNxEnvVariablesForForkedProcess(

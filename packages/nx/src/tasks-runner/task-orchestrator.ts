@@ -643,6 +643,10 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
+    for (const task of tasks) {
+      this.detectTaskInvocationLoop(task);
+    }
+
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
       executorName: batch.executorName,
       taskIds: Object.keys(batch.taskGraph.tasks),
@@ -1531,7 +1535,7 @@ export class TaskOrchestrator {
    * Checks whether this task has already been invoked by a parent Nx process,
    * which would indicate an infinite loop of nested Nx invocations.
    *
-   * The NX_TASK_INVOCATION_CHAIN env var accumulates task keys (project:target)
+   * The NX_TASK_INVOCATION_CHAIN env var accumulates task IDs (project:target[:configuration])
    * across nested Nx processes. If the current task is already in the chain,
    * we're in a loop.
    */
@@ -1541,12 +1545,8 @@ export class TaskOrchestrator {
       return;
     }
 
-    // All entries in the chain have form `-> {key}`, since root is represented as `$0 ->`
-    const taskKey = `-> ${task.target.project}:${task.target.target}`;
-
     const chainTasks = invocationChain.split(' -> ').slice(1); // Skip '$0'
-    const currentTaskKey = `${task.target.project}:${task.target.target}`;
-    if (chainTasks.includes(currentTaskKey)) {
+    if (chainTasks.includes(task.id)) {
       output.error({
         title: 'Recursive task invocation detected',
         bodyLines: [
@@ -1554,7 +1554,7 @@ export class TaskOrchestrator {
           ``,
           `  ${invocationChain}`,
           ``,
-          `Task "${task.target.project}:${task.target.target}" was already invoked by a parent Nx process in this chain.`,
+          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
           `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
           `triggers a chain of tasks that eventually re-invokes itself.`,
           ``,
