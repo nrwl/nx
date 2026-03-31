@@ -74,7 +74,7 @@
       "options": { "packageRoot": "dist/packages/{projectName}" }
     },
     "build": {
-      "dependsOn": ["^build", "typecheck", "build-base", "build-native"],
+      "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
     },
