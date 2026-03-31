@@ -58,6 +58,7 @@ struct State<'a> {
     pub import_type: ImportType,
     open_brace_count: i128,
     open_bracket_count: i128,
+    open_angle_count: i128,
     blocks_stack: Vec<BlockType>,
     next_block_type: BlockType,
 }
@@ -70,6 +71,7 @@ impl<'a> State<'a> {
             previous_token: None,
             open_brace_count: 0,
             open_bracket_count: 0,
+            open_angle_count: 0,
             blocks_stack: vec![],
             next_block_type: BlockType::Block,
             import_type: ImportType::Dynamic,
@@ -127,8 +129,8 @@ impl<'a> State<'a> {
             let new_line = self.lexer.had_line_break_before_last();
 
             // This is the beginning of a new statement, reset the import type to the default
-            // Reset import type when there is new line not in braces
-            if new_line && self.open_brace_count == 0 {
+            // Reset import type when there is new line not in braces or angle brackets (generics)
+            if new_line && self.open_brace_count == 0 && self.open_angle_count == 0 {
                 self.import_type = ImportType::Dynamic;
             }
 
@@ -214,9 +216,15 @@ impl<'a> State<'a> {
                                 _ if is_identifier(&t.token) => {
                                     // Generic
                                     self.import_type = ImportType::Static;
+                                    self.open_angle_count += 1;
                                 }
                                 _ => {}
                             }
+                        }
+                    }
+                    BinOpToken::Gt => {
+                        if self.open_angle_count > 0 {
+                            self.open_angle_count -= 1;
                         }
                     }
 
@@ -1489,6 +1497,63 @@ import(myTag`react@${version}`);
         assert_eq!(
             result.dynamic_import_expressions,
             ast_results.dynamic_import_expressions
+        );
+    }
+
+    #[test]
+    fn should_find_typeof_import_in_ensure_package_pattern() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      import { ensurePackage } from '@nx/devkit';
+
+      const { configurationGenerator } = ensurePackage<
+        typeof import('@nx/playwright')
+      >('@nx/playwright', nxVersion);
+
+      const { storybookGenerator } = ensurePackage<
+        typeof import('@nx/storybook')
+      >('@nx/storybook', nxVersion);
+
+      const { cypressGenerator } = ensurePackage<
+        typeof import('@nx/cypress')
+      >('@nx/cypress', nxVersion);
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert!(
+            result
+                .static_import_expressions
+                .contains(&String::from("@nx/playwright")),
+            "Should detect @nx/playwright from typeof import in generic. Found: {:?}",
+            result.static_import_expressions
+        );
+        assert!(
+            result
+                .static_import_expressions
+                .contains(&String::from("@nx/storybook")),
+            "Should detect @nx/storybook from typeof import in generic. Found: {:?}",
+            result.static_import_expressions
+        );
+        assert!(
+            result
+                .static_import_expressions
+                .contains(&String::from("@nx/cypress")),
+            "Should detect @nx/cypress from typeof import in generic. Found: {:?}",
+            result.static_import_expressions
         );
     }
 
