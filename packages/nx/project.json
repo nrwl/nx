@@ -72,11 +72,7 @@
       "dependsOn": ["build-native"]
     },
     "build": {
-      "dependsOn": [
-        "^build-client",
-        "build-base",
-        "build-native"
-      ],
+      "dependsOn": ["^build-client", "build-base", "build-native"],
       "inputs": [
         "production",
         "^production",
