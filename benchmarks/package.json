@@ -36,7 +36,9 @@
         "parallelism": false
       },
       "bench:cat-warm": {
-        "dependsOn": ["^build"],
+        "dependsOn": [
+          "^build"
+        ],
         "parallelism": false
       },
       "bench:lint-warm": {
