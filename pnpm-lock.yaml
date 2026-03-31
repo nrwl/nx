@@ -338,7 +338,7 @@ importers:
         specifier: 3.0.2
         version: 3.0.2
       axios:
-        specifier: ^1.12.0
+        specifier: 1.12.0
         version: 1.12.0
       classnames:
         specifier: ^2.5.1
@@ -2734,7 +2734,7 @@ importers:
   packages/create-nx-workspace:
     dependencies:
       axios:
-        specifier: ^1.12.0
+        specifier: 1.12.0
         version: 1.12.0
       chalk:
         specifier: 'catalog:'
@@ -3481,7 +3481,7 @@ importers:
         specifier: 'catalog:'
         version: 0.0.7
       axios:
-        specifier: ^1.12.0
+        specifier: 1.12.0
         version: 1.12.0
       cli-cursor:
         specifier: 3.1.0
