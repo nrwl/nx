@@ -21,10 +21,6 @@ import {
 import {
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
-  readTargetDefaultsForTarget,
-  isCompatibleTarget,
-  mergeTargetDefaultWithTargetDefinition,
-  deepClone,
 } from './target-merging';
 
 import type { ConfigurationSourceMaps } from './source-maps';
@@ -125,8 +121,7 @@ function normalizeTargets(
   /**
    * Project configurations keyed by project name
    */
-  projects: Record<string, ProjectConfiguration>,
-  skipTargetDefaults?: boolean
+  projects: Record<string, ProjectConfiguration>
 ) {
   const targetErrorMessage: string[] = [];
 
@@ -138,35 +133,6 @@ function normalizeTargets(
       projects,
       [project.root, targetName].join(':')
     );
-
-    if (!skipTargetDefaults) {
-      const projectSourceMaps = sourceMaps[project.root];
-
-      const targetConfig = project.targets[targetName];
-      const targetDefaults = deepClone(
-        readTargetDefaultsForTarget(
-          targetName,
-          nxJsonConfiguration.targetDefaults,
-          targetConfig.executor
-        )
-      );
-
-      // We only apply defaults if they exist
-      if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
-        project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
-          targetName,
-          project,
-          normalizeTarget(
-            targetDefaults,
-            project,
-            workspaceRoot,
-            projects,
-            ['nx.json[targetDefaults]', targetName].join(':')
-          ),
-          projectSourceMaps
-        );
-      }
-    }
 
     const target = project.targets[targetName];
 
@@ -203,8 +169,7 @@ export function validateAndNormalizeProjectRootMap(
   workspaceRoot: string,
   projectRootMap: Record<string, ProjectConfiguration>,
   nxJsonConfiguration: NxJsonConfiguration,
-  sourceMaps: ConfigurationSourceMaps = {},
-  skipTargetDefaults?: boolean
+  sourceMaps: ConfigurationSourceMaps = {}
 ) {
   // Name -> Project, used to validate that all projects have unique names
   const projects: Record<string, ProjectConfiguration> = {};
@@ -257,8 +222,7 @@ export function validateAndNormalizeProjectRootMap(
         sourceMaps,
         nxJsonConfiguration,
         workspaceRoot,
-        projects,
-        skipTargetDefaults
+        projects
       );
     } catch (e) {
       if (e instanceof WorkspaceValidityError) {

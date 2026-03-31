@@ -2,9 +2,8 @@ import { TargetConfiguration } from '../../../config/workspace-json-project-json
 import {
   isCompatibleTarget,
   mergeTargetConfigurations,
-  mergeTargetDefaultWithTargetDefinition,
-  readTargetDefaultsForTarget,
 } from './target-merging';
+import { readTargetDefaultsForTarget } from '../project-configuration-utils/target-defaults';
 import type { SourceInformation } from './source-maps';
 
 describe('target merging', () => {
@@ -444,6 +443,170 @@ describe('target merging', () => {
   });
 });
 
+describe('spread syntax in mergeTargetConfigurations', () => {
+  it('should spread arrays in top-level target properties', () => {
+    const result = mergeTargetConfigurations(
+      {
+        executor: 'nx:run-commands',
+        inputs: ['production', '...', '{workspaceRoot}/.eslintrc.json'],
+      },
+      {
+        executor: 'nx:run-commands',
+        inputs: ['default', '{projectRoot}/**/*'],
+      }
+    );
+
+    expect(result.inputs).toEqual([
+      'production',
+      'default',
+      '{projectRoot}/**/*',
+      '{workspaceRoot}/.eslintrc.json',
+    ]);
+  });
+
+  it('should spread arrays in options', () => {
+    const result = mergeTargetConfigurations(
+      {
+        executor: 'nx:run-commands',
+        options: {
+          assets: ['new-asset', '...', 'trailing-asset'],
+        },
+      },
+      {
+        executor: 'nx:run-commands',
+        options: {
+          assets: ['base-asset-1', 'base-asset-2'],
+        },
+      }
+    );
+
+    expect(result.options.assets).toEqual([
+      'new-asset',
+      'base-asset-1',
+      'base-asset-2',
+      'trailing-asset',
+    ]);
+  });
+
+  it('should spread objects in options using "..." key', () => {
+    const result = mergeTargetConfigurations(
+      {
+        executor: 'nx:run-commands',
+        options: {
+          env: {
+            NEW_VAR: 'new-value',
+            '...': true,
+            OVERRIDE_VAR: 'overridden',
+          },
+        },
+      },
+      {
+        executor: 'nx:run-commands',
+        options: {
+          env: {
+            BASE_VAR: 'base-value',
+            OVERRIDE_VAR: 'original',
+          },
+        },
+      }
+    );
+
+    expect(result.options.env).toEqual({
+      NEW_VAR: 'new-value',
+      BASE_VAR: 'base-value',
+      OVERRIDE_VAR: 'overridden',
+    });
+  });
+
+  it('should spread arrays in configurations', () => {
+    const result = mergeTargetConfigurations(
+      {
+        executor: 'nx:run-commands',
+        configurations: {
+          prod: {
+            fileReplacements: [
+              { replace: 'new.ts', with: 'new.prod.ts' },
+              '...',
+            ],
+          },
+        },
+      },
+      {
+        executor: 'nx:run-commands',
+        configurations: {
+          prod: {
+            fileReplacements: [{ replace: 'env.ts', with: 'env.prod.ts' }],
+          },
+        },
+      }
+    );
+
+    expect(result.configurations.prod.fileReplacements).toEqual([
+      { replace: 'new.ts', with: 'new.prod.ts' },
+      { replace: 'env.ts', with: 'env.prod.ts' },
+    ]);
+  });
+
+  it('should track source map entries for spread array elements', () => {
+    const sourceMap: Record<string, SourceInformation> = {
+      'targets.build': ['base.json', 'base-plugin'],
+      'targets.build.inputs': ['base.json', 'base-plugin'],
+    };
+    const result = mergeTargetConfigurations(
+      {
+        executor: 'nx:run-commands',
+        inputs: ['new-input', '...', 'trailing-input'],
+      },
+      {
+        executor: 'nx:run-commands',
+        inputs: ['base-input'],
+      },
+      sourceMap,
+      ['nx.json', 'override-plugin'],
+      'targets.build'
+    );
+
+    expect(result.inputs).toEqual([
+      'new-input',
+      'base-input',
+      'trailing-input',
+    ]);
+    // Parent key attributed to the new source
+    expect(sourceMap['targets.build.inputs']).toEqual([
+      'nx.json',
+      'override-plugin',
+    ]);
+    // Per-element tracking
+    expect(sourceMap['targets.build.inputs.0']).toEqual([
+      'nx.json',
+      'override-plugin',
+    ]);
+    expect(sourceMap['targets.build.inputs.1']).toEqual([
+      'base.json',
+      'base-plugin',
+    ]);
+    expect(sourceMap['targets.build.inputs.2']).toEqual([
+      'nx.json',
+      'override-plugin',
+    ]);
+  });
+
+  it('should replace array without spread token', () => {
+    const result = mergeTargetConfigurations(
+      {
+        executor: 'nx:run-commands',
+        inputs: ['only-new-input'],
+      },
+      {
+        executor: 'nx:run-commands',
+        inputs: ['base-input-1', 'base-input-2'],
+      }
+    );
+
+    expect(result.inputs).toEqual(['only-new-input']);
+  });
+});
+
 describe('isCompatibleTarget', () => {
   it('should return true if only one target specifies an executor', () => {
     expect(
@@ -537,96 +700,5 @@ describe('isCompatibleTarget', () => {
         }
       )
     ).toBe(false);
-  });
-});
-
-describe('merge target default with target definition', () => {
-  it('should merge options', () => {
-    const sourceMap: Record<string, SourceInformation> = {
-      targets: ['dummy', 'dummy.ts'],
-      'targets.build': ['dummy', 'dummy.ts'],
-      'targets.build.options': ['dummy', 'dummy.ts'],
-      'targets.build.options.command': ['dummy', 'dummy.ts'],
-      'targets.build.options.cwd': ['project.json', 'nx/project-json'],
-    };
-    const result = mergeTargetDefaultWithTargetDefinition(
-      'build',
-      {
-        name: 'myapp',
-        root: 'apps/myapp',
-        targets: {
-          build: {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo',
-              cwd: '{workspaceRoot}',
-            },
-          },
-        },
-      },
-      {
-        options: {
-          command: 'tsc',
-          cwd: 'apps/myapp',
-        },
-      },
-      sourceMap
-    );
-
-    // Command was defined by a non-core plugin so it should be
-    // overwritten.
-    expect(result.options.command).toEqual('tsc');
-    expect(sourceMap['targets.build.options.command']).toEqual([
-      'nx.json',
-      'nx/target-defaults',
-    ]);
-    // Cwd was defined by a core plugin so it should be left unchanged.
-    expect(result.options.cwd).toEqual('{workspaceRoot}');
-    expect(sourceMap['targets.build.options.cwd']).toEqual([
-      'project.json',
-      'nx/project-json',
-    ]);
-    // other source map entries should be left unchanged
-    expect(sourceMap['targets']).toEqual(['dummy', 'dummy.ts']);
-  });
-
-  it('should not overwrite dependsOn', () => {
-    const sourceMap: Record<string, SourceInformation> = {
-      targets: ['dummy', 'dummy.ts'],
-      'targets.build': ['dummy', 'dummy.ts'],
-      'targets.build.options': ['dummy', 'dummy.ts'],
-      'targets.build.options.command': ['dummy', 'dummy.ts'],
-      'targets.build.options.cwd': ['project.json', 'nx/project-json'],
-      'targets.build.dependsOn': ['project.json', 'nx/project-json'],
-    };
-    const result = mergeTargetDefaultWithTargetDefinition(
-      'build',
-      {
-        name: 'myapp',
-        root: 'apps/myapp',
-        targets: {
-          build: {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo',
-              cwd: '{workspaceRoot}',
-            },
-            dependsOn: [],
-          },
-        },
-      },
-      {
-        options: {
-          command: 'tsc',
-          cwd: 'apps/myapp',
-        },
-        dependsOn: ['^build'],
-      },
-      sourceMap
-    );
-
-    // Command was defined by a core plugin so it should
-    // not be replaced by target default
-    expect(result.dependsOn).toEqual([]);
   });
 });

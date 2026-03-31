@@ -1,15 +1,6 @@
-import { NX_PREFIX } from '../../../utils/logger';
-import type {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from '../../../config/workspace-json-project-json';
 import type { SourceInformation } from '../project-configuration/source-maps';
 
 const NX_SPREAD_TOKEN = '...';
-
-export function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
 
 /**
  * Returns deduplicated keys from all provided objects.
@@ -146,60 +137,4 @@ export function getMergeValueResult(
       sourceMapContext.sourceInformation;
   }
   return newValue;
-}
-
-export function resolveCommandSyntacticSugar(
-  target: TargetConfiguration,
-  key: string
-): TargetConfiguration {
-  const { command, ...config } = target ?? {};
-
-  if (!command) {
-    return target;
-  }
-
-  if (config.executor) {
-    throw new Error(
-      `${NX_PREFIX} Project at ${key} should not have executor and command both configured.`
-    );
-  } else {
-    return {
-      ...config,
-      executor: 'nx:run-commands',
-      options: {
-        ...config.options,
-        command: command,
-      },
-    };
-  }
-}
-
-export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
-  object: T,
-  project: ProjectConfiguration,
-  key: string
-): T {
-  const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
-  for (let [opt, value] of Object.entries(object ?? {})) {
-    if (typeof value === 'string') {
-      const workspaceRootMatch = /^(\{workspaceRoot\}\/?)/.exec(value);
-      if (workspaceRootMatch?.length) {
-        value = value.replace(workspaceRootMatch[0], '');
-      }
-      if (value.includes('{workspaceRoot}')) {
-        throw new Error(
-          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
-        );
-      }
-      value = value.replace(/\{projectRoot\}/g, project.root);
-      result[opt] = value.replace(/\{projectName\}/g, project.name);
-    } else if (typeof value === 'object' && value) {
-      result[opt] = resolveNxTokensInOptions(
-        value,
-        project,
-        [key, opt].join('.')
-      );
-    }
-  }
-  return result;
 }

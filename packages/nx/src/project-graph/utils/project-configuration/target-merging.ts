@@ -1,25 +1,17 @@
 import { NX_PREFIX } from '../../../utils/logger';
-import { isGlobPattern } from '../../../utils/globs';
 import {
   ProjectConfiguration,
   ProjectMetadata,
   TargetConfiguration,
   TargetMetadata,
 } from '../../../config/workspace-json-project-json';
-import { TargetDefaults } from '../../../config/nx-json';
-import {
-  recordSourceMapKeysByIndex,
-  targetConfigurationsSourceMapKey,
-  targetOptionSourceMapKey,
-} from './source-maps';
+import { recordSourceMapKeysByIndex } from './source-maps';
 
 import type { SourceInformation } from './source-maps';
 import {
   getMergeValueResult,
   uniqueKeysInObjects,
 } from '../project-configuration-utils/utils';
-
-import { minimatch } from 'minimatch';
 
 export function deepClone<T>(obj: T): T {
   return structuredClone(obj);
@@ -366,155 +358,6 @@ export function isCompatibleTarget(
   return true;
 }
 
-/**
- * Checks whether the source map entry for a given key comes from an Nx core
- * plugin (one whose name starts with 'nx/'). Returns true when the property
- * was defined by a core plugin, meaning the target definition takes precedence
- * over target defaults.
- *
- * Returns false when there is no source info or the source is a non-core plugin,
- * meaning target defaults should override.
- */
-function definedSourceInfoComesFromCorePlugins(
-  key: string,
-  sourceMap: Record<string, SourceInformation>
-) {
-  const sourceInfo = sourceMap[key];
-  if (!sourceInfo) {
-    return false;
-  }
-  const [, plugin] = sourceInfo;
-  return plugin?.startsWith('nx/');
-}
-
-function mergeOptionsBasedOnSource(
-  optionsFromTargetDefinition: Record<string, any>,
-  optionsFromTargetDefaults: Record<string, any>,
-  sourceMapKeyBase: string,
-  sourceMap: Record<string, SourceInformation>
-) {
-  const result = {
-    ...optionsFromTargetDefinition,
-  };
-  for (const optionKey in optionsFromTargetDefaults) {
-    const sourceMapKey = `${sourceMapKeyBase}.${optionKey}`;
-    if (!definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)) {
-      // Property was defined by a non-core plugin, so target defaults take precedence
-      result[optionKey] = getMergeValueResult(
-        optionsFromTargetDefinition[optionKey], // base
-        optionsFromTargetDefaults[optionKey], // overrides
-        {
-          sourceMap,
-          key: sourceMapKey,
-          sourceInformation: ['nx.json', 'nx/target-defaults'],
-        }
-      );
-    } else {
-      // target definition (from core plugin) takes precedence over target defaults
-      // Don't pass source map context - keep the original source from core plugin
-      result[optionKey] = getMergeValueResult(
-        optionsFromTargetDefaults[optionKey], // base
-        optionsFromTargetDefinition[optionKey] // overrides
-      );
-    }
-  }
-  return result;
-}
-
-/**
- * Merges a given target default with a target definition inside a project configuration.
- *
- * NOTE: Target defaults are applied differently based on where the target definition came from.
- * If the target definition was defined by a plugin outside of Nx core plugins, the target default
- * is always applied on top of it. If the target definition was defined by Nx core plugins, the definition
- * takes precedence and target defaults are only applied for properties that are not defined in the target definition.
- *
- * @param targetName The name of the target
- * @param project  The project configuration
- * @param targetDefault The target default to merge with the target definition
- * @param sourceMap Source map info to track where properties came from
- * @returns The merged target configuration
- */
-export function mergeTargetDefaultWithTargetDefinition(
-  targetName: string,
-  project: ProjectConfiguration,
-  targetDefault: Partial<TargetConfiguration>,
-  sourceMap: Record<string, SourceInformation>
-): TargetConfiguration {
-  const targetDefinition = project.targets[targetName] ?? {};
-  const result = deepClone(targetDefinition);
-
-  for (const key in targetDefault) {
-    switch (key) {
-      case 'options': {
-        const normalizedDefaults = resolveNxTokensInOptions(
-          targetDefault.options,
-          project,
-          targetName
-        );
-        result.options = mergeOptionsBasedOnSource(
-          targetDefinition.options ?? {},
-          normalizedDefaults,
-          `targets.${targetName}.options`,
-          sourceMap
-        );
-        break;
-      }
-      case 'configurations': {
-        if (!result.configurations) {
-          result.configurations = {};
-          sourceMap[targetConfigurationsSourceMapKey(targetName)] = [
-            'nx.json',
-            'nx/target-defaults',
-          ];
-        }
-        for (const configuration in targetDefault.configurations) {
-          // easy case, target defaults is adding a new configuration, nothing to merge.
-          if (!result.configurations[configuration]) {
-            result.configurations[configuration] = {};
-            sourceMap[
-              targetConfigurationsSourceMapKey(targetName, configuration)
-            ] = ['nx.json', 'nx/target-defaults'];
-          }
-          // must merge...
-          // Configurations are very similar to options above in how we merge them, just a layer deeper.
-          const configurationTargetDefaults = resolveNxTokensInOptions(
-            targetDefault.configurations[configuration],
-            project,
-            targetName
-          );
-          result.configurations[configuration] = mergeOptionsBasedOnSource(
-            targetDefinition.configurations?.[configuration] ?? {},
-            configurationTargetDefaults,
-            `targets.${targetName}.configurations.${configuration}`,
-            sourceMap
-          );
-        }
-        break;
-      }
-      default: {
-        const sourceMapKey = `targets.${targetName}.${key}`;
-        if (
-          targetDefinition[key] === undefined ||
-          !definedSourceInfoComesFromCorePlugins(sourceMapKey, sourceMap)
-        ) {
-          result[key] = getMergeValueResult(
-            targetDefinition[key],
-            targetDefault[key],
-            {
-              sourceMap,
-              key: sourceMapKey,
-              sourceInformation: ['nx.json', 'nx/target-defaults'],
-            }
-          );
-        }
-        break;
-      }
-    }
-  }
-  return result;
-}
-
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
   project: ProjectConfiguration,
@@ -543,39 +386,4 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
     }
   }
   return result;
-}
-
-export function readTargetDefaultsForTarget(
-  targetName: string,
-  targetDefaults: TargetDefaults,
-  executor?: string
-): TargetDefaults[string] {
-  if (executor && targetDefaults?.[executor]) {
-    // If an executor is defined in project.json, defaults should be read
-    // from the most specific key that matches that executor.
-    // e.g. If executor === run-commands, and the target is named build:
-    // Use, use nx:run-commands if it is present
-    // If not, use build if it is present.
-    return targetDefaults?.[executor];
-  } else if (targetDefaults?.[targetName]) {
-    // If the executor is not defined, the only key we have is the target name.
-    return targetDefaults?.[targetName];
-  }
-
-  let matchingTargetDefaultKey: string | null = null;
-  for (const key in targetDefaults ?? {}) {
-    if (isGlobPattern(key) && minimatch(targetName, key)) {
-      if (
-        !matchingTargetDefaultKey ||
-        matchingTargetDefaultKey.length < key.length
-      ) {
-        matchingTargetDefaultKey = key;
-      }
-    }
-  }
-  if (matchingTargetDefaultKey) {
-    return targetDefaults[matchingTargetDefaultKey];
-  }
-
-  return null;
 }

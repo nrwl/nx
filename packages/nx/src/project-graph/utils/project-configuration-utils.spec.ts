@@ -2,7 +2,7 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
-import { basename, dirname } from 'path';
+import { dirname } from 'path';
 import { isProjectConfigurationsError } from '../error-types';
 import { createNodesFromFiles, NxPluginV2 } from '../plugins';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
@@ -15,10 +15,6 @@ import {
   mergeTargetConfigurations,
   isCompatibleTarget,
 } from './project-configuration/target-merging';
-import {
-  mergeTargetDefaultWithTargetDefinition,
-  readTargetDefaultsForTarget,
-} from './project-configuration-utils/target-defaults';
 import type {
   ConfigurationSourceMaps,
   SourceInformation,
@@ -33,8 +29,10 @@ describe('project-configuration-utils', () => {
         workspaceRoot: root,
         errors,
       } = require('./__fixtures__/merge-create-nodes-args.json');
+      // results[0] = specified plugin (@acme/gradle), results[1] = default plugin (project.json)
       const result = mergeCreateNodesResults(
-        results,
+        [results[0]],
+        [results[1]],
         nxJsonConfiguration,
         root,
         errors
@@ -52,6 +50,413 @@ describe('project-configuration-utils', () => {
           "lib-b:jar",
         ]
       `);
+    });
+
+    it('should apply target defaults between specified and default plugin results', () => {
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'libs/my-lib/vite.config.ts',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  targets: {
+                    build: {
+                      executor: '@nx/vite:build',
+                      inputs: ['inferred'],
+                      options: { configFile: 'vite.config.ts' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/my-lib/project.json',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  root: 'libs/my-lib',
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            '@nx/vite:build': {
+              cache: true,
+              inputs: ['production'],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/my-lib'].targets!['build'];
+      // Target defaults should be applied on top of specified plugin values
+      expect(buildTarget.cache).toEqual(true);
+      expect(buildTarget.inputs).toEqual(['production']);
+      expect(buildTarget.options).toEqual({ configFile: 'vite.config.ts' });
+      expect(errors).toEqual([]);
+    });
+
+    it('should let default plugin values override target defaults', () => {
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'libs/my-lib/vite.config.ts',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  targets: {
+                    build: {
+                      executor: '@nx/vite:build',
+                      inputs: ['inferred'],
+                      options: { configFile: 'vite.config.ts' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/my-lib/project.json',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  root: 'libs/my-lib',
+                  targets: {
+                    build: {
+                      inputs: ['explicit'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            '@nx/vite:build': {
+              cache: true,
+              inputs: ['from-defaults'],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/my-lib'].targets!['build'];
+      // Default plugin (project.json) overrides target defaults for inputs
+      expect(buildTarget.inputs).toEqual(['explicit']);
+      // But cache from target defaults still applies (project.json didn't set it)
+      expect(buildTarget.cache).toEqual(true);
+    });
+
+    it('should resolve spread tokens in default plugin values against target defaults', () => {
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'libs/my-lib/vite.config.ts',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  targets: {
+                    build: {
+                      executor: '@nx/vite:build',
+                      inputs: ['inferred'],
+                      options: { configFile: 'vite.config.ts' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/my-lib/project.json',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  root: 'libs/my-lib',
+                  targets: {
+                    build: {
+                      inputs: ['explicit', '...'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            '@nx/vite:build': {
+              inputs: ['from-defaults'],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/my-lib'].targets!['build'];
+      // '...' in project.json expands against (specified + target defaults)
+      // The target defaults override specified, so base is ['from-defaults']
+      // Then project.json's ['explicit', '...'] expands to ['explicit', 'from-defaults']
+      expect(buildTarget.inputs).toEqual(['explicit', 'from-defaults']);
+    });
+
+    it('should handle empty specified results', () => {
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/my-lib/project.json',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  root: 'libs/my-lib',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: { command: 'echo build' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        [],
+        defaultResults as any,
+        {
+          targetDefaults: {
+            build: { cache: true },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/my-lib'].targets!['build'];
+      expect(buildTarget.executor).toEqual('nx:run-commands');
+      expect(buildTarget.cache).toEqual(true);
+      expect(errors).toEqual([]);
+    });
+
+    it('should handle empty default results', () => {
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'libs/my-lib/vite.config.ts',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  targets: {
+                    build: {
+                      executor: '@nx/vite:build',
+                      options: { configFile: 'vite.config.ts' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: {
+            '@nx/vite:build': { cache: true },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/my-lib'].targets!['build'];
+      expect(buildTarget.executor).toEqual('@nx/vite:build');
+      expect(buildTarget.cache).toEqual(true);
+      expect(errors).toEqual([]);
+    });
+
+    it('should handle no target defaults', () => {
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'libs/my-lib/vite.config.ts',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  targets: {
+                    build: {
+                      executor: '@nx/vite:build',
+                      inputs: ['inferred'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/my-lib/project.json',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  root: 'libs/my-lib',
+                  targets: {
+                    build: {
+                      inputs: ['explicit', '...'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/my-lib'].targets!['build'];
+      // No target defaults, so '...' expands against specified plugin's inputs
+      expect(buildTarget.inputs).toEqual(['explicit', 'inferred']);
+    });
+
+    it('should merge multiple specified plugins contributing to the same project', () => {
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'libs/my-lib/vite.config.ts',
+            {
+              projects: {
+                'libs/my-lib': {
+                  name: 'my-lib',
+                  targets: {
+                    build: {
+                      executor: '@nx/vite:build',
+                      options: { configFile: 'vite.config.ts' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+        [
+          [
+            '@nx/eslint',
+            'libs/my-lib/.eslintrc.json',
+            {
+              projects: {
+                'libs/my-lib': {
+                  targets: {
+                    lint: {
+                      executor: '@nx/eslint:lint',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      const project = result.projectRootMap['libs/my-lib'];
+      expect(project.targets!['build'].executor).toEqual('@nx/vite:build');
+      expect(project.targets!['lint'].executor).toEqual('@nx/eslint:lint');
+      expect(errors).toEqual([]);
     });
   });
 
@@ -927,426 +1332,6 @@ describe('project-configuration-utils', () => {
             tags: ['fake-lib'],
           },
         });
-      });
-    });
-
-    describe('spread syntax', () => {
-      it('should spread arrays in target default options using "..."', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['dummy', 'dummy.ts'],
-          'targets.build': ['dummy', 'dummy.ts'],
-          'targets.build.options': ['dummy', 'dummy.ts'],
-          'targets.build.options.assets': ['dummy', 'dummy.ts'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  assets: ['project-asset-1', 'project-asset-2'],
-                },
-              },
-            },
-          },
-          {
-            options: {
-              assets: ['default-asset', '...'],
-            },
-          },
-          sourceMap
-        );
-
-        // Target defaults should override non-core plugin values, and spread should work
-        expect(result.options?.assets).toEqual([
-          'default-asset',
-          'project-asset-1',
-          'project-asset-2',
-        ]);
-        // Source map should reflect that target defaults won for this property
-        expect(sourceMap['targets.build.options.assets']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
-      });
-
-      it('should spread objects in target default options using "..."', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['dummy', 'dummy.ts'],
-          'targets.build': ['dummy', 'dummy.ts'],
-          'targets.build.options': ['dummy', 'dummy.ts'],
-          'targets.build.options.env': ['dummy', 'dummy.ts'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  env: {
-                    PROJECT_VAR: 'project-value',
-                  },
-                },
-              },
-            },
-          },
-          {
-            options: {
-              env: {
-                DEFAULT_VAR: 'default-value',
-                '...': true,
-              },
-            },
-          },
-          sourceMap
-        );
-
-        expect(result.options?.env).toEqual({
-          DEFAULT_VAR: 'default-value',
-          PROJECT_VAR: 'project-value',
-        });
-      });
-
-      it('should spread arrays in target default configurations using "..."', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['dummy', 'dummy.ts'],
-          'targets.build': ['dummy', 'dummy.ts'],
-          'targets.build.configurations': ['dummy', 'dummy.ts'],
-          'targets.build.configurations.prod': ['dummy', 'dummy.ts'],
-          'targets.build.configurations.prod.fileReplacements': [
-            'dummy',
-            'dummy.ts',
-          ],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                configurations: {
-                  prod: {
-                    fileReplacements: [
-                      { replace: 'env.ts', with: 'env.prod.ts' },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-          {
-            configurations: {
-              prod: {
-                fileReplacements: [
-                  { replace: 'default.ts', with: 'default.prod.ts' },
-                  '...',
-                ],
-              },
-            },
-          },
-          sourceMap
-        );
-
-        expect(result.configurations?.prod?.fileReplacements).toEqual([
-          { replace: 'default.ts', with: 'default.prod.ts' },
-          { replace: 'env.ts', with: 'env.prod.ts' },
-        ]);
-      });
-
-      it('should spread top-level arrays like inputs using "..."', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['dummy', 'dummy.ts'],
-          'targets.build': ['dummy', 'dummy.ts'],
-          'targets.build.inputs': ['dummy', 'dummy.ts'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                inputs: ['default', '{projectRoot}/**/*'],
-              },
-            },
-          },
-          {
-            inputs: ['production', '...', '{workspaceRoot}/.eslintrc.json'],
-          },
-          sourceMap
-        );
-
-        expect(result.inputs).toEqual([
-          'production',
-          'default',
-          '{projectRoot}/**/*',
-          '{workspaceRoot}/.eslintrc.json',
-        ]);
-      });
-
-      it('should let project.json override target defaults for core plugin targets', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['project.json', 'nx/core/project-json'],
-          'targets.build': ['project.json', 'nx/core/project-json'],
-          'targets.build.options': ['project.json', 'nx/core/project-json'],
-          'targets.build.options.command': [
-            'project.json',
-            'nx/core/project-json',
-          ],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  command: 'echo hello',
-                },
-              },
-            },
-          },
-          {
-            options: {
-              command: 'echo world',
-            },
-          },
-          sourceMap
-        );
-
-        // Core plugin source means project definition takes precedence
-        expect(result.options?.command).toEqual('echo hello');
-      });
-
-      it('should let project.json override target default arrays for core plugin targets', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['project.json', 'nx/core/project-json'],
-          'targets.build': ['project.json', 'nx/core/project-json'],
-          'targets.build.inputs': ['project.json', 'nx/core/project-json'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                inputs: ['default', '{projectRoot}/**/*'],
-              },
-            },
-          },
-          {
-            inputs: ['production', '{workspaceRoot}/.eslintrc.json'],
-          },
-          sourceMap
-        );
-
-        // Core plugin source means project definition takes precedence
-        expect(result.inputs).toEqual(['default', '{projectRoot}/**/*']);
-      });
-
-      it('should ignore "..." in base target definition when target default overrides without spread', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['dummy', 'dummy.ts'],
-          'targets.build': ['dummy', 'dummy.ts'],
-          'targets.build.options': ['dummy', 'dummy.ts'],
-          'targets.build.options.assets': ['dummy', 'dummy.ts'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  assets: ['project-asset', '...'],
-                },
-              },
-            },
-          },
-          {
-            options: {
-              assets: ['default-asset-1', 'default-asset-2'],
-            },
-          },
-          sourceMap
-        );
-
-        // Target defaults override non-core plugin values, and the '...' in the
-        // project definition is irrelevant since the target default has no spread
-        expect(result.options?.assets).toEqual([
-          'default-asset-1',
-          'default-asset-2',
-        ]);
-      });
-
-      it('should ignore "..." in base target definition object when target default overrides without spread', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['dummy', 'dummy.ts'],
-          'targets.build': ['dummy', 'dummy.ts'],
-          'targets.build.options': ['dummy', 'dummy.ts'],
-          'targets.build.options.env': ['dummy', 'dummy.ts'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  env: {
-                    '...': true,
-                    PROJECT_VAR: 'project',
-                  },
-                },
-              },
-            },
-          },
-          {
-            options: {
-              env: {
-                DEFAULT_VAR: 'default',
-              },
-            },
-          },
-          sourceMap
-        );
-
-        // Target defaults override non-core, and the '...' in project definition
-        // doesn't affect the result since the override has no spread
-        expect(result.options?.env).toEqual({
-          DEFAULT_VAR: 'default',
-        });
-      });
-
-      it('should track per-element source for array spread in target default options', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['project.json', 'my-plugin'],
-          'targets.build': ['project.json', 'my-plugin'],
-          'targets.build.options': ['project.json', 'my-plugin'],
-          'targets.build.options.assets': ['project.json', 'my-plugin'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  assets: ['project-asset'],
-                },
-              },
-            },
-          },
-          {
-            options: {
-              assets: ['default-asset-1', '...', 'default-asset-2'],
-            },
-          },
-          sourceMap
-        );
-
-        expect(result.options?.assets).toEqual([
-          'default-asset-1',
-          'project-asset',
-          'default-asset-2',
-        ]);
-        // Parent key is attributed to target defaults (new source)
-        expect(sourceMap['targets.build.options.assets']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
-        // Per-element tracking
-        expect(sourceMap['targets.build.options.assets.0']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
-        expect(sourceMap['targets.build.options.assets.1']).toEqual([
-          'project.json',
-          'my-plugin',
-        ]);
-        expect(sourceMap['targets.build.options.assets.2']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
-      });
-
-      it('should track per-property source for object spread in target default options', () => {
-        const sourceMap: Record<string, SourceInformation> = {
-          targets: ['project.json', 'my-plugin'],
-          'targets.build': ['project.json', 'my-plugin'],
-          'targets.build.options': ['project.json', 'my-plugin'],
-          'targets.build.options.env': ['project.json', 'my-plugin'],
-        };
-        const result = mergeTargetDefaultWithTargetDefinition(
-          'build',
-          {
-            name: 'myapp',
-            root: 'apps/myapp',
-            targets: {
-              build: {
-                executor: 'nx:run-commands',
-                options: {
-                  env: {
-                    PROJECT_VAR: 'project-value',
-                    SHARED: 'project-shared',
-                  },
-                },
-              },
-            },
-          },
-          {
-            options: {
-              env: {
-                DEFAULT_VAR: 'default-value',
-                '...': true,
-                SHARED: 'default-shared',
-              },
-            },
-          },
-          sourceMap
-        );
-
-        expect(result.options?.env).toEqual({
-          DEFAULT_VAR: 'default-value',
-          PROJECT_VAR: 'project-value',
-          SHARED: 'default-shared',
-        });
-        expect(sourceMap['targets.build.options.env']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
-        expect(sourceMap['targets.build.options.env.DEFAULT_VAR']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
-        expect(sourceMap['targets.build.options.env.PROJECT_VAR']).toEqual([
-          'project.json',
-          'my-plugin',
-        ]);
-        // SHARED is defined after '...', so target defaults win
-        expect(sourceMap['targets.build.options.env.SHARED']).toEqual([
-          'nx.json',
-          'nx/target-defaults',
-        ]);
       });
     });
 

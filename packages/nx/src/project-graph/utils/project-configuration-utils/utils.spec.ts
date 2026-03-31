@@ -162,7 +162,7 @@ describe('getMergeValueResult - spread token behavior', () => {
       const base = ['a', 'b'];
       const newValue = [NX_SPREAD_TOKEN, 'c'];
       const sourceMap: Record<string, [string | null, string]> = {
-        'inputs': ['base.json', 'base-plugin'],
+        inputs: ['base.json', 'base-plugin'],
       };
 
       const result = getMergeValueResult(base, newValue, {
@@ -206,7 +206,10 @@ describe('getMergeValueResult - spread token behavior', () => {
         sourceInformation: ['package.json', 'nx/package-json'],
       });
       expect(afterLayer2).toEqual(['c', 'a', 'b']);
-      expect(sourceMap['inputs.0']).toEqual(['package.json', 'nx/package-json']);
+      expect(sourceMap['inputs.0']).toEqual([
+        'package.json',
+        'nx/package-json',
+      ]);
       // When spreading, source info is updated to the most recent layer that did the spreading
       // The spread elements themselves get the source from afterLayer1's base source (target-defaults)
       expect(sourceMap['inputs.1']).toEqual([
@@ -223,7 +226,7 @@ describe('getMergeValueResult - spread token behavior', () => {
       const base = { a: 1, b: 2 };
       const newValue = { [NX_SPREAD_TOKEN]: true, c: 3 };
       const sourceMap: Record<string, [string | null, string]> = {
-        'options': ['base.json', 'base-plugin'],
+        options: ['base.json', 'base-plugin'],
       };
 
       const result = getMergeValueResult(base, newValue, {
