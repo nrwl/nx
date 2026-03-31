@@ -3,10 +3,7 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
