@@ -23,6 +23,13 @@
     {
       "glob": "**/*.{node,wasm}",
       "includeIgnoredFiles": true
+    },
+    {
+      "glob": "**/*",
+      "input": "dist/apps/graph",
+      "output": "/src/core/graph",
+      "ignore": ["assets/**"],
+      "includeIgnoredFiles": true
     }
   ]
 }
