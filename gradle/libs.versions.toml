@@ -13,7 +13,7 @@ shadow = "8.1.1"
 ktfmt = "0.25.0"
 nx-project-graph = "0.1.17"
 gradle-plugin-publish = "1.2.1"
-jgit = "6.8.0.202311291450-r"
+jgit = "7.6.0.202603022253-r"
 
 [libraries]
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
