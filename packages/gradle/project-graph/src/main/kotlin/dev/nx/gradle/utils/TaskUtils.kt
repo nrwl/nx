@@ -491,8 +491,7 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
 
   val result =
       try {
-        collectLifecycleDependencies(taskInternal) +
-            collectInputPropertyDependencies(taskInternal)
+        collectLifecycleDependencies(taskInternal) + collectInputPropertyDependencies(taskInternal)
       } catch (e: Exception) {
         task.logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
         emptySet()
@@ -532,8 +531,7 @@ private fun collectInputPropertyDependencies(task: TaskInternal): Set<String> {
   val projectInternal =
       task.project as? org.gradle.api.internal.project.ProjectInternal ?: return emptySet()
   val propertyWalker =
-      projectInternal.services.get(
-          org.gradle.internal.properties.bean.PropertyWalker::class.java)
+      projectInternal.services.get(org.gradle.internal.properties.bean.PropertyWalker::class.java)
   val result = mutableSetOf<String>()
 
   try {

@@ -571,19 +571,15 @@ class ProcessTaskUtilsTest {
     fun `identifies @Input provider-based dependencies via PropertyVisitor`() {
       val producerProvider =
           project.tasks.register("producer") { task ->
-            task.outputs.dir(
-                java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
+            task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
           }
 
       abstract class TaskWithInputProvider : DefaultTask() {
         @get:Input abstract val inputProp: Property<String>
       }
 
-      val consumerProvider =
-          project.tasks.register("consumer", TaskWithInputProvider::class.java)
-      consumerProvider.configure { task ->
-        task.inputProp.set(producerProvider.map { it.name })
-      }
+      val consumerProvider = project.tasks.register("consumer", TaskWithInputProvider::class.java)
+      consumerProvider.configure { task -> task.inputProp.set(producerProvider.map { it.name }) }
 
       val result = findProviderBasedDependencies(consumerProvider.get())
 
