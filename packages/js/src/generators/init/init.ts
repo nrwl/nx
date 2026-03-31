@@ -23,6 +23,7 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
+  oxfmtVersion,
   prettierVersion,
   swcHelpersVersion,
   tsLibVersion,
@@ -36,7 +37,7 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
-  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'prettier';
+  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'oxfmt';
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
@@ -134,6 +135,15 @@ export async function initGeneratorInternal(
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(prettierTask);
+  } else if (schema.formatter === 'oxfmt') {
+    if (!schema.skipPackageJson) {
+      const oxfmtTask = addDependenciesToPackageJson(
+        tree,
+        {},
+        { oxfmt: oxfmtVersion }
+      );
+      tasks.push(oxfmtTask);
+    }
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
@@ -157,12 +167,7 @@ export async function initGeneratorInternal(
     : () => {};
   tasks.push(installTask);
 
-  if (
-    !schema.skipPackageJson &&
-    // For `create-nx-workspace` or `nx g @nx/js:init`, we want to make sure users didn't set formatter to none.
-    // For programmatic usage, the formatter is normally undefined, and we want prettier to continue to be ensured, even if not ultimately installed.
-    schema.formatter !== 'none'
-  ) {
+  if (!schema.skipPackageJson && schema.formatter === 'prettier') {
     ensurePackage('prettier', prettierVersion);
   }
 

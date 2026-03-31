@@ -4,7 +4,7 @@ export interface Schema {
   directory: string;
   name?: string;
   linter?: Linter | LinterType;
-  formatter?: 'none' | 'prettier';
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   skipFormat?: boolean;
   unitTestRunner?: 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
