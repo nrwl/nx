@@ -1,3 +1,10 @@
+pluginManagement {
+  repositories {
+    mavenLocal()
+    gradlePluginPortal()
+  }
+}
+
 rootProject.name = "project-graph"
 
 dependencyResolutionManagement {
