@@ -11,7 +11,7 @@ export interface Schema {
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   linter: Linter | LinterType;
-  formatter?: 'none' | 'prettier';
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   routing?: boolean;
   js?: boolean;
   strict?: boolean;

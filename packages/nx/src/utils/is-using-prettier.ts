@@ -30,7 +30,7 @@ const configFiles = [
 
 export function isUsingPrettier(root: string) {
   for (const file of configFiles) {
-    if (existsSync(file)) {
+    if (existsSync(join(root, file))) {
       return true;
     }
   }

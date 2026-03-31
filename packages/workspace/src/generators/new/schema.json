@@ -99,7 +99,8 @@
     "formatter": {
       "description": "The tool to use for code formatting.",
       "type": "string",
-      "default": "none"
+      "enum": ["none", "prettier", "oxfmt"],
+      "default": "oxfmt"
     },
     "workspaces": {
       "description": "Whether to use package manager workspaces.",
