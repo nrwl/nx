@@ -10,8 +10,7 @@ import {
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-// TODO: unskip once Cypress HMR issue is resolved
-describe.skip('Federate Module', () => {
+describe('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
