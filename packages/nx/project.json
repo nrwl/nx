@@ -69,14 +69,13 @@
       "dependsOn": ["echo"]
     },
     "copy-assets": {
-      "dependsOn": ["build-base", "build-native"]
+      "dependsOn": ["build-native"]
     },
     "build": {
       "dependsOn": [
         "^build-client",
         "build-base",
-        "build-native",
-        "copy-assets"
+        "build-native"
       ],
       "inputs": [
         "production",

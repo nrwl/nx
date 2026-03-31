@@ -77,7 +77,6 @@
       "dependsOn": [
         "^build",
         "typecheck",
-        "copy-assets",
         "build-base",
         "build-native"
       ],
@@ -86,7 +85,7 @@
     },
     "build-native": { "inputs": ["native"], "cache": true },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
+      "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
     "test-native": {
