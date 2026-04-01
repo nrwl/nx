@@ -9,6 +9,18 @@
     "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/nx"
   },
+  "files": [
+    "dist/bin",
+    "dist/plugins",
+    "dist/presets",
+    "dist/release",
+    "dist/schemas",
+    "dist/src",
+    "dist/tasks-runners",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "scripts": {
     "postinstall": "node -e \"try{require('./dist/bin/post-install')}catch(e){}\""
   },
@@ -192,7 +204,7 @@
         "dist/plugins/*.d.ts"
       ],
       "src/native": [
-        "src/native/index.d.ts"
+        "dist/src/native/index.d.ts"
       ],
       "src": [
         "dist/src/index.d.ts"
@@ -216,10 +228,10 @@
         "dist/src/project-graph/plugins/isolation/index.d.ts"
       ],
       "src/native/index": [
-        "src/native/index.d.ts"
+        "dist/src/native/index.d.ts"
       ],
       "src/native/index.js": [
-        "src/native/index.d.ts"
+        "dist/src/native/index.d.ts"
       ],
       "src/plugins/js": [
         "dist/src/plugins/js/index.d.ts"
@@ -273,8 +285,8 @@
     "./generators": "./generators.json",
     "./executors.json": "./executors.json",
     "./executors": "./executors.json",
-    "./schemas/*": "./schemas/*.json",
-    "./schemas/*.json": "./schemas/*.json",
+    "./schemas/*": "./dist/schemas/*.json",
+    "./schemas/*.json": "./dist/schemas/*.json",
     "./presets/*": {
       "@nx/nx-source": "./presets/*.json",
       "default": "./dist/presets/*.json"
@@ -330,17 +342,17 @@
     },
     "./src/native": {
       "@nx/nx-source": "./src/native/index.js",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/native/index": {
       "@nx/nx-source": "./src/native/index.js",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/native/index.js": {
       "@nx/nx-source": "./src/native/index.js",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/native/*.js": {

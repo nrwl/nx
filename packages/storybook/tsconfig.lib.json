@@ -14,7 +14,7 @@
     "jest.config.ts",
     "src/**/test-configs"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../eslint/tsconfig.lib.json"
