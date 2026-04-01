@@ -10,7 +10,13 @@
     "directory": "packages/nx"
   },
   "files": [
-    "dist",
+    "dist/bin",
+    "dist/plugins",
+    "dist/presets",
+    "dist/release",
+    "dist/schemas",
+    "dist/src",
+    "dist/tasks-runners",
     "migrations.json",
     "executors.json",
     "generators.json"
