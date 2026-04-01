@@ -8,6 +8,7 @@ import { isJsonChange, JsonChange } from '../../../../utils/json-diff';
 import { jsPluginConfig as readJsPluginConfig } from '../../utils/config';
 import { findMatchingProjects } from '../../../../utils/find-matching-projects';
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
+import { logger } from '../../../../utils/logger';
 
 type AffectedPathsResolver = (changes: JsonChange[]) => string[] | null;
 
@@ -149,7 +150,9 @@ const getProjectPathsAffectedByDependencyUpdates = (
   }
 
   if (!isSupportedLockFile(changedLockFile.file)) {
-    // TODO: should we log a warning here?
+    logger.warn(
+      `Unsupported lock file "${changedLockFile.file}" for projectsAffectedByDependencyUpdates "auto" mode. All projects will be marked as affected.`
+    );
     return null;
   }
 

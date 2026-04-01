@@ -3,6 +3,7 @@ import { WholeFileChange } from '../../../../project-graph/file-utils';
 import { getTouchedProjectsFromLockFile } from './lock-file-changes';
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 import { JsonDiffType } from '../../../../utils/json-diff';
+import { logger } from '../../../../utils/logger';
 
 describe('getTouchedProjectsFromLockFile', () => {
   let graph: ProjectGraph;
@@ -365,6 +366,46 @@ describe('getTouchedProjectsFromLockFile', () => {
         graph.nodes
       );
       expect(result).toStrictEqual(allNodes);
+    });
+  });
+
+  describe('unrecognized lock file with projectsAffectedByDependencyUpdates set to auto', () => {
+    beforeAll(async () => {
+      tempFs = new TempFs('lock-file-changes-test');
+      await tempFs.createFiles({
+        './nx.json': JSON.stringify({
+          pluginsConfig: {
+            '@nx/js': {
+              projectsAffectedByDependencyUpdates: 'auto',
+            },
+          },
+        }),
+      });
+    });
+
+    afterAll(() => {
+      tempFs.cleanup();
+    });
+
+    // An unrecognized lock file is not in ALL_LOCK_FILES, so it is
+    // filtered out before auto mode runs. No projects are affected.
+    it('should not return changes for an unrecognized lock file', () => {
+      const result = getTouchedProjectsFromLockFile(
+        [
+          {
+            file: 'unknown.lock',
+            getChanges: () => [
+              {
+                type: JsonDiffType.Modified,
+                path: ['some', 'path'],
+                value: { lhs: '1.0.0', rhs: '2.0.0' },
+              },
+            ],
+          },
+        ],
+        graph.nodes
+      );
+      expect(result).toStrictEqual([]);
     });
   });
 });
