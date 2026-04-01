@@ -12,7 +12,7 @@ import { parseRegistryOptions } from '../../utils/npm-config';
 import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
-import chalk = require('chalk');
+import { orange } from 'nx/src/utils/output';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -151,7 +151,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   }
 
   const warnFn = (message: string) => {
-    console.log(chalk.keyword('orange')(message));
+    console.log(orange(message));
   };
   const { registry, tag, registryConfigKey } = await parseRegistryOptions(
     context.root,
@@ -227,9 +227,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
               );
             } else {
               console.log(
-                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
-                  'orange'
-                )('[dry-run]')} was set.\n`
+                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${orange('[dry-run]')} was set.\n`
               );
             }
             return {
@@ -377,9 +375,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';
 
     const publishSummaryMessage = isDryRun
-      ? `Would publish to ${registry} with tag "${tag}", but ${chalk.keyword(
-          'orange'
-        )('[dry-run]')} was set`
+      ? `Would publish to ${registry} with tag "${tag}", but ${orange('[dry-run]')} was set`
       : `Published to ${registry} with tag "${tag}"`;
 
     // bun publish does not support outputting JSON, so we need to modify and print the output string directly

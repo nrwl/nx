@@ -1,23 +1,23 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-highlight/src/index.js
 import * as jsTokens from 'js-tokens';
-import chalk from 'chalk';
+import * as pc from 'picocolors';
 import { isKeyword, isReservedWord } from './identifiers';
 
 /**
  * Chalk styles for token types.
  */
-function getDefs(chalk) {
+function getDefs(colors) {
   return {
-    keyword: chalk.cyan,
-    capitalized: chalk.yellow,
-    jsx_tag: chalk.yellow,
-    punctuator: chalk.yellow,
+    keyword: colors.cyan,
+    capitalized: colors.yellow,
+    jsx_tag: colors.yellow,
+    punctuator: colors.yellow,
     // bracket:  intentionally omitted.
-    number: chalk.magenta,
-    string: chalk.green,
-    regex: chalk.magenta,
-    comment: chalk.grey,
-    invalid: chalk.white.bgRed.bold,
+    number: colors.magenta,
+    string: colors.green,
+    regex: colors.magenta,
+    comment: colors.grey,
+    invalid: (str: string) => colors.white(colors.bgRed(colors.bold(str))),
   };
 }
 
@@ -93,6 +93,6 @@ function highlightTokens(defs: Object, text: string) {
 }
 
 export function highlight(code: string): string {
-  const defs = getDefs(chalk);
+  const defs = getDefs(pc);
   return highlightTokens(defs, code);
 }

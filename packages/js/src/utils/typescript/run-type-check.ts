@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import * as pc from 'picocolors';
 import * as path from 'path';
 import type { BuilderProgram, Diagnostic, Program } from 'typescript';
 import { codeFrameColumns } from 'nx/src/utils/code-frames';
@@ -190,13 +190,13 @@ export function getFormattedDiagnostic(
 
   switch (category) {
     case ts.DiagnosticCategory.Warning: {
-      message += `${chalk.yellow.bold('warning')} ${chalk.gray(
+      message += `${pc.yellow(pc.bold('warning'))} ${pc.gray(
         `TS${diagnostic.code}`
       )}: `;
       break;
     }
     case ts.DiagnosticCategory.Error: {
-      message += `${chalk.red.bold('error')} ${chalk.gray(
+      message += `${pc.red(pc.bold('error'))} ${pc.gray(
         `TS${diagnostic.code}`
       )}: `;
       break;
@@ -204,7 +204,7 @@ export function getFormattedDiagnostic(
     case ts.DiagnosticCategory.Suggestion:
     case ts.DiagnosticCategory.Message:
     default: {
-      message += `${chalk.cyan.bold(category === 2 ? 'suggestion' : 'info')}: `;
+      message += `${pc.cyan(pc.bold(category === 2 ? 'suggestion' : 'info'))}: `;
       break;
     }
   }
@@ -219,7 +219,7 @@ export function getFormattedDiagnostic(
     const column = pos.character + 1;
     const fileName = path.relative(workspaceRoot, diagnostic.file.fileName);
     message =
-      `${chalk.underline.blue(`${fileName}:${line}:${column}`)} - ` + message;
+      `${pc.underline(pc.blue(`${fileName}:${line}:${column}`))} - ` + message;
 
     const code = diagnostic.file.getFullText(diagnostic.file.getSourceFile());
 
