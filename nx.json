@@ -96,7 +96,12 @@
         "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
-    "lint": { "dependsOn": ["build-native", "^build-native"] },
+    "lint": {
+      "dependsOn": ["build-native", "^build-native"],
+      "options": {
+        "max-warnings": 5
+      }
+    },
     "e2e": { "cache": true, "inputs": ["e2eInputs", "^production"] },
     "e2e-local": {
       "cache": true,
