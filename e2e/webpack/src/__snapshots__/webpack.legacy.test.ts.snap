@@ -1,9 +1,9 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 1`] = `
-"const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
-const { NxReactWebpackPlugin } = require("@nx/react/webpack-plugin");
-const { useLegacyNxPlugin } = require("@nx/webpack");
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+const { useLegacyNxPlugin } = require('@nx/webpack');
 
 // This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
 // Please check that the options here are correct as they were moved from the old webpack.config.js to this file.
@@ -25,7 +25,7 @@ module.exports = async () => ({
     // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
     // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    await useLegacyNxPlugin(require("./webpack.config.old"), options),
+    await useLegacyNxPlugin(require('./webpack.config.old'), options),
   ],
 });
 "
@@ -109,7 +109,7 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
 `;
 
 exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 3`] = `
-"const { composePlugins } = require("@nx/webpack");
+"const { composePlugins } = require('@nx/webpack');
 // Nx plugins for webpack.
 module.exports = composePlugins((config) => {
   // Update the webpack config as needed here.
