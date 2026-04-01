@@ -1,6 +1,7 @@
 import {
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   readNxJson,
   runTasksInSerial,
@@ -15,6 +16,7 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { coerce, major } from 'semver';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
@@ -104,11 +106,45 @@ export async function applicationGeneratorInternal(
                   'I do not want to use react-router for server-side rendering',
               },
             ],
-            initial: 0,
+            initial: 1,
           },
           { response: 'No' }
         ).then((r) => r.response === 'Yes')))
       : false;
+
+  if (options.useReactRouter) {
+    // TODO(jack): Remove these guards once @react-router/dev supports Vite 8.
+    // React Router does not yet support Vite 8 (@react-router/dev peer dep
+    // is ^5.1.0 || ^6.0.0 || ^7.0.0). Same guard pattern as Cypress CT.
+    const existingViteVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'vite'
+    );
+    if (existingViteVersion) {
+      const coerced = coerce(existingViteVersion);
+      if (coerced && major(coerced) >= 8) {
+        throw new Error(
+          `React Router does not yet support Vite ${major(coerced)}. ` +
+            `Downgrade to Vite 7 or earlier before adding a React Router application.`
+        );
+      }
+    }
+    if (options.unitTestRunner === 'vitest') {
+      const existingVitestVersion = getDependencyVersionFromPackageJson(
+        tree,
+        'vitest'
+      );
+      if (existingVitestVersion) {
+        const coerced = coerce(existingVitestVersion);
+        if (coerced && major(coerced) >= 4) {
+          throw new Error(
+            `React Router requires Vite 7, but Vitest ${major(coerced)} bundles Vite as a direct dependency which can resolve to Vite 8. ` +
+              `Downgrade to Vitest 3 before adding a React Router application with Vitest.`
+          );
+        }
+      }
+    }
+  }
 
   showPossibleWarnings(tree, options);
 

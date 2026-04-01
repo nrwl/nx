@@ -8,6 +8,7 @@ import {
   runCLI,
   runE2ETests,
   uniq,
+  updateJson,
 } from '@nx/e2e-utils';
 
 describe('React Router Applications - TS Solution', () => {
@@ -15,6 +16,30 @@ describe('React Router Applications - TS Solution', () => {
   beforeAll(() => {
     newProject({ preset: 'ts', packages: ['@nx/react'] });
     ensurePlaywrightBrowsersInstallation();
+
+    // TODO(jack): Remove once @react-router/dev supports Vite 8.
+    // React Router requires Vite 7, but new workspaces default to Vite 8.
+    // Downgrade vite, vitest, and related packages before generating to
+    // avoid the generator's incompatibility guard.
+    updateJson('package.json', (json) => {
+      if (json.devDependencies?.['vite']) {
+        json.devDependencies['vite'] = '^7.0.0';
+      }
+      if (json.devDependencies?.['vitest']) {
+        json.devDependencies['vitest'] = '^3.2.0';
+      }
+      for (const key of Object.keys(json.devDependencies ?? {})) {
+        if (
+          key.startsWith('@vitest/') &&
+          json.devDependencies[key]?.startsWith('~4')
+        ) {
+          json.devDependencies[key] = '^3.2.0';
+        }
+      }
+      delete json.devDependencies?.['@vitejs/plugin-react'];
+      return json;
+    });
+
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
     );
@@ -37,8 +62,7 @@ describe('React Router Applications - TS Solution', () => {
     checkFilesExist(`${appName}/vite.config.mts`);
   });
 
-  // TODO: re-enable once @react-router/dev supports Vite 8 — currently pnpm can resolve both vite 7 and 8, causing typecheck failures
-  xit('should be able to build, lint, test and typecheck a react-router application', async () => {
+  it('should be able to build, lint, test and typecheck a react-router application', async () => {
     const buildResult = runCLI(`build ${appName}`);
     const lintResult = runCLI(`lint ${appName}`);
     const testResult = runCLI(`test ${appName}`);

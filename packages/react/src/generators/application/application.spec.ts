@@ -1181,6 +1181,25 @@ describe('app', () => {
       expect(rootPackageJson.devDependencies['vite']).toMatch(/^\^7\./);
     });
 
+    it('should not install @vitejs/plugin-react since React Router uses its own vite plugin', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const rootPackageJson = readJson(appTree, 'package.json');
+      expect(
+        rootPackageJson.devDependencies['@vitejs/plugin-react']
+      ).toBeUndefined();
+      expect(
+        rootPackageJson.devDependencies['@vitejs/plugin-react-swc']
+      ).toBeUndefined();
+    });
+
     it('should be configured to work with jest', async () => {
       await applicationGenerator(appTree, {
         ...schema,
@@ -1230,6 +1249,41 @@ describe('app', () => {
         }
         "
       `);
+    });
+
+    it('should throw an error when vite 8 is already installed', async () => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.devDependencies ??= {};
+        json.devDependencies['vite'] = '^8.0.0';
+        return json;
+      });
+
+      await expect(
+        applicationGenerator(appTree, {
+          ...schema,
+          useReactRouter: true,
+          routing: true,
+          bundler: 'vite',
+        })
+      ).rejects.toThrow('React Router does not yet support Vite 8');
+    });
+
+    it('should throw an error when vitest 4 is already installed', async () => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.devDependencies ??= {};
+        json.devDependencies['vitest'] = '~4.1.0';
+        return json;
+      });
+
+      await expect(
+        applicationGenerator(appTree, {
+          ...schema,
+          useReactRouter: true,
+          routing: true,
+          bundler: 'vite',
+          unitTestRunner: 'vitest',
+        })
+      ).rejects.toThrow('Downgrade to Vitest 3');
     });
   });
 
