@@ -20,6 +20,34 @@ describe('js init generator', () => {
     expect(packageJson.devDependencies['prettier']).toBeDefined();
   });
 
+  it('should add oxfmt to devDependencies and create .oxfmtrc.json', async () => {
+    await init(tree, { formatter: 'oxfmt' });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['oxfmt']).toBeDefined();
+    expect(packageJson.devDependencies['prettier']).toBeUndefined();
+
+    const oxfmtrc = readJson(tree, '.oxfmtrc.json');
+    expect(oxfmtrc).toEqual({ singleQuote: true });
+  });
+
+  it('should not overwrite existing .oxfmtrc.json', async () => {
+    writeJson(tree, '.oxfmtrc.json', { singleQuote: false });
+
+    await init(tree, { formatter: 'oxfmt' });
+
+    const oxfmtrc = readJson(tree, '.oxfmtrc.json');
+    expect(oxfmtrc).toEqual({ singleQuote: false });
+  });
+
+  it('should not create .oxfmtrc.json if another oxfmt config format exists', async () => {
+    tree.write('oxfmt.config.js', 'module.exports = {};');
+
+    await init(tree, { formatter: 'oxfmt' });
+
+    expect(tree.exists('.oxfmtrc.json')).toBeFalsy();
+  });
+
   it('should create .prettierrc and .prettierignore files', async () => {
     await init(tree, {});
 

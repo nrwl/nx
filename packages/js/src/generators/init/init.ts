@@ -14,6 +14,7 @@ import {
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
+import { generateOxfmtSetup } from '../../utils/oxfmt';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
@@ -23,7 +24,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  oxfmtVersion,
   prettierVersion,
   swcHelpersVersion,
   tsLibVersion,
@@ -136,14 +136,10 @@ export async function initGeneratorInternal(
     });
     tasks.push(prettierTask);
   } else if (schema.formatter === 'oxfmt') {
-    if (!schema.skipPackageJson) {
-      const oxfmtTask = addDependenciesToPackageJson(
-        tree,
-        {},
-        { oxfmt: oxfmtVersion }
-      );
-      tasks.push(oxfmtTask);
-    }
+    const oxfmtTask = generateOxfmtSetup(tree, {
+      skipPackageJson: schema.skipPackageJson,
+    });
+    tasks.push(oxfmtTask);
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
