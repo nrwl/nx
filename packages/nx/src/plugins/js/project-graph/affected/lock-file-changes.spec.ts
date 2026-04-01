@@ -79,8 +79,190 @@ describe('getTouchedProjectsFromLockFile', () => {
     });
   });
 
-  PNPM_LOCK_FILES.forEach((lockFile) => {
-    describe(`"${lockFile} with projectsAffectedByDependencyUpdates set to auto"`, () => {
+  // Each lock file format has a different JSON structure. The changes
+  // array simulates realistic diffs for each format to test that auto
+  // mode can identify which projects are affected by dependency updates.
+  type AutoModeTestCase = {
+    lockFile: string;
+    changes: {
+      type: JsonDiffType;
+      path: (string | number)[];
+      value: { lhs: any; rhs: any };
+    }[];
+    expectedProjects: string[];
+  };
+
+  // pnpm-lock.yaml / pnpm-lock.yml
+  //
+  //   importers:
+  //     libs/proj1:
+  //       dependencies:
+  //         some-external-package:
+  //           version: 0.0.1 -> 0.0.2
+  //     apps/app1:
+  //       devDependencies:
+  //         some-other-external-package:
+  //           version: (added) 4.0.1
+  //     apps/app-that-was-deleted:
+  //       devDependencies:
+  //         some-other-external-package:
+  //           version: 4.0.1 (deleted)
+  const pnpmChanges: AutoModeTestCase['changes'] = [
+    {
+      type: JsonDiffType.Modified,
+      path: [
+        'importers',
+        'libs/proj1',
+        'dependencies',
+        'some-external-package',
+        'version',
+      ],
+      value: { lhs: '0.0.1', rhs: '0.0.2' },
+    },
+    {
+      type: JsonDiffType.Added,
+      path: [
+        'importers',
+        'apps/app1',
+        'devDependencies',
+        'some-other-external-package',
+        'version',
+      ],
+      value: { lhs: undefined, rhs: '4.0.1' },
+    },
+    {
+      type: JsonDiffType.Deleted,
+      path: [
+        'importers',
+        'apps/app-that-was-deleted',
+        'devDependencies',
+        'some-other-external-package',
+        'version',
+      ],
+      value: { lhs: '4.0.1', rhs: undefined },
+    },
+  ];
+
+  const AUTO_MODE_LOCK_FILES: AutoModeTestCase[] = [
+    {
+      lockFile: 'pnpm-lock.yaml',
+      changes: pnpmChanges,
+      expectedProjects: ['proj1', 'app1'],
+    },
+    {
+      lockFile: 'pnpm-lock.yml',
+      changes: pnpmChanges,
+      expectedProjects: ['proj1', 'app1'],
+    },
+    // package-lock.json (npm v2/v3)
+    //
+    //   {
+    //     "packages": {
+    //       "libs/proj1/node_modules/some-external-package": {
+    //         "version": "0.0.1" -> "0.0.2"
+    //       },
+    //       "apps/app1/node_modules/some-other-external-package": {
+    //         "version": (added) "4.0.1"
+    //       }
+    //     }
+    //   }
+    {
+      lockFile: 'package-lock.json',
+      changes: [
+        {
+          type: JsonDiffType.Modified,
+          path: [
+            'packages',
+            'libs/proj1/node_modules/some-external-package',
+            'version',
+          ],
+          value: { lhs: '0.0.1', rhs: '0.0.2' },
+        },
+        {
+          type: JsonDiffType.Added,
+          path: [
+            'packages',
+            'apps/app1/node_modules/some-other-external-package',
+            'version',
+          ],
+          value: { lhs: undefined, rhs: '4.0.1' },
+        },
+      ],
+      expectedProjects: ['proj1', 'app1'],
+    },
+    // yarn.lock (flat map -- no per-project structure)
+    //
+    //   "some-external-package@^0.0.1":
+    //     version "0.0.1" -> "0.0.2"
+    //
+    //   "some-other-external-package@^4.0.0":
+    //     version (added) "4.0.1"
+    {
+      lockFile: 'yarn.lock',
+      changes: [
+        {
+          type: JsonDiffType.Modified,
+          path: ['some-external-package@^0.0.1', 'version'],
+          value: { lhs: '0.0.1', rhs: '0.0.2' },
+        },
+        {
+          type: JsonDiffType.Added,
+          path: ['some-other-external-package@^4.0.0', 'version'],
+          value: { lhs: undefined, rhs: '4.0.1' },
+        },
+      ],
+      // yarn.lock is flat -- no per-project structure, so all projects
+      // should be affected when any dependency changes
+      expectedProjects: ['proj1', 'proj2', 'app1'],
+    },
+    // bun.lock (JSON with "workspaces" keyed by workspace path)
+    //
+    //   {
+    //     "workspaces": {
+    //       "libs/proj1": {
+    //         "dependencies": {
+    //           "some-external-package": "^0.0.1" -> "^0.0.2"
+    //         }
+    //       },
+    //       "apps/app1": {
+    //         "devDependencies": {
+    //           "some-other-external-package": (added) "^4.0.1"
+    //         }
+    //       }
+    //     }
+    //   }
+    {
+      lockFile: 'bun.lock',
+      changes: [
+        {
+          type: JsonDiffType.Modified,
+          path: [
+            'workspaces',
+            'libs/proj1',
+            'dependencies',
+            'some-external-package',
+          ],
+          value: { lhs: '^0.0.1', rhs: '^0.0.2' },
+        },
+        {
+          type: JsonDiffType.Added,
+          path: [
+            'workspaces',
+            'apps/app1',
+            'devDependencies',
+            'some-other-external-package',
+          ],
+          value: { lhs: undefined, rhs: '^4.0.1' },
+        },
+      ],
+      expectedProjects: ['proj1', 'app1'],
+    },
+  ];
+
+  AUTO_MODE_LOCK_FILES.forEach(({ lockFile, changes, expectedProjects }) => {
+    const isPnpm = PNPM_LOCK_FILES.includes(lockFile);
+
+    describe(`"${lockFile}" with projectsAffectedByDependencyUpdates set to auto`, () => {
       beforeAll(async () => {
         tempFs = new TempFs('lock-file-changes-test');
         await tempFs.createFiles({
@@ -111,74 +293,107 @@ describe('getTouchedProjectsFromLockFile', () => {
         expect(result).toStrictEqual([]);
       });
 
-      it(`should not return changes when whole lock file "${lockFile}" is changed`, () => {
+      // When auto mode sees a WholeFileChange (binary diff, no JSON
+      // structure), it cannot narrow to specific projects. pnpm returns
+      // [] here because it only looks at importers-level JSON changes.
+      // Non-pnpm should return all projects as a safe fallback.
+      // BUG (NXC-4185): non-pnpm lock files silently return [].
+      const wholeFileTest = isPnpm ? it : it.failing;
+      wholeFileTest(
+        isPnpm
+          ? `should not return changes when whole lock file "${lockFile}" is changed`
+          : `should return all projects when whole lock file "${lockFile}" is changed`,
+        () => {
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [new WholeFileChange()],
+              },
+            ],
+            graph.nodes
+          );
+          if (isPnpm) {
+            expect(result).toStrictEqual([]);
+          } else {
+            expect(result).toStrictEqual(allNodes);
+          }
+        }
+      );
+
+      // BUG (NXC-4185): non-pnpm lock files silently return [] for
+      // json-level changes because getProjectPathsAffectedByDependencyUpdates
+      // only understands pnpm's "importers" structure.
+      const jsonChangeTest = isPnpm ? it : it.failing;
+      jsonChangeTest(
+        `should return only affected projects when "${lockFile}" has dependency changes`,
+        () => {
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => changes,
+              },
+            ],
+            graph.nodes
+          );
+          expect(result).toStrictEqual(expectedProjects);
+        }
+      );
+    });
+  });
+
+  // bun.lockb is a binary file (.lockb extension), so the change
+  // detection layer always produces a WholeFileChange -- it never
+  // gets JSON-diffed. Only the WholeFileChange case is meaningful.
+  describe('"bun.lockb" with projectsAffectedByDependencyUpdates set to auto', () => {
+    beforeAll(async () => {
+      tempFs = new TempFs('lock-file-changes-test');
+      await tempFs.createFiles({
+        './nx.json': JSON.stringify({
+          pluginsConfig: {
+            '@nx/js': {
+              projectsAffectedByDependencyUpdates: 'auto',
+            },
+          },
+        }),
+      });
+    });
+
+    afterAll(() => {
+      tempFs.cleanup();
+    });
+
+    it('should not return changes when "bun.lockb" is not touched', () => {
+      const result = getTouchedProjectsFromLockFile(
+        [
+          {
+            file: 'source.ts',
+            getChanges: () => [new WholeFileChange()],
+          },
+        ],
+        graph.nodes
+      );
+      expect(result).toStrictEqual([]);
+    });
+
+    // BUG (NXC-4185): auto mode returns [] for non-pnpm lock files.
+    // Since bun.lockb is binary and always produces WholeFileChange,
+    // auto mode should return all projects as a safe fallback.
+    it.failing(
+      'should return all projects when whole lock file "bun.lockb" is changed',
+      () => {
         const result = getTouchedProjectsFromLockFile(
           [
             {
-              file: lockFile,
+              file: 'bun.lockb',
               getChanges: () => [new WholeFileChange()],
             },
           ],
           graph.nodes
         );
-        expect(result).toStrictEqual([]);
-      });
-
-      it(`should return only changed projects when "${lockFile}" is touched`, () => {
-        const result = getTouchedProjectsFromLockFile(
-          [
-            {
-              file: lockFile,
-              getChanges: () => [
-                {
-                  type: JsonDiffType.Modified,
-                  path: [
-                    'importers',
-                    'libs/proj1',
-                    'dependencies',
-                    'some-external-package',
-                    'version',
-                  ],
-                  value: {
-                    lhs: '0.0.1',
-                    rhs: '0.0.2',
-                  },
-                },
-                {
-                  type: JsonDiffType.Added,
-                  path: [
-                    'importers',
-                    'apps/app1',
-                    'devDependencies',
-                    'some-other-external-package',
-                    'version',
-                  ],
-                  value: {
-                    lhs: undefined,
-                    rhs: '4.0.1',
-                  },
-                },
-                {
-                  type: JsonDiffType.Deleted,
-                  path: [
-                    'importers',
-                    'apps/app-that-was-deleted',
-                    'devDependencies',
-                    'some-other-external-package',
-                    'version',
-                  ],
-                  value: {
-                    lhs: '4.0.1',
-                    rhs: undefined,
-                  },
-                },
-              ],
-            },
-          ],
-          graph.nodes
-        );
-        expect(result).toStrictEqual(['proj1', 'app1']);
-      });
-    });
+        expect(result).toStrictEqual(allNodes);
+      }
+    );
   });
 });
