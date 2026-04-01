@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
@@ -98,12 +99,6 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
 }
 
-export function shouldShowCloudPrompt(): boolean {
-  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
-  // To re-enable A/B testing: return getFlowVariant() !== '2';
-  return false;
-}
-
 // ============================================================================
 // Banner Variant A/B Testing (CLOUD-4235)
 // ============================================================================
@@ -142,7 +137,18 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
 export function getBannerVariant(cloudUrl?: string): BannerVariant {
-  return '0';
+  // Enterprise URLs always get plain link (variant 0)
+  if (isEnterpriseCloudUrl(cloudUrl)) {
+    return '0';
+  }
+
+  // Docs generation uses variant 0 for deterministic output
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    return '0';
+  }
+
+  // Standard URLs get variant 2 banner
+  return '2';
 }
 
 export const NxCloudChoices = [
@@ -181,22 +187,21 @@ const messageOptions: Record<string, MessageData[]> = {
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
-   * NXC-4020: Restored to v22.1.3 wording
+   * Locked to "full platform" messaging (CLOUD-4235)
    */
   setupNxCloud: [
     {
-      code: 'enable-caching2',
-      message: 'Would you like remote caching to make your build faster?',
+      code: 'cloud-v2-full-platform-visit',
+      message: 'Try the full Nx platform?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'No - I would not like remote caching' },
+        { value: 'skip', name: 'Skip' },
       ],
       footer:
-        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
-      hint: '(can be disabled any time)',
+        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
       fallback: undefined,
-      completionMessage: 'cache-setup',
+      completionMessage: 'platform-setup',
     },
   ],
   /**
@@ -210,10 +215,38 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: "No, don't ask again" },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
       footer:
         '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+      fallback: undefined,
+      completionMessage: 'platform-setup',
+    },
+    {
+      code: 'cloud-ab-remote-cache-speed',
+      message: 'Enable remote caching to speed up builds with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
+      ],
+      footer:
+        '\nFree for small teams. 2-minute setup with GitHub — cache locally and in CI: https://nx.dev/nx-cloud',
+      fallback: undefined,
+      completionMessage: 'platform-setup',
+    },
+    {
+      code: 'cloud-ab-fast-ci-setup',
+      message: 'Speed up your CI with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
+      ],
+      footer:
+        '\n70% faster CI on GitHub, GitLab, and more. Free tier, 2-minute setup: https://nx.dev/nx-cloud',
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
@@ -240,9 +273,9 @@ export class PromptMessages {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * messageOptions[key].length
-        );
+        const variant = Number(getFlowVariant());
+        this.selectedMessages[key] =
+          variant < messageOptions[key].length ? variant : 0;
       }
     }
     return messageOptions[key][this.selectedMessages[key]!];
@@ -360,7 +393,7 @@ function shouldRecordStats(): boolean {
     // Use npm to check registry - this works regardless of which package manager invoked us
     const stdout = execSync('npm config get registry', {
       encoding: 'utf-8',
-      windowsHide: false,
+      windowsHide: true,
     });
     const url = new URL(stdout.trim());
 

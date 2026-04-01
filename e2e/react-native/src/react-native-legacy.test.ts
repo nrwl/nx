@@ -265,9 +265,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should tsc app', async () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
-      runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
-      );
+      runCommand(`${pmc.exec} tsc -p apps/${appName}/tsconfig.app.json`);
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/main.js`,
         `dist/out-tsc/apps/${appName}/src/main.d.ts`,

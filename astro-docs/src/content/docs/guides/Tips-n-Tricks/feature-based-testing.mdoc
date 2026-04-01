@@ -152,7 +152,7 @@ When running tests from multiple features in parallel, be mindful of shared reso
 
 - **Using unique test data**: Don't rely on specific database records or application state
 - **Managing ports**: Configure each test to use different ports, or let the test framework find free ports automatically
-  - For Cypress, use the [`--port` flag](/nx-api/cypress/executors/cypress#port) to specify or auto-detect ports
+  - For Cypress, use the [`--port` flag](/docs/technologies/test-tools/cypress/executors) to specify or auto-detect ports
   - For Playwright, the `webServerAddress` can be dynamically assigned
 - **Isolating state**: Use test-specific user accounts, temporary data, or cleanup between tests
 

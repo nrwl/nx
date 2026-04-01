@@ -66,8 +66,8 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # Prepend any command with "nx record --" to record its logs to Nx Cloud
+      # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -110,8 +110,8 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # Prepend any command with "nx record --" to record its logs to Nx Cloud
+      # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -161,8 +161,8 @@ CI:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-    # - npx nx-cloud record -- echo Hello World
+    # Prepend any command with "nx record --" to record its logs to Nx Cloud
+    # - npx nx record -- echo Hello World
     - npx nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -238,8 +238,8 @@ jobs:
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
+      # Prepend any command with "nx record --" to record its logs to Nx Cloud
+      # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: npx nx fix-ci
@@ -269,12 +269,12 @@ pipeline {
                     steps {
                         // This line enables distribution
                         // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-                        // sh "npx nx-cloud start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
+                        // sh "npx nx start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
                         sh "npm ci"
 
-                        // Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+                        // Prepend any command with "nx record --" to record its logs to Nx Cloud
                         // This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
-                        // sh "npx nx-cloud record -- nx format:check"
+                        // sh "npx nx record -- nx format:check"
 
                         // Without Nx Cloud, run format:check directly
                         sh "npx nx format:check"
@@ -289,12 +289,12 @@ pipeline {
                     steps {
                         // This line enables distribution
                         // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-                        // sh "npx nx-cloud start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
+                        // sh "npx nx start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
                         sh "npm ci"
 
-                        // Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+                        // Prepend any command with "nx record --" to record its logs to Nx Cloud
                         // This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
-                        // sh "npx nx-cloud record -- nx format:check"
+                        // sh "npx nx record -- nx format:check"
 
                         // Without Nx Cloud, run format:check directly
                         sh "npx nx format:check"
@@ -342,8 +342,8 @@ pipelines:
 
             - npm ci
 
-            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
+            # Prepend any command with "nx record --" to record its logs to Nx Cloud
+            # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -364,8 +364,8 @@ pipelines:
 
             - npm ci
 
-            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
+            # Prepend any command with "nx record --" to record its logs to Nx Cloud
+            # - npx nx record -- echo Hello World
             - npx nx affected -t lint test build --base=HEAD~1
 ```
 
@@ -482,10 +482,10 @@ Learn more about [Self-Healing CI features](https://nx.dev/ci/features/self-heal
 
 ### Recording commands
 
-You can record any command's logs to Nx Cloud by prepending it with `nx-cloud record --`. This helps with debugging and monitoring your CI pipeline.
+You can record any command's logs to Nx Cloud by prepending it with `nx record --`. This helps with debugging and monitoring your CI pipeline.
 
 Example:
 
 ```bash
-npx nx-cloud record -- echo Hello World
+npx nx record -- echo Hello World
 ```

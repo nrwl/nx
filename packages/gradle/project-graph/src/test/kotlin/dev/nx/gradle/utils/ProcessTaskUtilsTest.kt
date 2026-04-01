@@ -496,72 +496,18 @@ class ProcessTaskUtilsTest {
 
   @Nested
   inner class ProviderBasedDependenciesTests {
-
     @Test
-    fun `returns empty set when task has no dependencies`() {
-      val task = project.tasks.register("standalone").get()
-      assertTrue(findProviderBasedDependencies(task).isEmpty())
-    }
+    fun `compileTestKotlin from kotlin plugin has correct provider dependencies`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinProject").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
-    @Test
-    fun `identifies TaskProvider dependencies`() {
-      val producerProvider = project.tasks.register("producer")
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { it.dependsOn(producerProvider) }
+      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
+      val result = findProviderBasedDependencies(compileTestKotlin)
 
-      val result = findProviderBasedDependencies(consumerProvider.get())
-
-      assertTrue(result.any { it.contains("producer") }, "Found: $result")
-    }
-
-    @Test
-    fun `identifies ProviderInternal from task output files`() {
-      val producerProvider =
-          project.tasks.register("producer") { task ->
-            task.outputs.file(
-                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
-          }
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { it.dependsOn(producerProvider.map { p -> p.outputs.files }) }
-
-      val result = findProviderBasedDependencies(consumerProvider.get())
-
-      assertTrue(result.any { it.contains("producer") }, "Found: $result")
-    }
-
-    @Test
-    fun `identifies ProviderInternal from task output directory`() {
-      val compileProvider =
-          project.tasks.register("compile") { task ->
-            task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
-          }
-      val jarProvider = project.tasks.register("jar")
-      jarProvider.configure { it.dependsOn(compileProvider.map { p -> p.outputs.files }) }
-
-      val result = findProviderBasedDependencies(jarProvider.get())
-
-      assertTrue(result.any { it.contains("compile") }, "Found: $result")
-    }
-
-    @Test
-    fun `identifies multiple TaskProvider dependencies`() {
-      val provider1 = project.tasks.register("task1")
-      val provider2 = project.tasks.register("task2")
-      val provider3 = project.tasks.register("task3")
-
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { task ->
-        task.dependsOn(provider1)
-        task.dependsOn(provider2)
-        task.dependsOn(provider3)
-      }
-
-      val result = findProviderBasedDependencies(consumerProvider.get())
-
-      assertEquals(3, result.size)
-      assertTrue(result.any { it.contains("task1") }, "Found: $result")
-      assertTrue(result.any { it.contains("task2") }, "Found: $result")
-      assertTrue(result.any { it.contains("task3") }, "Found: $result")
+      assertTrue { result.contains(":compileKotlin") }
+      assertTrue { result.contains(":jar") }
+      assertTrue { result.contains(":compileJava") }
+      assertTrue { result.contains(":checkKotlinGradlePluginConfigurationErrors") }
     }
   }
 

@@ -31,7 +31,7 @@ describe('Jest', () => {
     const results = await runCLIAsync(`test ${name} --skip-nx-cache`, {
       silenceError: true,
       env: {
-        ...process.env, // need to set this for some reason, or else get "env: node: No such file or directory"
+        ...getStrippedEnvironmentVariables(),
         NODE_ENV: 'foobar',
       },
     });

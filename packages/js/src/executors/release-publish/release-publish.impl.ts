@@ -132,6 +132,24 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     };
   }
 
+  /**
+   * If version data was provided by the nx release version step, check if this project
+   * actually had a new version resolved. If not (newVersion is null), there is nothing
+   * to publish, so we can skip this project entirely.
+   */
+  if (options.nxReleaseVersionData) {
+    const projectVersionData =
+      options.nxReleaseVersionData[context.projectName];
+    if (projectVersionData && projectVersionData.newVersion === null) {
+      console.warn(
+        `Skipped ${packageTxt}, because no new version was resolved for this project`
+      );
+      return {
+        success: true,
+      };
+    }
+  }
+
   const warnFn = (message: string) => {
     console.log(chalk.keyword('orange')(message));
   };
@@ -175,7 +193,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         env: processEnv(true),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: false,
+        windowsHide: true,
       });
 
       const resultJson = JSON.parse(result.toString());
@@ -202,7 +220,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
                 env: processEnv(true),
                 cwd: context.root,
                 stdio: 'ignore',
-                windowsHide: false,
+                windowsHide: true,
               });
               console.log(
                 `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
@@ -353,7 +371,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: false,
+      windowsHide: true,
     });
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';

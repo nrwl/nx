@@ -71,6 +71,7 @@ export async function getServerConfig(
           ],
         },
         {
+          // eslint-disable-next-line @nx/enforce-module-boundaries
           loader: require.resolve(
             '@nx/angular-rspack/loaders/platform-server-exports-loader'
           ),

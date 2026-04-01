@@ -1,6 +1,9 @@
 pub const TRACKING_ID_PROD: &str = "G-BGPKPJK4PY";
 pub const GA_ENDPOINT: &str = "https://www.google-analytics.com/g/collect";
 pub const BATCH_INTERVAL_MS: u64 = 50;
+/// Session timeout in seconds (30 minutes). If no events are received
+/// within this window, a new session ID is generated.
+pub const SESSION_TIMEOUT_SECS: u64 = 30 * 60;
 
 // Google Analytics Measurement Protocol limits
 pub const MAX_EVENT_NAME_LENGTH: usize = 40;

@@ -1,7 +1,8 @@
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 
-export default function addPolygraphToGitIgnore(tree: Tree) {
+export default async function addPolygraphToGitIgnore(tree: Tree) {
   if (!tree.exists('.gitignore')) {
     return;
   }
@@ -10,4 +11,6 @@ export default function addPolygraphToGitIgnore(tree: Tree) {
     return;
   }
   addEntryToGitIgnore(tree, '.gitignore', '.nx/polygraph');
+
+  await formatChangedFilesWithPrettierIfAvailable(tree);
 }

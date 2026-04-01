@@ -32,5 +32,8 @@ export const jasmineMarblesVersion = '^0.9.2';
 
 export const vitestVersion = '^4.0.8';
 export const jsdomVersion = '^27.1.0';
+// @angular/build uses rolldown which injects @oxc-project/runtime helpers
+// at transform time but doesn't declare it as a dependency
+export const oxcProjectRuntimeVersion = '^0.115.0';
 
 export const jsoncEslintParserVersion = '^2.1.0';

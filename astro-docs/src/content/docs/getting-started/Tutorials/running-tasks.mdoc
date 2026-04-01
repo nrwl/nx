@@ -1,0 +1,164 @@
+---
+title: Running Tasks
+description: Learn how to run tasks in your Nx workspace, including single tasks, multiple tasks in parallel, and how to pass arguments.
+sidebar:
+  order: 4
+---
+
+{% llm_copy_prompt title="Tutorial 4/8: Run tasks across your workspace" %}
+Help me run tasks in my Nx workspace efficiently.
+Use my existing workspace and projects for hands-on examples.
+
+Show me how to run a single task for one project, run multiple tasks across all projects with `nx run-many`, and understand how Nx orders task execution. Do not discuss caching or affected commands — those are covered in later tutorials.
+
+Stay on-topic: only teach what's covered on this page. Do not introduce concepts from later tutorials.
+
+Tutorial: {pageUrl}
+{% /llm_copy_prompt %}
+
+You've [configured your tasks](/docs/getting-started/tutorials/configuring-tasks). Now how do you run them, for one project, for many, or only for what changed?
+
+The examples below use Vite and Vitest, but the concepts apply to any tool. Substitute your own build and test commands as needed.
+
+## Running a single task
+
+Given a project with tasks defined in `package.json` (or `project.json` for non-JS projects):
+
+{% tabs %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "name": "my-app",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "command": "vite build",
+    },
+    "test": {
+      "command": "vitest run",
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Run a task with `nx run <project>:<task>`:
+
+```shell
+nx run my-app:build
+```
+
+Or the shorthand, which works when the task name doesn't conflict with an Nx command:
+
+```shell
+nx build my-app
+```
+
+You can also `cd` into a project directory and run without specifying the project name:
+
+```shell
+cd apps/my-app
+nx build
+```
+
+Nx resolves the project from the current directory. Try running `nx build` or `nx test` in your own workspace to see it in action.
+
+## Running multiple tasks
+
+Use `run-many` to run one or more tasks across multiple projects:
+
+```shell
+# Run build for all projects that have a build task
+nx run-many --targets build
+
+# Run multiple tasks
+nx run-many --targets build test lint
+
+# Run tasks for specific projects only
+nx run-many --targets build --projects my-app
+```
+
+The `-t` and `-p` flags are shorthands for `--targets` and `--projects`.
+
+Nx runs tasks in parallel by default, respecting the [task dependencies](/docs/getting-started/tutorials/configuring-tasks) you've configured. For example, with this configuration:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+Running `nx run-many --targets build` builds dependencies first, then dependents:
+
+![Diagram showing task execution order: shared-ui:build and utils:build run in step 1, then my-app:build and data-access:build run in step 2, driven by dependsOn configuration](../../../../assets/tutorials/task-dependency-order.svg)
+
+Nx handles the ordering automatically, even when running in parallel.
+
+## Passing arguments
+
+Pass arguments directly to the task:
+
+```shell
+# Use a named configuration
+nx build my-app --configuration=production
+
+# Forward arguments to the underlying tool
+nx test my-app --watch
+```
+
+For more details, see [pass args to commands](/docs/guides/tasks--caching/pass-args-to-commands).
+
+## Controlling parallelism
+
+By default, Nx runs tasks in parallel. Limit the number of concurrent tasks with `--parallel`:
+
+```shell
+nx run-many --targets build --parallel=3
+```
+
+Set `--parallel=1` to run tasks sequentially.
+
+## Running continuous tasks
+
+Some tasks run indefinitely, like development servers. When another task depends on a continuous task, Nx starts both concurrently. For example, running an e2e test that needs a dev server:
+
+```shell
+nx run my-app:e2e
+```
+
+This works when `e2e` depends on a `serve` task marked as `continuous` (configured in [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks)). Nx starts the server, waits for it to be ready, then runs the tests.
+
+## Nx Console
+
+[Nx Console](/docs/getting-started/editor-setup) is a VS Code and WebStorm extension that provides a visual interface for running tasks, exploring your project graph, and managing your workspace, all without memorizing CLI commands.
+
+## Learn more
+
+- [Run tasks](/docs/features/run-tasks): full feature documentation
+- [Pass args to commands](/docs/guides/tasks--caching/pass-args-to-commands): detailed argument handling
+
+{% cards cols=2 %}
+{% card title="Previous: Configuring Tasks" description="Define tasks and their dependencies" url="/docs/getting-started/tutorials/configuring-tasks" /%}
+{% card title="Next: Caching Tasks" description="Speed up tasks by replaying previous results" url="/docs/getting-started/tutorials/caching" /%}
+{% /cards %}

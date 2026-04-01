@@ -42,6 +42,7 @@ import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
+import { handleImport } from '../../utils/handle-import';
 
 export type ModificationResults = {
   messages: CLINoteMessageConfig[];
@@ -109,7 +110,7 @@ export async function setupAiAgentsGenerator(
       'src/ai/set-up-ai-agents/set-up-ai-agents.js'
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const setupAiAgentsGeneratorResult = await module.setupAiAgentsGenerator(
       tree,
       normalizedOptions,
@@ -276,11 +277,24 @@ export async function setupAiAgentsGeneratorImpl(
   if (aiConfigRepoPath) {
     const repoPath = aiConfigRepoPath;
 
+    // Shared skills directory used by codex, cursor, and gemini
+    if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
+      const sharedSkillsSrc = join(repoPath, 'generated/.agents');
+      if (existsSync(sharedSkillsSrc)) {
+        generateFiles(
+          tree,
+          sharedSkillsSrc,
+          join(options.directory, '.agents'),
+          {}
+        );
+      }
+    }
+
+    // Agent-specific directories (commands, agents, config)
     const agentDirs: { agent: Agent; src: string; dest: string }[] = [
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
       {
         agent: 'codex',
         src: 'generated/.codex/agents',
@@ -309,6 +323,12 @@ export async function setupAiAgentsGeneratorImpl(
     tree,
     join(options.directory, '.gitignore'),
     '.claude/worktrees'
+  );
+
+  addEntryToGitIgnore(
+    tree,
+    join(options.directory, '.gitignore'),
+    '.claude/settings.local.json'
   );
 
   await formatChangedFilesWithPrettierIfAvailable(tree);

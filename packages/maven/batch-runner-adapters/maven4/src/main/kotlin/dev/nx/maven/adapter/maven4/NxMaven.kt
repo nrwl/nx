@@ -197,13 +197,15 @@ class NxMaven(
     request: MavenExecutionRequest
   ) {
     log.debug("Applying project dependency graph to session for ${request.pom}: ${request.goals}")
-    session.allProjects = graph.allProjects
+    session.allProjects = graph.allProjects.toMutableList()
     session.projectDependencyGraph = graph
 
     // Find the selected project(s) to build
+    // Use toMutableList() because Maven's MojoExecutor.executeForkedExecutions
+    // calls list.set() which requires a mutable list
     val selectedProjects = listOfNotNull(
       request.selectedProjects.firstOrNull()?.let { projectBySelector[it] }
-    )
+    ).toMutableList()
 
     // session.projects controls what lifecycleStarter builds - keep it to selected projects only
     session.projects = selectedProjects

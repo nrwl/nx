@@ -9,6 +9,7 @@ import {
 } from '../../utils/package-manager';
 import { readJsonFile } from '../../utils/fileutils';
 import {
+  NxPackageJson,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -40,8 +41,8 @@ import {
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
 
-const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
-  join(__dirname, '../../../package.json')
+const nxPackageJson = readJsonFile<NxPackageJson>(
+  require.resolve('nx/package.json')
 );
 
 export const packagesWeCareAbout = [
@@ -404,7 +405,9 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(
+    nxPackageJson as PackageJson
+  );
 
   const mismatchedNxVersions = findMismatchedNxVersions(graph);
 

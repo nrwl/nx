@@ -1,4 +1,4 @@
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
@@ -290,7 +290,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
       maxBuffer: TEN_MEGABYTES,
       cwd: workspaceRoot,
       stdio: 'pipe',
-      windowsHide: false,
+      windowsHide: true,
     })
       .toString()
       .trim();
@@ -300,7 +300,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
         maxBuffer: TEN_MEGABYTES,
         cwd: workspaceRoot,
         stdio: 'pipe',
-        windowsHide: false,
+        windowsHide: true,
       })
         .toString()
         .trim();
@@ -321,7 +321,7 @@ function parseGitOutput(command: string): string[] {
     maxBuffer: TEN_MEGABYTES,
     cwd: workspaceRoot,
     stdio: 'pipe',
-    windowsHide: false,
+    windowsHide: true,
   })
     .toString('utf-8')
     .split('\n')

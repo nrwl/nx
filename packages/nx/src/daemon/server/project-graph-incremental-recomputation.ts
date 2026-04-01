@@ -32,10 +32,8 @@ import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from '../logger';
 import { NxWorkspaceFilesExternals } from '../../native';
-import {
-  ConfigurationResult,
-  ConfigurationSourceMaps,
-} from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,
@@ -357,6 +355,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     // Early exit if a newer recomputation has started - chain to the newer one
     if (isStale()) {
+      notifyPluginsGraphAborted(plugins);
       return cachedSerializedProjectGraphPromise;
     }
 
@@ -381,6 +380,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     // Early exit if a newer recomputation has started - chain to the newer one
     if (isStale()) {
+      notifyPluginsGraphAborted(plugins);
       return cachedSerializedProjectGraphPromise;
     }
 
@@ -546,6 +546,15 @@ async function resetInternalStateIfNxDepsMissing() {
     }
   } catch (e) {
     await resetInternalState();
+  }
+}
+
+function notifyPluginsGraphAborted(plugins: LoadedNxPlugin[]) {
+  // At both abort sites, only createNodes has been called.
+  // createDependencies and createMetadata are called later in
+  // createAndSerializeProjectGraph, which hasn't run yet.
+  for (const plugin of plugins) {
+    plugin.notifyPhaseAborted?.('graph', 'createNodes');
   }
 }
 

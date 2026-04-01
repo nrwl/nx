@@ -77,7 +77,7 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
             mappedLocationOfRemotes,
             {
               pathToCert: this._options.devServerConfig.sslCert,
-              pathToKey: this._options.devServerConfig.sslCert,
+              pathToKey: this._options.devServerConfig.sslKey,
             },
             false,
             this._options.devServerConfig.host

@@ -86,5 +86,6 @@ Outputs:
 Configurations: production
 Cache: true
 Parallelism: true
+Continuous: false
 "
 `;

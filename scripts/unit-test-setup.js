@@ -23,6 +23,7 @@ module.exports = () => {
    * of the Nx repo, so we mock it to return an empty project graph.
    */
   jest.doMock('@nx/devkit', () => ({
+    __esModule: true,
     ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(async () => {
       return {
@@ -30,5 +31,12 @@ module.exports = () => {
         dependencies: {},
       };
     }),
+    /**
+     * `ensurePackage` calls `require(pkg)` which resolves from node_modules
+     * (the installed version) instead of the local source code. Using
+     * `jest.requireActual` routes through Jest's module resolver which
+     * respects tsconfig paths, so it picks up the source code instead.
+     */
+    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
   }));
 };

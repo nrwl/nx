@@ -3,6 +3,7 @@ title: Jest Plugin for Nx
 description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest, including setup and configuration for your Nx workspace.
 sidebar:
   label: Introduction
+weight: 5
 filter: 'type:References'
 ---
 
@@ -165,12 +166,13 @@ Configure the plugin in `nx.json`:
 }
 ```
 
-| Option               | Type    | Default | Description                                                                                                                    |
-| -------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `targetName`         | string  | `test`  | Name of the inferred Jest target.                                                                                              |
-| `ciTargetName`       | string  | none    | Creates a CI-only target for atomized test tasks.                                                                              |
-| `ciGroupName`        | string  | none    | Custom group name for atomized tasks in Nx Cloud/UI.                                                                           |
-| `disableJestRuntime` | boolean | `true`  | When `true`, Nx skips creating the Jest runtime and computes inputs/outputs itself. Set to `false` to enable the Jest runtime. |
+| Option               | Type    | Default                        | Description                                                                                                                                                                                                      |
+| -------------------- | ------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `targetName`         | string  | `test`                         | Name of the inferred Jest target.                                                                                                                                                                                |
+| `ciTargetName`       | string  | none                           | Creates a CI-only target for atomized test tasks.                                                                                                                                                                |
+| `ciGroupName`        | string  | none                           | Custom group name for atomized tasks in Nx Cloud/UI.                                                                                                                                                             |
+| `disableJestRuntime` | boolean | `true`                         | When `true`, Nx skips creating the Jest runtime and computes inputs/outputs itself. Set to `false` to enable the Jest runtime.                                                                                   |
+| `useJestResolver`    | boolean | `true` when runtime is enabled | Whether to use Jest's resolver for resolving config file references as task inputs. Follows symlinks and honors custom `moduleDirectories`/`modulePaths`. Faster path-based classification is used when `false`. |
 
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 

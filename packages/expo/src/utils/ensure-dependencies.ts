@@ -25,6 +25,7 @@ export async function ensureDependencies(
   if (unitTestRunner === 'jest') {
     devDependencies['@testing-library/react-native'] =
       versions.testingLibraryReactNative;
+    devDependencies['react-test-renderer'] = versions.reactTestRenderer;
     devDependencies['jest-expo'] = versions.jestExpo;
   }
 

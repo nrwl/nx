@@ -16,6 +16,7 @@ pub mod ai;
 #[cfg_attr(target_arch = "wasm32", path = "atomics/wasm.rs")]
 pub mod atomics;
 pub mod ci;
+pub mod command;
 pub mod file_lock;
 pub mod git;
 

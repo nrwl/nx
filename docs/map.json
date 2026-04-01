@@ -2699,6 +2699,11 @@
                   "file": "nx-cloud/recipes/google-auth"
                 },
                 {
+                  "name": "Set Up CI with Bun",
+                  "id": "use-bun",
+                  "file": "nx-cloud/recipes/use-bun"
+                },
+                {
                   "name": "CI Access Tokens",
                   "id": "access-tokens",
                   "file": "nx-cloud/recipes/access-tokens"

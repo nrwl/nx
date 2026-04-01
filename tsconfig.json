@@ -354,6 +354,48 @@
     },
     {
       "path": "./nx-dev/ui-resources"
+    },
+    {
+      "path": "./examples/angular-rspack/module-federation/remote"
+    },
+    {
+      "path": "./examples/angular-rspack/module-federation/host"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-csr-i18n"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-csr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-ssg-css"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-ssr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-css-assets"
+    },
+    {
+      "path": "./examples/angular-rspack/appshell-css"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-tailwind"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-i18n"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-scss"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/ssg-css"
+    },
+    {
+      "path": "./examples/angular-rspack/ssr-css"
     }
   ],
   "extends": "./tsconfig.base.json"

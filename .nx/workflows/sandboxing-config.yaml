@@ -1,8 +1,9 @@
 exclude-reads:
-  - '**/node_modules/**'
-  - .nx/**/*
-  - .git/**/*
-  - '**/package.json'
-  - pnpm-workspace.yaml
+  - packages/nx/src/native/*.node
 exclude-writes:
-  - nx/**/*
+  - '**/.swc/**'
+
+task-exclusions:
+  - target: lint
+    exclude-reads:
+      - '**/dist/**/*.json'

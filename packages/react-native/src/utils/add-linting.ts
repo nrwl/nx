@@ -84,7 +84,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       addPredefinedConfigToFlatLintConfig(
         host,
         options.projectRoot,
-        'flat/react'
+        'flat/react',
+        { checkBaseConfig: true }
       );
       // Add an empty rules object to users know how to add/override rules
       addOverrideToLintConfig(host, options.projectRoot, {

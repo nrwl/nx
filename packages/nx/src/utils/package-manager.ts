@@ -69,7 +69,9 @@ export function detectPackageManager(dir: string = ''): PackageManager {
         ? 'yarn'
         : existsSync(join(dir, 'pnpm-lock.yaml'))
           ? 'pnpm'
-          : detectInvokedPackageManager())
+          : existsSync(join(dir, 'package-lock.json'))
+            ? 'npm'
+            : detectInvokedPackageManager())
   );
 }
 
@@ -608,19 +610,14 @@ export async function packageRegistryPack(
   pkg: string,
   version: string
 ): Promise<{ tarballPath: string }> {
-  let pm = detectPackageManager();
-  if (pm === 'yarn' || pm === 'bun') {
-    /**
-     * `(p)npm pack` will download a tarball of the specified version,
-     * whereas `yarn` pack creates a tarball of the active workspace, so it
-     * does not work for getting the content of a library.
-     *
-     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
-     *
-     * bun doesn't currently support pack
-     */
-    pm = 'npm';
-  }
+  /**
+   * Only `npm pack` supports downloading a tarball of a specified remote
+   * package. `yarn` packs the active workspace, `pnpm pack` only packs
+   * the local project, and `bun` doesn't support pack.
+   *
+   * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+   */
+  const pm = 'npm';
 
   const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
     cwd,

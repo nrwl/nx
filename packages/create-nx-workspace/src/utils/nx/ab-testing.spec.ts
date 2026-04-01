@@ -1,8 +1,8 @@
 import {
   isEnterpriseCloudUrl,
   getBannerVariant,
-  shouldShowCloudPrompt,
   getFlowVariant,
+  PromptMessages,
 } from './ab-testing';
 
 describe('ab-testing', () => {
@@ -99,15 +99,45 @@ describe('ab-testing', () => {
       ).toBe('0');
     });
 
-    // NXC-4020: Locked to variant 0 to match v22.1.3
-    it('should return 0 for standard URLs (NXC-4020)', () => {
-      expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('0');
+    it('should return 2 for standard URLs', () => {
+      expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('2');
     });
   });
 
-  describe('shouldShowCloudPrompt', () => {
-    it('should always return false (variant 2 locked in CLOUD-4255)', () => {
-      expect(shouldShowCloudPrompt()).toBe(false);
+  describe('setupNxCloudV2 prompt variants', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it.each([
+      { flowVariant: '0', expectedCode: 'connect-to-cloud' },
+      { flowVariant: '1', expectedCode: 'cloud-ab-remote-cache-speed' },
+      { flowVariant: '2', expectedCode: 'cloud-ab-fast-ci-setup' },
+    ])(
+      'should select $expectedCode for flow variant $flowVariant',
+      ({ flowVariant, expectedCode }) => {
+        jest.resetModules();
+        process.env.NX_CNW_FLOW_VARIANT = flowVariant;
+        const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
+        const pm = new FreshPromptMessages();
+        expect(pm.getPrompt('setupNxCloudV2').code).toBe(expectedCode);
+      }
+    );
+
+    it('should select variant 0 for docs generation', () => {
+      process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+      const { PromptMessages: FreshPromptMessages } = jest.requireActual(
+        './ab-testing'
+      ) as typeof import('./ab-testing');
+      const pm = new FreshPromptMessages();
+      expect(pm.getPrompt('setupNxCloudV2').code).toBe('connect-to-cloud');
     });
   });
 });

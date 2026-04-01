@@ -6,47 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/webpack/README.md"],
-      "command": "node ./scripts/copy-readme.js webpack"
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/webpack",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/webpack",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/webpack",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/webpack",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/webpack",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "command": "node ./scripts/copy-readme.js webpack",
+      "inputs": ["copyReadme"]
     }
   }
 }

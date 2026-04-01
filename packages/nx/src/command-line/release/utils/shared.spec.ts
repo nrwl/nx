@@ -187,6 +187,74 @@ describe('shared', () => {
         `);
       });
 
+      it('should include dependent projects that were versioned but not in the filtered projects set', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'one',
+            projectsRelationship: 'independent',
+            projects: ['projectA', 'projectB'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: true,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        // Only projectA is in the filtered projects (user ran --projects=projectA)
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['projectA'])
+        );
+        // But projectB was also versioned as a side-effect (dependent bump)
+        // projectB depends on projectA, so when projectA is bumped,
+        // projectB gets a patch bump via updateDependents
+        const versionData = {
+          projectA: {
+            currentVersion: '1.0.0',
+            dependentProjects: [
+              {
+                source: 'projectB',
+                target: 'projectA',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.0',
+              },
+            ],
+            newVersion: '2.0.0',
+            dockerVersion: null,
+          },
+          projectB: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+            dockerVersion: null,
+          },
+        };
+        const userCommitMessage = 'chore(release): publish';
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          userCommitMessage
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: projectA 2.0.0",
+            "- project: projectB 1.0.1",
+          ]
+        `);
+      });
+
       it('should interpolate the {projectName} and {version} within the main commit message if a single project within a single independent release group is being committed', () => {
         const releaseGroups: ReleaseGroupWithName[] = [
           {
