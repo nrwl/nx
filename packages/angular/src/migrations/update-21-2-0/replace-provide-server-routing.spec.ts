@@ -104,11 +104,8 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
 
       const serverConfig: ApplicationConfig = {
         providers: [
-          provideServerRendering(
-            withRoutes(serverRoutes),
-            withAppShell(AppShellComponent),
-          ),
-        ],
+          provideServerRendering(withRoutes(serverRoutes), withAppShell(AppShellComponent))
+      ],
       };
 
       export const config = mergeApplicationConfig(appConfig, serverConfig);
@@ -180,11 +177,8 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
 
       const serverConfig: ApplicationConfig = {
         providers: [
-          provideServerRendering(
-            withRoutes(serverRoutes),
-            withAppShell(AppShellComponent),
-          ),
-        ],
+          provideServerRendering(withRoutes(serverRoutes), withAppShell(AppShellComponent))
+      ],
       };
 
       export const config = mergeApplicationConfig(appConfig, serverConfig);

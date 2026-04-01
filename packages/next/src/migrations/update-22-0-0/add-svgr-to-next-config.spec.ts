@@ -116,7 +116,8 @@ module.exports = composePlugins(...plugins)(nextConfig);
 
     const newContent = tree.read('apps/my-app/next.config.js', 'utf-8');
     expect(newContent).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {
@@ -125,7 +126,9 @@ module.exports = composePlugins(...plugins)(nextConfig);
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ];
 
       module.exports = composePlugins(...plugins)(nextConfig);
       "
@@ -170,14 +173,17 @@ module.exports = composePlugins(...plugins)(nextConfig);
 
     const content = tree.read('apps/my-app/next.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {},
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ]
 
       // Add SVGR webpack config function
       // @ts-ignore
@@ -209,10 +215,10 @@ module.exports = composePlugins(...plugins)(nextConfig);
                   {
                     loader: require.resolve('@svgr/webpack'),
                     options: {
-                      svgo: false,
-                      titleProp: true,
-                      ref: true,
-                    },
+            svgo: false,
+            titleProp: true,
+            ref: true,
+          },
                   },
                 ],
               },
@@ -223,7 +229,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
             : webpackConfig;
         };
         return config;
-      };
+      };;;
 
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "
@@ -272,14 +278,17 @@ module.exports = composePlugins(...plugins)(nextConfig);
 
     const content = tree.read('apps/my-app/next.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {},
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ]
 
       // Add SVGR webpack config function
       // @ts-ignore
@@ -311,10 +320,10 @@ module.exports = composePlugins(...plugins)(nextConfig);
                   {
                     loader: require.resolve('@svgr/webpack'),
                     options: {
-                      svgo: true,
-                      titleProp: false,
-                      ref: false,
-                    },
+            svgo: true,
+            titleProp: false,
+            ref: false
+          },
                   },
                 ],
               },
@@ -325,7 +334,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
             : webpackConfig;
         };
         return config;
-      };
+      };;;
 
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "
@@ -370,14 +379,17 @@ module.exports = composePlugins(...plugins)(nextConfig);
 
     const content = tree.read('apps/my-app/next.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {},
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ]
 
       // Add SVGR webpack config function
       // @ts-ignore
@@ -409,10 +421,10 @@ module.exports = composePlugins(...plugins)(nextConfig);
                   {
                     loader: require.resolve('@svgr/webpack'),
                     options: {
-                      svgo: false,
-                      titleProp: true,
-                      ref: true,
-                    },
+            svgo: false,
+            titleProp: true,
+            ref: true,
+          },
                   },
                 ],
               },
@@ -423,7 +435,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
             : webpackConfig;
         };
         return config;
-      };
+      };;;
 
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "
@@ -500,14 +512,17 @@ module.exports = composePlugins(...plugins)(nextConfig);
     const content2 = tree.read('apps/app2/next.config.js', 'utf-8');
 
     expect(content1).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {},
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ]
 
       // Add SVGR webpack config function
       // @ts-ignore
@@ -539,10 +554,10 @@ module.exports = composePlugins(...plugins)(nextConfig);
                   {
                     loader: require.resolve('@svgr/webpack'),
                     options: {
-                      svgo: false,
-                      titleProp: true,
-                      ref: true,
-                    },
+            svgo: false,
+            titleProp: true,
+            ref: true,
+          },
                   },
                 ],
               },
@@ -553,7 +568,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
             : webpackConfig;
         };
         return config;
-      };
+      };;;
 
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "
@@ -601,7 +616,8 @@ module.exports = composePlugins(...plugins)(nextConfig);
 
     const content = tree.read('apps/my-app/next.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {
@@ -611,7 +627,9 @@ module.exports = composePlugins(...plugins)(nextConfig);
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ]
 
       // Add SVGR webpack config function
       // @ts-ignore
@@ -643,10 +661,10 @@ module.exports = composePlugins(...plugins)(nextConfig);
                   {
                     loader: require.resolve('@svgr/webpack'),
                     options: {
-                      svgo: false,
-                      titleProp: true,
-                      ref: true,
-                    },
+            svgo: false,
+            titleProp: true,
+            ref: true,
+          },
                   },
                 ],
               },
@@ -657,7 +675,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
             : webpackConfig;
         };
         return config;
-      };
+      };;;
 
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "
@@ -702,14 +720,17 @@ module.exports = composePlugins(...plugins)(nextConfig);
 
     const content = tree.read('apps/my-app/next.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/next');
+      "
+      const { composePlugins, withNx } = require('@nx/next');
 
       const nextConfig = {
         nx: {},
         reactStrictMode: true,
       };
 
-      const plugins = [withNx];
+      const plugins = [
+        withNx,
+      ]
 
       // Add SVGR webpack config function
       // @ts-ignore
@@ -741,10 +762,10 @@ module.exports = composePlugins(...plugins)(nextConfig);
                   {
                     loader: require.resolve('@svgr/webpack'),
                     options: {
-                      svgo: false,
-                      titleProp: true,
-                      ref: true,
-                    },
+            svgo: false,
+            titleProp: true,
+            ref: true,
+          },
                   },
                 ],
               },
@@ -755,7 +776,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
             : webpackConfig;
         };
         return config;
-      };
+      };;;
 
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "

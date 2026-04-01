@@ -17,17 +17,16 @@ exports[`e2e migrator cypress with project root at "" should create a cypress.co
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 export default defineConfig({
-  e2e: {
-    ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
-      webServerCommands: {
-        default: 'nx run app1:serve',
-      },
-    }),
-    baseUrl: 'http://localhost:4200',
-  },
-});
-"
+    e2e: {
+        ...nxE2EPreset(__filename, {
+            "cypressDir": "src",
+            "webServerCommands": {
+                "default": "nx run app1:serve"
+            }
+        }),
+        baseUrl: 'http://localhost:4200'
+    }
+});"
 `;
 
 exports[`e2e migrator cypress with project root at "" should keep paths in the e2e config when they differ from the nx preset defaults 1`] = `
@@ -100,17 +99,16 @@ exports[`e2e migrator cypress with project root at "projects/app1" should create
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 export default defineConfig({
-  e2e: {
-    ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
-      webServerCommands: {
-        default: 'nx run app1:serve',
-      },
-    }),
-    baseUrl: 'http://localhost:4200',
-  },
-});
-"
+    e2e: {
+        ...nxE2EPreset(__filename, {
+            "cypressDir": "src",
+            "webServerCommands": {
+                "default": "nx run app1:serve"
+            }
+        }),
+        baseUrl: 'http://localhost:4200'
+    }
+});"
 `;
 
 exports[`e2e migrator cypress with project root at "projects/app1" should keep paths in the e2e config when they differ from the nx preset defaults 1`] = `

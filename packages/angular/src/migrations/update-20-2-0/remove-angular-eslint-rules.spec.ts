@@ -82,7 +82,9 @@ describe('remove-angular-eslint-rules', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {}
             }
           ]
@@ -114,7 +116,9 @@ describe('remove-angular-eslint-rules', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {}
             }
           ]
@@ -153,7 +157,9 @@ describe('remove-angular-eslint-rules', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {}
             }
           ]
@@ -213,12 +219,14 @@ describe('remove-angular-eslint-rules', () => {
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['**/*.ts'],
-            rules: {},
-          },
-        ];
-        "
+                  {
+                    files: [
+              "**/*.ts"
+            ],
+                    rules: {},
+                  },
+                ];
+                "
       `);
     });
 
@@ -249,19 +257,21 @@ describe('remove-angular-eslint-rules', () => {
 
       expect(tree.read('eslint.config.js', 'utf8')).toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['**/*.ts'],
-            rules: {},
-          },
-        ];
-        "
+                  {
+                    files: [
+              "**/*.ts"
+            ],
+                    rules: {},
+                  },
+                ];
+                "
       `);
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "const baseConfig = require('../../eslint.config.js');
 
-        module.exports = [...baseConfig];
-        "
+                module.exports = [...baseConfig];
+                "
       `);
     });
 
@@ -293,19 +303,21 @@ describe('remove-angular-eslint-rules', () => {
 
       expect(tree.read('eslint.base.config.js', 'utf8')).toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['**/*.ts'],
-            rules: {},
-          },
-        ];
-        "
+                  {
+                    files: [
+              "**/*.ts"
+            ],
+                    rules: {},
+                  },
+                ];
+                "
       `);
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "const baseConfig = require('../../eslint.base.config.js');
 
-        module.exports = [...baseConfig];
-        "
+                module.exports = [...baseConfig];
+                "
       `);
     });
   });

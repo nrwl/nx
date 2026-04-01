@@ -40,7 +40,7 @@ exports[`component Generator should create component files correctly: component 
   standalone: false,
   imports: [],
   templateUrl: './example.html',
-  styleUrl: './example.css',
+  styleUrl: './example.css'
 })
 export class Example {}
 "
@@ -56,7 +56,7 @@ describe('Example', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [Example],
+      declarations: [Example]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Example);
@@ -71,12 +71,12 @@ describe('Example', () => {
 "
 `;
 
-exports[`component Generator should create component files correctly: entry point file 1`] = `
-"export * from './lib/lib-module';
+exports[`component Generator should create component files correctly: entry point file 1`] = `"export * from './lib/lib-module';"`;
+
+exports[`component Generator should create component files correctly: stylesheet 1`] = `
+"
 "
 `;
-
-exports[`component Generator should create component files correctly: stylesheet 1`] = `""`;
 
 exports[`component Generator should create component files correctly: template 1`] = `
 "<p>example works!</p>
@@ -177,7 +177,7 @@ exports[`component Generator should handle path with file extension: component 1
   selector: 'example.component',
   imports: [],
   templateUrl: './example.component.html',
-  styleUrl: './example.component.css',
+  styleUrl: './example.component.css'
 })
 export class ExampleComponent {}
 "
@@ -193,7 +193,7 @@ describe('ExampleComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ExampleComponent],
+      imports: [ExampleComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ExampleComponent);
@@ -210,7 +210,10 @@ describe('ExampleComponent', () => {
 
 exports[`component Generator should handle path with file extension: entry point file 1`] = `null`;
 
-exports[`component Generator should handle path with file extension: stylesheet 1`] = `""`;
+exports[`component Generator should handle path with file extension: stylesheet 1`] = `
+"
+"
+`;
 
 exports[`component Generator should handle path with file extension: template 1`] = `
 "<p>example.component works!</p>

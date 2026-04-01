@@ -77,7 +77,7 @@ describe('component Generator', () => {
         selector: 'example',
         imports: [],
         templateUrl: './example.component.html',
-        styleUrl: './example.component.css',
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
       "
@@ -90,7 +90,10 @@ describe('component Generator', () => {
     `);
     expect(
       tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8')
-    ).toMatchInlineSnapshot(`""`);
+    ).toMatchInlineSnapshot(`
+      "
+      "
+    `);
     expect(
       tree.read('libs/lib1/src/lib/example/example.component.spec.ts', 'utf-8')
     ).toMatchInlineSnapshot(`
@@ -103,7 +106,7 @@ describe('component Generator', () => {
 
         beforeEach(async () => {
           await TestBed.configureTestingModule({
-            imports: [ExampleComponent],
+            imports: [ExampleComponent]
           }).compileComponents();
 
           fixture = TestBed.createComponent(ExampleComponent);
@@ -147,7 +150,7 @@ describe('component Generator', () => {
         selector: 'example',
         imports: [],
         templateUrl: './example.ng.html',
-        styleUrl: './example.css',
+        styleUrl: './example.css'
       })
       export class Example {}
       "
@@ -1132,7 +1135,7 @@ export class LibModule {}
           selector: 'example',
           imports: [],
           templateUrl: './example.component.html',
-          styleUrl: './example.component.css',
+          styleUrl: './example.component.css'
         })
         export class ExampleComponent {}
         "
@@ -1145,7 +1148,10 @@ export class LibModule {}
       `);
       expect(
         tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8')
-      ).toMatchInlineSnapshot(`""`);
+      ).toMatchInlineSnapshot(`
+        "
+        "
+      `);
       expect(
         tree.read(
           'libs/lib1/src/lib/example/example.component.spec.ts',
@@ -1161,7 +1167,7 @@ export class LibModule {}
 
           beforeEach(async () => {
             await TestBed.configureTestingModule({
-              imports: [ExampleComponent],
+              imports: [ExampleComponent]
             }).compileComponents();
 
             fixture = TestBed.createComponent(ExampleComponent);

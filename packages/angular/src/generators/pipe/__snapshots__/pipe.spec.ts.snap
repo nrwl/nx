@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`pipe generator --no-standalone should export the pipe correctly when directory is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
@@ -17,7 +17,7 @@ exports[`pipe generator --no-standalone should generate a pipe with test files a
 
 @Pipe({
   name: 'test',
-  standalone: false,
+  standalone: false
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {
@@ -133,7 +133,7 @@ exports[`pipe generator should generate correctly 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test',
+  name: 'test'
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {
@@ -159,7 +159,7 @@ exports[`pipe generator should handle path with file extension 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test',
+  name: 'test'
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {

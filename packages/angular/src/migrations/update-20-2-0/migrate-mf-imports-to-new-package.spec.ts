@@ -91,26 +91,26 @@ describe('migrate-mf-imports-to-new-package', () => {
     await migrateMfImportsToNewPackage(tree);
 
     // ASSERT
-    expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
-    expect(tree.read('apps/remote/webpack.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
-    expect(tree.read('apps/shell/module-federation.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
-    expect(tree.read('apps/remote/module-federation.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
+    expect(
+      tree.read('apps/shell/webpack.config.js', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
+    expect(
+      tree.read('apps/remote/webpack.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
+    expect(
+      tree.read('apps/shell/module-federation.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
+    expect(
+      tree.read('apps/remote/module-federation.config.js', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
   });
 
   it('should not update the ModuleFederationConfig import when its correct', async () => {
@@ -137,26 +137,26 @@ describe('migrate-mf-imports-to-new-package', () => {
     await migrateMfImportsToNewPackage(tree);
 
     // ASSERT
-    expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
-    expect(tree.read('apps/remote/webpack.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
-    expect(tree.read('apps/shell/module-federation.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
-    expect(tree.read('apps/remote/module-federation.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
-    `);
+    expect(
+      tree.read('apps/shell/webpack.config.js', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
+    expect(
+      tree.read('apps/remote/webpack.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
+    expect(
+      tree.read('apps/shell/module-federation.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
+    expect(
+      tree.read('apps/remote/module-federation.config.js', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { ModuleFederationConfig } from '@nx/module-federation';"`
+    );
   });
 
   it('should update the ModuleFederationConfig import to change the import when its across multiple lines', async () => {
@@ -193,23 +193,27 @@ describe('migrate-mf-imports-to-new-package', () => {
     // ASSERT
     expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
+      "import { 
+            ModuleFederationConfig 
+            } from '@nx/module-federation';"
     `);
     expect(tree.read('apps/remote/webpack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
+      "import { 
+            ModuleFederationConfig 
+            } from '@nx/module-federation';"
     `);
     expect(tree.read('apps/shell/module-federation.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
+      "import { 
+            ModuleFederationConfig 
+            } from '@nx/module-federation';"
     `);
     expect(tree.read('apps/remote/module-federation.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ModuleFederationConfig } from '@nx/module-federation';
-      "
+      "import { 
+            ModuleFederationConfig 
+            } from '@nx/module-federation';"
     `);
   });
 
@@ -240,26 +244,22 @@ describe('migrate-mf-imports-to-new-package', () => {
     expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import { something,  } from '@nx/webpack';"
     `);
     expect(tree.read('apps/remote/webpack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import { something,  } from '@nx/webpack';"
     `);
     expect(tree.read('apps/shell/module-federation.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import {  something} from '@nx/webpack';"
     `);
     expect(tree.read('apps/remote/module-federation.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import {  something } from '@nx/webpack';"
     `);
   });
 
@@ -302,26 +302,34 @@ describe('migrate-mf-imports-to-new-package', () => {
     expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import { 
+              something, 
+               
+            } from '@nx/webpack';"
     `);
     expect(tree.read('apps/remote/webpack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import { 
+              something, 
+               
+            } from '@nx/webpack';"
     `);
     expect(tree.read('apps/shell/module-federation.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import { 
+               
+              something
+            } from '@nx/webpack';"
     `);
     expect(tree.read('apps/remote/module-federation.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { something } from '@nx/webpack';
-      "
+            import { 
+               
+              something 
+            } from '@nx/webpack';"
     `);
   });
 
@@ -343,10 +351,9 @@ import { withModuleFederation } from '@nx/react/module-federation';`
     expect(tree.read('apps/shell/webpack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ModuleFederationConfig } from '@nx/module-federation';
-      import { composePlugins, withNx } from '@nx/webpack';
+            import { composePlugins, withNx,  } from '@nx/webpack';
       import { withReact } from '@nx/react';
-      import { withModuleFederation } from '@nx/react/module-federation';
-      "
+      import { withModuleFederation } from '@nx/react/module-federation';"
     `);
   });
 });

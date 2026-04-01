@@ -100,7 +100,7 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -134,9 +134,14 @@ module.exports = composePlugins(
           };
         }
 
-        module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-          return config;
-        });
+
+        module.exports = composePlugins(
+          withNx(),
+          withReact(), withSvgr(),
+          (config) => {
+            return config;
+          }
+        );
         "
       `);
     });
@@ -200,7 +205,7 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -234,17 +239,17 @@ module.exports = composePlugins(
           };
         }
 
+
         module.exports = composePlugins(
           withNx(),
-          withReact(),
-          withSvgr({
-            svgo: true,
-            titleProp: false,
-            ref: false,
-          }),
+          withReact(), withSvgr({
+          svgo: true,
+          titleProp: false,
+          ref: false
+        }),
           (config) => {
             return config;
-          },
+          }
         );
         "
       `);
@@ -290,9 +295,13 @@ module.exports = composePlugins(
         "const { composePlugins, withNx } = require('@nx/webpack');
         const { withReact } = require('@nx/react');
 
-        module.exports = composePlugins(withNx(), withReact(), (config) => {
-          return config;
-        });
+        module.exports = composePlugins(
+          withNx(),
+          withReact(),
+          (config) => {
+            return config;
+          }
+        );
         "
       `);
     });
@@ -355,7 +364,7 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -389,11 +398,16 @@ module.exports = composePlugins(
           };
         }
 
+
         // Some comment here
 
-        module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-          return config;
-        });
+        module.exports = composePlugins(
+          withNx(),
+          withReact(), withSvgr(),
+          (config) => {
+            return config;
+          }
+        );
         "
       `);
     });
@@ -453,7 +467,7 @@ module.exports = config;
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -487,9 +501,14 @@ module.exports = config;
           };
         }
 
-        const config = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-          return config;
-        });
+
+        const config = composePlugins(
+          withNx(),
+          withReact(), withSvgr(),
+          (config) => {
+            return config;
+          }
+        );
 
         module.exports = config;
         "
@@ -551,7 +570,7 @@ export default config;
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -585,9 +604,14 @@ export default config;
           };
         }
 
-        const config = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-          return config;
-        });
+
+        const config = composePlugins(
+          withNx(),
+          withReact(), withSvgr(),
+          (config) => {
+            return config;
+          }
+        );
 
         export default config;
         "
@@ -650,7 +674,7 @@ export default composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -684,9 +708,14 @@ export default composePlugins(
           };
         }
 
-        export default composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-          return config;
-        });
+
+        export default composePlugins(
+          withNx(),
+          withReact(), withSvgr(),
+          (config) => {
+            return config;
+          }
+        );
         "
       `);
     });
@@ -730,10 +759,13 @@ module.exports = composePlugins(
         "const { composePlugins, withNx } = require('@nx/next');
         const { withReact } = require('@nx/react');
 
-        module.exports = composePlugins(withNx(), withReact(), (config) => {
-          return config;
-        });
-        "
+        module.exports = composePlugins(
+          withNx(),
+          withReact(),
+          (config) => {
+            return config;
+          }
+        );"
       `);
     });
   });
@@ -820,7 +852,8 @@ module.exports = {
       await addSvgrToWebpackConfig(tree);
       const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
       expect(content).toMatchInlineSnapshot(`
-        "const { NxWebpackPlugin } = require('@nx/webpack');
+        "
+        const { NxWebpackPlugin } = require('@nx/webpack');
         const { NxReactWebpackPlugin } = require('@nx/react');
 
         // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
@@ -844,7 +877,7 @@ module.exports = {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    ),
+                    )
                 );
 
                 // Add SVGR loader with webpack 5 asset modules
@@ -874,6 +907,7 @@ module.exports = {
             return config;
           };
         }
+
 
         module.exports = withSvgr()({
           output: {
@@ -986,7 +1020,8 @@ module.exports = {
       const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
 
       expect(content).toMatchInlineSnapshot(`
-        "const { NxWebpackPlugin } = require('@nx/webpack');
+        "
+        const { NxWebpackPlugin } = require('@nx/webpack');
         const { NxReactWebpackPlugin } = require('@nx/react');
 
         // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
@@ -1010,7 +1045,7 @@ module.exports = {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    ),
+                    )
                 );
 
                 // Add SVGR loader with webpack 5 asset modules
@@ -1041,10 +1076,11 @@ module.exports = {
           };
         }
 
+
         module.exports = withSvgr({
           svgo: true,
           titleProp: false,
-          ref: false,
+          ref: false
         })({
           output: {
             path: join(__dirname, '../dist/apps/my-app'),
@@ -1132,7 +1168,7 @@ module.exports = webpackConfig;
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    ),
+                    )
                 );
 
                 // Add SVGR loader with webpack 5 asset modules
@@ -1162,6 +1198,7 @@ module.exports = webpackConfig;
             return config;
           };
         }
+
 
         const webpackConfig = {
           output: {
@@ -1252,7 +1289,7 @@ export default webpackConfig;
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    ),
+                    )
                 );
 
                 // Add SVGR loader with webpack 5 asset modules
@@ -1282,6 +1319,7 @@ export default webpackConfig;
             return config;
           };
         }
+
 
         const webpackConfig = {
           output: {
@@ -1348,7 +1386,8 @@ export default {
       const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
 
       expect(content).toMatchInlineSnapshot(`
-        "import { NxWebpackPlugin } from '@nx/webpack';
+        "
+        import { NxWebpackPlugin } from '@nx/webpack';
         import { NxReactWebpackPlugin } from '@nx/react';
 
         // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
@@ -1372,7 +1411,7 @@ export default {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    ),
+                    )
                 );
 
                 // Add SVGR loader with webpack 5 asset modules
@@ -1402,6 +1441,7 @@ export default {
             return config;
           };
         }
+
 
         export default withSvgr()({
           output: {
@@ -1466,7 +1506,8 @@ export default {
       const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
 
       expect(content).toMatchInlineSnapshot(`
-        "import { NxWebpackPlugin } from '@nx/webpack';
+        "
+        import { NxWebpackPlugin } from '@nx/webpack';
         import { NxReactWebpackPlugin } from '@nx/react';
 
         export default {
@@ -1600,7 +1641,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg'),
+                rule.test.toString().includes('svg')
             );
 
             if (svgLoaderIdx !== -1) {
@@ -1634,9 +1675,14 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
           };
         }
 
-        module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-          return config;
-        });
+
+        module.exports = composePlugins(
+          withNx(),
+          withReact(), withSvgr(),
+          (config) => {
+            return config;
+          }
+        );
         "
       `);
 
@@ -1667,7 +1713,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    ),
+                    )
                 );
 
                 // Add SVGR loader with webpack 5 asset modules
@@ -1698,10 +1744,14 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
           };
         }
 
+
         module.exports = withSvgr({
-          svgo: false,
+          svgo: false
         })({
-          plugins: [new NxWebpackPlugin(), new NxReactWebpackPlugin()],
+          plugins: [
+            new NxWebpackPlugin(),
+            new NxReactWebpackPlugin(),
+          ],
         });
         "
       `);
