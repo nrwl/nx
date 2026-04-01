@@ -122,6 +122,11 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
                 "@nx/js:typescript-sync",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "dev": {
               "command": "next dev",
               "continuous": true,
@@ -151,6 +156,13 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects next --includeDependentProjects -- npx nx build-deps next",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
             },
           },
         },

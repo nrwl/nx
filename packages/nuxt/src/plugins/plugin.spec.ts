@@ -42,7 +42,7 @@ describe('@nx/nuxt/plugin', () => {
         workspaceRoot: tempFs.tempDir,
       };
       tempFs.createFileSync('nuxt.config.ts', '');
-      tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package.json', JSON.stringify({ name: 'nuxt' }));
       tempFs.createFileSync('package-lock.json', '{}');
     });
 

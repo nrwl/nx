@@ -22,7 +22,7 @@ describe('@nx/next/plugin', () => {
         workspaceRoot: tempFs.tempDir,
       };
       tempFs.createFileSync('next.config.js', '');
-      tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package.json', JSON.stringify({ name: 'next' }));
       tempFs.createFileSync('package-lock.json', '{}');
     });
 
