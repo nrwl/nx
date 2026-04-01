@@ -140,17 +140,12 @@ async function formatWithOxfmt(
     return;
   }
 
-  // If the oxfmt config exists in the virtual tree but not on disk,
-  // write it to a temp file so the oxfmt binary can pick it up.
-  const configPath = getOxfmtConfigPathFromTree(tree);
-
   await Promise.all(
     Array.from(files).map(async (file) => {
       try {
         const formatted = await formatContentWithOxfmt(
           path.join(tree.root, file.path),
-          file.content.toString('utf-8'),
-          configPath
+          file.content.toString('utf-8')
         );
         tree.write(file.path, formatted);
       } catch (e) {
@@ -158,44 +153,6 @@ async function formatWithOxfmt(
       }
     })
   );
-}
-
-function getOxfmtConfigPathFromTree(tree: Tree): string | undefined {
-  const oxfmtConfigFiles = [
-    '.oxfmtrc.json',
-    '.oxfmtrc.jsonc',
-    'oxfmt.config.js',
-    'oxfmt.config.cjs',
-    'oxfmt.config.mjs',
-    'oxfmt.config.ts',
-    'oxfmt.config.mts',
-    'oxfmt.config.cts',
-  ];
-
-  // Check if a config file was changed in the tree (i.e., newly generated)
-  const changedFiles = new Set(tree.listChanges().map((change) => change.path));
-  for (const configFile of oxfmtConfigFiles) {
-    if (changedFiles.has(configFile)) {
-      // The config is in the virtual tree — write it to a temp file
-      // so the oxfmt binary can read it
-      const fs = require('fs');
-      const os = require('os');
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'oxfmt-'));
-      const tmpConfigPath = path.join(tmpDir, configFile);
-      fs.writeFileSync(tmpConfigPath, tree.read(configFile));
-      return tmpConfigPath;
-    }
-  }
-
-  // Check if a config already exists on disk
-  for (const configFile of oxfmtConfigFiles) {
-    const diskPath = path.join(tree.root, configFile);
-    if (require('fs').existsSync(diskPath)) {
-      return diskPath;
-    }
-  }
-
-  return undefined;
 }
 
 function sortTsConfig(tree: Tree) {

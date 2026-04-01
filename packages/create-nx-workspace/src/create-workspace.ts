@@ -71,6 +71,10 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
+  // Skip formatting during generation — we'll run `nx format` once at the end
+  // after all files are created and dependencies are installed on disk.
+  process.env.NX_SKIP_FORMAT = 'true';
+
   let directory: string;
 
   if (options.template) {
@@ -240,6 +244,16 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
+  }
+
+  // Format all files now that everything is on disk (dependencies installed,
+  // config files written). This replaces per-generator formatting which can't
+  // work reliably because the formatter binary may not be installed yet.
+  try {
+    const pmc = getPackageManagerCommand(packageManager);
+    await execAndWait(`${pmc.exec} nx format`, directory, true);
+  } catch {
+    // formatting is best-effort
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
