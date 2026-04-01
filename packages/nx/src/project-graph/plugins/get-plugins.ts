@@ -287,7 +287,7 @@ async function loadSpecifiedNxPlugins(
   return plugins;
 }
 
-function reasonToError(reason: unknown): Error {
+export function reasonToError(reason: unknown): Error {
   if (reason instanceof Error) {
     return reason;
   }
