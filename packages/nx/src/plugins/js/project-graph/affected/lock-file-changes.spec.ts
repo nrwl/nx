@@ -35,6 +35,35 @@ describe('getTouchedProjectsFromLockFile', () => {
           },
         },
       },
+      externalNodes: {
+        'npm:some-external-package': {
+          type: 'npm',
+          name: 'npm:some-external-package',
+          data: {
+            version: '0.0.2',
+            packageName: 'some-external-package',
+            hash: 'abc123',
+          },
+        },
+        'npm:some-other-external-package': {
+          type: 'npm',
+          name: 'npm:some-other-external-package',
+          data: {
+            version: '4.0.1',
+            packageName: 'some-other-external-package',
+            hash: 'def456',
+          },
+        },
+        'npm:unrelated-package': {
+          type: 'npm',
+          name: 'npm:unrelated-package',
+          data: {
+            version: '1.0.0',
+            packageName: 'unrelated-package',
+            hash: 'ghi789',
+          },
+        },
+      },
       dependencies: {},
     };
     allNodes = Object.keys(graph.nodes);
@@ -79,7 +108,8 @@ describe('getTouchedProjectsFromLockFile', () => {
 
   // Each lock file format has a different JSON structure. The changes
   // array simulates realistic diffs for each format to test that auto
-  // mode can identify which projects are affected by dependency updates.
+  // mode can identify which packages changed and return the
+  // corresponding external node names.
   type AutoModeTestCase = {
     lockFile: string;
     changes: {
@@ -87,7 +117,9 @@ describe('getTouchedProjectsFromLockFile', () => {
       path: (string | number)[];
       value: { lhs: any; rhs: any };
     }[];
-    expectedProjects: string[];
+    // External node names that should be returned -- the graph reversal
+    // in filterAffected walks from these to workspace projects.
+    expectedExternalNodes: string[];
   };
 
   // pnpm-lock.yaml / pnpm-lock.yml
@@ -145,12 +177,18 @@ describe('getTouchedProjectsFromLockFile', () => {
     {
       lockFile: 'pnpm-lock.yaml',
       changes: pnpmChanges,
-      expectedProjects: ['proj1', 'app1'],
+      expectedExternalNodes: [
+        'npm:some-external-package',
+        'npm:some-other-external-package',
+      ],
     },
     {
       lockFile: 'pnpm-lock.yml',
       changes: pnpmChanges,
-      expectedProjects: ['proj1', 'app1'],
+      expectedExternalNodes: [
+        'npm:some-external-package',
+        'npm:some-other-external-package',
+      ],
     },
     // package-lock.json (npm v2/v3)
     //
@@ -186,7 +224,10 @@ describe('getTouchedProjectsFromLockFile', () => {
           value: { lhs: undefined, rhs: '4.0.1' },
         },
       ],
-      expectedProjects: ['proj1', 'app1'],
+      expectedExternalNodes: [
+        'npm:some-external-package',
+        'npm:some-other-external-package',
+      ],
     },
     // yarn.lock (flat map -- no per-project structure)
     //
@@ -209,9 +250,12 @@ describe('getTouchedProjectsFromLockFile', () => {
           value: { lhs: undefined, rhs: '4.0.1' },
         },
       ],
-      // yarn.lock is flat -- no per-project structure, so all projects
-      // should be affected when any dependency changes
-      expectedProjects: ['proj1', 'proj2', 'app1'],
+      // yarn now extracts package names from keys and returns external
+      // nodes instead of falling back to "all projects"
+      expectedExternalNodes: [
+        'npm:some-external-package',
+        'npm:some-other-external-package',
+      ],
     },
     // bun.lock (JSON with "workspaces" keyed by workspace path)
     //
@@ -253,71 +297,85 @@ describe('getTouchedProjectsFromLockFile', () => {
           value: { lhs: undefined, rhs: '^4.0.1' },
         },
       ],
-      expectedProjects: ['proj1', 'app1'],
+      expectedExternalNodes: [
+        'npm:some-external-package',
+        'npm:some-other-external-package',
+      ],
     },
   ];
 
-  AUTO_MODE_LOCK_FILES.forEach(({ lockFile, changes, expectedProjects }) => {
-    describe(`"${lockFile}" with projectsAffectedByDependencyUpdates set to auto`, () => {
-      beforeAll(async () => {
-        tempFs = new TempFs('lock-file-changes-test');
-        await tempFs.createFiles({
-          './nx.json': JSON.stringify({
-            pluginsConfig: {
-              '@nx/js': {
-                projectsAffectedByDependencyUpdates: 'auto',
+  AUTO_MODE_LOCK_FILES.forEach(
+    ({ lockFile, changes, expectedExternalNodes }) => {
+      describe(`"${lockFile}" with projectsAffectedByDependencyUpdates set to auto`, () => {
+        beforeAll(async () => {
+          tempFs = new TempFs('lock-file-changes-test');
+          await tempFs.createFiles({
+            './nx.json': JSON.stringify({
+              pluginsConfig: {
+                '@nx/js': {
+                  projectsAffectedByDependencyUpdates: 'auto',
+                },
               },
-            },
-          }),
+            }),
+          });
+        });
+
+        afterAll(() => {
+          tempFs.cleanup();
+        });
+
+        it(`should not return changes when "${lockFile}" is not touched`, () => {
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: 'source.ts',
+                getChanges: () => [new WholeFileChange()],
+              },
+            ],
+            graph.nodes,
+            undefined,
+            undefined,
+            graph
+          );
+          expect(result).toStrictEqual([]);
+        });
+
+        // When auto mode sees a WholeFileChange it cannot narrow to
+        // specific packages, so all projects should be affected.
+        it(`should return all projects when whole lock file "${lockFile}" is changed`, () => {
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [new WholeFileChange()],
+              },
+            ],
+            graph.nodes,
+            undefined,
+            undefined,
+            graph
+          );
+          expect(result).toStrictEqual(allNodes);
+        });
+
+        it(`should return external nodes for changed packages when "${lockFile}" has dependency changes`, () => {
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => changes,
+              },
+            ],
+            graph.nodes,
+            undefined,
+            undefined,
+            graph
+          );
+          expect(result).toStrictEqual(expectedExternalNodes);
         });
       });
-
-      afterAll(() => {
-        tempFs.cleanup();
-      });
-
-      it(`should not return changes when "${lockFile}" is not touched`, () => {
-        const result = getTouchedProjectsFromLockFile(
-          [
-            {
-              file: 'source.ts',
-              getChanges: () => [new WholeFileChange()],
-            },
-          ],
-          graph.nodes
-        );
-        expect(result).toStrictEqual([]);
-      });
-
-      // When auto mode sees a WholeFileChange it cannot narrow to
-      // specific projects, so all projects should be affected.
-      it(`should return all projects when whole lock file "${lockFile}" is changed`, () => {
-        const result = getTouchedProjectsFromLockFile(
-          [
-            {
-              file: lockFile,
-              getChanges: () => [new WholeFileChange()],
-            },
-          ],
-          graph.nodes
-        );
-        expect(result).toStrictEqual(allNodes);
-      });
-
-      it(`should return only affected projects when "${lockFile}" has dependency changes`, () => {
-        const result = getTouchedProjectsFromLockFile(
-          [
-            {
-              file: lockFile,
-              getChanges: () => changes,
-            },
-          ],
-          graph.nodes
-        );
-        expect(result).toStrictEqual(expectedProjects);
-      });
-    });
-  });
+    }
+  );
 
   // bun.lockb is a binary file (.lockb extension), so the change
   // detection layer always produces a WholeFileChange -- it never
@@ -348,7 +406,10 @@ describe('getTouchedProjectsFromLockFile', () => {
             getChanges: () => [new WholeFileChange()],
           },
         ],
-        graph.nodes
+        graph.nodes,
+        undefined,
+        undefined,
+        graph
       );
       expect(result).toStrictEqual([]);
     });
@@ -363,7 +424,10 @@ describe('getTouchedProjectsFromLockFile', () => {
             getChanges: () => [new WholeFileChange()],
           },
         ],
-        graph.nodes
+        graph.nodes,
+        undefined,
+        undefined,
+        graph
       );
       expect(result).toStrictEqual(allNodes);
     });
@@ -403,9 +467,60 @@ describe('getTouchedProjectsFromLockFile', () => {
             ],
           },
         ],
-        graph.nodes
+        graph.nodes,
+        undefined,
+        undefined,
+        graph
       );
       expect(result).toStrictEqual([]);
+    });
+  });
+
+  describe('npm root-level dependency changes with auto mode', () => {
+    beforeAll(async () => {
+      tempFs = new TempFs('lock-file-changes-test');
+      await tempFs.createFiles({
+        './nx.json': JSON.stringify({
+          pluginsConfig: {
+            '@nx/js': {
+              projectsAffectedByDependencyUpdates: 'auto',
+            },
+          },
+        }),
+      });
+    });
+
+    afterAll(() => {
+      tempFs.cleanup();
+    });
+
+    // Root-level dependencies in package-lock.json are stored under
+    // "node_modules/<pkg>" (no project path prefix). The refactored
+    // code extracts the package name and looks it up in externalNodes.
+    it('should return external nodes for root-level npm dependency changes', () => {
+      const result = getTouchedProjectsFromLockFile(
+        [
+          {
+            file: 'package-lock.json',
+            getChanges: () => [
+              {
+                type: JsonDiffType.Modified,
+                path: [
+                  'packages',
+                  'node_modules/some-external-package',
+                  'version',
+                ],
+                value: { lhs: '0.0.1', rhs: '0.0.2' },
+              },
+            ],
+          },
+        ],
+        graph.nodes,
+        undefined,
+        undefined,
+        graph
+      );
+      expect(result).toStrictEqual(['npm:some-external-package']);
     });
   });
 });
