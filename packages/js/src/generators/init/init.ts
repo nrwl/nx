@@ -17,6 +17,7 @@ import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
+import { generateOxfmtSetup } from '../../utils/oxfmt';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -25,7 +26,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  oxfmtVersion,
   prettierVersion,
   supportedTypescriptVersions,
   swcCoreVersion,
@@ -181,14 +181,10 @@ export async function initGeneratorInternal(
     });
     tasks.push(prettierTask);
   } else if (schema.formatter === 'oxfmt') {
-    if (!schema.skipPackageJson) {
-      const oxfmtTask = addDependenciesToPackageJson(
-        tree,
-        {},
-        { oxfmt: oxfmtVersion }
-      );
-      tasks.push(oxfmtTask);
-    }
+    const oxfmtTask = generateOxfmtSetup(tree, {
+      skipPackageJson: schema.skipPackageJson,
+    });
+    tasks.push(oxfmtTask);
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
