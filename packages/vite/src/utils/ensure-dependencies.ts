@@ -13,6 +13,7 @@ import {
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
+  rolldownPluginDtsVersion,
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
   vitePluginReactV4Version,
@@ -24,7 +25,7 @@ export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  useOxcDeclarations?: boolean;
+  declarations?: 'tsc' | 'oxc' | 'rolldown-plugin-dts' | 'none';
 };
 
 export function ensureDependencies(
@@ -66,14 +67,18 @@ export function ensureDependencies(
   }
 
   if (schema.includeLib) {
-    if (schema.useOxcDeclarations) {
+    const decl = schema.declarations ?? 'tsc';
+    if (decl === 'oxc') {
       devDependencies['oxc-transform'] = oxcTransformVersion;
-    } else {
+    } else if (decl === 'rolldown-plugin-dts') {
+      devDependencies['rolldown-plugin-dts'] = rolldownPluginDtsVersion;
+    } else if (decl === 'tsc') {
       devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
       if (detectPackageManager() !== 'pnpm') {
         devDependencies['ajv'] = ajvVersion;
       }
     }
+    // 'none' — no declaration dependencies needed
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);

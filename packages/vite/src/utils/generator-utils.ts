@@ -381,11 +381,14 @@ export interface ViteConfigFileOptions {
   port?: number;
   previewPort?: number;
   /**
-   * Use oxc-transform for generating TypeScript declaration files (.d.ts)
-   * instead of vite-plugin-dts. Requires `isolatedDeclarations: true` in
-   * the project's tsconfig. Significantly faster than TSC-based emission.
+   * How to generate TypeScript declaration files (.d.ts) during the build.
+   * - `'tsc'` — uses the TypeScript compiler (via vite-plugin-dts)
+   * - `'oxc'` — uses oxc-transform's `isolatedDeclaration` (requires `isolatedDeclarations: true` in tsconfig)
+   * - `'rolldown-plugin-dts'` — uses Rolldown-native DTS bundling
+   * - `'none'` — skips declaration generation
+   * Defaults to `'tsc'` when not specified.
    */
-  useOxcDeclarations?: boolean;
+  declarations?: 'tsc' | 'oxc' | 'rolldown-plugin-dts' | 'none';
 }
 
 export function createOrEditViteConfig(
@@ -448,11 +451,14 @@ export function createOrEditViteConfig(
   const plugins: string[] = options.plugins ? [...options.plugins] : [];
 
   if (!onlyVitest && options.includeLib) {
-    if (options.useOxcDeclarations) {
+    const decl = options.declarations ?? 'tsc';
+    if (decl === 'oxc') {
       imports.push(
         `import { nxOxcDeclarationsPlugin } from '@nx/vite/plugins/nx-oxc-declarations.plugin'`
       );
-    } else {
+    } else if (decl === 'rolldown-plugin-dts') {
+      imports.push(`import { dts } from 'rolldown-plugin-dts'`);
+    } else if (decl === 'tsc') {
       imports.push(
         `import dts from 'vite-plugin-dts'`,
         `import * as path from 'path'`
@@ -469,11 +475,14 @@ export function createOrEditViteConfig(
   }
 
   if (!onlyVitest && options.includeLib) {
-    if (options.useOxcDeclarations) {
+    const decl = options.declarations ?? 'tsc';
+    if (decl === 'oxc') {
       plugins.push(
         `nxOxcDeclarationsPlugin({ projectRoot: import.meta.dirname })`
       );
-    } else {
+    } else if (decl === 'rolldown-plugin-dts') {
+      plugins.push(`dts()`);
+    } else if (decl === 'tsc') {
       plugins.push(
         `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
           !isTsSolutionSetup ? ', pathsToAliases: false' : ''

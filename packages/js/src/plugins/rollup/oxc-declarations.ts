@@ -131,7 +131,7 @@ export function oxcDeclarations(options: OxcDeclarationsOptions) {
               mkdirSync(dirname(dtsOut), { recursive: true });
               writeFileSync(dtsOut, result.code);
               if (result.map && sourcemap) {
-                writeFileSync(dtsOut + '.map', result.map);
+                writeFileSync(dtsOut + '.map', JSON.stringify(result.map));
               }
             }
           } catch (error) {
