@@ -9,7 +9,9 @@ describe('@nx/next/plugin', () => {
   let context: CreateNodesContextV2;
 
   describe('root projects', () => {
+    let tempFs: TempFs;
     beforeEach(async () => {
+      tempFs = new TempFs('next-root-plugin');
       context = {
         nxJsonConfiguration: {
           namedInputs: {
@@ -17,12 +19,16 @@ describe('@nx/next/plugin', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
+        workspaceRoot: tempFs.tempDir,
       };
+      tempFs.createFileSync('next.config.js', '');
+      tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {

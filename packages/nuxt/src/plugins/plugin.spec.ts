@@ -22,7 +22,9 @@ describe('@nx/nuxt/plugin', () => {
   let context: CreateNodesContextV2;
 
   describe('root project', () => {
+    let tempFs: TempFs;
     beforeEach(async () => {
+      tempFs = new TempFs('nuxt-root-plugin');
       context = {
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
@@ -37,12 +39,16 @@ describe('@nx/nuxt/plugin', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
+        workspaceRoot: tempFs.tempDir,
       };
+      tempFs.createFileSync('nuxt.config.ts', '');
+      tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {

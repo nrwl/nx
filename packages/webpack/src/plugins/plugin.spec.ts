@@ -120,7 +120,7 @@ describe('@nx/webpack/plugin', () => {
                       "cwd": "my-app",
                     },
                     "outputs": [
-                      "{projectRoot}\\dist\\foo",
+                      "{projectRoot}/dist/foo",
                     ],
                   },
                   "my-serve": {
