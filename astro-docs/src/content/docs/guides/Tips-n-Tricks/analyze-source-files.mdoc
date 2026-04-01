@@ -27,10 +27,10 @@ Controls whether Nx statically analyzes TypeScript and JavaScript source files (
 
 - **Default:** `true` when the workspace has an `@nx/js` plugin configuration in `nx.json`, or when the root `package.json` includes any of the core Nx packages (`@nx/workspace`, `@nx/js`, `@nx/node`, `@nx/next`, `@nx/react`, `@nx/angular`, or `@nx/web`). Otherwise `false`.
 - **When `true`:** Nx parses source files to find import statements and builds project-to-project dependency edges from them. This is how Nx knows that `app-a` depends on `lib-b` even if you never declared it in `package.json`.
-- **When `false`:** Nx skips source file analysis entirely. Dependencies are only detected via `package.json` files (if `analyzePackageJson` is enabled).
+- **When `false`:** Nx skips source file analysis entirely. Workspace project dependencies and project-to-external-package edges are then only detected via project-level `package.json` files (if `analyzePackageJson` is enabled). Note that `analyzeLockfile` does **not** replace source analysis -- it only creates nodes for resolved external packages in the graph, not the edges from your projects to those packages.
 
 {% aside type="caution" title="Disabling source file analysis may cause missed dependencies" %}
-If a project imports from another project but doesn't declare that dependency in its `package.json`, Nx won't know about the relationship. This means `nx affected` may miss projects that should be rebuilt, build ordering may be incorrect, and cached results could be stale.
+If a project imports from another project but doesn't declare that dependency in its project-level `package.json`, Nx won't know about the relationship. This means `nx affected` may miss projects that should be rebuilt, build ordering may be incorrect, and cached results could be stale.
 {% /aside %}
 
 To disable source file analysis:
@@ -53,7 +53,7 @@ This is useful for workspaces that rely entirely on `package.json` for dependenc
 Controls whether Nx reads `package.json` files in each project to discover dependencies.
 
 - **Default:** `true` when a `package.json` exists in the workspace root.
-- **When `true`:** Nx reads each project's `package.json` `dependencies` and `devDependencies` to build dependency edges, both to other workspace projects and to external npm packages.
+- **When `true`:** Nx reads each project's `package.json` `dependencies`, `devDependencies`, `peerDependencies`, and `optionalDependencies` to build dependency edges, both to other workspace projects and to external npm packages.
 - **When `false`:** Nx ignores `package.json` files for dependency detection.
 
 To disable `package.json` analysis:
@@ -69,7 +69,7 @@ To disable `package.json` analysis:
 }
 ```
 
-This can be useful in "integrated" monorepo setups where all dependencies are in the root `package.json` and source file analysis handles all inter-project dependency detection. Disabling this means that any dependency declared only in `package.json` (and not discovered through source imports) will be invisible to Nx.
+This can be useful in "integrated" monorepo setups where all dependencies are in the root `package.json` and source file analysis handles inter-project dependency detection. Disabling this means that workspace relationships declared only in a project's `package.json` (and not discovered through source imports) will be invisible to Nx.
 
 ## `analyzeLockfile`
 
@@ -78,6 +78,10 @@ Controls whether Nx parses the package manager lock file (`pnpm-lock.yaml`, `yar
 - **Default:** `true` for most workspaces. Set to `false` automatically for Lerna workspaces that do not have an `nx.json` file (for backward compatibility).
 - **When `true`:** Nx parses the lock file and creates nodes for every resolved npm package with their exact versions. This enables more granular cache invalidation when external dependencies change.
 - **When `false`:** Nx skips lock file parsing. External packages are tracked less precisely.
+
+{% aside type="caution" title="analyzeLockfile does not discover project dependencies" %}
+Lock file analysis only enriches the project graph with external package nodes and their version information. It does **not** create edges from your projects to those packages -- that is the job of `analyzeSourceFiles` and `analyzePackageJson`. If you disable both of those, your projects will have no dependency edges in the graph regardless of the `analyzeLockfile` setting, which means `nx affected`, task ordering, and cache invalidation will not work correctly.
+{% /aside %}
 
 To disable lock file analysis:
 
