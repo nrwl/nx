@@ -1,13 +1,13 @@
 import {
   cleanupProject,
   createFile,
-  directoryExists,
   fileExists,
   listFiles,
   newProject,
   readFile,
   removeFile,
   runCLI,
+  tmpProjPath,
   updateFile,
 } from '@nx/e2e-utils';
 
@@ -277,11 +277,13 @@ describe('configure-ai-agents', () => {
       runCLI('configure-ai-agents --agents gemini --no-interactive');
 
       // The shared skill should be removed from .gemini/skills
-      expect(fileExists(`.gemini/skills/${sharedSkill}/skill.md`)).toBeFalsy();
+      expect(
+        fileExists(tmpProjPath(`.gemini/skills/${sharedSkill}/skill.md`))
+      ).toBeFalsy();
 
       // The user's custom skill should be preserved
       expect(
-        fileExists('.gemini/skills/my-custom-skill/skill.md')
+        fileExists(tmpProjPath('.gemini/skills/my-custom-skill/skill.md'))
       ).toBeTruthy();
     });
   });
