@@ -467,19 +467,34 @@ describe('@nx/eslint:lint-project', () => {
     expect(tree.read('libs/test-lib/.eslintrc.json', 'utf-8'))
       .toMatchInlineSnapshot(`
       "{
-        "extends": ["../../.eslintrc.json"],
-        "ignorePatterns": ["!**/*"],
+        "extends": [
+          "../../.eslintrc.json"
+        ],
+        "ignorePatterns": [
+          "!**/*"
+        ],
         "overrides": [
           {
-            "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.ts", "*.tsx"],
+            "files": [
+              "*.ts",
+              "*.tsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.js", "*.jsx"],
+            "files": [
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {}
           }
         ]
@@ -516,23 +531,40 @@ describe('@nx/eslint:lint-project', () => {
     expect(tree.read('libs/buildable-lib/.eslintrc.json', 'utf-8'))
       .toMatchInlineSnapshot(`
       "{
-        "extends": ["../../.eslintrc.json"],
-        "ignorePatterns": ["!**/*"],
+        "extends": [
+          "../../.eslintrc.json"
+        ],
+        "ignorePatterns": [
+          "!**/*"
+        ],
         "overrides": [
           {
-            "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.ts", "*.tsx"],
+            "files": [
+              "*.ts",
+              "*.tsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.js", "*.jsx"],
+            "files": [
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.json"],
+            "files": [
+              "*.json"
+            ],
             "parser": "jsonc-eslint-parser",
             "rules": {
               "@nx/dependency-checks": [
@@ -584,19 +616,34 @@ describe('@nx/eslint:lint-project', () => {
     expect(tree.read('libs/test-lib/.eslintrc.json', 'utf-8'))
       .toMatchInlineSnapshot(`
       "{
-        "extends": ["../../.eslintrc.js"],
-        "ignorePatterns": ["!**/*"],
+        "extends": [
+          "../../.eslintrc.js"
+        ],
+        "ignorePatterns": [
+          "!**/*"
+        ],
         "overrides": [
           {
-            "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.ts", "*.tsx"],
+            "files": [
+              "*.ts",
+              "*.tsx"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.js", "*.jsx"],
+            "files": [
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {}
           }
         ]
@@ -684,11 +731,20 @@ describe('@nx/eslint:lint-project', () => {
     expect(tree.read('.eslintrc.json', 'utf-8')).toMatchInlineSnapshot(`
       "{
         "root": true,
-        "ignorePatterns": ["**/*"],
-        "plugins": ["@nx"],
+        "ignorePatterns": [
+          "**/*"
+        ],
+        "plugins": [
+          "@nx"
+        ],
         "overrides": [
           {
-            "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx"
+            ],
             "rules": {
               "@nx/enforce-module-boundaries": [
                 "error",
@@ -698,7 +754,9 @@ describe('@nx/eslint:lint-project', () => {
                   "depConstraints": [
                     {
                       "sourceTag": "*",
-                      "onlyDependOnLibsWithTags": ["*"]
+                      "onlyDependOnLibsWithTags": [
+                        "*"
+                      ]
                     }
                   ]
                 }
@@ -706,13 +764,23 @@ describe('@nx/eslint:lint-project', () => {
             }
           },
           {
-            "files": ["*.ts", "*.tsx"],
-            "extends": ["plugin:@nx/typescript"],
+            "files": [
+              "*.ts",
+              "*.tsx"
+            ],
+            "extends": [
+              "plugin:@nx/typescript"
+            ],
             "rules": {}
           },
           {
-            "files": ["*.js", "*.jsx"],
-            "extends": ["plugin:@nx/javascript"],
+            "files": [
+              "*.js",
+              "*.jsx"
+            ],
+            "extends": [
+              "plugin:@nx/javascript"
+            ],
             "rules": {}
           }
         ]

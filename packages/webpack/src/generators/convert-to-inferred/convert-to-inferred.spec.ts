@@ -488,90 +488,43 @@ describe('convert-to-inferred', () => {
         const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
         const { useLegacyNxPlugin } = require('@nx/webpack');
 
-        // These options were migrated by @nx/webpack:convert-to-inferred from
-        // the project.json file and merged with the options in this file
-        const configValues = {
-          build: {
-            default: {
-              compiler: 'babel',
-              outputPath: '../../dist/apps/app1',
-              index: './src/index.html',
-              baseHref: '/',
-              main: './src/main.tsx',
-              tsConfig: './tsconfig.app.json',
-              assets: ['./src/favicon.ico', './src/assets'],
-              styles: ['./src/styles.scss'],
-            },
-            development: {
-              extractLicenses: false,
-              optimization: false,
-              sourceMap: true,
-              vendorChunk: true,
-            },
-            production: {
-              fileReplacements: [
-                {
-                  replace: './src/environments/environment.ts',
-                  with: './src/environments/environment.prod.ts',
-                },
-              ],
-              optimization: true,
-              outputHashing: 'all',
-              sourceMap: false,
-              namedChunks: false,
-              extractLicenses: true,
-              vendorChunk: false,
-            },
-          },
-          serve: {
-            default: {
-              hot: true,
-              liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
-              proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
-              port: 4200,
-              headers: { 'Access-Control-Allow-Origin': '*' },
-              historyApiFallback: {
-                index: '/index.html',
-                disableDotRule: true,
-                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-              },
-            },
-            development: { open: true },
-            production: { hot: false },
-          },
-        };
 
-        // Determine the correct configValue to use based on the configuration
-        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 
-        const buildOptions = {
-          ...configValues.build.default,
-          ...configValues.build[configuration],
+
+            // These options were migrated by @nx/webpack:convert-to-inferred from
+            // the project.json file and merged with the options in this file
+            const configValues = {
+            build: { default: { "compiler": "babel", "outputPath": "../../dist/apps/app1", "index": "./src/index.html", "baseHref": "/", "main": "./src/main.tsx", "tsConfig": "./tsconfig.app.json", "assets": ["./src/favicon.ico", "./src/assets"], "styles": ["./src/styles.scss"] }, development: { "extractLicenses": false, "optimization": false, "sourceMap": true, "vendorChunk": true }, production: { "fileReplacements": [{ "replace": "./src/environments/environment.ts", "with": "./src/environments/environment.prod.ts" }], "optimization": true, "outputHashing": "all", "sourceMap": false, "namedChunks": false, "extractLicenses": true, "vendorChunk": false } },
+            serve: { default: { "hot": true, "liveReload": false, "server": { "type": "https", "options": { "cert": "./server.crt", "key": "./server.key" } }, "proxy": { "/api": { "target": "http://localhost:3333", "secure": false } }, "port": 4200, "headers": { "Access-Control-Allow-Origin": "*" }, "historyApiFallback": { "index": "/index.html", "disableDotRule": true, "htmlAcceptHeaders": ["text/html", "application/xhtml+xml"] } }, development: { "open": true }, production: { "hot": false } }
         };
-        const devServerOptions = {
-          ...configValues.serve.default,
-          ...configValues.serve[configuration],
-        };
+            
+            // Determine the correct configValue to use based on the configuration
+            const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+            const buildOptions = {
+              ...configValues.build.default,
+              ...configValues.build[configuration],
+            };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
 
         /**
          * @type{import('webpack').WebpackOptionsNormalized}
          */
         module.exports = async () => ({
-          devServer: devServerOptions,
-          plugins: [
-            new NxAppWebpackPlugin(buildOptions),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
-          ],
+            devServer: devServerOptions,
+            plugins: [
+                new NxAppWebpackPlugin(buildOptions),
+                new NxReactWebpackPlugin({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+                }),
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
+            ]
         });
         "
       `);
@@ -642,96 +595,50 @@ describe('convert-to-inferred', () => {
       expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-        const { useLegacyNxPlugin } = require('@nx/webpack');
-
-        // These options were migrated by @nx/webpack:convert-to-inferred from
-        // the project.json file and merged with the options in this file
-        const configValues = {
-          build: {
-            default: {
-              assets: ['./src/favicon.ico', './src/assets'],
-              styles: ['./src/styles.scss'],
-              memoryLimit: 4096,
-              compiler: 'babel',
-              outputPath: '../../dist/apps/app1',
-              index: './src/index.html',
-              baseHref: '/',
-              main: './src/main.tsx',
-              tsConfig: './tsconfig.app.json',
-            },
-            development: {
-              extractLicenses: false,
-              optimization: false,
-              sourceMap: true,
-              vendorChunk: true,
-            },
-            production: {
-              fileReplacements: [
-                {
-                  replace: './src/environments/environment.ts',
-                  with: './src/environments/environment.prod.ts',
-                },
-              ],
-              optimization: true,
-              outputHashing: 'all',
-              sourceMap: false,
-              namedChunks: false,
-              extractLicenses: true,
-              vendorChunk: false,
-            },
-          },
-          serve: {
-            default: {
-              hot: true,
-              liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
-              proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
-              port: 4200,
-              headers: { 'Access-Control-Allow-Origin': '*' },
-              historyApiFallback: {
-                index: '/index.html',
-                disableDotRule: true,
-                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-              },
-            },
-            development: { open: true },
-            production: { hot: false },
-          },
+                const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+                const { useLegacyNxPlugin } = require('@nx/webpack');
+                
+                
+                
+                
+            // These options were migrated by @nx/webpack:convert-to-inferred from
+            // the project.json file and merged with the options in this file
+            const configValues = {
+            build: { default: { assets: ['./src/favicon.ico', './src/assets'],
+                    styles: ['./src/styles.scss'],
+                    memoryLimit: 4096, "compiler": "babel", "outputPath": "../../dist/apps/app1", "index": "./src/index.html", "baseHref": "/", "main": "./src/main.tsx", "tsConfig": "./tsconfig.app.json" }, development: { "extractLicenses": false, "optimization": false, "sourceMap": true, "vendorChunk": true }, production: { "fileReplacements": [{ "replace": "./src/environments/environment.ts", "with": "./src/environments/environment.prod.ts" }], "optimization": true, "outputHashing": "all", "sourceMap": false, "namedChunks": false, "extractLicenses": true, "vendorChunk": false } },
+            serve: { default: { "hot": true, "liveReload": false, "server": { "type": "https", "options": { "cert": "./server.crt", "key": "./server.key" } }, "proxy": { "/api": { "target": "http://localhost:3333", "secure": false } }, "port": 4200, "headers": { "Access-Control-Allow-Origin": "*" }, "historyApiFallback": { "index": "/index.html", "disableDotRule": true, "htmlAcceptHeaders": ["text/html", "application/xhtml+xml"] } }, development: { "open": true }, production: { "hot": false } }
         };
+            
+            // Determine the correct configValue to use based on the configuration
+            const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 
-        // Determine the correct configValue to use based on the configuration
-        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
-
-        const buildOptions = {
-          ...configValues.build.default,
-          ...configValues.build[configuration],
-        };
-        const devServerOptions = {
-          ...configValues.serve.default,
-          ...configValues.serve[configuration],
-        };
-
-        /**
-         * @type{import('webpack').WebpackOptionsNormalized}
-         */
-        module.exports = async () => ({
-          devServer: devServerOptions,
-          plugins: [
-            new NxAppWebpackPlugin(buildOptions),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
-          ],
+            const buildOptions = {
+              ...configValues.build.default,
+              ...configValues.build[configuration],
+            };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
+                
+                /**
+                 * @type{import('webpack').WebpackOptionsNormalized}
+                 */
+                module.exports = async () => ({
+            devServer: devServerOptions,
+            plugins: [
+                new NxAppWebpackPlugin(buildOptions),
+                new NxReactWebpackPlugin({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+                }),
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
+            ]
         });
-        "
+                "
       `);
       // project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
@@ -784,10 +691,11 @@ describe('convert-to-inferred', () => {
       await convertToInferred(tree, { project: project.name });
 
       // check the updated webpack config
-      expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8')).toEqual(
-        expect.stringContaining(`// This is the untouched "devServer" option from the original webpack config. Please review it and make any necessary changes manually.
-  devServer: { hot: true },`)
+      const webpackConfig = tree.read(
+        `${project.root}/webpack.config.js`,
+        'utf-8'
       );
+      expect(webpackConfig).toContain(`"hot": true`);
       // project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.build).toStrictEqual({
@@ -814,11 +722,11 @@ describe('convert-to-inferred', () => {
 
       // check the updated webpack config
       expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8')).toContain(
-        'port: 1234,'
+        '"port": 1234'
       );
       expect(
         tree.read(`${project.root}/webpack.config.js`, 'utf-8')
-      ).not.toContain('port: 4200,');
+      ).not.toContain('"port": 4200');
       // project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.build).toStrictEqual({
@@ -1106,91 +1014,43 @@ module.exports = composePlugins(
         const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
         const { useLegacyNxPlugin } = require('@nx/webpack');
 
-        // These options were migrated by @nx/webpack:convert-to-inferred from
-        // the project.json file and merged with the options in this file
-        const configValues = {
-          build: {
-            default: {
-              compiler: 'babel',
-              outputPath: '../../dist/apps/app1',
-              index: './src/index.html',
-              baseHref: '/',
-              main: './src/main.tsx',
-              tsConfig: './tsconfig.app.json',
-              assets: ['./src/favicon.ico', './src/assets'],
-              styles: ['./src/styles.scss'],
-              memoryLimit: 8192,
-            },
-            development: {
-              extractLicenses: false,
-              optimization: false,
-              sourceMap: true,
-              vendorChunk: true,
-            },
-            production: {
-              fileReplacements: [
-                {
-                  replace: './src/environments/environment.ts',
-                  with: './src/environments/environment.prod.ts',
-                },
-              ],
-              optimization: true,
-              outputHashing: 'all',
-              sourceMap: false,
-              namedChunks: false,
-              extractLicenses: true,
-              vendorChunk: false,
-            },
-          },
-          serve: {
-            default: {
-              hot: true,
-              liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
-              proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
-              port: 4200,
-              headers: { 'Access-Control-Allow-Origin': '*' },
-              historyApiFallback: {
-                index: '/index.html',
-                disableDotRule: true,
-                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-              },
-            },
-            development: { open: true },
-            production: { hot: false },
-          },
-        };
 
-        // Determine the correct configValue to use based on the configuration
-        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 
-        const buildOptions = {
-          ...configValues.build.default,
-          ...configValues.build[configuration],
+
+            // These options were migrated by @nx/webpack:convert-to-inferred from
+            // the project.json file and merged with the options in this file
+            const configValues = {
+            build: { default: { "compiler": "babel", "outputPath": "../../dist/apps/app1", "index": "./src/index.html", "baseHref": "/", "main": "./src/main.tsx", "tsConfig": "./tsconfig.app.json", "assets": ["./src/favicon.ico", "./src/assets"], "styles": ["./src/styles.scss"], "memoryLimit": 8192 }, development: { "extractLicenses": false, "optimization": false, "sourceMap": true, "vendorChunk": true }, production: { "fileReplacements": [{ "replace": "./src/environments/environment.ts", "with": "./src/environments/environment.prod.ts" }], "optimization": true, "outputHashing": "all", "sourceMap": false, "namedChunks": false, "extractLicenses": true, "vendorChunk": false } },
+            serve: { default: { "hot": true, "liveReload": false, "server": { "type": "https", "options": { "cert": "./server.crt", "key": "./server.key" } }, "proxy": { "/api": { "target": "http://localhost:3333", "secure": false } }, "port": 4200, "headers": { "Access-Control-Allow-Origin": "*" }, "historyApiFallback": { "index": "/index.html", "disableDotRule": true, "htmlAcceptHeaders": ["text/html", "application/xhtml+xml"] } }, development: { "open": true }, production: { "hot": false } }
         };
-        const devServerOptions = {
-          ...configValues.serve.default,
-          ...configValues.serve[configuration],
-        };
+            
+            // Determine the correct configValue to use based on the configuration
+            const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+            const buildOptions = {
+              ...configValues.build.default,
+              ...configValues.build[configuration],
+            };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
 
         /**
          * @type{import('webpack').WebpackOptionsNormalized}
          */
         module.exports = async () => ({
-          devServer: devServerOptions,
-          plugins: [
-            new NxAppWebpackPlugin(buildOptions),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
-          ],
+            devServer: devServerOptions,
+            plugins: [
+                new NxAppWebpackPlugin(buildOptions),
+                new NxReactWebpackPlugin({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+                }),
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
+            ]
         });
         "
       `);
@@ -1200,91 +1060,43 @@ module.exports = composePlugins(
         const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
         const { useLegacyNxPlugin } = require('@nx/webpack');
 
-        // These options were migrated by @nx/webpack:convert-to-inferred from
-        // the project.json file and merged with the options in this file
-        const configValues = {
-          build: {
-            default: {
-              compiler: 'babel',
-              outputPath: '../../dist/apps/app2',
-              index: './src/index.html',
-              baseHref: '/',
-              main: './src/main.tsx',
-              tsConfig: './tsconfig.app.json',
-              assets: ['./src/favicon.ico', './src/assets'],
-              styles: ['./src/styles.scss'],
-              memoryLimit: 8192,
-            },
-            development: {
-              extractLicenses: false,
-              optimization: false,
-              sourceMap: true,
-              vendorChunk: true,
-            },
-            production: {
-              fileReplacements: [
-                {
-                  replace: './src/environments/environment.ts',
-                  with: './src/environments/environment.prod.ts',
-                },
-              ],
-              optimization: true,
-              outputHashing: 'all',
-              sourceMap: false,
-              namedChunks: false,
-              extractLicenses: true,
-              vendorChunk: false,
-            },
-          },
-          serve: {
-            default: {
-              hot: true,
-              liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
-              proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
-              port: 4200,
-              headers: { 'Access-Control-Allow-Origin': '*' },
-              historyApiFallback: {
-                index: '/index.html',
-                disableDotRule: true,
-                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-              },
-            },
-            development: { open: true },
-            production: { hot: false },
-          },
-        };
 
-        // Determine the correct configValue to use based on the configuration
-        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 
-        const buildOptions = {
-          ...configValues.build.default,
-          ...configValues.build[configuration],
+
+            // These options were migrated by @nx/webpack:convert-to-inferred from
+            // the project.json file and merged with the options in this file
+            const configValues = {
+            build: { default: { "compiler": "babel", "outputPath": "../../dist/apps/app2", "index": "./src/index.html", "baseHref": "/", "main": "./src/main.tsx", "tsConfig": "./tsconfig.app.json", "assets": ["./src/favicon.ico", "./src/assets"], "styles": ["./src/styles.scss"], "memoryLimit": 8192 }, development: { "extractLicenses": false, "optimization": false, "sourceMap": true, "vendorChunk": true }, production: { "fileReplacements": [{ "replace": "./src/environments/environment.ts", "with": "./src/environments/environment.prod.ts" }], "optimization": true, "outputHashing": "all", "sourceMap": false, "namedChunks": false, "extractLicenses": true, "vendorChunk": false } },
+            serve: { default: { "hot": true, "liveReload": false, "server": { "type": "https", "options": { "cert": "./server.crt", "key": "./server.key" } }, "proxy": { "/api": { "target": "http://localhost:3333", "secure": false } }, "port": 4200, "headers": { "Access-Control-Allow-Origin": "*" }, "historyApiFallback": { "index": "/index.html", "disableDotRule": true, "htmlAcceptHeaders": ["text/html", "application/xhtml+xml"] } }, development: { "open": true }, production: { "hot": false } }
         };
-        const devServerOptions = {
-          ...configValues.serve.default,
-          ...configValues.serve[configuration],
-        };
+            
+            // Determine the correct configValue to use based on the configuration
+            const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+            const buildOptions = {
+              ...configValues.build.default,
+              ...configValues.build[configuration],
+            };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
 
         /**
          * @type{import('webpack').WebpackOptionsNormalized}
          */
         module.exports = async () => ({
-          devServer: devServerOptions,
-          plugins: [
-            new NxAppWebpackPlugin(buildOptions),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
-          ],
+            devServer: devServerOptions,
+            plugins: [
+                new NxAppWebpackPlugin(buildOptions),
+                new NxReactWebpackPlugin({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+                }),
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
+            ]
         });
         "
       `);

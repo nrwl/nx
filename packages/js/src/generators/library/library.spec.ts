@@ -1922,7 +1922,7 @@ describe('lib', () => {
         expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
           .toMatchInlineSnapshot(`
           "packages:
-            - '${expected}'
+            - "${expected}"
           "
         `);
       }
@@ -2113,14 +2113,7 @@ describe('lib', () => {
             "type": "es6"
           },
           "sourceMaps": true,
-          "exclude": [
-            "jest.config.[ct]s",
-            ".*\\\\.spec.tsx?$",
-            ".*\\\\.test.tsx?$",
-            "./src/jest-setup.ts$",
-            "./**/jest-setup.ts$",
-            ".*.js$"
-          ]
+          "exclude": ["jest.config.[ct]s",".*\\\\.spec.tsx?$",".*\\\\.test.tsx?$","./src/jest-setup.ts$","./**/jest-setup.ts$",".*.js$"]
         }
         "
       `);
@@ -2215,11 +2208,11 @@ describe('lib', () => {
         expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
                   "/* eslint-disable */
-                  const { readFileSync } = require('fs');
+                  const { readFileSync } = require('fs')
 
                   // Reading the SWC compilation config for the spec files
                   const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
+                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
                   );
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
@@ -2229,10 +2222,10 @@ describe('lib', () => {
                     displayName: '@proj/my-lib',
                     preset: '../jest.preset.js',
                     transform: {
-                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig]
                     },
                     moduleFileExtensions: ['ts', 'js', 'html'],
-                    coverageDirectory: 'test-output/jest/coverage',
+                    coverageDirectory: 'test-output/jest/coverage'
                   };
                   "
               `);

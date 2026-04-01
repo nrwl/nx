@@ -124,25 +124,24 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       const options = {};
 
       /**
-       * @type{import('webpack').WebpackOptionsNormalized}
-       */
+      * @type{import('webpack').WebpackOptionsNormalized}
+      */
       module.exports = async () => ({
-        plugins: [
-          new NxAppWebpackPlugin(),
-          new NxReactWebpackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
-          // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
-          // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
-          // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
-          // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          await useLegacyNxPlugin(require('./webpack.config.old'), options),
-        ],
-      });
-      "
+      plugins: [
+      new NxAppWebpackPlugin(),
+      new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+      }),
+      // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+      // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+      // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+      // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      await useLegacyNxPlugin(require('./webpack.config.old'), options),
+      ],
+      });"
     `);
 
     expect(tree.read(`${project.name}/webpack.config.old.js`, 'utf-8'))
@@ -150,29 +149,30 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       "const { composePlugins } = require('@nx/webpack');
       // Nx plugins for webpack.
       module.exports = composePlugins((config) => {
-        return config;
+          return config;
       });
       "
     `);
 
     expect(tree.read(`another-app/webpack.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
-
-      // Nx plugins for webpack.
-      module.exports = composePlugins(
-        withNx(),
-        withReact({
-          // Uncomment this line if you don't want to use SVGR
-          // See: https://react-svgr.com/
-          // svgr: false
-        }),
-        (config) => {
-          return config;
-        },
-      );
       "
+            const { composePlugins, withNx } = require('@nx/webpack');
+            const { withReact } = require('@nx/react');
+
+            // Nx plugins for webpack.
+            module.exports = composePlugins(
+              withNx(),
+              withReact({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+              }),
+              (config) => {
+                return config;
+              }
+            );
+            "
     `);
 
     expect(tree.exists(`${project.name}/webpack.config.old.js`)).toBe(true);
@@ -395,43 +395,49 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       // This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
       // Please check that the options here are correct as they were moved from the old webpack.config.js to this file.
       const options = {
-        assets: ['./src/favicon.ico', './src/assets'],
-        styles: ['./src/styles.scss'],
-        scripts: ['./src/scripts.js'],
-        tsConfig: './tsconfig.app.json',
-        fileReplacements: [
-          {
-            replace: './src/environments/environment.ts',
-            with: './src/environments/environment.prod.ts',
-          },
-        ],
-        additionalEntryPoints: [
-          {
-            entryPath: './src/polyfills.ts',
-          },
-        ],
+      "assets": [
+      "./src/favicon.ico",
+      "./src/assets"
+      ],
+      "styles": [
+      "./src/styles.scss"
+      ],
+      "scripts": [
+      "./src/scripts.js"
+      ],
+      "tsConfig": "./tsconfig.app.json",
+      "fileReplacements": [
+      {
+      "replace": "./src/environments/environment.ts",
+      "with": "./src/environments/environment.prod.ts"
+      }
+      ],
+      "additionalEntryPoints": [
+      {
+      "entryPath": "./src/polyfills.ts"
+      }
+      ]
       };
 
       /**
-       * @type{import('webpack').WebpackOptionsNormalized}
-       */
+      * @type{import('webpack').WebpackOptionsNormalized}
+      */
       module.exports = async () => ({
-        plugins: [
-          new NxAppWebpackPlugin(options),
-          new NxReactWebpackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
-          // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
-          // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
-          // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
-          // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          await useLegacyNxPlugin(require('./webpack.config.old'), options),
-        ],
-      });
-      "
+      plugins: [
+      new NxAppWebpackPlugin(options),
+      new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+      }),
+      // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+      // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+      // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+      // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      await useLegacyNxPlugin(require('./webpack.config.old'), options),
+      ],
+      });"
     `);
   });
 });
