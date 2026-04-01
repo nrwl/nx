@@ -2,7 +2,10 @@
   "compileOnSave": false,
   "include": [],
   "files": [],
-  "exclude": ["node_modules", "tmp"],
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ],
   "references": [
     {
       "path": "./packages/angular"
@@ -399,6 +402,9 @@
     },
     {
       "path": "./nx-dev/nx-dev-e2e"
+    },
+    {
+      "path": "./e2e/nx-build"
     }
   ],
   "extends": "./tsconfig.base.json"
